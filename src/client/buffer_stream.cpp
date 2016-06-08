@@ -181,6 +181,14 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         }
         if (next_buffer_wait_handle.is_pending())
             next_buffer_wait_handle.result_received();
+
+        while (!incoming_buffers.empty())
+        {
+            auto b = incoming_buffers.front();
+            for (auto i = 0; i < b.fd_size(); i++)
+                close(b.fd(i));
+            incoming_buffers.pop();
+        }
     }
 
     void set_size(geom::Size) override
@@ -266,7 +274,7 @@ public:
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    void submit_buffer(mcl::Buffer& buffer) override
+    void submit_buffer(mcl::MirBuffer& buffer) override
     {
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
@@ -299,6 +307,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
         vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers),
+        current(nullptr),
+        future(vault.withdraw()),
         size_(size)
     {
     }
@@ -310,9 +320,9 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
     {
         lk.unlock();
-        auto buffer = vault.withdraw().get();
+        auto c = future.get();
         lk.lock();
-        current = buffer;
+        current = c;
     }
 
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
@@ -336,18 +346,16 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
             advance_current_buffer(lk);
+        auto c = current;
+        current = nullptr;
         lk.unlock();
 
-        vault.deposit(current);
-
-        next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current);
-        next_buffer_wait_handle.result_received();
-
+        vault.deposit(c);
+        auto wh = vault.wire_transfer_outbound(c, done);
+        auto f = vault.withdraw();
         lk.lock();
-        advance_current_buffer(lk);
-        done();
-        return &next_buffer_wait_handle;
+        future = std::move(f);
+        return wh;
     }
 
     void set_size(geom::Size size) override
@@ -397,8 +405,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     mcl::BufferVault vault;
     std::mutex mutable mutex;
-    std::shared_ptr<mcl::Buffer> current{nullptr};
-    MirWaitHandle next_buffer_wait_handle;
+    std::shared_ptr<mcl::MirBuffer> current{nullptr};
+    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
     geom::Size size_;

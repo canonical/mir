@@ -65,7 +65,6 @@ MirEvent* MirEvent::clone() const
     case mir_event_type_input_device_state:
         return to_input_device_state()->clone();
     case mir_event_type_input:
-    default:
         break;
     }
 
@@ -107,7 +106,6 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
     case mir_event_type_input_device_state:
         return MirInputDeviceStateEvent::deserialize(bytes);
     case mir_event_type_input:
-    default:
         break;
     }
 
@@ -141,7 +139,6 @@ std::string MirEvent::serialize(MirEvent const* event)
     case mir_event_type_input_device_state:
         return MirInputDeviceStateEvent::serialize(event);
     case mir_event_type_input:
-    default:
         break;
     }
 

@@ -127,11 +127,40 @@ std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
     return name;
 }
 
+namespace
+{
+std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
+    mgk::DRMModeResources const& resources,
+    mgk::DRMModeConnectorUPtr const& connector)
+{
+    int crtc_index = 0;
+
+    auto const encoders = connector_available_encoders(resources, connector.get());
+
+    for (auto& crtc : resources.crtcs())
+    {
+        if (!crtc_is_used(resources, crtc->crtc_id))
+        {
+            for (auto& enc : encoders)
+            {
+                if (encoder_supports_crtc_index(enc.get(), crtc_index))
+                {
+                    return std::tuple<mgk::DRMModeCrtcUPtr, int>{std::move(crtc), crtc_index};
+                }
+            }
+        }
+        crtc_index++;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+}
+}
+
 mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnectorUPtr const& connector)
 {
     mgk::DRMModeResources resources{drm_fd};
 
-    /* Check to see if there is a crtc already connected */
+    /* If there is already a CRTC connected we can just return it */
     if (connector->encoder_id)
     {
         auto encoder = resources.encoder(connector->encoder_id);
@@ -141,24 +170,64 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
         }
     }
 
-    auto available_encoders = connector_available_encoders(resources, connector.get());
+    return std::get<0>(find_crtc_and_index_for_connector(resources, connector));
+}
 
-    int crtc_index = 0;
+auto mgk::find_crtc_with_primary_plane(
+    int drm_fd,
+    mgk::DRMModeConnectorUPtr const& connector) -> std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr>
+{
+    /*
+     * TODO: This currently has a sequential find-crtc-then-find-primary-plane-for-it algorithm.
+     * This is needlessly restrictive - it will fail if the first available CRTC found doesn't have
+     * an appropriate primary plane, even if other CRTCs are available and do have an appropriate plane.
+     */
+    DRMModeCrtcUPtr crtc;
 
-    for (auto& crtc : resources.crtcs())
+    DRMModeResources resources{drm_fd};
+    int crtc_index{-1};
+
+    /* If there's already a CRTC connected, find it */
+    if (connector->encoder_id)
     {
-        if (!crtc_is_used(resources, crtc->crtc_id))
+        auto encoder = get_encoder(drm_fd, connector->encoder_id);
+        if (encoder->crtc_id)
         {
-            for (auto& enc : available_encoders)
+            /* There's already a CRTC connected; we only need to find its index */
+            auto our_crtc = std::find_if(
+                resources.crtcs().begin(),
+                resources.crtcs().end(),
+            [crtc_id = encoder->crtc_id](mgk::DRMModeCrtcUPtr& crtc)
             {
-                if (encoder_supports_crtc_index(enc.get(), crtc_index))
-                {
-                    return std::move(crtc);
-                }
+                return crtc_id == crtc->crtc_id;
+            });
+            if (our_crtc == resources.crtcs().end())
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find index of CRTC?!"});
             }
+            crtc = std::move(*our_crtc);
+            crtc_index = std::distance(resources.crtcs().begin(), our_crtc);
         }
-        crtc_index++;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+    if (!crtc)
+    {
+        std::tie(crtc, crtc_index) = find_crtc_and_index_for_connector(resources, connector);
+    }
+    
+    mgk::PlaneResources plane_res{drm_fd};
+
+    for (auto& plane : plane_res.planes())
+    {
+        if (plane->possible_crtcs & (1 << crtc_index))
+        {
+            ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+            if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
+            {
+                return std::make_pair(std::move(crtc), std::move(plane));
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for CRTC"});
 }
