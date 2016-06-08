@@ -73,6 +73,13 @@ void PeriodicPerfReport::end_frame(int buffer_id)
         auto render_time_avg = render_time_sum / frame_count;
         auto queue_lag_avg = buffer_queue_latency_sum / frame_count;
 
+        // Save this before cleaning out the map. In production you can
+        // safely measure this after the while loop. But in testing with
+        // artificially irregular render times and potentially seconds
+        // between frames, you need to save this before the while loop.
+        // In production it doesn't really matter if it's before or after...
+        int nbuffers = buffer_end_time.size();
+
         // Remove history of old buffer ids
         auto i = buffer_end_time.begin();
         while (i != buffer_end_time.end())
@@ -82,7 +89,6 @@ void PeriodicPerfReport::end_frame(int buffer_id)
             else
                 ++i;
         }
-        int nbuffers = buffer_end_time.size();
 
         display(name.c_str(), fps_100,
                 duration_cast<microseconds>(render_time_avg).count(),

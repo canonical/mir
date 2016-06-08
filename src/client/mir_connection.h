@@ -138,7 +138,7 @@ public:
     void register_error_callback(mir_error_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate_graphics_module(MirModuleProperties& properties);
+    void populate_graphics_module(MirModuleProperties& properties) override;
     MirDisplayConfiguration* create_copy_of_display_config();
     std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
@@ -260,6 +260,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
@@ -280,7 +281,6 @@ private:
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
-    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
