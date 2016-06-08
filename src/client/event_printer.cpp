@@ -216,7 +216,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
                 << mir_keyboard_event_action(key_event)
                 << ", code=" << mir_keyboard_event_key_code(key_event)
                 << ", scan=" << mir_keyboard_event_scan_code(key_event) << ", modifiers=" << std::hex
-                << mir_keyboard_event_modifiers(key_event) << ')';
+                << mir_keyboard_event_modifiers(key_event) << std::dec << ')';
         }
     case mir_input_event_type_touch:
         {
@@ -328,7 +328,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
         << ", mod=" << MirInputEventModifier(mir_input_device_state_event_modifiers(&event))
         << ", btns=" << mir_input_device_state_event_pointer_buttons(&event)
         << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_x)
-        << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_y)
+        << ", y=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_y)
         << " [";
 
     for (size_t size = mir_input_device_state_event_device_count(&event), index = 0; index != size; ++index)
@@ -339,9 +339,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
         auto keys = mir_input_device_state_event_device_pressed_keys(&event, index);
         for (size_t count_keys = mir_input_device_state_event_device_pressed_keys_count(&event, index), i = 0; i != count_keys; ++i)
         {
-            out << uint32_t(keys[i]) << ", ";
+            out << static_cast<uint32_t>(keys[i]);
+            if (i + 1 < count_keys)
+                out << ", ";
         }
-        out << "), ";
+        out << ")";
+        if (index + 1 < size)
+            out << ", ";
     }
     return out << "]";
 }
