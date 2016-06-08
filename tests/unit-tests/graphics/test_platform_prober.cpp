@@ -244,7 +244,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, Not(HasSubstr("dummy")));
+    EXPECT_THAT(description->name, Not(HasSubstr("mir:stub-graphics")));
 }
 #endif
 
