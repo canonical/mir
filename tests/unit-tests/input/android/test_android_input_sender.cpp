@@ -18,7 +18,7 @@
 
 #include "mir/events/event_private.h"
 
-#include "src/server/input/android/android_input_channel.h"
+#include "src/server/input/channel.h"
 #include "src/server/input/android/input_sender.h"
 #include "src/server/input/default_event_builder.h"
 #include "src/server/report/null_report_factory.h"
@@ -44,7 +44,6 @@
 
 #include <boost/exception/all.hpp>
 
-//#include <algorithm>
 #include <cstring>
 
 namespace mi = mir::input;
@@ -65,6 +64,7 @@ class MockInputEventFactory : public droidinput::InputEventFactoryInterface
 public:
     MOCK_METHOD0(createKeyEvent, droidinput::KeyEvent*());
     MOCK_METHOD0(createMotionEvent, droidinput::MotionEvent*());
+    MOCK_METHOD0(createRawBufferEvent, droidinput::RawBufferEvent*());
 };
 
 class MockInputReport : public mir::input::InputReport
@@ -116,7 +116,7 @@ public:
           motion_event(builder.touch_event(std::chrono::nanoseconds(-1))),
           pointer_event(builder.pointer_event(std::chrono::nanoseconds(123), mir_pointer_action_motion,
                                         mir_pointer_button_primary, 0.0f, 0.0f,
-                                        movement.dx.as_float(), movement.dy.as_float()))
+                                        movement.dx.as_int(), movement.dy.as_int()))
 
     {
         using namespace ::testing;
@@ -140,7 +140,7 @@ public:
         fake_scene.observer->surface_removed(&stub_surface);
     }
 
-    std::shared_ptr<mi::InputChannel> channel = std::make_shared<mia::AndroidInputChannel>();
+    std::shared_ptr<mi::InputChannel> channel = std::make_shared<mi::Channel>();
     mtd::StubSceneSurface stub_surface{channel->server_fd()};
     droidinput::sp<droidinput::InputChannel> client_channel{new droidinput::InputChannel(droidinput::String8("test"), channel->client_fd())};
     droidinput::InputConsumer consumer{client_channel};
@@ -299,8 +299,8 @@ TEST_F(AndroidInputSender, sends_pointer_events)
 
     EXPECT_EQ(1, client_motion_event.getPointerCount());
 
-    EXPECT_EQ(movement.dx.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
-    EXPECT_EQ(movement.dy.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
+    EXPECT_EQ(movement.dx.as_int(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
+    EXPECT_EQ(movement.dy.as_int(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
     EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_MOUSE, client_motion_event.getToolType(0));
     EXPECT_EQ(AINPUT_SOURCE_MOUSE, client_motion_event.getSource());
 }

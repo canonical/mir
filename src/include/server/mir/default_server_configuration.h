@@ -113,7 +113,11 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
-namespace nested { class HostConnection; }
+namespace nested
+{
+class HostConnection;
+class MirClientHostConnection;
+}
 }
 namespace input
 {
@@ -174,8 +178,8 @@ public:
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
-     * the default strategy to be overridden by --on-fatal-error-abort to force a
-     * core. (This behavior is useful for diagnostic purposes during development.)
+     * the default strategy to be overridden by --on-fatal-error-except to avoid a
+     * core.
      * To change the default strategy used FatalErrorStrategy. See acceptance test
      * ServerShutdown.fatal_error_default_can_be_changed_to_abort
      * for an example.
@@ -330,6 +334,7 @@ private:
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
+    std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -405,7 +410,7 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
-    CachedPtr<graphics::nested::HostConnection> host_connection;
+    CachedPtr<graphics::nested::MirClientHostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;

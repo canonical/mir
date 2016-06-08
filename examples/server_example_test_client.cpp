@@ -21,6 +21,7 @@
 #include "mir/server.h"
 #include "mir/main_loop.h"
 #include "mir/logging/logger.h"
+#include "mir/log.h"
 #include "mir/options/option.h"
 
 #include <csignal>
@@ -45,6 +46,7 @@ bool exit_success(pid_t pid)
     {
         ml::log(ml::Severity::informational, "Terminating client", component);
         kill(pid, SIGKILL);
+        return false;
     }
     else if (wait_rc != pid)
     {
@@ -54,7 +56,12 @@ bool exit_success(pid_t pid)
     else if (WIFEXITED(status))
     {
         auto const exit_status = WEXITSTATUS(status);
-        if (exit_status != EXIT_SUCCESS)
+        if (exit_status == EXIT_SUCCESS)
+        {
+            ml::log(ml::Severity::informational, "Client exited successfully", component);
+            return true;
+        }
+        else
         {
             char const format[] = "Client has exited with status %d";
             char buffer[sizeof format + 10];
@@ -77,8 +84,6 @@ bool exit_success(pid_t pid)
         ml::log(ml::Severity::informational, "Client died mysteriously", component);
         return false;
     }
-
-    return true;
 }
 }
 
@@ -116,8 +121,9 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
                 setenv("MIR_SOCKET", connect_string, 1);
 
                 auto const client = options->get<std::string>(test_client_opt);
-                execl(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
-                ml::log(ml::Severity::critical, "Failed to execute client", component);
+                execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
+                log(logging::Severity::critical, "mir::examples",
+                    "Failed to execute client (%s) error: %s", client.c_str(), strerror(errno));
                 abort(); // If execl() returns then something is badly wrong
             }
             else if (pid > 0)

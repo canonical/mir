@@ -28,7 +28,7 @@
 #include <mir/gl/primitive.h>
 #include "mir/renderer/gl/render_target.h"
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -49,6 +49,7 @@ public:
     ~CurrentRenderTarget();
 
     void ensure_current();
+    void bind();
     void swap_buffers();
 
 private:
@@ -63,7 +64,7 @@ public:
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
-    void set_rotation(float degrees) override;
+    void set_output_transform(MirOrientation orientation, MirMirrorMode mode) override;
     void render(graphics::RenderableList const&) const override;
 
     // This is called _without_ a GL context:
@@ -123,10 +124,11 @@ protected:
 
 private:
     std::unique_ptr<mir::gl::TextureCache> const texture_cache;
-    float rotation;
+    MirOrientation orientation;
+    MirMirrorMode mirror_mode;
     geometry::Rectangle viewport;
-    glm::mat4 screen_to_gl_coords, screen_rotation;
-
+    glm::mat4 screen_to_gl_coords;
+    glm::mat4 display_transform;
     std::vector<mir::gl::Primitive> mutable primitives;
 };
 

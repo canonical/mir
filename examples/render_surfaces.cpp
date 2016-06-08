@@ -33,6 +33,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 
@@ -142,10 +143,10 @@ public:
     Moveable(std::shared_ptr<ms::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(s), display_size(display_size),
-          x{s->top_left().x.as_float()},
-          y{s->top_left().y.as_float()},
-          w{s->size().width.as_float()},
-          h{s->size().height.as_float()},
+          x(s->top_left().x.as_int()),
+          y(s->top_left().y.as_int()),
+          w(s->size().width.as_int()),
+          h(s->size().height.as_int()),
           dx{dx},
           dy{dy},
           rotation_axis(rotation_axis),
@@ -317,6 +318,10 @@ public:
         set_command_line(argc, argv);
         setenv("MIR_SERVER_NO_FILE", "", 1);
 
+        // If there's a server available, try connecting to it
+        if (auto const socket = getenv("MIR_SOCKET"))
+            setenv("MIR_SERVER_HOST_SOCKET", socket, 0);
+
         // Unless the compositor starts before we create the surfaces it won't respond to
         // the change notification that causes.
         callback_when_started(*this, [this] { create_surfaces(); });
@@ -329,6 +334,7 @@ public:
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
+    try
     {
         moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
@@ -368,17 +374,28 @@ public:
             struct NullBufferSink : mf::BufferSink
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
+                void add_buffer(mg::Buffer&) override {}
+                void remove_buffer(mg::Buffer&) override {}
+                void update_buffer(mg::Buffer&) override {}
             };
 
-            auto const stream = buffer_stream_factory->create_buffer_stream(
-                mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
-            auto const surface = surface_factory->create_surface(stream, params);
+            auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
+            auto const stream = buffer_stream_factory->create_buffer_stream({}, buffers, properties);
+            auto const surface = surface_factory->create_surface(
+                {ms::StreamInfo{stream, {}, {}}}, params);
             surface_stack->add_surface(surface, params.input_mode);
 
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
+
                 surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                if (!buffer)
+                {
+                    auto buffer_id = buffers->add_buffer(properties);
+                    buffer = (*buffers)[buffer_id].get();
+                }
+
                 {
                     gl_context->make_current();
 
@@ -411,6 +428,11 @@ public:
         }
 
         created = true;
+    }
+    catch (...)
+    {
+        mir::report_exception();
+        exit(EXIT_FAILURE);
     }
 
 private:

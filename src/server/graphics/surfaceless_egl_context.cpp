@@ -120,7 +120,9 @@ EGLSurface create_surface(EGLDisplay egl_display, EGLConfig egl_config)
 
 EGLint const default_egl_context_attr[] =
 {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
     EGL_NONE
 };
 
@@ -131,7 +133,7 @@ EGLint const default_attr[] =
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
     EGL_ALPHA_SIZE, 0,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
     EGL_NONE
 };
 
@@ -180,6 +182,7 @@ mg::SurfacelessEGLContext::~SurfacelessEGLContext() noexcept
 
 void mg::SurfacelessEGLContext::make_current() const
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     if (eglGetCurrentContext() == egl_context)
         return;
 
@@ -193,6 +196,7 @@ void mg::SurfacelessEGLContext::make_current() const
 
 void mg::SurfacelessEGLContext::release_current() const
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     if (egl_context != EGL_NO_CONTEXT && eglGetCurrentContext() == egl_context)
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

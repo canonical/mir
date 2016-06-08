@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,18 +21,13 @@
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
-#include <memory>
-
 namespace mir
 {
 namespace input
 {
-class Platform;
-
 class InputManager
 {
 public:
-    virtual void add_platform(std::shared_ptr<Platform> const& platform) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 

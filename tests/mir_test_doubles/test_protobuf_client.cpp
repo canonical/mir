@@ -23,6 +23,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/lifecycle_control.h"
+#include "src/client/buffer_factory.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/input/input_devices.h"
@@ -44,6 +45,7 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
     channel(mclr::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        std::make_shared<mir::client::BufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(),
         rpc_report,
@@ -55,7 +57,6 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),
-    next_buffer_called(false),
     exchange_buffer_called(false),
     disconnect_done_called(false),
     configure_display_done_called(false),
@@ -73,8 +74,8 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
     ON_CALL(*this, create_surface_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
-    ON_CALL(*this, next_buffer_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
+    ON_CALL(*this, exchange_buffer_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_exchange_buffer_done));
     ON_CALL(*this, disconnect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
     ON_CALL(*this, display_configure_done())
@@ -107,9 +108,9 @@ void mir::test::TestProtobufClient::on_create_surface_done()
     cv.notify_all();
 }
 
-void mir::test::TestProtobufClient::on_next_buffer_done()
+void mir::test::TestProtobufClient::on_exchange_buffer_done()
 {
-    signal_condition(next_buffer_called);
+    signal_condition(exchange_buffer_called);
 }
 
 void mir::test::TestProtobufClient::on_disconnect_done()
@@ -149,13 +150,13 @@ void mir::test::TestProtobufClient::create_surface()
         google::protobuf::NewCallback(this, &TestProtobufClient::create_surface_done));
 }
 
-void mir::test::TestProtobufClient::next_buffer()
+void mir::test::TestProtobufClient::exchange_buffer()
 {
-    reset_condition(next_buffer_called);
-    display_server.next_buffer(
-        &surface.id(),
+    reset_condition(exchange_buffer_called);
+    display_server.exchange_buffer(
+        &buffer_request,
         surface.mutable_buffer(),
-        google::protobuf::NewCallback(this, &TestProtobufClient::next_buffer_done));
+        google::protobuf::NewCallback(this, &TestProtobufClient::exchange_buffer_done));
 }
 
 void mir::test::TestProtobufClient::configure_display()
@@ -182,9 +183,9 @@ void mir::test::TestProtobufClient::wait_for_create_surface()
     wait_for([this]{ return create_surface_called; }, "Timed out waiting create surface");
 }
 
-void mir::test::TestProtobufClient::wait_for_next_buffer()
+void mir::test::TestProtobufClient::wait_for_exchange_buffer()
 {
-    wait_for([this] { return next_buffer_called; }, "Timed out waiting for next buffer");
+    wait_for([this] { return exchange_buffer_called; }, "Timed out waiting for next buffer");
 }
 
 void mir::test::TestProtobufClient::wait_for_disconnect_done()

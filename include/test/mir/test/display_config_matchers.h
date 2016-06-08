@@ -23,6 +23,7 @@
 
 #include <gmock/gmock.h>
 
+
 //avoid a valgrind complaint by defining printer for this type
 static void PrintTo(MirDisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
 void PrintTo(MirDisplayConfiguration const&, ::std::ostream*)
@@ -54,40 +55,60 @@ class DisplayConfiguration;
 namespace test
 {
 
-bool compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
-                                    graphics::DisplayConfiguration const& display_config2);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    graphics::DisplayConfiguration const& display_config1,
+    graphics::DisplayConfiguration const& display_config2);
 
-bool compare_display_configurations(MirDisplayConfiguration const& client_config,
-                                    graphics::DisplayConfiguration const& display_config);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const& client_config,
+    graphics::DisplayConfiguration const& display_config);
 
-bool compare_display_configurations(protobuf::DisplayConfiguration const& protobuf_config,
-                                    graphics::DisplayConfiguration const& display_config);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    protobuf::DisplayConfiguration const& protobuf_config,
+    graphics::DisplayConfiguration const& display_config);
 
-bool compare_display_configurations(MirDisplayConfiguration const* client_config1,
-                                    MirDisplayConfiguration const* client_config2);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const* client_config1,
+    MirDisplayConfiguration const* client_config2);
 
-bool compare_display_configurations(MirDisplayConfiguration const& client_config,
-                                    protobuf::DisplayConfiguration const& protobuf_config);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const& client_config,
+    protobuf::DisplayConfiguration const& protobuf_config);
 
-bool compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
-                                    MirDisplayConfiguration const* display_config2);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    graphics::DisplayConfiguration const& display_config1,
+    MirDisplayConfiguration const* display_config2);
 
 
-bool compare_display_configurations(MirDisplayConfiguration const* display_config2,
-                                    graphics::DisplayConfiguration const& display_config1);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const* display_config2,
+    graphics::DisplayConfiguration const& display_config1);
 
-bool compare_display_configurations(MirDisplayConfig const* client_config,
-                                   graphics::DisplayConfiguration const& server_config);
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfig const* client_config,
+    graphics::DisplayConfiguration const& server_config);
 
-bool compare_display_configurations(graphics::DisplayConfiguration const& server_config,
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    graphics::DisplayConfiguration const& server_config,
     MirDisplayConfig const* client_config);
 
-bool compare_display_configurations(MirDisplayConfig const* config1,
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfig const* config1,
     MirDisplayConfig const* config2);
 
 MATCHER_P(DisplayConfigMatches, config, "")
 {
-    return compare_display_configurations(arg, config);
+    return compare_display_configurations(result_listener, arg, config);
 }
 
 }

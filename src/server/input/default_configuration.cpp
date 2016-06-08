@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,10 +19,10 @@
 #include "mir/default_server_configuration.h"
 
 #include "android/input_sender.h"
-#include "android/input_channel_factory.h"
 #include "key_repeat_dispatcher.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
+#include "channel_factory.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -34,6 +34,7 @@
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
+#include "../graphics/nested/mir_client_host_connection.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -44,8 +45,10 @@
 #include "mir/compositor/scene.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/main_loop.h"
+#include "mir/abnormal_exit.h"
 #include "mir/glib_main_loop.h"
 #include "mir/log.h"
+#include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
@@ -57,6 +60,41 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
+
+namespace
+{
+
+bool is_arale()
+{
+#ifdef __ARM_EABI__
+    try
+    {
+        auto const android_properties = "libandroid-properties.so.1";
+        auto const arale_device_name = "arale";
+        int const property_value_max = 92;
+
+        mir::SharedLibrary android_properties_lib(android_properties);
+        int (*property_get)(char const*, char*, char const*) = nullptr;
+        property_get = android_properties_lib.load_function<decltype(property_get)>("property_get");
+
+        char default_value[] = "";
+        char value[property_value_max];
+
+        if (property_get == nullptr)
+            return false;
+
+        property_get("ro.product.device", value, default_value);
+
+        return std::strcmp(arale_device_name, value) == 0;
+    }
+    catch(...)
+    {
+    }
+#endif
+    return false;
+}
+
+}
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -149,7 +187,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
-                enable_repeat, key_repeat_timeout, key_repeat_delay);
+                enable_repeat, key_repeat_timeout, key_repeat_delay, is_arale());
         });
 }
 
@@ -159,7 +197,7 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     if (!options->get<bool>(options::enable_input_opt))
         return std::make_shared<mi::NullInputChannelFactory>();
     else
-        return std::make_shared<mia::InputChannelFactory>();
+        return std::make_shared<mi::ChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
@@ -233,25 +271,34 @@ mir::DefaultServerConfiguration::the_input_manager()
             auto const options = the_options();
             bool input_opt = options->get<bool>(options::enable_input_opt);
 
-            // TODO nested input handling (== host_socket) should fold into a platform
-            if (!input_opt || options->is_set(options::host_socket_opt))
+            if (!input_opt)
             {
+                return std::make_shared<mi::NullInputManager>();
+            }
+            else if (options->is_set(options::host_socket_opt))
+            {
+                // TODO nested input handling (== host_socket) should fold into a platform
                 return std::make_shared<mi::NullInputManager>();
             }
             else
             {
-                auto platforms = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
-                                                       the_input_report(), *the_shared_library_prober_report());
+                auto const emergency_cleanup = the_emergency_cleanup();
+                auto const device_registry = the_input_device_registry();
+                auto const input_report = the_input_report();
 
-                if (platforms.empty())
-                    BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
+                // Maybe the graphics platform also supplies input (e.g. mesa-x11 or nested)
+                // NB this makes the (valid) assumption that graphics initializes before input
+                auto platform = mi::input_platform_from_graphics_module(
+                    *the_graphics_platform(), *options, emergency_cleanup, device_registry, input_report);
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+                // otherwise (usually) we probe for it
+                if (!platform)
+                {
+                    platform = probe_input_platforms(*options, emergency_cleanup, device_registry,
+                                                     input_report, *the_shared_library_prober_report());
+                }
 
-                for (auto & platform : platforms)
-                    ret->add_platform(std::move(platform));
-
-                return ret;
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
         }
     );
@@ -286,25 +333,45 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
     return default_input_device_hub(
         [this]()
         {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                 the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
                 the_cookie_authority());
+
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
         });
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
-                the_global_event_sink(),
-                the_seat(),
-                the_input_reading_multiplexer(),
-                the_main_loop(),
-                the_cookie_authority());
-        });
+    auto options = the_options();
+    if (options->is_set(options::host_socket_opt))
+    {
+        return the_mir_client_host_connection();
+    }
+    else
+    {
+        return default_input_device_hub(
+            [this]()
+            {
+                auto input_dispatcher = the_input_dispatcher();
+                auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+                auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
+                    the_global_event_sink(),
+                    the_seat(),
+                    the_input_reading_multiplexer(),
+                    the_main_loop(),
+                    the_cookie_authority());
+
+                if (key_repeater)
+                    key_repeater->set_input_device_hub(hub);
+                return hub;
+            });
+    }
 }

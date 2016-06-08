@@ -32,11 +32,13 @@ namespace mir
 namespace frontend
 {
 class EventSink;
+class ClientBuffers;
 }
 namespace compositor { class BufferStream; }
 namespace graphics
 {
 class DisplayConfiguration;
+class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -59,7 +61,8 @@ public:
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
         graphics::DisplayConfiguration const& initial_config,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 
@@ -77,7 +80,7 @@ public:
     std::string name() const override;
     pid_t process_id() const override;
 
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
 
     void hide() override;
     void show() override;
@@ -98,6 +101,9 @@ public:
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
+    void destroy_buffer(graphics::BufferID) override;
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -111,6 +117,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
+    std::shared_ptr<frontend::ClientBuffers> const buffers;
 
     frontend::SurfaceId next_id();
 
@@ -125,6 +132,10 @@ private:
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
     Streams streams;
+
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> default_content_map;
+
+    void destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces);
 };
 
 }

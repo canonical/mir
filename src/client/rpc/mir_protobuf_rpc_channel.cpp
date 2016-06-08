@@ -20,11 +20,15 @@
 #include "rpc_report.h"
 
 #include "../surface_map.h"
+#include "../buffer.h"
+#include "../presentation_chain.h"
+#include "../buffer_factory.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
+#include "../protobuf_to_native_buffer.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
@@ -35,6 +39,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
 #include <endian.h>
 
 #include <stdexcept>
@@ -55,6 +60,7 @@ std::chrono::milliseconds const timeout(200);
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
@@ -64,6 +70,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
+    buffer_factory(buffer_factory),
     display_configuration(disp_config),
     input_devices(input_devices),
     lifecycle_control(lifecycle_control),
@@ -99,7 +106,7 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(
-            [](mcl::BufferReceiver* receiver) {
+            [](mcl::ClientBufferStream* receiver) {
                 if (receiver) receiver->buffer_unavailable();
             });
     }
@@ -298,12 +305,55 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
         }
 
-        if (auto map = surface_map.lock()) 
-            map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-            [&] (mcl::BufferReceiver* receiver) {
-                if (receiver)
-                    receiver->buffer_available(seq.buffer_request().buffer());
-            });
+        if (auto map = surface_map.lock())
+        {
+            try
+            {
+                if (seq.buffer_request().has_id())
+                {
+                    map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+                    [&] (mcl::ClientBufferStream* receiver) {
+                        receiver->buffer_available(seq.buffer_request().buffer());
+                    });
+                }
+                
+                else if (seq.buffer_request().has_operation())
+                {
+                    auto stream_cmd = seq.buffer_request().operation();
+                    auto buffer_id = seq.buffer_request().buffer().buffer_id();
+                    std::shared_ptr<mcl::Buffer> buffer;
+                    switch (stream_cmd)
+                    {
+                    case mp::BufferOperation::add:
+                        buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        map->insert(buffer_id, buffer); 
+                        buffer->received();
+                        break;
+                    case mp::BufferOperation::update:
+                        map->buffer(buffer_id)->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        break;
+                    case mp::BufferOperation::remove:
+                        map->erase(buffer_id);
+                        break;
+                    default:
+                        BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
+                    }
+                }
+            }
+            catch (std::exception& e)
+            {
+                for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
+                    close(seq.buffer_request().buffer().fd(i));
+                throw e;
+            }
+        }
+        else
+        {
+            for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
+                close(seq.buffer_request().buffer().fd(i));
+        }
+
     }
 
     int const nevents = seq.event_size();
@@ -324,34 +374,34 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     auto const send_e = [&e](MirSurface* surface)
                         { surface->handle_event(*e); };
 
-                    switch (e->type)
+                    switch (e->type())
                     {
                     case mir_event_type_surface:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->surface.id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_surface()->id()), send_e);
                         break;
 
                     case mir_event_type_resize:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->resize.surface_id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_resize()->surface_id()), send_e);
                         break;
 
                     case mir_event_type_orientation:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->orientation.surface_id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_orientation()->surface_id()), send_e);
                         break;
 
                     case mir_event_type_close_surface:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->close_surface.surface_id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_close_surface()->surface_id()), send_e);
                         break;
                     case mir_event_type_keymap:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->keymap.surface_id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_keymap()->surface_id()), send_e);
                         break;
                     case mir_event_type_surface_output:
                         if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->surface_output.surface_id), send_e);
+                            map->with_surface_do(mf::SurfaceId(e->to_surface_output()->surface_id()), send_e);
                         break;
                     default:
                         event_sink->handle_event(*e);

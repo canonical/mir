@@ -222,38 +222,79 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
-MIR_CLIENT_9_unreleased {
+MIR_CLIENT_0.21 {
   global:
-    mir_connection_create_display_configuration;
-    mir_display_config_release;
-    mir_display_config_get_num_outputs;
     mir_connection_apply_display_configuration;
-    mir_connection_set_base_display_configuration;
-    mir_display_config_get_output;
-    mir_output_is_enabled;
+    mir_connection_create_display_configuration;
+    mir_connection_create_input_config;
+    mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;
-    mir_output_get_id;
-    mir_output_get_type;
-    mir_output_get_preferred_mode;
-    mir_output_get_physical_width_mm;
-    mir_output_get_physical_height_mm;
+    mir_display_config_get_num_outputs;
+    mir_display_config_get_output;
+    mir_display_config_release;
+    mir_input_config_destroy;
+    mir_input_config_device_count;
+    mir_input_config_get_device;
+    mir_input_config_get_device_by_id;
+    mir_input_config_get_mutable_device;
+    mir_input_config_get_mutable_device_by_id;
+    mir_input_device_get_capabilities;
+    mir_input_device_get_id;
+    mir_input_device_get_name;
+    mir_input_device_get_unique_id;
     mir_output_get_connection_state;
-    mir_output_get_position_x;
-    mir_output_get_position_y;
     mir_output_get_current_mode;
     mir_output_get_current_pixel_format;
-    mir_output_get_power_mode;
-    mir_output_get_orientation;
-    mir_output_get_num_modes;
+    mir_output_get_form_factor;
+    mir_output_get_id;
     mir_output_get_mode;
+    mir_output_get_num_modes;
     mir_output_get_num_pixel_formats;
+    mir_output_get_orientation;
+    mir_output_get_physical_height_mm;
+    mir_output_get_physical_width_mm;
     mir_output_get_pixel_format;
-    mir_output_mode_get_width;
+    mir_output_get_position_x;
+    mir_output_get_position_y;
+    mir_output_get_power_mode;
+    mir_output_get_preferred_mode;
+    mir_output_get_scale_factor;
+    mir_output_get_type;
+    mir_output_is_enabled;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
+    mir_output_mode_get_width;
   local:
     *;
 } MIR_CLIENT_9v19;
+
+MIR_CLIENT_0.22 {  # New functions in Mir 0.22
+  global:
+    mir_connection_confirm_base_display_configuration;
+    mir_connection_preview_base_display_configuration;
+    mir_connection_set_error_callback;
+    mir_create_screencast_spec;
+    mir_display_config_get_mutable_output;
+    mir_error_get_code;
+    mir_error_get_domain;
+    mir_output_disable;
+    mir_output_enable;
+    mir_output_set_current_mode;
+    mir_output_set_orientation;
+    mir_output_set_pixel_format;
+    mir_output_set_position;
+    mir_output_set_power_mode;
+    mir_screencast_create_sync;
+    mir_screencast_get_error_message;
+    mir_screencast_is_valid;
+    mir_screencast_spec_release;
+    mir_screencast_spec_set_capture_region;
+    mir_screencast_spec_set_height;
+    mir_screencast_spec_set_mirror_mode;
+    mir_screencast_spec_set_number_of_buffers;
+    mir_screencast_spec_set_pixel_format;
+    mir_screencast_spec_set_width;
+} MIR_CLIENT_0.21;
 
 MIR_CLIENT_DETAIL_9 {
   global:
@@ -311,6 +352,13 @@ MIR_CLIENT_DETAIL_9v19 {
     };
 } MIR_CLIENT_DETAIL_9v18;
 
+MIR_CLIENT_DETAIL_0.21 {
+  global:
+    extern "C++" { 
+      mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
+    };
+} MIR_CLIENT_DETAIL_9v19;
+
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_get_fence;
@@ -323,11 +371,29 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_presentation_chain_is_valid;
     mir_presentation_chain_get_error_message;
     mir_connection_create_presentation_chain;
-    mir_presentation_chain_allocate_buffer;
+    mir_connection_allocate_buffer;
     mir_presentation_chain_submit_buffer;
     mir_presentation_chain_release;
     mir_surface_spec_add_presentation_chain;
     mir_surface_spec_add_buffer_stream;
+    mir_buffer_get_width;
+    mir_buffer_get_height;
+    mir_buffer_get_pixel_format;
+    mir_buffer_get_buffer_usage;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
+
+MIR_CLIENT_0.24 {  # New functions in Mir 0.24
+  global:
+    mir_event_get_input_device_state_event;
+    mir_input_device_state_event_device_count;
+    mir_input_device_state_event_device_id;
+    mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pressed_keys;
+    mir_input_device_state_event_device_pressed_count;
+    mir_input_device_state_event_pointer_axis;
+    mir_input_device_state_event_pointer_buttons;
+    mir_input_device_state_event_time;
+    mir_input_device_state_event_device_pointer_buttons;
+} MIR_CLIENT_0.22;

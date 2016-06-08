@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,7 +21,6 @@
 
 #include "mir/input/input_manager.h"
 
-#include <vector>
 #include <thread>
 #include <atomic>
 
@@ -42,15 +41,17 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
+    DefaultInputManager(
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+        std::shared_ptr<Platform> const& platform);
     ~DefaultInputManager();
-    void add_platform(std::shared_ptr<Platform> const& platform) override;
+
     void start() override;
     void stop() override;
 private:
     void start_platforms();
     void stop_platforms();
-    std::vector<std::shared_ptr<Platform>> platforms;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<dispatch::ActionQueue> const queue;
     std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;

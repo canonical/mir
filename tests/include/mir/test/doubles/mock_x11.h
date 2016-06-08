@@ -47,6 +47,9 @@ public:
     XEvent focus_out_event_return = { 0 };
     XEvent vscroll_event_return = { 0 };
     XEvent motion_event_return = { 0 };
+    XEvent enter_notify_event_return = { 0 };
+    XEvent leave_notify_event_return = { 0 };
+    int pending_events = 1;
 };
 
 class MockX11
@@ -80,6 +83,8 @@ public:
     MOCK_METHOD1(XSetErrorHandler, XErrorHandler(XErrorHandler));
     MOCK_METHOD0(XInitThreads, Status());
     MOCK_METHOD3(XSetWMHints, int(Display*, Window, XWMHints*));
+    MOCK_METHOD9(XGrabPointer, int(Display*, Window, Bool, unsigned int, int, int, Window, Cursor, Time));
+    MOCK_METHOD2(XUngrabPointer, int(Display*, Time));
 
     FakeX11Resources fake_x11;
 };

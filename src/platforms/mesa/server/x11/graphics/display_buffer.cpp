@@ -41,7 +41,14 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-    return {{0,0}, size};
+    switch (orientation_)
+    {
+    case mir_orientation_left:
+    case mir_orientation_right:
+        return {{0,0}, {size.height.as_int(), size.width.as_int()}};
+    default:
+        return {{0,0}, size};
+    }
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -67,9 +74,18 @@ void mgx::DisplayBuffer::swap_buffers()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 }
 
+void mgx::DisplayBuffer::bind()
+{
+}
+
 MirOrientation mgx::DisplayBuffer::orientation() const
 {
     return orientation_;
+}
+
+MirMirrorMode mgx::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
 }
 
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)

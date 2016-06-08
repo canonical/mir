@@ -90,7 +90,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(SessionInfoMa
 
 void me::CanonicalWindowManagerPolicyCopy::resize(Point cursor)
 {
-    select_active_surface(tools->surface_at(old_cursor));
+    if (!resizing) select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
 }
 
@@ -251,13 +251,17 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         return;
 
     auto format = mir_pixel_format_xrgb_8888;
-    ms::SurfaceCreationParameters params;
-    params.of_size(titlebar_size_for_window(surface->size()))
+    mir::graphics::BufferProperties properties(titlebar_size_for_window(surface->size()),
+        format, mir::graphics::BufferUsage::software);
+    auto stream_id = session->create_buffer_stream(properties);
+    auto params = ms::a_surface()
+        .of_size(titlebar_size_for_window(surface->size()))
         .of_name("decoration")
         .of_pixel_format(format)
         .of_buffer_usage(mir::graphics::BufferUsage::software)
         .of_position(titlebar_position_for_window(surface->top_left()))
-        .of_type(mir_surface_type_gloss);
+        .of_type(mir_surface_type_gloss)
+        .with_buffer_stream(stream_id);
     auto id = build(session, params);
     auto titlebar = session->surface(id);
     titlebar->set_alpha(0.9);
@@ -265,13 +269,14 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     auto& surface_info = tools->info_for(surface);
     surface_info.titlebar = titlebar;
     surface_info.titlebar_id = id;
+    surface_info.titlebar_stream_id = stream_id;
     surface_info.children.push_back(titlebar);
 
     SurfaceInfo& titlebar_info =
             surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
-    titlebar_info.init_titlebar(titlebar);
+    titlebar_info.init_titlebar(session, titlebar);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
@@ -369,11 +374,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         session->configure_streams(*surface, l);
     }
 
-    if (modifications.input_shape.is_set())
-    {
-        surface->set_input_region(modifications.input_shape.value());
-    }
-
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
@@ -397,6 +397,20 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         apply_resize(surface, surface_info.titlebar, top_left, new_size);
     }
 
+    if (modifications.input_shape.is_set())
+    {
+        auto rectangles = modifications.input_shape.value();
+        auto displacement = surface->top_left() - Point{0, 0}; 
+        for(auto& rect : rectangles)
+        {
+            rect.top_left = rect.top_left + displacement;
+            rect = rect.intersection_with({surface->top_left(), surface->size()});
+            rect.top_left = rect.top_left - displacement;
+        }
+        surface->set_input_region(rectangles);
+    }
+
+
     if (modifications.state.is_set())
     {
         auto const state = handle_set_state(surface, modifications.state.value());
@@ -407,6 +421,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     fullscreen_surfaces.erase(surface);
+    bool const is_active_surface{surface.lock() == active_surface()};
 
     auto& info = tools->info_for(surface);
 
@@ -428,6 +443,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     if (info.titlebar)
     {
         session->destroy_surface(info.titlebar_id);
+        session->destroy_buffer_stream(info.titlebar_stream_id);
         tools->forget(info.titlebar);
     }
 
@@ -442,11 +458,19 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-    if (surfaces.empty() && session == tools->focused_session())
+    if (is_active_surface)
     {
         active_surface_.reset();
-        tools->focus_next_session();
-        select_active_surface(tools->focused_surface());
+
+        if (surfaces.empty())
+        {
+            tools->focus_next_session();
+            select_active_surface(tools->focused_surface());
+        }
+        else
+        {
+            select_active_surface(surfaces[0].lock());
+        }
     }
 }
 
@@ -718,6 +742,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
     bool consumes_event = false;
+    bool resize_event = false;
 
     if (action == mir_pointer_action_button_down)
     {
@@ -735,6 +760,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
+            resize_event = active_surface_.lock().get();
             consumes_event = true;
         }
     }
@@ -753,6 +779,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         }
     }
 
+    resizing = resize_event;
     old_cursor = cursor;
     return consumes_event;
 }
@@ -837,39 +864,62 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
 
 bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface || !surface->input_area_contains(old_cursor))
+    if (!surface)
         return false;
+
+    auto const& surface_info = tools->info_for(surface);
 
     auto const top_left = surface->top_left();
     Rectangle const old_pos{top_left, surface->size()};
 
-    auto anchor = top_left;
-
-    for (auto const& corner : {
-        old_pos.top_right(),
-        old_pos.bottom_left(),
-        old_pos.bottom_right()})
+    if (!resizing)
     {
-        if ((old_cursor - anchor).length_squared() <
-            (old_cursor - corner).length_squared())
+        auto anchor = old_pos.bottom_right();
+
+        for (auto const& corner : {
+            old_pos.top_right(),
+            old_pos.bottom_left(),
+            top_left})
         {
-            anchor = corner;
+            if ((old_cursor - anchor).length_squared() <
+                (old_cursor - corner).length_squared())
+            {
+                anchor = corner;
+            }
         }
+
+        left_resize = anchor.x != top_left.x;
+        top_resize  = anchor.y != top_left.y;
     }
 
-    bool const left_resize = anchor.x != top_left.x;
-    bool const top_resize  = anchor.y != top_left.y;
     int const x_sign = left_resize? -1 : 1;
     int const y_sign = top_resize?  -1 : 1;
 
-    auto const delta = cursor-old_cursor;
+    auto delta = cursor-old_cursor;
 
-    Size new_size{old_pos.size.width + x_sign*delta.dx, old_pos.size.height + y_sign*delta.dy};
+    auto new_width = old_pos.size.width + x_sign * delta.dx;
+    auto new_height = old_pos.size.height + y_sign * delta.dy;
 
+    auto const min_width  = std::max(surface_info.min_width, Width{5});
+    auto const min_height = std::max(surface_info.min_height, Height{5});
+
+    if (new_width < min_width)
+    {
+        new_width = min_width;
+        if (delta.dx > DeltaX{0})
+            delta.dx = DeltaX{0};
+    }
+
+    if (new_height < min_height)
+    {
+        new_height = min_height;
+        if (delta.dy > DeltaY{0})
+            delta.dy = DeltaY{0};
+    }
+
+    Size new_size{new_width, new_height};
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
-
-    auto const& surface_info = tools->info_for(surface);
 
     surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
 

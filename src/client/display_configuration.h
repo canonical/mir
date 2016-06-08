@@ -47,12 +47,6 @@ void delete_config_storage(MirDisplayConfiguration* config);
 class DisplayConfiguration
 {
 public:
-    struct Config
-    {
-        std::vector<MirDisplayCard> cards;
-        std::vector<DisplayOutput> outputs;
-    };
-
     DisplayConfiguration();
     ~DisplayConfiguration();
 
@@ -62,11 +56,11 @@ public:
 
     //copying to a c POD, so kinda kludgy
     MirDisplayConfiguration* copy_to_client() const;
-    std::shared_ptr<Config> take_snapshot() const;
+    std::unique_ptr<protobuf::DisplayConfiguration> take_snapshot() const;
 
 private:
     std::mutex mutable guard;
-    std::shared_ptr<Config> config;
+    protobuf::DisplayConfiguration config;
 
     std::function<void()> notify_change;
 };

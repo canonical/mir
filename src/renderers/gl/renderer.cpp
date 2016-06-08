@@ -43,6 +43,40 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
+namespace
+{
+float cos_for(MirOrientation orientation)
+{
+    switch(orientation)
+    {
+    case mir_orientation_normal:
+        return 1.0f;
+    case mir_orientation_inverted:
+        return -1.0f;
+    case mir_orientation_left:
+    case mir_orientation_right:
+        return 0.0f;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
+    }
+}
+
+float sine_for(MirOrientation orientation)
+{
+    switch(orientation)
+    {
+    case mir_orientation_left:
+        return 1.0f;
+    case mir_orientation_right:
+        return -1.0f;
+    case mir_orientation_normal:
+    case mir_orientation_inverted:
+        return 0.0f;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
+    }
+}
+}
 mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
     : render_target{
         dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
@@ -61,6 +95,12 @@ mrg::CurrentRenderTarget::~CurrentRenderTarget()
 void mrg::CurrentRenderTarget::ensure_current()
 {
     render_target->make_current();
+}
+
+void mrg::CurrentRenderTarget::bind()
+{
+    ensure_current();
+    render_target->bind();
 }
 
 void mrg::CurrentRenderTarget::swap_buffers()
@@ -87,7 +127,9 @@ const GLchar* const mrg::Renderer::vshader =
 
 const GLchar* const mrg::Renderer::alpha_fshader =
 {
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -99,7 +141,9 @@ const GLchar* const mrg::Renderer::alpha_fshader =
 
 const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
@@ -126,8 +170,10 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
-      rotation(NAN) // ensure the first set_rotation succeeds
+      orientation(mir_orientation_normal),
+      mirror_mode(mir_mirror_mode_none)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
     {
@@ -177,7 +223,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_buffer.view_area());
-    set_rotation(0.0f);
 }
 
 mrg::Renderer::~Renderer()
@@ -194,7 +239,7 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
-    render_target.ensure_current();
+    render_target.bind();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -218,7 +263,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
         prog.last_used_frameno = frameno;
         glUniform1i(prog.tex_uniform, 0);
         glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_rotation));
+                           glm::value_ptr(display_transform));
         glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
                            glm::value_ptr(screen_to_gl_coords));
     }
@@ -340,43 +385,44 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
     float const vertical_fov_degrees = 30.0f;
     float const near =
-        (rect.size.height.as_float() / 2.0f) /
+        (rect.size.height.as_int() / 2.0f) /
         std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
     float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / rect.size.width.as_float(),
-                      -2.0f / rect.size.height.as_float(),
+            glm::vec3{2.0f / rect.size.width.as_int(),
+                      -2.0f / rect.size.height.as_int(),
                       2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
-            glm::vec3{-rect.top_left.x.as_float(),
-                      -rect.top_left.y.as_float(),
+            glm::vec3{-rect.top_left.x.as_int(),
+                      -rect.top_left.y.as_int(),
                       0.0f});
 
     viewport = rect;
 }
 
-void mrg::Renderer::set_rotation(float degrees)
+void mrg::Renderer::set_output_transform(MirOrientation new_orientation, MirMirrorMode new_mirror_mode)
 {
-    if (degrees == rotation)
+    if (new_orientation == orientation && new_mirror_mode == mirror_mode)
         return;
 
-    float rad = degrees * M_PI / 180.0f;
-    GLfloat cos = cosf(rad);
-    GLfloat sin = sinf(rad);
+    GLfloat const cos = cos_for(new_orientation);
+    GLfloat const sin = sine_for(new_orientation);
 
-    /*
-     * Transposed rotation matrix. You're reading it as transposed just
-     * because the C language is row-major. OpenGL however will load it as
-     * column-major. This is necessary because glUniformMatrix4fv in ES
-     * does not support the 'transpose' parameter, requiring it be GL_FALSE.
-     */
-    screen_rotation = {cos,  sin,  0.0f, 0.0f,
-                       -sin, cos,  0.0f, 0.0f,
-                       0.0f, 0.0f, 1.0f, 0.0f,
-                       0.0f, 0.0f, 0.0f, 1.0f};
+    glm::mat2 rotation_matrix(cos, sin, -sin, cos);
+    glm::mat2 mirror_matrix;
+    if (new_mirror_mode == mir_mirror_mode_horizontal)
+    {
+        mirror_matrix[0][0] = -1.0f;
+    }
+    else if (new_mirror_mode == mir_mirror_mode_vertical)
+    {
+        mirror_matrix[1][1] = -1.0f;
+    }
 
-    rotation = degrees;
+    display_transform = glm::mat4(mirror_matrix*rotation_matrix);
+    orientation = new_orientation;
+    mirror_mode = new_mirror_mode;
 }
 
 void mrg::Renderer::suspend()

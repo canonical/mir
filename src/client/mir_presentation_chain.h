@@ -19,19 +19,15 @@
 #ifndef MIR_CLIENT_MIR_PRESENTATION_CHAIN_H
 #define MIR_CLIENT_MIR_PRESENTATION_CHAIN_H
 
-#include "buffer_receiver.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_buffer.h"
 
-class MirPresentationChain : public mir::client::BufferReceiver
+class MirPresentationChain
 {
 public:
-    ~MirPresentationChain() = default;
-    virtual void allocate_buffer(
-        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback, void*) = 0;
-    virtual void submit_buffer(MirBuffer* buffer) = 0;
-    virtual void release_buffer(MirBuffer* buffer) = 0;
+    virtual ~MirPresentationChain() = default;
+    virtual void submit_buffer(mir::client::MirBuffer* buffer) = 0;
     virtual MirConnection* connection() const = 0;
     virtual int rpc_id() const = 0;
     virtual char const* error_msg() const = 0;

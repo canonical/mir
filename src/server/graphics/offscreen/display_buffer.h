@@ -67,10 +67,12 @@ public:
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
+    void bind() override;
     void release_current() override;
     void swap_buffers() override;
 
     MirOrientation orientation() const override;
+    MirMirrorMode mirror_mode() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 

@@ -22,6 +22,7 @@
 #include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_presentation_chain.h>
 #include <mir_toolkit/mir_buffer.h>
+#include <mir_toolkit/version.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
@@ -70,9 +71,8 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirPresentationChain* chain, MirBuffer* buffer, void* client_context)
+static void available_callback(MirBuffer* buffer, void* client_context)
 {
-    (void)chain;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;
@@ -147,18 +147,20 @@ int main(int argc, char** argv)
     if (!mir_presentation_chain_is_valid(chain))
     {
         printf("could not create MirPresentationChain\n");
+
+// TODO this is a frig to pass smoke tests until we support NBS by default
+#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
+        printf("This is currently an unreleased API - likely server support is switched off\n");
+        return 0;
+#else
         return -1;
+#endif
     }
 
     MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
-    //reassociate for advanced control
-    spec = mir_create_surface_spec(connection);
     mir_surface_spec_add_presentation_chain(
         spec, width, height, displacement_x, displacement_y, chain);
-    mir_surface_apply_spec(surface, spec);
+    MirSurface* surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;
@@ -172,8 +174,8 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         buffer_available[i].buffer = NULL;
 
-        mir_presentation_chain_allocate_buffer(
-            chain, width, height, format, usage, available_callback, &buffer_available[i]);
+        mir_connection_allocate_buffer(
+            connection, width, height, format, usage, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)

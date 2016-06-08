@@ -2,6 +2,7 @@ include(CMakeDependentOption)
 
 add_definitions(
   -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
+  -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -32,8 +33,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
   ${PROJECT_SOURCE_DIR}/src/platforms/android/include
+  ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
 
@@ -124,6 +126,8 @@ target_link_libraries(
   demo-shell
   mircommon
   client_platform_common
+  server_platform_common
+  kms_utils
 
   mirclient-static
   mirclientrpc-static

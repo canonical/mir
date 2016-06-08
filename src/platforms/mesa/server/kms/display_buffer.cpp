@@ -24,7 +24,7 @@
 #include "mir/fatal.h"
 
 #include <boost/throw_exception.hpp>
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 
 #include <stdexcept>
 #include <chrono>
@@ -184,6 +184,11 @@ MirOrientation mgm::DisplayBuffer::orientation() const
 {
     // Tell the renderer to do the rotation, since we're not doing it here.
     return rotation;
+}
+
+MirMirrorMode mgm::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
 }
 
 void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
@@ -449,6 +454,10 @@ void mgm::DisplayBuffer::make_current()
     {
         fatal_error("Failed to make EGL surface current");
     }
+}
+
+void mgm::DisplayBuffer::bind()
+{
 }
 
 void mgm::DisplayBuffer::release_current()

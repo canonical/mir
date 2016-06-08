@@ -1,4 +1,7 @@
 usr/bin/mirping
+usr/bin/mirvanity
 usr/bin/mirout
+usr/bin/mirin
 usr/bin/mirscreencast
 usr/bin/mirbacklight
+usr/bin/mirrun

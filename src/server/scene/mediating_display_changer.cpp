@@ -17,6 +17,7 @@
  */
 
 #include <condition_variable>
+#include <boost/throw_exception.hpp>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -28,12 +29,15 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
+#include "mir/time/alarm_factory.h"
+#include "mir/time/alarm.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
+namespace mt = mir::time;
 
 namespace
 {
@@ -69,7 +73,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
     std::shared_ptr<mg::DisplayConfigurationReport> const& report,
-    std::shared_ptr<mi::InputRegion> const& region)
+    std::shared_ptr<mi::InputRegion> const& region,
+    std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
@@ -79,7 +84,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       report{report},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
-      region{region}
+      region{region},
+      alarm_factory{alarm_factory}
 {
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
@@ -146,6 +152,61 @@ void ms::MediatingDisplayChanger::configure(
                     apply_config(conf, PauseResumeSystem);
             }
         });
+}
+
+void
+ms::MediatingDisplayChanger::preview_base_configuration(
+    std::weak_ptr<frontend::Session> const& session,
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+    std::chrono::seconds timeout)
+{
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+
+        if (preview_configuration_timeout)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error{"Another client is currently changing base configuration"});
+        }
+
+        preview_configuration_timeout = alarm_factory->create_alarm(
+            [this, session]()
+                {
+                    if (auto live_session = session.lock())
+                    {
+                        apply_base_config(PauseResumeSystem);
+                        live_session->send_display_config(*base_configuration());
+                    }
+                });
+    }
+
+    server_action_queue->enqueue(
+        this,
+        [this, conf, session, timeout]()
+        {
+            if (auto live_session = session.lock())
+            {
+                {
+                    std::lock_guard<std::mutex> lock{configuration_mutex};
+                    preview_configuration_timeout->reschedule_in(timeout);
+                }
+
+                apply_config(conf, PauseResumeSystem);
+                live_session->send_display_config(*conf);
+            }
+        });
+}
+
+void
+ms::MediatingDisplayChanger::confirm_base_configuration(
+    std::shared_ptr<frontend::Session> const& /*session*/,
+    std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf)
+{
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+        preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
+    }
+    set_base_configuration(confirmed_conf);
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -292,11 +353,10 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 void ms::MediatingDisplayChanger::update_input_rectangles(mg::DisplayConfiguration const& config)
 {
     geometry::Rectangles rectangles;
-    config.for_each_output(
-        [&rectangles](mg::DisplayConfigurationOutput const& output)
-        {
-            if (output.power_mode == mir_power_mode_on && output.current_mode_index < output.modes.size())
-                rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
-        });
+    config.for_each_output([&rectangles](mg::DisplayConfigurationOutput const& output) {
+        if (output.used && output.connected && output.power_mode == mir_power_mode_on &&
+            output.current_mode_index < output.modes.size())
+            rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
+    });
     region->set_input_rectangles(rectangles);
 }

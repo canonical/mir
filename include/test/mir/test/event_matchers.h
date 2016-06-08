@@ -20,6 +20,8 @@
 #ifndef MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
+#include <cmath>
+
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>
@@ -259,9 +261,9 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }
@@ -293,9 +295,9 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, button) == true)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }
@@ -383,16 +385,21 @@ MATCHER_P(PointerEventWithModifiers, modifiers, "")
     return false;
 }
 
-MATCHER_P2(PointerEventWithDiff, dx, dy, "")
+MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
     if (pev == nullptr)
         return false;
     if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x) != dx)
+    auto const error = 0.00001f;
+    auto const actual_dx = mir_pointer_event_axis_value(pev,
+                                                mir_pointer_axis_relative_x);
+    if (std::abs(expect_dx - actual_dx) > error)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y) != dy)
+    auto const actual_dy = mir_pointer_event_axis_value(pev,
+                                                mir_pointer_axis_relative_y);
+    if (std::abs(expect_dy - actual_dy) > error)
         return false;
     return true;
 }

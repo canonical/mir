@@ -25,14 +25,17 @@ namespace mcl = mir::client;
 mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
-    std::shared_ptr<ClientBuffer> const& buffer) :
+    std::shared_ptr<ClientBuffer> const& buffer,
+    MirConnection* connection,
+    MirBufferUsage usage) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
-    owned(true)
+    owned(false),
+    connection(connection),
+    usage(usage)
 {
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
 
 int mcl::Buffer::rpc_id() const
@@ -45,18 +48,33 @@ void mcl::Buffer::submitted()
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
         BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
+    buffer->mark_as_submitted();
     mapped_region.reset();
     owned = false;
 }
 
 void mcl::Buffer::received()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    if (!owned)
     {
-        owned = true;
-        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        if (!owned)
+            owned = true;
     }
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
+
+}
+
+void mcl::Buffer::received(MirBufferPackage const& update_package)
+{
+    {
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        if (!owned)
+        {
+            owned = true;
+            buffer->update_from(update_package);
+        }
+    }
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -90,4 +108,33 @@ MirNativeFence* mcl::Buffer::get_fence() const
 bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
 {
     return buffer->wait_fence(access, timeout);
+}
+
+MirConnection* mcl::Buffer::allocating_connection() const
+{
+    return connection;
+}
+
+MirBufferUsage mcl::Buffer::buffer_usage() const
+{
+    return usage;
+}
+
+MirPixelFormat mcl::Buffer::pixel_format() const
+{
+    return buffer->pixel_format();
+}
+
+mir::geometry::Size mcl::Buffer::size() const
+{
+    return buffer->size();
+}
+std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
+{
+    return buffer;
+}
+
+void mcl::Buffer::increment_age()
+{
+    buffer->increment_age();
 }

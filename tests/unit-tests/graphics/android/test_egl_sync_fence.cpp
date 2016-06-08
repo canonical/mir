@@ -42,9 +42,9 @@ TEST_F(EglSyncFence, creation_failure_throws)
         .WillOnce(Return(EGL_NO_SYNC_KHR));
 
     mg::EGLSyncFence fence(sync_extensions);
-    EXPECT_THROW({
+    EXPECT_NO_THROW({
         fence.raise();
-    }, std::runtime_error); 
+    });
 }
 
 TEST_F(EglSyncFence, raise_sets_sync_point)

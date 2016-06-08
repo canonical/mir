@@ -209,11 +209,11 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         );
 }
 
-void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(std::shared_ptr<Device> const&)> const& callback)
+void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     for (auto const& item : handles)
-        callback(item);
+        callback(*item);
 }
 
 void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& element)
@@ -244,17 +244,23 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
-    auto handle_it = remove_if(begin(handles),
-                               end(handles),
-                               [&id](auto const& handle){return handle->id() == id;});
+    auto handle_it = remove_if(
+        begin(handles),
+        end(handles),
+        [this,&id](auto const& handle)
+        {
+            if (handle->id() != id)
+                return false;
+            for (auto const& observer : observers)
+            {
+                observer->device_removed(handle);
+                observer->changes_complete();
+            }
+            return true;
+        });
 
     if (handle_it == end(handles))
         return;
-    for (auto const& observer : observers)
-    {
-        observer->device_removed(*handle_it);
-        observer->changes_complete();
-    }
 
     handles.erase(handle_it, end(handles));
     sink->handle_input_device_change(handles);

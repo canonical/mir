@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,6 +20,8 @@
 #define MIR_INPUT_KEY_REPEAT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
+#include "mir/input/input_device_observer.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 #include <chrono>
@@ -39,8 +41,8 @@ class Alarm;
 }
 namespace input
 {
-
-class KeyRepeatDispatcher : public mir::input::InputDispatcher
+class InputDeviceHub;
+class KeyRepeatDispatcher : public InputDispatcher
 {
 public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
@@ -48,13 +50,18 @@ public:
                         std::shared_ptr<cookie::Authority> const& cookie_authority,
                         bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
-                        std::chrono::milliseconds repeat_delay /* delay between repeated keys */);
+                        std::chrono::milliseconds repeat_delay, /* delay between repeated keys */
+                        bool disable_repeat_on_touchscreen);
 
     // InputDispatcher
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
-    
+
+    void set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub);
+
+    void set_touch_button_device(MirInputDeviceId id);
+    void remove_device(MirInputDeviceId id);
 private:
     std::mutex repeat_state_mutex;
 
@@ -64,6 +71,8 @@ private:
     bool const repeat_enabled;
     std::chrono::milliseconds repeat_timeout;
     std::chrono::milliseconds repeat_delay;
+    bool const disable_repeat_on_touchscreen;
+    optional_value<MirInputDeviceId> touch_button_device;
 
     struct KeyboardState
     {

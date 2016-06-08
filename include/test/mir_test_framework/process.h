@@ -54,6 +54,9 @@ struct Result
     // Was the process terminated by a signal?
     bool signalled() const;
 
+    // Was the process terminated normally?
+    bool exited_normally() const;
+
     TerminationReason reason;
     int exit_code;
     int signal;

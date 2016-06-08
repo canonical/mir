@@ -40,7 +40,10 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&focus_out_event_return, 0, sizeof(XEvent));
     std::memset(&vscroll_event_return, 0, sizeof(XEvent));
     std::memset(&motion_event_return, 0, sizeof(XEvent));
-    visual_info.depth = 24;
+    std::memset(&enter_notify_event_return, 0, sizeof(XEvent));
+    std::memset(&leave_notify_event_return, 0, sizeof(XEvent));
+    std::memset(&visual_info, 0, sizeof(XVisualInfo));
+    visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
     button_release_event_return.xbutton.button = 0;
@@ -51,6 +54,8 @@ mtd::FakeX11Resources::FakeX11Resources()
     XButtonEvent& xbev = (XButtonEvent&)vscroll_event_return;
     xbev.button = Button4;
     motion_event_return.type = MotionNotify;
+    enter_notify_event_return.type = EnterNotify;
+    leave_notify_event_return.type = LeaveNotify;
 }
 
 mtd::MockX11::MockX11()
@@ -64,13 +69,20 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(fake_x11.display));
 
     ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
-    .WillByDefault(Return(&fake_x11.visual_info));
+    .WillByDefault(DoAll(SetArgPointee<3>(1),
+                         Return(&fake_x11.visual_info)));
 
     ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
     .WillByDefault(Return(fake_x11.window));
 
     ON_CALL(*this, XInitThreads())
     .WillByDefault(Return(1));
+
+    ON_CALL(*this, XPending(_))
+    .WillByDefault(InvokeWithoutArgs([this]()
+                                     {
+                                         return fake_x11.pending_events;
+                                     }));
 }
 
 mtd::MockX11::~MockX11()
@@ -135,7 +147,9 @@ int XConnectionNumber(Display* display)
 
 int XNextEvent(Display* display, XEvent* event_return)
 {
-    return global_mock->XNextEvent(display, event_return);
+    auto const result = global_mock->XNextEvent(display, event_return);
+    if (result) --global_mock->fake_x11.pending_events;
+    return result;
 }
 
 int XLookupString(XKeyEvent* event_struct, char* buffer_return, int bytes_buffer, KeySym* keysym_return, XComposeStatus* status_in_out)
@@ -186,4 +200,17 @@ int XSetWMHints(Display* display, Window window, XWMHints* wmhints)
 int XPending(Display* display)
 {
     return global_mock->XPending(display);
+}
+
+int XGrabPointer(Display* display, Window grab_window, Bool owner_events,
+                 unsigned int event_mask, int pointer_mode, int keyboard_mode,
+                 Window confine_to, Cursor cursor, Time time)
+{
+    return global_mock->XGrabPointer(display, grab_window, owner_events, event_mask,
+                                     pointer_mode, keyboard_mode, confine_to, cursor, time);
+}
+
+int XUngrabPointer(Display* display, Time time)
+{
+    return global_mock->XUngrabKeyboard(display, time);
 }

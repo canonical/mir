@@ -22,31 +22,62 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mir
 {
+namespace graphics
+{
+class Display;
+class GLContext;
+}
 namespace renderer { namespace gl { class TextureSource; }}
 namespace compositor
 {
+
 namespace detail
 {
 
-template <void (*Generate)(GLsizei,GLuint*), void (*Delete)(GLsizei,GLuint const*)>
+template <void (*Delete)(GLsizei,GLuint const*)>
 class GLResource
 {
 public:
-    GLResource() { Generate(1, &resource); }
-    ~GLResource() { Delete(1, &resource); }
+    GLResource() {}
+    GLResource(GLuint resource) : resource{resource} {}
+    ~GLResource() { reset(); }
+
     operator GLuint() const { return resource; }
+
+    void reset()
+    {
+        if (resource)
+        {
+            Delete(1, &resource);
+            resource = 0;
+        }
+    }
+
+    GLResource(GLResource&& other) : resource {other.resource}
+    {
+        other.resource = 0;
+    }
+
+    GLResource& operator=(GLResource&& other)
+    {
+        resource = other.resource;
+        other.resource = 0;
+        return *this;
+    }
 
 private:
     GLResource(GLResource const&) = delete;
     GLResource& operator=(GLResource const&) = delete;
-    GLuint resource = 0;
+    GLuint resource{0};
 };
 }
 
+class Schedule;
 class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
                                 public graphics::NativeDisplayBuffer,
                                 public renderer::gl::RenderTarget
@@ -54,12 +85,18 @@ class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
 public:
     ScreencastDisplayBuffer(
         geometry::Rectangle const& rect,
-        graphics::Buffer& buffer);
+        geometry::Size const& size,
+        MirMirrorMode mirror_mode,
+        Schedule& free_queue,
+        Schedule& ready_queue,
+        graphics::Display& display);
     ~ScreencastDisplayBuffer();
 
     geometry::Rectangle view_area() const override;
 
     void make_current() override;
+
+    void bind() override;
 
     void release_current() override;
 
@@ -69,17 +106,25 @@ public:
 
     MirOrientation orientation() const override;
 
+    MirMirrorMode mirror_mode() const override;
+
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
+    std::unique_ptr<graphics::GLContext> gl_context;
     geometry::Rectangle const rect;
-    graphics::Buffer& buffer;
-    renderer::gl::TextureSource* texture_source;
+    MirMirrorMode const mirror_mode_;
+
+    Schedule& free_queue;
+    Schedule& ready_queue;
+    std::shared_ptr<graphics::Buffer> current_buffer;
+
     GLint old_fbo;
     GLint old_viewport[4];
-    detail::GLResource<glGenTextures,glDeleteTextures> const color_tex;
-    detail::GLResource<glGenRenderbuffers,glDeleteRenderbuffers> const depth_rbo;
-    detail::GLResource<glGenFramebuffers,glDeleteFramebuffers> const fbo;
+
+    detail::GLResource<glDeleteTextures> color_tex;
+    detail::GLResource<glDeleteRenderbuffers> depth_rbo;
+    detail::GLResource<glDeleteFramebuffers> fbo;
 };
 
 }

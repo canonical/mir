@@ -77,7 +77,7 @@ TEST_F(BufferStreamTest, force_requests_to_complete)
         .Times(2);  // Once explcit, once on destruction
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    buffer_stream.force_requests_to_complete();
+    buffer_stream.drop_outstanding_requests();
 }
 
 TEST_F(BufferStreamTest, requests_are_completed_before_destruction)
@@ -230,18 +230,6 @@ TEST_F(BufferStreamTest, notifies_on_swap)
     buffer_stream.swap_buffers(buffer, complete);
     buffer_stream.swap_buffers(buffer, complete);
     buffer_stream.swap_buffers(buffer, complete);
-}
-
-TEST_F(BufferStreamTest, allocate_and_release_not_supported)
-{
-    mg::BufferProperties properties;
-    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    EXPECT_THROW({
-        buffer_stream.allocate_buffer(properties);
-    }, std::logic_error);
-    EXPECT_THROW({
-        buffer_stream.remove_buffer(mg::BufferID{3});
-    }, std::logic_error);
 }
 
 TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)

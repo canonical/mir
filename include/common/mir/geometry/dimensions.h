@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -38,19 +38,19 @@ class IntWrapper
 public:
     typedef int ValueType;
 
-    IntWrapper() : value(0) {}
-    template<typename AnyInteger>
-    explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
+    constexpr IntWrapper() : value(0) {}
+    constexpr IntWrapper(IntWrapper const& that) = default;
+    IntWrapper& operator=(IntWrapper const& that) = default;
 
-    uint32_t as_uint32_t() const  // TODO: Deprecate this later
+    template<typename AnyInteger>
+    explicit constexpr IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
+
+    constexpr uint32_t as_uint32_t() const  // TODO: Deprecate this later
     {
         return (uint32_t)value;
     }
-    int as_int() const
-    {
-        return value;
-    }
-    float as_float() const
+
+    constexpr int as_int() const
     {
         return value;
     }
@@ -67,37 +67,37 @@ std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
 }
 
 template<typename Tag>
-inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() == rhs.as_int();
 }
 
 template<typename Tag>
-inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() != rhs.as_int();
 }
 
 template<typename Tag>
-inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() <= rhs.as_int();
 }
 
 template<typename Tag>
-inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() >= rhs.as_int();
 }
 
 template<typename Tag>
-inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() < rhs.as_int();
 }
 
 template<typename Tag>
-inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+inline constexpr bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_int() > rhs.as_int();
 }
@@ -114,55 +114,55 @@ typedef detail::IntWrapper<struct DeltaXTag> DeltaX;
 typedef detail::IntWrapper<struct DeltaYTag> DeltaY;
 
 // Adding deltas is fine
-inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() + rhs.as_int()); }
-inline DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + rhs.as_int()); }
-inline DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
-inline DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() + rhs.as_int()); }
+inline constexpr DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + rhs.as_int()); }
+inline constexpr DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 // Adding deltas to co-ordinates is fine
-inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
-inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
-inline X operator-(X lhs, DeltaX rhs) { return X(lhs.as_int() - rhs.as_int()); }
-inline Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_int() - rhs.as_int()); }
+inline constexpr X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
+inline constexpr Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
+inline constexpr X operator-(X lhs, DeltaX rhs) { return X(lhs.as_int() - rhs.as_int()); }
+inline constexpr Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_int() - rhs.as_int()); }
 inline X& operator+=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() + rhs.as_int()); }
 inline Y& operator+=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() + rhs.as_int()); }
 inline X& operator-=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() - rhs.as_int()); }
 inline Y& operator-=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() - rhs.as_int()); }
 
 // Adding deltas to Width and Height is fine
-inline Width operator+(Width lhs, DeltaX rhs) { return Width(lhs.as_int() + rhs.as_int()); }
-inline Height operator+(Height lhs, DeltaY rhs) { return Height(lhs.as_int() + rhs.as_int()); }
-inline Width operator-(Width lhs, DeltaX rhs) { return Width(lhs.as_int() - rhs.as_int()); }
-inline Height operator-(Height lhs, DeltaY rhs) { return Height(lhs.as_int() - rhs.as_int()); }
+inline constexpr Width operator+(Width lhs, DeltaX rhs) { return Width(lhs.as_int() + rhs.as_int()); }
+inline constexpr Height operator+(Height lhs, DeltaY rhs) { return Height(lhs.as_int() + rhs.as_int()); }
+inline constexpr Width operator-(Width lhs, DeltaX rhs) { return Width(lhs.as_int() - rhs.as_int()); }
+inline constexpr Height operator-(Height lhs, DeltaY rhs) { return Height(lhs.as_int() - rhs.as_int()); }
 
 // Subtracting coordinates is fine
-inline DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
-inline DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 //Subtracting Width and Height is fine
-inline DeltaX operator-(Width lhs, Width rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
-inline DeltaY operator-(Height lhs, Height rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaX operator-(Width lhs, Width rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaY operator-(Height lhs, Height rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 // Multiplying by a scalar value is fine
 template<typename Scalar>
-inline Width operator*(Scalar scale, Width const& w) { return Width{scale*w.as_int()}; }
+inline constexpr Width operator*(Scalar scale, Width const& w) { return Width{scale*w.as_int()}; }
 template<typename Scalar>
-inline Height operator*(Scalar scale, Height const& h) { return Height{scale*h.as_int()}; }
+inline constexpr Height operator*(Scalar scale, Height const& h) { return Height{scale*h.as_int()}; }
 template<typename Scalar>
-inline DeltaX operator*(Scalar scale, DeltaX const& dx) { return DeltaX{scale*dx.as_int()}; }
+inline constexpr DeltaX operator*(Scalar scale, DeltaX const& dx) { return DeltaX{scale*dx.as_int()}; }
 template<typename Scalar>
-inline DeltaY operator*(Scalar scale, DeltaY const& dy) { return DeltaY{scale*dy.as_int()}; }
+inline constexpr DeltaY operator*(Scalar scale, DeltaY const& dy) { return DeltaY{scale*dy.as_int()}; }
 template<typename Scalar>
-inline Width operator*(Width const& w, Scalar scale) { return scale*w; }
+inline constexpr Width operator*(Width const& w, Scalar scale) { return scale*w; }
 template<typename Scalar>
-inline Height operator*(Height const& h, Scalar scale) { return scale*h; }
+inline constexpr Height operator*(Height const& h, Scalar scale) { return scale*h; }
 template<typename Scalar>
-inline DeltaX operator*(DeltaX const& dx, Scalar scale) { return scale*dx; }
+inline constexpr DeltaX operator*(DeltaX const& dx, Scalar scale) { return scale*dx; }
 template<typename Scalar>
-inline DeltaY operator*(DeltaY const& dy, Scalar scale) { return scale*dy; }
+inline constexpr DeltaY operator*(DeltaY const& dy, Scalar scale) { return scale*dy; }
 
 template<typename Target, typename Source>
-inline Target dim_cast(Source s) { return Target(s.as_int()); }
+inline constexpr Target dim_cast(Source s) { return Target(s.as_int()); }
 }
 }
 

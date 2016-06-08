@@ -44,9 +44,12 @@ using namespace testing;
 
 namespace
 {
-struct TestSurfaceStack : public ms::SurfaceStack
+struct TestSurfaceStack : public msh::SurfaceStack
 {
-    using ms::SurfaceStack::SurfaceStack;
+    std::shared_ptr<msh::SurfaceStack> const wrapped;
+    TestSurfaceStack(std::shared_ptr<msh::SurfaceStack> const& wrapped)
+        : wrapped{wrapped}
+    {}
 
     MOCK_METHOD2(add_surface, void(
         std::shared_ptr<ms::Surface> const& surface,
@@ -55,16 +58,31 @@ struct TestSurfaceStack : public ms::SurfaceStack
     MOCK_METHOD1(raise, void(
         std::weak_ptr<ms::Surface> const& surface));
 
+    void raise(SurfaceSet const& surfaces) override
+    {
+        wrapped->raise(surfaces);
+    }
+
+    void remove_surface(std::weak_ptr<ms::Surface> const& surface) override
+    {
+        wrapped->remove_surface(surface);
+    }
+
+    auto surface_at(mir::geometry::Point point) const -> std::shared_ptr<ms::Surface> override
+    {
+        return wrapped->surface_at(point);
+    }
+
     void default_add_surface(
         std::shared_ptr<ms::Surface> const& surface,
         mir::input::InputReceptionMode input_mode)
     {
-        ms::SurfaceStack::add_surface(surface, input_mode);
+        wrapped->add_surface(surface, input_mode);
     }
 
     void default_raise(std::weak_ptr<ms::Surface> const& surface)
     {
-        ms::SurfaceStack::raise(surface);
+        wrapped->raise(surface);
     }
 
 };
@@ -73,17 +91,11 @@ struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
 
     std::shared_ptr<msh::SurfaceStack>
-    the_surface_stack() override
+    wrap_surface_stack(std::shared_ptr<msh::SurfaceStack> const& wrapped) override
     {
-        return scene_surface_stack(
-            [this]()
-            {
-                auto const scene_report = the_scene_report();
-
-                test_surface_stack = std::make_shared<TestSurfaceStack>(scene_report);
-
-                return test_surface_stack;
-            });
+        if (!test_surface_stack)
+            test_surface_stack = std::make_shared<TestSurfaceStack>(wrapped);
+        return test_surface_stack;
     }
 
     std::shared_ptr<TestSurfaceStack> test_surface_stack;
@@ -95,8 +107,6 @@ struct SessionManagement : Test
     std::shared_ptr<mf::EventSink> const event_sink = std::make_shared<mtd::NullEventSink>();
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
-    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100).of_type(mir_surface_type_normal);
-
     void SetUp()
     {
         ASSERT_THAT(test_surface_stack, Ne(nullptr));
@@ -116,6 +126,13 @@ MATCHER_P(WeakPtrTo, p, "")
 TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 {
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
+
+    mir::graphics::BufferProperties properties(
+        mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::software);
+    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters()
+        .of_size(100,100)
+        .of_type(mir_surface_type_normal)
+        .with_buffer_stream(session->create_buffer_stream(properties));
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_)).Times(1);
     session_manager->create_surface(session, params, event_sink);

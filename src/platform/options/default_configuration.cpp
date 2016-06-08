@@ -47,7 +47,7 @@ char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
-char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
+char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
 char const* const mo::composite_delay_opt         = "composite-delay";
@@ -172,7 +172,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (nbuffers_opt, po::value<int>()->default_value(3),
+        (nbuffers_opt, po::value<int>()->default_value(0),
             "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),
             "Compositor frame delay in milliseconds (how long to wait for new "
@@ -187,8 +187,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
-        (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] abort (to get a core dump)")
+        (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
+            "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
             "This is only interesting for people doing Mir server or client development.");
 

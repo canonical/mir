@@ -42,6 +42,10 @@
 
 namespace mir
 {
+namespace input
+{
+class InputDevices;
+}
 namespace protobuf
 {
 class BufferStream;
@@ -60,6 +64,7 @@ class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
+class AsyncBufferFactory;
 
 namespace rpc
 {
@@ -130,15 +135,17 @@ public:
 
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
+    void register_error_callback(mir_error_callback callback, void* context);
+
     void populate(MirPlatformPackage& platform_package);
-    void populate_graphics_module(MirModuleProperties& properties);
+    void populate_graphics_module(MirModuleProperties& properties) override;
     MirDisplayConfiguration* create_copy_of_display_config();
-    std::shared_ptr<mir::client::DisplayConfiguration::Config> snapshot_display_configuration() const;
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
-       mir::protobuf::BufferStream const& protobuf_bs, mir::geometry::Size);
+       mir::protobuf::BufferStream const& protobuf_bs);
 
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
@@ -169,6 +176,11 @@ public:
     void done_display_configure();
 
     MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
+    void preview_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const& configuration,
+        std::chrono::seconds timeout);
+    void confirm_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const& configuration);
     void done_set_base_display_configuration();
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel() const
@@ -178,7 +190,15 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
+    std::shared_ptr<mir::input::InputDevices> const& the_input_devices() const
+    {
+        return input_devices;
+    }
+
+    void allocate_buffer(
+        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir_buffer_callback callback, void* context);
+    void release_buffer(int buffer_id);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -240,7 +260,9 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
+    std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;
     mir::client::rpc::DisplayServerDebug debug;
@@ -259,7 +281,7 @@ private:
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
-    std::shared_ptr<mir::client::ClientPlatform> platform;
+    std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
@@ -276,6 +298,7 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
+    std::shared_ptr<mir::input::InputDevices> const input_devices;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
@@ -289,6 +312,8 @@ private:
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
+
+    mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
     struct StreamRelease;

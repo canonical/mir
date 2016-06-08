@@ -22,6 +22,11 @@
 #include "mir/libname.h"
 
 #include <boost/throw_exception.hpp>
+#include <stdlib.h>
+#include <unordered_map>
+#include <libgen.h>
+#include <malloc.h>
+#include <mir/shared_library.h>
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;
@@ -35,13 +40,87 @@ class ProgramOption;
 
 namespace
 {
-class ExceptionThrowingPlatform : public mir::test::doubles::NullPlatform
+class ExceptionThrowingPlatform : public mg::Platform
 {
 public:
     ExceptionThrowingPlatform()
+        : should_throw{parse_exception_request(getenv("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS"))}
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
+        if (should_throw.at(ExceptionLocation::at_constructor))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
+
+        std::unique_ptr<char, void(*)(void*)> library_path{strdup(mir::libname()), &free};
+        auto platform_path = dirname(library_path.get());
+
+        mir::SharedLibrary stub_platform_library{std::string(platform_path) + "/graphics-dummy.so"};
+        auto create_stub_platform = stub_platform_library.load_function<mg::CreateHostPlatform>("create_host_platform");
+
+        stub_platform = create_stub_platform(nullptr, nullptr, nullptr);
     }
+
+    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    {
+        if (should_throw.at(ExceptionLocation::at_create_buffer_allocator))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_buffer_allocator"));
+
+        return stub_platform->create_buffer_allocator();
+    }
+
+    mir::UniqueModulePtr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& ptr,
+        std::shared_ptr<mg::GLConfig> const& shared_ptr) override
+    {
+        if (should_throw.at(ExceptionLocation::at_create_display))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_display"));
+
+        return stub_platform->create_display(ptr, shared_ptr);
+    }
+
+    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        if (should_throw.at(ExceptionLocation::at_make_ipc_operations))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during make_ipc_operations"));
+
+        return stub_platform->make_ipc_operations();
+    }
+
+    EGLNativeDisplayType egl_native_display() const override
+    {
+        if (should_throw.at(ExceptionLocation::at_egl_native_display))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
+
+        return stub_platform->egl_native_display();
+    }
+
+private:
+    enum ExceptionLocation : uint32_t
+    {
+        at_constructor,
+        at_create_buffer_allocator,
+        at_create_display,
+        at_make_ipc_operations,
+        at_egl_native_display
+    };
+
+    static std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> parse_exception_request(char const* request)
+    {
+        std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> requested_exceptions;
+        requested_exceptions[ExceptionLocation::at_constructor] =
+            static_cast<bool>(strstr(request, "constructor"));
+        requested_exceptions[ExceptionLocation::at_create_buffer_allocator] =
+            static_cast<bool>(strstr(request, "create_buffer_allocator"));
+        requested_exceptions[ExceptionLocation::at_create_display] =
+            static_cast<bool>(strstr(request, "create_display"));
+        requested_exceptions[ExceptionLocation::at_make_ipc_operations] =
+            static_cast<bool>(strstr(request, "make_ipc_operations"));
+        requested_exceptions[ExceptionLocation::at_egl_native_display] =
+            static_cast<bool>(strstr(request, "egl_native_display"));
+
+        return requested_exceptions;
+    };
+
+    std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> const should_throw;
+    mir::UniqueModulePtr<mg::Platform> stub_platform;
 };
 
 }

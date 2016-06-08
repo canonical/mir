@@ -29,14 +29,11 @@
 #include <sys/socket.h>
 #include <math.h>
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 
 namespace android {
-
-// Socket buffer size.  The default is typically about 128KB, which is much larger than
-// we really need.  So we make it smaller.  It just needs to be big enough to hold
-// a few dozen large multi-finger motion events in the case where an application gets
-// behind processing touches.
-static const size_t SOCKET_BUFFER_SIZE = 32 * 1024;
 
 // Nanoseconds per milliseconds.
 static constexpr const std::chrono::nanoseconds NANOS_PER_MS = std::chrono::nanoseconds(1000000);
@@ -68,16 +65,32 @@ InputMessage::InputMessage()
     memset(this, 0, sizeof(InputMessage));
 }
 
+InputMessage::InputMessage(uint32_t seq, std::string const& buffer)
+{
+    memset(this, 0, sizeof(InputMessage));
+    header.type = TYPE_BUFFER;
+    header.seq = seq;
+    header.size = buffer.size();
+
+    if (raw_event_payload < buffer.size())
+        BOOST_THROW_EXCEPTION(std::runtime_error("raw buffer event exceeds payload"));
+    memcpy(body.buffer.buffer, buffer.data(), header.size);
+}
+
+InputMessage::InputMessage(InputMessage const& cp) = default;
+
+InputMessage& InputMessage::operator=(InputMessage const& cp) = default;
+
 bool InputMessage::isValid(size_t actualSize) const {
     if (size() == actualSize) {
         switch (header.type) {
+        case TYPE_FINISHED:
+        case TYPE_BUFFER:
         case TYPE_KEY:
             return true;
         case TYPE_MOTION:
             return body.motion.pointerCount > 0
                     && body.motion.pointerCount <= MAX_POINTERS;
-        case TYPE_FINISHED:
-            return true;
         }
     }
     return false;
@@ -91,11 +104,11 @@ size_t InputMessage::size() const {
         return sizeof(Header) + body.motion.size();
     case TYPE_FINISHED:
         return sizeof(Header) + body.finished.size();
+    case TYPE_BUFFER:
+        return sizeof(Header) + header.size;
     }
     return sizeof(Header);
 }
-
-
 // --- InputChannel ---
 
 InputChannel::InputChannel(const String8& name, int fd) :
@@ -115,29 +128,6 @@ InputChannel::~InputChannel() {
     ALOGD("Input channel destroyed: name='%s', fd=%d",
         c_str(mName), mFd);
 #endif
-}
-
-status_t InputChannel::openInputFdPair(int& server_fd, int& client_fd) {
-    int sockets[2];
-    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, sockets)) {
-        status_t result = -errno;
-        ALOGE("InputChannel ~ Could not create socket pair.  errno=%d",
-            errno);
-        server_fd = client_fd = 0;
-
-        return result;
-    }
-
-    int bufferSize = SOCKET_BUFFER_SIZE;
-    setsockopt(sockets[0], SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[0], SOL_SOCKET, SO_RCVBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[1], SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[1], SOL_SOCKET, SO_RCVBUF, &bufferSize, sizeof(bufferSize));
-
-    server_fd = sockets[0];
-    client_fd = sockets[1];
-    
-    return OK;
 }
 
 status_t InputChannel::sendMessage(const InputMessage* msg) {
@@ -226,6 +216,20 @@ InputPublisher::InputPublisher(const sp<InputChannel>& channel) :
 InputPublisher::~InputPublisher() {
 }
 
+status_t InputPublisher::publishEventBuffer(uint32_t seq, std::string const& buffer) {
+#if DEBUG_TRANSPORT_ACTIONS
+    ALOGD("channel '%s' publisher ~ publishInputBuffer: seq=%u", c_str(mChannel->getName()), seq);
+#endif
+
+    if (!seq) {
+        ALOGE("Attempted to publish a buffer with sequence number 0.");
+        return BAD_VALUE;
+    }
+
+    InputMessage msg(seq, buffer);
+    return mChannel->sendMessage(&msg);
+}
+
 status_t InputPublisher::publishKeyEvent(
         uint32_t seq,
         int32_t deviceId,
@@ -255,7 +259,8 @@ status_t InputPublisher::publishKeyEvent(
 
     InputMessage msg;
     msg.header.type = InputMessage::TYPE_KEY;
-    msg.body.key.seq = seq;
+    msg.header.seq = seq;
+    msg.header.size = sizeof(msg.body.key);
     msg.body.key.deviceId = deviceId;
     msg.body.key.source = source;
     msg.body.key.action = action;
@@ -313,7 +318,7 @@ status_t InputPublisher::publishMotionEvent(
 
     InputMessage msg;
     msg.header.type = InputMessage::TYPE_MOTION;
-    msg.body.motion.seq = seq;
+    msg.header.seq = seq;
     msg.body.motion.deviceId = deviceId;
     msg.body.motion.source = source;
     msg.body.motion.action = action;
@@ -333,6 +338,8 @@ status_t InputPublisher::publishMotionEvent(
         msg.body.motion.pointers[i].properties.copyFrom(pointerProperties[i]);
         msg.body.motion.pointers[i].coords.copyFrom(pointerCoords[i]);
     }
+
+    msg.header.size = msg.body.motion.size();
     return mChannel->sendMessage(&msg);
 }
 
@@ -354,7 +361,7 @@ status_t InputPublisher::receiveFinishedSignal(uint32_t* outSeq, bool* outHandle
             c_str(mChannel->getName()), msg.header.type);
         return UNKNOWN_ERROR;
     }
-    *outSeq = msg.body.finished.seq;
+    *outSeq = msg.header.seq;
     *outHandled = msg.body.finished.handled;
     return OK;
 }
@@ -421,12 +428,25 @@ status_t InputConsumer::consume(InputEventFactoryInterface* factory,
         }
 
         switch (mMsg.header.type) {
+        case InputMessage::TYPE_BUFFER: {
+            RawBufferEvent* bufferEvent = factory->createRawBufferEvent();
+            if (!bufferEvent) return NO_MEMORY;
+
+            initializeBufferEvent(bufferEvent, &mMsg);
+            *outSeq = mMsg.header.seq;
+            *outEvent = bufferEvent;
+#if DEBUG_TRANSPORT_ACTIONS
+            ALOGD("channel '%s' consumer ~ consumed buffer event, seq=%u",
+                c_str(mChannel->getName()), *outSeq);
+#endif
+            break;
+        }
         case InputMessage::TYPE_KEY: {
             KeyEvent* keyEvent = factory->createKeyEvent();
             if (!keyEvent) return NO_MEMORY;
 
             initializeKeyEvent(keyEvent, &mMsg);
-            *outSeq = mMsg.body.key.seq;
+            *outSeq = mMsg.header.seq;
             *outEvent = keyEvent;
 #if DEBUG_TRANSPORT_ACTIONS
             ALOGD("channel '%s' consumer ~ consumed key event, seq=%u",
@@ -484,7 +504,7 @@ status_t InputConsumer::consume(InputEventFactoryInterface* factory,
 
             updateTouchState(&mMsg);
             initializeMotionEvent(motionEvent, &mMsg);
-            *outSeq = mMsg.body.motion.seq;
+            *outSeq = mMsg.header.seq;
             *outEvent = motionEvent;
 #if DEBUG_TRANSPORT_ACTIONS
             ALOGD("channel '%s' consumer ~ consumed motion event, seq=%u",
@@ -548,14 +568,14 @@ status_t InputConsumer::consumeSamples(InputEventFactoryInterface* factory,
         updateTouchState(&msg);
         if (i) {
             SeqChain seqChain;
-            seqChain.seq = msg.body.motion.seq;
+            seqChain.seq = msg.header.seq;
             seqChain.chain = chain;
             mSeqChains.push(seqChain);
             addSample(motionEvent, &msg);
         } else {
             initializeMotionEvent(motionEvent, &msg);
         }
-        chain = msg.body.motion.seq;
+        chain = msg.header.seq;
     }
     batch.samples.removeItemsAt(0, count);
 
@@ -750,6 +770,7 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
     // Resample touch coordinates.
     touchState.lastResample.eventTime = sampleTime;
     touchState.lastResample.ids.clear();
+    bool coords_resampled = false;
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t id = event->getPointerId(i);
         touchState.lastResample.idToIndex[id] = i;
@@ -764,6 +785,9 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     lerp(currentCoords.getX(), otherCoords.getX(), alpha));
             resampledCoords.setAxisValue(AMOTION_EVENT_AXIS_Y,
                     lerp(currentCoords.getY(), otherCoords.getY(), alpha));
+            coords_resampled = true;
+            // No coordinate resampling for tooltype mouse - if we intend to
+            // change that we must also resample RX, RY, HSCROLL, VSCROLL
 #if DEBUG_RESAMPLING
             ALOGD("[%d] - out (%0.3f, %0.3f), cur (%0.3f, %0.3f), "
                     "other (%0.3f, %0.3f), alpha %0.3f",
@@ -773,6 +797,8 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     alpha);
 #endif
         } else {
+            // Before calling this method currentCoords was already part of the
+            // event -> no need to add them to the event.
             resampledCoords.copyFrom(currentCoords);
 #if DEBUG_RESAMPLING
             ALOGD("[%d] - out (%0.3f, %0.3f), cur (%0.3f, %0.3f)",
@@ -782,7 +808,8 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
         }
     }
 
-    event->addSample(sampleTime, touchState.lastResample.pointers);
+    if (coords_resampled)
+        event->addSample(sampleTime, touchState.lastResample.pointers);
 }
 
 bool InputConsumer::shouldResampleTool(int32_t toolType) {
@@ -838,7 +865,8 @@ status_t InputConsumer::sendFinishedSignal(uint32_t seq, bool handled) {
 status_t InputConsumer::sendUnchainedFinishedSignal(uint32_t seq, bool handled) {
     InputMessage msg;
     msg.header.type = InputMessage::TYPE_FINISHED;
-    msg.body.finished.seq = seq;
+    msg.header.size = sizeof(msg.body.finished);
+    msg.header.seq = seq;
     msg.body.finished.handled = handled;
     return mChannel->sendMessage(&msg);
 }
@@ -870,6 +898,10 @@ ssize_t InputConsumer::findTouchState(int32_t deviceId, int32_t source) const {
         }
     }
     return -1;
+}
+
+void InputConsumer::initializeBufferEvent(RawBufferEvent* event, const InputMessage* msg) {
+    event->buffer.assign(msg->body.buffer.buffer, msg->body.buffer.buffer + msg->header.size);
 }
 
 void InputConsumer::initializeKeyEvent(KeyEvent* event, const InputMessage* msg) {

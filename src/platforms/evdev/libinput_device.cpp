@@ -171,11 +171,10 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    mir::geometry::Displacement const movement{libinput_event_pointer_get_dx(pointer),
-                                               libinput_event_pointer_get_dy(pointer)};
-
-    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(),
-                                  movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state,
+                                  hscroll_value, vscroll_value,
+                                  libinput_event_pointer_get_dx(pointer),
+                                  libinput_event_pointer_get_dy(pointer));
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
@@ -196,7 +195,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
         libinput_event_pointer_get_absolute_y_transformed(pointer, height)};
     auto const movement = pointer_pos - old_pointer_pos;
 
-    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_int(), movement.dy.as_int());
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* pointer)

@@ -37,7 +37,7 @@ struct StubSession : scene::Session
 
     std::string name() const override;
 
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
 
     pid_t process_id() const override;
 
@@ -88,6 +88,10 @@ struct StubSession : scene::Session
     void destroy_surface(std::weak_ptr<scene::Surface> const& surface) override;
 
     void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
+
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties);
+    void destroy_buffer(graphics::BufferID);
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID);
 
     pid_t pid;
 };

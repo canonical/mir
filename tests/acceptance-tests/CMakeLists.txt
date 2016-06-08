@@ -20,6 +20,7 @@ set(
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
   test_client_surfaces.cpp
+  test_client_logging.cpp
   test_custom_window_management.cpp
   test_custom_input_dispatcher.cpp
   test_server_shutdown.cpp
@@ -92,4 +93,5 @@ CMAKE_DEPENDENT_OPTION(
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
+  mir_discover_tests_with_fd_leak_detection_and_env(mir_acceptance_tests "MIR_SERVER_NBUFFERS=3")
 endif (MIR_RUN_ACCEPTANCE_TESTS)

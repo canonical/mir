@@ -25,6 +25,7 @@
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/fake_shared.h"
+#include "mir_test_framework/visible_surface.h"
 #include "mir/options/option.h"
 #include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
 
@@ -52,21 +53,21 @@ public:
     void post()
     {
         std::lock_guard<std::mutex> lock{mutex};
-        post_count++;
+        visible_frame++;
         posted.notify_one();
     }
 
     void record_submission(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        submissions.push_back({submission_id, post_count});
+        submissions.push_back({submission_id, visible_frame});
     }
 
     auto latency_for(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        mir::optional_value<uint32_t> latency;
+        mir::optional_value<unsigned int> latency;
 
         for (auto i = submissions.begin(); i != submissions.end(); i++)
         {
@@ -79,7 +80,7 @@ public:
                 if (i != submissions.begin())
                     i = submissions.erase(submissions.begin(), i);
 
-                latency = post_count - i->time;
+                latency = visible_frame - i->visible_frame_when_submitted;
                 submissions.erase(i);
                 break;
             }
@@ -92,7 +93,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(mutex);
         auto const deadline = std::chrono::system_clock::now() + timeout;
-        while (post_count < count)
+        while (visible_frame < count)
         {
             if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
                 return false;
@@ -103,7 +104,7 @@ public:
 private:
     std::mutex mutex;
     std::condition_variable posted;
-    unsigned int post_count{0};
+    unsigned int visible_frame{0};
 
     // Note that a buffer_id may appear twice in the list as the client is
     // faster than the compositor and can produce a new frame before the
@@ -111,7 +112,7 @@ private:
     struct Submission
     {
         uint32_t buffer_id;
-        uint32_t time;
+        unsigned int visible_frame_when_submitted;
     };
     std::deque<Submission> submissions;
 };
@@ -156,6 +157,8 @@ public:
 
     void post() override
     {
+        stats.post();
+
         auto latency = stats.latency_for(db.last_id().as_value());
         if (latency.is_set())
         {
@@ -164,8 +167,6 @@ public:
             if (latency.value() > max)
                 max = latency.value();
         }
-
-        stats.post();
 
         /*
          * Sleep a little to make the test more realistic. This way the
@@ -235,12 +236,26 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingGroup group;
 };
  
-struct ClientLatency : mtf::ConnectedClientWithASurface
+struct ClientLatency : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientHeadlessServer::SetUp();
+
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
+            mir_connection_create_spec_for_normal_surface(
+                connection, 100, 100, mir_pixel_format_abgr_8888),
+            del);
+        visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
+        surface =  *visible_surface;
+    }
+
+    void TearDown() override
+    {
+        visible_surface.reset();
+        mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     Stats stats;
@@ -252,10 +267,12 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
     // affecting results will be the first few frames before the buffer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
+    std::unique_ptr<mtf::VisibleSurface> visible_surface;
+    MirSurface* surface;
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
+TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 {
     using namespace testing;
 
@@ -269,23 +286,15 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
 
-    // Note: Using the "early release" optimization without dynamic queue
-    //       scaling enabled makes the expected latency possibly up to
-    //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
-    //       enabled, the average will be lower than this.
-    float const expected_max_latency = expected_client_buffers;
-    float const expected_min_latency = expected_client_buffers - 1;
-
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
 
-    auto observed_latency = display.group.average_latency();
+    auto average_latency = display.group.average_latency();
 
-    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
-    EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
+    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
 }
 
-TEST_F(ClientLatency, latency_is_limited_to_nbuffers)
+TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 {
     using namespace testing;
 
@@ -307,7 +316,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     using namespace testing;
 
-    int const throttled_input_rate = refresh_rate - 1;
+    int const throttled_input_rate = refresh_rate * 3 / 4;
     std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
     auto next_input_event = std::chrono::high_resolution_clock::now();
 

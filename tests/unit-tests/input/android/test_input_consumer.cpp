@@ -18,7 +18,7 @@
 
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"
-#include "src/server/input/android/android_input_channel.h"
+#include "src/server/input/channel.h"
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/geometry/displacement.h"
@@ -30,8 +30,10 @@
 #include <vector>
 #include <cstring>
 
+using namespace testing;
 using namespace std::literals::chrono_literals;
 namespace mia = mir::input::android;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 namespace
@@ -40,6 +42,7 @@ struct EventFactory : android::InputEventFactoryInterface
 {
     android::KeyEvent key;
     android::MotionEvent motion;
+    android::RawBufferEvent raw;
     android::KeyEvent* createKeyEvent()
     {
         return &key;
@@ -48,17 +51,22 @@ struct EventFactory : android::InputEventFactoryInterface
     {
         return &motion;
     }
+    android::RawBufferEvent* createRawBufferEvent()
+    {
+        return &raw;
+    }
 };
 }
 
 struct InputConsumerTest : ::testing::Test
 {
     MOCK_METHOD3(pointer_movement,void(geom::Point pos, geom::Displacement movement, geom::Displacement scroll));
+    MOCK_METHOD1(raw_buffer,void(std::string const& buffer));
     uint32_t seq{0};
     mir::cookie::Blob default_cookie;
     EventFactory events;
     std::chrono::milliseconds current_frame_time = 0ms;
-    mia::AndroidInputChannel channel;
+    mi::Channel channel;
     geom::Displacement no_move{0,0};
     geom::Displacement no_scroll{0,0};
     geom::Point origin{0,0};
@@ -99,8 +107,8 @@ struct InputConsumerTest : ::testing::Test
         int contacts_in_event = 0;
         for (auto const& contact : event.positions)
         {
-            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, contact.x.as_float());
-            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, contact.y.as_float());
+            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, contact.x.as_int());
+            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, contact.y.as_int());
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, 5);
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, 5);
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_SIZE, 5);
@@ -131,12 +139,12 @@ struct InputConsumerTest : ::testing::Test
         std::memset(&pointer_coord, 0, sizeof(pointer_coord));
         std::memset(&pointer_properties, 0, sizeof(pointer_properties));
 
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, event.position.x.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, event.position.y.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.scroll.dx.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.scroll.dy.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, event.movement.dx.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, event.movement.dy.as_float());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, event.position.x.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, event.position.y.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.scroll.dx.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.scroll.dy.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, event.movement.dx.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, event.movement.dy.as_int());
         pointer_properties.toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
         pointer_properties.id = 0;
 
@@ -154,14 +162,23 @@ struct InputConsumerTest : ::testing::Test
                                      default_cookie, event.tp, event.tp, 1, &pointer_properties, &pointer_coord);
     }
 
+    void send_raw_event(std::string const& event)
+    {
+        publisher.publishEventBuffer(++seq, event);
+    }
+
     void handle_event(droidinput::InputEvent* event)
     {
         if (event->getType() == AINPUT_EVENT_TYPE_KEY)
         {
         }
+        else if (event->getType() == AINPUT_EVENT_TYPE_BUFFER)
+        {
+            auto raw = static_cast<const droidinput::RawBufferEvent*>(event);
+            raw_buffer(raw->buffer);
+        }
         else
         {
-
             if (mia::android_source_id_is_pointer_device(event->getSource()))
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(event);
@@ -170,15 +187,12 @@ struct InputConsumerTest : ::testing::Test
                     {mev->getRawAxisValue(AMOTION_EVENT_AXIS_RX, 0),
                      mev->getRawAxisValue(AMOTION_EVENT_AXIS_RY, 0)},
                     {mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0),
-                     mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0)}
-                     );
+                     mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0)});
             }
         }
     }
     void receive_events()
     {
-        const auto fake_update_rate = 1ms;
-
         android::InputEvent *received_event = nullptr;
         uint32_t seq_id;
         do
@@ -193,6 +207,7 @@ struct InputConsumerTest : ::testing::Test
         } while(consumer.hasPendingBatch() || consumer.hasDeferredEvent());
     }
 
+    std::chrono::milliseconds fake_update_rate = 1ms;
     void advance_frame_time_to(std::chrono::milliseconds time)
     {
         current_frame_time = time;
@@ -226,6 +241,80 @@ TEST_F(InputConsumerTest, emits_move_events_on_recent_messages)
     receive_events();
 }
 
+
+TEST_F(InputConsumerTest, batched_and_resampled_events_contain_correct_relative_displacement)
+{
+    Sequence seq;
+    EXPECT_CALL(*this, pointer_movement(geom::Point{0, 0}, geom::Displacement{0, 0}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{27, 20}, geom::Displacement{27, 20}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{55, 62}, geom::Displacement{28, 42}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{67, 71}, geom::Displacement{12, 9}, no_scroll));
+    MirPointerButtons button_down = mir_pointer_button_primary;
+    fake_update_rate = 16ms;
+
+    send_pointer_event({mir_pointer_action_button_down, button_down, {0, 0}, {0, 0}, no_scroll, 0ns});
+    send_pointer_event({mir_pointer_action_motion, button_down, {10, 5}, {10, 5}, no_scroll, 2ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {18, 12}, {8, 7}, no_scroll, 4ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {27, 20}, {9, 8}, no_scroll, 8ms});
+
+    // 5 ms RESAMPLE_LATENCY
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_motion, button_down, {39, 36}, {12, 16}, no_scroll, 12ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {43, 56}, {4, 20}, no_scroll, 16ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {51, 59}, {8, 3}, no_scroll, 20ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {55, 62}, {4, 3}, no_scroll, 24ms});
+
+    // 16 ms later
+    receive_events();
+    send_pointer_event({mir_pointer_action_motion, button_down, {59, 65}, {4, 3}, no_scroll, 28ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {63, 68}, {4, 3}, no_scroll, 32ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {67, 71}, {4, 3}, no_scroll, 36ms});
+
+    // 16 ms later
+    receive_events();
+}
+
+TEST_F(InputConsumerTest, correct_relative_displacement_when_switching_in_and_out_of_resampling)
+{
+    Sequence seq;
+    EXPECT_CALL(*this, pointer_movement(geom::Point{27, 20}, geom::Displacement{27, 20}, no_scroll));
+    // emitted due to press:
+    EXPECT_CALL(*this, pointer_movement(geom::Point{39, 36}, geom::Displacement{12, 16}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{55, 62}, geom::Displacement{16, 26}, no_scroll));
+    // emit due to release:
+    EXPECT_CALL(*this, pointer_movement(geom::Point{59, 65}, geom::Displacement{4, 3}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{70, 72}, geom::Displacement{11, 7}, no_scroll));
+    MirPointerButtons button_down = mir_pointer_button_primary;
+    fake_update_rate = 16ms;
+
+    send_pointer_event({mir_pointer_action_motion, 0, {10, 5}, {10, 5}, no_scroll, 0ns});
+    send_pointer_event({mir_pointer_action_motion, 0, {18, 12}, {8, 7}, no_scroll, 4ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {27, 20}, {9, 8}, no_scroll, 8ms});
+
+    // 5ms RESAMPLE_LATENCY
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_button_down, button_down, {39, 36}, {12, 16}, no_scroll, 12ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {43, 56}, {4, 20}, no_scroll, 16ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {51, 59}, {8, 3}, no_scroll, 20ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {55, 62}, {4, 3}, no_scroll, 24ms});
+
+    // update rate + 16 ms later
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_button_up, 0, {59, 65}, {4, 3}, no_scroll, 28ms});
+    // handle release immediately..
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_motion, 0, {63, 68}, {4, 3}, no_scroll, 32ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {67, 71}, {4, 3}, no_scroll, 36ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {70, 72}, {3, 1}, no_scroll, 40ms});
+
+    receive_events();
+}
+
+
 TEST_F(InputConsumerTest, emits_scroll_events_on_each_recent_scroll_messages)
 {
     EXPECT_CALL(*this, pointer_movement(origin, no_move, geom::Displacement{3, 0}));
@@ -249,5 +338,24 @@ TEST_F(InputConsumerTest, emits_accumulated_scroll_event_on_old_messages)
     send_pointer_event({mir_pointer_action_motion, 0, origin, no_move, {2.0, 5.0}, 2ms});
 
     advance_frame_time_to(16ms);
+    receive_events();
+}
+
+TEST_F(InputConsumerTest, receives_raw_event_buffer)
+{
+    auto const buffer = "hello android";
+    EXPECT_CALL(*this, raw_buffer(buffer));
+
+    send_raw_event(buffer);
+    receive_events();
+}
+
+TEST_F(InputConsumerTest, buffer_exceeding_payload_not_transfered)
+{
+    std::string too_big;
+    too_big.resize(droidinput::InputMessage::raw_event_payload +1, 'I');
+    EXPECT_CALL(*this, raw_buffer(_)).Times(0);
+
+    EXPECT_THROW({send_raw_event(too_big);}, std::runtime_error);
     receive_events();
 }

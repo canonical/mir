@@ -69,7 +69,7 @@ TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
     }, std::runtime_error);
 }
 
-TEST_F(ResourceFactoryTest, hwc_allocation)
+TEST_F(ResourceFactoryTest, hwc_allocation_12)
 {
     using namespace testing;
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
@@ -83,6 +83,22 @@ TEST_F(ResourceFactoryTest, hwc_allocation)
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
+
+TEST_F(ResourceFactoryTest, hwc_allocation_15)
+{
+    using namespace testing;
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_5;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+
+    mga::ResourceFactory factory;
+    auto wrapper_tuple = factory.create_hwc_wrapper(null_report);
+    EXPECT_THAT(std::get<1>(wrapper_tuple), Eq(mga::HwcVersion::hwc15));
+    std::get<0>(wrapper_tuple).reset();
+
+    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
+}
+
 
 TEST_F(ResourceFactoryTest, hwc_allocation_failures)
 {

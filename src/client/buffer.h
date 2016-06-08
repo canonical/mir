@@ -20,6 +20,8 @@
 #define MIR_CLIENT_BUFFER_H
 
 #include "mir_toolkit/mir_buffer.h"
+#include "mir/geometry/size.h"
+#include "mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -30,26 +32,36 @@ namespace client
 {
 class ClientBuffer;
 class MemoryRegion;
-//this is the type backing MirBuffer* 
-class Buffer
+class Buffer : public MirBuffer
 {
 public:
     Buffer(
         mir_buffer_callback cb, void* context,
         int buffer_id,
-        std::shared_ptr<ClientBuffer> const& buffer);
-    int rpc_id() const;
+        std::shared_ptr<ClientBuffer> const& buffer,
+        MirConnection* connection,
+        MirBufferUsage usage);
+    int rpc_id() const override;
 
-    void submitted();
-    void received();
+    void submitted() override;
+    void received() override;
+    void received(MirBufferPackage const& update_message) override;
 
-    MirNativeBuffer* as_mir_native_buffer() const;
-    MirGraphicsRegion map_region();
+    MirNativeBuffer* as_mir_native_buffer() const override;
+    std::shared_ptr<ClientBuffer> client_buffer() const override;
+    MirGraphicsRegion map_region() override;
 
-    void set_fence(MirNativeFence*, MirBufferAccess);
-    MirNativeFence* get_fence() const;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
+    void set_fence(MirNativeFence*, MirBufferAccess) override;
+    MirNativeFence* get_fence() const override;
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
 
+    MirBufferUsage buffer_usage() const override;
+    MirPixelFormat pixel_format() const override;
+    geometry::Size size() const override;
+
+    MirConnection* allocating_connection() const override;
+
+    void increment_age() override;
 private:
     mir_buffer_callback cb;
     void* cb_context;
@@ -59,6 +71,8 @@ private:
     std::mutex mutex;
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
+    MirConnection* const connection;
+    MirBufferUsage const usage;
 };
 }
 }

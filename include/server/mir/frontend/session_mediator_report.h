@@ -38,8 +38,6 @@ public:
 
     virtual void session_create_surface_called(std::string const& app_name) = 0;
 
-    virtual void session_next_buffer_called(std::string const& app_name) = 0;
-
     virtual void session_exchange_buffer_called(std::string const& app_name) = 0;
 
     virtual void session_submit_buffer_called(std::string const& app_name) = 0;
@@ -59,6 +57,10 @@ public:
     virtual void session_configure_display_called(std::string const& app_name) = 0;
 
     virtual void session_set_base_display_configuration_called(std::string const& app_name) = 0;
+
+    virtual void session_preview_base_display_configuration_called(std::string const& app_name) = 0;
+
+    virtual void session_confirm_base_display_configuration_called(std::string const& app_name) = 0;
 
     virtual void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) = 0;
 

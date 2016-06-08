@@ -33,6 +33,7 @@
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <mutex>
 
@@ -44,11 +45,51 @@ namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 using namespace testing;
 
 namespace
 {
+
+auto display_output(
+    mg::DisplayConfigurationOutputId id, geom::Point pos, geom::Size size, bool connected, bool used, MirPowerMode mode)
+    -> mg::DisplayConfigurationOutput
+{
+        return mg::DisplayConfigurationOutput{id,
+                                              mg::DisplayConfigurationCardId{0},
+                                              mg::DisplayConfigurationOutputType::lvds,
+                                              std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+                                              {mg::DisplayConfigurationMode{size, 60}},
+                                              0,
+                                              geom::Size{40, 40},
+                                              connected,
+                                              used,
+                                              pos,
+                                              0,
+                                              mir_pixel_format_abgr_8888,
+                                              mode,
+                                              mir_orientation_normal,
+                                              1.0f,
+                                              mir_form_factor_phone
+        };
+}
+
+struct TestDisplayConfiguration : mtd::NullDisplayConfiguration
+{
+    std::vector<mg::DisplayConfigurationOutput> const outputs;
+    TestDisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& items)
+        : outputs{items} {}
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> fun) const override
+    {
+        for (auto const& output : outputs)
+            fun(output);
+    }
+    std::unique_ptr<mg::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<TestDisplayConfiguration>(outputs);
+    }
+};
 
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 {
@@ -138,7 +179,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(session_event_sink),
                       mt::fake_shared(server_action_queue),
                       mt::fake_shared(display_configuration_report),
-                      mt::fake_shared(mock_input_region));
+                      mt::fake_shared(mock_input_region),
+                      mt::fake_shared(alarm_factory));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -150,6 +192,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     StubServerActionQueue server_action_queue;
     StubDisplayConfigurationReport display_configuration_report;
     testing::NiceMock<mtd::MockInputRegion> mock_input_region;
+    mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -433,7 +476,8 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(session_event_sink),
       mt::fake_shared(mock_server_action_queue),
       mt::fake_shared(display_configuration_report),
-      mt::fake_shared(mock_input_region));
+      mt::fake_shared(mock_input_region),
+      mt::fake_shared(alarm_factory));
 
     void const* owner{nullptr};
 
@@ -489,7 +533,8 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(session_event_sink),
         mt::fake_shared(mock_server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
@@ -614,7 +659,8 @@ TEST_F(MediatingDisplayChangerTest, input_region_receives_display_configuration_
         mt::fake_shared(session_event_sink),
         mt::fake_shared(server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
@@ -622,6 +668,277 @@ TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
     mir::geometry::Rectangles expected_rectangles;
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configuration)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    EXPECT_CALL(*mock_session, send_display_config(_));
+
+    changer->preview_base_configuration(
+        mock_session,
+        mt::fake_shared(conf),
+        std::chrono::seconds{1});
+}
+
+TEST_F(MediatingDisplayChangerTest, reverts_to_previous_configuration_on_timeout)
+{
+    using namespace testing;
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    auto applied_config = old_config->clone();
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(Invoke([&applied_config](auto& conf) { applied_config = conf.clone(); }));
+
+    auto mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session,
+        new_config,
+        timeout);
+
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(timeout - std::chrono::milliseconds{1});
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(std::chrono::milliseconds{2});
+    alarm_factory.advance_smoothly_by(timeout);
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*old_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_notifications)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    EXPECT_CALL(*mock_session2, send_display_config(_)).Times(0);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    alarm_factory.advance_smoothly_by(timeout + std::chrono::seconds{1});
+}
+
+TEST_F(MediatingDisplayChangerTest, only_one_client_can_preview_configuration_change_at_once)
+{
+    using namespace testing;
+
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    EXPECT_THROW(
+        {
+            changer->preview_base_configuration(
+                mock_session2,
+                new_config,
+                timeout);
+        },
+        std::runtime_error);
+}
+
+TEST_F(MediatingDisplayChangerTest, confirmed_configuration_doesnt_revert_after_timeout)
+{
+    using namespace testing;
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    auto applied_config = old_config->clone();
+
+    ASSERT_THAT(applied_config, Not(Eq(nullptr)));
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(Invoke([&applied_config](auto& conf) { applied_config = conf.clone(); }));
+
+    auto mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session,
+        new_config,
+        timeout);
+
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    changer->confirm_base_configuration(mock_session, new_config);
+
+    alarm_factory.advance_smoothly_by(timeout * 100);
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_confirmation)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    std::unique_ptr<mg::DisplayConfiguration> received_configuration;
+
+    ON_CALL(*mock_session2, send_display_config(_))
+        .WillByDefault(Invoke([&received_configuration](auto& conf) { received_configuration = conf.clone(); }));
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        std::chrono::seconds{1});
+
+    EXPECT_THAT(received_configuration, Eq(nullptr));
+
+    changer->confirm_base_configuration(mock_session1, new_config);
+
+    ASSERT_THAT(received_configuration, Not(Eq(nullptr)));
+    EXPECT_THAT(*received_configuration, mt::DisplayConfigMatches(std::cref(*new_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, input_region_skipps_not_connected_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const disconnected = false;
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(geom::Rectangle{geom::Point{0,0}, geom::Size{100,100}});
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  geom::Point{0, 0},
+                                                  geom::Size{100, 100},
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  geom::Point{100, 0},
+                                                  geom::Size{100, 100},
+                                                  disconnected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, input_region_accumulates_powered_and_connected_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const first_monitor = geom::Rectangle{geom::Point{0, 0}, geom::Size{ 40, 40 }};
+    auto const second_monitor = geom::Rectangle{geom::Point{40, 0}, geom::Size{ 10, 10}};
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(first_monitor);
+    expected_rectangles.add(second_monitor);
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  first_monitor.top_left,
+                                                  first_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  second_monitor.top_left,
+                                                  second_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+
+TEST_F(MediatingDisplayChangerTest, input_region_accumulates_powered_connected_skips_unused_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const first_monitor = geom::Rectangle{geom::Point{0, 0}, geom::Size{ 40, 40 }};
+    auto const second_monitor = geom::Rectangle{geom::Point{40, 0}, geom::Size{ 10, 10}};
+    auto const not_used = false;
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(second_monitor);
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  first_monitor.top_left,
+                                                  first_monitor.size,
+                                                  connected,
+                                                  not_used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  second_monitor.top_left,
+                                                  second_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
     EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
 
     auto session = std::make_shared<mtd::StubSession>();

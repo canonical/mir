@@ -141,7 +141,8 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_session_event_handler_register(),
                 the_server_action_queue(),
                 the_display_configuration_report(),
-                the_input_region());
+                the_input_region(),
+                the_main_loop());
         });
 
 }
@@ -183,7 +184,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_session_event_sink(),
                 the_session_listener(),
                 the_display(),
-                the_application_not_responding_detector());
+                the_application_not_responding_detector(),
+                the_buffer_allocator());
         });
 }
 

@@ -42,7 +42,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     MirPixelFormat preferred_format) :
     egl_display(egl_display),
     host_surface{host_surface},
-    egl_config{egl_display.choose_windowed_es_config(preferred_format)},
+    egl_config{egl_display.choose_windowed_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     dispatcher{dispatcher},
@@ -73,6 +73,10 @@ void mgn::detail::DisplayBuffer::swap_buffers()
     eglSwapBuffers(egl_display, egl_surface);
 }
 
+void mgn::detail::DisplayBuffer::bind()
+{
+}
+
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
@@ -85,6 +89,11 @@ MirOrientation mgn::detail::DisplayBuffer::orientation() const
      * native display.
      */
     return mir_orientation_normal;
+}
+
+MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
 }
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
@@ -109,19 +118,21 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
     if (mir_event_get_type(&event) != mir_event_type_input)
         return;
 
-    if (event.type == mir_event_type_motion)
+    if (event.type() == mir_event_type_motion)
     {
-        auto my_event = event;
+        MirMotionEvent my_event = *event.to_input()->to_motion();
         auto iev = mir_event_get_input_event(&my_event);
 
         if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
         {
-            auto& motion = my_event.motion;
+            auto motion = my_event.to_input()->to_motion();
 
-            for (size_t i = 0; i != motion.pointer_count; ++i)
+            for (size_t i = 0; i != motion->pointer_count(); ++i)
             {
-                motion.pointer_coordinates[i].x += area.top_left.x.as_float();
-                motion.pointer_coordinates[i].y += area.top_left.y.as_float();
+                auto x = motion->x(i);
+                auto y = motion->y(i);
+                motion->set_x(i, x + area.top_left.x.as_int());
+                motion->set_y(i, y + area.top_left.y.as_int());
             }
 
             auto pev = mir_input_event_get_pointer_event(iev);

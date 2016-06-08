@@ -16,7 +16,7 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   buffer_stream_tracker.cpp
-  unauthorized_display_changer.cpp
+  authorizing_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
   default_configuration.cpp
@@ -28,6 +28,7 @@ set(
   reordering_message_sender.cpp
   reordering_message_sender.h
   event_sink_factory.h
+  screencast_buffer_tracker.cpp
 )
 
 add_library(

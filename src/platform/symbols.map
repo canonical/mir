@@ -1,4 +1,4 @@
-MIRPLATFORM_11 {
+MIRPLATFORM_0.24 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -118,7 +118,7 @@ MIRPLATFORM_11 {
     mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::fatal_abort_opt*;
+    mir::options::fatal_except_opt*;
     mir::options::frontend_threads_opt*;
     mir::options::glog*;
     mir::options::glog_log_dir*;

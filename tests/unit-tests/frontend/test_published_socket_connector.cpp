@@ -32,7 +32,7 @@
 #include "mir/test/stub_server_tool.h"
 #include "mir/test/test_protobuf_client.h"
 #include "mir/test/test_protobuf_server.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/doubles/stub_ipc_factory.h"
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/doubles/mock_rpc_report.h"
@@ -236,12 +236,12 @@ TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_buffer());
-    EXPECT_CALL(*client, next_buffer_done()).Times(8);
+    EXPECT_CALL(*client, exchange_buffer_done()).Times(8);
 
     for (int i = 0; i != 8; ++i)
     {
-        client->next_buffer();
-        client->wait_for_next_buffer();
+        client->exchange_buffer();
+        client->wait_for_exchange_buffer();
         EXPECT_TRUE(client->surface.has_buffer());
     }
 
@@ -269,19 +269,16 @@ TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
     client->create_surface();
     client->wait_for_create_surface();
 
-    mt::WaitCondition wc;
+    mt::Signal error_reported;
 
-    ON_CALL(*communicator_report, error(_)).WillByDefault(Invoke([&wc] (std::exception const&)
-        {
-            wc.wake_up_everyone();
-        }));
+    ON_CALL(*communicator_report, error(_)).WillByDefault(WakeUp(&error_reported));
 
     EXPECT_CALL(*communicator_report, error(_)).Times(1);
 
     client.reset();
 
-    wc.wait_for_at_most_seconds(1);
-    EXPECT_TRUE(wc.woken());
+    error_reported.wait_for(std::chrono::seconds{1});
+    EXPECT_TRUE(error_reported.raised());
 }
 
 TEST_F(PublishedSocketConnector, configure_display)
@@ -295,7 +292,7 @@ TEST_F(PublishedSocketConnector, configure_display)
 
 TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 {
-    int const next_buffer_calls{8};
+    int const exchange_buffer_calls{8};
     char buffer[128] = {0};
     sprintf(buffer, "fd://%d", stub_server->comm->client_socket_fd());
     auto client = std::make_shared<mt::TestProtobufClient>(buffer, timeout_ms);
@@ -312,12 +309,12 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_buffer());
-    EXPECT_CALL(*client, next_buffer_done()).Times(next_buffer_calls);
+    EXPECT_CALL(*client, exchange_buffer_done()).Times(exchange_buffer_calls);
 
-    for (int i = 0; i != next_buffer_calls; ++i)
+    for (int i = 0; i != exchange_buffer_calls; ++i)
     {
-        client->next_buffer();
-        client->wait_for_next_buffer();
+        client->exchange_buffer();
+        client->wait_for_exchange_buffer();
         EXPECT_TRUE(client->surface.has_buffer());
     }
 

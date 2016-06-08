@@ -18,6 +18,24 @@
 
 #include "mir/graphics/egl_error.h"
 #include <sstream>
+#include <EGL/eglext.h>
+
+/*
+ * The version of eglext in vivid-overlay is too old to contain these
+ * defines, so provide them if missing
+ */
+#ifndef EGL_BAD_DEVICE_EXT
+#define EGL_BAD_DEVICE_EXT 0x322B
+#endif
+
+#ifndef EGL_BAD_STREAM_KHR
+#define EGL_BAD_STREAM_KHR 0x321B
+#endif
+
+#ifndef EGL_BAD_STATE_KHR
+#define EGL_BAD_STATE_KHR 0x321C
+#endif
+
 
 namespace
 {
@@ -54,6 +72,9 @@ struct egl_category : std::error_category
             CASE_FOR_ERROR(EGL_BAD_PARAMETER)
             CASE_FOR_ERROR(EGL_BAD_SURFACE)
             CASE_FOR_ERROR(EGL_CONTEXT_LOST)
+            CASE_FOR_ERROR(EGL_BAD_DEVICE_EXT)
+            CASE_FOR_ERROR(EGL_BAD_STREAM_KHR)
+            CASE_FOR_ERROR(EGL_BAD_STATE_KHR)
 
             default:
                 return "Unknown error (" + to_hex_string(ev) + ")";

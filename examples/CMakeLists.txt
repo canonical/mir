@@ -27,7 +27,6 @@ add_library(exampleserverconfig STATIC
   server_example_log_options.cpp
   server_example_input_filter.cpp
   server_example_host_lifecycle_event.cpp
-  server_example_tiling_window_manager.cpp
   server_example_window_management.cpp
   server_example_window_management_info.cpp
   server_example_window_management_info.h
@@ -69,6 +68,12 @@ mir_add_wrapped_executable(mir_demo_client_target
   target.c
 )
 target_link_libraries(mir_demo_client_target
+  eglapp
+)
+mir_add_wrapped_executable(mir_demo_client_camera
+  camera.c
+)
+target_link_libraries(mir_demo_client_camera
   eglapp
 )
 mir_add_wrapped_executable(mir_demo_client_eglcounter
@@ -160,28 +165,22 @@ mir_add_wrapped_executable(mir_demo_client_scroll
 )
 
 target_link_libraries(mir_demo_client_scroll
+  eglapp
   mirdraw
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
-
 )
 
 mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)
 target_link_libraries(mir_demo_client_prompt_session mirclient)
 
 add_library(mirdraw STATIC graphics_utils.cpp)
-target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${GLESv2_INCLUDE_DIRS}
+  ${GL_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(mir_demo_standalone_render_to_fb
@@ -191,6 +190,7 @@ mir_add_wrapped_executable(mir_demo_standalone_render_to_fb
 target_link_libraries(mir_demo_standalone_render_to_fb
     mirserver
     mirdraw
+    ${GL_LIBRARIES}
     ${Boost_LIBRARIES}
 )
 
@@ -222,15 +222,6 @@ target_link_libraries(mir_demo_server
 
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
-
-mir_add_wrapped_executable(mir_demo_standalone_render_overlays
-    render_overlays.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_overlays
-    mirserver
-    mircommon
-)
 
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test

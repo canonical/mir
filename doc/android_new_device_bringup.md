@@ -7,42 +7,50 @@ when you try to start unity, the information listed below will help the Mir
 team diagnose and fix the issues that are seen.
 
 ##Mir Tests##
-The android platform of Mir has a variety of tests and tools that help the Mir
-team troubleshoot new devices. There are thousands of tests, but certain tests
-exercise the driver and have proven useful in diagnosing driver problems. These
-tests are available in the 'mir-test-tools' debian package.
+Mir has a test suite available in the package mir-test-tools that checks the
+operation of Mir.
+Mir also provides a test suite in mir-android-diagnostics that is helpful in
+checking how a new device will work with Mir. 
+
+##Mir and libhybris##
+Vendor provided drivers are compiled against Android's bionic libc.
+Mir runs against glibc. To make the two libc's work together, Mir uses
+libhybris.
+
+libhybris has some internal tests (e.g., test_egl), but these are insufficient
+tests to see if mir will run on the device. The tests are aimed checking
+the operation of hybris on non-Mir graphics stacks. Furthermore, they test a
+more limited range of hardware module capabilities (e.g. they don't test HWC
+overlay capability) 
 
 ###Mir Client Software Rendering###
 
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.client_can_draw_with_cpu"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.client_can_draw_with_cpu"
 
-This test checks that a buffer can travel from the server to the client accross
-the interprocess communication channel. It then renders some pixels using
-software and the server will check that the pixels are present in the buffer. 
+This test checks that the CPU can render pixels using software
+and checks that the pixels can be read back.
 
 ###Mir Client OpenGLES 2.0 Rendering (Android EGLNativeWindowType test)###
 
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.client_can_draw_with_gpu"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.client_can_draw_with_gpu"
 
-This test checks that a buffer can travel from the server to the client accross
-the interprocess communication channel. It then renders some pixels using
-OpenGLES 2.0 and the server will check that the pixels are present in the
-buffer. 
+This test checks that the GL api can be used to glClear() a buffer, and checks
+that the content is correct after render.
 
 ###Mir Display posting (HWC tests)###
 
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.display_can_post"
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.display_can_post_overlay"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.display_can_post"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.display_can_post_overlay"
 
 This test checks that the display can post content to the screen. It should
 flash the screen briefly and run without error. Since it is important that
 screen looks flawless, a visual inspection should also be perfomed using
-mir_demo_standalone_render_to_fb 
+mir_demo_standalone_render_to_fb and mir_demo_standalone_render_overlays 
 
 ###Mir GPU buffer allocations (gralloc tests)###
 
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.can_allocate_sw_buffer"
-    mir_integration_tests --gtest-filter="AndroidHardwareSanity.can_allocate_hw_buffer"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.can_allocate_sw_buffer"
+    mir_android_diagnostics --gtest_filter="AndroidMirDiagnostics.can_allocate_hw_buffer"
 
 This will test that Mir can access the gralloc module and allocate GPU buffers.
 
@@ -85,7 +93,7 @@ The demo servers provide a good way to check visually that clients can connect
 and display to the screen.
 In one terminal, run
 
-    mir_proving_server
+    mir_demo_server
 
 and in another terminal, run
 
@@ -138,6 +146,12 @@ and demo standalone programs. If its more convenient, setting
 MIR_SERVER_HWC_REPORT=log to the environment of the running server will give 
 the hwc report on stdout.
 
+###Android platform quirks###
+If a driver has a bug that can be fixed, its best to fix the bug in the driver.
+However, if workarounds are needed due to source unavailability, they can be
+experimented with via quicks that can be activated via the command line.
+The list of quirks is printed with the --help flag on a mir_demo_server.
+
 ###Note on HWC versions###
 The "--hwc-report log" will log the HWC version at the beginning of the report,
  e.g.
@@ -149,8 +163,8 @@ If you see something like:
     HWC version unknown (<version>)
 
 This means that Mir does not support the version of hwc on the device.
-As of Dec 2014, Mir supports the legacy FB module, as well as HWC versions
-1.0, 1.1, 1.2, and 1.3. 
+As of Feb 2016, Mir supports the legacy FB module, as well as HWC versions
+1.0, 1.1, 1.2, 1.3, and 1.4. 
 
 If you run
 
