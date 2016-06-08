@@ -77,7 +77,7 @@ static void available_callback(MirBuffer* buffer, void* client_context)
     pthread_mutex_unlock(&info->lock);
 }
 
-volatile int rendering = 1;
+volatile sig_atomic_t rendering = 1;
 static void shutdown(int signum)
 {
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -127,8 +127,18 @@ int main(int argc, char** argv)
     int const chain_width = width / 2;
     int const chain_height = height / 2;
 
-    signal(SIGTERM, shutdown);
-    signal(SIGINT, shutdown);
+    sigset_t signal_set;
+    sigemptyset(&signal_set);
+    sigaddset(&signal_set, SIGALRM);
+    sigprocmask(SIG_BLOCK, &signal_set, NULL);
+
+    struct sigaction action;
+    action.sa_handler = shutdown;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+
 
     int displacement_x = 0;
     int displacement_y = 0;
@@ -230,7 +240,10 @@ int main(int argc, char** argv)
             mir_presentation_chain_submit_buffer(chain[i], b);
 
             //just looks like a blur if we don't slow things down
-            usleep(500000);
+            ualarm(500000, 0);
+            int sig;
+            sigwait(&signal_set, &sig);
+            if (!rendering) break;
 
             if (++spare_buffer > num_chains)
                 spare_buffer = 0;
