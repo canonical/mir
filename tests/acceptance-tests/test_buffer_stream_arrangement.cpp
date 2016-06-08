@@ -302,6 +302,7 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
         connection, 100, 100, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_streams(spec, infos.data(), infos.size());
     auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
     EXPECT_TRUE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
 }
