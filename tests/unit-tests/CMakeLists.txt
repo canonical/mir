@@ -17,6 +17,10 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_X11)
 endif()
 
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
