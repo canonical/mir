@@ -571,6 +571,13 @@ protected:
     Vector<PointerCoords> mSamplePointerCoords;
 };
 
+struct RawBufferEvent : public InputEvent {
+
+    virtual int32_t getType() const { return AINPUT_EVENT_TYPE_BUFFER; }
+    virtual ~RawBufferEvent() { }
+    std::string buffer;
+};
+
 /*
  * Input event factory.
  */
@@ -583,6 +590,7 @@ public:
 
     virtual KeyEvent* createKeyEvent() = 0;
     virtual MotionEvent* createMotionEvent() = 0;
+    virtual RawBufferEvent* createRawBufferEvent() = 0;
 };
 
 /*
@@ -596,10 +604,12 @@ public:
 
     virtual KeyEvent* createKeyEvent() { return & mKeyEvent; }
     virtual MotionEvent* createMotionEvent() { return & mMotionEvent; }
+    virtual RawBufferEvent* createRawBufferEvent() { return &mRawEvent; }
 
 private:
     KeyEvent mKeyEvent;
     MotionEvent mMotionEvent;
+    RawBufferEvent mRawEvent;
 };
 
 /*
@@ -612,6 +622,7 @@ public:
 
     virtual KeyEvent* createKeyEvent();
     virtual MotionEvent* createMotionEvent();
+    virtual RawBufferEvent* createRawBufferEvent();
 
     void recycle(InputEvent* event);
 
@@ -620,6 +631,7 @@ private:
 
     Vector<KeyEvent*> mKeyEventPool;
     Vector<MotionEvent*> mMotionEventPool;
+    Vector<RawBufferEvent*> mRawBufferEventPool;
 };
 
 } // namespace android

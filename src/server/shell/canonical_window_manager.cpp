@@ -351,6 +351,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     COPY_IF_SET(min_aspect);
     COPY_IF_SET(max_aspect);
     COPY_IF_SET(output_id);
+    COPY_IF_SET(confine_pointer);
 
     #undef COPY_IF_SET
 
