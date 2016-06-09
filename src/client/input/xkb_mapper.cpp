@@ -77,19 +77,6 @@ uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
     return evdev_scan_code + 8;
 }
 
-xkb_keysym_t keysym_for_scan_code(xkb_state* state, uint32_t xkb_scan_code)
-{
-    const xkb_keysym_t* syms;
-    uint32_t num_syms = xkb_key_get_syms(state, xkb_scan_code, &syms);
-
-    if (num_syms == 1)
-    {
-        return syms[0];
-    }
-
-    return XKB_KEY_NoSymbol;
-}
-
 }
 
 mi::XKBContextPtr mi::make_unique_context()
@@ -276,7 +263,7 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
 
 xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action)
 {
-    auto key_sym = keysym_for_scan_code(state.get(), scan_code);
+    auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
     auto mod_change = xkb_key_code_to_modifier(key_sym);
 
     if (action == mir_keyboard_action_up)

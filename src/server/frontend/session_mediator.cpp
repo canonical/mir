@@ -615,6 +615,7 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(confine_pointer);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
