@@ -1229,6 +1229,7 @@ void MirConnection::allocate_buffer(
     mir_buffer_callback callback, void* context)
 {
     mp::BufferAllocation request;
+    request.mutable_id()->set_value(-1);
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
@@ -1237,14 +1238,11 @@ void MirConnection::allocate_buffer(
 
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
-
-    auto response = std::make_shared<mir::protobuf::Void>();
     buffer_factory->expect_buffer(
-        client_buffer_factory, response, this,
+        client_buffer_factory, this,
         size, format, usage,
         callback, context);
-    server.allocate_buffers(&request, response.get(),
-        gp::NewCallback(this, &MirConnection::buffer_allocation_request_complete, response.get()));
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1253,24 +1251,4 @@ void MirConnection::release_buffer(int buffer_id)
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
-
-    surface_map->erase(buffer_id);
-}
-
-int MirConnection::next_error_buffer_id()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return error_buffer_id--;
-}
-
-void MirConnection::buffer_allocation_request_complete(mp::Void* response)
-{
-    if (response->has_error())
-    {
-        auto msg = std::string(response->error().c_str());
-        auto id = next_error_buffer_id();
-        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(response, id);
-        surface_map->insert(id, buffer);
-        buffer->received();
-    }
 }

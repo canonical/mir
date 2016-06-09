@@ -18,7 +18,6 @@
 
 #include "mir/client_buffer_factory.h"
 #include "buffer_factory.h"
-#include "error_buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include "protobuf_to_native_buffer.h"
@@ -28,12 +27,10 @@ namespace geom = mir::geometry;
 
 mcl::BufferFactory::AllocationRequest::AllocationRequest(
     std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
-    std::shared_ptr<protobuf::Void> const& response,
     MirConnection* connection,
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     native_buffer_factory(native_buffer_factory),
-    response(response),
     connection(connection),
     size(size),
     format(format),
@@ -45,7 +42,6 @@ mcl::BufferFactory::AllocationRequest::AllocationRequest(
 
 void mcl::BufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    std::shared_ptr<mir::protobuf::Void> const& response,
     MirConnection* connection,
     geometry::Size size,
     MirPixelFormat format,
@@ -55,26 +51,7 @@ void mcl::BufferFactory::expect_buffer(
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(
-            factory, response, connection, size, format, usage, cb, cb_context));
-}
-
-std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::error_buffer(
-    mir::protobuf::Void* response, int id)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
-        [&](std::unique_ptr<AllocationRequest> const& it)
-        {
-            return (response == it->response.get());
-        });
-    if (request_it == allocation_requests.end() || !response->has_error())
-        BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
-
-    auto buffer = std::make_unique<mcl::ErrorBuffer>(
-       response->error(), id, (*request_it)->cb, (*request_it)->cb_context);
-    allocation_requests.erase(request_it);
-    return std::move(buffer);
+        std::make_unique<AllocationRequest>(factory, connection, size, format, usage, cb, cb_context));
 }
 
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)

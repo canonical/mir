@@ -199,7 +199,6 @@ public:
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(int buffer_id);
-    void buffer_allocation_request_complete(mir::protobuf::Void*);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -253,9 +252,6 @@ private:
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     void context_created(ChainCreationRequest*);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
-
-    int next_error_buffer_id();
-    int error_buffer_id = -1;
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
