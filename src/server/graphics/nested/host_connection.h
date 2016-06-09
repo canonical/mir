@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir/graphics/nested_context.h"
+#include "mir/geometry/rectangle.h"
 
 #include <memory>
 #include <vector>
@@ -36,6 +37,8 @@ class CursorImage;
  
 namespace nested
 {
+using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
+
 class HostSurface;
 class HostConnection : public NestedContext
 {
@@ -53,6 +56,11 @@ public:
     virtual void set_cursor_image(CursorImage const& image) = 0;
     virtual void hide_cursor() = 0;
     virtual auto graphics_platform_library() -> std::string = 0;
+
+    virtual UniqueInputConfig create_input_device_config() = 0;
+    virtual void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) = 0;
+    virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
+    virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
 
 protected:
     HostConnection() = default;
