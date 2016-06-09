@@ -282,3 +282,18 @@ TEST_F(XKBMapper, injected_key_state_affects_mapping_of_key_code)
 
     map_event(keyboard, mir_keyboard_action_down, KEY_Q);
 }
+
+TEST_F(XKBMapper, on_czech_qwerty_caps_lock_should_provide_uppercase_letters)
+{
+    auto keyboard_cz = MirInputDeviceId{0};
+    mapper.set_keymap(mi::Keymap{"pc105+inet", "cz", "qwerty", ""});
+
+    InSequence seq;
+    EXPECT_CALL(*this, mapped_event(mt::KeyOfSymbol(XKB_KEY_Caps_Lock)));
+    EXPECT_CALL(*this, mapped_event(mt::KeyOfSymbol(XKB_KEY_Caps_Lock)));
+    EXPECT_CALL(*this, mapped_event(mt::KeyOfSymbol(XKB_KEY_Ecaron)));
+
+    map_event(keyboard_cz, mir_keyboard_action_down, KEY_CAPSLOCK);
+    map_event(keyboard_cz, mir_keyboard_action_up, KEY_CAPSLOCK);
+    map_event(keyboard_cz, mir_keyboard_action_down, KEY_2);
+}

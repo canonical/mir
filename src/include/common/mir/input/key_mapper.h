@@ -47,6 +47,7 @@ class KeyMapper
 public:
     KeyMapper() = default;
     virtual ~KeyMapper() = default;
+
     /// Update the key state of device \a id, with the given sequence of pressed scan codes.
     virtual void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state) = 0;
 
@@ -87,8 +88,6 @@ public:
      * masks in input events with the modifier mask evaluated by this Keymapper.
      */
     virtual void map_event(MirEvent& event) = 0;
-
-    virtual MirInputEventModifiers modifiers() const = 0;
 
 protected:
     KeyMapper(KeyMapper const&) = delete;
