@@ -182,6 +182,7 @@ MIR_SERVER_0.22 {
     mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_window_manager_builder*;
+    mir::Server::override_the_persistent_surface_store*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
@@ -219,6 +220,7 @@ MIR_SERVER_0.22 {
     mir::Server::the_surface_factory*;
     mir::Server::the_surface_stack*;
     mir::Server::the_touch_visualizer*;
+    mir::Server::the_persistent_surface_store*;
     mir::Server::wrap_cursor*;
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
@@ -801,6 +803,7 @@ MIR_SERVER_0.22 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
+    mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;

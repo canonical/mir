@@ -68,7 +68,8 @@ namespace mo = mir::options;
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
-    MACRO(coordinate_translator)
+    MACRO(coordinate_translator) \
+    MACRO(persistent_surface_store)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
@@ -96,7 +97,8 @@ namespace mo = mir::options;
     MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
-    MACRO(the_application_not_responding_detector)
+    MACRO(the_application_not_responding_detector)\
+    MACRO(the_persistent_surface_store)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
