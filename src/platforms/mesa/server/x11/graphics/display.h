@@ -56,7 +56,7 @@ public:
     X11Window(::Display* const x_dpy,
               EGLDisplay egl_dpy,
               geometry::Size const size,
-              std::shared_ptr<GLConfig> const& gl_config);
+              GLConfig const& gl_config);
     ~X11Window();
 
     operator Window() const;
@@ -101,7 +101,7 @@ class Display : public graphics::Display
 public:
     explicit Display(::Display* x_dpy,
                      geometry::Size const size,
-                     std::shared_ptr<GLConfig> const& gl_config);
+                     GLConfig const& gl_config);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;

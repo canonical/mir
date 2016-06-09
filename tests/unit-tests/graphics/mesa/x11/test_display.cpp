@@ -22,7 +22,7 @@
 #include "src/platforms/mesa/server/x11/graphics/display.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/mock_gl_config.h"
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -82,11 +82,12 @@ public:
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   std::make_shared<mtd::StubGLConfig>());
+                   mock_gl_config);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
+    mtd::MockGLConfig mock_gl_config;
 };
 
 }
@@ -112,6 +113,31 @@ TEST_F(X11DisplayTest, creates_display_successfully)
 
     EXPECT_CALL(mock_x11, XMapWindow(mock_x11.fake_x11.display,_))
         .Times(Exactly(1));
+
+    auto display = create_display();
+}
+
+TEST_F(X11DisplayTest, respects_gl_config)
+{
+    using namespace testing;
+
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(depth_bits));
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(stencil_bits));
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    _,_,_))
+        .Times(AtLeast(1));
 
     auto display = create_display();
 }

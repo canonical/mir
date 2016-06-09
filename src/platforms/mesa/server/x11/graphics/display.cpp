@@ -64,7 +64,7 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
 mgx::X11Window::X11Window(::Display* x_dpy,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
-                          std::shared_ptr<GLConfig> const& gl_config)
+                          GLConfig const& gl_config)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
@@ -73,8 +73,8 @@ mgx::X11Window::X11Window(::Display* x_dpy,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
-        EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
+        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
+        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
         EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
@@ -248,7 +248,7 @@ mgx::X11EGLSurface::operator EGLSurface() const
 
 mgx::Display::Display(::Display* x_dpy,
                       geom::Size const size,
-                      std::shared_ptr<GLConfig> const& gl_config)
+                      GLConfig const& gl_config)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
       win{X11Window(x_dpy,
