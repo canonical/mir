@@ -1257,8 +1257,8 @@ void MirConnection::release_buffer(int buffer_id)
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
-    if (buffer_id < 0)
-        surface_map->erase(buffer_id);
+
+    surface_map->erase(buffer_id);
 }
 
 int MirConnection::next_error_buffer_id()
