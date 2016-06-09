@@ -521,6 +521,16 @@ void mir_surface_spec_set_event_handler(
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
 
 /**
+ * Attempts to set the pointer confinement spec for this surface
+ *
+ * This will request the window manager to confine the pointer to the surfaces region.
+ *
+ * \param [in] spec  The spec to accumulate the request in.
+ * \param [in] state The state you would like the pointer confinement to be in.
+ */
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+
+/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
