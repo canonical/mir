@@ -122,11 +122,15 @@ MirSurface::MirSurface(
       void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
-      buffer_stream(buffer_stream),
+      default_stream(buffer_stream),
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
-      creation_handle(handle)
+      creation_handle(handle),
+      size(spec.width.is_set() && spec.height.is_set() ? geom::Size{spec.width.value(), spec.height.value()} : geom::Size{0,0}),
+      format(spec.pixel_format.is_set() ? spec.pixel_format.value() : mir_pixel_format_invalid),
+      usage(spec.buffer_usage.is_set() ? spec.buffer_usage.value() : mir_buffer_usage_hardware),
+      output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {
@@ -172,7 +176,7 @@ MirSurfaceParameters MirSurface::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    return buffer_stream->get_parameters();
+    return {name.c_str(), size.width.as_int(), size.height.as_int(), format, usage, output_id};
 }
 
 char const * MirSurface::get_error_message()
@@ -281,9 +285,9 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     // possible to eliminate it in the second phase of buffer
     // stream where the existing MirSurface swap interval functions
     // may be deprecated in terms of mir_buffer_stream_ alternatives
-    if (at == mir_surface_attrib_swapinterval)
+    if ((at == mir_surface_attrib_swapinterval) && default_stream)
     {
-        buffer_stream->set_swap_interval(value);
+        default_stream->set_swap_interval(value);
         return &configure_wait_handle;
     }
 
@@ -387,8 +391,8 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
 
     if (at == mir_surface_attrib_swapinterval)
     {
-        if (buffer_stream)
-            return buffer_stream->swap_interval();
+        if (default_stream)
+            return default_stream->swap_interval();
         else // Surface creation is not finalized
             return 1;
     }
@@ -447,13 +451,10 @@ void MirSurface::handle_event(MirEvent const& e)
     }
     case mir_event_type_resize:
     {
-        if (auto_resize_stream)
-        {
-            auto resize_event = mir_event_get_resize_event(&e);
-            buffer_stream->set_size(geom::Size{
-                mir_resize_event_get_width(resize_event),
-                mir_resize_event_get_height(resize_event)});
-        }
+        auto resize_event = mir_event_get_resize_event(&e);
+        size = { mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event) };
+        if (default_stream)
+            default_stream->set_size(size);
         break;
     }
     default:
@@ -506,7 +507,7 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     
-    return buffer_stream.get();
+    return default_stream.get();
 }
 
 void MirSurface::on_modified()
@@ -555,6 +556,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(confine_pointer);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
     #undef COPY_IF_SET
@@ -600,7 +602,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        auto_resize_stream = false;
+        default_stream = nullptr;
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();

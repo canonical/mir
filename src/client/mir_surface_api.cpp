@@ -693,6 +693,16 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
+try
+{
+    spec->confine_pointer = state;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
     mir::require(mir_surface_is_valid(surface));

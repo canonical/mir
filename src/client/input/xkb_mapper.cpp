@@ -24,7 +24,6 @@
 #include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
