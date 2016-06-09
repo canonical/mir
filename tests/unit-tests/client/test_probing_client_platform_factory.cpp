@@ -43,17 +43,21 @@ void populate_graphics_module_for(MirModuleProperties& props, mir::SharedLibrary
     ::memcpy(&props, server_description(), sizeof(props));
 }
 
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
 void populate_valid_mesa_platform_package(MirPlatformPackage& pkg)
 {
     memset(&pkg, 0, sizeof(MirPlatformPackage));
     pkg.fd_items = 1;
     pkg.fd[0] = 23;
 }
+#endif
 
+#if defined(MIR_BUILD_PLATFORM_ANDROID)
 void populate_valid_android_platform_package(MirPlatformPackage& pkg)
 {
     memset(&pkg, 0, sizeof(pkg));
 }
+#endif
 
 class ModuleContext
 {
