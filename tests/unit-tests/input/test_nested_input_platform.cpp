@@ -35,7 +35,6 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
-
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mr = mir::report;
@@ -78,7 +77,6 @@ struct TestNestedInputPlatform : Test
     mi::DeviceData a_keyboard{1, mir_input_device_capability_keyboard, "keys" , "keys-evdev2"};
     mi::DeviceData a_mouse{0, mir_input_device_capability_pointer, "rodent", "rodent-evdev1"};
     const mir::geometry::Rectangle source_surface{{0, 0}, {100, 100}};
-
 
     auto capture_input_device(mi::DeviceData& dev)
     {

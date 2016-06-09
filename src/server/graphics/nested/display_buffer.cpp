@@ -35,8 +35,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
     MirPixelFormat preferred_format,
-    std::shared_ptr<HostConnection> const& host_connection
-    ) :
+    std::shared_ptr<HostConnection> const& host_connection) :
     egl_display(egl_display),
     host_surface{host_surface},
     host_connection{host_connection},
