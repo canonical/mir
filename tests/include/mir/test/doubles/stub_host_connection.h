@@ -82,7 +82,6 @@ public:
 
     auto graphics_platform_library() -> std::string { return {}; }
 
-
     graphics::nested::UniqueInputConfig create_input_device_config()
     {
         return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),

@@ -73,6 +73,7 @@ private:
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
     void update_states();
+    bool filter_input_event(MirInputEvent const* event);
 
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
@@ -87,6 +88,7 @@ private:
         bool update_button_state(MirPointerButtons button_state);
         bool update_spots(MirTouchEvent const* event);
         void update_scan_codes(MirKeyboardEvent const* event);
+        bool allowed_scan_code_action(MirKeyboardEvent const* event) const;
 
         MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;

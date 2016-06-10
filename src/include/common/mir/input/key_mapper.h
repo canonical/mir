@@ -88,6 +88,7 @@ public:
      * masks in input events with the modifier mask evaluated by this Keymapper.
      */
     virtual void map_event(MirEvent& event) = 0;
+    virtual MirInputEventModifiers modifiers() const = 0;
 
 protected:
     KeyMapper(KeyMapper const&) = delete;

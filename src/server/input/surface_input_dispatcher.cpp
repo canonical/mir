@@ -149,10 +149,6 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
     if (!started)
         return;
 
-    auto key_it = focus_surface_key_state.depressed_scancodes.find(reset_device_id);
-    if (key_it != focus_surface_key_state.depressed_scancodes.end())
-        focus_surface_key_state.depressed_scancodes.erase(key_it);
-
     auto pointer_it = pointer_state_by_id.find(reset_device_id);
     if (pointer_it != pointer_state_by_id.end())
         pointer_state_by_id.erase(pointer_it);
@@ -162,7 +158,7 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
         touch_state_by_id.erase(touch_it);
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev)
+bool mi::SurfaceInputDispatcher::dispatch_key(MirKeyboardEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
@@ -173,9 +169,7 @@ bool mi::SurfaceInputDispatcher::dispatch_key(MirInputDeviceId id, MirKeyboardEv
     if (!strong_focus)
         return false;
 
-    if (!focus_surface_key_state.handle_event(id, kev))
-        return false;
-   
+
     deliver(strong_focus, kev);
 
     return true;
@@ -387,7 +381,7 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
     switch (mir_input_event_get_type(iev))
     {
     case mir_input_event_type_key:
-        return dispatch_key(id, mir_input_event_get_keyboard_event(iev));
+        return dispatch_key(mir_input_event_get_keyboard_event(iev));
     case mir_input_event_type_touch:
         return dispatch_touch(id, mir_input_event_get_touch_event(iev));
     case mir_input_event_type_pointer:
@@ -410,7 +404,6 @@ void mi::SurfaceInputDispatcher::stop()
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
-    focus_surface_key_state.clear();
     pointer_state_by_id.clear();
     touch_state_by_id.clear();
     
@@ -419,7 +412,6 @@ void mi::SurfaceInputDispatcher::stop()
 
 void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
 {
-    focus_surface_key_state.clear();
     focus_surface = target;
 }
 
@@ -435,66 +427,3 @@ void mi::SurfaceInputDispatcher::clear_focus()
     set_focus_locked(lg, nullptr);
 }
 
-bool mi::SurfaceInputDispatcher::KeyInputState::handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev)
-{
-    auto action = mir_keyboard_event_action(kev);
-    auto scan_code = mir_keyboard_event_scan_code(kev);
-    if (action == mir_keyboard_action_up)
-    {
-        return release_key(id, scan_code);
-    }
-    else if (action == mir_keyboard_action_down)
-    {
-        return press_key(id, scan_code);
-    }
-    else if (action == mir_keyboard_action_repeat)
-    {
-        return repeat_key(id, scan_code);
-    }
-    return false;
-}
-
-bool mi::SurfaceInputDispatcher::KeyInputState::press_key(MirInputDeviceId id, int scan_code)
-{
-    // First key press for a device
-    if (depressed_scancodes.find(id) == depressed_scancodes.end())
-    {
-        depressed_scancodes[id] = {};
-    }
-
-    auto& device_key_state = depressed_scancodes[id];
-    if (device_key_state.find(scan_code) != device_key_state.end())
-        return false;
-    device_key_state.insert(scan_code);
-    return true;
-}
-
-bool mi::SurfaceInputDispatcher::KeyInputState::release_key(MirInputDeviceId id, int scan_code)
-{
-    if (depressed_scancodes.find(id) == depressed_scancodes.end())
-    {
-        return false;
-    }
-
-    auto& device_key_state = depressed_scancodes[id];
-    if (device_key_state.find(scan_code) == device_key_state.end())
-        return false;
-    device_key_state.erase(scan_code);
-    return true;
-}
-
-bool mi::SurfaceInputDispatcher::KeyInputState::repeat_key(MirInputDeviceId id, int scan_code)
-{
-    if (depressed_scancodes.find(id) == depressed_scancodes.end())
-        return false;
-    auto& device_key_state = depressed_scancodes[id];
-    if (device_key_state.find(scan_code) == device_key_state.end())
-        return false;
-
-    return true;
-}
-
-void mi::SurfaceInputDispatcher::KeyInputState::clear()
-{
-    depressed_scancodes.clear();
-}

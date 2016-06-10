@@ -235,3 +235,30 @@ TEST_F(SeatInputDeviceTracker, pointing_device_removal_removes_pressed_button_st
     tracker.dispatch(*another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion,
                                                            mir_pointer_button_secondary, 0, 0, 0, 0));
 }
+
+TEST_F(SeatInputDeviceTracker, inconsistent_key_down_dropped)
+{
+    tracker.add_device(some_device);
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyOfScanCode(KEY_A))).Times(1);
+
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A));
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A));
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_A));
+}
+
+TEST_F(SeatInputDeviceTracker, repeat_without_down_dropped)
+{
+    tracker.add_device(some_device);
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyOfScanCode(KEY_A))).Times(0);
+
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_repeat, 0, KEY_A));
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_repeat, 0, KEY_A));
+}
+
+TEST_F(SeatInputDeviceTracker, inconsistent_key_up_dropped)
+{
+    tracker.add_device(some_device);
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyOfScanCode(KEY_A))).Times(0);
+
+    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_A));
+}

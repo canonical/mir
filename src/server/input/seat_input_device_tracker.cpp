@@ -80,6 +80,10 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
     if (mir_event_get_type(&event) == mir_event_type_input)
     {
         auto input_event = mir_event_get_input_event(&event);
+
+        if (filter_input_event(input_event))
+            return;
+
         update_seat_properties(input_event);
 
         key_mapper->map_event(event);
@@ -93,6 +97,22 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
     }
 
     dispatcher->dispatch(event);
+}
+
+bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)
+{
+    auto device_id = mir_input_event_get_device_id(event);
+    auto type = mir_input_event_get_type(event);
+    if (type == mir_input_event_type_key)
+    {
+        auto stored_data = device_data.find(device_id);
+
+        if (stored_data == end(device_data))
+            return true;
+
+        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));
+    }
+    return false;
 }
 
 void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* event)
@@ -233,4 +253,14 @@ void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
 {
     cursor_x = x;
     cursor_y = y;
+}
+
+bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const
+{
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    bool found = find(begin(scan_codes), end(scan_codes), scan_code) != end(scan_codes);
+
+    return (action == mir_keyboard_action_down && !found)
+        || (action != mir_keyboard_action_down && found);
 }
