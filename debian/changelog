@@ -1,3 +1,14 @@
+mir (0.23.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.23.1 (https://launchpad.net/mir/+milestone/0.23.1)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Turn off NBS as workaround to LP: #1590765
+ 
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Fri, 10 Jun 2016 11:47:01 -0400
+
 mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]
