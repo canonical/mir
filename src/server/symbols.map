@@ -825,4 +825,4 @@ MIR_SERVER_0.24 {  # New functions in Mir 0.24
     mir::Server::the_persistent_surface_store*;
   };
   local: *;
-} MIR_SERVER_0.23;
+} MIR_SERVER_0.22;
