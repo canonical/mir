@@ -6,9 +6,8 @@ mir (0.23.1-0ubuntu1) UNRELEASED; urgency=medium
       . no abi changes in any libraries. bugfix release only
     - Bugs fixed:
       . Turn of NBS as workaround to (LP: #1590765)
-      . Fix Alt-Gr on external keyboards (LP: #1565236)
  
- -- Kevin DuBois <kevin.duboi@canonical.com>  Fri, 10 Jun 2016 11:47:01 -0400
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Fri, 10 Jun 2016 11:47:01 -0400
 
 mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
