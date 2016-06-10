@@ -20,12 +20,10 @@
 #include "mir/shell/persistent_surface_store.h"
 
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/fake_shared.h"
-#include "mir_test_framework/any_surface.h"
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -37,7 +35,7 @@ using namespace testing;
 
 namespace
 {
-struct TestPersistentSurfaceStore : mtf::ConnectedClientHeadlessServer
+struct TestPersistentSurfaceStore : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
@@ -48,13 +46,13 @@ struct TestPersistentSurfaceStore : mtf::ConnectedClientHeadlessServer
             return msc;
         });
 
-        mtf::ConnectedClientHeadlessServer::SetUp();
+        mtf::ConnectedClientWithASurface::SetUp();
     }
 
     void TearDown() override
     {
         shell.reset();
-        mtf::ConnectedClientHeadlessServer::TearDown();
+        mtf::ConnectedClientWithASurface::TearDown();
     }
 
     std::shared_ptr<ms::Surface> latest_shell_surface() const
@@ -71,19 +69,15 @@ private:
 
 TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
 {
-    auto const client_surface = mtf::make_any_surface(connection);
-    ASSERT_THAT(client_surface, NotNull());
+    auto const shell_server_surface = latest_shell_surface();
+    ASSERT_THAT(shell_server_surface, NotNull());
 
-    auto const shell_surface = latest_shell_surface();
-    ASSERT_THAT(shell_surface, NotNull());
-
-    MirPersistentId* client_surface_id = mir_surface_request_persistent_id_sync(client_surface);
-    msh::PersistentSurfaceStore::Id server_surface_id = server.the_persistent_surface_store()->id_for_surface(shell_surface);
+    MirPersistentId* client_surface_id = mir_surface_request_persistent_id_sync(surface);
+    msh::PersistentSurfaceStore::Id server_surface_id = server.the_persistent_surface_store()->id_for_surface(shell_server_surface);
 
     std::string client_surface_id_string(mir_persistent_id_as_string(client_surface_id));
 
-    ASSERT_EQ(server_surface_id.serialize_to_string(), client_surface_id_string);
+    ASSERT_THAT(server_surface_id.serialize_to_string(), Eq(client_surface_id_string));
 
     mir_persistent_id_release(client_surface_id);
-    mir_surface_release_sync(client_surface);
 }
