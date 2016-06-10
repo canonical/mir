@@ -413,12 +413,14 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
 
 mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
                                MirPointerButtons pointer_buttons,
+                               MirInputEventModifiers modifiers,
                                float x_axis_value,
                                float y_axis_value,
                                std::vector<InputDeviceState>&& device_states)
 {
     auto e = new_event<MirInputDeviceStateEvent>();
     e->set_when(timestamp);
+    e->set_modifiers(modifiers);
     e->set_pointer_buttons(pointer_buttons);
     e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
     e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
