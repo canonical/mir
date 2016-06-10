@@ -186,6 +186,9 @@ public:
      */
     auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() override;
+    virtual std::shared_ptr<scene::ApplicationNotRespondingDetector>
+        wrap_application_not_responding_detector(
+            std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped);
     /** @} */
 
     /** @name graphics configuration - customization
