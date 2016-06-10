@@ -1,3 +1,18 @@
+mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
+    - ABI summary:
+      . TODO
+    - Enhancements:
+      . Added a new tool 'mirvanity' which can use a high speed video camera
+        to measure client-to-screen latency.
+      . Added (build-time) support for desktop full OpenGL servers (disabled
+        by default in favor of GLESv2).
+    - Bug fixes:
+      . TODO: list these after branching
+ 
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jun 2016 16:29:31 -0400
+
 mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]
