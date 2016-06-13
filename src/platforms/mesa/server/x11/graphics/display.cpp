@@ -31,6 +31,8 @@
 #include <fcntl.h>
 #include <mutex>
 
+#include <X11/Xatom.h>
+
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
 
@@ -171,6 +173,9 @@ mgx::X11Window::X11Window(::Display* x_dpy,
         };
 
         XSetWMHints(x_dpy, win, &wm_hints);
+
+        Atom wmDeleteMessage = XInternAtom(x_dpy, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(x_dpy, win, &wmDeleteMessage, 1);
     }
 
     XMapWindow(x_dpy, win);
