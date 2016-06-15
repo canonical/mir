@@ -823,5 +823,12 @@ MIR_SERVER_0.24 {
   extern "C++" {
    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
    mir::Server::wrap_application_not_responding_detector*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::ApplicationNotRespondingDetectorWrapper*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::?ApplicationNotRespondingDetectorWrapper*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::pong_received*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::register_observer*;
+   mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
   };
-};
+} MIR_SERVER_0.22;
