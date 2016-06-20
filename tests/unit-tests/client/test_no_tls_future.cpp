@@ -18,6 +18,7 @@
 
 #include "src/client/no_tls_future-inl.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
@@ -32,4 +33,20 @@ TEST(NoTLSFuture, and_then_calls_back_immediately_when_promise_is_already_fulfil
 
     future.and_then([&callback_called](int) { callback_called = true;});
     EXPECT_TRUE(callback_called);
+}
+
+TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already_fulfilled)
+{
+    constexpr int expected{0xfeed};
+
+    mcl::NoTLSPromise<int> promise;
+    promise.set_value(expected);
+
+    auto future = promise.get_future();
+    future.and_then(
+        [](int result)
+        {
+            using namespace testing;
+            EXPECT_THAT(result, Eq(expected));
+        });
 }
