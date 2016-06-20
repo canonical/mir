@@ -36,6 +36,7 @@
 
 namespace mi = mir::input;
 namespace mev = mir::events;
+namespace geom = mir::geometry;
 
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
@@ -208,16 +209,35 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
     return buttons;
 }
 
+void mi::SeatInputDeviceTracker::set_confinement_regions(geometry::Rectangles const& regions)
+{
+    pointer_confinment_regions = regions;
+}
+
+void mi::SeatInputDeviceTracker::reset_confinement_regions()
+{
+    pointer_confinment_regions.clear();
+}
+
+void mi::SeatInputDeviceTracker::confine_pointer(std::function<void(geom::Point&)> const& confine)
+{
+    mir::geometry::Point const old{cursor_x, cursor_y};
+    auto confined = old;
+    confine(confined);
+    if (confined.x != old.x) cursor_x = confined.x.as_int();
+    if (confined.y != old.y) cursor_y = confined.y.as_int();
+}
+
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
     cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
     cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
 
-    mir::geometry::Point const old{cursor_x, cursor_y};
-    auto confined = old;
-    input_region->confine(confined);
-    if (confined.x != old.x) cursor_x = confined.x.as_int();
-    if (confined.y != old.y) cursor_y = confined.y.as_int();
+    auto input_region_confine = std::bind(&InputRegion::confine, input_region.get(), std::placeholders::_1);
+    confine_pointer(input_region_confine);
+
+    auto pointer_region_confine = std::bind(&geom::Rectangles::confine, &pointer_confinment_regions, std::placeholders::_1);
+    confine_pointer(pointer_region_confine);
 
     cursor_listener->cursor_moved_to(cursor_x, cursor_y);
 }

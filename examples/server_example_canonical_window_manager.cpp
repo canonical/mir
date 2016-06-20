@@ -416,6 +416,18 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         auto const state = handle_set_state(surface, modifications.state.value());
         surface->configure(mir_surface_attrib_state, state);
     }
+
+    if (modifications.confine_pointer.is_set())
+    {
+        if (modifications.confine_pointer.value() == mir_pointer_confined_to_surface)
+        {
+            surface->set_confine_pointer(mir_pointer_confined_to_surface);
+        }
+        else
+        {
+            surface->set_confine_pointer(mir_pointer_unconfined);
+        }
+    }
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

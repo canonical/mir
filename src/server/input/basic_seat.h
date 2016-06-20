@@ -47,6 +47,8 @@ public:
     void remove_device(Device const& device) override;
     void dispatch_event(MirEvent& event) override;
     geometry::Rectangle get_rectangle_for(Device const& dev) override;
+    virtual void set_confinement_regions(geometry::Rectangles const& regions) override;
+    virtual void reset_confinement_regions() override;
 
 private:
     SeatInputDeviceTracker input_state_tracker;

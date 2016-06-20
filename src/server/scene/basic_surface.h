@@ -148,6 +148,9 @@ public:
 
     void rename(std::string const& title) override;
 
+    void set_confine_pointer(MirPointerConfinementState state) override;
+    MirPointerConfinementState confine_pointer_state() const override;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirSurfaceType set_type(MirSurfaceType t);  // Use configure() to make public changes
@@ -184,6 +187,7 @@ private:
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
+    MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 

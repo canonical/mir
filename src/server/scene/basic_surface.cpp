@@ -916,3 +916,13 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
     }
     return list;
 }
+
+void ms::BasicSurface::set_confine_pointer(MirPointerConfinementState state)
+{
+    confine_pointer_state_ = state;
+}
+
+MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
+{
+    return confine_pointer_state_;
+}
