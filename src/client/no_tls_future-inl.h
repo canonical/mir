@@ -98,7 +98,7 @@ private:
 };
 
 template<typename T>
-struct NoTLSFuture
+class NoTLSFuture
 {
     NoTLSFuture() :
         state(nullptr) 
