@@ -64,6 +64,7 @@ public:
     BasicSurface(
         std::string const& name,
         geometry::Rectangle rect,
+        MirPointerConfinementState state,
         bool nonrectangular,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,
@@ -75,6 +76,7 @@ public:
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
+        MirPointerConfinementState state,
         bool nonrectangular,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,

@@ -103,7 +103,6 @@ struct SurfaceCreationParameters
     mir::optional_value<MirShellChrome> shell_chrome;
     mir::optional_value<std::vector<shell::StreamSpecification>> streams;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
-
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

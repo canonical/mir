@@ -69,8 +69,8 @@ struct Client
         }
         auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
                                                                   surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_name(spec, name.c_str());
         mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+        mir_surface_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
         if (!mir_surface_is_valid(surface))
@@ -88,16 +88,6 @@ struct Client
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
         }
-
-        spec = mir_connection_create_spec_for_changes(connection);
-
-        mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
-
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
-
-        // FIXME Dont have a way to know when the spec has actually taken place to the surface. So wait for now
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     void handle_surface_event(MirSurfaceEvent const* event)
