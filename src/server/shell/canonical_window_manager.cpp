@@ -757,6 +757,8 @@ void msh::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 
 void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    std::lock_guard<std::recursive_mutex> lock{active_surface_mutex};
+
     if (!surface)
     {
         if (active_surface_.lock())
