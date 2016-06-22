@@ -292,6 +292,16 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
     EXPECT_THAT(mir_surface_output_event_get_scale(output_event), FloatEq(scale));
 }
 
+TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
+{
+    set_event_filter(mir_event_type_close_surface);
+
+    mir_surface_set_event_handler(surface, nullptr, nullptr);
+    scene_surface->request_client_surface_close();
+
+    EXPECT_FALSE(wait_for_event(std::chrono::seconds(3)));
+}
+
 namespace
 {
 class WrapShellGeneratingCloseEvent : public mir::shell::ShellWrapper
