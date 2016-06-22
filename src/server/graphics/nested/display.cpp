@@ -37,7 +37,6 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
@@ -179,17 +178,13 @@ geom::Rectangle mgn::detail::DisplaySyncGroup::view_area() const
 mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener) :
+    std::shared_ptr<mg::GLConfig> const& gl_config) :
     platform{platform},
     connection{connection},
-    dispatcher{dispatcher},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
-    cursor_listener{cursor_listener},
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
@@ -321,9 +316,8 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                         egl_display,
                         host_surface,
                         extents,
-                        dispatcher,
-                        cursor_listener,
-                        best_output.current_format));
+                        best_output.current_format,
+                        connection));
             }
         });
 

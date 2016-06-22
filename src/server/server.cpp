@@ -48,7 +48,8 @@ namespace mo = mir::options;
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(shell)\
-    MACRO(surface_stack)
+    MACRO(surface_stack)\
+    MACRO(application_not_responding_detector)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\

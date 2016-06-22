@@ -314,6 +314,9 @@ public:
 
     /// Sets a wrapper functor for creating the surface stack.
     void wrap_surface_stack(Wrapper<shell::SurfaceStack> const& surface_stack);
+
+    /// Sets a wrapper functor for creating the application not responding detector.
+    void wrap_application_not_responding_detector(Wrapper<scene::ApplicationNotRespondingDetector> const & anr_detector);
 /** @} */
 
 /** @name Getting access to Mir subsystems
