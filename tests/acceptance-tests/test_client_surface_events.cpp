@@ -299,7 +299,7 @@ TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
     mir_surface_set_event_handler(surface, nullptr, nullptr);
     scene_surface->request_client_surface_close();
 
-    EXPECT_FALSE(wait_for_event(std::chrono::seconds(3)));
+    EXPECT_FALSE(wait_for_event(std::chrono::seconds(1)));
 }
 
 namespace
