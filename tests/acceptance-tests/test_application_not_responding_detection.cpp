@@ -49,6 +49,23 @@ public:
     {
         mtf::ConnectedClientHeadlessServer::SetUp();
     }
+
+    void tear_down()
+    {
+        mtf::ConnectedClientHeadlessServer::TearDown();
+        torn_down = true;
+    }
+
+    void TearDown() override
+    {
+        if (!torn_down)
+        {
+            tear_down();
+        }
+    }
+
+private:
+    bool torn_down{false};
 };
 
 class DelegateObserver : public ms::ApplicationNotRespondingDetector::Observer
@@ -126,6 +143,68 @@ TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
     EXPECT_CALL(*anr_detector, register_session(_,_)).Times(AtLeast(1));
 
     complete_setup();
+}
+
+TEST_F(ApplicationNotRespondingDetection, can_wrap_anr_detector)
+{
+    using namespace std::literals::chrono_literals;
+    using namespace testing;
+
+    int registration_count{0};
+    int unregister_count{0};
+    server.wrap_application_not_responding_detector(
+        [&registration_count, &unregister_count](auto wrapee)
+        {
+            auto anr_detector = std::make_shared<NiceMock<MockANRDetector>>();
+            ON_CALL(*anr_detector, register_session(_,_))
+                .WillByDefault(Invoke([&registration_count, wrapee](auto a, auto b)
+                    {
+                        ++registration_count;
+                        wrapee->register_session(a, b);
+                    }));
+            ON_CALL(*anr_detector, unregister_session(_))
+                .WillByDefault(Invoke([&unregister_count, wrapee](auto a)
+                    {
+                        ++unregister_count;
+                        wrapee->unregister_session(a);
+                    }));
+            ON_CALL(*anr_detector, pong_received(_))
+                .WillByDefault(Invoke([wrapee](auto a) { wrapee->pong_received(a); }));
+
+            ON_CALL(*anr_detector, register_observer(_))
+                .WillByDefault(Invoke([wrapee](auto observer) { wrapee->register_observer(observer); }));
+            ON_CALL(*anr_detector, unregister_observer(_))
+                .WillByDefault(Invoke([wrapee](auto observer) { wrapee->unregister_observer(observer); }));
+
+            return anr_detector;
+        });
+
+    EXPECT_THAT(registration_count, Eq(0));
+    EXPECT_THAT(unregister_count, Eq(0));
+
+    complete_setup();
+
+    EXPECT_THAT(registration_count, Eq(1));
+    EXPECT_THAT(unregister_count, Eq(0));
+
+    // Verify that we wrap rather than replace by testing the default behaviour.
+    mt::Signal marked_as_unresponsive;
+    auto anr_observer = std::make_shared<DelegateObserver>(
+        [&marked_as_unresponsive](auto) { marked_as_unresponsive.raise(); },
+        [](auto){}
+    );
+
+    server.the_application_not_responding_detector()->register_observer(anr_observer);
+
+    mir_connection_set_ping_event_callback(connection, &black_hole_pong, nullptr);
+
+    EXPECT_TRUE(marked_as_unresponsive.wait_for(10s));
+
+
+    tear_down();
+
+    EXPECT_THAT(registration_count, Eq(1));
+    EXPECT_THAT(unregister_count, Eq(1));
 }
 
 TEST_F(ApplicationNotRespondingDetection, each_new_client_is_registered)

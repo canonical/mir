@@ -188,8 +188,10 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     auto const pos_x = 12.1f;
     auto const pos_y = 53.2f;
     auto const button_state = mir_pointer_button_primary|mir_pointer_button_secondary;
+    auto const modifiers = mir_input_event_modifier_ctrl_right | mir_input_event_modifier_ctrl;
     auto ev = mev::make_event(timestamp,
                               button_state,
+                              modifiers,
                               pos_x,
                               pos_y,
                               {mev::InputDeviceState{MirInputDeviceId{3}, {KEY_LEFTALT, KEY_M}, 0},
@@ -199,6 +201,7 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     auto ids_event = mir_event_get_input_device_state_event(ev.get());
 
     EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
+    EXPECT_THAT(mir_input_device_state_event_modifiers(ids_event), Eq(modifiers));
     EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(pos_x));
     EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(pos_y));
     EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
@@ -220,8 +223,10 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     auto const pos_x = 124.5f;
     auto const pos_y = 91.2f;
     auto const button_state = mir_pointer_button_primary;
+    auto const modifiers = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
     auto ev = mev::make_event(timestamp,
                               button_state,
+                              modifiers,
                               pos_x,
                               pos_y,
                               {});
@@ -234,6 +239,7 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     auto ids_event = mir_event_get_input_device_state_event(deserialzed_event.get());
 
     EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
+    EXPECT_THAT(mir_input_device_state_event_modifiers(ids_event), Eq(modifiers));
     EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(pos_x));
     EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(pos_y));
     EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
@@ -245,8 +251,10 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     auto const pos_x = 0.0f;
     auto const pos_y = 0.0f;
     auto const button_state = mir_pointer_button_primary | mir_pointer_button_secondary;
+    auto const modifiers = mir_input_event_modifier_none;
     auto ev = mev::make_event(timestamp,
                               button_state,
+                              modifiers,
                               pos_x,
                               pos_y,
                               {mev::InputDeviceState{MirInputDeviceId{0}, {}, mir_pointer_button_primary},

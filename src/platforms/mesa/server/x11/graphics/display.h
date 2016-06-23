@@ -32,6 +32,9 @@ namespace mir
 {
 namespace graphics
 {
+
+class GLConfig;
+
 namespace X
 {
 
@@ -50,7 +53,10 @@ private:
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, mir::geometry::Size const size);
+    X11Window(::Display* const x_dpy,
+              EGLDisplay egl_dpy,
+              geometry::Size const size,
+              GLConfig const& gl_config);
     ~X11Window();
 
     operator Window() const;
@@ -93,7 +99,9 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display* x_dpy, mir::geometry::Size const size);
+    explicit Display(::Display* x_dpy,
+                     geometry::Size const size,
+                     GLConfig const& gl_config);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -129,6 +137,7 @@ private:
 };
 
 }
+
 }
 }
 #endif /* MIR_GRAPHICS_X_DISPLAY_H_ */
