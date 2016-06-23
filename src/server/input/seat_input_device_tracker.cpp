@@ -45,7 +45,7 @@ mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatch
                                                    std::shared_ptr<InputRegion> const& input_region)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
       input_region{input_region}, modifier{0}, buttons{0},
-      confine_function{[&input_region](mir::geometry::Point& pos) { input_region->confine(pos); }}
+      confine_function{[input_region](mir::geometry::Point& pos) { input_region->confine(pos); }}
 
 {
 }
