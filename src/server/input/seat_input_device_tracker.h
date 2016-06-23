@@ -66,8 +66,7 @@ private:
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
     void update_states();
-
-    void confine_pointer(std::function<void(mir::geometry::Point&)> const& confine);
+    void confine_pointer();
 
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
@@ -95,6 +94,7 @@ private:
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
     geometry::Rectangles pointer_confinment_regions;
+    std::function<void(mir::geometry::Point&)> confine_function;
 };
 
 }
