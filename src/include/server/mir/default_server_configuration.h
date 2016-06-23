@@ -186,6 +186,9 @@ public:
      */
     auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() override;
+    virtual std::shared_ptr<scene::ApplicationNotRespondingDetector>
+        wrap_application_not_responding_detector(
+            std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped);
     /** @} */
 
     /** @name graphics configuration - customization
@@ -335,6 +338,7 @@ private:
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
+    std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
