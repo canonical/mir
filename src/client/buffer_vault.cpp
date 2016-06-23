@@ -137,9 +137,27 @@ mcl::BufferVault::BufferMap::iterator mcl::BufferVault::available_buffer()
 
 mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
 {
+    std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
     if (disconnected_)
         BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
+
+    //clean up incorrectly sized buffers
+    for (auto it = buffers.begin(); it != buffers.end();)
+    {
+        auto buffer = checked_buffer_from_map(it->first);
+        if ((it->second == Owner::Self) && (buffer->size() != size)) 
+        {
+            current_buffer_count--;
+            free_ids.push_back(it->first);
+            it = buffers.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    } 
+
     mcl::NoTLSPromise<std::shared_ptr<mcl::MirBuffer>> promise;
     auto it = available_buffer();
     auto future = promise.get_future();
@@ -147,6 +165,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
     {
         it->second = Owner::ContentProducer;
         promise.set_value(checked_buffer_from_map(it->first));
+        lk.unlock();
     }
     else
     {
@@ -161,6 +180,9 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
         if (allocate_buffer)
             alloc_buffer(s, format, usage);
     }
+
+    for(auto& id : free_ids)
+        free_buffer(id);
     return future;
 }
 
@@ -283,30 +305,9 @@ void mcl::BufferVault::set_size(geom::Size new_size)
     set_size(lk, new_size);
 }
 
-void mcl::BufferVault::set_size(std::unique_lock<std::mutex>& lk, geometry::Size new_size)
+void mcl::BufferVault::set_size(std::unique_lock<std::mutex> const&, geometry::Size new_size)
 {
-    if (new_size == size)
-        return;
-    std::vector<int> free_ids;
     size = new_size;
-    for (auto it = buffers.begin(); it != buffers.end();)
-    {
-        auto buffer = checked_buffer_from_map(it->first);
-        if ((it->second == Owner::Self) && (buffer->size() != size)) 
-        {
-            current_buffer_count--;
-            free_ids.push_back(it->first);
-            it = buffers.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    } 
-    lk.unlock();
-
-    for(auto& id : free_ids)
-        free_buffer(id);
 }
 
 void mcl::BufferVault::increase_buffer_count()

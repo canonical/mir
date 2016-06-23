@@ -327,9 +327,10 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_d
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
 
     vault.wire_transfer_inbound(package.buffer_id());
+    Mock::VerifyAndClearExpectations(&mock_requests);
+
     vault.wire_transfer_inbound(package4.buffer_id());
     EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
-    Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
 TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
@@ -339,20 +340,6 @@ TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
     vault.wire_transfer_inbound(package4.buffer_id());
 
     EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
-    Mock::VerifyAndClearExpectations(&mock_requests);
-}
-
-TEST_F(StartedBufferVault, setting_size_frees_unneeded_buffers_right_away)
-{
-    EXPECT_CALL(mock_requests, free_buffer(_)).Times(3);
-    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_)).Times(0);
-    auto const cycles = 30u;
-    geom::Size new_size(80, 100);
-    for(auto i = 0u; i < cycles; i++)
-    {
-        new_size = geom::Size(geom::Width(i), new_size.height);
-        vault.set_size(new_size);
-    }
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
@@ -579,15 +566,14 @@ TEST_F(StartedBufferVault, doesnt_free_buffer_until_a_newly_sized_buffer_is_call
     vault.set_size(size); //set back the original size
 
     auto buffer_future = vault.withdraw();
-    vault.wire_transfer_inbound(package4.buffer_id());
     EXPECT_THAT(buffer_future.get()->size(), Eq(size));
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
 TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
 {
-    EXPECT_CALL(mock_requests, free_buffer(_))
-        .Times(2);
+//    EXPECT_CALL(mock_requests, free_buffer(_))
+//        .Times(2);
     auto buffer = vault.withdraw().get();
     vault.set_size(new_size);
     Mock::VerifyAndClearExpectations(&mock_requests);
@@ -603,8 +589,8 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
 
 TEST_F(StartedBufferVault, doesnt_free_buffers_with_content_after_resize)
 {
-    EXPECT_CALL(mock_requests, free_buffer(_))
-        .Times(2);
+//    EXPECT_CALL(mock_requests, free_buffer(_))
+//        .Times(2);
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
     vault.set_size(new_size);
