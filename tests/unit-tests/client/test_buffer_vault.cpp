@@ -563,6 +563,27 @@ TEST_F(StartedBufferVault, doesnt_let_buffers_stagnate_after_resize)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
+//LP: #1590765 (more efficient allocations, and krillin/mali accommodation)
+TEST_F(StartedBufferVault, doesnt_free_buffer_until_a_newly_sized_buffer_is_called_for)
+{
+    auto i = 0u;
+    auto const num_resizes = 10u;
+    std::array<geom::Size, num_resizes> other_sizes;
+    std::generate(other_sizes.begin(), other_sizes.end(),
+        [&i, this] { return geom::Size{ size.width.as_int() + i, size.height.as_int() + i }; } );
+
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    for(auto const& size : other_sizes)
+        vault.set_size(size);
+    vault.set_size(size); //set back the original size
+
+    auto buffer_future = vault.withdraw();
+    vault.wire_transfer_inbound(package4.buffer_id());
+    EXPECT_THAT(buffer_future.get()->size(), Eq(size));
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
 TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
 {
     EXPECT_CALL(mock_requests, free_buffer(_))
