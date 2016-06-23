@@ -221,6 +221,16 @@ typedef enum MirShellChrome
     mir_shell_chrome_low,
 } MirShellChrome;
 
+/**
+ * Pointer Confinement
+ */
+
+typedef enum MirPointerConfinementState
+{
+    mir_pointer_unconfined,
+    mir_pointer_confined_to_surface,
+} MirPointerConfinementState;
+
 /**@}*/
 
 #endif

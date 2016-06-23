@@ -214,3 +214,13 @@ int XUngrabPointer(Display* display, Time time)
 {
     return global_mock->XUngrabKeyboard(display, time);
 }
+
+Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
+{
+    return global_mock->XInternAtom(display, atom_name, only_if_exists);
+}
+
+Status XSetWMProtocols(Display* display, Window w, Atom* protocols, int count)
+{
+    return global_mock->XSetWMProtocols(display, w, protocols, count);
+}

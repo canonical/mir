@@ -162,11 +162,9 @@ mir::DefaultServerConfiguration::the_display()
                 return std::make_shared<mgn::Display>(
                     the_graphics_platform(),
                     the_host_connection(),
-                    the_input_dispatcher(),
                     the_display_report(),
                     the_display_configuration_policy(),
-                    the_gl_config(),
-                    the_cursor_listener());
+                    the_gl_config());
             }
             {
                 return the_graphics_platform()->create_display(
@@ -254,9 +252,7 @@ auto mir::DefaultServerConfiguration::the_mir_client_host_connection()
             return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
                 my_name,
-                the_host_lifecycle_event_listener(),
-                the_global_event_sink(),
-                the_main_loop()
+                the_host_lifecycle_event_listener()
                 );
         });
 }

@@ -26,6 +26,7 @@
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
 
+#include <EGL/egl.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -161,6 +162,19 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
     if (drm_devices.begin() == drm_devices.end())
         return mg::PlatformPriority::unsupported;
+
+    // We also require GBM EGL platform
+    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    if (!client_extensions)
+    {
+        // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be mesa.
+        return mg::PlatformPriority::unsupported;
+    }
+    if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+    {
+        // No platform_gbm support, so we can't work.
+        return mg::PlatformPriority::unsupported;
+    }
 
     // Check for master
     int tmp_fd = -1;

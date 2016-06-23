@@ -390,10 +390,13 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
     mir_input_device_state_event_device_count;
     mir_input_device_state_event_device_id;
     mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pressed_keys_count;
     mir_input_device_state_event_device_pressed_keys;
-    mir_input_device_state_event_device_pressed_count;
+    mir_input_device_state_event_modifiers;
     mir_input_device_state_event_pointer_axis;
     mir_input_device_state_event_pointer_buttons;
     mir_input_device_state_event_time;
     mir_input_device_state_event_device_pointer_buttons;
+    mir_surface_spec_set_pointer_confinement;
 } MIR_CLIENT_0.22;
