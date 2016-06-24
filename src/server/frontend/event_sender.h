@@ -50,6 +50,7 @@ public:
     void send_ping(int32_t serial) override;
     void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) override;
     void add_buffer(graphics::Buffer&) override;
+    void error_buffer(graphics::BufferProperties const&, std::string const&) override;
     void remove_buffer(graphics::Buffer&) override;
     void update_buffer(graphics::Buffer&) override;
 

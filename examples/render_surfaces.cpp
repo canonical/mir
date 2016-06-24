@@ -377,6 +377,7 @@ public:
                 void add_buffer(mg::Buffer&) override {}
                 void remove_buffer(mg::Buffer&) override {}
                 void update_buffer(mg::Buffer&) override {}
+                void error_buffer(mg::BufferProperties const&, std::string const&) override {}
             };
 
             auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());

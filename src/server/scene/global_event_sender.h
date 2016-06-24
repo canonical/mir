@@ -42,7 +42,7 @@ public:
     void add_buffer(graphics::Buffer&) override;
     void remove_buffer(graphics::Buffer&) override;
     void update_buffer(graphics::Buffer&) override;
-
+    void error_buffer(graphics::BufferProperties const&, std::string const&);
 private:
     std::shared_ptr<SessionContainer> const sessions;
 };

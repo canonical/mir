@@ -136,6 +136,16 @@ void mfd::EventSender::add_buffer(graphics::Buffer& buffer)
     send_buffer(seq, buffer, mg::BufferIpcMsgType::full_msg);
 }
 
+void mfd::EventSender::error_buffer(graphics::BufferProperties const& properties, std::string const& error)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->mutable_buffer()->set_error(error);
+    request->mutable_buffer()->set_width(properties.size.width.as_int());
+    request->mutable_buffer()->set_height(properties.size.height.as_int());
+    send_event_sequence(seq, {});
+}
+
 void mfd::EventSender::remove_buffer(graphics::Buffer& buffer)
 {
     mp::EventSequence seq;
