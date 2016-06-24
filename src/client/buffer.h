@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/geometry/size.h"
 #include "atomic_callback.h"
+#include "mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -32,8 +33,7 @@ namespace client
 {
 class ClientBuffer;
 class MemoryRegion;
-//this is the type backing MirBuffer* 
-class Buffer
+class Buffer : public MirBuffer
 {
 public:
     Buffer(
@@ -42,28 +42,29 @@ public:
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
         MirBufferUsage usage);
-    int rpc_id() const;
 
-    void submitted();
-    void received();
-    void received(MirBufferPackage const& update_message);
+    int rpc_id() const override;
 
-    MirNativeBuffer* as_mir_native_buffer() const;
-    std::shared_ptr<ClientBuffer> client_buffer() const;
-    MirGraphicsRegion map_region();
+    void submitted() override;
+    void received() override;
+    void received(MirBufferPackage const& update_message) override;
 
-    void set_fence(MirNativeFence*, MirBufferAccess);
-    MirNativeFence* get_fence() const;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
+    MirNativeBuffer* as_mir_native_buffer() const override;
+    std::shared_ptr<ClientBuffer> client_buffer() const override;
+    MirGraphicsRegion map_region() override;
 
-    MirBufferUsage buffer_usage() const;
-    MirPixelFormat pixel_format() const;
-    geometry::Size size() const;
+    void set_fence(MirNativeFence*, MirBufferAccess) override;
+    MirNativeFence* get_fence() const override;
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
 
-    MirConnection* allocating_connection() const;
+    MirBufferUsage buffer_usage() const override;
+    MirPixelFormat pixel_format() const override;
+    geometry::Size size() const override;
 
-    void increment_age();
-    void set_callback(mir_buffer_callback callback, void* context);
+    MirConnection* allocating_connection() const override;
+
+    void increment_age() override;
+    void set_callback(mir_buffer_callback callback, void* context) override;
 private:
     int const buffer_id;
     std::shared_ptr<ClientBuffer> const buffer;

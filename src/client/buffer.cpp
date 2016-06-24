@@ -30,7 +30,7 @@ mcl::Buffer::Buffer(
     MirBufferUsage usage) :
     buffer_id(buffer_id),
     buffer(buffer),
-    cb([this, cb, context]{ (*cb)((MirBuffer*)this, context); }),
+    cb([this, cb, context]{ (*cb)(reinterpret_cast<::MirBuffer*>(this), context); }),
     owned(false),
     connection(connection),
     usage(usage)
@@ -141,5 +141,5 @@ void mcl::Buffer::increment_age()
 
 void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
 {
-    cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<MirBuffer*>(this), context); });
+    cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

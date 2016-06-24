@@ -161,6 +161,12 @@ int main(int argc, char** argv)
     mir_surface_spec_add_presentation_chain(
         spec, width, height, displacement_x, displacement_y, chain);
     MirSurface* surface = mir_surface_create_sync(spec);
+    if (!mir_surface_is_valid(surface))
+    {
+        printf("could not create MirSurface\n");
+        return -1;
+    }
+
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;

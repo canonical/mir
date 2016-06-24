@@ -612,6 +612,9 @@ PooledInputEventFactory::~PooledInputEventFactory() {
     for (size_t i = 0; i < mMotionEventPool.size(); i++) {
         delete mMotionEventPool.itemAt(i);
     }
+    for (size_t i = 0; i < mRawBufferEventPool.size(); i++) {
+        delete mRawBufferEventPool.itemAt(i);
+    }
 }
 
 KeyEvent* PooledInputEventFactory::createKeyEvent() {
@@ -632,8 +635,23 @@ MotionEvent* PooledInputEventFactory::createMotionEvent() {
     return new MotionEvent();
 }
 
+RawBufferEvent* PooledInputEventFactory::createRawBufferEvent() {
+    if (!mRawBufferEventPool.isEmpty()) {
+        RawBufferEvent* event = mRawBufferEventPool.top();
+        mRawBufferEventPool.pop();
+        return event;
+    }
+    return new RawBufferEvent();
+}
+
 void PooledInputEventFactory::recycle(InputEvent* event) {
     switch (event->getType()) {
+    case AINPUT_EVENT_TYPE_BUFFER:
+        if (mRawBufferEventPool.size() < mMaxPoolSize) {
+            mRawBufferEventPool.push(static_cast<RawBufferEvent*>(event));
+            return;
+        }
+        break;
     case AINPUT_EVENT_TYPE_KEY:
         if (mKeyEventPool.size() < mMaxPoolSize) {
             mKeyEventPool.push(static_cast<KeyEvent*>(event));

@@ -391,7 +391,7 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(mcl::Buffer& buffer)
+    void submit_buffer(mcl::MirBuffer& buffer)
     {
         mp::Buffer buffer_req;
         buffer_req.set_buffer_id(buffer.rpc_id());

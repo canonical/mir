@@ -817,3 +817,23 @@ MIR_SERVER_0.22 {
   };
  local: *;
 };
+
+MIR_SERVER_0.24 {
+ global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
+    mir::Server::wrap_application_not_responding_detector*;
+    mir::Server::override_the_persistent_surface_store*;
+    mir::Server::the_persistent_surface_store*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::ApplicationNotRespondingDetectorWrapper*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::?ApplicationNotRespondingDetectorWrapper*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::pong_received*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::register_observer*;
+    mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
+    typeinfo?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
+    vtable?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
+    VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
+  };
+} MIR_SERVER_0.22;
