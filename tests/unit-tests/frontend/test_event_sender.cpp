@@ -217,16 +217,6 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
     event_sender.handle_input_device_change(devices);
 }
 
-namespace
-{
-MATCHER_P2(MessageMatches, data, size, "")
-{
-    ASSERT_THAT(arg.size(), testing::Eq(size));
-    (void)data;
-    return true;
-}
-}
-
 TEST_F(EventSender, can_send_error_buffer)
 {
     using namespace testing;
@@ -234,24 +224,28 @@ TEST_F(EventSender, can_send_error_buffer)
     mir::graphics::BufferProperties properties{
         { 10, 12 }, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::hardware};
     mir::protobuf::EventSequence expected_sequence;
-    auto buffer = expected_sequence.mutable_buffer_request()->mutable_buffer();
     expected_sequence.mutable_buffer_request()->set_operation(mir::protobuf::BufferOperation::add);
+    auto buffer = expected_sequence.mutable_buffer_request()->mutable_buffer();
     buffer->set_width(properties.size.width.as_int());
     buffer->set_height(properties.size.height.as_int());
     buffer->set_error(error_msg.c_str());
     mir::VariableLengthArray<1024>
         send_buffer{static_cast<size_t>(expected_sequence.ByteSize())};
     expected_sequence.SerializeWithCachedSizesToArray(send_buffer.data());
+
     mir::protobuf::wire::Result result;
     result.add_events(send_buffer.data(), send_buffer.size());
     send_buffer.resize(result.ByteSize());
     result.SerializeWithCachedSizesToArray(send_buffer.data());
 
-    char const* data = nullptr;
-    size_t length = 0;
+    std::vector<char> sent;
     EXPECT_CALL(mock_msg_sender, send(_,_,_))
-          .WillOnce(DoAll(SaveArg<0>(&data), SaveArg<1>(&length)));
+          .WillOnce(Invoke([&](auto data, auto size, auto)
+            {
+                sent.resize(size);
+                memcpy(sent.data(), data, size); 
+            }));
     event_sender.error_buffer(properties, error_msg);
-
-    ASSERT_THAT(length, Eq(send_buffer.size()));
+    ASSERT_THAT(sent.size(), Eq(send_buffer.size()));
+    EXPECT_FALSE(memcmp(sent.data(), send_buffer.data(), sent.size()));
 }
