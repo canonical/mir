@@ -54,32 +54,32 @@ public:
     /**
      * Set a keymap for the device \a id
      */
-    virtual void set_keymap(MirInputDeviceId id, Keymap const& map) = 0;
+    virtual void set_keymap_for_device(MirInputDeviceId id, Keymap const& map) = 0;
     /**
      * Set a keymap for the device \a id
      */
-    virtual void set_keymap(MirInputDeviceId id, char const* buffer, size_t len) = 0;
+    virtual void set_keymap_for_device(MirInputDeviceId id, char const* buffer, size_t len) = 0;
     /**
      * Remove the specific keymap defined for device identified via the \a id.
      *
      * After this call key codes in events processed for device \a id will not be evaluated.
      */
-    virtual void reset_keymap(MirInputDeviceId id) = 0;
+    virtual void clear_keymap_for_device(MirInputDeviceId id) = 0;
 
     /**
      * Set a default keymap for all devices.
      */
-    virtual void set_keymap(Keymap const& map) = 0;
+    virtual void set_keymap_for_all_devices(Keymap const& map) = 0;
     /**
      * Set a default keymap for all devices.
      */
-    virtual void set_keymap(char const* buffer, size_t len) = 0;
+    virtual void set_keymap_for_all_devices(char const* buffer, size_t len) = 0;
     /*
      * Remove all keymap configurations
      *
      * After this call no key code will be evaluated.
      */
-    virtual void reset_keymap() = 0;
+    virtual void clear_all_keymaps() = 0;
 
     /**
      * Map the given event based on the key maps configured.
