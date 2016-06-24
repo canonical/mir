@@ -117,10 +117,10 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   list_to_string("${test_cmd_no_memcheck}" "" discover_cmd_no_memcheck)
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name} -- ${discover_cmd}\n")
   if (test_no_memcheck_filter)
     file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd_no_memcheck}\n")
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name}_no_memcheck -- ${discover_cmd_no_memcheck}\n")
   endif()
 endfunction ()
 

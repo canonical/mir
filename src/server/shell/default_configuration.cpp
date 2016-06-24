@@ -65,7 +65,7 @@ auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> con
 std::shared_ptr<msh::PersistentSurfaceStore>
 mir::DefaultServerConfiguration::the_persistent_surface_store()
 {
-    return surface_store([]()
+    return persistent_surface_store([]()
     {
         return std::make_shared<msh::DefaultPersistentSurfaceStore>();
     });

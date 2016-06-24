@@ -406,6 +406,7 @@ void MirSurface::set_event_handler(mir_surface_event_callback callback,
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     input_thread.reset();
+    handle_event_callback = [](auto){};
 
     if (callback)
     {
