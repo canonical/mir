@@ -68,6 +68,7 @@ public:
 
 private:
     std::mutex mutex;
+    int error_id { -1 };
     struct AllocationRequest
     {
         AllocationRequest(

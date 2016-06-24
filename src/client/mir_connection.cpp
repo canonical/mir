@@ -1247,6 +1247,12 @@ void MirConnection::allocate_buffer(
 
 void MirConnection::release_buffer(int buffer_id)
 {
+    if (buffer_id < 0)
+    {
+        surface_map->erase(buffer_id);
+        return;
+    }
+
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);

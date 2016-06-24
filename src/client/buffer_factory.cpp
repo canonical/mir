@@ -58,7 +58,6 @@ void mcl::BufferFactory::expect_buffer(
 std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
         {
@@ -72,8 +71,8 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobu
     if (buffer.has_error())
     {
         b = std::make_unique<ErrorBuffer>(
-            buffer.error(), -1, 
-            (*request_it)->cb, (*request_it)->cb_context);
+            buffer.error(), error_id--, 
+            (*request_it)->cb, (*request_it)->cb_context, (*request_it)->connection);
     }
     else
     {
