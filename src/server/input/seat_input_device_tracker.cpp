@@ -65,7 +65,7 @@ void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
     bool spot_update_needed = !stored_data->second.spots.empty();
 
     device_data.erase(stored_data);
-    key_mapper->reset_keymap(id);
+    key_mapper->clear_keymap_for_device(id);
 
     if (state_update_needed)
         update_states();

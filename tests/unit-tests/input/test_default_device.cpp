@@ -150,7 +150,7 @@ MATCHER_P(KeymapLayout, layout, "")
 TEST_F(DefaultDevice, when_managing_a_keyboard_us_layout_is_set_by_default)
 {
     auto const device_id = MirInputDeviceId{12};
-    EXPECT_CALL(key_mapper,  set_keymap(device_id, KeymapLayout("us")));
+    EXPECT_CALL(key_mapper, set_keymap_for_device(device_id, KeymapLayout("us")));
     mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper));
 
     queue->dispatch(md::FdEvent::readable);

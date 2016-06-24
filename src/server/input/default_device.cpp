@@ -38,7 +38,7 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         keyboard = mi::KeyboardConfiguration{};
-        key_mapper->set_keymap(device_id, keyboard.value().device_keymap);
+        key_mapper->set_keymap_for_device(device_id, keyboard.value().device_keymap);
     }
 }
 
@@ -147,6 +147,6 @@ void mi::DefaultDevice::apply_keyboard_configuration(mi::KeyboardConfiguration c
     if (keyboard.value().device_keymap != conf.device_keymap)
     {
         keyboard = conf;
-        key_mapper->set_keymap(device_id, conf.device_keymap);
+        key_mapper->set_keymap_for_device(device_id, conf.device_keymap);
     }
 }

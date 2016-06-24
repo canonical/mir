@@ -181,12 +181,12 @@ mircv::XKBMapper::XkbMappingState* mircv::XKBMapper::get_keymapping_state(MirInp
     return nullptr;
 }
 
-void mircv::XKBMapper::set_keymap(Keymap const& new_keymap)
+void mircv::XKBMapper::set_keymap_for_all_devices(Keymap const& new_keymap)
 {
     set_keymap(make_unique_keymap(context.get(), new_keymap));
 }
 
-void mircv::XKBMapper::set_keymap(char const* buffer, size_t len)
+void mircv::XKBMapper::set_keymap_for_all_devices(char const* buffer, size_t len)
 {
     set_keymap(make_unique_keymap(context.get(), buffer, len));
 }
@@ -198,12 +198,12 @@ void mircv::XKBMapper::set_keymap(XKBKeymapPtr new_keymap)
     device_mapping.clear();
 }
 
-void mircv::XKBMapper::set_keymap(MirInputDeviceId id, Keymap const& new_keymap)
+void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, Keymap const& new_keymap)
 {
     set_keymap(id, make_unique_keymap(context.get(), new_keymap));
 }
 
-void mircv::XKBMapper::set_keymap(MirInputDeviceId id, char const* buffer, size_t len)
+void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, char const* buffer, size_t len)
 {
     set_keymap(id, make_unique_keymap(context.get(), buffer, len));
 }
@@ -217,7 +217,7 @@ void mircv::XKBMapper::set_keymap(MirInputDeviceId id, XKBKeymapPtr new_keymap)
                            std::forward_as_tuple(std::move(new_keymap)));
 }
 
-void mircv::XKBMapper::reset_keymap()
+void mircv::XKBMapper::clear_all_keymaps()
 {
     std::lock_guard<std::mutex> lg(guard);
     default_keymap.reset();
@@ -225,7 +225,7 @@ void mircv::XKBMapper::reset_keymap()
     update_modifier();
 }
 
-void mircv::XKBMapper::reset_keymap(MirInputDeviceId id)
+void mircv::XKBMapper::clear_keymap_for_device(MirInputDeviceId id)
 {
     std::lock_guard<std::mutex> lg(guard);
     device_mapping.erase(id);
