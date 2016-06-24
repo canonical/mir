@@ -294,6 +294,128 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
 namespace
 {
+bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state)
+{
+    if (mir_event_get_type(event) != mir_event_type_surface)
+    {
+        return false;
+    }
+
+    auto surface_event = mir_event_get_surface_event(event);
+    if (mir_surface_event_get_attribute(surface_event) != mir_surface_attrib_focus)
+    {
+        return false;
+    }
+    return mir_surface_event_get_attribute_value(surface_event) == state;
+}
+
+bool is_focus_event(MirEvent const* event)
+{
+    return is_focus_event_with_value(event, mir_surface_focused);
+}
+
+bool is_unfocus_event(MirEvent const* event)
+{
+    return is_focus_event_with_value(event, mir_surface_unfocused);
+}
+}
+
+TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
+{
+    using namespace testing;
+    using namespace std::chrono_literals;
+
+    auto surface = mtf::make_any_surface(connection);
+
+    mt::Signal focus_received;
+    mir_surface_set_event_handler(
+        surface,
+        [](MirSurface*, MirEvent const* event, void* ctx)
+        {
+            auto& done = *reinterpret_cast<mt::Signal*>(ctx);
+            if (is_focus_event(event))
+            {
+                done.raise();
+            }
+        },
+        &focus_received);
+
+    // Swap buffers to get the surface into the scene so it can be focused.
+    auto buffer_stream = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_swap_buffers_sync(buffer_stream);
+
+    ASSERT_TRUE(focus_received.wait_for(10s));
+
+    mt::Signal unfocus_received;
+    mir_surface_set_event_handler(
+        surface,
+        [](MirSurface*, MirEvent const* event, void* ctx)
+        {
+            auto& done = *reinterpret_cast<mt::Signal*>(ctx);
+            if (is_unfocus_event(event))
+            {
+                done.raise();
+            }
+        },
+        &unfocus_received);
+
+    mir_surface_release_sync(surface);
+
+    EXPECT_TRUE(unfocus_received.wait_for(10s));
+}
+
+TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_release)
+{
+    using namespace testing;
+    using namespace std::chrono_literals;
+
+    auto surface = mtf::make_any_surface(connection);
+
+    mt::Signal focus_received;
+    mir_surface_set_event_handler(
+        surface,
+        [](MirSurface*, MirEvent const* event, void* ctx)
+        {
+            auto& done = *reinterpret_cast<mt::Signal*>(ctx);
+            if (is_focus_event(event))
+            {
+                done.raise();
+            }
+        },
+        &focus_received);
+
+    // Swap buffers to get the surface into the scene so it can be focused.
+    auto buffer_stream = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_swap_buffers_sync(buffer_stream);
+
+    ASSERT_TRUE(focus_received.wait_for(10s));
+
+    mt::Signal unfocus_received;
+    mir_surface_set_event_handler(
+        surface,
+        [](MirSurface*, MirEvent const* event, void* ctx)
+        {
+            auto& done = *reinterpret_cast<mt::Signal*>(ctx);
+            if (is_unfocus_event(event))
+            {
+                done.raise();
+            }
+        },
+        &unfocus_received);
+
+    // Add a new surface that will take focus.
+    auto focus_grabbing_surface = mtf::make_any_surface(connection);
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(focus_grabbing_surface));
+
+    ASSERT_TRUE(unfocus_received.wait_for(10s));
+
+    unfocus_received.reset();
+
+    mir_surface_release_sync(surface);
+
+    EXPECT_FALSE(unfocus_received.wait_for(1s));
+}
+
 class WrapShellGeneratingCloseEvent : public mir::shell::ShellWrapper
 {
     using mir::shell::ShellWrapper::ShellWrapper;
@@ -334,7 +456,6 @@ void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
         auto signal = reinterpret_cast<mt::Signal*>(ctx);
         signal->raise();
     }
-}
 }
 
 TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_construction)
