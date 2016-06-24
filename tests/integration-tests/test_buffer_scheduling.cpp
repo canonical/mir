@@ -432,7 +432,7 @@ struct ScheduledProducer : ProducerSystem
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
                 auto& ipc_buffer = request.buffer();
-                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                std::shared_ptr<mcl::MirBuffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }

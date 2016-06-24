@@ -235,6 +235,7 @@ TEST_F(EventSender, can_send_error_buffer)
         { 10, 12 }, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::hardware};
     mir::protobuf::EventSequence expected_sequence;
     auto buffer = expected_sequence.mutable_buffer_request()->mutable_buffer();
+    expected_sequence.mutable_buffer_request()->set_operation(mir::protobuf::BufferOperation::add);
     buffer->set_width(properties.size.width.as_int());
     buffer->set_height(properties.size.height.as_int());
     buffer->set_error(error_msg.c_str());

@@ -140,6 +140,7 @@ void mfd::EventSender::error_buffer(graphics::BufferProperties const& properties
 {
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
+    request->set_operation(mir::protobuf::BufferOperation::add);
     request->mutable_buffer()->set_error(error);
     request->mutable_buffer()->set_width(properties.size.width.as_int());
     request->mutable_buffer()->set_height(properties.size.height.as_int());

@@ -321,7 +321,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();
-                    std::shared_ptr<mcl::Buffer> buffer;
+                    std::shared_ptr<mcl::MirBuffer> buffer;
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:
@@ -339,10 +339,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     default:
                         BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
                     }
-                }
-                else if (seq.buffer_request().has_buffer() && seq.buffer_request().buffer().has_error())
-                {
-                    printf("ERRORR\n");
                 }
             }
             catch (std::exception& e)
