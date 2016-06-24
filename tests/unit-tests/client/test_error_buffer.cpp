@@ -18,6 +18,7 @@
 
 #include "src/client/error_buffer.h"
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mcl = mir::client;
 namespace geom = mir::geometry;

@@ -243,9 +243,17 @@ auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
         [this]() -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
         {
             using namespace std::literals::chrono_literals;
-            return std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
-                *the_main_loop(), 1s);
+            return wrap_application_not_responding_detector(
+                std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
+                    *the_main_loop(), 1s));
         });
+}
+
+auto mir::DefaultServerConfiguration::wrap_application_not_responding_detector(
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped)
+        -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
+{
+    return wrapped;
 }
 
 std::shared_ptr<msh::DisplayConfigurationController>

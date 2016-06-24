@@ -186,6 +186,9 @@ public:
      */
     auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() override;
+    virtual std::shared_ptr<scene::ApplicationNotRespondingDetector>
+        wrap_application_not_responding_detector(
+            std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped);
     /** @} */
 
     /** @name graphics configuration - customization
@@ -420,7 +423,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
-    CachedPtr<shell::PersistentSurfaceStore> surface_store;
+    CachedPtr<shell::PersistentSurfaceStore> persistent_surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
