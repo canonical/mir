@@ -423,7 +423,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
-    CachedPtr<shell::PersistentSurfaceStore> surface_store;
+    CachedPtr<shell::PersistentSurfaceStore> persistent_surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;

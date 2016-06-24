@@ -821,8 +821,10 @@ MIR_SERVER_0.22 {
 MIR_SERVER_0.24 {
  global:
   extern "C++" {
-   mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
-   mir::Server::wrap_application_not_responding_detector*;
+    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
+    mir::Server::wrap_application_not_responding_detector*;
+    mir::Server::override_the_persistent_surface_store*;
+    mir::Server::the_persistent_surface_store*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::ApplicationNotRespondingDetectorWrapper*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::?ApplicationNotRespondingDetectorWrapper*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;

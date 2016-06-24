@@ -46,6 +46,7 @@ class DisplayConfigurationController;
 class FocusController;
 class HostLifecycleEventListener;
 class InputTargeter;
+class PersistentSurfaceStore;
 class Shell;
 class SurfaceStack;
 }
@@ -289,6 +290,9 @@ public:
     void override_the_application_not_responding_detector(
         Builder<scene::ApplicationNotRespondingDetector> const& anr_detector_builder);
 
+    /// Sets an override functor for creating the persistent_surface_store
+    void override_the_persistent_surface_store(Builder<shell::PersistentSurfaceStore> const& persistent_surface_store);
+
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 
@@ -398,6 +402,10 @@ public:
     /// \return the application not responding detector
     auto the_application_not_responding_detector() const ->
         std::shared_ptr<scene::ApplicationNotRespondingDetector>;
+
+    /// \return the persistent surface store
+    auto the_persistent_surface_store() const -> std::shared_ptr<shell::PersistentSurfaceStore>;
+
 /** @} */
 
 /** @name Client side support
