@@ -340,6 +340,10 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
                     }
                 }
+                else if (seq.buffer_request().has_buffer() && seq.buffer_request().buffer().has_error())
+                {
+                    printf("ERRORR\n");
+                }
             }
             catch (std::exception& e)
             {

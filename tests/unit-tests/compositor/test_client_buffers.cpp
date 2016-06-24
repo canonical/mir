@@ -151,5 +151,8 @@ TEST_F(ClientBuffers, sends_error_buffer_when_alloc_fails)
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Throw(std::runtime_error(error_msg)));
     EXPECT_CALL(mock_sink, error_buffer(properties, StrEq(error_msg)));
-    map.add_buffer(properties);
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
+    EXPECT_THROW({
+        map.add_buffer(properties);
+    }, std::runtime_error);
 }
