@@ -230,22 +230,22 @@ TEST_F(EventSender, can_send_error_buffer)
     buffer->set_height(properties.size.height.as_int());
     buffer->set_error(error_msg.c_str());
     mir::VariableLengthArray<1024>
-        send_buffer{static_cast<size_t>(expected_sequence.ByteSize())};
-    expected_sequence.SerializeWithCachedSizesToArray(send_buffer.data());
+        expected_buffer{static_cast<size_t>(expected_sequence.ByteSize())};
+    expected_sequence.SerializeWithCachedSizesToArray(expected_buffer.data());
 
     mir::protobuf::wire::Result result;
-    result.add_events(send_buffer.data(), send_buffer.size());
-    send_buffer.resize(result.ByteSize());
-    result.SerializeWithCachedSizesToArray(send_buffer.data());
+    result.add_events(expected_buffer.data(), expected_buffer.size());
+    expected_buffer.resize(result.ByteSize());
+    result.SerializeWithCachedSizesToArray(expected_buffer.data());
 
-    std::vector<char> sent;
+    std::vector<char> sent_buffer;
     EXPECT_CALL(mock_msg_sender, send(_,_,_))
           .WillOnce(Invoke([&](auto data, auto size, auto)
             {
-                sent.resize(size);
-                memcpy(sent.data(), data, size); 
+                sent_buffer.resize(size);
+                memcpy(sent_buffer.data(), data, size); 
             }));
     event_sender.error_buffer(properties, error_msg);
-    ASSERT_THAT(sent.size(), Eq(send_buffer.size()));
-    EXPECT_FALSE(memcmp(sent.data(), send_buffer.data(), sent.size()));
+    ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
+    EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
 }
