@@ -88,19 +88,17 @@ struct XKBMapper : Test
     }
 };
 
-#if 0 
-TEST_F(XKBMapper, maps_nothing_by_default)
+TEST_F(XKBMapper, DISABLED_maps_nothing_by_default)
 {
     EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_4));
     EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_LEFTSHIFT));
 }
-#else
+
 TEST_F(XKBMapper, maps_like_us_by_default)
 {
     EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_down, KEY_LEFTSHIFT));
 }
-#endif
 
 TEST_F(XKBMapper, when_device_keymap_is_set_maps_generic_us_english_keys)
 {
