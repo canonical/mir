@@ -32,4 +32,5 @@ ADD_LIBRARY(
   timeout_application_not_responding_detector.cpp
   output_properties_cache.cpp
   output_properties_cache.h
+  application_not_responding_detector_wrapper.cpp
 )

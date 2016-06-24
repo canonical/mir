@@ -60,7 +60,6 @@ namespace client
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 class ClientBufferStream;
-class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
@@ -311,8 +310,6 @@ private:
 
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
-
     mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
