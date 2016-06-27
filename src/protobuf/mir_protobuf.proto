@@ -45,6 +45,7 @@ message SurfaceParameters {
   repeated Rectangle input_shape = 22;
   optional int32 shell_chrome = 24;
   repeated StreamConfiguration stream = 25; 
+  optional int32 confine_pointer = 26;
 }
 
 message SurfaceAspectRatio

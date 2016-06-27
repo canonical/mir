@@ -193,7 +193,8 @@ struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
         : surface(surface_name,
-            rect, false, streams,
+            rect, mir_pointer_unconfined,
+            false, streams,
             std::make_shared<mtd::StubInputChannel>(),
             std::make_shared<mtd::StubInputSender>(),
             nullptr /* cursor_image */, report)
@@ -377,6 +378,7 @@ TEST_F(SurfaceCreation, input_fds)
     ms::BasicSurface input_surf(
         surface_name,
         rect,
+        mir_pointer_unconfined,
         false,
         streams,
         mt::fake_shared(channel),
@@ -395,6 +397,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     ms::BasicSurface surface(
         surface_name,
         rect,
+        mir_pointer_unconfined,
         false,
         streams,
         std::make_shared<mtd::StubInputChannel>(),
