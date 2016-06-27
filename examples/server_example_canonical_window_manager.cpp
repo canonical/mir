@@ -419,7 +419,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     if (modifications.confine_pointer.is_set())
     {
-        surface->set_confine_pointer(modifications.confine_pointer.value());
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
     }
 }
 

@@ -93,7 +93,6 @@ private:
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
-    geometry::Rectangles pointer_confinment_regions;
     std::function<void(mir::geometry::Point&)> confine_function;
 };
 

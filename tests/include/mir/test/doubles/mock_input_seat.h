@@ -21,8 +21,8 @@
 
 #include "mir/input/seat.h"
 
+#include <gmock/gmock.h>
 #include "mir/input/device.h"
-#include "mir/test/gmock_fixes.h"
 
 namespace mir
 {

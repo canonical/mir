@@ -106,7 +106,7 @@ public:
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
 
-    void set_confine_pointer(MirPointerConfinementState /*state*/) override {}
+    void set_confine_pointer_state(MirPointerConfinementState /*state*/) override {}
     MirPointerConfinementState confine_pointer_state() const override { return {}; }
 };
 

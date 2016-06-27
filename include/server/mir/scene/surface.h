@@ -116,7 +116,7 @@ public:
     virtual void rename(std::string const& title) = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
 
-    virtual void set_confine_pointer(MirPointerConfinementState state) = 0;
+    virtual void set_confine_pointer_state(MirPointerConfinementState state) = 0;
     virtual MirPointerConfinementState confine_pointer_state() const = 0;
 };
 }

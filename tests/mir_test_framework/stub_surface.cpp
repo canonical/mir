@@ -200,7 +200,7 @@ void mtd::StubSurface::rename(std::string const& /*title*/)
 {
 }
 
-void mtd::StubSurface::set_confine_pointer(MirPointerConfinementState /*state*/)
+void mtd::StubSurface::set_confine_pointer_state(MirPointerConfinementState /*state*/)
 {
 }
 
