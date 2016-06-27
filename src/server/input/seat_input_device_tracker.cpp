@@ -213,7 +213,7 @@ void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent 
     if (action == mir_keyboard_action_down)
         scan_codes.push_back(scan_code);
     else if (action == mir_keyboard_action_up)
-        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code));
+        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code), end(scan_codes));
 }
 
 bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const
