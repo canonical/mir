@@ -41,11 +41,16 @@ TEST_F(HwcConfiguration, fb_format_selection)
 {
     using namespace testing;
     Mock::VerifyAndClearExpectations(&mock_egl);
+    // Should match what's in determine_hwc_fb_format() in hwc_blanking_control.cpp
     EGLint const expected_egl_config_attr [] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
+        EGL_RECORDABLE_ANDROID, EGL_TRUE,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
         EGL_NONE
     };
 
