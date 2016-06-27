@@ -13,7 +13,7 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jun 2016 16:29:31 -0400
 
-mir (0.23.1+16.04.20160610.1-0ubuntu1) xenial; urgency=medium
+mir (0.23.1+16.10.20160610.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]
   * New upstream release 0.23.1 (https://launchpad.net/mir/+milestone/0.23.1)
