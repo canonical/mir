@@ -1239,16 +1239,16 @@ void MirConnection::allocate_buffer(
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-void MirConnection::release_buffer(int buffer_id)
+void MirConnection::release_buffer(mcl::MirBuffer* buffer)
 {
-    if (buffer_id < 0)
+    if (!buffer->valid())
     {
-        surface_map->erase(buffer_id);
+        surface_map->erase(buffer->rpc_id());
         return;
     }
 
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
-    released_buffer->set_buffer_id(buffer_id);
+    released_buffer->set_buffer_id(buffer->rpc_id());
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }

@@ -36,6 +36,7 @@
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
 #include "mir/test/stub_server_tool.h"
+#include "mir/test/doubles/mock_mir_buffer.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
@@ -865,11 +866,16 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
 TEST_F(MirConnectionTest, can_release_buffer_from_connection)
 {
     int buffer_id = 1320;
+    testing::NiceMock<mtd::MockMirBuffer> mock_buffer;
+    ON_CALL(mock_buffer, valid())
+        .WillByDefault(Return(true)); 
+    ON_CALL(mock_buffer, rpc_id())
+        .WillByDefault(Return(buffer_id)); 
     mp::BufferRelease release_msg;
     auto released_buffer = release_msg.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
 
     EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg)));
 
-    connection->release_buffer(buffer_id);
+    connection->release_buffer(&mock_buffer);
 }

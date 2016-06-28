@@ -64,6 +64,7 @@ class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
 class AsyncBufferFactory;
+class MirBuffer;
 
 namespace rpc
 {
@@ -197,7 +198,7 @@ public:
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
-    void release_buffer(int buffer_id);
+    void release_buffer(mir::client::MirBuffer* buffer);
 
 private:
     //google cant have callbacks with more than 2 args
