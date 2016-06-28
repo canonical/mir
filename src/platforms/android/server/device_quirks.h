@@ -54,6 +54,11 @@ public:
         char const* default_value) const;
 };
 
+struct GPUInfo
+{
+    std::string const gl_vendor;
+    std::string const gl_renderer;
+};
 class DeviceQuirks
 {
 public:
@@ -73,6 +78,8 @@ private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
     std::string const device_name;
+    GPUInfo const gpu_info;
+
     unsigned int const num_framebuffers_;
     bool const gralloc_cannot_be_closed_safely_;
     bool const enable_width_alignment_quirk;
