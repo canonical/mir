@@ -42,7 +42,12 @@ namespace mtd = mir::test::doubles;
 class DisplayTestGeneric : public ::testing::Test
 {
 public:
-    DisplayTestGeneric()
+    DisplayTestGeneric() :
+        platform{create_host_platform(
+            std::make_shared<mir::options::ProgramOption>(),
+            std::make_shared<mtd::NullEmergencyCleanup>(),
+            mir::report::null_display_report())}
+
     {
         using namespace testing;
 
@@ -53,15 +58,10 @@ public:
 
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
-
     }
 
     std::shared_ptr<mg::Display> create_display()
     {
-        auto const platform = create_host_platform(
-                std::make_shared<mir::options::ProgramOption>(),
-                std::make_shared<mtd::NullEmergencyCleanup>(),
-                mir::report::null_display_report());
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());
@@ -70,6 +70,7 @@ public:
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    mir::UniqueModulePtr<mg::Platform> platform;
 };
 
 #include "../test_display.h"

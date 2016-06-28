@@ -100,29 +100,28 @@ bool device_has_working_egl_sync(mga::GPUInfo const& gpu_info, std::string const
     return false;
 }
 
-mga::GPUInfo determine_gpu_info()
+struct NullReport : mg::DisplayReport
 {
-    struct NullReport : mg::DisplayReport
-    {
-        void report_successful_setup_of_native_resources() override {};
-        void report_successful_egl_make_current_on_construction() override {};
-        void report_successful_egl_buffer_swap_on_construction() override {};
-        void report_successful_display_construction() override {};
-        void report_egl_configuration(EGLDisplay, EGLConfig) override {};
-        void report_vsync(unsigned int) override {};
-        void report_successful_drm_mode_set_crtc_on_construction() override {};
-        void report_drm_master_failure(int) override {};
-        void report_vt_switch_away_failure() override {};
-        void report_vt_switch_back_failure() override {};
-    } report;
-    struct Config : mg::GLConfig
-    {
-        int depth_buffer_bits() const override { return 0; }
-        int stencil_buffer_bits() const override { return 0; }
-    } config;
+    void report_successful_setup_of_native_resources() override {};
+    void report_successful_egl_make_current_on_construction() override {};
+    void report_successful_egl_buffer_swap_on_construction() override {};
+    void report_successful_display_construction() override {};
+    void report_egl_configuration(EGLDisplay, EGLConfig) override {};
+    void report_vsync(unsigned int) override {};
+    void report_successful_drm_mode_set_crtc_on_construction() override {};
+    void report_drm_master_failure(int) override {};
+    void report_vt_switch_away_failure() override {};
+    void report_vt_switch_back_failure() override {};
+} report;
 
-    mga::PbufferGLContext context(mir_pixel_format_abgr_8888, config, report);
+struct Config : mg::GLConfig
+{
+    int depth_buffer_bits() const override { return 0; }
+    int stencil_buffer_bits() const override { return 0; }
+} config;
 
+mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+{
     auto current = mir::raii::paired_calls([&] { context.make_current(); }, [&] { context.release_current(); });
 
     std::string vendor;
@@ -135,9 +134,9 @@ mga::GPUInfo determine_gpu_info()
 }
 }
 
-mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
+mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mg::GLContext const& context)
     : device_name(determine_device_name(properties)),
-      gpu_info(determine_gpu_info()),
+      gpu_info(determine_gpu_info(context)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
       enable_width_alignment_quirk{true},
@@ -147,9 +146,14 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
 {
 }
 
+mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties) :
+    DeviceQuirks(properties, mga::PbufferGLContext{mir_pixel_format_abgr_8888, config, report})
+{
+}
+
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option const& options)
     : device_name(determine_device_name(properties)),
-      gpu_info(determine_gpu_info()),
+      gpu_info(determine_gpu_info(mga::PbufferGLContext(mir_pixel_format_abgr_8888, config, report))),
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
