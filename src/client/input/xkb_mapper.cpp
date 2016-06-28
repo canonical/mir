@@ -13,32 +13,86 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by:
+ *   Robert Carr <robert.carr@canonical.com>
+ *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/input/xkb_mapper.h"
+#include "mir/input/keymap.h"
 #include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
 
 namespace mi = mir::input;
+namespace mev = mir::events;
 namespace mircv = mi::receiver;
+
+namespace
+{
+
+MirInputEventModifiers xkb_key_code_to_modifier(xkb_keysym_t key)
+{
+    switch(key)
+    {
+    case XKB_KEY_Shift_R: return mir_input_event_modifier_shift_right;
+    case XKB_KEY_Shift_L: return mir_input_event_modifier_shift_left;
+    case XKB_KEY_Alt_R: return mir_input_event_modifier_alt_right;
+    case XKB_KEY_Alt_L: return mir_input_event_modifier_alt_left;
+    case XKB_KEY_Control_R: return mir_input_event_modifier_ctrl_right;
+    case XKB_KEY_Control_L: return mir_input_event_modifier_ctrl_left;
+    case XKB_KEY_Meta_L: return mir_input_event_modifier_meta_left;
+    case XKB_KEY_Meta_R: return mir_input_event_modifier_meta_right;
+    case XKB_KEY_Caps_Lock: return mir_input_event_modifier_caps_lock;
+    case XKB_KEY_Scroll_Lock: return mir_input_event_modifier_scroll_lock;
+    default: return MirInputEventModifiers{0};
+    }
+}
+
+MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers)
+{
+    if (modifiers == 0)
+        return mir_input_event_modifier_none;
+
+    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
+        modifiers |= mir_input_event_modifier_alt;
+
+    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
+        modifiers |= mir_input_event_modifier_ctrl;
+
+    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
+        modifiers |= mir_input_event_modifier_shift;
+
+    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
+        modifiers |= mir_input_event_modifier_meta;
+
+    return modifiers;
+}
+
+
+uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
+{
+    // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
+    return evdev_scan_code + 8;
+}
+
+}
 
 mi::XKBContextPtr mi::make_unique_context()
 {
     return {xkb_context_new(xkb_context_flags(0)), &xkb_context_unref};
 }
 
-mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, std::string const& model, std::string const& layout,
-                                std::string const& variant, std::string const& options)
+mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, mi::Keymap const& map)
 {
     xkb_rule_names keymap_names
     {
         "evdev",
-        model.c_str(),
-        layout.c_str(),
-        variant.c_str(),
-        options.c_str()
+        map.model.c_str(),
+        map.layout.c_str(),
+        map.variant.c_str(),
+        map.options.c_str()
     };
     return {xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0)), &xkb_keymap_unref};
 }
@@ -55,86 +109,173 @@ mi::XKBStatePtr mi::make_unique_state(xkb_keymap* keymap)
     return {xkb_state_new(keymap), xkb_state_unref};
 }
 
-namespace
+mircv::XKBMapper::XKBMapper()
+    : context{make_unique_context()}, default_keymap{make_unique_keymap(context.get(), mi::Keymap{})}
 {
-void do_nothing_with_xkb_state(xkb_state*) {}
-mi::XKBStatePtr make_empty_state()
-{
-    return {nullptr, &do_nothing_with_xkb_state};
-}
 }
 
-mircv::XKBMapper::XKBMapper() :
-    context(make_unique_context()),
-    keymap(make_unique_keymap(context.get(), "pc105+inet", "us", "", "")),
-    state(make_empty_state())
-{
-    if (keymap.get())
-        state = make_unique_state(keymap.get());
-    else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create keymap"));
-}
-
-namespace
-{
-
-static uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
-{
-    // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
-    return evdev_scan_code + 8;
-}
-
-static xkb_keysym_t keysym_for_scan_code(xkb_state* state, uint32_t xkb_scan_code)
-{
-    const xkb_keysym_t* syms;
-    uint32_t num_syms = xkb_key_get_syms(state, xkb_scan_code, &syms);
-
-    if (num_syms == 1)
-    {
-        return syms[0];
-    }
-
-    return XKB_KEY_NoSymbol;
-}
-
-}
-
-void mircv::XKBMapper::update_state_and_map_event(MirEvent& ev)
+void mircv::XKBMapper::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto& key_ev = *ev.to_input()->to_keyboard();
+    auto mapping_state = get_keymapping_state(id);
+    if (mapping_state)
+        mapping_state->set_key_state(key_state);
+}
 
-    xkb_key_direction direction = XKB_KEY_DOWN;
+void mircv::XKBMapper::update_modifier()
+{
+    modifier_state = mir::optional_value<MirInputEventModifiers>{};
+    if (!device_mapping.empty())
+    {
+        MirInputEventModifiers new_modifier = 0;
+        for (auto const& mapping_state : device_mapping)
+        {
+            new_modifier |= mapping_state.second.modifier_state;
+        }
 
-    bool update_state = true;
-    if (key_ev.action() == mir_keyboard_action_up)
-        direction = XKB_KEY_UP;
-    else if (key_ev.action() == mir_keyboard_action_down)
-        direction = XKB_KEY_DOWN;
-    else if (key_ev.action() == mir_keyboard_action_repeat)
-        update_state = false;
+        modifier_state = new_modifier;
+    }
+}
 
+void mircv::XKBMapper::map_event(MirEvent& ev)
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    auto type = mir_event_get_type(&ev);
+
+    if (type == mir_event_type_input)
+    {
+        auto input_event = mir_event_get_input_event(&ev);
+        auto input_type = mir_input_event_get_type(input_event);
+        auto device_id = mir_input_event_get_device_id(input_event);
+        auto mapping_state = get_keymapping_state(device_id);
+
+        if (input_type == mir_input_event_type_key)
+        {
+            if (mapping_state && mapping_state->update_and_map(ev))
+                update_modifier();
+        }
+        else if (modifier_state.is_set())
+        {
+            mev::set_modifier(ev, expand_modifiers(modifier_state.value()));
+        }
+    }
+}
+
+mircv::XKBMapper::XkbMappingState* mircv::XKBMapper::get_keymapping_state(MirInputDeviceId id)
+{
+    auto dev_keymap = device_mapping.find(id);
+
+    if (dev_keymap != end(device_mapping))
+    {
+        return &dev_keymap->second;
+    }
+    if (default_keymap)
+    {
+        return
+            &device_mapping.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(id),
+                                    std::forward_as_tuple(default_keymap)).first->second;
+    }
+    return nullptr;
+}
+
+void mircv::XKBMapper::set_keymap_for_all_devices(Keymap const& new_keymap)
+{
+    set_keymap(make_unique_keymap(context.get(), new_keymap));
+}
+
+void mircv::XKBMapper::set_keymap_for_all_devices(char const* buffer, size_t len)
+{
+    set_keymap(make_unique_keymap(context.get(), buffer, len));
+}
+
+void mircv::XKBMapper::set_keymap(XKBKeymapPtr new_keymap)
+{
+    std::lock_guard<std::mutex> lg(guard);
+    default_keymap = std::move(new_keymap);
+    device_mapping.clear();
+}
+
+void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, Keymap const& new_keymap)
+{
+    set_keymap(id, make_unique_keymap(context.get(), new_keymap));
+}
+
+void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, char const* buffer, size_t len)
+{
+    set_keymap(id, make_unique_keymap(context.get(), buffer, len));
+}
+
+void mircv::XKBMapper::set_keymap(MirInputDeviceId id, XKBKeymapPtr new_keymap)
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    device_mapping.emplace(std::piecewise_construct,
+                           std::forward_as_tuple(id),
+                           std::forward_as_tuple(std::move(new_keymap)));
+}
+
+void mircv::XKBMapper::clear_all_keymaps()
+{
+    std::lock_guard<std::mutex> lg(guard);
+    default_keymap.reset();
+    device_mapping.clear();
+    update_modifier();
+}
+
+void mircv::XKBMapper::clear_keymap_for_device(MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lg(guard);
+    device_mapping.erase(id);
+    update_modifier();
+}
+
+mircv::XKBMapper::XkbMappingState::XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap)
+    : keymap{keymap}, state{make_unique_state(this->keymap.get())}
+{
+}
+
+void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> const& key_state)
+{
+    state = make_unique_state(keymap.get());
+    modifier_state = mir_input_event_modifier_none;
+    for (uint32_t scan_code : key_state)
+        update_state(to_xkb_scan_code(scan_code), mir_keyboard_action_down);
+}
+
+bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
+{
+    auto& key_ev = *event.to_input()->to_keyboard();
+    // TODO test if key entry is start of a compose key sequence..
+    // then use compose key API to map key..
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
-    if (update_state)
-        xkb_state_update_key(state.get(), xkb_scan_code, direction);
+    auto old_state = modifier_state;
 
-    key_ev.set_key_code(keysym_for_scan_code(state.get(), xkb_scan_code));
+    key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action()));
+    // TODO we should also indicate effective/consumed modifier state to properly
+    // implement short cuts with keys that are only reachable via modifier keys
+    key_ev.set_modifiers(expand_modifiers(modifier_state));
+
+    return old_state != modifier_state;
 }
 
-// id should be used in the future to implement per device keymaps
-void mircv::XKBMapper::set_keymap(MirInputDeviceId /*id*/, XKBKeymapPtr new_keymap)
+xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
+    auto mod_change = xkb_key_code_to_modifier(key_sym);
 
-    if(new_keymap.get())
+    if (action == mir_keyboard_action_up)
     {
-        keymap = std::move(new_keymap);
-        state = make_unique_state(keymap.get());
+        xkb_state_update_key(state.get(), scan_code, XKB_KEY_UP);
+        modifier_state = modifier_state & ~mod_change;
     }
-}
+    else if (action == mir_keyboard_action_down)
+    {
+        xkb_state_update_key(state.get(), scan_code, XKB_KEY_DOWN);
+        modifier_state = modifier_state | mod_change;
+    }
 
-xkb_context* mircv::XKBMapper::get_context() const
-{
-    return context.get();
+    return key_sym;
 }
