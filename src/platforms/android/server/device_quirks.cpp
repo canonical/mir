@@ -123,7 +123,7 @@ mga::GPUInfo determine_gpu_info()
 
     mga::PbufferGLContext context(mir_pixel_format_abgr_8888, config, report);
 
-    mir::raii::paired_calls([&] { context.make_current(); }, [&] { context.release_current(); });
+    auto current = mir::raii::paired_calls([&] { context.make_current(); }, [&] { context.release_current(); });
 
     std::string vendor;
     std::string renderer;
