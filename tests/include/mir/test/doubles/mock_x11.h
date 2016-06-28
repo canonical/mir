@@ -39,6 +39,7 @@ public:
 
     Display *display;
     Window window;
+    Screen screen;
     XVisualInfo visual_info;
     XEvent keypress_event_return = { 0 };
     XEvent button_release_event_return = { 0 };
@@ -77,6 +78,7 @@ public:
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
     MOCK_METHOD1(XDefaultRootWindow, Window(Display*));
+    MOCK_METHOD1(XDefaultScreenOfDisplay, Screen*(Display*));
     MOCK_METHOD6(XGrabKeyboard, int(Display*, Window, Bool, int, int, Time));
     MOCK_METHOD2(XUngrabKeyboard, int(Display*, Time));
     MOCK_METHOD4(XGetErrorText, int(Display*, int, char*, int ));
