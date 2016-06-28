@@ -217,6 +217,7 @@ ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
+    MirPointerConfinementState state,
     bool nonrectangular,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
@@ -237,6 +238,7 @@ ms::BasicSurface::BasicSurface(
     report(report),
     parent_(parent),
     layers(layers),
+    confine_pointer_state_(state),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
 {
@@ -246,13 +248,14 @@ ms::BasicSurface::BasicSurface(
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
+    MirPointerConfinementState state,
     bool nonrectangular,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular, layers,
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, state, nonrectangular, layers,
                  input_channel, input_sender, cursor_image, report)
 {
 }
@@ -915,4 +918,14 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
         }
     }
     return list;
+}
+
+void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState state)
+{
+    confine_pointer_state_ = state;
+}
+
+MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
+{
+    return confine_pointer_state_;
 }
