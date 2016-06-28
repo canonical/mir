@@ -127,6 +127,7 @@ struct SurfaceStack : public ::testing::Test
         stub_surface1 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
+            mir_pointer_unconfined,
             false,
             std::list<ms::StreamInfo> { { stub_buffer_stream1, {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -137,6 +138,7 @@ struct SurfaceStack : public ::testing::Test
         stub_surface2 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
+            mir_pointer_unconfined,
             false,
             std::list<ms::StreamInfo> { { stub_buffer_stream2, {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -148,6 +150,7 @@ struct SurfaceStack : public ::testing::Test
         stub_surface3 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
+            mir_pointer_unconfined,
             false,
             std::list<ms::StreamInfo> { { stub_buffer_stream3, {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -159,6 +162,7 @@ struct SurfaceStack : public ::testing::Test
         invisible_stub_surface = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
+            mir_pointer_unconfined,
             false,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -274,6 +278,7 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("Mary had a little lamb"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -303,6 +308,7 @@ TEST_F(SurfaceStack, gets_surface_renames)
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("username@hostname: /"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -346,6 +352,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -383,6 +390,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -417,6 +425,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -531,6 +540,7 @@ TEST_F(SurfaceStack, generate_elementelements)
         auto const surface = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+            mir_pointer_unconfined,
             true,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -716,6 +726,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
         auto const surface = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
+            mir_pointer_unconfined,
             true,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mir::input::InputChannel>(),
@@ -749,6 +760,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     auto const surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
+        mir_pointer_unconfined,
         true,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -779,6 +791,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
     auto const surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
+        mir_pointer_unconfined,
         true,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mir::input::InputChannel>(),
@@ -802,6 +815,7 @@ struct MockConfigureSurface : public ms::BasicSurface
         ms::BasicSurface(
             {},
             {{},{}},
+            mir_pointer_unconfined,
             true,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             {},

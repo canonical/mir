@@ -22,6 +22,7 @@
 #include "mir/input/seat.h"
 
 #include <gmock/gmock.h>
+#include "mir/input/device.h"
 
 namespace mir
 {
@@ -35,6 +36,8 @@ struct MockInputSeat : input::Seat
     MOCK_METHOD1(remove_device, void(input::Device const& device));
     MOCK_METHOD1(dispatch_event, void(MirEvent& event));
     MOCK_METHOD1(get_rectangle_for, geometry::Rectangle(input::Device const& dev));
+    MOCK_METHOD1(set_confinement_regions, void(geometry::Rectangles const&));
+    MOCK_METHOD0(reset_confinement_regions, void());
 };
 }
 }

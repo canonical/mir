@@ -93,6 +93,7 @@ struct BasicSurfaceTest : public testing::Test
     ms::BasicSurface surface{
         name,
         rect,
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
@@ -121,7 +122,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, false, 
+                name, rect, mir_pointer_unconfined, false, 
                 std::list<ms::StreamInfo> {
                     { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
@@ -142,7 +143,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, false, streams,
+                name, rect, mir_pointer_unconfined, false, streams,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
 
@@ -265,6 +266,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     ms::BasicSurface surface{
         name,
         rect,
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
@@ -305,6 +307,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
     ms::BasicSurface surface{
         name,
         geom::Rectangle{pt, one_by_one},
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
@@ -346,6 +349,7 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
     ms::BasicSurface surface{
         name,
         geom::Rectangle{{0,0}, {100,100}},
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
@@ -486,6 +490,7 @@ TEST_F(BasicSurfaceTest, stores_parent)
         name,
         geom::Rectangle{{0,0}, {100,100}},
         parent,
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
@@ -673,6 +678,7 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
     ms::BasicSurface surface{
         name,
         rect,
+        mir_pointer_unconfined,
         false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
