@@ -13,6 +13,21 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jun 2016 16:29:31 -0400
 
+mir (0.23.1+16.10.20160610.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.23.1 (https://launchpad.net/mir/+milestone/0.23.1)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Turn off NBS as workaround to LP: #1590765
+ 
+  [ Daniel van Vugt, Kevin DuBois ]
+  * Mir 0.23.1 bugfix release. Fix flickering issue seen with onscreen
+    keyboard (LP: 1590765)
+
+ -- Kevin DuBois <kdub432@gmail.com>  Fri, 10 Jun 2016 22:40:55 +0000
+
 mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]

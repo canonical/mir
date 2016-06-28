@@ -22,6 +22,7 @@
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/rectangles.h"
 #include "mir_toolkit/event.h"
 #include <unordered_map>
 #include <memory>
@@ -57,11 +58,15 @@ public:
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
+
+    void set_confinement_regions(geometry::Rectangles const& region);
+    void reset_confinement_regions();
 private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
     void update_states();
+    void confine_pointer();
 
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
@@ -86,6 +91,7 @@ private:
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
+    std::function<void(mir::geometry::Point&)> confine_function;
 };
 
 }

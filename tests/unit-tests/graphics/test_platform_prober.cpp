@@ -24,10 +24,10 @@
 
 #include "mir/raii.h"
 
+#include "mir/test/doubles/mock_egl.h"
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
-#include "mir/test/doubles/mock_egl.h"
 #endif
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
