@@ -28,7 +28,6 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/display_report.h"
 #include "mir/renderer/gl/render_target.h"
-#include "mir/server.h"
 #include "mir_image.h"
 #include "as_render_target.h"
 #include "mir/logging/null_shared_library_prober_report.h"
