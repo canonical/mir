@@ -26,6 +26,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/null_gl_context.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "mir_toolkit/common.h"
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -70,6 +71,7 @@ struct ServerRenderWindow : public ::testing::Test
     MirPixelFormat format{mir_pixel_format_abgr_8888};
     StubPropertiesWrapper wrapper{false};
     mtd::NullGLContext context;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     mga::DeviceQuirks quirks{wrapper, context};
     mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache, quirks};
 };

@@ -90,6 +90,7 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     mtd::NullGLContext context;
     std::shared_ptr<mga::DeviceQuirks> quirks;
     geom::Stride stride;
@@ -240,6 +241,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     mtd::NullGLContext context;
     mga::Platform platform(
         std::make_shared<mtd::StubBufferAllocator>(),

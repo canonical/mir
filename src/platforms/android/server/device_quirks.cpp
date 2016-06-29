@@ -120,10 +120,8 @@ struct Config : mg::GLConfig
     int stencil_buffer_bits() const override { return 0; }
 } config;
 
-mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+mga::GPUInfo query_gl_for_gpu_info()
 {
-    auto current = mir::raii::paired_calls([&] { context.make_current(); }, [&] { context.release_current(); });
-
     std::string vendor;
     std::string renderer;
     if (auto vendor_string = glGetString(GL_VENDOR))
@@ -131,6 +129,26 @@ mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
     if (auto renderer_string = glGetString(GL_RENDERER))
         renderer = std::string((char*)renderer_string);
     return { std::move(vendor), std::move(renderer) };
+}
+
+mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+{
+    EGLDisplay current_display = eglGetCurrentDisplay();
+    EGLContext current_context = eglGetCurrentContext();
+    EGLSurface current_surface_read = eglGetCurrentSurface(EGL_READ);
+    EGLSurface current_surface_draw = eglGetCurrentSurface(EGL_DRAW);
+
+    if (current_context == EGL_NO_CONTEXT)
+    {
+        auto current = mir::raii::paired_calls(
+            [&] { context.make_current(); },
+            [&] { eglMakeCurrent(current_display, current_surface_draw, current_surface_read, current_context); });
+        return query_gl_for_gpu_info();
+    }
+    else
+    {
+        return query_gl_for_gpu_info();
+    }
 }
 }
 
