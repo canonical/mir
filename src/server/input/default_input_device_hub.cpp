@@ -43,13 +43,15 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+    std::shared_ptr<mi::KeyMapper> const& key_mapper)
     : seat{seat},
       sink{sink},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       cookie_authority(cookie_authority),
+      key_mapper(key_mapper),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -70,7 +72,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device);
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
             device, id, input_dispatchable, cookie_authority, handle));

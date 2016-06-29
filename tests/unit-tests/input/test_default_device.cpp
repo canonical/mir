@@ -20,13 +20,18 @@
 #include "mir/input/input_device.h"
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/pointer_configuration.h"
+#include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/test/fake_shared.h"
+#include "mir/events/event_private.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
 
 namespace mi = mir::input;
 namespace md = mir::dispatch;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 using namespace ::testing;
 namespace
 {
@@ -46,6 +51,7 @@ struct DefaultDevice : Test
     NiceMock<MockInputDevice> touchpad;
     NiceMock<MockInputDevice> mouse;
     NiceMock<MockInputDevice> keyboard;
+    NiceMock<mtd::MockKeyMapper> key_mapper;
     std::shared_ptr<md::ActionQueue> queue{std::make_shared<md::ActionQueue>()};
 
     DefaultDevice()
@@ -65,7 +71,8 @@ struct DefaultDevice : Test
         ON_CALL(mouse, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
 
         ON_CALL(keyboard, get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{"name", "unique", mi::DeviceCapability::keyboard}));
+            .WillByDefault(Return(mi::InputDeviceInfo{
+                "name", "unique", mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric}));
         ON_CALL(keyboard, get_pointer_settings()).WillByDefault(Return(optional_pointer_settings{}));
         ON_CALL(keyboard, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
     }
@@ -75,7 +82,7 @@ struct DefaultDevice : Test
 
 TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse);
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
     mi::TouchpadConfiguration touch_conf;
 
     EXPECT_THROW({dev.apply_touchpad_configuration(touch_conf);}, std::invalid_argument);
@@ -83,7 +90,7 @@ TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 
 TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard);
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard, mt::fake_shared(key_mapper));
     mi::TouchpadConfiguration touch_conf;
     mi::PointerConfiguration pointer_conf;
 
@@ -94,7 +101,7 @@ TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 
 TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse);
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
     mi::PointerConfiguration pointer_conf;
 
     EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_)));
@@ -105,7 +112,7 @@ TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 
 TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad);
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
     mi::TouchpadConfiguration touch_conf;
     mi::PointerConfiguration pointer_conf;
 
@@ -120,7 +127,7 @@ TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 
 TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad);
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
 
     mi::PointerConfiguration pointer_conf;
     pointer_conf.cursor_acceleration_bias = 3.0;
@@ -130,4 +137,21 @@ TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
 
     pointer_conf.cursor_acceleration_bias = 1.0;
     EXPECT_NO_THROW(dev.apply_pointer_configuration(pointer_conf));
+}
+
+namespace
+{
+MATCHER_P(KeymapLayout, layout, "")
+{
+    return arg.layout == layout;
+}
+}
+
+TEST_F(DefaultDevice, when_managing_a_keyboard_us_layout_is_set_by_default)
+{
+    auto const device_id = MirInputDeviceId{12};
+    EXPECT_CALL(key_mapper, set_keymap_for_device(device_id, KeymapLayout("us")));
+    mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper));
+
+    queue->dispatch(md::FdEvent::readable);
 }

@@ -19,6 +19,7 @@
 #include "src/server/input/seat_input_device_tracker.h"
 #include "src/server/input/default_event_builder.h"
 
+#include "mir/input/xkb_mapper.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_region.h"
@@ -60,8 +61,9 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::DefaultEventBuilder some_device_builder{some_device, cookie_factory};
     mi::DefaultEventBuilder another_device_builder{another_device, cookie_factory};
     mi::DefaultEventBuilder third_device_builder{third_device, cookie_factory};
+    mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
+                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), mt::fake_shared(mapper)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };
@@ -165,70 +167,6 @@ TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
         tracker.dispatch(*some_device_builder.pointer_event(
             arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
             step, step));
-}
-
-TEST_F(SeatInputDeviceTracker, key_strokes_of_modifier_key_update_modifier)
-{
-    const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
-    InSequence seq;
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_left)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
-
-    tracker.add_device(some_device);
-    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTSHIFT));
-    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTSHIFT));
-}
-
-TEST_F(SeatInputDeviceTracker, modifier_events_on_different_keyboards_do_not_change_modifier_state)
-{
-    const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
-    InSequence seq;
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_left)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
-
-    tracker.add_device(some_device);
-    tracker.add_device(another_device);
-    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTSHIFT));
-    tracker.dispatch(*another_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_A));
-}
-
-TEST_F(SeatInputDeviceTracker, modifier_events_on_different_keyboards_contribute_to_pointer_event_modifier_state)
-{
-    const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
-    const MirInputEventModifiers shift_right = mir_input_event_modifier_shift_right | mir_input_event_modifier_shift;
-    InSequence seq;
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_right)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(shift_right | r_alt_modifier)));
-
-    tracker.add_device(some_device);
-    tracker.add_device(another_device);
-    tracker.add_device(third_device);
-    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT));
-    tracker.dispatch(
-        *another_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTSHIFT));
-    tracker.dispatch(
-        *third_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40));
-}
-
-TEST_F(SeatInputDeviceTracker, device_removal_removes_modifier_flags)
-{
-    const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
-    const MirInputEventModifiers shift_right = mir_input_event_modifier_shift_right | mir_input_event_modifier_shift;
-    InSequence seq;
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_right)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
-
-    tracker.add_device(some_device);
-    tracker.add_device(another_device);
-    tracker.add_device(third_device);
-    tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT));
-    tracker.dispatch(
-        *another_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTSHIFT));
-    tracker.remove_device(another_device);
-    tracker.dispatch(
-        *third_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40));
 }
 
 TEST_F(SeatInputDeviceTracker, pointer_movement_from_different_devices_change_cursor_position)

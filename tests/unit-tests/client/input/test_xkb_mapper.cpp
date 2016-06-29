@@ -88,16 +88,10 @@ struct XKBMapper : Test
     }
 };
 
-TEST_F(XKBMapper, DISABLED_maps_nothing_by_default)
+TEST_F(XKBMapper, maps_nothing_by_default)
 {
     EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_4));
     EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_LEFTSHIFT));
-}
-
-TEST_F(XKBMapper, maps_like_us_by_default)
-{
-    EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
-    EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_down, KEY_LEFTSHIFT));
 }
 
 TEST_F(XKBMapper, when_device_keymap_is_set_maps_generic_us_english_keys)
@@ -303,4 +297,3 @@ TEST_F(XKBMapper, on_czech_qwerty_caps_lock_should_provide_uppercase_letters)
     map_event(keyboard_cz, mir_keyboard_action_up, KEY_CAPSLOCK);
     map_event(keyboard_cz, mir_keyboard_action_down, KEY_2);
 }
-

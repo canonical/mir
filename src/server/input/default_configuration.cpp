@@ -39,6 +39,7 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
+#include "mir/input/xkb_mapper.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -330,7 +331,8 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
-                    the_input_region());
+                    the_input_region(),
+                    the_key_mapper());
         });
 }
 
@@ -356,10 +358,20 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_seat(),
                the_input_reading_multiplexer(),
                the_main_loop(),
-               the_cookie_authority());
+               the_cookie_authority(),
+               the_key_mapper());
 
            if (key_repeater && !the_options()->is_set(options::host_socket_opt))
                key_repeater->set_input_device_hub(hub);
            return hub;
+       });
+}
+
+std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
+{
+    return key_mapper(
+       [this]()
+       {
+           return std::make_shared<mi::receiver::XKBMapper>();
        });
 }

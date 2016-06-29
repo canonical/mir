@@ -110,7 +110,7 @@ mi::XKBStatePtr mi::make_unique_state(xkb_keymap* keymap)
 }
 
 mircv::XKBMapper::XKBMapper()
-    : context{make_unique_context()}, default_keymap{make_unique_keymap(context.get(), mi::Keymap{})}
+    : context{make_unique_context()}
 {
 }
 
