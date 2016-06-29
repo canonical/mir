@@ -34,6 +34,7 @@ class TouchVisualizer;
 class CursorListener;
 class InputRegion;
 class InputDispatcher;
+class KeyMapper;
 
 class BasicSeat : public Seat
 {
@@ -41,7 +42,8 @@ public:
     BasicSeat(std::shared_ptr<InputDispatcher> const& dispatcher,
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorListener> const& cursor_listener,
-              std::shared_ptr<InputRegion> const& input_region);
+              std::shared_ptr<InputRegion> const& input_region,
+              std::shared_ptr<KeyMapper> const& key_mapper);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;

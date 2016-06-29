@@ -34,6 +34,7 @@ namespace input
 class CursorListener;
 class InputRegion;
 class InputDispatcher;
+class KeyMapper;
 
 /*
  * The SeatInputDeviceTracker bundles the input device properties of a group of devices defined by a seat:
@@ -48,7 +49,8 @@ public:
     SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
-                           std::shared_ptr<InputRegion> const& input_region);
+                           std::shared_ptr<InputRegion> const& input_region,
+                           std::shared_ptr<KeyMapper> const& key_mapper);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -56,8 +58,6 @@ public:
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
-    MirInputEventModifiers event_modifier() const;
-    MirInputEventModifiers event_modifier(MirInputDeviceId) const;
 
     void set_confinement_regions(geometry::Rectangles const& region);
     void reset_confinement_regions();
@@ -72,15 +72,14 @@ private:
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
+    std::shared_ptr<KeyMapper> const key_mapper;
 
     struct DeviceData
     {
         DeviceData() {}
-        bool update_modifier(MirKeyboardAction action, int scan_code);
         bool update_button_state(MirPointerButtons button_state);
         bool update_spots(MirTouchEvent const* event);
 
-        MirInputEventModifiers mod{0};
         MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;
     };
@@ -89,7 +88,6 @@ private:
     // increments, and often less than 1.0, so float is required...
     float cursor_x = 0.0f, cursor_y = 0.0f;
 
-    MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;

@@ -128,6 +128,8 @@ public:
 private:
     X11EGLDisplay const egl_display;
     mir::geometry::Size const size;
+    float pixel_width;
+    float pixel_height;
     X11Window const win;
     X11EGLContext egl_context;
     X11EGLSurface egl_surface;

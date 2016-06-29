@@ -33,7 +33,6 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             //TODO: query fps
             {mg::DisplayConfigurationMode{size, 60.0}},
             0,
-            //TODO: query mm-size
             size,
             true,
             true,
