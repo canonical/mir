@@ -405,7 +405,7 @@ struct Client
 
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
 
-        initial_condition.wait_for(std::chrono::seconds{1});
+        initial_condition.wait_for(timeout);
         mir_display_config_destroy(configuration);
 
         Mock::VerifyAndClearExpectations(&display);
@@ -598,7 +598,7 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
     trigger_lifecycle_event(mir_lifecycle_state_resumed);
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
 
-    events_processed.wait_for(std::chrono::seconds{5});
+    events_processed.wait_for(timeout);
 }
 
 TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
@@ -613,7 +613,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
             return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
                 && mir_surface_get_focus(surface) == mir_surface_focused;
         },
-        std::chrono::seconds{10});
+        timeout);
 
     EXPECT_TRUE(became_exposed_and_focused);
 }
@@ -644,7 +644,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
-        wait.wait_for(std::chrono::seconds{1});
+        wait.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
     }
 
@@ -659,7 +659,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
 
-        wait.wait_for(std::chrono::seconds{1});
+        wait.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
     }
 
@@ -685,7 +685,7 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
     client.update_display_configuration(
         [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
@@ -714,7 +714,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
-        config_reported.wait_for(std::chrono::seconds{3});
+        config_reported.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 
@@ -744,7 +744,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
         mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
-        condition.wait_for(std::chrono::seconds{1});
+        condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
 
@@ -756,7 +756,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
         mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
 
-        condition.wait_for(std::chrono::seconds{1});
+        condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
 }
@@ -786,7 +786,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
         mir_cursor_configuration_destroy(cursor);
 
-        condition.wait_for(std::chrono::seconds{1});
+        condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
 }
@@ -814,7 +814,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
-        condition.wait_for(std::chrono::seconds{1});
+        condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
 
@@ -867,7 +867,7 @@ TEST_F(NestedServer, applies_display_config_on_startup)
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 
     EXPECT_TRUE(condition.raised());
@@ -889,7 +889,7 @@ TEST_F(NestedServer, base_configuration_change_in_host_is_seen_in_nested)
 
     server.the_display_configuration_controller()->set_base_configuration(new_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     Mock::VerifyAndClearExpectations(config_policy.get());
     EXPECT_TRUE(condition.raised());
 }
@@ -914,7 +914,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
                 [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
             // Wait for initial config to be applied
-            initial_condition.wait_for(std::chrono::seconds{1});
+            initial_condition.wait_for(timeout);
 
             Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
             ASSERT_TRUE(initial_condition.raised());
@@ -924,7 +924,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
     }
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
@@ -952,7 +952,7 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(new_config);
 
         // Wait for initial config to be applied
-        initial_condition.wait_for(std::chrono::seconds{1});
+        initial_condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
 
@@ -960,7 +960,7 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
     }
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
 }
 
@@ -979,7 +979,7 @@ TEST_F(NestedServer, when_monitor_unplugs_client_is_notified_of_new_display_conf
 
     display.emit_configuration_change_event(new_config);
 
-    client_config_changed.wait_for(std::chrono::seconds{1});
+    client_config_changed.wait_for(timeout);
 
     ASSERT_TRUE(client_config_changed.raised());
 
@@ -1008,7 +1008,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(initial_config);
 
         // Wait for initial config to be applied
-        initial_condition.wait_for(std::chrono::seconds{1});
+        initial_condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
@@ -1024,7 +1024,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     display.emit_configuration_change_event(expect_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
@@ -1054,7 +1054,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     display.emit_configuration_change_event(expect_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
@@ -1074,7 +1074,7 @@ TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_c
 
     display.emit_configuration_change_event(new_config);
 
-    client_config_changed.wait_for(std::chrono::seconds{1});
+    client_config_changed.wait_for(timeout);
 
     ASSERT_TRUE(client_config_changed.raised());
 
@@ -1109,7 +1109,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(initial_config);
 
         // Wait for initial config to be applied
-        initial_condition.wait_for(std::chrono::seconds{1});
+        initial_condition.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
@@ -1131,7 +1131,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     display.emit_configuration_change_event(new_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
@@ -1167,7 +1167,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     display.emit_configuration_change_event(new_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
     EXPECT_TRUE(condition.raised());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
@@ -1192,7 +1192,7 @@ TEST_F(NestedServer,
 
     display.emit_configuration_change_event(new_config);
 
-    condition.wait_for(std::chrono::seconds{1});
+    condition.wait_for(timeout);
 
     EXPECT_TRUE(condition.raised());
 
@@ -1235,14 +1235,14 @@ TEST_F(NestedServer,
 
     display.emit_configuration_change_event(new_hw_config);
 
-    client_config_changed.wait_for(std::chrono::seconds{1});
+    client_config_changed.wait_for(timeout);
     if (client_config_changed.raised())
     {
         client.update_display_configuration(
             [](MirDisplayConfiguration* config) { config->outputs->orientation = mir_orientation_inverted; });
     }
 
-    host_config_change.wait_for(std::chrono::seconds{1});
+    host_config_change.wait_for(timeout);
 
     EXPECT_TRUE(host_config_change.raised());
     Mock::VerifyAndClearExpectations(&display);
