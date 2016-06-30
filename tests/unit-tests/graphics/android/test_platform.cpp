@@ -30,6 +30,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/null_gl_context.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"
 #include <system/window.h>
@@ -80,7 +81,7 @@ protected:
         ON_CALL(*mock_buffer, stride())
             .WillByDefault(Return(stride));
 
-        quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+        quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context);
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
@@ -89,6 +90,8 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    mtd::NullGLContext context;
     std::shared_ptr<mga::DeviceQuirks> quirks;
     geom::Stride stride;
     unsigned int num_ints, num_fds;
@@ -238,12 +241,14 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    mtd::NullGLContext context;
     mga::Platform platform(
         std::make_shared<mtd::StubBufferAllocator>(),
         std::make_shared<mtd::StubDisplayBuilder>(),
         mr::null_display_report(),
         mga::OverlayOptimization::enabled,
-        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}));
+        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context));
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
 

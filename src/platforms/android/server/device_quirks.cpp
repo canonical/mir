@@ -16,13 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include "mir/graphics/display_report.h"
+#include "mir/graphics/gl_config.h"
+#include "gl_context.h"
 #include "device_quirks.h"
 #include "hardware/gralloc.h"
+#include "mir/raii.h"
 
 #include <mir/options/option.h>
 #include <boost/program_options/options_description.hpp>
 
-namespace mga=mir::graphics::android;
+namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
 namespace mo = mir::options;
 
 int mga::PropertiesOps::property_get(
@@ -77,7 +84,7 @@ bool device_has_fb_ion_heap(std::string const& device_name, bool quirk_enabled)
     return quirk_enabled && (device_name != "Aquaris_M10_FHD");
 }
 
-bool device_has_working_egl_sync(std::string const& device_name, std::string const& option)
+bool device_has_working_egl_sync(mga::GPUInfo const& gpu_info, std::string const& option)
 {
     if (option == egl_sync_force_on)
         return true;
@@ -88,33 +95,90 @@ bool device_has_working_egl_sync(std::string const& device_name, std::string con
     //mali devices are have sync disabled due to high cost (500us) in hybris while using the
     //sync extensions. We should re-enable sync once the cost can be minimized.
     //powervr devices have some problems with depth-buffer ordering once EGL_KHR_fence_sync
-    if (device_name == "flo" || device_name == "mako")
+    if (gpu_info.gl_vendor == "Qualcomm")
         return true;
     return false;
 }
 
+struct NullReport : mg::DisplayReport
+{
+    void report_successful_setup_of_native_resources() override {};
+    void report_successful_egl_make_current_on_construction() override {};
+    void report_successful_egl_buffer_swap_on_construction() override {};
+    void report_successful_display_construction() override {};
+    void report_egl_configuration(EGLDisplay, EGLConfig) override {};
+    void report_vsync(unsigned int) override {};
+    void report_successful_drm_mode_set_crtc_on_construction() override {};
+    void report_drm_master_failure(int) override {};
+    void report_vt_switch_away_failure() override {};
+    void report_vt_switch_back_failure() override {};
+} report;
+
+struct Config : mg::GLConfig
+{
+    int depth_buffer_bits() const override { return 0; }
+    int stencil_buffer_bits() const override { return 0; }
+} config;
+
+mga::GPUInfo query_gl_for_gpu_info()
+{
+    std::string vendor;
+    std::string renderer;
+    if (auto vendor_string = glGetString(GL_VENDOR))
+        vendor = std::string((char*)vendor_string);
+    if (auto renderer_string = glGetString(GL_RENDERER))
+        renderer = std::string((char*)renderer_string);
+    return { std::move(vendor), std::move(renderer) };
 }
 
-mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
+mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+{
+    EGLDisplay current_display = eglGetCurrentDisplay();
+    EGLContext current_context = eglGetCurrentContext();
+    EGLSurface current_surface_read = eglGetCurrentSurface(EGL_READ);
+    EGLSurface current_surface_draw = eglGetCurrentSurface(EGL_DRAW);
+
+    if (current_context == EGL_NO_CONTEXT)
+    {
+        auto current = mir::raii::paired_calls(
+            [&] { context.make_current(); },
+            [&] { eglMakeCurrent(current_display, current_surface_draw, current_surface_read, current_context); });
+        return query_gl_for_gpu_info();
+    }
+    else
+    {
+        return query_gl_for_gpu_info();
+    }
+}
+}
+
+mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mg::GLContext const& context)
     : device_name(determine_device_name(properties)),
+      gpu_info(determine_gpu_info(context)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
       enable_width_alignment_quirk{true},
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
       fb_ion_heap_{device_has_fb_ion_heap(device_name, true)},
-      working_egl_sync_{device_has_working_egl_sync(device_name, egl_sync_default)}
+      working_egl_sync_{device_has_working_egl_sync(gpu_info, egl_sync_default)}
+{
+}
+
+mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties) :
+    DeviceQuirks(properties, mga::PbufferGLContext{mir_pixel_format_abgr_8888, config, report})
 {
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option const& options)
     : device_name(determine_device_name(properties)),
+      gpu_info(determine_gpu_info(mga::PbufferGLContext(mir_pixel_format_abgr_8888, config, report))),
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
       fb_ion_heap_{device_has_fb_ion_heap(device_name, options.get(fb_ion_heap_opt, true))},
       working_egl_sync_{device_has_working_egl_sync(
-        device_name, options.get(working_egl_sync_opt, egl_sync_default.c_str()))}
+        gpu_info, options.get(working_egl_sync_opt, egl_sync_default.c_str()))}
 {
 }
 

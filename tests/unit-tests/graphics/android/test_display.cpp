@@ -119,7 +119,7 @@ TEST_F(Display, creation_creates_egl_resources_properly)
     EXPECT_CALL(mock_egl, eglGetCurrentContext())
         .WillRepeatedly(Return(dummy_context));
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(2);
+        .Times(AtLeast(2));
     EXPECT_CALL(mock_egl, eglDestroySurface(_,_))
         .Times(2);
     EXPECT_CALL(mock_egl, eglDestroyContext(_,_))
@@ -245,6 +245,8 @@ TEST_F(Display, throws_on_eglMakeCurrent_failure)
     EXPECT_CALL(*mock_display_report, report_successful_setup_of_native_resources())
         .Times(1);
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, _, _, _))
+        .WillOnce(Return(EGL_TRUE))
+        .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));

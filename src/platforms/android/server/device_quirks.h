@@ -29,6 +29,7 @@ namespace mir
 namespace options{ class Option; }
 namespace graphics
 {
+class GLContext;
 namespace android
 {
 class PropertiesWrapper
@@ -54,11 +55,17 @@ public:
         char const* default_value) const;
 };
 
+struct GPUInfo
+{
+    std::string const gl_vendor;
+    std::string const gl_renderer;
+};
 class DeviceQuirks
 {
 public:
     DeviceQuirks(PropertiesWrapper const& properties);
     DeviceQuirks(PropertiesWrapper const& properties, mir::options::Option const& options);
+    DeviceQuirks(PropertiesWrapper const& properties, graphics::GLContext const& context);
 
     unsigned int num_framebuffers() const;
     bool gralloc_cannot_be_closed_safely() const;
@@ -73,6 +80,8 @@ private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
     std::string const device_name;
+    GPUInfo const gpu_info;
+
     unsigned int const num_framebuffers_;
     bool const gralloc_cannot_be_closed_safely_;
     bool const enable_width_alignment_quirk;

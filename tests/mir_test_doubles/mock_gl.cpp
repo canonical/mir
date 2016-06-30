@@ -89,7 +89,8 @@ GLenum glGetError()
 
 const GLubyte* glGetString(GLenum name)
 {
-    CHECK_GLOBAL_MOCK(const GLubyte*);
+    if (!global_mock_gl)
+        return nullptr;
     return global_mock_gl->glGetString(name);
 }
 

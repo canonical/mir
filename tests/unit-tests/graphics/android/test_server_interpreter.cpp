@@ -25,6 +25,8 @@
 #include "mir/test/doubles/stub_android_native_buffer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/null_gl_context.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "mir_toolkit/common.h"
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -68,7 +70,9 @@ struct ServerRenderWindow : public ::testing::Test
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>()};
     MirPixelFormat format{mir_pixel_format_abgr_8888};
     StubPropertiesWrapper wrapper{false};
-    mga::DeviceQuirks quirks{wrapper};
+    mtd::NullGLContext context;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    mga::DeviceQuirks quirks{wrapper, context};
     mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache, quirks};
 };
 }
@@ -118,7 +122,7 @@ TEST_F(ServerRenderWindow, clears_fence_when_quirk_present)
 {
     using namespace testing;
     StubPropertiesWrapper wrapper{true};
-    mga::DeviceQuirks quirks{wrapper};
+    mga::DeviceQuirks quirks{wrapper, context};
     mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache, quirks};
 
     int fake_fence = 488;
