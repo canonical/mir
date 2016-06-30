@@ -130,6 +130,12 @@ void glDisable(GLenum func)
     global_mock_gl->glDisable(func);
 }
 
+void glBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glBlendColor(red, green, blue, alpha);
+}
+
 void glBlendFunc(GLenum src, GLenum dst)
 {
     CHECK_GLOBAL_VOID_MOCK();
