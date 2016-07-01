@@ -75,7 +75,7 @@ struct SurfaceInfo
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
     mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
-    mir::optional_value<bool> confine_pointer;
+    mir::optional_value<MirPointerConfinementState> confine_pointer;
 
     void init_titlebar(std::shared_ptr <scene::Surface> const& surface);
 

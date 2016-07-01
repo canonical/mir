@@ -40,6 +40,7 @@
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mi = mir::input;
+namespace geom = mir::geometry;
 namespace
 {
 
@@ -261,4 +262,39 @@ TEST_F(SeatInputDeviceTracker, inconsistent_key_up_dropped)
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyOfScanCode(KEY_A))).Times(0);
 
     tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_A));
+}
+
+TEST_F(SeatInputDeviceTracker, pointer_confinement_bounds_mouse_inside)
+{
+    auto const move_x = 20.0f, move_y = 40.0f;
+    auto const max_w_h = 100;
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(max_w_h - 1, max_w_h - 1)).Times(1);
+   
+    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
+    tracker.set_confinement_regions({rec});
+    tracker.add_device(some_device);
+    tracker.dispatch(*some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
+                                                    move_x, move_y));
+    tracker.dispatch(*some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
+                                                    max_w_h * 2, max_w_h * 2));
+}
+
+TEST_F(SeatInputDeviceTracker, reset_pointer_confinement_allows_movement_past)
+{
+    auto const move_x = 20.0f, move_y = 40.0f;
+    auto const max_w_h = 100;
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x + max_w_h * 2,
+                                                      move_y + max_w_h * 2)).Times(1);
+
+    geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
+    tracker.set_confinement_regions({rec});
+    tracker.add_device(some_device);
+    tracker.dispatch(*some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
+                                                    move_x, move_y));
+
+    tracker.reset_confinement_regions();
+    tracker.dispatch(*some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
+                                                    max_w_h * 2, max_w_h * 2));
 }

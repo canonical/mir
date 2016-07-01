@@ -21,6 +21,7 @@
 #define MIR_INPUT_SEAT_H_
 
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
 #include "mir_toolkit/event.h"
 
 #include <memory>
@@ -46,6 +47,8 @@ public:
     virtual void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) = 0;
     virtual void set_pointer_state(Device const& dev, MirPointerButtons buttons) = 0;
     virtual void set_cursor_position(float cursor_x, float cursor_y) = 0;
+    virtual void set_confinement_regions(geometry::Rectangles const& regions) = 0;
+    virtual void reset_confinement_regions() = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

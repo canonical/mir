@@ -36,7 +36,7 @@ set(
   PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 5)
+set(MIRCOMMON_ABI 6)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 mir_add_library_with_symbols(mircommon SHARED

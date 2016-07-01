@@ -55,6 +55,8 @@ public:
     void dispatch_event(MirEvent& event) override;
     geometry::Rectangle get_rectangle_for(Device const& dev) override;
     virtual EventUPtr create_device_state() override;
+    virtual void set_confinement_regions(geometry::Rectangles const& regions) override;
+    virtual void reset_confinement_regions() override;
 
     void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) override;
     void set_pointer_state(Device const& dev, MirPointerButtons buttons) override;

@@ -129,6 +129,7 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(width_inc);
     SERIALIZE_OPTION_IF_SET(height_inc);
     SERIALIZE_OPTION_IF_SET(shell_chrome);
+    SERIALIZE_OPTION_IF_SET(confine_pointer);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -475,13 +476,6 @@ void MirConnection::released(StreamRelease data)
 
 void MirConnection::released(SurfaceRelease data)
 {
-    // releasing this surface from surface_map means that it will no longer receive events
-    // If it's still focused, send an unfocused event before we kill it entirely
-    if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
-    {
-        auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
-        data.surface->handle_event(*unfocus);
-    }
     data.callback(data.surface, data.context);
     data.handle->result_received();
     surface_map->erase(mf::BufferStreamId(data.surface->id()));

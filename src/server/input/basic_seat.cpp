@@ -79,3 +79,13 @@ void mi::BasicSeat::set_cursor_position(float cursor_x, float cursor_y)
 {
     input_state_tracker.set_cursor_position(cursor_x, cursor_y);
 }
+
+void mi::BasicSeat::set_confinement_regions(geometry::Rectangles const& regions)
+{
+    input_state_tracker.set_confinement_regions(regions);
+}
+
+void mi::BasicSeat::reset_confinement_regions()
+{
+    input_state_tracker.reset_confinement_regions();
+}

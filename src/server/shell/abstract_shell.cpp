@@ -117,6 +117,18 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     {
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
+
+    if (modifications.confine_pointer.is_set())
+    {
+        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+        {
+            seat->set_confinement_regions({surface->input_bounds()});
+        }
+        else
+        {
+            seat->reset_confinement_regions();
+        }
+    }
 }
 
 void msh::AbstractShell::destroy_surface(
@@ -228,12 +240,18 @@ void msh::AbstractShell::set_focus_to_locked(
     if (surface != current_focus)
     {
         focus_surface = surface;
+        seat->reset_confinement_regions();
 
         if (current_focus)
             current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
 
         if (surface)
         {
+            if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+            {
+                seat->set_confinement_regions({surface->input_bounds()});
+            }
+
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());

@@ -23,6 +23,8 @@
 #include "mir/input/device.h"
 #include "mir/test/gmock_fixes.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test
@@ -39,6 +41,8 @@ struct MockInputSeat : input::Seat
     MOCK_METHOD2(set_key_state, void(input::Device const&, std::vector<uint32_t> const&));
     MOCK_METHOD2(set_pointer_state, void (input::Device const&, MirPointerButtons));
     MOCK_METHOD2(set_cursor_position, void (float, float));
+    MOCK_METHOD1(set_confinement_regions, void(geometry::Rectangles const&));
+    MOCK_METHOD0(reset_confinement_regions, void());
 };
 }
 }

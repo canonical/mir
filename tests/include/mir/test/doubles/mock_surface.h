@@ -42,6 +42,7 @@ struct MockSurface : public scene::BasicSurface
         scene::BasicSurface(
             {},
             {{},{}},
+            mir_pointer_unconfined,
             true,
             { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },
             std::make_shared<StubInputChannel>(),
