@@ -122,7 +122,7 @@ std::vector<geom::Rectangle> const display_geometry
     {{640, 0}, {1920, 1080}}
 };
 
-std::chrono::seconds const timeout{10};
+std::chrono::seconds const timeout{5};
 
 // We can't rely on the test environment to have X cursors, so we provide some of our own
 auto const cursor_names = {
