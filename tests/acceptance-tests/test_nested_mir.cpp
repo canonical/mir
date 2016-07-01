@@ -107,7 +107,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 struct MockCursor : public mtd::StubCursor
 {
     MOCK_METHOD1(show, void(mg::CursorImage const&));
-    MOCK_METHOD0(hide, void());
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
