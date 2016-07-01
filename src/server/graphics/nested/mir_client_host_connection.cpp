@@ -127,6 +127,12 @@ public:
         auto const image_width = image.size().width.as_int();
         auto const image_height = image.size().height.as_int();
 
+        if ((image_width <= 0) || (image_height <= 0))
+        {
+            hide_cursor();
+            return;
+        }
+
         MirGraphicsRegion g;
 
         if (cursor)

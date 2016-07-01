@@ -24,11 +24,14 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/shell/shell.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_configuration_controller.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 
@@ -57,6 +60,7 @@ namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace msc = mir::scene;
 
 using namespace testing;
 using namespace std::chrono_literals;
@@ -103,6 +107,7 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 struct MockCursor : public mtd::StubCursor
 {
     MOCK_METHOD1(show, void(mg::CursorImage const&));
+    MOCK_METHOD0(hide, void());
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
@@ -206,6 +211,171 @@ struct MockDisplay : mtd::FakeDisplay
     MOCK_METHOD1(configure, void (mg::DisplayConfiguration const&));
 };
 
+
+struct StubSurfaceObserver : msc::NullSurfaceObserver
+{
+    void cursor_image_set_to(mg::CursorImage const&) override {}
+    void cursor_image_removed() override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        removed = true;
+        cv.notify_all();
+    }
+
+    bool wait_for_removal()
+    {
+        using namespace std::chrono_literals;
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        auto rc = cv.wait_for(lk, 4s, [this] { return removed; });
+        return rc;
+    }
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool removed = false;
+};
+
+struct ObservantShell : msh::Shell
+{
+    ObservantShell(
+        std::shared_ptr<msh::Shell> const& wrapped,
+        std::shared_ptr<msc::SurfaceObserver> const& surface_observer) :
+        wrapped(wrapped),
+        surface_observer(surface_observer)
+    {
+    }
+
+    void add_display(geom::Rectangle const& area) override
+    {
+        return wrapped->add_display(area);
+    }
+
+    void remove_display(geom::Rectangle const& area) override
+    {
+        return wrapped->remove_display(area);
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        return wrapped->handle(event);
+    }
+
+    void focus_next_session() override
+    {
+        wrapped->focus_next_session();
+    }
+
+    auto focused_session() const -> std::shared_ptr<msc::Session>
+    {
+        return wrapped->focused_session();
+    }
+
+    void set_focus_to(
+        std::shared_ptr<msc::Session> const& focus_session,
+        std::shared_ptr<msc::Surface> const& focus_surface) override
+    {
+        return wrapped->set_focus_to(focus_session, focus_surface);
+    }
+
+    std::shared_ptr<msc::Surface> focused_surface() const override
+    {
+        return wrapped->focused_surface();
+    }
+
+    auto surface_at(geom::Point cursor) const -> std::shared_ptr<msc::Surface> override
+    {
+        return wrapped->surface_at(cursor);
+    }
+
+    void raise(msh::SurfaceSet const& surfaces) override
+    {
+        wrapped->raise(surfaces);
+    }
+
+    std::shared_ptr<msc::Session> open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink) override
+    {
+        return wrapped->open_session(client_pid, name, sink);
+    }
+
+    void close_session(std::shared_ptr<msc::Session> const& session) override
+    {
+        wrapped->close_session(session);
+    }
+
+    std::shared_ptr<msc::PromptSession> start_prompt_session_for(
+        std::shared_ptr<msc::Session> const& session,
+        msc::PromptSessionCreationParameters const& params) override
+    {
+        return wrapped->start_prompt_session_for(session, params);
+    }
+
+    void add_prompt_provider_for(
+        std::shared_ptr<msc::PromptSession> const& prompt_session,
+        std::shared_ptr<msc::Session> const& session) override
+    {
+        wrapped->add_prompt_provider_for(prompt_session, session);
+    }
+
+    void stop_prompt_session(std::shared_ptr<msc::PromptSession> const& prompt_session) override
+    {
+        wrapped->stop_prompt_session(prompt_session);
+    }
+
+    mf::SurfaceId create_surface(
+        std::shared_ptr<msc::Session> const& session,
+        msc::SurfaceCreationParameters const& params,
+        std::shared_ptr<mf::EventSink> const& sink) override
+    {
+        auto id = wrapped->create_surface(session, params, sink);
+        auto surface = session->surface(id);
+        surface->add_observer(surface_observer);
+        return id;
+    }
+
+    void modify_surface(
+        std::shared_ptr<msc::Session> const& session,
+        std::shared_ptr<msc::Surface> const& surface,
+        msh::SurfaceSpecification  const& modifications) override
+    {
+        wrapped->modify_surface(session, surface, modifications);
+    }
+
+    void destroy_surface(std::shared_ptr<msc::Session> const& session, mf::SurfaceId surface) override
+    {
+        wrapped->destroy_surface(session, surface);
+    }
+
+    int set_surface_attribute(
+        std::shared_ptr<msc::Session> const& session,
+        std::shared_ptr<msc::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override
+    {
+        return wrapped->set_surface_attribute(session, surface, attrib, value);
+    }
+
+    int get_surface_attribute(
+        std::shared_ptr<msc::Surface> const& surface,
+        MirSurfaceAttrib attrib) override
+    {
+        return wrapped->get_surface_attribute(surface, attrib);
+    }
+
+    void raise_surface(
+        std::shared_ptr<msc::Session> const& session,
+        std::shared_ptr<msc::Surface> const& surface,
+        uint64_t timestamp) override
+    {
+        return wrapped->raise_surface(session, surface, timestamp);
+    }
+
+private:
+    std::shared_ptr<msh::Shell> const wrapped;
+    std::shared_ptr<msc::SurfaceObserver> const surface_observer;
+};
+
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -264,6 +434,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
     NiceMock<MockDisplay> display{display_geometry};
+    std::shared_ptr<StubSurfaceObserver> stub_observer = std::make_shared<StubSurfaceObserver>();
 
     void SetUp() override
     {
@@ -278,6 +449,11 @@ struct NestedServer : mtf::HeadlessInProcessServer
             { return the_mock_display_configuration_report(); });
 
         server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return the_mock_cursor(); });
+
+        server.wrap_shell([&, this](auto const& wrapped)
+        {
+            return std::make_shared<ObservantShell>(wrapped, stub_observer);
+        });
 
         mtf::HeadlessInProcessServer::SetUp();
     }
@@ -826,6 +1002,32 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     {
         mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
     }
+
+    // Need to verify before test server teardown deletes the
+    // surface as the host cursor then reverts to default.
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
+}
+
+//LP: #1597717
+TEST_F(NestedServer, showing_a_0x0_cursor_image_sets_disabled_cursor)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
+    auto const mock_cursor = the_mock_cursor();
+
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    //see NamedCursor in qtmir
+    struct EmptyImage : mg::CursorImage
+    {
+        const void *as_argb_8888() const override { return nullptr; }
+        geom::Size size() const override { return {0,0}; }
+        geom::Displacement hotspot() const override { return {0,0}; }
+    } empty_image;
+    nested_mir.cursor_wrapper->show(empty_image);
+
+    EXPECT_TRUE(stub_observer->wait_for_removal());
 
     // Need to verify before test server teardown deletes the
     // surface as the host cursor then reverts to default.
