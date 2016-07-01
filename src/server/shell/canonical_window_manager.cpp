@@ -408,6 +408,11 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
         auto const state = handle_set_state(surface, modifications.state.value());
         surface->configure(mir_surface_attrib_state, state);
     }
+
+    if (modifications.confine_pointer.is_set())
+    {
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
+    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)

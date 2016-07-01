@@ -19,6 +19,7 @@ set(
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
+  test_confined_pointer.cpp
   test_client_surfaces.cpp
   test_client_logging.cpp
   test_custom_window_management.cpp

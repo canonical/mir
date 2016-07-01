@@ -36,6 +36,22 @@
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
 
+namespace
+{
+auto get_pixel_width(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mwidth) / screen->width;
+}
+auto get_pixel_height(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mheight) / screen->height;
+}
+}
+
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
@@ -256,6 +272,8 @@ mgx::Display::Display(::Display* x_dpy,
                       GLConfig const& gl_config)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
+      pixel_width{get_pixel_width(x_dpy)},
+      pixel_height{get_pixel_height(x_dpy)},
       win{X11Window(x_dpy,
                     egl_display,
                     size,
@@ -291,7 +309,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, size, orientation);
+    return std::make_unique<mgx::DisplayConfiguration>(pf, geom::Size{size.width*pixel_width, size.height*pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)

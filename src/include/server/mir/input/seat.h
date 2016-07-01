@@ -21,6 +21,7 @@
 #define MIR_INPUT_SEAT_H_
 
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
 #include "mir_toolkit/event.h"
 
 #include <memory>
@@ -39,6 +40,8 @@ public:
     virtual void remove_device(Device const& device) = 0;
     virtual void dispatch_event(MirEvent& event) = 0;
     virtual geometry::Rectangle get_rectangle_for(Device const& dev) = 0;
+    virtual void set_confinement_regions(geometry::Rectangles const& regions) = 0;
+    virtual void reset_confinement_regions() = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

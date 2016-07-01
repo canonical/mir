@@ -284,6 +284,7 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(confine_pointer);
 
     #undef COPY_IF_SET
 

@@ -58,3 +58,13 @@ mir::geometry::Rectangle mi::BasicSeat::get_rectangle_for(input::Device const&)
     // assumes that only the first output may have a touch screen associated to it.
     return input_region->bounding_rectangle();
 }
+
+void mi::BasicSeat::set_confinement_regions(geometry::Rectangles const& regions)
+{
+    input_state_tracker.set_confinement_regions(regions);
+}
+
+void mi::BasicSeat::reset_confinement_regions()
+{
+    input_state_tracker.reset_confinement_regions();
+}
