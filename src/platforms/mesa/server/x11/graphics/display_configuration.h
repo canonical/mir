@@ -33,7 +33,10 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(MirPixelFormat pf, mir::geometry::Size const size, MirOrientation orientation);
+    DisplayConfiguration(MirPixelFormat pf,
+                         mir::geometry::Size const pixels,
+                         mir::geometry::Size const size_mm,
+                         MirOrientation orientation);
     DisplayConfiguration(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;

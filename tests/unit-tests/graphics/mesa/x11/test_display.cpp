@@ -177,3 +177,24 @@ TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_scre
 
     EXPECT_THAT(reported_size, Eq(expected_size));
 }
+
+TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
+{
+    auto const pixel = geom::Size{2560, 1080};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+
+    setup_x11_screen(pixel, mm, window);
+
+    auto display = create_display();
+    auto config = display->configuration();
+    geom::Size reported_resolution;
+    config->for_each_output(
+        [&reported_resolution](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_resolution = output.modes[0].size;
+        }
+        );
+
+    EXPECT_THAT(reported_resolution, Eq(window));
+}
