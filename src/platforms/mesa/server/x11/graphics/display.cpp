@@ -309,7 +309,8 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, geom::Size{size.width*pixel_width, size.height*pixel_height}, orientation);
+    return std::make_unique<mgx::DisplayConfiguration>(
+        pf, size, geom::Size{size.width * pixel_width, size.height * pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
