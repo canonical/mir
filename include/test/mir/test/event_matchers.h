@@ -523,7 +523,8 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
         auto it_keys = begin(keys);
         auto end_keys = end(keys);
-        if (distance(it_keys, end_keys) != key_count)
+        decltype(key_count) num_required_keys = distance(it_keys, end_keys);
+        if (num_required_keys != key_count)
             continue;
 
         auto pressed_keys = mir_input_device_state_event_device_pressed_keys(device_state, index);
