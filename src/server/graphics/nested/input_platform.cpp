@@ -268,6 +268,8 @@ void mgn::InputPlatform::stop()
 {
     std::function<void(mgn::UniqueInputConfig)> reset;
     connection->set_input_device_change_callback(reset);
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> empty_event_callback;
+    connection->set_input_event_callback(empty_event_callback);
 
     for(auto const& device : devices)
         input_device_registry->remove_device(device.second);
