@@ -13,6 +13,16 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jun 2016 16:29:31 -0400
 
+mir (0.23.2+16.10.20160624-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.2 (https://launchpad.net/mir/+milestone/0.23.2)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Refine Android display format selection LP: #1584657
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Fri, 24 Jun 2016 19:56:05 +0000
+
 mir (0.23.1+16.10.20160610.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]
