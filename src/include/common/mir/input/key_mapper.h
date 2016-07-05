@@ -89,6 +89,7 @@ public:
      */
     virtual void map_event(MirEvent& event) = 0;
     virtual MirInputEventModifiers modifiers() const = 0;
+    virtual MirInputEventModifiers device_modifiers(MirInputDeviceId id) const = 0;
 
 protected:
     KeyMapper(KeyMapper const&) = delete;

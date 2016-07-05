@@ -18,6 +18,7 @@
 
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
+#include "mir/input/keymap.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -82,7 +83,6 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
         : ShellWrapper{wrapped_shell}, wrapped_shell{wrapped_shell}
     {}
 
-    ~SurfaceTrackingShell();
     mir::frontend::SurfaceId create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
@@ -93,6 +93,17 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
         tracked_surfaces[session->name()] =  TrackedSurface{session, surface_id};
 
         return surface_id;
+    }
+
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& session_name)
+    {
+        if (end(tracked_surfaces) == tracked_surfaces.find(session_name))
+            return nullptr;
+        TrackedSurface & tracked_surface = tracked_surfaces[session_name];
+        auto session = tracked_surface.session.lock();
+        if (!session)
+            return nullptr;
+        return session->surface(tracked_surface.surface);
     }
 
     struct TrackedSurface
@@ -110,7 +121,6 @@ struct Client
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
-    MOCK_METHOD1(handle_input_device_state, void(MirEvent const*));
 
     Client(std::string const& con, std::string const& name)
     {
@@ -171,8 +181,6 @@ struct Client
             client->handle_input(ev);
         if (type == mir_event_type_keymap)
             client->handle_keymap(ev);
-        if (type == mir_event_type_input_device_state)
-            client->handle_input_device_state(ev);
     }
     ~Client()
     {
@@ -200,7 +208,8 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
             {
                 shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
-                return shell;
+                surfaces = std::make_shared<SurfaceTrackingShell>(shell);
+                return surfaces;
             });
 
         HeadlessInProcessServer::SetUp();
@@ -208,7 +217,13 @@ struct TestClientInput : mtf::HeadlessInProcessServer
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
+    {
+        return surfaces->get_surface(name);
+    }
+
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
+    std::shared_ptr<SurfaceTrackingShell> surfaces;
     std::string const keyboard_name = "keyboard";
     std::string const keyboard_unique_id = "keyboard-uid";
     std::string const mouse_name = "mouse";
@@ -992,40 +1007,29 @@ TEST_F(TestClientInput, keeps_num_lock_state_after_focus_change)
 
 TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keymap)
 {
-    /*
     Client a_client_with_keymap(new_connection(), first);
 
-    get_surface(first) ->set_keymap(mi::Keymap{"",,...});
+    mir::test::Signal keymap_received;
+    EXPECT_CALL(a_client_with_keymap, handle_keymap(_))
+        .WillOnce(mt::WakeUp(&keymap_received));
+    get_surface(first)->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
 
     {
         Client a_client(new_connection(), second);
         fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_NUMLOCK));
         fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_NUMLOCK));
 
-        EXPECT_CALL(a_client, handle_input(mt::KeyDownEvent()))
-            EXPECT_CALL(a_client, handle_input(mt::KeyUpEvent()))
+        EXPECT_CALL(a_client, handle_input(mt::KeyDownEvent()));
+        EXPECT_CALL(a_client, handle_input(mt::KeyUpEvent()))
             .WillOnce(mt::WakeUp(&a_client.all_events_received));
 
         a_client.all_events_received.wait_for(10s);
     }
-
-    mir::test::Signal client_ready;
-    EXPECT_CALL(a_client_with_keymap, handle_input_device_state())
-            .WillOnce(mt::WakeUp(&client_ready));
-
-    client_ready.wait_for(1s);
+    keymap_received.wait_for(1s);
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
-    fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_KP4));
-    EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyDownEvent()))
-    EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyDownEvent()))
-        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+    EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
+        .WillOnce(mt::WakeUp(&a_client_with_keymap.all_events_received));
 
-
-
-    // wait for a_client to be focused
-    // set num  lock .. 
-    // close a_client
-    // press 
-    */
+    a_client_with_keymap.all_events_received.wait_for(10s);
 }

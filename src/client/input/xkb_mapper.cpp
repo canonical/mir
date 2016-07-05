@@ -24,6 +24,8 @@
 #include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
+#include <unordered_set>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -239,6 +241,16 @@ MirInputEventModifiers mircv::XKBMapper::modifiers() const
     return mir_input_event_modifier_none;
 }
 
+MirInputEventModifiers mircv::XKBMapper::device_modifiers(MirInputDeviceId id) const
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    auto it = device_mapping.find(id);
+    if (it == end(device_mapping))
+        return mir_input_event_modifier_none;
+    return expand_modifiers(it->second.modifier_state);
+}
+
 mircv::XKBMapper::XkbMappingState::XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap)
     : keymap{keymap}, state{make_unique_state(this->keymap.get())}
 {
@@ -248,8 +260,21 @@ void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> cons
 {
     state = make_unique_state(keymap.get());
     modifier_state = mir_input_event_modifier_none;
+    std::unordered_set<uint32_t> pressed_codes;
+    std::cout << "updating a key state" << std::endl;
     for (uint32_t scan_code : key_state)
-        update_state(to_xkb_scan_code(scan_code), mir_keyboard_action_down);
+    {
+        bool already_pressed = pressed_codes.count(scan_code) > 0;
+        std::cout << "Scan Code " << scan_code << std::endl;
+
+        update_state(to_xkb_scan_code(scan_code),
+                     (already_pressed) ? mir_keyboard_action_up : mir_keyboard_action_down);
+
+        if (already_pressed)
+            pressed_codes.erase(scan_code);
+        else
+            pressed_codes.insert(scan_code);
+    }
 }
 
 bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)

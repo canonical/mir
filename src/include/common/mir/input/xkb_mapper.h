@@ -59,6 +59,7 @@ public:
     void clear_all_keymaps() override;
     void map_event(MirEvent& event) override;
     MirInputEventModifiers modifiers() const override;
+    MirInputEventModifiers device_modifiers(MirInputDeviceId di) const override;
 
 protected:
     XKBMapper(XKBMapper const&) = delete;
