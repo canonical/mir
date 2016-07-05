@@ -174,3 +174,16 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return mir_buffer_usage_hardware;
 }
+
+void mir_buffer_set_callback(
+    MirBuffer* b, mir_buffer_callback available_callback, void* available_context)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->set_callback(available_callback, available_context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}

@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/geometry/size.h"
+#include "atomic_callback.h"
 #include "mir_buffer.h"
 #include <memory>
 #include <chrono>
@@ -41,6 +42,7 @@ public:
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
         MirBufferUsage usage);
+
     int rpc_id() const override;
 
     void submitted() override;
@@ -62,11 +64,12 @@ public:
     MirConnection* allocating_connection() const override;
 
     void increment_age() override;
+    void set_callback(mir_buffer_callback callback, void* context) override;
 private:
-    mir_buffer_callback cb;
-    void* cb_context;
     int const buffer_id;
-    std::shared_ptr<ClientBuffer> buffer;
+    std::shared_ptr<ClientBuffer> const buffer;
+
+    AtomicCallback<> cb;
 
     std::mutex mutex;
     bool owned;
