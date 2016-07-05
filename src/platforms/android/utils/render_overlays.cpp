@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2014 Canonical Ltd.
+ * Copyright © 2012, 2014, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,18 +16,22 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/server.h"
-#include "mir/report_exception.h"
+#include "mir/options/default_configuration.h"
+#include "mir/shared_library_prober.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_probe.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/gl_config.h"
+#include "mir/graphics/display_report.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir_image.h"
 #include "as_render_target.h"
-
+#include "mir/logging/null_shared_library_prober_report.h"
+#include "GLES2/gl2.h"
 #include <chrono>
 #include <csignal>
 #include <iostream>
@@ -45,7 +49,6 @@ void signal_handler(int /*signum*/)
 {
     running = false;
 }
-
 class PixelBufferABGR
 {
 public:
@@ -171,7 +174,7 @@ private:
     glm::mat4 const trans;
 };
 
-void render_loop(mir::Server& server)
+void render_loop(mir::graphics::Display& display, mir::graphics::GraphicBufferAllocator& allocator)
 {
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -182,20 +185,14 @@ void render_loop(mir::Server& server)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    auto platform = server.the_graphics_platform();
-    auto display = server.the_display();
-    auto buffer_allocator = platform->create_buffer_allocator();
-
     mg::BufferProperties buffer_properties{
         geom::Size{512, 512},
         mir_pixel_format_abgr_8888,
         mg::BufferUsage::hardware
     };
 
-    auto client1 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_properties, 0xFF0000FF);
-    auto client2 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_properties, 0xFFFFFF00);
+    auto client1 = std::make_shared<DemoOverlayClient>(allocator, buffer_properties, 0xFF0000FF);
+    auto client2 = std::make_shared<DemoOverlayClient>(allocator, buffer_properties, 0xFFFFFF00);
 
     mg::RenderableList renderlist
     {
@@ -207,7 +204,7 @@ void render_loop(mir::Server& server)
     {
         client1->update_green_channel();
         client2->update_green_channel();
-        display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
+        display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             {
@@ -219,28 +216,70 @@ void render_loop(mir::Server& server)
         });
     }
 }
+struct GLConfig : mg::GLConfig
+{
+    int depth_buffer_bits() const override { return 0; }
+    int stencil_buffer_bits() const override { return 0; }
+};
+
+struct DisplayReport : mg::DisplayReport 
+{
+    void report_successful_setup_of_native_resources() override {}
+    void report_successful_egl_make_current_on_construction() override {}
+    void report_successful_egl_buffer_swap_on_construction() override {}
+    void report_successful_display_construction() override {}
+    void report_egl_configuration(EGLDisplay, EGLConfig) override {}
+    void report_vsync(unsigned int) override {}
+    void report_successful_drm_mode_set_crtc_on_construction() override {}
+    void report_drm_master_failure(int) override {}
+    void report_vt_switch_away_failure() override {}
+    void report_vt_switch_back_failure() override {}
+};
 }
 
 int main(int argc, char const** argv)
 try
 {
-    // We don't want to act as a server by providing an endpoint
-    setenv("MIR_SERVER_NO_FILE", "", 1);
+    mir::logging::NullSharedLibraryProberReport null_report;
+    auto config = std::make_unique<mo::DefaultConfiguration>(argc, argv);
+    auto options = static_cast<mo::Configuration*>(config.get())->the_options();
+    auto const& path = options->get<std::string>(mo::platform_path);
+    auto platforms = mir::libraries_for_path(path, null_report);
+    if (platforms.empty())
+        throw std::runtime_error("no platform modules detected");
+    auto platform_library = mg::module_for_device(
+        platforms, dynamic_cast<mir::options::ProgramOption&>(*options));
 
-    // If there's a server available, try connecting to it
-    if (auto const socket = getenv("MIR_SOCKET"))
-        setenv("MIR_SERVER_HOST_SOCKET", socket, 0);
+    auto describe_fn = platform_library->load_function<mg::DescribeModule>(
+        "describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto description = describe_fn();
+    std::cout << "Loaded module: " << description->file << "\n\t"
+        << "module name: " << description->name
+        << "version: " << description->major_version << "."
+        << description->minor_version << "."
+        << description->micro_version << std::endl;
 
-    mir::Server server;
-    server.set_command_line(argc, argv);
-    server.apply_settings();
+    auto platform_fn = platform_library->load_function<mg::CreateHostPlatform>(
+        "create_host_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto platform = platform_fn(options, nullptr, std::make_shared<DisplayReport>());
 
-    render_loop(server);
+    //Strange issues going on here with dlopen() + hybris (which uses gnu_indirect_functions)
+    //https://github.com/libhybris/libhybris/issues/315
+    //calling a GLES function here makes everything resolve correctly.
+    glGetString(GL_EXTENSIONS);
+    auto allocator = platform->create_buffer_allocator();
+    auto display = platform->create_display(nullptr, std::make_shared<GLConfig>());
 
+    render_loop(*display, *allocator);
     return EXIT_SUCCESS;
+}
+catch (std::exception& e)
+{
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
 }
 catch (...)
 {
-    mir::report_exception(std::cerr);
+    std::cerr << "unknown exception" << std::endl;
     return EXIT_FAILURE;
 }

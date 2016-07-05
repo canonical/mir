@@ -29,8 +29,9 @@ namespace mf = mir::frontend;
 mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer,
                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
-                         std::shared_ptr<mi::InputRegion> const& input_region)
-    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region}, input_region{input_region}
+                         std::shared_ptr<mi::InputRegion> const& input_region,
+                         std::shared_ptr<mi::KeyMapper> const& key_mapper)
+    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region, key_mapper}, input_region{input_region}
 {
 }
 

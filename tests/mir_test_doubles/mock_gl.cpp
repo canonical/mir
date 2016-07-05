@@ -89,7 +89,8 @@ GLenum glGetError()
 
 const GLubyte* glGetString(GLenum name)
 {
-    CHECK_GLOBAL_MOCK(const GLubyte*);
+    if (!global_mock_gl)
+        return nullptr;
     return global_mock_gl->glGetString(name);
 }
 
@@ -127,6 +128,12 @@ void glDisable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glDisable(func);
+}
+
+void glBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glBlendColor(red, green, blue, alpha);
 }
 
 void glBlendFunc(GLenum src, GLenum dst)

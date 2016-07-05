@@ -28,10 +28,9 @@ mcl::Buffer::Buffer(
     std::shared_ptr<ClientBuffer> const& buffer,
     MirConnection* connection,
     MirBufferUsage usage) :
-    cb(cb),
-    cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
+    cb([this, cb, context]{ (*cb)(reinterpret_cast<::MirBuffer*>(this), context); }),
     owned(false),
     connection(connection),
     usage(usage)
@@ -60,8 +59,8 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
-    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 
+    cb();
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
@@ -74,7 +73,8 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
+
+    cb();
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -147,4 +147,9 @@ bool mcl::Buffer::valid() const
 char const* mcl::Buffer::error_message() const
 {
     return "";
+}
+
+void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
+{
+    cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

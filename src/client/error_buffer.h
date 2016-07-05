@@ -47,6 +47,7 @@ public:
     geometry::Size size() const override;
     MirConnection* allocating_connection() const override;
     void increment_age() override;
+    void set_callback(mir_buffer_callback callback, void* context) override;
 
     bool valid() const override;
     char const* error_message() const override;

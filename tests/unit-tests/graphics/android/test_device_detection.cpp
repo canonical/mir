@@ -18,12 +18,15 @@
 
 #include "src/platforms/android/server/device_quirks.h"
 #include "mir/options/program_option.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
 #include <hardware/gralloc.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mga = mir::graphics::android;
 namespace bpo = boost::program_options;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -34,7 +37,13 @@ struct MockOps : mga::PropertiesWrapper
 };
 }
 
-TEST(DeviceDetection, two_buffers_by_default)
+struct DeviceDetection : testing::Test
+{
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
+};
+
+TEST_F(DeviceDetection, two_buffers_by_default)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -54,7 +63,7 @@ TEST(DeviceDetection, two_buffers_by_default)
     EXPECT_EQ(2u, quirks.num_framebuffers());
 }
 
-TEST(DeviceDetection, three_buffers_reported_for_mx3)
+TEST_F(DeviceDetection, three_buffers_reported_for_mx3)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -75,7 +84,7 @@ TEST(DeviceDetection, three_buffers_reported_for_mx3)
 }
 
 //LP: 1371619, 1370555
-TEST(DeviceDetection, reports_gralloc_can_be_closed_safely_by_default)
+TEST_F(DeviceDetection, reports_gralloc_can_be_closed_safely_by_default)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -94,7 +103,7 @@ TEST(DeviceDetection, reports_gralloc_can_be_closed_safely_by_default)
     EXPECT_FALSE(quirks.gralloc_cannot_be_closed_safely());
 }
 
-TEST(DeviceDetection, reports_gralloc_cannot_be_closed_safely_on_krillin)
+TEST_F(DeviceDetection, reports_gralloc_cannot_be_closed_safely_on_krillin)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -113,7 +122,7 @@ TEST(DeviceDetection, reports_gralloc_cannot_be_closed_safely_on_krillin)
     EXPECT_TRUE(quirks.gralloc_cannot_be_closed_safely());
 }
 
-TEST(DeviceDetection, aligns_width_on_vegetahd)
+TEST_F(DeviceDetection, aligns_width_on_vegetahd)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -132,7 +141,7 @@ TEST(DeviceDetection, aligns_width_on_vegetahd)
     EXPECT_THAT(quirks.aligned_width(720), Eq(736));
 }
 
-TEST(DeviceDetection, clears_gl_context_fence_on_manta)
+TEST_F(DeviceDetection, clears_gl_context_fence_on_manta)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -151,7 +160,7 @@ TEST(DeviceDetection, clears_gl_context_fence_on_manta)
     EXPECT_TRUE(quirks.clear_fb_context_fence());
 }
 
-TEST(DeviceDetection, clears_gl_context_fence_on_arale)
+TEST_F(DeviceDetection, clears_gl_context_fence_on_arale)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -170,7 +179,7 @@ TEST(DeviceDetection, clears_gl_context_fence_on_arale)
     EXPECT_TRUE(quirks.clear_fb_context_fence());
 }
 
-TEST(DeviceDetection, clears_gl_context_fence_on_krillin)
+TEST_F(DeviceDetection, clears_gl_context_fence_on_krillin)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -189,7 +198,7 @@ TEST(DeviceDetection, clears_gl_context_fence_on_krillin)
     EXPECT_TRUE(quirks.clear_fb_context_fence());
 }
 
-TEST(DeviceDetection, does_not_clear_gl_context_fence_on_others)
+TEST_F(DeviceDetection, does_not_clear_gl_context_fence_on_others)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -260,6 +269,8 @@ struct DeviceQuirks : testing::Test
 
     bpo::options_description desc{"Options"};
     mir::options::ProgramOption options;
+    testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
 TEST_F(DeviceQuirks, number_of_framebuffers_quirk_can_be_disabled)
@@ -358,4 +369,21 @@ TEST_F(DeviceQuirks, returns_correct_gralloc_bits_with_fb_ion_quirk)
     mga::DeviceQuirks quirks(mock_ops, options);
     EXPECT_THAT(quirks.fb_gralloc_bits(),
         testing::Eq(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE));
+}
+
+TEST_F(DeviceQuirks, detects_gl_vendor_and_renderer_for_egl_quirk)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gl, glGetString(GL_VENDOR))
+        .Times(2)
+        .WillOnce(Return(reinterpret_cast<const unsigned char*>("Qualcomm")))
+        .WillOnce(Return(reinterpret_cast<const unsigned char*>("gpuMart")));
+    EXPECT_CALL(mock_gl, glGetString(GL_RENDERER))
+        .Times(2);
+    MockOps mock_ops;
+    mga::DeviceQuirks quirks(mock_ops, options);
+    EXPECT_TRUE(quirks.working_egl_sync());
+
+    mga::DeviceQuirks broken_quirks(mock_ops, options);
+    EXPECT_FALSE(broken_quirks.working_egl_sync());
 }

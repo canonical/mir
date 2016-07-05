@@ -54,6 +54,7 @@ public:
     virtual void increment_age() = 0;
     virtual bool valid() const = 0;
     virtual char const* error_message() const = 0;
+    virtual void set_callback(mir_buffer_callback callback, void* context) = 0;
 protected:
     MirBuffer() = default;
     MirBuffer(MirBuffer const&) = delete;

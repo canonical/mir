@@ -75,3 +75,4 @@ MirBufferUsage mcl::ErrorBuffer::buffer_usage() const THROW_EXCEPTION
 MirPixelFormat mcl::ErrorBuffer::pixel_format() const THROW_EXCEPTION
 geom::Size mcl::ErrorBuffer::size() const THROW_EXCEPTION
 void mcl::ErrorBuffer::increment_age() THROW_EXCEPTION
+void mcl::ErrorBuffer::set_callback(mir_buffer_callback, void*) THROW_EXCEPTION

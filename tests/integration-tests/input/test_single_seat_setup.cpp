@@ -35,6 +35,7 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir/input/device.h"
+#include "mir/input/xkb_mapper.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
@@ -78,16 +79,20 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
+    mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
+                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), mt::fake_shared(key_mapper)};
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
-                                  cookie_authority};
+                                  cookie_authority, mt::fake_shared(key_mapper)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
+
+    mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;
+    mi::DeviceCapabilities const touchpad_caps = mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
-    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
-    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
-    NiceMock<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
+    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", keyboard_caps};
+    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", keyboard_caps};
+    NiceMock<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", touchpad_caps};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
@@ -269,14 +274,14 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
     mi::EventBuilder* key_event_builder;
     std::shared_ptr<mi::Device> key_handle;
 
-    capture_input_sink(device,  key_board_sink, key_event_builder);
+    capture_input_sink(another_device, key_board_sink, key_event_builder);
 
     InSequence seq;
     EXPECT_CALL(mock_observer,device_added(_))
         .WillOnce(SaveArg<0>(&key_handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
-    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
 
     observer_loop.trigger_server_actions();
 

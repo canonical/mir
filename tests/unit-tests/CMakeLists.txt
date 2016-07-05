@@ -243,3 +243,7 @@ install(TARGETS loadable_test_dso
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)
+
+mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "!(objdump -p *unit_tests* | grep NEEDED | grep GL)")
