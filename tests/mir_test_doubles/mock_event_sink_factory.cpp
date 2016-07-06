@@ -43,6 +43,7 @@ public:
     void add_buffer(mir::graphics::Buffer&) override;
     void remove_buffer(mir::graphics::Buffer&) override;
     void update_buffer(mir::graphics::Buffer&) override;
+    void error_buffer(mir::graphics::BufferProperties const&, std::string const&) override;
 
 private:
     std::shared_ptr<mf::EventSink> underlying_sink;
@@ -96,6 +97,12 @@ void GloballyUniqueMockEventSink::send_buffer(
 void GloballyUniqueMockEventSink::add_buffer(mir::graphics::Buffer& buffer)
 {
     underlying_sink->add_buffer(buffer);
+}
+
+void GloballyUniqueMockEventSink::error_buffer(
+    mir::graphics::BufferProperties const& props, std::string const& error)
+{
+    underlying_sink->error_buffer(props, error);
 }
 
 void GloballyUniqueMockEventSink::remove_buffer(mir::graphics::Buffer& buffer)

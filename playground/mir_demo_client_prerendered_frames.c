@@ -187,6 +187,12 @@ int main(int argc, char** argv)
         while(!buffer_available[i].buffer)
             pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
 
+        if (!mir_buffer_is_valid(buffer_available[i].buffer))
+        {
+            printf("could not create MirBuffer\n");
+            return -1;
+        }
+
         float max_radius = distance(0, 0, width, height) / 2.0f;
         float radius_i = ((float) i + 1) / num_prerendered_frames * max_radius;
         fill_buffer_with_centered_circle_abgr(buffer_available[i].buffer, radius_i, fg, bg);

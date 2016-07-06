@@ -321,7 +321,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();
-                    std::shared_ptr<mcl::Buffer> buffer;
+                    std::shared_ptr<mcl::MirBuffer> buffer;
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:

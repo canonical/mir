@@ -329,6 +329,7 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
+    void error_buffer(mg::BufferProperties const&, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
@@ -431,7 +432,7 @@ struct ScheduledProducer : ProducerSystem
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
                 auto& ipc_buffer = request.buffer();
-                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                std::shared_ptr<mcl::MirBuffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }

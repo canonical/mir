@@ -684,7 +684,7 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
 struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
-    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mir::protobuf::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirConnection*,
