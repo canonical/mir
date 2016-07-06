@@ -53,7 +53,7 @@ TEST_F(ANWLogger, logs_buffer_events)
         "window (" << &anw << "): queueBuffer: " << &anwb << ", fence: " << dummy_fd << "\n"
         "window (" << &anw << "): dequeueBuffer: " << &anwb << ", fence: none\n"
         "window (" << &anw << "): cancelBuffer: " << &anwb << ", fence: none\n"
-        "window (" << &anw << "): queueBuffer_deprecated: " << &anwb << "\n"
+        "window (" << &anw << "): dequeueBuffer_deprecated: " << &anwb << "\n"
         "window (" << &anw << "): cancelBuffer_deprecated: " << &anwb << "\n";
 
     logger.buffer_event(mga::BufferEvent::Queue, &anw, &anwb, dummy_fd);
@@ -68,12 +68,12 @@ TEST_F(ANWLogger, logs_perform_events)
 {
     std::stringstream expected;
     expected << 
-        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_USAGE: 0x734\n"
-        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_TIMESTAMP: 0x313\n";
+        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_USAGE: 0x734, 0x858\n"
+        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP: 0x313\n";
 
-    logger.perform_event(&anw, NATIVE_WINDOW_SET_USAGE, {0x734});
-    logger.perform_event(&anw, NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP, {0x313});
-    EXPECT_THAT(expected.str(), StrEq(test_stream.str())); 
+    logger.perform_event(&anw, NATIVE_WINDOW_SET_USAGE, {0x734, 0x858} );
+    logger.perform_event(&anw, NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP, {0x313} );
+    EXPECT_THAT(test_stream.str(), StrEq(expected.str()));
 }
 
 TEST_F(ANWLogger, logs_query_events)
