@@ -34,7 +34,6 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/gl/program_factory.h"
 #include "mir/fd.h"
-#include "native_window_logger.h"
 
 #include <memory>
 #include <boost/throw_exception.hpp>
@@ -118,13 +117,14 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     geom::Displacement displacement,
+    std::shared_ptr<mga::NativeWindowLogger> const& logger,
     mga::OverlayOptimization overlay_option)
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
     auto cache = std::make_shared<mga::InterpreterCache>();
     mga::DeviceQuirks quirks(mga::PropertiesOps{}, gl_context);
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache, quirks); 
-    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter, std::make_shared<mga::NullNativeWindowLogger>());
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter, logger);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
         display_buffer_builder.create_layer_list(),
@@ -144,8 +144,10 @@ mga::Display::Display(
     std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<DisplayReport> const& display_report,
+    std::shared_ptr<NativeWindowLogger> const& native_window_logger,
     mga::OverlayOptimization overlay_option) :
     display_report{display_report},
+    native_window_logger{native_window_logger},
     display_buffer_builder{display_buffer_builder},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
@@ -170,6 +172,7 @@ mga::Display::Display(
             gl_program_factory,
             gl_context,
             geom::Displacement{0,0},
+            native_window_logger,
             overlay_option),
             [this] { on_hotplug(); }), //Recover from exception by forcing a configuration change
     overlay_option(overlay_option)
@@ -188,6 +191,7 @@ mga::Display::Display(
                 gl_program_factory,
                 gl_context,
                 geom::Displacement{0,0},
+                native_window_logger,
                 overlay_option));
     }
 
@@ -255,6 +259,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
                 gl_program_factory,
                 gl_context,
                 config.external().top_left - origin,
+                native_window_logger,
                 overlay_option));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);

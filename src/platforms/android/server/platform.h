@@ -34,6 +34,7 @@ class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayComponentFactory;
 class CommandStreamSyncFactory;
+class NativeWindowLogger;
 
 class Platform : public graphics::Platform
 {
@@ -42,6 +43,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
         std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<NativeWindowLogger> const& native_window_logger,
         OverlayOptimization overlay_option,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
@@ -59,6 +61,7 @@ private:
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     std::shared_ptr<DeviceQuirks> const quirks;
+    std::shared_ptr<NativeWindowLogger> const native_window_logger;
     OverlayOptimization const overlay_option;
 
 };
