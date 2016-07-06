@@ -137,3 +137,19 @@ void mga::ConsoleNativeWindowLogger::perform_event(
     }
     std::cout << std::endl;;
 }
+
+void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*, int)
+{
+}
+
+void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*)
+{
+}
+
+void mga::NullNativeWindowLogger::query_event(ANativeWindow*, int, int)
+{
+}
+
+void mga::NullNativeWindowLogger::perform_event(ANativeWindow*, int, std::vector<int> const&)
+{
+}

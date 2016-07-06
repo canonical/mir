@@ -34,6 +34,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/gl/program_factory.h"
 #include "mir/fd.h"
+#include "native_window_logger.h"
 
 #include <memory>
 #include <boost/throw_exception.hpp>
@@ -123,7 +124,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     auto cache = std::make_shared<mga::InterpreterCache>();
     mga::DeviceQuirks quirks(mga::PropertiesOps{}, gl_context);
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache, quirks); 
-    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter, std::make_shared<mga::NullNativeWindowLogger>());
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
         display_buffer_builder.create_layer_list(),

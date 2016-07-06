@@ -32,11 +32,14 @@ namespace android
 {
 class AndroidDriverInterpreter;
 class SyncFileOps;
+class NativeWindowLogger;
 
 class MirNativeWindow : public ANativeWindow
 {
 public:
-    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
+    explicit MirNativeWindow(
+        std::shared_ptr<AndroidDriverInterpreter> const& interpreter,
+        std::shared_ptr<NativeWindowLogger> const& logger);
 
     int query(int key, int* value) const;
     int perform(int key, va_list args );
@@ -47,6 +50,7 @@ public:
     int setSwapInterval(int interval);
 private:
     std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
+    std::shared_ptr<NativeWindowLogger> const logger;
     std::shared_ptr<SyncFileOps> const sync_ops;
     std::vector<struct ANativeWindowBuffer*> cancelled_buffers;
 };

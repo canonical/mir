@@ -18,6 +18,7 @@
 
 #include "mir_native_window.h"
 #include "android_driver_interpreter.h"
+#include "native_window_logger.h"
 #include "mir/egl_native_surface.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/stub_android_native_buffer.h"
@@ -57,7 +58,9 @@ class AndroidNativeWindowTest : public ::testing::Test
 protected:
     std::shared_ptr<MockAndroidDriverInterpreter> const mock_driver_interpreter =
         std::make_shared<testing::NiceMock<MockAndroidDriverInterpreter>>();
-    mga::MirNativeWindow mir_native_window{mock_driver_interpreter};
+    mga::MirNativeWindow mir_native_window{
+        mock_driver_interpreter,
+        std::make_shared<mga::NullNativeWindowLogger>()};
     ANativeWindow& window = mir_native_window;
     int const failure_code{-1};
 };

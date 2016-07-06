@@ -48,6 +48,14 @@ private:
     NativeWindowLogger& operator=(NativeWindowLogger const&) = delete;
 };
 
+class NullNativeWindowLogger : public NativeWindowLogger
+{
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) override;
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) override;
+    void query_event(ANativeWindow* win, int type, int result) override;
+    void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) override;
+};
+
 class ConsoleNativeWindowLogger : public NativeWindowLogger
 {
 public:

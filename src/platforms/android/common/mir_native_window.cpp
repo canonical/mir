@@ -126,8 +126,12 @@ int cancelBuffer_static(struct ANativeWindow* window,
 }
 }
 
-mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
- : driver_interpreter(interpreter), sync_ops(std::make_shared<mga::RealSyncFileOps>())
+mga::MirNativeWindow::MirNativeWindow(
+    std::shared_ptr<AndroidDriverInterpreter> const& interpreter,
+    std::shared_ptr<NativeWindowLogger> const& logger) :
+    driver_interpreter(interpreter),
+    logger(logger),
+    sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
