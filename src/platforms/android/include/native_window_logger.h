@@ -38,10 +38,10 @@ public:
     NativeWindowLogger() = default;
     virtual ~NativeWindowLogger() = default;
 
-    virtual void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) = 0;
-    virtual void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) = 0;
-    virtual void query_event(ANativeWindow* win, int type, int result) = 0;
-    virtual void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) = 0;
+    virtual void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) const = 0;
+    virtual void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) const = 0;
+    virtual void query_event(ANativeWindow* win, int type, int result) const = 0;
+    virtual void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) const = 0;
 
 private:
     NativeWindowLogger(NativeWindowLogger const&) = delete;
@@ -50,19 +50,19 @@ private:
 
 class NullNativeWindowLogger : public NativeWindowLogger
 {
-    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) override;
-    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) override;
-    void query_event(ANativeWindow* win, int type, int result) override;
-    void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) override;
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) const override;
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) const override;
+    void query_event(ANativeWindow* win, int type, int result) const override;
+    void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) const override;
 };
 
 class ConsoleNativeWindowLogger : public NativeWindowLogger
 {
 public:
-    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) override;
-    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) override;
-    void query_event(ANativeWindow* win, int type, int result) override;
-    void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) override;
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) const override;
+    void buffer_event(BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) const override;
+    void query_event(ANativeWindow* win, int type, int result) const override;
+    void perform_event(ANativeWindow* win, int type, std::vector<int> const& args) const override;
 };
 
 }

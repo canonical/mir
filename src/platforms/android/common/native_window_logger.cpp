@@ -100,7 +100,7 @@ std::ostream& operator<<(std::ostream& out, mga::BufferEvent type)
 }
 
 void mga::ConsoleNativeWindowLogger::buffer_event(
-    BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence)
+    BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf, int fence) const
 {
     std::cout << "window (" << win << "): " << type << ": " << buf << ", fence: ";
     if ( fence > 0 )
@@ -112,12 +112,12 @@ void mga::ConsoleNativeWindowLogger::buffer_event(
 }
 
 void mga::ConsoleNativeWindowLogger::buffer_event(
-    BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf)
+    BufferEvent type, ANativeWindow* win, ANativeWindowBuffer* buf) const
 {
     std::cout << "window (" << win << "): " << type << "_deprecated: " << buf << std::endl;
 }
 
-void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow* win, int type, int result)
+void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow* win, int type, int result) const
 {
     auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
     std::cout << "window (" << win << "): query: " << NativeQueryKey{type} << ": result: 0x" <<
@@ -125,7 +125,7 @@ void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow* win, int type, i
 }
 
 void mga::ConsoleNativeWindowLogger::perform_event(
-    ANativeWindow* win, int type, std::vector<int> const& args)
+    ANativeWindow* win, int type, std::vector<int> const& args) const
 {
     auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
     std::cout << "window (" << win << "): perform: " << NativePerformKey{type} << ": ";
@@ -138,18 +138,18 @@ void mga::ConsoleNativeWindowLogger::perform_event(
     std::cout << std::endl;;
 }
 
-void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*, int)
+void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*, int) const
 {
 }
 
-void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*)
+void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*) const
 {
 }
 
-void mga::NullNativeWindowLogger::query_event(ANativeWindow*, int, int)
+void mga::NullNativeWindowLogger::query_event(ANativeWindow*, int, int) const
 {
 }
 
-void mga::NullNativeWindowLogger::perform_event(ANativeWindow*, int, std::vector<int> const&)
+void mga::NullNativeWindowLogger::perform_event(ANativeWindow*, int, std::vector<int> const&) const
 {
 }
