@@ -17,8 +17,10 @@
  */
 
 #include "native_window_logger.h"
+#include "mir/raii.h"
 #include <iostream>
 
+#define CASE_KEY(var) case var: return out << #var;
 namespace mga = mir::graphics::android;
 
 namespace
@@ -29,11 +31,37 @@ struct NativePerformKey
     int key;
 };
 
+struct NativeQueryKey
+{
+    int key;
+};
+
+std::ostream& operator<<(std::ostream& out, NativeQueryKey key)
+{
+    switch (key.key)
+    {
+        CASE_KEY(NATIVE_WINDOW_WIDTH)
+        CASE_KEY(NATIVE_WINDOW_HEIGHT)
+        CASE_KEY(NATIVE_WINDOW_FORMAT)
+        CASE_KEY(NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS)
+        CASE_KEY(NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER)
+        CASE_KEY(NATIVE_WINDOW_CONCRETE_TYPE)
+        CASE_KEY(NATIVE_WINDOW_DEFAULT_WIDTH)
+        CASE_KEY(NATIVE_WINDOW_DEFAULT_HEIGHT)
+        CASE_KEY(NATIVE_WINDOW_TRANSFORM_HINT)
+        CASE_KEY(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND)
+        CASE_KEY(NATIVE_WINDOW_CONSUMER_USAGE_BITS)
+        CASE_KEY(NATIVE_WINDOW_STICKY_TRANSFORM)
+        CASE_KEY(NATIVE_WINDOW_DEFAULT_DATASPACE)
+        CASE_KEY(NATIVE_WINDOW_BUFFER_AGE)
+        default: return out << "unknown query key: " << key.key;
+    }
+}
+
 std::ostream& operator<<(std::ostream& out, NativePerformKey key)
 {
     switch (key.key)
     {
-#define CASE_KEY(var) case var: return out << #var;
         CASE_KEY(NATIVE_WINDOW_SET_USAGE)
         CASE_KEY(NATIVE_WINDOW_CONNECT)
         CASE_KEY(NATIVE_WINDOW_DISCONNECT)
@@ -55,8 +83,7 @@ std::ostream& operator<<(std::ostream& out, NativePerformKey key)
         CASE_KEY(NATIVE_WINDOW_SET_SIDEBAND_STREAM)
         CASE_KEY(NATIVE_WINDOW_SET_BUFFERS_DATASPACE)
         CASE_KEY(NATIVE_WINDOW_SET_SURFACE_DAMAGE)
-#undef CASE_KEY
-        default: return out << "unknown key: " << key.key;
+        default: return out << "unknown perform key: " << key.key;
     }
 }
 
@@ -92,19 +119,21 @@ void mga::ConsoleNativeWindowLogger::buffer_event(
 
 void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow* win, int type, int result)
 {
-    (void) win; (void) type; (void) result;
+    auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
+    std::cout << "window (" << win << "): query: " << NativeQueryKey{type} << ": result: 0x" <<
+        result << std::endl;
 }
 
 void mga::ConsoleNativeWindowLogger::perform_event(
     ANativeWindow* win, int type, std::vector<int> const& args)
 {
+    auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
     std::cout << "window (" << win << "): perform: " << NativePerformKey{type} << ": ";
-    std::cout << std::hex;
     for (auto i = 0u; i < args.size(); i++)
     {
         if (i != 0u)
             std::cout << ", ";
         std::cout <<  "0x" << args[i];
     }
-    std::cout << std::dec << std::endl;;
+    std::cout << std::endl;;
 }

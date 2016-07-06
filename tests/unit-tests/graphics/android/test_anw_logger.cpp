@@ -78,13 +78,13 @@ TEST_F(ANWLogger, logs_perform_events)
 
 TEST_F(ANWLogger, logs_query_events)
 {
-    int width = 380;
+    unsigned int width = 0x380;
     unsigned int type = 0x2; 
     std::stringstream expected;
     expected << 
-        "window (" << &anw << "): query NATIVE_WINDOW_WIDTH: result: 380\n"
-        "window (" << &anw << "): query NATIVE_WINDOW_CONCRETE_TYPE: result: 0x2\n";
+        "window (" << &anw << "): query: NATIVE_WINDOW_WIDTH: result: 0x380\n"
+        "window (" << &anw << "): query: NATIVE_WINDOW_CONCRETE_TYPE: result: 0x2\n";
     logger.query_event(&anw, NATIVE_WINDOW_WIDTH, width);
     logger.query_event(&anw, NATIVE_WINDOW_CONCRETE_TYPE, type);
-    EXPECT_THAT(expected.str(), StrEq(test_stream.str())); 
+    EXPECT_THAT(test_stream.str(), StrEq(expected.str()));
 }
