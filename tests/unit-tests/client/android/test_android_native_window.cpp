@@ -35,10 +35,10 @@ namespace
 {
 struct MockLogger : mga::NativeWindowLogger
 {
-    MOCK_CONST_METHOD4(buffer_event, void(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*, int));
-    MOCK_CONST_METHOD3(buffer_event, void(mga::BufferEvent, ANativeWindow*, ANativeWindowBuffer*));
-    MOCK_CONST_METHOD3(query_event, void(ANativeWindow*, int, int));
-    MOCK_CONST_METHOD3(perform_event, void(ANativeWindow*, int, std::vector<int> const&));
+    MOCK_CONST_METHOD4(buffer_event, void(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*, int));
+    MOCK_CONST_METHOD3(buffer_event, void(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*));
+    MOCK_CONST_METHOD3(query_event, void(ANativeWindow const*, int, int));
+    MOCK_CONST_METHOD3(perform_event, void(ANativeWindow const*, int, std::vector<int> const&));
 };
 
 class MockAndroidDriverInterpreter : public mga::AndroidDriverInterpreter
@@ -147,7 +147,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
     int fence_fd;
 
     ASSERT_NE(nullptr, window.dequeueBuffer);
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, returned_buffer, fence_fd));
+    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, _, _));
     window.dequeueBuffer(&window, &returned_buffer, &fence_fd);
 }
 
@@ -207,7 +207,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
         .Times(1);
     EXPECT_CALL(*mock_buffer, copy_fence())
         .Times(0);
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, returned_buffer));
+    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, _));
 
     window.dequeueBuffer_DEPRECATED(&window, &returned_buffer);
     EXPECT_EQ(mock_buffer->anwb(), returned_buffer);

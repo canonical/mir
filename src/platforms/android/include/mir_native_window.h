@@ -46,7 +46,9 @@ public:
     int dequeueBuffer(struct ANativeWindowBuffer** buffer, int* fence);
     int dequeueBufferAndWait(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer, int fence);
+    int queueBufferDeprecated(struct ANativeWindowBuffer* buffer);
     int cancelBuffer(struct ANativeWindowBuffer* buffer, int fence);
+    int cancelBufferDeprecated(struct ANativeWindowBuffer* buffer);
     int setSwapInterval(int interval);
 private:
     std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
