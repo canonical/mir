@@ -55,6 +55,8 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(allocating_connection, MirConnection*());
     MOCK_METHOD0(increment_age, void());
+    MOCK_CONST_METHOD0(valid, bool());
+    MOCK_CONST_METHOD0(error_message, char const*());
     MOCK_METHOD2(set_callback, void(mir_buffer_callback callback, void* context));
 };
 

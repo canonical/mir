@@ -139,6 +139,16 @@ void mcl::Buffer::increment_age()
     buffer->increment_age();
 }
 
+bool mcl::Buffer::valid() const
+{
+    return true;
+}
+
+char const* mcl::Buffer::error_message() const
+{
+    return "";
+}
+
 void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
 {
     cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });

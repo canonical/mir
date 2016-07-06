@@ -52,6 +52,8 @@ public:
     virtual geometry::Size size() const = 0;
     virtual MirConnection* allocating_connection() const = 0;
     virtual void increment_age() = 0;
+    virtual bool valid() const = 0;
+    virtual char const* error_message() const = 0;
     virtual void set_callback(mir_buffer_callback callback, void* context) = 0;
 protected:
     MirBuffer() = default;
