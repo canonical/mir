@@ -58,9 +58,16 @@ std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_bu
 
 std::shared_ptr<void> mcla::AndroidClientPlatform::create_egl_native_window(EGLNativeSurface *surface)
 {
+    auto log = getenv("MIR_CLIENT_ANDROID_WINDOW_REPORT");
+    std::shared_ptr<mga::NativeWindowLogger> logger;
+    char const* on_val = "log";
+    if (log && !strncmp(log, on_val, strlen(on_val)))
+        logger = std::make_shared<mga::ConsoleNativeWindowLogger>();
+    else
+        logger = std::make_shared<mga::NullNativeWindowLogger>();
+ 
     return std::make_shared<mga::MirNativeWindow>(
-        std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface),
-        std::make_shared<mga::NullNativeWindowLogger>());
+        std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface), logger);
 }
 
 std::shared_ptr<EGLNativeDisplayType>
