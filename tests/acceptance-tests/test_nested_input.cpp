@@ -79,8 +79,8 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
                                     std::shared_ptr<MockEventFilter> const& event_filter)
         : mtf::HeadlessNestedServerRunner(connection_string), mock_event_filter{event_filter}
     {
-        start_server();
         server.the_composite_event_filter()->append(mock_event_filter);
+        start_server();
     }
     NestedServerWithMockEventFilter(std::string const& connection_string)
         : NestedServerWithMockEventFilter(connection_string, std::make_shared<MockEventFilter>())

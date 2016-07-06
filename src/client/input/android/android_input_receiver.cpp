@@ -128,12 +128,29 @@ namespace
 
 static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, MirEvent &ev)
 {
-    // TODO: As XKBMapper is used to track modifier state we need to use a seperate instance
-    // of XKBMapper per device id (or modify XKBMapper semantics)
-    if (mir_event_get_type(&ev) != mir_event_type_input)
-        return;
+    auto const type = mir_event_get_type(&ev);
+    if (type == mir_event_type_input)
+    {
+        xkb_mapper->map_event(ev);
+    }
+    else if (type == mir_event_type_input_device_state)
+    {
+        auto device_state = mir_event_get_input_device_state_event(&ev);
+        std::vector<uint32_t> keys;
 
-    xkb_mapper->map_event(ev);
+        for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
+             index != end_index; ++index)
+        {
+            auto device_id = mir_input_device_state_event_device_id(device_state, index);
+            auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+            auto const* array = mir_input_device_state_event_device_pressed_keys(device_state, index);
+            auto const* end_array = array + key_count;
+
+            keys.assign(array, end_array);
+
+            xkb_mapper->set_key_state(device_id, keys);
+        }
+    }
 }
 
 }

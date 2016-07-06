@@ -37,7 +37,6 @@
 #include <algorithm>
 #include <tuple>
 #include <numeric>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -114,7 +113,7 @@ bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)
         if (stored_data == end(device_data))
             return true;
 
-        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));
+        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));;
     }
     return false;
 }
@@ -293,7 +292,6 @@ void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent 
 
 void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes)
 {
-    std::cout << "mir::input::SeatInputDeviceTracker::set_key_state" << std::endl;
     key_mapper->set_key_state(id, scan_codes);
 
     auto device = device_data.find(id);
