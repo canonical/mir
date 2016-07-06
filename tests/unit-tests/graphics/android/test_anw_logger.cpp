@@ -50,11 +50,11 @@ TEST_F(ANWLogger, logs_buffer_events)
 {
     std::stringstream expected;
     expected << 
-        "window (" << &anw << "): queueBuffer: " << &anwb << ", fence: " << dummy_fd << "\n"
-        "window (" << &anw << "): dequeueBuffer: " << &anwb << ", fence: none\n"
-        "window (" << &anw << "): cancelBuffer: " << &anwb << ", fence: none\n"
-        "window (" << &anw << "): dequeueBuffer_deprecated: " << &anwb << "\n"
-        "window (" << &anw << "): cancelBuffer_deprecated: " << &anwb << "\n";
+        "[EGLNativeWindow] addr (" << &anw << "): queueBuffer: " << &anwb << ", fence: " << dummy_fd << "\n"
+        "[EGLNativeWindow] addr (" << &anw << "): dequeueBuffer: " << &anwb << ", fence: none\n"
+        "[EGLNativeWindow] addr (" << &anw << "): cancelBuffer: " << &anwb << ", fence: none\n"
+        "[EGLNativeWindow] addr (" << &anw << "): dequeueBuffer_deprecated: " << &anwb << "\n"
+        "[EGLNativeWindow] addr (" << &anw << "): cancelBuffer_deprecated: " << &anwb << "\n";
 
     logger.buffer_event(mga::BufferEvent::Queue, &anw, &anwb, dummy_fd);
     logger.buffer_event(mga::BufferEvent::Dequeue, &anw, &anwb, dummy_cleared_fd);
@@ -68,8 +68,8 @@ TEST_F(ANWLogger, logs_perform_events)
 {
     std::stringstream expected;
     expected << 
-        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_USAGE: 0x734, 0x858\n"
-        "window (" << &anw << "): perform: NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP: 0x313\n";
+        "[EGLNativeWindow] addr (" << &anw << "): perform: NATIVE_WINDOW_SET_USAGE: 0x734, 0x858\n"
+        "[EGLNativeWindow] addr (" << &anw << "): perform: NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP: 0x313\n";
 
     logger.perform_event(&anw, NATIVE_WINDOW_SET_USAGE, {0x734, 0x858} );
     logger.perform_event(&anw, NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP, {0x313} );
@@ -82,8 +82,8 @@ TEST_F(ANWLogger, logs_query_events)
     unsigned int type = 0x2; 
     std::stringstream expected;
     expected << 
-        "window (" << &anw << "): query: NATIVE_WINDOW_WIDTH: result: 0x380\n"
-        "window (" << &anw << "): query: NATIVE_WINDOW_CONCRETE_TYPE: result: 0x2\n";
+        "[EGLNativeWindow] addr (" << &anw << "): query: NATIVE_WINDOW_WIDTH: result: 0x380\n"
+        "[EGLNativeWindow] addr (" << &anw << "): query: NATIVE_WINDOW_CONCRETE_TYPE: result: 0x2\n";
     logger.query_event(&anw, NATIVE_WINDOW_WIDTH, width);
     logger.query_event(&anw, NATIVE_WINDOW_CONCRETE_TYPE, type);
     EXPECT_THAT(test_stream.str(), StrEq(expected.str()));

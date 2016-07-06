@@ -97,12 +97,17 @@ std::ostream& operator<<(std::ostream& out, mga::BufferEvent type)
         default: return out;
     }
 }
+
+std::ostream& operator<<(std::ostream& out, ANativeWindow const* window)
+{
+    return out << "[EGLNativeWindow] addr (" << static_cast<void const*>(window) << "): "; 
+}
 }
 
 void mga::ConsoleNativeWindowLogger::buffer_event(
     BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf, int fence) const
 {
-    std::cout << "window (" << win << "): " << type << ": " << buf << ", fence: ";
+    std::cout << win << type << ": " << buf << ", fence: ";
     if ( fence > 0 )
         std::cout << fence;
     else
@@ -114,13 +119,13 @@ void mga::ConsoleNativeWindowLogger::buffer_event(
 void mga::ConsoleNativeWindowLogger::buffer_event(
     BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf) const
 {
-    std::cout << "window (" << win << "): " << type << "_deprecated: " << buf << std::endl;
+    std::cout << win << type << "_deprecated: " << buf << std::endl;
 }
 
 void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow const* win, int type, int result) const
 {
     auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
-    std::cout << "window (" << win << "): query: " << NativeQueryKey{type} << ": result: 0x" <<
+    std::cout << win << "query: " << NativeQueryKey{type} << ": result: 0x" <<
         result << std::endl;
 }
 
@@ -128,7 +133,7 @@ void mga::ConsoleNativeWindowLogger::perform_event(
     ANativeWindow const* win, int type, std::vector<int> const& args) const
 {
     auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
-    std::cout << "window (" << win << "): perform: " << NativePerformKey{type} << ": ";
+    std::cout << win << "perform: " << NativePerformKey{type} << ": ";
     for (auto i = 0u; i < args.size(); i++)
     {
         if (i != 0u)
