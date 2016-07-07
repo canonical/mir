@@ -76,7 +76,6 @@ uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
     // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
     return evdev_scan_code + 8;
 }
-
 }
 
 mi::XKBContextPtr mi::make_unique_context()
@@ -230,6 +229,14 @@ void mircv::XKBMapper::clear_keymap_for_device(MirInputDeviceId id)
     std::lock_guard<std::mutex> lg(guard);
     device_mapping.erase(id);
     update_modifier();
+}
+
+MirInputEventModifiers mircv::XKBMapper::modifiers() const
+{
+    std::lock_guard<std::mutex> lg(guard);
+    if (modifier_state.is_set())
+        return expand_modifiers(modifier_state.value());
+    return mir_input_event_modifier_none;
 }
 
 mircv::XKBMapper::XkbMappingState::XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap)

@@ -29,6 +29,11 @@
 
 namespace mir
 {
+using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
+namespace time
+{
+class Clock;
+}
 namespace input
 {
 class CursorListener;
@@ -50,7 +55,8 @@ public:
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
                            std::shared_ptr<InputRegion> const& input_region,
-                           std::shared_ptr<KeyMapper> const& key_mapper);
+                           std::shared_ptr<KeyMapper> const& key_mapper,
+                           std::shared_ptr<time::Clock> const& clock);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -58,7 +64,11 @@ public:
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
+    EventUPtr create_device_state() const;
 
+    void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes);
+    void set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons);
+    void set_cursor_position(float cursor_x, float cursor_y);
     void set_confinement_regions(geometry::Rectangles const& region);
     void reset_confinement_regions();
 private:
@@ -74,6 +84,7 @@ private:
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::shared_ptr<time::Clock> const clock;
 
     struct DeviceData
     {

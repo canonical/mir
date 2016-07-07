@@ -254,6 +254,7 @@ void msh::AbstractShell::set_focus_to_locked(
 
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
+            surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
         }
         else
