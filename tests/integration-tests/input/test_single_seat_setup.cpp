@@ -83,11 +83,12 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
-    mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region),
-                       mt::fake_shared(key_mapper),           mt::fake_shared(clock)};
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink),     mt::fake_shared(seat), mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop), cookie_authority,      mt::fake_shared(key_mapper)};
+    mi::BasicSeat seat{
+        mt::fake_shared(mock_dispatcher),mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
+        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock)};
+    mi::DefaultInputDeviceHub hub{
+        mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
+        cookie_authority, mt::fake_shared(key_mapper)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
 
     mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;

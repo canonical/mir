@@ -31,7 +31,6 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/event_printer.h"
 
 #include <chrono>
 
@@ -248,8 +247,8 @@ void mgn::InputPlatform::start()
                             auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
                             auto const* scan_codes = mir_input_device_state_event_device_pressed_keys(device_state, index);
 
-                            dest->set_key_state({scan_codes, scan_codes + key_count});
-                            dest->set_pointer_state(
+                            dest->key_state({scan_codes, scan_codes + key_count});
+                            dest->pointer_state(
                                 mir_input_device_state_event_device_pointer_buttons(device_state, index));
                         }
                     }

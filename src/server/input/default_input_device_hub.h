@@ -109,8 +109,8 @@ private:
         std::shared_ptr<Seat> seat;
         const std::shared_ptr<DefaultDevice> handle;
 
-        void set_key_state(std::vector<uint32_t> const& scan_codes) override;
-        void set_pointer_state(MirPointerButtons buttons) override;
+        void key_state(std::vector<uint32_t> const& scan_codes) override;
+        void pointer_state(MirPointerButtons buttons) override;
     private:
         MirInputDeviceId device_id;
         std::unique_ptr<DefaultEventBuilder> builder;

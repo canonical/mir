@@ -21,7 +21,6 @@
 #define MIR_INPUT_EVENT_BUILDER_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/events/event_builders.h"
 #include <memory>
 #include <chrono>
 

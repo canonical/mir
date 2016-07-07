@@ -201,7 +201,7 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
     return seat->get_rectangle_for(*handle);
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::set_key_state(std::vector<uint32_t> const& scan_codes)
+void mi::DefaultInputDeviceHub::RegisteredDevice::key_state(std::vector<uint32_t> const& scan_codes)
 {
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
@@ -209,7 +209,7 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::set_key_state(std::vector<uint
     seat->set_key_state(*handle, scan_codes);
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::set_pointer_state(MirPointerButtons buttons)
+void mi::DefaultInputDeviceHub::RegisteredDevice::pointer_state(MirPointerButtons buttons)
 {
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
