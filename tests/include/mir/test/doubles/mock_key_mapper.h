@@ -40,6 +40,7 @@ struct MockKeyMapper : input::KeyMapper
     MOCK_METHOD1(clear_keymap_for_device, void(MirInputDeviceId id));
     MOCK_METHOD0(clear_all_keymaps, void());
     MOCK_METHOD1(map_event, void(MirEvent& event));
+    MOCK_CONST_METHOD0(modifiers, MirInputEventModifiers());
 };
 
 

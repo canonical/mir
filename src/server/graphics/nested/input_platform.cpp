@@ -31,6 +31,7 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/event_printer.h"
 
 #include <chrono>
 
@@ -107,13 +108,14 @@ public:
         case mir_input_event_type_key:
             {
                 auto const* key_event = mir_input_event_get_keyboard_event(event);
-                destination->handle_input(*builder->key_event(
+
+                auto new_kev = builder->key_event(
                         event_time,
                         mir_keyboard_event_action(key_event),
                         mir_keyboard_event_key_code(key_event),
                         mir_keyboard_event_scan_code(key_event)
-                        ));
-
+                        );
+                destination->handle_input(*new_kev);
                 break;
             }
         case mir_input_event_type_pointer:
@@ -209,28 +211,65 @@ void mgn::InputPlatform::start()
             action_queue->enqueue([this]{update_devices();});
         });
 
-    connection->set_input_event_callback([this](MirEvent const& event, mir::geometry::Rectangle const& area) {
-        auto const* input_ev = mir_event_get_input_event(&event);
-        auto const id = mir_input_event_get_device_id(input_ev);
-        auto it = devices.find(id);
-        if (it != end(devices))
+    connection->set_input_event_callback(
+        [this](MirEvent const& event, mir::geometry::Rectangle const& area)
         {
-            it->second->emit_event(input_ev, area);
-        }
-        else // device was not advertised to us yet.
-        {
-            unknown_device_events[id].emplace_back(
-                std::piecewise_construct,
-                std::forward_as_tuple(event.clone(), [](MirEvent* e){delete e;}),
-                std::forward_as_tuple(area));
-        }
-    });
+            auto const event_type = mir_event_get_type(&event);
+
+            if (event_type == mir_event_type_input)
+            {
+                auto const* input_ev = mir_event_get_input_event(&event);
+                auto const id = mir_input_event_get_device_id(input_ev);
+                auto it = devices.find(id);
+                if (it != end(devices))
+                {
+                    it->second->emit_event(input_ev, area);
+                }
+                else // device was not advertised to us yet.
+                {
+                    unknown_device_events[id].emplace_back(
+                        std::piecewise_construct,
+                        std::forward_as_tuple(event.clone(), [](MirEvent* e){delete e;}),
+                        std::forward_as_tuple(area));
+                }
+            }
+            else if (event_type == mir_event_type_input_device_state)
+            {
+                if (!devices.empty())
+                {
+                    auto const* device_state = mir_event_get_input_device_state_event(&event);
+                    for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
+                         index != end_index; ++index)
+                    {
+                        auto it = devices.find(mir_input_device_state_event_device_id(device_state, index));
+                        if (it != end(devices) && it->second->destination)
+                        {
+                            auto dest = it->second->destination;
+                            auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+                            auto const* scan_codes = mir_input_device_state_event_device_pressed_keys(device_state, index);
+
+                            dest->set_key_state({scan_codes, scan_codes + key_count});
+                            dest->set_pointer_state(
+                                mir_input_device_state_event_device_pointer_buttons(device_state, index));
+                        }
+                    }
+
+                    auto& front = begin(devices)->second;
+                    auto device_state_event = front->builder->device_state_event(
+                        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x),
+                        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y));
+                    front->destination->handle_input(*device_state_event);
+                }
+            }
+        });
 }
 
 void mgn::InputPlatform::stop()
 {
     std::function<void(mgn::UniqueInputConfig)> reset;
     connection->set_input_device_change_callback(reset);
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> empty_event_callback;
+    connection->set_input_event_callback(empty_event_callback);
 
     for(auto const& device : devices)
         input_device_registry->remove_device(device.second);

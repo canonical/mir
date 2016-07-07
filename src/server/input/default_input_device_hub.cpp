@@ -142,7 +142,11 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::DefaultDevice> const& handle)
-    : handle(handle), device_id(device_id), builder(device_id, cookie_authority), device(dev), multiplexer(multiplexer)
+    : handle(handle),
+      device_id(device_id),
+      cookie_authority(cookie_authority),
+      device(dev),
+      multiplexer(multiplexer)
 {
 }
 
@@ -160,7 +164,8 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 {
     auto type = mir_event_get_type(&event);
 
-    if (type != mir_event_type_input)
+    if (type != mir_event_type_input &&
+        type != mir_event_type_input_device_state)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event received from device"));
 
     if (!seat)
@@ -177,13 +182,15 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> const& seat)
 {
     this->seat = seat;
-    device->start(this, &builder);
+    builder = std::make_unique<DefaultEventBuilder>(device_id, cookie_authority, seat);
+    device->start(this, builder.get());
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
     device->stop();
     seat = nullptr;
+    builder.reset();
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
@@ -192,6 +199,22 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
 
     return seat->get_rectangle_for(*handle);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::set_key_state(std::vector<uint32_t> const& scan_codes)
+{
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    seat->set_key_state(*handle, scan_codes);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::set_pointer_state(MirPointerButtons buttons)
+{
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    seat->set_pointer_state(*handle, buttons);
 }
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)

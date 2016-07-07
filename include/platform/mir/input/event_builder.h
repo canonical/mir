@@ -21,6 +21,7 @@
 #define MIR_INPUT_EVENT_BUILDER_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/events/event_builders.h"
 #include <memory>
 #include <chrono>
 
@@ -50,6 +51,8 @@ public:
                                     float relative_y_value) = 0;
 
     virtual EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) = 0;
+
+    virtual EventUPtr device_state_event(float cursor_x, float cursor_y) = 0;
 
 protected:
     EventBuilder(EventBuilder const&) = delete;

@@ -58,7 +58,7 @@ public:
     void clear_keymap_for_device(MirInputDeviceId id) override;
     void clear_all_keymaps() override;
     void map_event(MirEvent& event) override;
-
+    MirInputEventModifiers modifiers() const override;
 
 protected:
     XKBMapper(XKBMapper const&) = delete;
@@ -69,7 +69,7 @@ private:
     void set_keymap(XKBKeymapPtr map);
     void update_modifier();
 
-    std::mutex guard;
+    mutable std::mutex guard;
 
     struct XkbMappingState
     {
