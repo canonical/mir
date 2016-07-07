@@ -287,15 +287,12 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
     ExposedSurface client_to_host(new_connection());
     client_to_host.ready_to_accept_events.wait_for(1s);
 
-    EXPECT_CALL(client_to_host, handle_input(mt::KeyOfScanCode(KEY_LEFTALT)))
-        .WillOnce(mt::WakeUp(&all_events_received));
+    EXPECT_CALL(client_to_host, handle_input(mt::KeyOfScanCode(KEY_LEFTALT)));
     EXPECT_CALL(nested_event_filter,
                 handle(mt::DeviceStateWithPressedKeys(std::vector<uint32_t>({KEY_LEFTALT, KEY_TAB}))))
         .WillOnce(DoAll(mt::WakeUp(&all_events_received), Return(true)));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTALT));
-    all_events_received.wait_for(2s);
-
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_TAB));
 
     all_events_received.wait_for(2s);
