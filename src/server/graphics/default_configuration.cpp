@@ -25,7 +25,6 @@
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"
-#include "offscreen/display.h"
 #include "software_cursor.h"
 
 #include "mir/graphics/gl_config.h"
@@ -150,14 +149,7 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            if (the_options()->is_set(options::offscreen_opt))
-            {
-                return std::make_shared<mg::offscreen::Display>(
-                    the_graphics_platform()->egl_native_display(),
-                    the_display_configuration_policy(),
-                    the_display_report());
-            }
-            else if (the_options()->is_set(options::host_socket_opt))
+            if (the_options()->is_set(options::host_socket_opt))
             {
                 return std::make_shared<mgn::Display>(
                     the_graphics_platform(),
