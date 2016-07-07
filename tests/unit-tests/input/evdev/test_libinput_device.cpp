@@ -73,8 +73,8 @@ struct MockInputSink : mi::InputSink
     MOCK_METHOD1(handle_input,void(MirEvent &));
     MOCK_METHOD1(confine_pointer, void(geom::Point&));
     MOCK_CONST_METHOD0(bounding_rectangle, geom::Rectangle());
-    MOCK_METHOD1(set_key_state, void(std::vector<uint32_t> const&));
-    MOCK_METHOD1(set_pointer_state, void(MirPointerButtons));
+    MOCK_METHOD1(key_state, void(std::vector<uint32_t> const&));
+    MOCK_METHOD1(pointer_state, void(MirPointerButtons));
 };
 
 struct MockEventBuilder : mi::EventBuilder

@@ -44,7 +44,7 @@ public:
     /**
      * \name Device State interface of InputSink
      *
-     * In scenarios in which the device is not capable of seeing all changes as they occur,
+     * In scenarios in which the system is not capable of receiving all changes as they occur,
      * these method should be used to update the input device state as needed
      * \{
      */
@@ -52,12 +52,12 @@ public:
      * Set all pressed scan codes.
      * \param scan_codes currently pressed
      */
-    virtual void set_key_state(std::vector<uint32_t> const& scan_codes) = 0;
+    virtual void key_state(std::vector<uint32_t> const& scan_codes) = 0;
     /**
      * Set button state of a pointing device.
      * \param buttons mask of the buttons currently pressed
      */
-    virtual void set_pointer_state(MirPointerButtons buttons) = 0;
+    virtual void pointer_state(MirPointerButtons buttons) = 0;
     /**
      * \}
      */

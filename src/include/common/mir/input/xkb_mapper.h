@@ -69,7 +69,7 @@ private:
     void set_keymap(XKBKeymapPtr map);
     void update_modifier();
 
-    mutable std::mutex guard;
+    std::mutex mutable guard;
 
     struct XkbMappingState
     {
