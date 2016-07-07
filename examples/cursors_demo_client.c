@@ -16,6 +16,7 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE /* for usleep() */
 
 #include "mir_toolkit/mir_client_library.h"
