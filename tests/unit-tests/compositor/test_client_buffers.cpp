@@ -144,3 +144,15 @@ TEST_F(ClientBuffers, ignores_unknown_receive)
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
 }
+
+TEST_F(ClientBuffers, sends_error_buffer_when_alloc_fails)
+{
+    std::string error_msg = "a reason";
+    EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
+        .WillOnce(Throw(std::runtime_error(error_msg)));
+    EXPECT_CALL(mock_sink, error_buffer(properties, StrEq(error_msg)));
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
+    EXPECT_THROW({
+        map.add_buffer(properties);
+    }, std::runtime_error);
+}

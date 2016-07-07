@@ -292,6 +292,24 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibrary, can_set_pointer_confinement)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    int const width = 640;
+    int const height = 480;
+    auto const format = mir_pixel_format_abgr_8888;
+    auto const spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    EXPECT_THAT(surface, IsValid());
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
 TEST_F(ClientLibrary, can_set_surface_min_width)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

@@ -40,6 +40,7 @@
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>
@@ -65,8 +66,11 @@ class MesaGraphicsPlatform : public ::testing::Test
 public:
     void SetUp()
     {
-        ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
-        ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
+        using namespace testing;
+        Mock::VerifyAndClearExpectations(&mock_drm);
+        Mock::VerifyAndClearExpectations(&mock_gbm);
+        ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+            .WillByDefault(Return("EGL_AN_extension_string EGL_MESA_platform_gbm"));
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
@@ -81,6 +85,7 @@ public:
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
     mtf::UdevEnvironment fake_devices;
 };
 }
@@ -365,4 +370,44 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe(options));
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extensions_not_supported)
+{
+    using namespace testing;
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, _))
+        .WillByDefault(Return(nullptr));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_supported)
+{
+    using namespace testing;
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+        .WillByDefault(Return("EGL_KHR_not_really_an_extension EGL_EXT_master_of_the_house"));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }

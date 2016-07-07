@@ -283,3 +283,48 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
 }
+
+//LP: #1577967
+TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
+{
+    using namespace testing;
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection, 100, 100, mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    EXPECT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
+}
+
+TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_stream_gives_null)
+{
+    using namespace testing;
+    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_surface_get_buffer_stream(surface)));
+
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+    auto change_spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_surface_apply_spec(surface, change_spec);
+    mir_surface_spec_release(change_spec);
+
+    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+}

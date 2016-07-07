@@ -7,7 +7,7 @@ include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
+    ${GL_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
 )
 
@@ -59,7 +59,7 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
 )
 
 set_target_properties(

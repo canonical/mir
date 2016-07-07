@@ -20,22 +20,29 @@
 #include <gmock/gmock.h>
 
 #include "src/platforms/mesa/server/x11/graphics/display.h"
+
+#include "mir/graphics/display_configuration.h"
+
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "mir/test/doubles/mock_gl_config.h"
+
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+using namespace testing;
+
 
 namespace
 {
 
-geom::Size const size{1280, 1024};
 
 class X11DisplayTest : public ::testing::Test
 {
 public:
+    geom::Size size{1280, 1024};
 
     X11DisplayTest()
     {
@@ -76,13 +83,25 @@ public:
                        Return(1)));
     }
 
+    void setup_x11_screen(geom::Size const& pixel, geom::Size const& mm, geom::Size const& window)
+    {
+        mock_x11.fake_x11.screen.width = pixel.width.as_int();
+        mock_x11.fake_x11.screen.height = pixel.height.as_int();
+        mock_x11.fake_x11.screen.mwidth = mm.width.as_int();
+        mock_x11.fake_x11.screen.mheight = mm.height.as_int();
+        size = window;
+    }
     std::shared_ptr<mgx::Display> create_display()
     {
-        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display, size);
+        return std::make_shared<mgx::Display>(
+                   mock_x11.fake_x11.display,
+                   size,
+                   mock_gl_config);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
+    mtd::MockGLConfig mock_gl_config;
 };
 
 }
@@ -110,4 +129,72 @@ TEST_F(X11DisplayTest, creates_display_successfully)
         .Times(Exactly(1));
 
     auto display = create_display();
+}
+
+TEST_F(X11DisplayTest, respects_gl_config)
+{
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(depth_bits));
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(stencil_bits));
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    _,_,_))
+        .Times(AtLeast(1));
+
+    auto display = create_display();
+}
+
+TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_screen)
+{
+    auto const pixel = geom::Size{2560, 1080};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+    auto const pixel_width = float(mm.width.as_int()) / float(pixel.width.as_int());
+    auto const pixel_height = float(mm.height.as_int()) / float(pixel.height.as_int());
+    auto const expected_size = geom::Size{window.width * pixel_width, window.height * pixel_height};
+
+    setup_x11_screen(pixel, mm, window);
+
+    auto display = create_display();
+    auto config = display->configuration();
+    geom::Size reported_size;
+    config->for_each_output(
+        [&reported_size](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_size = output.physical_size_mm;
+        }
+        );
+
+    EXPECT_THAT(reported_size, Eq(expected_size));
+}
+
+TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
+{
+    auto const pixel = geom::Size{2560, 1080};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+
+    setup_x11_screen(pixel, mm, window);
+
+    auto display = create_display();
+    auto config = display->configuration();
+    geom::Size reported_resolution;
+    config->for_each_output(
+        [&reported_resolution](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_resolution = output.modes[0].size;
+        }
+        );
+
+    EXPECT_THAT(reported_resolution, Eq(window));
 }

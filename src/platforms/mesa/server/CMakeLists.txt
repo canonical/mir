@@ -16,7 +16,6 @@ add_library(
   buffer_allocator.cpp
   display_helpers.cpp
   drm_close_threadsafe.cpp
-  drm_mode_resources.cpp
   gbm_buffer.cpp
   ipc_operations.cpp
 )
@@ -25,4 +24,5 @@ target_link_libraries(
   mirsharedmesaservercommon-static
 
   server_platform_common
+  kms_utils
 )

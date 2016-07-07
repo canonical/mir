@@ -261,9 +261,9 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }
@@ -295,9 +295,9 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, button) == true)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }
@@ -500,6 +500,38 @@ MATCHER(InputConfigurationEvent, "")
     auto as_address = to_address(arg);
     if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
         return true;
+    return false;
+}
+
+MATCHER(InputDeviceStateEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) == mir_event_type_input_device_state)
+        return true;
+    return false;
+}
+
+MATCHER_P(DeviceStateWithPressedKeys, keys, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_device_state)
+        return false;
+    auto device_state = mir_event_get_input_device_state_event(as_address);
+    for (size_t index = 0, count = mir_input_device_state_event_device_count(device_state);
+         index != count; ++index)
+    {
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+        auto it_keys = begin(keys);
+        auto end_keys = end(keys);
+        decltype(key_count) num_required_keys = distance(it_keys, end_keys);
+        if (num_required_keys != key_count)
+            continue;
+
+        auto pressed_keys = mir_input_device_state_event_device_pressed_keys(device_state, index);
+        if (!std::equal(it_keys, end_keys, pressed_keys))
+            continue;
+        return true;
+    }
     return false;
 }
 

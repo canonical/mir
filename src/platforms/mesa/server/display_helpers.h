@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
 #define MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
 
-#include "drm_mode_resources.h"
 #include "drm_authentication.h"
 #include "mir/udev/wrapper.h"
 

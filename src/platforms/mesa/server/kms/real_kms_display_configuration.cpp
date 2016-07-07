@@ -17,7 +17,7 @@
  */
 
 #include "real_kms_display_configuration.h"
-#include "drm_mode_resources.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
 
 #include <cmath>
@@ -155,19 +155,19 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 }
 void mgm::RealKMSDisplayConfiguration::update()
 {
-    DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd};
 
     size_t max_outputs = std::min(resources.num_crtcs(), resources.num_connectors());
     card = {DisplayConfigurationCardId{0}, max_outputs};
 
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
     {
         add_or_update_output(resources, *connector);
     });
 }
 
 void mgm::RealKMSDisplayConfiguration::add_or_update_output(
-    DRMModeResources const& resources,
+    kms::DRMModeResources const& resources,
     drmModeConnector const& connector)
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
@@ -186,12 +186,11 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
     /* Get information about the current mode */
-    auto encoder = resources.encoder(connector.encoder_id);
-    if (encoder)
+    if (connector.encoder_id)
     {
-        auto crtc = resources.crtc(encoder->crtc_id);
-        if (crtc)
-            current_mode_info = crtc->mode;
+        auto encoder = resources.encoder(connector.encoder_id);
+        if (encoder->crtc_id)
+            current_mode_info = resources.crtc(encoder->crtc_id)->mode;
     }
 
     /* Add all the available modes and find the current and preferred one */

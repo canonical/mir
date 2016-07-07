@@ -37,14 +37,15 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
 EGLint const mgn::detail::nested_egl_context_attribs[] =
 {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
     EGL_NONE
 };
 
@@ -86,14 +87,15 @@ void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
         BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     pixel_format = format;
-    egl_context_ = eglCreateContext(egl_display, choose_windowed_es_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
+    egl_context_ = eglCreateContext(egl_display, choose_windowed_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
 
     if (egl_context_ == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create shared EGL context"));
 }
 
-EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelFormat format) const
+EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_config(MirPixelFormat format) const
 {
     EGLint const nested_egl_config_attribs[] =
     {
@@ -104,7 +106,7 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelForma
         EGL_ALPHA_SIZE, mg::alpha_channel_depth(format),
         EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
         EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
     EGLConfig result;
@@ -133,7 +135,7 @@ std::unique_ptr<mg::GLContext> mgn::detail::EGLDisplayHandle::create_gl_context(
        EGL_ALPHA_SIZE, mg::alpha_channel_depth(pixel_format),
        EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
        EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
-       EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+       EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
        EGL_NONE
     };
     return std::make_unique<SurfacelessEGLContext>(egl_display, attribs, EGL_NO_CONTEXT);
@@ -176,17 +178,13 @@ geom::Rectangle mgn::detail::DisplaySyncGroup::view_area() const
 mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener) :
+    std::shared_ptr<mg::GLConfig> const& gl_config) :
     platform{platform},
     connection{connection},
-    dispatcher{dispatcher},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
-    cursor_listener{cursor_listener},
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
@@ -205,6 +203,7 @@ mgn::Display::Display(
 
 mgn::Display::~Display() noexcept
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     if (eglGetCurrentContext() == egl_display.egl_context())
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
@@ -311,14 +310,14 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                     mir_buffer_usage_hardware,
                     static_cast<uint32_t>(best_output.id.as_value()));
 
+                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,
                         host_surface,
                         extents,
-                        dispatcher,
-                        cursor_listener,
-                        best_output.current_format));
+                        best_output.current_format,
+                        connection));
             }
         });
 

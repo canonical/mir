@@ -117,6 +117,7 @@ std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc13:
         case mga::HwcVersion::hwc14:
+        case mga::HwcVersion::hwc15:
             return std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::unknown:
@@ -145,6 +146,7 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
             case mga::HwcVersion::hwc12:
             case mga::HwcVersion::hwc13:
             case mga::HwcVersion::hwc14:
+            case mga::HwcVersion::hwc15:
                return std::unique_ptr<mga::DisplayDevice>(
                     new mga::HwcDevice(hwc_wrapper));
 

@@ -24,6 +24,7 @@
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/test/doubles/stub_cursor_listener.h"
 #include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/doubles/triggered_main_loop.h"
@@ -79,8 +80,9 @@ struct InputDeviceHubTest : ::testing::Test
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockInputSeat> mock_seat;
     NiceMock<mtd::MockEventSink> mock_sink;
+    NiceMock<mtd::MockKeyMapper> mock_key_mapper;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop), cookie_authority};
+                                  mt::fake_shared(observer_loop), cookie_authority, mt::fake_shared(mock_key_mapper)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};

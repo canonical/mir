@@ -6,5 +6,5 @@ Name: mirtest
 Description: Mir test assist library
 Version: @MIR_VERSION@
 Requires: mirserver mirplatform mirclient
-Libs: -L@LIBDIR@ -lmir-test-assist
+Libs: -L@LIBDIR@ -lmir-test-assist -ldl
 Cflags: -I@INCLUDEDIR@

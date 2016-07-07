@@ -28,12 +28,17 @@
 
 namespace mir
 {
+namespace time
+{
+class Clock;
+}
 namespace input
 {
 class TouchVisualizer;
 class CursorListener;
 class InputRegion;
 class InputDispatcher;
+class KeyMapper;
 
 class BasicSeat : public Seat
 {
@@ -41,13 +46,21 @@ public:
     BasicSeat(std::shared_ptr<InputDispatcher> const& dispatcher,
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorListener> const& cursor_listener,
-              std::shared_ptr<InputRegion> const& input_region);
+              std::shared_ptr<InputRegion> const& input_region,
+              std::shared_ptr<KeyMapper> const& key_mapper,
+              std::shared_ptr<time::Clock> const& clock);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;
     void dispatch_event(MirEvent& event) override;
     geometry::Rectangle get_rectangle_for(Device const& dev) override;
+    virtual EventUPtr create_device_state() override;
+    virtual void set_confinement_regions(geometry::Rectangles const& regions) override;
+    virtual void reset_confinement_regions() override;
 
+    void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) override;
+    void set_pointer_state(Device const& dev, MirPointerButtons buttons) override;
+    void set_cursor_position(float cursor_x, float cursor_y) override;
 private:
     SeatInputDeviceTracker input_state_tracker;
     std::shared_ptr<InputRegion> const input_region;

@@ -163,29 +163,38 @@ mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, std::
 
 void mia::InputSender::ActiveTransfer::send(uint32_t sequence_id, MirEvent const& event)
 {
-    if (mir_event_get_type(&event) != mir_event_type_input)
+    auto const type = mir_event_get_type(&event);
+
+    if (type != mir_event_type_input_device_state && type != mir_event_type_input)
         return;
 
     droidinput::status_t error_status;
 
-    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event));
-    auto input_event = mir_event_get_input_event(&event);
-    switch(mir_input_event_get_type(input_event))
+    if (type == mir_event_type_input)
     {
-    case mir_input_event_type_key:
-        error_status = send_key_event(sequence_id, event);
-        state.report->published_key_event(channel->server_fd(), sequence_id, event_time);
-        break;
-    case mir_input_event_type_touch:
-        error_status = send_touch_event(sequence_id, event);
-        state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
-        break;
-    case mir_input_event_type_pointer:
-        error_status = send_pointer_event(sequence_id, event);
-        state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
-        break;
-    default:
-        BOOST_THROW_EXCEPTION(std::runtime_error("unknown input event type"));
+        auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event));
+        auto input_event = mir_event_get_input_event(&event);
+        switch(mir_input_event_get_type(input_event))
+        {
+        case mir_input_event_type_key:
+            error_status = send_key_event(sequence_id, event);
+            state.report->published_key_event(channel->server_fd(), sequence_id, event_time);
+            break;
+        case mir_input_event_type_touch:
+            error_status = send_touch_event(sequence_id, event);
+            state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
+            break;
+        case mir_input_event_type_pointer:
+            error_status = send_pointer_event(sequence_id, event);
+            state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
+            break;
+        default:
+            BOOST_THROW_EXCEPTION(std::runtime_error("unknown input event type"));
+        }
+    }
+    else
+    {
+        error_status = publisher.publishEventBuffer(sequence_id, MirEvent::serialize(&event));
     }
 
     switch(error_status)

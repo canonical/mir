@@ -200,7 +200,8 @@ __attribute__ ((deprecated))
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,
-    mir_platform_type_android
+    mir_platform_type_android,
+    mir_platform_type_eglstream,
 } MirPlatformType;
 
 typedef struct MirPlatformPackage

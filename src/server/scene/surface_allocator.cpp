@@ -53,10 +53,12 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
 {
     bool nonrectangular = has_alpha(params.pixel_format);
     auto input_channel = input_factory->make_input_channel();
+    auto confine = params.confine_pointer.is_set() ? params.confine_pointer.value() : mir_pointer_unconfined;
     auto const surface = std::make_shared<BasicSurface>(
         params.name,
         geom::Rectangle{params.top_left, params.size},
         params.parent,
+        confine,
         nonrectangular,
         streams,
         input_channel,

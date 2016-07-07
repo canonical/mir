@@ -45,7 +45,6 @@ char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
-char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
@@ -178,8 +177,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
-        (offscreen_opt,
-            "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),

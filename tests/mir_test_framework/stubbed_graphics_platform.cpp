@@ -51,16 +51,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-namespace
-{
-mir::ModuleProperties const module_properties = {
-    "mir:stub-graphics",
-    MIR_VERSION_MAJOR,
-    MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO,
-    mir::libname()
-};
-}
 
 class StubFDBuffer : public mtd::StubBuffer
 {
@@ -219,7 +209,15 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        auto package = std::make_shared<mg::PlatformIPCPackage>(&module_properties);
+        /*
+         * The call to describe_graphics_module() is not ambiguous; the only implementation
+         * linked in here is the one from platform_graphics_dummy.cpp
+         *
+         * We call describe_graphics_module() here rather than have our own module description
+         * to ensure that what the client receives in the platform message is guaranteed to match
+         * what describe_graphics_module() returns. Tests fail weirdly when this is not the case :).
+         */
+        auto package = std::make_shared<mg::PlatformIPCPackage>(describe_graphics_module());
         mtf::pack_stub_ipc_package(*package);
         return package;
     }

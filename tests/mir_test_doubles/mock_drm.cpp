@@ -300,6 +300,21 @@ drmModeEncoderPtr drmModeGetEncoder(int fd, uint32_t encoder_id)
     return global_mock->drmModeGetEncoder(fd, encoder_id);
 }
 
+drmModePlaneResPtr drmModeGetPlaneResources(int fd)
+{
+    return global_mock->drmModeGetPlaneResources(fd);
+}
+
+drmModePlanePtr drmModeGetPlane(int fd, uint32_t plane_id)
+{
+    return global_mock->drmModeGetPlane(fd, plane_id);
+}
+
+drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t id, uint32_t type)
+{
+    return global_mock->drmModeObjectGetProperties(fd, id, type);
+}
+
 drmModeCrtcPtr drmModeGetCrtc(int fd, uint32_t crtcId)
 {
     return global_mock->drmModeGetCrtc(fd, crtcId);
@@ -328,6 +343,11 @@ int drmGetCap(int fd, uint64_t capability, uint64_t *value)
     return global_mock->drmGetCap(fd, capability, value);
 }
 
+int drmSetClientCap(int fd, uint64_t capability, uint64_t value)
+{
+    return global_mock->drmSetClientCap(fd, capability, value);
+}
+
 drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
 {
     return global_mock->drmModeGetProperty(fd, propertyId);
@@ -351,6 +371,21 @@ void drmModeFreeEncoder(drmModeEncoderPtr ptr)
 void drmModeFreeCrtc(drmModeCrtcPtr ptr)
 {
     global_mock->drmModeFreeCrtc(ptr);
+}
+
+void drmModeFreePlaneResources(drmModePlaneResPtr ptr)
+{
+    global_mock->drmModeFreePlaneResources(ptr);
+}
+
+void drmModeFreePlane(drmModePlanePtr ptr)
+{
+    global_mock->drmModeFreePlane(ptr);
+}
+
+void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr)
+{
+    global_mock->drmModeFreeObjectProperties(ptr);
 }
 
 int drmModeAddFB(int fd, uint32_t width, uint32_t height,
@@ -443,6 +478,11 @@ char* drmGetBusid(int fd)
 void drmFreeBusid(const char* busid)
 {
     return global_mock->drmFreeBusid(busid);
+}
+
+char* drmGetDeviceNameFromFd(int fd)
+{
+    return global_mock->drmGetDeviceNameFromFd(fd);
 }
 
 // We need to wrap open as we sometimes open() the DRM device

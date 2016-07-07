@@ -22,17 +22,24 @@
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/rectangles.h"
 #include "mir_toolkit/event.h"
 #include <unordered_map>
 #include <memory>
 
 namespace mir
 {
+using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
+namespace time
+{
+class Clock;
+}
 namespace input
 {
 class CursorListener;
 class InputRegion;
 class InputDispatcher;
+class KeyMapper;
 
 /*
  * The SeatInputDeviceTracker bundles the input device properties of a group of devices defined by a seat:
@@ -47,7 +54,9 @@ public:
     SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
-                           std::shared_ptr<InputRegion> const& input_region);
+                           std::shared_ptr<InputRegion> const& input_region,
+                           std::shared_ptr<KeyMapper> const& key_mapper,
+                           std::shared_ptr<time::Clock> const& clock);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -55,39 +64,49 @@ public:
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
-    MirInputEventModifiers event_modifier() const;
-    MirInputEventModifiers event_modifier(MirInputDeviceId) const;
+    EventUPtr create_device_state() const;
+
+    void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes);
+    void set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons);
+    void set_cursor_position(float cursor_x, float cursor_y);
+    void set_confinement_regions(geometry::Rectangles const& region);
+    void reset_confinement_regions();
 private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
     void update_states();
+    bool filter_input_event(MirInputEvent const* event);
+    void confine_pointer();
 
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
+    std::shared_ptr<KeyMapper> const key_mapper;
+    std::shared_ptr<time::Clock> const clock;
 
     struct DeviceData
     {
         DeviceData() {}
-        bool update_modifier(MirKeyboardAction action, int scan_code);
         bool update_button_state(MirPointerButtons button_state);
         bool update_spots(MirTouchEvent const* event);
+        void update_scan_codes(MirKeyboardEvent const* event);
+        bool allowed_scan_code_action(MirKeyboardEvent const* event) const;
 
-        MirInputEventModifiers mod{0};
         MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;
+        std::vector<uint32_t> scan_codes;
     };
 
     // Libinput's acceleration curve means the cursor moves by non-integer
     // increments, and often less than 1.0, so float is required...
     float cursor_x = 0.0f, cursor_y = 0.0f;
 
-    MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
+    std::function<void(mir::geometry::Point&)> confine_function;
 };
 
 }
