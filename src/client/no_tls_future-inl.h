@@ -44,6 +44,12 @@ template<typename T>
 class PromiseState
 {
 public:
+    void wait() const
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        cv.wait(lk, [this]{ return set || broken; });
+    }
+
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
@@ -152,6 +158,12 @@ template<>
 class PromiseState<void>
 {
 public:
+    void wait() const
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        cv.wait(lk, [this]{ return set || broken; });
+    }
+
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
@@ -247,6 +259,14 @@ public:
     NoTLSFutureBase(std::shared_ptr<PromiseState<T>> const& state) :
         state(state)
     {
+    }
+
+    ~NoTLSFutureBase()
+    {
+        if (state)
+        {
+            state->wait();
+        }
     }
 
     NoTLSFutureBase(NoTLSFutureBase&& other) :

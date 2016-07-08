@@ -18,10 +18,14 @@
 
 #include "src/client/no_tls_future-inl.h"
 
+#include "mir/test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
+namespace mt = mir::test;
 
 TEST(NoTLSFuture, and_then_calls_back_immediately_when_promise_is_already_fulfilled)
 {
@@ -151,4 +155,28 @@ TEST(NoTLSFuture, or_else_is_called_when_void_promise_is_broken)
     EXPECT_FALSE(called);
     promise.reset();
     EXPECT_TRUE(called);
+}
+
+TEST(NoTLSFuture, destruction_of_future_blocks_if_unsatisfied)
+{
+    mcl::NoTLSPromise<float> promise;
+
+    mt::Signal done;
+
+    mt::AutoJoinThread a{
+        [](mt::Signal& unblocked, mcl::NoTLSFuture<float>&& future)
+        {
+            {
+                auto killer = std::move(future);
+            }
+            unblocked.raise();
+        },
+        std::ref(done),
+        promise.get_future()};
+
+    EXPECT_FALSE(done.wait_for(std::chrono::seconds{1}));
+
+    promise.set_value(3.1415f);
+
+    EXPECT_TRUE(done.wait_for(std::chrono::seconds{1}));
 }
