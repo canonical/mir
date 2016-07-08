@@ -840,3 +840,11 @@ MIR_SERVER_0.24 {
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
   };
 } MIR_SERVER_0.22;
+
+MIR_SERVER_0.25 {
+ global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_stop_callback*;
+    mir::Server::add_stop_callback*;
+  };
+} MIR_SERVER_0.24;

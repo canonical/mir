@@ -31,15 +31,33 @@ struct ServerStopCallback : mtf::HeadlessTest
     ServerStopCallback() { add_to_environment("MIR_SERVER_NO_FILE", ""); }
 
     MOCK_CONST_METHOD0(callback0, void());
+    MOCK_CONST_METHOD0(callback1, void());
+    MOCK_CONST_METHOD0(callback2, void());
 };
 }
-
 
 TEST_F(ServerStopCallback, is_invoked)
 {
     server.add_stop_callback([this]{ callback0(); });
+
     start_server();
 
     EXPECT_CALL(*this, callback0());
+    stop_server();
+}
+
+TEST_F(ServerStopCallback, invoked_in_reverse_order)
+{
+    server.add_stop_callback([this]{ callback0(); });
+    server.add_stop_callback([this]{ callback1(); });
+    server.add_stop_callback([this]{ callback2(); });
+
+    start_server();
+
+    testing::InSequence seq;
+    EXPECT_CALL(*this, callback2());
+    EXPECT_CALL(*this, callback1());
+    EXPECT_CALL(*this, callback0());
+
     stop_server();
 }
