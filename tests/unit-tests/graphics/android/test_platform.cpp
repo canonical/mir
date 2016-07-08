@@ -239,19 +239,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
-TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
-{
-    testing::NiceMock<mtd::MockEGL> mock_egl;
-    mtd::NullGLContext context;
-    mga::Platform platform(
-        std::make_shared<mtd::StubBufferAllocator>(),
-        std::make_shared<mtd::StubDisplayBuilder>(),
-        mr::null_display_report(),
-        mga::OverlayOptimization::enabled,
-        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context));
-    EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
-}
-
 TEST(AndroidGraphicsPlatform, probe_returns_unsupported_when_no_hwaccess)
 {
     using namespace testing;

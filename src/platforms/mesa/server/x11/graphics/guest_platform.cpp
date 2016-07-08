@@ -58,8 +58,3 @@ mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform cannot create display\n"));
 }
-
-EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
-{
-    return gbm.device;
-}
