@@ -173,13 +173,15 @@ TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
     auto buffer_future = vault->withdraw();
     ASSERT_TRUE(buffer_future.valid());
     EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
+
+    vault.reset();
 }
 
 TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
 {
     auto buffer_future = vault.withdraw();
     ASSERT_TRUE(buffer_future.valid());
-    EXPECT_THAT(buffer_future.get(), Ne(nullptr));;
+    EXPECT_THAT(buffer_future.get(), Ne(nullptr));
 }
 
 TEST_F(StartedBufferVault, can_deposit_buffer)
@@ -639,5 +641,9 @@ TEST_F(StartedBufferVault, can_increase_count_after_resize)
     vault.set_size(new_size);
 
     for(auto i = 0u; i < num_allocations + 1; i++)
-        vault.withdraw();
+    {
+        auto future = vault.withdraw();
+        // Do the minimum possible to actually satisfy this future...
+        vault.wire_transfer_inbound(package4.buffer_id());
+    }
 }
