@@ -138,6 +138,11 @@ struct NoTLSFuture
         return value;
     }
 
+    void and_then(std::function<void(T)> const& continuation)
+    {
+        continuation(state->get_value());
+    }
+
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
