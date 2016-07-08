@@ -66,10 +66,18 @@ public:
         cv.notify_all();
     }
 
-    void set_value(T && val)
+    void set_value(T&& val)
     {
         std::lock_guard<std::mutex> lk(mutex);
         set = true;
+        if (continuation)
+        {
+            continuation(std::move(val));
+        }
+        else
+        {
+            value = val;
+        }
         cv.notify_all();
     }
 
@@ -232,9 +240,14 @@ public:
     NoTLSPromise(NoTLSPromise const&) = delete;
     NoTLSPromise operator=(NoTLSPromise const&) = delete;
 
-    void set_value(T value)
+    void set_value(T const& value)
     {
         state->set_value(value);
+    }
+
+    void set_value(T&& value)
+    {
+        state->set_value(std::move(value));
     }
 
     NoTLSFuture<T> get_future()

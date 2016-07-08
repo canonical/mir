@@ -51,7 +51,7 @@ TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already
         });
 }
 
-TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled)
+TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_copy)
 {
     constexpr char const* expected{"And then nothing turned itself inside out"};
 
@@ -69,7 +69,31 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled)
 
     EXPECT_FALSE(called);
 
-    promise.set_value(expected);
+    std::string expected_copy{expected};
+
+    promise.set_value(expected_copy);
+    EXPECT_TRUE(called);
+}
+
+TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_moving)
+{
+    constexpr char const* expected{"And then nothing turned itself inside out"};
+
+    mcl::NoTLSPromise<std::string> promise;
+    auto future = promise.get_future();
+
+    bool called{false};
+    future.and_then(
+        [&called](std::string&& value)
+        {
+            using namespace testing;
+            called = true;
+            EXPECT_THAT(value, StrEq(expected));
+        });
+
+    EXPECT_FALSE(called);
+
+    promise.set_value(std::move(std::string{expected}));
     EXPECT_TRUE(called);
 }
 
