@@ -38,6 +38,9 @@ template<typename T>
 class NoTLSFuture;
 
 template<typename T>
+class NoTLSFutureBase;
+
+template<typename T>
 class PromiseState
 {
 public:
@@ -90,7 +93,7 @@ public:
             //clang has problems with std::future_error::what() on vivid+overlay
             BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
         }
-        return value; 
+        return value;
     }
 
     void break_promise()
@@ -133,6 +136,7 @@ private:
         this->continuation = continuation;
     }
 
+    friend class NoTLSFutureBase<T>;
     void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
     {
         std::lock_guard<std::mutex> lk{mutex};
@@ -218,6 +222,7 @@ private:
         this->continuation = continuation;
     }
 
+    friend class NoTLSFutureBase<void>;
     void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
     {
         std::lock_guard<std::mutex> lk{mutex};
@@ -231,50 +236,37 @@ private:
 
 
 template<typename T>
-class NoTLSFuture
+class NoTLSFutureBase
 {
 public:
-    NoTLSFuture() :
+    NoTLSFutureBase() :
         state(nullptr) 
     {
     }
 
-    NoTLSFuture(std::shared_ptr<PromiseState<T>> const& state) :
+    NoTLSFutureBase(std::shared_ptr<PromiseState<T>> const& state) :
         state(state)
     {
     }
 
-    NoTLSFuture(NoTLSFuture&& other) :
+    NoTLSFutureBase(NoTLSFutureBase&& other) :
         state(std::move(other.state))
     {
     }
 
-    NoTLSFuture& operator=(NoTLSFuture&& other)
+    NoTLSFutureBase& operator=(NoTLSFutureBase&& other)
     {
         state = std::move(other.state);
         return *this;
     }
 
-    NoTLSFuture(NoTLSFuture const&) = delete;
-    NoTLSFuture& operator=(NoTLSFuture const&) = delete;
+    NoTLSFutureBase(NoTLSFutureBase const&) = delete;
+    NoTLSFutureBase& operator=(NoTLSFutureBase const&) = delete;
 
     void validate_state() const
     {
         if (!valid())
             throw std::logic_error("state was not valid");
-    }
-
-    T get()
-    {
-        validate_state();
-        auto value = state->get_value();
-        state = nullptr;
-        return value;
-    }
-
-    void and_then(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
-    {
-        state->set_continuation(continuation);
     }
 
     void or_else(std::function<void(std::exception_ptr const&)> const& handler)
@@ -294,43 +286,35 @@ public:
         return state != nullptr;
     }
 
-private:
+protected:
     std::shared_ptr<PromiseState<T>> state;
 };
 
-template<>
-class NoTLSFuture<void>
+template<typename T>
+class NoTLSFuture : public NoTLSFutureBase<T>
 {
 public:
-    NoTLSFuture() :
-        state(nullptr)
+    using NoTLSFutureBase<T>::NoTLSFutureBase;
+
+    T get()
     {
+        NoTLSFutureBase<T>::validate_state();
+        auto value = NoTLSFutureBase<T>::state->get_value();
+        NoTLSFutureBase<T>::state = nullptr;
+        return value;
     }
 
-    NoTLSFuture(std::shared_ptr<PromiseState<void>> const& state) :
-        state(state)
+    void and_then(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
     {
+        NoTLSFutureBase<T>::state->set_continuation(continuation);
     }
+};
 
-    NoTLSFuture(NoTLSFuture&& other) :
-        state(std::move(other.state))
-    {
-    }
-
-    NoTLSFuture& operator=(NoTLSFuture&& other)
-    {
-        state = std::move(other.state);
-        return *this;
-    }
-
-    NoTLSFuture(NoTLSFuture const&) = delete;
-    NoTLSFuture& operator=(NoTLSFuture const&) = delete;
-
-    void validate_state() const
-    {
-        if (!valid())
-            throw std::logic_error("state was not valid");
-    }
+template<>
+class NoTLSFuture<void> : public NoTLSFutureBase<void>
+{
+public:
+    using NoTLSFutureBase<void>::NoTLSFutureBase;
 
     void get()
     {
@@ -343,66 +327,36 @@ public:
     {
         state->set_continuation(continuation);
     }
-
-    void or_else(std::function<void(std::exception_ptr const&)> const& handler)
-    {
-        state->set_exception_continuation(handler);
-    }
-
-    template<class Rep, class Period>
-    std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
-    {
-        validate_state();
-        return state->wait_for(timeout_duration);
-    }
-
-    bool valid() const
-    {
-        return state != nullptr;
-    }
-
-private:
-    std::shared_ptr<PromiseState<void>> state;
 };
 
 
 template<typename T>
-class NoTLSPromise
+class NoTLSPromiseBase
 {
 public:
-    NoTLSPromise():
+    NoTLSPromiseBase():
         state(std::make_shared<PromiseState<T>>())
     {
     }
 
-    ~NoTLSPromise()
+    ~NoTLSPromiseBase()
     {
         if (state && !state.unique())
             state->break_promise();
     }
 
-    NoTLSPromise(NoTLSPromise&& other) :
+    NoTLSPromiseBase(NoTLSPromiseBase&& other) :
         state(std::move(other.state))
     {
     }
 
-    NoTLSPromise& operator=(NoTLSPromise&& other)
+    NoTLSPromiseBase& operator=(NoTLSPromiseBase&& other)
     {
         state = std::move(other.state);
     }
 
-    NoTLSPromise(NoTLSPromise const&) = delete;
-    NoTLSPromise operator=(NoTLSPromise const&) = delete;
-
-    void set_value(T const& value)
-    {
-        state->set_value(value);
-    }
-
-    void set_value(T&& value)
-    {
-        state->set_value(std::move(value));
-    }
+    NoTLSPromiseBase(NoTLSPromiseBase const&) = delete;
+    NoTLSPromiseBase operator=(NoTLSPromiseBase const&) = delete;
 
     NoTLSFuture<T> get_future()
     {
@@ -415,59 +369,35 @@ public:
         return NoTLSFuture<T>(state);
     }
 
-private:
+protected:
     std::shared_ptr<PromiseState<T>> state;
+private:
     bool future_retrieved{false};
 };
 
-template<>
-class NoTLSPromise<void>
+template<typename T>
+class NoTLSPromise : public NoTLSPromiseBase<T>
 {
 public:
-    NoTLSPromise():
-        state(std::make_shared<PromiseState<void>>())
+    void set_value(T const& value)
     {
+        NoTLSPromiseBase<T>::state->set_value(value);
     }
 
-    ~NoTLSPromise()
+    void set_value(T&& value)
     {
-        if (state && !state.unique())
-            state->break_promise();
+        NoTLSPromiseBase<T>::state->set_value(std::move(value));
     }
+};
 
-    NoTLSPromise(NoTLSPromise&& other) :
-        state(std::move(other.state))
-    {
-    }
-
-    NoTLSPromise& operator=(NoTLSPromise&& other)
-    {
-        state = std::move(other.state);
-        return *this;
-    }
-
-    NoTLSPromise(NoTLSPromise const&) = delete;
-    NoTLSPromise operator=(NoTLSPromise const&) = delete;
-
+template<>
+class NoTLSPromise<void> : public NoTLSPromiseBase<void>
+{
+public:
     void set_value()
     {
         state->set_value();
     }
-
-    NoTLSFuture<void> get_future()
-    {
-        if (future_retrieved)
-        {
-            //clang has problems with std::future_error::what() on vivid+overlay
-            BOOST_THROW_EXCEPTION(std::runtime_error{"future_already_retrieved"});
-        }
-        future_retrieved = true;
-        return NoTLSFuture<void>(state);
-    }
-
-private:
-    std::shared_ptr<PromiseState<void>> state;
-    bool future_retrieved{false};
 };
 
 }
