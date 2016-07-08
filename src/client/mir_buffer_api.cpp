@@ -72,7 +72,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
+void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence fence, MirBufferAccess access)
 try
 {
     mir::require(b);
