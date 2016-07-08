@@ -54,7 +54,7 @@ bool mga::SyncFence::wait_for(std::chrono::milliseconds ms)
 
 void mga::SyncFence::reset_fence()
 {
-   fence_fd = mir::Fd(-1);
+   fence_fd = mir::Fd(mir::Fd::invalid);
 }
 
 void mga::SyncFence::merge_with(NativeFence& merge_fd)
