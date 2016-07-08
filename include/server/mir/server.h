@@ -87,12 +87,6 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
-    /// Sets an override functor for creating the cookie authority.
-    /// A secret can be saved and any process this secret is shared
-    /// with can verify Mir-generated cookies, or produce their own.
-    void override_the_cookie_authority(
-        std::function<std::shared_ptr<cookie::Authority>()> const& cookie_authority_builder);
-
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
     void apply_settings();
@@ -247,6 +241,12 @@ public:
 
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
+
+    /// Sets an override functor for creating the cookie authority.
+    /// A secret can be saved and any process this secret is shared
+    /// with can verify Mir-generated cookies, or produce their own.
+    void override_the_cookie_authority(
+        std::function<std::shared_ptr<cookie::Authority>()> const& cookie_authority_builder);
 
     /// Sets an override functor for creating the coordinate translator.
     void override_the_coordinate_translator(
