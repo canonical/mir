@@ -35,6 +35,9 @@ namespace mir
 namespace client
 {
 template<typename T>
+class NoTLSFuture;
+
+template<typename T>
 class PromiseState
 {
 public:
@@ -51,7 +54,15 @@ public:
     {
         std::lock_guard<std::mutex> lk(mutex);
         set = true;
-        value = val;
+        if (continuation)
+        {
+            value = val;
+            continuation(std::move(value));
+        }
+        else
+        {
+            value = val;
+        }
         cv.notify_all();
     }
 
@@ -59,7 +70,6 @@ public:
     {
         std::lock_guard<std::mutex> lk(mutex);
         set = true;
-        value = std::move(val);
         cv.notify_all();
     }
 
@@ -79,7 +89,13 @@ public:
     {
         std::lock_guard<std::mutex> lk(mutex);
         if (!set)
+        {
             broken = true;
+            if (exception_continuation)
+            {
+                exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+            }
+        }
         cv.notify_all();
     }
 
@@ -95,11 +111,35 @@ private:
     bool set{false};
     bool broken{false};
     T value;
+    std::function<void(typename std::add_rvalue_reference<T>::type)> continuation;
+    std::function<void(std::exception_ptr const&)> exception_continuation;
+
+    friend class NoTLSFuture<T>;
+    void set_continuation(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
+    {
+        std::lock_guard<std::mutex> lk{mutex};
+        if (set)
+        {
+            continuation(std::move(value));
+        }
+        this->continuation = continuation;
+    }
+
+    void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
+    {
+        std::lock_guard<std::mutex> lk{mutex};
+        if (broken)
+        {
+            exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+        }
+        this->exception_continuation = exception_continuation;
+    }
 };
 
 template<typename T>
 class NoTLSFuture
 {
+public:
     NoTLSFuture() :
         state(nullptr) 
     {
@@ -138,9 +178,14 @@ class NoTLSFuture
         return value;
     }
 
-    void and_then(std::function<void(T)> const& continuation)
+    void and_then(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
     {
-        continuation(state->get_value());
+        state->set_continuation(continuation);
+    }
+
+    void or_else(std::function<void(std::exception_ptr const&)> const& handler)
+    {
+        state->set_exception_continuation(handler);
     }
 
     template<class Rep, class Period>
@@ -194,11 +239,18 @@ public:
 
     NoTLSFuture<T> get_future()
     {
+        if (future_retrieved)
+        {
+            //clang has problems with std::future_error::what() on vivid+overlay
+            BOOST_THROW_EXCEPTION(std::runtime_error{"future_already_retrieved"});
+        }
+        future_retrieved = true;
         return NoTLSFuture<T>(state);
     }
 
 private:
-    std::shared_ptr<PromiseState<T>> state; 
+    std::shared_ptr<PromiseState<T>> state;
+    bool future_retrieved{false};
 };
 }
 }

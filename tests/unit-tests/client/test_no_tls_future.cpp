@@ -50,3 +50,38 @@ TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already
             EXPECT_THAT(result, Eq(expected));
         });
 }
+
+TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled)
+{
+    constexpr char const* expected{"And then nothing turned itself inside out"};
+
+    mcl::NoTLSPromise<std::string> promise;
+    auto future = promise.get_future();
+
+    bool called{false};
+    future.and_then(
+        [&called](std::string&& value)
+        {
+            using namespace testing;
+            called = true;
+            EXPECT_THAT(value, StrEq(expected));
+        });
+
+    EXPECT_FALSE(called);
+
+    promise.set_value(expected);
+    EXPECT_TRUE(called);
+}
+
+TEST(NoTLSFuture, or_else_is_called_when_promise_is_broken)
+{
+    auto promise = std::make_unique<mcl::NoTLSPromise<int>>();
+    auto future = promise->get_future();
+
+    bool called{false};
+    future.or_else([&called](auto) { called = true; });
+
+    EXPECT_FALSE(called);
+    promise.reset();
+    EXPECT_TRUE(called);
+}
