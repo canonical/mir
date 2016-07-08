@@ -144,6 +144,92 @@ private:
     }
 };
 
+template<>
+class PromiseState<void>
+{
+public:
+    template<class Rep, class Period>
+    std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        if (cv.wait_for(lk, timeout_duration, [this]{ return set || broken; }))
+            return std::future_status::ready;
+        return std::future_status::timeout;
+    }
+
+    void set_value()
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        set = true;
+        if (continuation)
+        {
+            continuation();
+        }
+        cv.notify_all();
+    }
+
+    void get_value()
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        cv.wait(lk, [this]{ return set || broken; });
+        if (broken)
+        {
+            //clang has problems with std::future_error::what() on vivid+overlay
+            BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
+        }
+    }
+
+    void break_promise()
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        if (!set)
+        {
+            broken = true;
+            if (exception_continuation)
+            {
+                exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+            }
+        }
+        cv.notify_all();
+    }
+
+    PromiseState() = default;
+    PromiseState(PromiseState const&) = delete;
+    PromiseState(PromiseState &&) = delete;
+    PromiseState& operator=(PromiseState const&) = delete;
+    PromiseState& operator=(PromiseState &&) = delete;
+
+private:
+    std::mutex mutable mutex;
+    std::condition_variable mutable cv;
+    bool set{false};
+    bool broken{false};
+    std::function<void()> continuation;
+    std::function<void(std::exception_ptr const&)> exception_continuation;
+
+    friend class NoTLSFuture<void>;
+    void set_continuation(std::function<void(void)> const& continuation)
+    {
+        std::lock_guard<std::mutex> lk{mutex};
+        if (set)
+        {
+            continuation();
+        }
+        this->continuation = continuation;
+    }
+
+    void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
+    {
+        std::lock_guard<std::mutex> lk{mutex};
+        if (broken)
+        {
+            exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+        }
+        this->exception_continuation = exception_continuation;
+    }
+};
+
+
 template<typename T>
 class NoTLSFuture
 {
@@ -212,6 +298,74 @@ private:
     std::shared_ptr<PromiseState<T>> state;
 };
 
+template<>
+class NoTLSFuture<void>
+{
+public:
+    NoTLSFuture() :
+        state(nullptr)
+    {
+    }
+
+    NoTLSFuture(std::shared_ptr<PromiseState<void>> const& state) :
+        state(state)
+    {
+    }
+
+    NoTLSFuture(NoTLSFuture&& other) :
+        state(std::move(other.state))
+    {
+    }
+
+    NoTLSFuture& operator=(NoTLSFuture&& other)
+    {
+        state = std::move(other.state);
+        return *this;
+    }
+
+    NoTLSFuture(NoTLSFuture const&) = delete;
+    NoTLSFuture& operator=(NoTLSFuture const&) = delete;
+
+    void validate_state() const
+    {
+        if (!valid())
+            throw std::logic_error("state was not valid");
+    }
+
+    void get()
+    {
+        validate_state();
+        state->get_value();
+        state = nullptr;
+    }
+
+    void and_then(std::function<void()> const& continuation)
+    {
+        state->set_continuation(continuation);
+    }
+
+    void or_else(std::function<void(std::exception_ptr const&)> const& handler)
+    {
+        state->set_exception_continuation(handler);
+    }
+
+    template<class Rep, class Period>
+    std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
+    {
+        validate_state();
+        return state->wait_for(timeout_duration);
+    }
+
+    bool valid() const
+    {
+        return state != nullptr;
+    }
+
+private:
+    std::shared_ptr<PromiseState<void>> state;
+};
+
+
 template<typename T>
 class NoTLSPromise
 {
@@ -265,6 +419,57 @@ private:
     std::shared_ptr<PromiseState<T>> state;
     bool future_retrieved{false};
 };
+
+template<>
+class NoTLSPromise<void>
+{
+public:
+    NoTLSPromise():
+        state(std::make_shared<PromiseState<void>>())
+    {
+    }
+
+    ~NoTLSPromise()
+    {
+        if (state && !state.unique())
+            state->break_promise();
+    }
+
+    NoTLSPromise(NoTLSPromise&& other) :
+        state(std::move(other.state))
+    {
+    }
+
+    NoTLSPromise& operator=(NoTLSPromise&& other)
+    {
+        state = std::move(other.state);
+        return *this;
+    }
+
+    NoTLSPromise(NoTLSPromise const&) = delete;
+    NoTLSPromise operator=(NoTLSPromise const&) = delete;
+
+    void set_value()
+    {
+        state->set_value();
+    }
+
+    NoTLSFuture<void> get_future()
+    {
+        if (future_retrieved)
+        {
+            //clang has problems with std::future_error::what() on vivid+overlay
+            BOOST_THROW_EXCEPTION(std::runtime_error{"future_already_retrieved"});
+        }
+        future_retrieved = true;
+        return NoTLSFuture<void>(state);
+    }
+
+private:
+    std::shared_ptr<PromiseState<void>> state;
+    bool future_retrieved{false};
+};
+
 }
 }
 #endif

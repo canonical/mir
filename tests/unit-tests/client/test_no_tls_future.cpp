@@ -35,6 +35,18 @@ TEST(NoTLSFuture, and_then_calls_back_immediately_when_promise_is_already_fulfil
     EXPECT_TRUE(callback_called);
 }
 
+TEST(NoTLSFuture, void_and_then_calls_back_immediately_when_promise_is_already_fulfilled)
+{
+    mcl::NoTLSPromise<void> promise;
+    promise.set_value();
+
+    auto future = promise.get_future();
+    bool callback_called{false};
+
+    future.and_then([&callback_called]() { callback_called = true;});
+    EXPECT_TRUE(callback_called);
+}
+
 TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already_fulfilled)
 {
     constexpr int expected{0xfeed};
@@ -97,9 +109,40 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_moving)
     EXPECT_TRUE(called);
 }
 
+TEST(NoTLSFuture, void_and_then_is_not_called_until_promise_is_fulfilled)
+{
+    mcl::NoTLSPromise<void> promise;
+    auto future = promise.get_future();
+
+    bool called{false};
+    future.and_then(
+        [&called]()
+        {
+            called = true;
+        });
+
+    EXPECT_FALSE(called);
+
+    promise.set_value();
+    EXPECT_TRUE(called);
+}
+
 TEST(NoTLSFuture, or_else_is_called_when_promise_is_broken)
 {
     auto promise = std::make_unique<mcl::NoTLSPromise<int>>();
+    auto future = promise->get_future();
+
+    bool called{false};
+    future.or_else([&called](auto) { called = true; });
+
+    EXPECT_FALSE(called);
+    promise.reset();
+    EXPECT_TRUE(called);
+}
+
+TEST(NoTLSFuture, or_else_is_called_when_void_promise_is_broken)
+{
+    auto promise = std::make_unique<mcl::NoTLSPromise<void>>();
     auto future = promise->get_future();
 
     bool called{false};
