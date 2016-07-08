@@ -123,7 +123,7 @@ MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAcc
  *   \return                The fence associated with buffer 
  *
  **/
-MirNativeFence* mir_buffer_get_fence(MirBuffer*);
+MirNativeFence mir_buffer_get_fence(MirBuffer*);
 
 /**
  * Protect the buffer's contents by associating a native fence with it.

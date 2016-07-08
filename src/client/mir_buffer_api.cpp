@@ -59,7 +59,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
+MirNativeFence mir_buffer_get_fence(MirBuffer* b)
 try
 {
     mir::require(b);
