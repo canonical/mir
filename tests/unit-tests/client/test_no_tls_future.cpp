@@ -27,7 +27,7 @@
 namespace mcl = mir::client;
 namespace mt = mir::test;
 
-TEST(NoTLSFuture, and_then_calls_back_immediately_when_promise_is_already_fulfilled)
+TEST(NoTLSFuture, then_calls_back_immediately_when_promise_is_already_fulfilled)
 {
     mcl::NoTLSPromise<int> promise;
     promise.set_value(1);
@@ -35,11 +35,16 @@ TEST(NoTLSFuture, and_then_calls_back_immediately_when_promise_is_already_fulfil
     auto future = promise.get_future();
     bool callback_called{false};
 
-    future.and_then([&callback_called](int) { callback_called = true;});
+    auto result = future.then(
+        [&callback_called](mcl::NoTLSFuture<int>&& done)
+        {
+            done.get();
+            callback_called = true;
+        });
     EXPECT_TRUE(callback_called);
 }
 
-TEST(NoTLSFuture, void_and_then_calls_back_immediately_when_promise_is_already_fulfilled)
+TEST(NoTLSFuture, void_then_calls_back_immediately_when_promise_is_already_fulfilled)
 {
     mcl::NoTLSPromise<void> promise;
     promise.set_value();
@@ -47,11 +52,11 @@ TEST(NoTLSFuture, void_and_then_calls_back_immediately_when_promise_is_already_f
     auto future = promise.get_future();
     bool callback_called{false};
 
-    future.and_then([&callback_called]() { callback_called = true;});
+    future.then([&callback_called](auto&&) { callback_called = true;});
     EXPECT_TRUE(callback_called);
 }
 
-TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already_fulfilled)
+TEST(NoTLSFuture, then_calls_back_with_correct_value_when_promise_is_already_fulfilled)
 {
     constexpr int expected{0xfeed};
 
@@ -59,15 +64,17 @@ TEST(NoTLSFuture, and_then_calls_back_with_correct_value_when_promise_is_already
     promise.set_value(expected);
 
     auto future = promise.get_future();
-    future.and_then(
-        [](int result)
+    future.then(
+        [](auto&& result)
         {
             using namespace testing;
-            EXPECT_THAT(result, Eq(expected));
+
+            auto value = result.get();
+            EXPECT_THAT(value, Eq(expected));
         });
 }
 
-TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_copy)
+TEST(NoTLSFuture, then_is_not_called_until_promise_is_fulfilled_by_copy)
 {
     constexpr char const* expected{"And then nothing turned itself inside out"};
 
@@ -75,12 +82,13 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_copy)
     auto future = promise.get_future();
 
     bool called{false};
-    future.and_then(
-        [&called](std::string&& value)
+    auto result = future.then(
+        [&called](auto&& value)
         {
             using namespace testing;
             called = true;
-            EXPECT_THAT(value, StrEq(expected));
+            auto result = value.get();
+            EXPECT_THAT(result, StrEq(expected));
         });
 
     EXPECT_FALSE(called);
@@ -91,7 +99,7 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_copy)
     EXPECT_TRUE(called);
 }
 
-TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_moving)
+TEST(NoTLSFuture, then_is_not_called_until_promise_is_fulfilled_by_moving)
 {
     constexpr char const* expected{"And then nothing turned itself inside out"};
 
@@ -99,12 +107,13 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_moving)
     auto future = promise.get_future();
 
     bool called{false};
-    future.and_then(
-        [&called](std::string&& value)
+    auto result = future.then(
+        [&called](auto&& value)
         {
             using namespace testing;
             called = true;
-            EXPECT_THAT(value, StrEq(expected));
+            auto result = value.get();
+            EXPECT_THAT(result, StrEq(expected));
         });
 
     EXPECT_FALSE(called);
@@ -113,15 +122,16 @@ TEST(NoTLSFuture, and_then_is_not_called_until_promise_is_fulfilled_by_moving)
     EXPECT_TRUE(called);
 }
 
-TEST(NoTLSFuture, void_and_then_is_not_called_until_promise_is_fulfilled)
+TEST(NoTLSFuture, void_then_is_not_called_until_promise_is_fulfilled)
 {
     mcl::NoTLSPromise<void> promise;
     auto future = promise.get_future();
 
     bool called{false};
-    future.and_then(
-        [&called]()
+    auto far_future = future.then(
+        [&called](auto&& result)
         {
+            result.get();
             called = true;
         });
 
@@ -131,26 +141,36 @@ TEST(NoTLSFuture, void_and_then_is_not_called_until_promise_is_fulfilled)
     EXPECT_TRUE(called);
 }
 
-TEST(NoTLSFuture, or_else_is_called_when_promise_is_broken)
+TEST(NoTLSFuture, then_is_called_when_promise_is_broken)
 {
     auto promise = std::make_unique<mcl::NoTLSPromise<int>>();
     auto future = promise->get_future();
 
     bool called{false};
-    future.or_else([&called](auto) { called = true; });
+    auto far_future = future.then(
+        [&called](auto&& result)
+        {
+            EXPECT_THROW(result.get(), std::runtime_error);
+            called = true;
+        });
 
     EXPECT_FALSE(called);
     promise.reset();
     EXPECT_TRUE(called);
 }
 
-TEST(NoTLSFuture, or_else_is_called_when_void_promise_is_broken)
+TEST(NoTLSFuture, then_is_called_when_void_promise_is_broken)
 {
     auto promise = std::make_unique<mcl::NoTLSPromise<void>>();
     auto future = promise->get_future();
 
     bool called{false};
-    future.or_else([&called](auto) { called = true; });
+    auto far_future = future.then(
+        [&called](auto&& result)
+        {
+            EXPECT_THROW(result.get(), std::runtime_error);
+            called = true;
+        });
 
     EXPECT_FALSE(called);
     promise.reset();

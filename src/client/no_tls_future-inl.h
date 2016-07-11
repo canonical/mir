@@ -61,31 +61,38 @@ public:
 
     void set_value(T const& val)
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        set = true;
-        if (continuation)
+        bool run_continuation{false};
         {
+            std::lock_guard<std::mutex> lk(mutex);
+            set = true;
             value = val;
-            continuation(std::move(value));
+            if (continuation)
+            {
+                run_continuation = true;
+            }
         }
-        else
+        if (run_continuation)
         {
-            value = val;
+            continuation();
         }
         cv.notify_all();
     }
 
     void set_value(T&& val)
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        set = true;
-        if (continuation)
+        bool run_continuation{false};
         {
-            continuation(std::move(val));
+            std::lock_guard<std::mutex> lk(mutex);
+            set = true;
+            value = std::move(val);
+            if (continuation)
+            {
+                run_continuation = true;
+            }
         }
-        else
+        if (run_continuation)
         {
-            value = val;
+            continuation();
         }
         cv.notify_all();
     }
@@ -104,14 +111,21 @@ public:
 
     void break_promise()
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (!set)
+        bool run_continuation{false};
         {
-            broken = true;
-            if (exception_continuation)
+            std::lock_guard<std::mutex> lk(mutex);
+            if (!set)
             {
-                exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+                broken = true;
+                if (continuation)
+                {
+                    run_continuation = true;
+                }
             }
+        }
+        if (run_continuation)
+        {
+            continuation();
         }
         cv.notify_all();
     }
@@ -128,29 +142,21 @@ private:
     bool set{false};
     bool broken{false};
     T value;
-    std::function<void(typename std::add_rvalue_reference<T>::type)> continuation;
-    std::function<void(std::exception_ptr const&)> exception_continuation;
+    std::function<void()> continuation;
 
     friend class NoTLSFuture<T>;
-    void set_continuation(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
+    void set_continuation(std::function<void()> const& continuation)
     {
-        std::lock_guard<std::mutex> lk{mutex};
+        std::unique_lock<std::mutex> lk{mutex};
         if (set)
         {
-            continuation(std::move(value));
+            lk.unlock();
+            continuation();
         }
-        this->continuation = continuation;
-    }
-
-    friend class NoTLSFutureBase<T>;
-    void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
-    {
-        std::lock_guard<std::mutex> lk{mutex};
-        if (broken)
+        else
         {
-            exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+            this->continuation = continuation;
         }
-        this->exception_continuation = exception_continuation;
     }
 };
 
@@ -175,9 +181,16 @@ public:
 
     void set_value()
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        set = true;
-        if (continuation)
+        bool run_continuation{false};
+        {
+            std::lock_guard<std::mutex> lk(mutex);
+            set = true;
+            if (continuation)
+            {
+                run_continuation = true;
+            }
+        }
+        if (run_continuation)
         {
             continuation();
         }
@@ -197,14 +210,21 @@ public:
 
     void break_promise()
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (!set)
+        bool run_continuation{false};
         {
-            broken = true;
-            if (exception_continuation)
+            std::lock_guard<std::mutex> lk(mutex);
+            if (!set)
             {
-                exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
+                broken = true;
+                if (continuation)
+                {
+                    run_continuation = true;
+                }
             }
+        }
+        if (run_continuation)
+        {
+            continuation();
         }
         cv.notify_all();
     }
@@ -221,38 +241,29 @@ private:
     bool set{false};
     bool broken{false};
     std::function<void()> continuation;
-    std::function<void(std::exception_ptr const&)> exception_continuation;
 
     friend class NoTLSFuture<void>;
     void set_continuation(std::function<void(void)> const& continuation)
     {
-        std::lock_guard<std::mutex> lk{mutex};
+        std::unique_lock<std::mutex> lk{mutex};
         if (set)
         {
+            lk.unlock();
             continuation();
         }
         this->continuation = continuation;
     }
-
-    friend class NoTLSFutureBase<void>;
-    void set_exception_continuation(std::function<void(std::exception_ptr const&)> const& exception_continuation)
-    {
-        std::lock_guard<std::mutex> lk{mutex};
-        if (broken)
-        {
-            exception_continuation(std::make_exception_ptr(std::runtime_error("broken_promise")));
-        }
-        this->exception_continuation = exception_continuation;
-    }
 };
 
+template<typename T>
+class NoTLSPromise;
 
 template<typename T>
 class NoTLSFutureBase
 {
 public:
     NoTLSFutureBase() :
-        state(nullptr) 
+        state(nullptr)
     {
     }
 
@@ -307,6 +318,12 @@ public:
     }
 
 protected:
+    template<typename Func, typename Result>
+    std::function<void()> make_continuation_for(NoTLSPromise<Result>&& resultant, Func&& continuation);
+
+    template<typename Func>
+    std::function<void()> make_continuation_for(NoTLSPromise<void>&& resultant, Func&& continuation);
+
     std::shared_ptr<PromiseState<T>> state;
 };
 
@@ -319,14 +336,23 @@ public:
     T get()
     {
         NoTLSFutureBase<T>::validate_state();
-        auto value = NoTLSFutureBase<T>::state->get_value();
+        T value{NoTLSFutureBase<T>::state->get_value()};
         NoTLSFutureBase<T>::state = nullptr;
         return value;
     }
 
-    void and_then(std::function<void(typename std::add_rvalue_reference<T>::type)> const& continuation)
+    template<typename Func>
+    NoTLSFuture<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> then(Func&& completion)
     {
-        NoTLSFutureBase<T>::state->set_continuation(continuation);
+        NoTLSPromise<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> promise;
+        auto transformed_future = promise.get_future();
+
+        NoTLSFutureBase<T>::state->set_continuation(
+            NoTLSFutureBase<T>::make_continuation_for(std::move(promise), std::move(completion)));
+
+        NoTLSFutureBase<T>::state = nullptr;
+
+        return transformed_future;
     }
 };
 
@@ -343,9 +369,18 @@ public:
         state = nullptr;
     }
 
-    void and_then(std::function<void()> const& continuation)
+    template<typename Func>
+    NoTLSFuture<typename std::result_of_t<Func(NoTLSFuture<void>&&)>> then(Func&& completion)
     {
-        state->set_continuation(continuation);
+        NoTLSPromise<typename std::result_of_t<Func(NoTLSFuture<void>&&)>> promise;
+        auto transformed_future = promise.get_future();
+
+        state->set_continuation(
+            make_continuation_for(std::move(promise), std::move(completion)));
+
+        state = nullptr;
+
+        return transformed_future;
     }
 };
 
@@ -419,6 +454,37 @@ public:
         state->set_value();
     }
 };
+
+template<typename T>
+template<typename Func, typename Result>
+std::function<void()> NoTLSFutureBase<T>::make_continuation_for(
+    NoTLSPromise<Result>&& resultant,
+    Func&& continuation)
+{
+    return
+        [promise = std::make_shared<NoTLSPromise<Result>>(std::move(resultant)),
+         completion = std::move(continuation),
+         state = NoTLSFutureBase<T>::state]()
+        {
+            promise->set_value(completion(NoTLSFuture<T>(std::move(state))));
+        };
+}
+
+template<typename T>
+template<typename Func>
+std::function<void()> NoTLSFutureBase<T>::make_continuation_for(
+    NoTLSPromise<void>&& resultant,
+    Func&& continuation)
+{
+    return
+        [promise = std::make_shared<NoTLSPromise<void>>(std::move(resultant)),
+         completion = std::move(continuation),
+         state = NoTLSFutureBase<T>::state]()
+        {
+            completion(NoTLSFuture<T>(std::move(state)));
+            promise->set_value();
+        };
+}
 
 }
 }
