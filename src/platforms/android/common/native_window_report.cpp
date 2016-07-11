@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "native_window_logger.h"
-#include "mir/raii.h"
-#include <iostream>
+#include "mir/logging/logger.h"
+#include "native_window_report.h"
+#include <sstream>
 
 #define CASE_KEY(var) case var: return out << #var;
 namespace mga = mir::graphics::android;
@@ -100,61 +100,71 @@ std::ostream& operator<<(std::ostream& out, mga::BufferEvent type)
 
 std::ostream& operator<<(std::ostream& out, ANativeWindow const* window)
 {
-    return out << "[EGLNativeWindow] addr (" << static_cast<void const*>(window) << "): "; 
+    return out << "addr (" << static_cast<void const*>(window) << "): "; 
 }
 }
 
-void mga::ConsoleNativeWindowLogger::buffer_event(
+mga::ConsoleNativeWindowReport::ConsoleNativeWindowReport(
+    std::shared_ptr<mir::logging::Logger> const& logger) :
+    logger(logger)
+{
+}
+
+void mga::ConsoleNativeWindowReport::buffer_event(
     BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf, int fence) const
 {
-    std::cout << win << type << ": " << buf << ", fence: ";
-    if ( fence > 0 )
-        std::cout << fence;
-    else
-        std::cout << "none";
+    std::stringstream str;
 
-    std::cout << std::endl;
+    str << win << type << ": " << buf << ", fence: ";
+    if ( fence > 0 )
+        str << fence;
+    else
+        str << "none";
+
+    logger->log(mir::logging::Severity::debug, str.str(), component_name); 
 }
 
-void mga::ConsoleNativeWindowLogger::buffer_event(
+void mga::ConsoleNativeWindowReport::buffer_event(
     BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf) const
 {
-    std::cout << win << type << "_deprecated: " << buf << std::endl;
+    std::stringstream str;
+    str << win << type << "_deprecated: " << buf;
+    logger->log(mir::logging::Severity::debug, str.str(), component_name); 
 }
 
-void mga::ConsoleNativeWindowLogger::query_event(ANativeWindow const* win, int type, int result) const
+void mga::ConsoleNativeWindowReport::query_event(ANativeWindow const* win, int type, int result) const
 {
-    auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
-    std::cout << win << "query: " << NativeQueryKey{type} << ": result: 0x" <<
-        result << std::endl;
+    std::stringstream str;
+    str << std::hex << win << "query: " << NativeQueryKey{type} << ": result: 0x" << result;
+    logger->log(mir::logging::Severity::debug, str.str(), component_name); 
 }
 
-void mga::ConsoleNativeWindowLogger::perform_event(
+void mga::ConsoleNativeWindowReport::perform_event(
     ANativeWindow const* win, int type, std::vector<int> const& args) const
 {
-    auto hex = mir::raii::paired_calls([] { std::cout << std::hex; }, [] { std::cout << std::dec; });
-    std::cout << win << "perform: " << NativePerformKey{type} << ": ";
+    std::stringstream str;
+    str << std::hex << win << "perform: " << NativePerformKey{type} << ": ";
     for (auto i = 0u; i < args.size(); i++)
     {
         if (i != 0u)
-            std::cout << ", ";
-        std::cout <<  "0x" << args[i];
+            str << ", ";
+        str <<  "0x" << args[i];
     }
-    std::cout << std::endl;;
+    logger->log(mir::logging::Severity::debug, str.str(), component_name); 
 }
 
-void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*, int) const
+void mga::NullNativeWindowReport::buffer_event(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*, int) const
 {
 }
 
-void mga::NullNativeWindowLogger::buffer_event(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*) const
+void mga::NullNativeWindowReport::buffer_event(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*) const
 {
 }
 
-void mga::NullNativeWindowLogger::query_event(ANativeWindow const*, int, int) const
+void mga::NullNativeWindowReport::query_event(ANativeWindow const*, int, int) const
 {
 }
 
-void mga::NullNativeWindowLogger::perform_event(ANativeWindow const*, int, std::vector<int> const&) const
+void mga::NullNativeWindowReport::perform_event(ANativeWindow const*, int, std::vector<int> const&) const
 {
 }

@@ -16,12 +16,18 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_LOGGER_H_
+#ifndef MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_REPORT_H_
+#define MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_REPORT_H_
 #include <system/window.h>
 #include <vector>
+#include <memory>
+
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace graphics
 {
 namespace android
@@ -32,11 +38,11 @@ enum class BufferEvent
     Dequeue,
     Cancel
 };
-class NativeWindowLogger
+class NativeWindowReport
 {
 public:
-    NativeWindowLogger() = default;
-    virtual ~NativeWindowLogger() = default;
+    NativeWindowReport() = default;
+    virtual ~NativeWindowReport() = default;
 
     virtual void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf, int fence) const = 0;
     virtual void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf) const = 0;
@@ -44,11 +50,11 @@ public:
     virtual void perform_event(ANativeWindow const* win, int type, std::vector<int> const& args) const = 0;
 
 private:
-    NativeWindowLogger(NativeWindowLogger const&) = delete;
-    NativeWindowLogger& operator=(NativeWindowLogger const&) = delete;
+    NativeWindowReport(NativeWindowReport const&) = delete;
+    NativeWindowReport& operator=(NativeWindowReport const&) = delete;
 };
 
-class NullNativeWindowLogger : public NativeWindowLogger
+class NullNativeWindowReport : public NativeWindowReport
 {
     void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf, int fence) const override;
     void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf) const override;
@@ -56,16 +62,20 @@ class NullNativeWindowLogger : public NativeWindowLogger
     void perform_event(ANativeWindow const* win, int type, std::vector<int> const& args) const override;
 };
 
-class ConsoleNativeWindowLogger : public NativeWindowLogger
+class ConsoleNativeWindowReport : public NativeWindowReport
 {
 public:
+    ConsoleNativeWindowReport(std::shared_ptr<logging::Logger> const&);
     void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf, int fence) const override;
     void buffer_event(BufferEvent type, ANativeWindow const* win, ANativeWindowBuffer* buf) const override;
     void query_event(ANativeWindow const* win, int type, int result) const override;
     void perform_event(ANativeWindow const* win, int type, std::vector<int> const& args) const override;
+private:
+    std::shared_ptr<logging::Logger> const logger;
+    std::string const component_name = "AndroidNativeWindow";
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_LOGGER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_NATIVE_WINDOW_REPORT_H_ */

@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/display_buffer.h"
 #include "src/platforms/android/server/gl_context.h"
-#include "native_window_logger.h"
+#include "native_window_report.h"
 #include "android_format_conversion-inl.h"
 #include "mir/test/doubles/mock_display_device.h"
 #include "mir/test/doubles/mock_display_report.h"
@@ -61,7 +61,7 @@ struct DisplayBuffer : public ::testing::Test
     std::shared_ptr<ANativeWindow> native_window{
         std::make_shared<mg::android::MirNativeWindow>(
             std::make_shared<mtd::StubDriverInterpreter>(),
-            std::make_shared<mga::NullNativeWindowLogger>())};
+            std::make_shared<mga::NullNativeWindowReport>())};
     std::shared_ptr<mtd::MockDisplayDevice> mock_display_device{
         std::make_shared<testing::NiceMock<mtd::MockDisplayDevice>>()};
     geom::Size const display_size{433,232};

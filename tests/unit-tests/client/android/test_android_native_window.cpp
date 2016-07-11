@@ -18,7 +18,7 @@
 
 #include "mir_native_window.h"
 #include "android_driver_interpreter.h"
-#include "native_window_logger.h"
+#include "native_window_report.h"
 #include "mir/egl_native_surface.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/stub_android_native_buffer.h"
@@ -33,7 +33,7 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-struct MockLogger : mga::NativeWindowLogger
+struct MockReport : mga::NativeWindowReport
 {
     MOCK_CONST_METHOD4(buffer_event, void(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*, int));
     MOCK_CONST_METHOD3(buffer_event, void(mga::BufferEvent, ANativeWindow const*, ANativeWindowBuffer*));
@@ -65,8 +65,8 @@ class AndroidNativeWindowTest : public ::Test
 protected:
     std::shared_ptr<MockAndroidDriverInterpreter> const mock_driver_interpreter =
         std::make_shared<NiceMock<MockAndroidDriverInterpreter>>();
-    std::shared_ptr<MockLogger> const mock_logger = std::make_shared<NiceMock<MockLogger>>();
-    mga::MirNativeWindow mir_native_window{mock_driver_interpreter, mock_logger};
+    std::shared_ptr<MockReport> const mock_report = std::make_shared<NiceMock<MockReport>>();
+    mga::MirNativeWindow mir_native_window{mock_driver_interpreter, mock_report};
     ANativeWindow& window = mir_native_window;
     int const failure_code{-1};
 };
@@ -102,7 +102,7 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook)
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_info(NATIVE_WINDOW_WIDTH))
         .Times(1)
         .WillOnce(Return(width));
-    EXPECT_CALL(*mock_logger, query_event(_, key, width));
+    EXPECT_CALL(*mock_report, query_event(_, key, width));
 
     window.query(&window, key, &returned_width);
 
@@ -119,7 +119,7 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
         .Times(1);
 
     ASSERT_NE(nullptr, window.perform);
-    EXPECT_CALL(*mock_logger, perform_event(_, key, _));
+    EXPECT_CALL(*mock_report, perform_event(_, key, _));
     window.perform(&window, key, format);
 }
 
@@ -147,7 +147,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
     int fence_fd;
 
     ASSERT_NE(nullptr, window.dequeueBuffer);
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, _, _));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Dequeue, _, _, _));
     window.dequeueBuffer(&window, &returned_buffer, &fence_fd);
 }
 
@@ -207,7 +207,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
         .Times(1);
     EXPECT_CALL(*mock_buffer, copy_fence())
         .Times(0);
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Dequeue, _, _));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Dequeue, _, _));
 
     window.dequeueBuffer_DEPRECATED(&window, &returned_buffer);
     EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
@@ -243,7 +243,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
 
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Queue, _, &buffer, fence_fd));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Queue, _, &buffer, fence_fd));
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, fence_fd))
         .Times(1);
 
@@ -262,7 +262,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_passes_buffer_bac
 {
     ANativeWindowBuffer buffer;
 
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Queue, _, &buffer));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Queue, _, &buffer));
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer,_))
         .Times(1);
 
@@ -275,8 +275,8 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hooks_callable)
     ANativeWindowBuffer* tmp = nullptr;
     int fence_fd = -1;
 
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Cancel, _, tmp));
-    EXPECT_CALL(*mock_logger, buffer_event(mga::BufferEvent::Cancel, _, tmp, fence_fd));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Cancel, _, tmp));
+    EXPECT_CALL(*mock_report, buffer_event(mga::BufferEvent::Cancel, _, tmp, fence_fd));
     ASSERT_NE(nullptr, window.cancelBuffer_DEPRECATED);
     ASSERT_NE(nullptr, window.cancelBuffer);
     window.cancelBuffer_DEPRECATED(&window, tmp);

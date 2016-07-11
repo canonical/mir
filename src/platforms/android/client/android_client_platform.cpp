@@ -23,7 +23,8 @@
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
-#include "native_window_logger.h"
+#include "native_window_report.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include "mir/weak_egl.h"
 #include <EGL/egl.h>
@@ -59,15 +60,16 @@ std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_bu
 std::shared_ptr<void> mcla::AndroidClientPlatform::create_egl_native_window(EGLNativeSurface *surface)
 {
     auto log = getenv("MIR_CLIENT_ANDROID_WINDOW_REPORT");
-    std::shared_ptr<mga::NativeWindowLogger> logger;
+    std::shared_ptr<mga::NativeWindowReport> report;
     char const* on_val = "log";
     if (log && !strncmp(log, on_val, strlen(on_val)))
-        logger = std::make_shared<mga::ConsoleNativeWindowLogger>();
+        report = std::make_shared<mga::ConsoleNativeWindowReport>(
+            std::make_shared<mir::logging::DumbConsoleLogger>());
     else
-        logger = std::make_shared<mga::NullNativeWindowLogger>();
+        report = std::make_shared<mga::NullNativeWindowReport>();
  
     return std::make_shared<mga::MirNativeWindow>(
-        std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface), logger);
+        std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface), report);
 }
 
 std::shared_ptr<EGLNativeDisplayType>

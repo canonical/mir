@@ -34,7 +34,7 @@
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir_native_window.h"
-#include "native_window_logger.h"
+#include "native_window_report.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 
 #include <gtest/gtest.h>
@@ -64,7 +64,7 @@ public:
           dummy_context{mock_egl.fake_egl_context},
           dummy_config{mock_egl.fake_configs[0]},
           null_display_report{mir::report::null_display_report()},
-          null_anw_logger(std::make_shared<mga::NullNativeWindowLogger>()),
+          null_anw_report(std::make_shared<mga::NullNativeWindowReport>()),
           stub_db_factory{std::make_shared<mtd::StubDisplayBuilder>()},
           stub_gl_config{std::make_shared<mtd::StubGLConfig>()},
           stub_gl_program_factory{std::make_shared<mtd::StubGLProgramFactory>()}
@@ -79,7 +79,7 @@ protected:
     EGLConfig const dummy_config;
 
     std::shared_ptr<mg::DisplayReport> const null_display_report;
-    std::shared_ptr<mga::NativeWindowLogger> const null_anw_logger;
+    std::shared_ptr<mga::NativeWindowReport> const null_anw_report;
     std::shared_ptr<mtd::StubDisplayBuilder> const stub_db_factory;
     std::shared_ptr<mtd::StubGLConfig> const stub_gl_config;
     std::shared_ptr<mtd::StubGLProgramFactory> const stub_gl_program_factory;
@@ -135,7 +135,7 @@ TEST_F(Display, creation_creates_egl_resources_properly)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 }
 
@@ -185,7 +185,7 @@ TEST_F(Display, selects_usable_egl_configuration)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
     EXPECT_EQ(correct_config, selected_config);
 }
@@ -215,7 +215,7 @@ TEST_F(Display, respects_gl_config)
         stub_gl_program_factory,
         mock_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 }
 
@@ -239,7 +239,7 @@ TEST_F(Display, logs_creation_events)
         stub_gl_program_factory,
         stub_gl_config,
         mock_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 }
 
@@ -268,7 +268,7 @@ TEST_F(Display, throws_on_eglMakeCurrent_failure)
             stub_gl_program_factory,
             stub_gl_config,
             mock_display_report,
-            null_anw_logger,
+            null_anw_report,
             mga::OverlayOptimization::disabled);
     }, std::runtime_error);
 }
@@ -296,7 +296,7 @@ TEST_F(Display, logs_error_because_of_surface_creation_failure)
             stub_gl_program_factory,
             stub_gl_config,
             mock_display_report,
-            null_anw_logger,
+            null_anw_report,
             mga::OverlayOptimization::disabled);
     }, std::runtime_error);
 }
@@ -315,7 +315,7 @@ TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 }
 
@@ -333,7 +333,7 @@ TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
             stub_gl_program_factory,
             stub_gl_config,
             null_display_report,
-            null_anw_logger,
+            null_anw_report,
             mga::OverlayOptimization::disabled);});
 }
 
@@ -352,7 +352,7 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 }
 
@@ -377,7 +377,7 @@ TEST_F(Display, configures_power_modes)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 
     auto configuration = display.configuration();
@@ -440,7 +440,7 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
     auto config = display.configuration();
 
@@ -492,7 +492,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
     auto config = display.configuration();
 
@@ -542,7 +542,7 @@ TEST_F(Display, incorrect_display_configure_throws)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
     auto config = display.configuration();
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
@@ -568,7 +568,7 @@ TEST_F(Display, display_orientation_not_supported)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto config = display.configuration();
@@ -592,7 +592,7 @@ TEST_F(Display, can_configure_orientation)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto scale = 4.2f;
@@ -616,7 +616,7 @@ TEST_F(Display, can_configure_form_factor)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto form_factor = mir_form_factor_tablet;
@@ -649,7 +649,7 @@ TEST_F(Display, keeps_subscription_to_hotplug)
             stub_gl_program_factory,
             stub_gl_config,
             null_display_report,
-            null_anw_logger,
+            null_anw_report,
             mga::OverlayOptimization::enabled);
         EXPECT_THAT(subscription.use_count(), Gt(use_count_before));
     }
@@ -699,7 +699,7 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto config = display.configuration();
@@ -743,7 +743,7 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto group_count = 0;
@@ -825,7 +825,7 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     //hotplug external away
@@ -865,7 +865,7 @@ TEST_F(Display, configures_external_display)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto configuration = display.configuration();
@@ -907,7 +907,7 @@ TEST_F(Display, reports_vsync)
         stub_gl_program_factory,
         stub_gl_config,
         report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     vsync_fn(mga::DisplayName::primary);
@@ -921,7 +921,7 @@ TEST_F(Display, reports_correct_card_information)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     int num_cards = 0;
@@ -944,7 +944,7 @@ TEST_F(Display, can_configure_positioning_of_dbs)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto config = display.configuration();
@@ -991,7 +991,7 @@ TEST_F(Display, applying_orientation_after_hotplug)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     //hotplug external back 
@@ -1028,7 +1028,7 @@ TEST_F(Display, display_buffers_respect_overlay_option)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::disabled);
 
     display.for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
@@ -1064,7 +1064,7 @@ TEST_F(Display, does_not_remove_dbs_when_enumerating_display_groups)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     auto db_count = 0;
@@ -1093,7 +1093,7 @@ TEST_F(Display, enabling_virtual_output_updates_display_configuration)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report,
-        null_anw_logger,
+        null_anw_report,
         mga::OverlayOptimization::enabled);
 
     int const virtual_output_width{1234};
