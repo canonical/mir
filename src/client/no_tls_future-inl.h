@@ -150,10 +150,37 @@ private:
     bool set{false};
     bool broken{false};
 
-    std::function<void()> continuation;
+    class OneShotContinuation
+    {
+    public:
+        OneShotContinuation() = default;
+
+        OneShotContinuation(std::function<void()>&& continuation)
+            : continuation{std::move(continuation)}
+        {
+        }
+        OneShotContinuation& operator=(std::function<void()>&& continuation)
+        {
+            this->continuation = std::move(continuation);
+            return *this;
+        }
+
+        void operator()()
+        {
+            continuation();
+            continuation = nullptr;
+        }
+        operator bool() const
+        {
+            return static_cast<bool>(continuation);
+        }
+    private:
+        std::function<void()> continuation;
+    };
+    OneShotContinuation continuation;
 
     friend class NoTLSFuture<T>;
-    void set_continuation(std::function<void()> const& continuation)
+    void set_continuation(std::function<void()>&& continuation)
     {
         std::unique_lock<std::mutex> lk{mutex};
         if (set)
@@ -163,7 +190,7 @@ private:
         }
         else
         {
-            this->continuation = continuation;
+            this->continuation = std::move(continuation);
         }
     }
 };
@@ -415,6 +442,9 @@ std::function<void()> NoTLSFutureBase<T>::make_continuation_for(
     NoTLSPromise<Result>&& resultant,
     Func&& continuation)
 {
+    // Ideally we'd be returning a MoveConstructible Callable and could avoid taking
+    // a shared_ptr to resultant, but it's not clear that std::packaged_task doesn't use TLS,
+    // which would somewhat defeat the purpose, and I don't feel like writing a functor class.
     return
         [promise = std::make_shared<NoTLSPromise<Result>>(std::move(resultant)),
          completion = std::move(continuation),
