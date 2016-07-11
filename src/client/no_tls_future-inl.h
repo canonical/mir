@@ -41,7 +41,7 @@ template<typename T>
 class NoTLSFutureBase;
 
 template<typename T>
-class PromiseState
+class PromiseStateBase
 {
 public:
     void wait() const
@@ -57,56 +57,6 @@ public:
         if (cv.wait_for(lk, timeout_duration, [this]{ return set || broken; }))
             return std::future_status::ready;
         return std::future_status::timeout;
-    }
-
-    void set_value(T const& val)
-    {
-        bool run_continuation{false};
-        {
-            std::lock_guard<std::mutex> lk(mutex);
-            set = true;
-            value = val;
-            if (continuation)
-            {
-                run_continuation = true;
-            }
-        }
-        if (run_continuation)
-        {
-            continuation();
-        }
-        cv.notify_all();
-    }
-
-    void set_value(T&& val)
-    {
-        bool run_continuation{false};
-        {
-            std::lock_guard<std::mutex> lk(mutex);
-            set = true;
-            value = std::move(val);
-            if (continuation)
-            {
-                run_continuation = true;
-            }
-        }
-        if (run_continuation)
-        {
-            continuation();
-        }
-        cv.notify_all();
-    }
-
-    T get_value()
-    {
-        std::unique_lock<std::mutex> lk(mutex);
-        cv.wait(lk, [this]{ return set || broken; });
-        if (broken)
-        {
-            //clang has problems with std::future_error::what() on vivid+overlay
-            BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
-        }
-        return value;
     }
 
     void break_promise()
@@ -130,18 +80,72 @@ public:
         cv.notify_all();
     }
 
-    PromiseState() = default;
-    PromiseState(PromiseState const&) = delete;
-    PromiseState(PromiseState &&) = delete;
-    PromiseState& operator=(PromiseState const&) = delete;
-    PromiseState& operator=(PromiseState &&) = delete;
+    PromiseStateBase() = default;
+    PromiseStateBase(PromiseStateBase const&) = delete;
+    PromiseStateBase(PromiseStateBase&&) = delete;
+    PromiseStateBase& operator=(PromiseStateBase const&) = delete;
+    PromiseStateBase& operator=(PromiseStateBase &&) = delete;
+
+protected:
+    class WriteLock
+    {
+    public:
+        WriteLock(PromiseStateBase& parent)
+            : parent{parent},
+              lock{parent.mutex}
+        {
+            call_continuation = static_cast<bool>(parent.continuation);
+        }
+        WriteLock(WriteLock&&) = default;
+        WriteLock& operator=(WriteLock&&) = default;
+
+        ~WriteLock() noexcept(false)
+        {
+            parent.set = true;
+            lock.unlock();
+            if (call_continuation)
+            {
+                parent.continuation();
+            }
+            parent.cv.notify_all();
+        }
+    private:
+        PromiseStateBase& parent;
+        std::unique_lock<std::mutex> lock;
+        bool call_continuation;
+    };
+    class ReadLock
+    {
+    public:
+        ReadLock(PromiseStateBase& parent)
+            : lock{parent.mutex}
+        {
+            parent.cv.wait(lock, [&parent]{ return parent.set || parent.broken; });
+            if (parent.broken)
+            {
+                //clang has problems with std::future_error::what() on vivid+overlay
+                BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
+            }
+        }
+    private:
+        std::unique_lock<std::mutex> lock;
+    };
+
+    WriteLock ensure_write_context()
+    {
+        return WriteLock(*this);
+    }
+    ReadLock ensure_read_context()
+    {
+        return ReadLock(*this);
+    }
 
 private:
     std::mutex mutable mutex;
     std::condition_variable mutable cv;
     bool set{false};
     bool broken{false};
-    T value;
+
     std::function<void()> continuation;
 
     friend class NoTLSFuture<T>;
@@ -160,98 +164,44 @@ private:
     }
 };
 
-template<>
-class PromiseState<void>
+template<typename T>
+class PromiseState : public PromiseStateBase<T>
 {
 public:
-    void wait() const
+    void set_value(T const& val)
     {
-        std::unique_lock<std::mutex> lk(mutex);
-        cv.wait(lk, [this]{ return set || broken; });
+        auto lock = PromiseStateBase<T>::ensure_write_context();
+        value = val;
     }
 
-    template<class Rep, class Period>
-    std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
+    void set_value(T&& val)
     {
-        std::unique_lock<std::mutex> lk(mutex);
-        if (cv.wait_for(lk, timeout_duration, [this]{ return set || broken; }))
-            return std::future_status::ready;
-        return std::future_status::timeout;
+        auto lock = PromiseStateBase<T>::ensure_write_context();
+        value = std::move(val);
     }
 
+    T get_value()
+    {
+        auto lock = PromiseStateBase<T>::ensure_read_context();
+        return value;
+    }
+
+private:
+    T value;
+};
+
+template<>
+class PromiseState<void> : public PromiseStateBase<void>
+{
+public:
     void set_value()
     {
-        bool run_continuation{false};
-        {
-            std::lock_guard<std::mutex> lk(mutex);
-            set = true;
-            if (continuation)
-            {
-                run_continuation = true;
-            }
-        }
-        if (run_continuation)
-        {
-            continuation();
-        }
-        cv.notify_all();
+        ensure_write_context();
     }
 
     void get_value()
     {
-        std::unique_lock<std::mutex> lk(mutex);
-        cv.wait(lk, [this]{ return set || broken; });
-        if (broken)
-        {
-            //clang has problems with std::future_error::what() on vivid+overlay
-            BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
-        }
-    }
-
-    void break_promise()
-    {
-        bool run_continuation{false};
-        {
-            std::lock_guard<std::mutex> lk(mutex);
-            if (!set)
-            {
-                broken = true;
-                if (continuation)
-                {
-                    run_continuation = true;
-                }
-            }
-        }
-        if (run_continuation)
-        {
-            continuation();
-        }
-        cv.notify_all();
-    }
-
-    PromiseState() = default;
-    PromiseState(PromiseState const&) = delete;
-    PromiseState(PromiseState &&) = delete;
-    PromiseState& operator=(PromiseState const&) = delete;
-    PromiseState& operator=(PromiseState &&) = delete;
-
-private:
-    std::mutex mutable mutex;
-    std::condition_variable mutable cv;
-    bool set{false};
-    bool broken{false};
-    std::function<void()> continuation;
-
-    friend class NoTLSFuture<void>;
-    void set_continuation(std::function<void(void)> const& continuation)
-    {
-        std::unique_lock<std::mutex> lk{mutex};
-        if (set)
-        {
-            lk.unlock();
-            continuation();
-        }
-        this->continuation = continuation;
+        ensure_read_context();
     }
 };
 
