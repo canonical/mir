@@ -1,4 +1,4 @@
-mir (0.23.3) UNRELEASED; urgency=medium
+mir (0.23.3+16.10.20160707.1-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.3 (https://launchpad.net/mir/+milestone/0.23.3)
     - ABI summary:
@@ -7,7 +7,7 @@ mir (0.23.3) UNRELEASED; urgency=medium
       . usage of std:call_once in mirclient causes TLS collisions with some
         android devices (LP: #1599867)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 07 Jul 2016 08:43:03 -0500
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 07 Jul 2016 17:07:38 +0000
 
 mir (0.23.2+16.10.20160624-0ubuntu1) yakkety; urgency=medium
 
