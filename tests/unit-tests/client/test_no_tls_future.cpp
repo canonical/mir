@@ -200,3 +200,15 @@ TEST(NoTLSFuture, destruction_of_future_blocks_if_unsatisfied)
 
     EXPECT_TRUE(done.wait_for(std::chrono::seconds{1}));
 }
+
+TEST(NoTLSFuture, promises_are_write_once)
+{
+    mcl::NoTLSPromise<float> non_void_promise;
+    mcl::NoTLSPromise<void> void_promise;
+
+    non_void_promise.set_value(3.5f);
+    void_promise.set_value();
+
+    EXPECT_THROW(non_void_promise.set_value(2.0f), std::runtime_error);
+    EXPECT_THROW(void_promise.set_value(), std::runtime_error);
+}

@@ -94,6 +94,10 @@ protected:
             : parent{parent},
               lock{parent.mutex}
         {
+            if (parent.set)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error{"promise_already_satisfied"});
+            }
             call_continuation = static_cast<bool>(parent.continuation);
         }
         WriteLock(WriteLock&&) = default;
