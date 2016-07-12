@@ -57,6 +57,7 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
+  $<TARGET_OBJECTS:mir-test-doubles-udev>
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -77,7 +78,9 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
+  -Wl,--whole-archive
   mir-test-assist
+  -Wl,--no-whole-archive
 
   mirclient
   mirclient-debug-extension

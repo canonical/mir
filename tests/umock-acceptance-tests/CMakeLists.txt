@@ -12,13 +12,17 @@ mir_add_wrapped_executable(
 
   test_libinput.cpp
   $<TARGET_OBJECTS:mir-umock-test-framework>
+  $<TARGET_OBJECTS:mir-test-doubles-udev>
   )
 
 add_dependencies(mir_umock_acceptance_tests GMock)
 
 target_link_libraries(mir_umock_acceptance_tests
+  -Wl,--whole-archive
+  mir-test-assist
+  -Wl,--no-whole-archive
+
   mir-test-framework-static
-  mir-test-doubles-static
 
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
