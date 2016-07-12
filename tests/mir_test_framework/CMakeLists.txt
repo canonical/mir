@@ -38,7 +38,6 @@ add_library(mir-public-test-framework OBJECT
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp
-  libinput_environment.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
