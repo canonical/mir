@@ -179,7 +179,7 @@ private:
     };
     OneShotContinuation continuation;
 
-    friend class NoTLSFuture<T>;
+    friend class NoTLSFutureBase<T>;
     void set_continuation(std::function<void()>&& continuation)
     {
         std::unique_lock<std::mutex> lk{mutex};
@@ -293,13 +293,28 @@ public:
         return state != nullptr;
     }
 
-protected:
+
+    template<typename Func>
+    NoTLSFuture<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> then(Func&& completion)
+    {
+        NoTLSPromise<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> promise;
+        auto transformed_future = promise.get_future();
+
+        state->set_continuation(make_continuation_for(std::move(promise), std::move(completion)));
+
+        state = nullptr;
+
+        return transformed_future;
+    }
+
+private:
     template<typename Func, typename Result>
     std::function<void()> make_continuation_for(NoTLSPromise<Result>&& resultant, Func&& continuation);
 
     template<typename Func>
     std::function<void()> make_continuation_for(NoTLSPromise<void>&& resultant, Func&& continuation);
 
+protected:
     std::shared_ptr<PromiseState<T>> state;
 };
 
@@ -316,20 +331,6 @@ public:
         NoTLSFutureBase<T>::state = nullptr;
         return value;
     }
-
-    template<typename Func>
-    NoTLSFuture<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> then(Func&& completion)
-    {
-        NoTLSPromise<typename std::result_of_t<Func(NoTLSFuture<T>&&)>> promise;
-        auto transformed_future = promise.get_future();
-
-        NoTLSFutureBase<T>::state->set_continuation(
-            NoTLSFutureBase<T>::make_continuation_for(std::move(promise), std::move(completion)));
-
-        NoTLSFutureBase<T>::state = nullptr;
-
-        return transformed_future;
-    }
 };
 
 template<>
@@ -343,20 +344,6 @@ public:
         validate_state();
         state->get_value();
         state = nullptr;
-    }
-
-    template<typename Func>
-    NoTLSFuture<typename std::result_of_t<Func(NoTLSFuture<void>&&)>> then(Func&& completion)
-    {
-        NoTLSPromise<typename std::result_of_t<Func(NoTLSFuture<void>&&)>> promise;
-        auto transformed_future = promise.get_future();
-
-        state->set_continuation(
-            make_continuation_for(std::move(promise), std::move(completion)));
-
-        state = nullptr;
-
-        return transformed_future;
     }
 };
 
