@@ -17,8 +17,8 @@ mir_add_wrapped_executable(
 add_dependencies(mir_umock_acceptance_tests GMock)
 
 target_link_libraries(mir_umock_acceptance_tests
-  mir-test-assist
   mir-test-framework-static
+  mir-test-doubles-static
 
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
