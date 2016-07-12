@@ -83,7 +83,7 @@ void mcll::RpcReport::result_receipt_failed(
     std::exception const& ex)
 {
     std::stringstream ss;
-    ss << "Result receipt failed: reason: " << ex.what();
+    ss << "Result receipt failed: reason: " << boost::diagnostic_information(ex);
 
     logger->log(ml::Severity::error, ss.str(), component);
 }
