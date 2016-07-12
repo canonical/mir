@@ -212,3 +212,51 @@ TEST(NoTLSFuture, promises_are_write_once)
     EXPECT_THROW(non_void_promise.set_value(2.0f), std::runtime_error);
     EXPECT_THROW(void_promise.set_value(), std::runtime_error);
 }
+
+TEST(NoTLSFuture, setting_continuation_invalidates_future)
+{
+    auto non_void_promise = std::make_unique<mcl::NoTLSPromise<int*>>();
+    auto void_promise = std::make_unique<mcl::NoTLSPromise<void>>();
+
+    auto non_void_future = non_void_promise->get_future();
+    auto void_future = void_promise->get_future();
+
+    auto far_non_void_future = non_void_future.then([](auto&&) {});
+    auto far_void_future = void_future.then([](auto&&) {});
+
+    EXPECT_TRUE(far_non_void_future.valid());
+    EXPECT_TRUE(far_void_future.valid());
+    EXPECT_FALSE(non_void_future.valid());
+    EXPECT_FALSE(void_future.valid());
+
+    // And break our promises so ~NoTLSFuture is unblocked
+    non_void_promise.reset();
+    void_promise.reset();
+}
+
+TEST(NoTLSFuture, retrieving_future_twice_throws)
+{
+    auto non_void_promise = std::make_unique<mcl::NoTLSPromise<int*>>();
+    auto void_promise = std::make_unique<mcl::NoTLSPromise<void>>();
+
+    auto non_void_promise_ref = non_void_promise.get();
+    auto void_promise_ref = void_promise.get();
+
+    mt::Signal break_promises;
+    mt::AutoJoinThread unblocker{
+        [&break_promises](auto, auto)
+        {
+            break_promises.wait_for(std::chrono::seconds{1});
+        },
+        std::shared_ptr<decltype(non_void_promise)::element_type>{std::move(non_void_promise)},
+        std::shared_ptr<decltype(void_promise)::element_type>{std::move(void_promise)}
+        };
+
+    auto non_void_future = non_void_promise_ref->get_future();
+    auto void_future = void_promise_ref->get_future();
+
+    EXPECT_THROW(non_void_promise_ref->get_future(), std::runtime_error);
+    EXPECT_THROW(void_promise_ref->get_future(), std::runtime_error);
+
+    break_promises.raise();
+}
