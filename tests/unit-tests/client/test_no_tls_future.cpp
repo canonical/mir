@@ -239,24 +239,12 @@ TEST(NoTLSFuture, retrieving_future_twice_throws)
     auto non_void_promise = std::make_unique<mcl::NoTLSPromise<int*>>();
     auto void_promise = std::make_unique<mcl::NoTLSPromise<void>>();
 
-    auto non_void_promise_ref = non_void_promise.get();
-    auto void_promise_ref = void_promise.get();
+    auto non_void_future = non_void_promise->get_future();
+    auto void_future = void_promise->get_future();
 
-    mt::Signal break_promises;
-    mt::AutoJoinThread unblocker{
-        [&break_promises](auto, auto)
-        {
-            break_promises.wait_for(std::chrono::seconds{1});
-        },
-        std::shared_ptr<decltype(non_void_promise)::element_type>{std::move(non_void_promise)},
-        std::shared_ptr<decltype(void_promise)::element_type>{std::move(void_promise)}
-        };
+    EXPECT_THROW(non_void_promise->get_future(), std::runtime_error);
+    EXPECT_THROW(void_promise->get_future(), std::runtime_error);
 
-    auto non_void_future = non_void_promise_ref->get_future();
-    auto void_future = void_promise_ref->get_future();
-
-    EXPECT_THROW(non_void_promise_ref->get_future(), std::runtime_error);
-    EXPECT_THROW(void_promise_ref->get_future(), std::runtime_error);
-
-    break_promises.raise();
+    void_promise.reset();
+    non_void_promise.reset();
 }
