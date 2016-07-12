@@ -65,7 +65,7 @@ void mcll::RpcReport::invocation_failed(
     std::stringstream ss;
     ss << "Invocation failed: id: " << invocation.id()
        << " method_name: " << invocation.method_name()
-       << " error: " << ex.what();
+       << " error: " << boost::diagnostic_information(ex);
 
     logger->log(ml::Severity::error, ss.str(), component);
 }
@@ -131,7 +131,7 @@ void mcll::RpcReport::result_processing_failed(
     std::exception const& ex)
 {
     std::stringstream ss;
-    ss << "Result processing failed: reason: " << ex.what();
+    ss << "Result processing failed: reason: " << boost::diagnostic_information(ex);
 
     logger->log(ml::Severity::error, ss.str(), component);
 }
