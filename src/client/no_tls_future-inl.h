@@ -281,11 +281,6 @@ public:
             throw std::logic_error("state was not valid");
     }
 
-    void or_else(std::function<void(std::exception_ptr const&)> const& handler)
-    {
-        state->set_exception_continuation(handler);
-    }
-
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
