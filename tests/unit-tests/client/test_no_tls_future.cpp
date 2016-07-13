@@ -65,7 +65,7 @@ TEST(NoTLSFuture, then_calls_back_with_correct_value_when_promise_is_already_ful
 
     auto future = promise.get_future();
     future.then(
-        [](auto&& result)
+        [expected](auto&& result)
         {
             using namespace testing;
 
@@ -83,7 +83,7 @@ TEST(NoTLSFuture, then_is_not_called_until_promise_is_fulfilled_by_copy)
 
     bool called{false};
     auto result = future.then(
-        [&called](auto&& value)
+        [&called, expected](auto&& value)
         {
             using namespace testing;
             called = true;
@@ -108,7 +108,7 @@ TEST(NoTLSFuture, then_is_not_called_until_promise_is_fulfilled_by_moving)
 
     bool called{false};
     auto result = future.then(
-        [&called](auto&& value)
+        [&called, expected](auto&& value)
         {
             using namespace testing;
             called = true;
