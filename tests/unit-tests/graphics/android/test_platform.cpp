@@ -33,6 +33,7 @@
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"
+#include "native_window_report.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -90,6 +91,7 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<native_handle_t> native_buffer_handle;
     std::shared_ptr<mg::DisplayReport> stub_display_report;
+    std::shared_ptr<mga::NativeWindowReport> anw_report = std::make_shared<mga::NullNativeWindowReport>();
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mtd::NullGLContext context;
     std::shared_ptr<mga::DeviceQuirks> quirks;
@@ -107,7 +109,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
         .WillOnce(Return(fake_fence));
 
     mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, mga::OverlayOptimization::enabled, quirks);
+        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -140,7 +142,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
         .WillOnce(Return(-1));
 
     mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, mga::OverlayOptimization::enabled, quirks);
+        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -181,7 +183,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
         .WillOnce(Return(-1));
 
     mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, mga::OverlayOptimization::enabled, quirks);
+        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -217,7 +219,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 
     int fake_fence{33};
     mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, mga::OverlayOptimization::enabled, quirks);
+        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
     auto ipc_ops = platform.make_ipc_operations();
 
     mtd::MockBufferIpcMessage mock_ipc_msg;

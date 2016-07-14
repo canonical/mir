@@ -30,6 +30,7 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "native_window_report.h"
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
@@ -128,6 +129,7 @@ struct DisplayHotplug : ::testing::Test
         std::make_shared<mir::gl::DefaultProgramFactory>(),
         std::make_shared<mtd::StubGLConfig>(),
         mir::report::null_display_report(),
+        std::make_shared<mga::NullNativeWindowReport>(),
         mga::OverlayOptimization::enabled};
 };
 
