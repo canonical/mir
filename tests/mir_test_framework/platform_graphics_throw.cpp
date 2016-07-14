@@ -84,22 +84,13 @@ public:
         return stub_platform->make_ipc_operations();
     }
 
-    EGLNativeDisplayType egl_native_display() const override
-    {
-        if (should_throw.at(ExceptionLocation::at_egl_native_display))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
-
-        return stub_platform->egl_native_display();
-    }
-
 private:
     enum ExceptionLocation : uint32_t
     {
         at_constructor,
         at_create_buffer_allocator,
         at_create_display,
-        at_make_ipc_operations,
-        at_egl_native_display
+        at_make_ipc_operations
     };
 
     static std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> parse_exception_request(char const* request)
@@ -113,8 +104,6 @@ private:
             static_cast<bool>(strstr(request, "create_display"));
         requested_exceptions[ExceptionLocation::at_make_ipc_operations] =
             static_cast<bool>(strstr(request, "make_ipc_operations"));
-        requested_exceptions[ExceptionLocation::at_egl_native_display] =
-            static_cast<bool>(strstr(request, "egl_native_display"));
 
         return requested_exceptions;
     };
