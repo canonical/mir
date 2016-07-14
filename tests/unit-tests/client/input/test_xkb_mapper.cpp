@@ -104,6 +104,9 @@ TEST_F(XKBMapper, when_device_keymap_is_set_maps_generic_us_english_keys)
     EXPECT_EQ(XKB_KEY_dollar, map_key(mir_keyboard_action_up, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_up, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
+
+    EXPECT_EQ(XKB_KEY_Super_L, map_key(mir_keyboard_action_down, KEY_LEFTMETA));
+    EXPECT_EQ(XKB_KEY_Super_R, map_key(mir_keyboard_action_down, KEY_RIGHTMETA));
 }
 
 TEST_F(XKBMapper, when_surface_keymap_is_set_maps_generic_us_english_keys)
@@ -116,6 +119,9 @@ TEST_F(XKBMapper, when_surface_keymap_is_set_maps_generic_us_english_keys)
     EXPECT_EQ(XKB_KEY_dollar, map_key(mir_keyboard_action_up, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_up, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
+
+    EXPECT_EQ(XKB_KEY_Super_L, map_key(mir_keyboard_action_down, KEY_LEFTMETA));
+    EXPECT_EQ(XKB_KEY_Super_R, map_key(mir_keyboard_action_down, KEY_RIGHTMETA));
 }
 
 TEST_F(XKBMapper, key_repeats_do_not_recurse_modifier_state)
