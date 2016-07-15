@@ -27,7 +27,7 @@ std::atomic<int> mouse_x{0};
 std::atomic<int> mouse_y{0};
 std::atomic<bool> done{false};
 
-constexpr float m_to_v(float xy, float wh, float size = 0.0f) { return (xy - wh/2.0f + size) / (wh/2.0f); }
+constexpr float normalize(float xy, float wh, float size = 0.0f) { return (xy - wh/2.0f + size) / (wh/2.0f); }
 
 static GLuint load_shader(const char* src, GLenum type)
 {
@@ -170,17 +170,17 @@ int main(int argc, char* argv[])
          *| 5-1    2  |
          *|-----------|
         **/
-        float four_zero_x = m_to_v(mouse_x % width, width,  sqaure_size);
-        float four_zero_y = m_to_v(mouse_y % height, height, sqaure_size);
+        float four_zero_x = normalize(mouse_x % width, width,  sqaure_size);
+        float four_zero_y = normalize(mouse_y % height, height, sqaure_size);
 
-        float five_one_x  = m_to_v(mouse_x % width, width);
-        float five_one_y  = m_to_v(mouse_y % height, height);
+        float five_one_x  = normalize(mouse_x % width, width);
+        float five_one_y  = normalize(mouse_y % height, height);
 
-        float two_x       = m_to_v(mouse_x % width, width, sqaure_size);
-        float two_y       = m_to_v(mouse_y % height, height);
+        float two_x       = normalize(mouse_x % width, width, sqaure_size);
+        float two_y       = normalize(mouse_y % height, height);
 
-        float three_x     = m_to_v(mouse_x % width, width);
-        float three_y     = m_to_v(mouse_y % height, height, sqaure_size);
+        float three_x     = normalize(mouse_x % width, width);
+        float three_y     = normalize(mouse_y % height, height, sqaure_size);
 
         GLfloat square_vert[] = { five_one_x , five_one_y , 0.0f,
                                   two_x      , two_y      , 0.0f,
