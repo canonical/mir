@@ -177,6 +177,7 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
+    std::function<void()>                   the_stop_callback() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-except to avoid a

@@ -46,6 +46,7 @@ class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 class DisplayChangePipe;
 class DisplayDevice;
+class NativeWindowReport;
 
 class Display : public graphics::Display
 {
@@ -55,6 +56,7 @@ public:
         std::shared_ptr<gl::ProgramFactory> const& gl_program_factory,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<NativeWindowReport> const& native_window_report,
         OverlayOptimization overlay_option);
     ~Display() noexcept;
 
@@ -85,6 +87,7 @@ private:
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<NativeWindowReport> const native_window_report;
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::mutex mutable configuration_mutex;
     bool mutable configuration_dirty{false};

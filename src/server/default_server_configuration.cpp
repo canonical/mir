@@ -193,6 +193,11 @@ std::shared_ptr<mir::cookie::Authority> mir::DefaultServerConfiguration::the_coo
         });
 }
 
+std::function<void()> mir::DefaultServerConfiguration::the_stop_callback()
+{
+    return []{};
+}
+
 auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
 -> void (*)(char const* reason, ...)
 {

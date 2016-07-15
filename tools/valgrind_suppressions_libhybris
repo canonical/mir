@@ -1,0 +1,10 @@
+{
+    hw_get_module
+    Memcheck:Leak
+    match-leak-kinds: definite
+    fun:malloc
+    obj:*
+    ...
+    fun:_ZN3mir7options20DefaultConfiguration20add_platform_optionsEv
+    ...
+}
