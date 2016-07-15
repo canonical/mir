@@ -177,9 +177,9 @@ int main(int argc, char* argv[])
 		float three_y     = m_to_v(mouse_y % height, height, sqaure_size);
 
 		GLfloat square_vert[] = { five_one_x , five_one_y , 0.0f,
-								  two_x      , two_y      , 0.0f,
-								  three_x    , three_y    , 0.0f,
-								  four_zero_x, four_zero_y, 0.0f };
+                                  two_x      , two_y      , 0.0f,
+                                  three_x    , three_y    , 0.0f,
+                                  four_zero_x, four_zero_y, 0.0f };
 
         glEnableVertexAttribArray(0);
 
