@@ -49,8 +49,6 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    EGLNativeDisplayType egl_native_display() const override;
-
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<helpers::DRMHelper> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;

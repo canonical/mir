@@ -148,6 +148,7 @@ struct mir::Server::Self
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
+    std::function<void()> stop_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
@@ -270,6 +271,11 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
+    std::function<void()> the_stop_callback() override
+    {
+        return self->stop_callback;
+    }
+
     using mir::DefaultServerConfiguration::the_options;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
@@ -351,6 +357,19 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
         };
 
     self->init_callback = updated;
+}
+
+void mir::Server::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    auto const& existing = self->stop_callback;
+
+    auto const updated = [=]
+        {
+            stop_callback();
+            existing();
+        };
+
+    self->stop_callback = updated;
 }
 
 void mir::Server::set_command_line_handler(
@@ -464,7 +483,10 @@ void mir::Server::stop()
     mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
+        {
+            self->stop_callback();
             main_loop->stop();
+        }
 }
 
 bool mir::Server::exited_normally()

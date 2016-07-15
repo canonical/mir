@@ -42,8 +42,8 @@ MirInputEventModifiers xkb_key_code_to_modifier(xkb_keysym_t key)
     case XKB_KEY_Alt_L: return mir_input_event_modifier_alt_left;
     case XKB_KEY_Control_R: return mir_input_event_modifier_ctrl_right;
     case XKB_KEY_Control_L: return mir_input_event_modifier_ctrl_left;
-    case XKB_KEY_Meta_L: return mir_input_event_modifier_meta_left;
-    case XKB_KEY_Meta_R: return mir_input_event_modifier_meta_right;
+    case XKB_KEY_Super_L: return mir_input_event_modifier_meta_left;
+    case XKB_KEY_Super_R: return mir_input_event_modifier_meta_right;
     case XKB_KEY_Caps_Lock: return mir_input_event_modifier_caps_lock;
     case XKB_KEY_Scroll_Lock: return mir_input_event_modifier_scroll_lock;
     default: return MirInputEventModifiers{0};
