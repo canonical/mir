@@ -117,6 +117,9 @@ int main(int argc, char* argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
+    mouse_x = width  / 2;
+    mouse_y = height / 2;
+
     GLuint vshader = load_shader(v_shader_src, GL_VERTEX_SHADER);
     assert(vshader);
     GLuint fshader = load_shader(f_shader_src, GL_FRAGMENT_SHADER);
@@ -148,6 +151,9 @@ int main(int argc, char* argv[])
 
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
+
+    // Hide cursor
+    mir_surface_configure_cursor(surface, NULL);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     GLfloat square_color[] = {1.0f, 0.0f, 0.0f, 1.0f};
