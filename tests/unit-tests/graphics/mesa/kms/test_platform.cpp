@@ -156,12 +156,6 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
     }, std::runtime_error) << "Expected that c'tor of Platform throws";
 }
 
-TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
-{
-    auto platform = create_platform();
-    EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
-}
-
 namespace
 {
 
