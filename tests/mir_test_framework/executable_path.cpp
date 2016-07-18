@@ -19,12 +19,14 @@
  */
 
 #include "mir_test_framework/executable_path.h"
+#include <mir_toolkit/mir_connection.h>
 
 #include <libgen.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/filesystem.hpp>
+#include <dlfcn.h>
 
 std::string mir_test_framework::executable_path()
 {
@@ -42,7 +44,23 @@ std::string mir_test_framework::executable_path()
 
 std::string mir_test_framework::library_path()
 {
-    return executable_path() + "/../lib";
+    static char libpath[1024];
+
+    if (!libpath[0])
+    {
+        // Try to find the location of libmirclient.so
+        Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
+        dladdr((void*)&mir_connect, &library_info);
+
+        strncpy(libpath, library_info.dli_fname, sizeof libpath);
+        dirname(libpath);
+
+        // Fixup for unit & integration tests that link mirclient directly into the executable
+        if (libpath[strlen(libpath)-1] == 'n')
+            strncat(libpath, "/../lib", sizeof libpath);
+    }
+
+    return libpath;
 }
 
 std::string mir_test_framework::server_platform_path()
