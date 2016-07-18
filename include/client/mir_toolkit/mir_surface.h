@@ -114,7 +114,8 @@ mir_connection_create_spec_for_tooltip(MirConnection* connection,
                                        int height,
                                        MirPixelFormat format,
                                        MirSurface* parent,
-                                       MirRectangle* zone);
+                                       MirRectangle* zone)
+    __attribute__((deprecated));
 
 /**
  * Create a surface specification for a tip surface.

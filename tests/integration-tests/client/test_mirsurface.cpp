@@ -196,7 +196,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     create_surface(menu_spec.get());
 }
 
-TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
+TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 {
     EXPECT_CALL(*mock_shell, create_surface(_,_,_));
     auto parent = create_surface(&spec);
@@ -206,8 +206,8 @@ TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
 
     auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> tooltip_spec{
-        mir_connection_create_spec_for_tooltip(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &target_zone_rect),
+        mir_connection_create_spec_for_tip(connection, 640, 480,
+            mir_pixel_format_abgr_8888, parent.get(), &target_zone_rect, mir_edge_attachment_vertical),
         spec_deleter
     };
 
