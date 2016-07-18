@@ -50,6 +50,9 @@ DRMModeCrtcUPtr find_crtc_for_connector(
     int drm_fd,
     DRMModeConnectorUPtr const& connector);
 
+std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr> find_crtc_with_primary_plane(
+    int drm_fd,
+    DRMModeConnectorUPtr const& connector);
 }
 }
 }

@@ -180,8 +180,8 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string const mouse_unique_id = "mouse-uid";
     std::string const touchscreen_name = "touchscreen";
     std::string const touchscreen_unique_id = "touchscreen-uid";
-    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{mtf::add_fake_input_device(
-        mi::InputDeviceInfo{keyboard_name, keyboard_unique_id, mi::DeviceCapability::keyboard})};
+    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{mtf::add_fake_input_device(mi::InputDeviceInfo{
+        keyboard_name, keyboard_unique_id, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{mouse_name, mouse_unique_id, mi::DeviceCapability::pointer})};
     std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(
@@ -541,8 +541,8 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
     float const minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
     float const maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
-    auto const display_width = screen_geometry.size.width.as_float();
-    auto const display_height = screen_geometry.size.height.as_float();
+    auto const display_width = screen_geometry.size.width.as_int();
+    auto const display_height = screen_geometry.size.height.as_int();
 
     // We place a click 10% in to the touchscreens space in both axis,
     // and a second at 0,0. Thus we expect to see a click at
@@ -858,7 +858,9 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
 
     ASSERT_THAT(mir_input_config_device_count(config), Eq(expected_devices));
 
-    EXPECT_THAT(config, ADeviceMatches(keyboard_name, keyboard_unique_id, mir_input_device_capability_keyboard));
+    EXPECT_THAT(config, ADeviceMatches(keyboard_name, keyboard_unique_id,
+                                       uint32_t(mir_input_device_capability_keyboard |
+                                                mir_input_device_capability_alpha_numeric)));
     EXPECT_THAT(config, ADeviceMatches(mouse_name, mouse_unique_id, mir_input_device_capability_pointer));
     EXPECT_THAT(config, ADeviceMatches(touchscreen_name, touchscreen_unique_id,
                                         uint32_t(mir_input_device_capability_touchscreen |

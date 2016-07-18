@@ -143,10 +143,10 @@ public:
     Moveable(std::shared_ptr<ms::Surface> const& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
         : surface(s), display_size(display_size),
-          x{s->top_left().x.as_float()},
-          y{s->top_left().y.as_float()},
-          w{s->size().width.as_float()},
-          h{s->size().height.as_float()},
+          x(s->top_left().x.as_int()),
+          y(s->top_left().y.as_int()),
+          w(s->size().width.as_int()),
+          h(s->size().height.as_int()),
           dx{dx},
           dy{dy},
           rotation_axis(rotation_axis),
@@ -377,6 +377,7 @@ public:
                 void add_buffer(mg::Buffer&) override {}
                 void remove_buffer(mg::Buffer&) override {}
                 void update_buffer(mg::Buffer&) override {}
+                void error_buffer(mg::BufferProperties const&, std::string const&) override {}
             };
 
             auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());

@@ -789,4 +789,24 @@ TEST_P(ClientBufferStream, keeps_accurate_buffer_id)
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
 }
 
+//LP: #1584784
+TEST_P(ClientBufferStream, can_cycle_through_available_buffers_without_waiting)
+{
+    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
+        .WillByDefault(mtd::RunProtobufClosure());
+    mcl::BufferStream bs{
+        nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    service_requests_for(bs, mock_protobuf_server.alloc_count);
+
+    auto count = 0;
+    for(auto i = 0u; i < mock_protobuf_server.alloc_count; i++)
+    {
+        bs.get_current_buffer();
+        bs.next_buffer([&count]{ count++;});
+    }
+}
+
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());

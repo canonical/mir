@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 23)
+set(MIR_VERSION_MINOR 25)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -62,6 +62,9 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++14 -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 
 option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
 if(MIR_USE_LD_GOLD)
@@ -163,10 +166,10 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa-kms;android;mesa-x11
+  mesa-kms;android;mesa-x11;eglstream-kms
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa-kms', 'android' or 'mesa-x11')"
+  "a list of graphics backends to build (options are 'mesa-kms', 'android', 'mesa-x11', or 'eglstream-kms')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
@@ -182,6 +185,9 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "mesa-x11")
      set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
+  endif()
+  if (platform STREQUAL "eglstream-kms")
+     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
   endif()
 endforeach(platform)
 
@@ -200,9 +206,10 @@ include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 #
-# Full OpenGL support works with Mesa. Although it probably should not, and
-# is expected to fail in proprietary drivers due to one remaining "TODO" in:
-#   src/platform/graphics/egl_extensions.cpp
+# Full OpenGL support is possibly complete but not yet perfect. So is
+# presently disabled by default. See the TODOs in:
+#   src/platform/graphics/egl_extensions.cpp: glEGLImageTargetTexture2DOES
+#   src/platforms/common/server/shm_buffer.cpp: glTexImage2D
 #
 #if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
 #    TARGET_ARCH STREQUAL "i386-linux-gnu")
@@ -242,6 +249,10 @@ if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
+endif()
+
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  pkg_check_modules(EPOXY REQUIRED epoxy)
 endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input

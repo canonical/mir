@@ -75,7 +75,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
   $<TARGET_OBJECTS:mirnestedgraphics>
-  $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
 
   $<TARGET_OBJECTS:mirrenderergl>
@@ -125,7 +124,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 39) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 41) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

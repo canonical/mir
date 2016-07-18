@@ -78,6 +78,8 @@ std::string mir::event_type_to_string(MirEventType t)
         return "mir_event_type_close_surface";
     case mir_event_type_input:
         return "mir_event_type_input";
+    case mir_event_type_input_device_state:
+        return "mir_event_type_input_device_state";
     default:
         abort();
     }
@@ -296,6 +298,12 @@ int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->when().count();
+}
+
+MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->modifiers();
 }
 
 uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev)

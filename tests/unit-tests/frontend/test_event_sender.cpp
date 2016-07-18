@@ -35,6 +35,7 @@
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
+#include "mir/variable_length_array.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -83,6 +84,14 @@ struct StubDevice : mi::Device
         return {};
     }
     void apply_touchpad_configuration(mi::TouchpadConfiguration const&) override
+    {
+    }
+
+    mir::optional_value<mi::KeyboardConfiguration> keyboard_configuration() const override
+    {
+        return {};
+    }
+    void apply_keyboard_configuration(mi::KeyboardConfiguration const&) override
     {
     }
 
@@ -214,4 +223,37 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
         .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
 
     event_sender.handle_input_device_change(devices);
+}
+
+TEST_F(EventSender, can_send_error_buffer)
+{
+    using namespace testing;
+    std::string error_msg = "error";
+    mir::graphics::BufferProperties properties{
+        { 10, 12 }, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::hardware};
+    mir::protobuf::EventSequence expected_sequence;
+    expected_sequence.mutable_buffer_request()->set_operation(mir::protobuf::BufferOperation::add);
+    auto buffer = expected_sequence.mutable_buffer_request()->mutable_buffer();
+    buffer->set_width(properties.size.width.as_int());
+    buffer->set_height(properties.size.height.as_int());
+    buffer->set_error(error_msg.c_str());
+    mir::VariableLengthArray<1024>
+        expected_buffer{static_cast<size_t>(expected_sequence.ByteSize())};
+    expected_sequence.SerializeWithCachedSizesToArray(expected_buffer.data());
+
+    mir::protobuf::wire::Result result;
+    result.add_events(expected_buffer.data(), expected_buffer.size());
+    expected_buffer.resize(result.ByteSize());
+    result.SerializeWithCachedSizesToArray(expected_buffer.data());
+
+    std::vector<char> sent_buffer;
+    EXPECT_CALL(mock_msg_sender, send(_,_,_))
+          .WillOnce(Invoke([&](auto data, auto size, auto)
+            {
+                sent_buffer.resize(size);
+                memcpy(sent_buffer.data(), data, size); 
+            }));
+    event_sender.error_buffer(properties, error_msg);
+    ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
+    EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
 }

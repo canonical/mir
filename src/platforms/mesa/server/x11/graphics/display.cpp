@@ -21,6 +21,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/graphics/gl_config.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -30,8 +31,26 @@
 #include <fcntl.h>
 #include <mutex>
 
+#include <X11/Xatom.h>
+
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
+
+namespace
+{
+auto get_pixel_width(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mwidth) / screen->width;
+}
+auto get_pixel_height(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mheight) / screen->height;
+}
+}
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -60,7 +79,10 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
     return egl_dpy;
 }
 
-mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const size)
+mgx::X11Window::X11Window(::Display* x_dpy,
+                          EGLDisplay egl_dpy,
+                          geom::Size const size,
+                          GLConfig const& gl_config)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
@@ -69,8 +91,8 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 0,
-        EGL_STENCIL_SIZE, 0,
+        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
+        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
         EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
@@ -167,6 +189,9 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         };
 
         XSetWMHints(x_dpy, win, &wm_hints);
+
+        Atom wmDeleteMessage = XInternAtom(x_dpy, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(x_dpy, win, &wmDeleteMessage, 1);
     }
 
     XMapWindow(x_dpy, win);
@@ -242,12 +267,17 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display* x_dpy, geom::Size const size)
+mgx::Display::Display(::Display* x_dpy,
+                      geom::Size const size,
+                      GLConfig const& gl_config)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
+      pixel_width{get_pixel_width(x_dpy)},
+      pixel_height{get_pixel_height(x_dpy)},
       win{X11Window(x_dpy,
                     egl_display,
-                    size)},
+                    size,
+                    gl_config)},
       egl_context{X11EGLContext(egl_display,
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
@@ -279,7 +309,8 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, size, orientation);
+    return std::make_unique<mgx::DisplayConfiguration>(
+        pf, size, geom::Size{size.width * pixel_width, size.height * pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)

@@ -44,7 +44,6 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
-    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<NestedContext> const nested_context;

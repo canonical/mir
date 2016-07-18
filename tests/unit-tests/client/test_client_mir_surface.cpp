@@ -542,3 +542,27 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     surface.handle_event(*ev);
     surface_map->erase(mir::frontend::BufferStreamId(2));
 }
+
+TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
+{
+    using namespace testing;
+    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
+    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
+    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
+        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
+    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
+    geom::Size size(120, 124);
+    EXPECT_CALL(*mock_stream, set_size(size));
+    auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
+
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        mock_stream, mock_input_platform, spec, surface_proto, wh};
+
+    auto params = surface.get_parameters();
+    EXPECT_THAT(params.width, Eq(spec.width.value())); 
+    EXPECT_THAT(params.height, Eq(spec.height.value()));
+    surface.handle_event(*ev);
+    params = surface.get_parameters();
+    EXPECT_THAT(params.width, Eq(size.width.as_int())); 
+    EXPECT_THAT(params.height, Eq(size.height.as_int()));
+}

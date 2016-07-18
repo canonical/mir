@@ -16,6 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>>
  */
 
+#include "mir/libname.h"
 #include "mir/graphics/platform.h"
 #include "mir/assert_module_entry_point.h"
 
@@ -33,16 +34,19 @@ mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOpt
     return mir::graphics::PlatformPriority::dummy;
 }
 
-mir::ModuleProperties const description {
-    "dummy",
+namespace
+{
+mir::ModuleProperties const module_properties = {
+    "mir:stub-graphics",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
-    "dummy"
+    mir::libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mir::graphics::DescribeModule>(&describe_graphics_module);
-    return &description;
+    return &module_properties;
 }

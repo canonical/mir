@@ -37,6 +37,9 @@ struct MirInputDeviceStateEvent : MirEvent
     std::chrono::nanoseconds when() const;
     void set_when(std::chrono::nanoseconds const& when);
 
+    MirInputEventModifiers modifiers() const;
+    void set_modifiers(MirInputEventModifiers modifiers);
+
     uint32_t device_count() const;
     MirInputDeviceId device_id(size_t index) const;
     MirPointerButtons device_pointer_buttons(size_t index) const;
@@ -52,6 +55,7 @@ struct MirInputDeviceStateEvent : MirEvent
 private:
     std::chrono::nanoseconds when_{0};
     MirPointerButtons pointer_buttons_{0};
+    MirInputEventModifiers modifiers_{0};
 
     float pointer_x{0.0f};
     float pointer_y{0.0f};

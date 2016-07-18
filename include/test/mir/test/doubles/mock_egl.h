@@ -102,8 +102,9 @@ public:
     void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);
+    typedef void* AnyNativeType;
 
-    MOCK_METHOD1(eglGetDisplay, EGLDisplay(NativeDisplayType));
+    MOCK_METHOD1(eglGetDisplay, EGLDisplay(AnyNativeType));
     MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
     MOCK_METHOD1(eglTerminate, EGLBoolean(EGLDisplay));
     MOCK_METHOD2(eglQueryString,const char*(EGLDisplay, EGLint));
@@ -116,8 +117,8 @@ public:
     MOCK_METHOD4(eglGetConfigAttrib, EGLBoolean(EGLDisplay,EGLConfig,EGLint,EGLint*));
 
     // Surface management
-    MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,NativeWindowType,const EGLint*));
-    MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,NativePixmapType,const EGLint*));
+    MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
+    MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
     MOCK_METHOD3(eglCreatePbufferSurface, EGLSurface(EGLDisplay,EGLConfig,const EGLint*));
     MOCK_METHOD2(eglDestroySurface, EGLBoolean(EGLDisplay,EGLSurface));
     MOCK_METHOD4(eglQuerySurface, EGLBoolean(EGLDisplay,EGLSurface,EGLint,EGLint*));
@@ -141,7 +142,7 @@ public:
     MOCK_METHOD0(eglWaitGL, EGLBoolean());
     MOCK_METHOD1(eglWaitNative, EGLBoolean(EGLint));
     MOCK_METHOD2(eglSwapBuffers, EGLBoolean(EGLDisplay,EGLSurface));
-    MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,NativePixmapType));
+    MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,AnyNativeType));
 
     MOCK_METHOD0(eglGetError, EGLint (void));
 

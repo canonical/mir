@@ -355,3 +355,66 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
     EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
 }
+
+TEST_F(PresentationChain, can_check_valid_buffers)
+{
+    MirBufferSync context;
+    mir_connection_allocate_buffer(
+        connection, size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    ASSERT_THAT(buffer, Ne(nullptr));
+    EXPECT_TRUE(mir_buffer_is_valid(buffer));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer), StrEq(""));
+}
+
+TEST_F(PresentationChain, can_check_invalid_buffers)
+{
+    MirBufferSync context;
+    mir_connection_allocate_buffer(connection, 0, 0, pf, usage, buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    ASSERT_THAT(buffer, Ne(nullptr));
+    EXPECT_FALSE(mir_buffer_is_valid(buffer));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer), Not(StrEq("")));
+    mir_buffer_release(buffer);
+}
+
+namespace
+{
+void another_buffer_callback(MirBuffer* buffer, void* context)
+{
+    buffer_callback(buffer, context);
+}
+}
+TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
+{
+    SurfaceWithChainFromStart surface(connection, size, pf);
+
+    MirBufferSync second_buffer_context;
+    MirBufferSync context;
+    MirBufferSync another_context;
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &second_buffer_context);
+
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    ASSERT_THAT(context.buffer(), Ne(nullptr));
+    ASSERT_TRUE(second_buffer_context.wait_for_buffer(10s));
+    ASSERT_THAT(second_buffer_context.buffer(), Ne(nullptr));
+
+    mir_buffer_set_callback(context.buffer(), another_buffer_callback, &another_context);
+
+    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
+    //flush the 1st buffer out
+    mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
+
+    ASSERT_TRUE(another_context.wait_for_buffer(10s));
+    ASSERT_THAT(another_context.buffer(), Ne(nullptr));
+}

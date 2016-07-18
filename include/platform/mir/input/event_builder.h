@@ -51,6 +51,8 @@ public:
 
     virtual EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) = 0;
 
+    virtual EventUPtr device_state_event(float cursor_x, float cursor_y) = 0;
+
 protected:
     EventBuilder(EventBuilder const&) = delete;
     EventBuilder& operator=(EventBuilder const&) = delete;

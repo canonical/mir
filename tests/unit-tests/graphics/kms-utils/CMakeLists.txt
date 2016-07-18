@@ -1,5 +1,6 @@
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_connector_utils.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_drm_mode_resources.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

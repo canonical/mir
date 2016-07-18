@@ -20,19 +20,9 @@
 
 namespace mcl = mir::client;
 
-namespace
-{
-std::once_flag error_connections_init;
-}
-
 mcl::ErrorConnections& mcl::ErrorConnections::instance()
 {
-    static ErrorConnections* error_connections = nullptr;
-
-    std::call_once(
-        error_connections_init,
-        [&] { error_connections = new ErrorConnections();});
-
+    static ErrorConnections* error_connections = new ErrorConnections();
     return *error_connections;
 }
 

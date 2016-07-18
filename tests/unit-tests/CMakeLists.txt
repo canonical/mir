@@ -17,6 +17,10 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_X11)
 endif()
 
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -239,3 +243,7 @@ install(TARGETS loadable_test_dso
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)
+
+mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "!(objdump -p *unit_tests* | grep NEEDED | grep GL)")

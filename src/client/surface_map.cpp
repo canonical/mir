@@ -108,7 +108,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
         chains.erase(chain_it);
 }
 
-void mcl::ConnectionSurfaceMap::insert(int buffer_id, std::shared_ptr<mcl::Buffer> const& buffer)
+void mcl::ConnectionSurfaceMap::insert(int buffer_id, std::shared_ptr<mcl::MirBuffer> const& buffer)
 {
     std::lock_guard<decltype(guard)> lk(guard);
     buffers[buffer_id] = buffer;
@@ -120,7 +120,7 @@ void mcl::ConnectionSurfaceMap::erase(int buffer_id)
     buffers.erase(buffer_id);
 }
 
-std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
+std::shared_ptr<mcl::MirBuffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     auto const it = buffers.find(buffer_id);

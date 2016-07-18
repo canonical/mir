@@ -24,6 +24,7 @@
 #include "mir/events/event_private.h"
 #include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir/input/keymap.h"
 
 #include <string.h>
 
@@ -216,8 +217,8 @@ void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
         event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_motion()->set_x(0, pos.x.as_float());
-    event.to_input()->to_motion()->set_y(0, pos.y.as_float());
+    event.to_input()->to_motion()->set_x(0, pos.x.as_int());
+    event.to_input()->to_motion()->set_y(0, pos.y.as_int());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -385,7 +386,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     });
 
     auto ctx = mi::make_unique_context();
-    auto map = mi::make_unique_keymap(ctx.get(), model, layout, variant, options);
+    auto map = mi::make_unique_keymap(ctx.get(), mi::Keymap{model, layout, variant, options});
 
     if (!map.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to assemble keymap from given parameters"));
@@ -412,12 +413,14 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
 
 mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
                                MirPointerButtons pointer_buttons,
+                               MirInputEventModifiers modifiers,
                                float x_axis_value,
                                float y_axis_value,
                                std::vector<InputDeviceState>&& device_states)
 {
     auto e = new_event<MirInputDeviceStateEvent>();
     e->set_when(timestamp);
+    e->set_modifiers(modifiers);
     e->set_pointer_buttons(pointer_buttons);
     e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
     e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);

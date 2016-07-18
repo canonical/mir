@@ -43,10 +43,10 @@ void mga::FloatSourceCrop::fill_source_crop(
 {
     hwc_layer.sourceCropf = 
     {
-        crop_rect.top_left.x.as_float(),
-        crop_rect.top_left.y.as_float(),
-        crop_rect.size.width.as_float(),
-        crop_rect.size.height.as_float()
+        static_cast<float>(crop_rect.top_left.x.as_int()),
+        static_cast<float>(crop_rect.top_left.y.as_int()),
+        static_cast<float>(crop_rect.size.width.as_int()),
+        static_cast<float>(crop_rect.size.height.as_int())
     };
 }
 

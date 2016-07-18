@@ -167,7 +167,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
     // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Invoke(
-            [&] (EGLDisplay,EGLConfig,NativeWindowType nw, EGLint const*) -> EGLSurface
+            [&] (EGLDisplay,EGLConfig,AnyNativeType nw, EGLint const*) -> EGLSurface
             {
                 return reinterpret_cast<EGLSurface>(nw);
             }));
@@ -213,7 +213,7 @@ EGLint eglGetError (void)
 EGLDisplay eglGetDisplay (NativeDisplayType display)
 {
     CHECK_GLOBAL_MOCK(EGLDisplay);
-    return global_mock_egl->eglGetDisplay(display);
+    return global_mock_egl->eglGetDisplay(reinterpret_cast<mtd::MockEGL::AnyNativeType>(display));
 }
 
 EGLBoolean eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
@@ -267,13 +267,13 @@ EGLBoolean eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribut
 EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreateWindowSurface(dpy, config, window, attrib_list);
+    return global_mock_egl->eglCreateWindowSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(window), attrib_list);
 }
 
 EGLSurface eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config, NativePixmapType pixmap, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreatePixmapSurface(dpy, config, pixmap, attrib_list);
+    return global_mock_egl->eglCreatePixmapSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(pixmap), attrib_list);
 }
 
 EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)
@@ -383,7 +383,7 @@ EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw)
 EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType target)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglCopyBuffers(dpy, surface, target);
+    return global_mock_egl->eglCopyBuffers(dpy, surface, reinterpret_cast<mtd::MockEGL::AnyNativeType>(target));
 }
 
 /* extensions */

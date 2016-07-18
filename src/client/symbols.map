@@ -366,6 +366,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_wait_fence;
     mir_buffer_get_native_buffer;
     mir_buffer_get_graphics_region;
+    mir_buffer_set_callback;
     mir_buffer_release;
     mir_connection_create_presentation_chain_sync;
     mir_presentation_chain_is_valid;
@@ -380,9 +381,23 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_height;
     mir_buffer_get_pixel_format;
     mir_buffer_get_buffer_usage;
+    mir_buffer_is_valid;
+    mir_buffer_get_error_message;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
+
+MIR_CLIENT_DETAIL_0.24 {
+  global:
+    extern "C++" { 
+      mir::input::receiver::XKBMapper::XKBMapper*;
+      mir::input::receiver::XKBMapper::?XKBMapper*;
+      mir::input::receiver::XKBMapper::set_key_state*;
+      mir::input::receiver::XKBMapper::set_keymap*;
+      mir::input::receiver::XKBMapper::reset_keymap*;
+      mir::input::receiver::XKBMapper::map_event*;
+    };
+} MIR_CLIENT_DETAIL_0.21;
 
 MIR_CLIENT_0.24 {  # New functions in Mir 0.24
   global:
@@ -390,10 +405,13 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
     mir_input_device_state_event_device_count;
     mir_input_device_state_event_device_id;
     mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pressed_keys_count;
     mir_input_device_state_event_device_pressed_keys;
-    mir_input_device_state_event_device_pressed_count;
+    mir_input_device_state_event_modifiers;
     mir_input_device_state_event_pointer_axis;
     mir_input_device_state_event_pointer_buttons;
     mir_input_device_state_event_time;
     mir_input_device_state_event_device_pointer_buttons;
+    mir_surface_spec_set_pointer_confinement;
 } MIR_CLIENT_0.22;

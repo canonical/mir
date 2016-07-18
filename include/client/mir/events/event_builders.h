@@ -143,6 +143,7 @@ struct InputDeviceState
 
 EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      MirPointerButtons pointer_buttons,
+                     MirInputEventModifiers modifiers,
                      float x_axis_value,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);

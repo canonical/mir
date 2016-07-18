@@ -57,6 +57,7 @@ class InputSink;
 class InputDeviceObserver;
 class DefaultDevice;
 class Seat;
+class KeyMapper;
 
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
@@ -65,7 +66,8 @@ public:
                           std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
-                          std::shared_ptr<cookie::Authority> const& cookie_authority);
+                          std::shared_ptr<cookie::Authority> const& cookie_authority,
+                          std::shared_ptr<KeyMapper> const& key_mapper);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -88,6 +90,7 @@ private:
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
+    std::shared_ptr<KeyMapper> const key_mapper;
 
     struct RegisteredDevice : public InputSink
     {
@@ -105,9 +108,13 @@ private:
         MirInputDeviceId id();
         std::shared_ptr<Seat> seat;
         const std::shared_ptr<DefaultDevice> handle;
+
+        void key_state(std::vector<uint32_t> const& scan_codes) override;
+        void pointer_state(MirPointerButtons buttons) override;
     private:
         MirInputDeviceId device_id;
-        DefaultEventBuilder builder;
+        std::unique_ptr<DefaultEventBuilder> builder;
+        std::shared_ptr<cookie::Authority> cookie_authority;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     };

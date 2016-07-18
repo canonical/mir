@@ -24,6 +24,7 @@
 
 #include "mir/raii.h"
 
+#include "mir/test/doubles/mock_egl.h"
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -81,11 +82,18 @@ std::shared_ptr<void> ensure_mesa_probing_fails()
 
 std::shared_ptr<void> ensure_mesa_probing_succeeds()
 {
-    auto udev = std::make_shared<mtf::UdevEnvironment>();
+    using namespace testing;
+    struct MockEnvironment {
+        mtf::UdevEnvironment udev;
+        mtd::MockEGL egl;
+    };
+    auto env = std::make_shared<MockEnvironment>();
 
-    udev->add_standard_device("standard-drm-devices");
+    env->udev.add_standard_device("standard-drm-devices");
+    ON_CALL(env->egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+        .WillByDefault(Return("EGL_MESA_platform_gbm"));
 
-    return udev;
+    return env;
 }
 
 std::shared_ptr<void> ensure_android_probing_succeeds()
@@ -216,7 +224,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("dummy"));
+    EXPECT_THAT(description->name, HasSubstr("mir:stub-graphics"));
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
@@ -236,7 +244,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, Not(HasSubstr("dummy")));
+    EXPECT_THAT(description->name, Not(HasSubstr("mir:stub-graphics")));
 }
 #endif
 
