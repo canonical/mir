@@ -56,8 +56,11 @@ std::string mir_test_framework::library_path()
         dirname(libpath);
 
         // Fixup for unit & integration tests that link mirclient directly into the executable
-        if (libpath[strlen(libpath)-1] == 'n')
-            strncat(libpath, "/../lib", sizeof libpath);
+        {
+            auto const len = strlen(libpath);
+            if (libpath[len-1] == 'n')
+                strncat(libpath, "/../lib", sizeof libpath - len - 1);
+        }
     }
 
     return libpath;
