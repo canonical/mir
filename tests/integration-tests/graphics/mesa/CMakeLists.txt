@@ -7,7 +7,6 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
       ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_integration.cpp
       ${MIR_SERVER_OBJECTS}
       ${MIR_PLATFORM_OBJECTS}
-      ${MIR_COMMON_OBJECTS}
       $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
     )
 
@@ -23,6 +22,7 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
       mirclientrpc-static
       mirclientlttng-static
       mirsharedmesaservercommon-static
+      mircommon
 
       ${PROTOBUF_LITE_LIBRARIES}
       # Mesa platform dependencies
@@ -44,7 +44,6 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
       ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_integration.cpp
       ${MIR_SERVER_OBJECTS}
       ${MIR_PLATFORM_OBJECTS}
-      ${MIR_COMMON_OBJECTS}
       $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
       $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
     )
@@ -61,6 +60,7 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
       mirclientrpc-static
       mirclientlttng-static
       mirsharedmesaservercommon-static
+      mircommon
 
       ${PROTOBUF_LITE_LIBRARIES}
       # Mesa platform dependencies
