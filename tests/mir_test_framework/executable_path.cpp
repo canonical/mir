@@ -48,7 +48,7 @@ std::string mir_test_framework::library_path()
 
     if (!libpath[0])
     {
-        // Try to find the location of libmirclient.so
+        // Try to find the location of libmircommon.so
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
         dladdr((void*)&mir::fatal_error_abort, &library_info);
 
