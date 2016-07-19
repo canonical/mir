@@ -51,11 +51,11 @@ static GLuint load_shader(const char* src, GLenum type)
     return shader;
 }
 
-static void handle_input_event(MirInputEvent const* event)
+static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
 {
     if (mir_input_event_get_type(event) == mir_input_event_type_pointer)
     {
-        MirPointerEvent const* pev = mir_input_event_get_pointer_event(event);
+        auto const* pev = mir_input_event_get_pointer_event(event);
         auto dx = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x);
         auto dy = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y);
 
@@ -65,22 +65,72 @@ static void handle_input_event(MirInputEvent const* event)
     }
     else if(mir_input_event_get_type(event) == mir_input_event_type_key)
     {
-        MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
-        if (mir_keyboard_event_key_code(kev) == XKB_KEY_q)
+        auto const* kev = mir_input_event_get_keyboard_event(event);
+        auto key_code   = mir_keyboard_event_key_code(kev);
+
+        if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
+            return;
+
+        if (key_code == XKB_KEY_q)
         {
             done = true;
+        }
+        else if (key_code == XKB_KEY_p)
+        {
+            // We start out grabbed
+            static bool grabbed = true;
+
+            auto* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+            auto state = mir_pointer_unconfined;
+            MirCursorConfiguration* conf = nullptr;
+
+            if (!grabbed)
+            {
+                state = mir_pointer_confined_to_surface;
+            }
+            else
+            {
+                conf = mir_cursor_configuration_from_name(mir_default_cursor_name);
+            }
+
+            grabbed = !grabbed;
+
+            mir_surface_spec_set_pointer_confinement(spec, state);
+
+            mir_surface_apply_spec(surface, spec);
+            mir_surface_spec_release(spec);
+
+            // If we are grabbing we'll make it NULL which will hide the cursor
+            mir_surface_configure_cursor(surface, conf);
+            mir_cursor_configuration_destroy(conf);
+        }
+        else if (key_code == XKB_KEY_f)
+        {
+            static bool fullscreen = false;
+            auto* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+            auto state = mir_surface_state_restored;
+
+            if (!fullscreen)
+            {
+                state = mir_surface_state_fullscreen;
+            }
+
+            fullscreen = !fullscreen;
+
+            mir_surface_spec_set_state(spec, state);
+            mir_surface_apply_spec(surface, spec);
+            mir_surface_spec_release(spec);
         }
     }
 }
 
 static void handle_event(MirSurface* surface, MirEvent const* event, void* context)
 {
-    (void) surface;
     (void) context;
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
-        handle_input_event(mir_event_get_input_event(event));
+        handle_input_event(mir_event_get_input_event(event), surface);
         break;
     default:
         break;
