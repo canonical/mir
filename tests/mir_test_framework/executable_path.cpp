@@ -54,13 +54,6 @@ std::string mir_test_framework::library_path()
 
         strncpy(libpath, library_info.dli_fname, sizeof libpath);
         dirname(libpath);
-
-        // Fixup for unit & integration tests that link mircommon directly into the executable
-        {
-            auto const len = strlen(libpath);
-            if (libpath[len-1] == 'n')
-                strncat(libpath, "/../lib", sizeof libpath - len - 1);
-        }
     }
 
     return libpath;
