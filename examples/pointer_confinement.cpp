@@ -21,11 +21,21 @@
 #include <GLES2/gl2.h>
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
+#include <signal.h>
 #include <atomic>
 
 std::atomic<int> mouse_x{0};
 std::atomic<int> mouse_y{0};
 std::atomic<bool> done{false};
+
+static void shutdown(int signum)
+{
+    if (!done)
+    {
+        done = true;
+        printf("Signal %d received. Good night.\n", signum);
+    }
+}
 
 constexpr float normalize(float xy, float wh, float size = 0.0f) { return (xy - wh/2.0f + size) / (wh/2.0f); }
 
@@ -207,6 +217,10 @@ int main(int argc, char* argv[])
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     GLfloat square_color[] = {1.0f, 0.0f, 0.0f, 1.0f};
+
+    signal(SIGINT, shutdown);
+    signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     while (!done)
     {
