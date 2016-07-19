@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     "}                         \n";
 
     int sqaure_size = 10;
-    unsigned int width = 640, height = 400;
+    unsigned int width = 400, height = 400;
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
