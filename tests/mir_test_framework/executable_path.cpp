@@ -19,7 +19,7 @@
  */
 
 #include "mir_test_framework/executable_path.h"
-#include <mir_toolkit/mir_connection.h>
+#include <mir/fatal.h>
 
 #include <libgen.h>
 #include <stdexcept>
@@ -50,12 +50,12 @@ std::string mir_test_framework::library_path()
     {
         // Try to find the location of libmirclient.so
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
-        dladdr((void*)&mir_connect, &library_info);
+        dladdr((void*)&mir::fatal_error_abort, &library_info);
 
         strncpy(libpath, library_info.dli_fname, sizeof libpath);
         dirname(libpath);
 
-        // Fixup for unit & integration tests that link mirclient directly into the executable
+        // Fixup for unit & integration tests that link mircommon directly into the executable
         {
             auto const len = strlen(libpath);
             if (libpath[len-1] == 'n')
