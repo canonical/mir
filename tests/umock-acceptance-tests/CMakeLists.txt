@@ -17,10 +17,7 @@ mir_add_wrapped_executable(
 add_dependencies(mir_umock_acceptance_tests GMock)
 
 target_link_libraries(mir_umock_acceptance_tests
-  -Wl,--whole-archive #LP: #1601810
   mir-test-assist
-  -Wl,--no-whole-archive
-
   mir-test-framework-static
 
   ${UMOCKDEV_LIBRARIES}
