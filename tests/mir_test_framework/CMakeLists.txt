@@ -113,7 +113,7 @@ set_target_properties(
 )
 
 add_library(
-  mir-platform-input-stub OBJECT
+  mir-test-input-framework OBJECT
   
   stub_input.cpp
   fake_input_device_impl.cpp
@@ -122,7 +122,7 @@ add_library(
 
 add_library(
   mirplatforminputstub MODULE
-  $<TARGET_OBJECTS:mir-platform-input-stub>
+  $<TARGET_OBJECTS:mir-test-input-framework>
   $<TARGET_OBJECTS:mirevdevutilsobjects>)
 target_link_libraries(mirplatforminputstub mircommon)
 
