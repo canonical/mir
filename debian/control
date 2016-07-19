@@ -25,8 +25,8 @@ Build-Depends: cmake,
                libprotobuf-dev,
                pkg-config,
                android-headers-23,
-               libhardware-dev [i386 amd64 armhf],
-               libandroid-properties-dev [i386 amd64 armhf],
+               libhardware-dev [i386 amd64 armhf arm64],
+               libandroid-properties-dev [i386 amd64 armhf arm64],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
@@ -36,7 +36,7 @@ Build-Depends: cmake,
                libgtest-dev,
                google-mock (>= 1.6.0+svn437),
 # only enable valgrind once it's been tested to work on each architecture:
-               valgrind [amd64 i386 armhf],
+               valgrind [amd64 i386 armhf arm64],
                libglib2.0-dev,
                libfreetype6-dev,
                abi-compliance-checker,
@@ -277,7 +277,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  Contains a tool for stress testing the Mir display server
 
 Package: mir-android-diagnostics
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -332,7 +332,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
 
 Package: mir-platform-graphics-android10
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -388,7 +388,7 @@ Description: Display server for Ubuntu - client platform library for Mesa develo
 
 Package: mir-client-platform-android5
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -419,7 +419,7 @@ Description: Display server for Ubuntu - desktop driver metapackage
 
 Package: mir-graphics-drivers-android
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
