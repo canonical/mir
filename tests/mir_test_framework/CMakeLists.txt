@@ -43,7 +43,6 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
-  stub_input_platform.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp
@@ -114,14 +113,17 @@ set_target_properties(
 )
 
 add_library(
-  mirplatforminputstub MODULE
+  mir-test-input-framework OBJECT
   
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
-  $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
+add_library(
+  mirplatforminputstub MODULE
+  $<TARGET_OBJECTS:mir-test-input-framework>
+  $<TARGET_OBJECTS:mirevdevutilsobjects>)
 target_link_libraries(mirplatforminputstub mircommon)
 
 set_target_properties(
