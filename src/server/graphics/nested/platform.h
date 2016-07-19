@@ -27,8 +27,6 @@ namespace mir
 namespace graphics
 {
 class DisplayReport;
-class DisplayConfigurationPolicy;
-class GLConfig;
 namespace nested
 {
 class HostConnection;
@@ -38,9 +36,7 @@ public:
     Platform(
         std::shared_ptr<mir::SharedLibrary> const& library, 
         std::shared_ptr<HostConnection> const& connection, 
-        std::shared_ptr<DisplayReport> const& display_report,
-        std::shared_ptr<DisplayConfigurationPolicy> const& display_config,
-        std::shared_ptr<GLConfig> const& gl_config);
+        std::shared_ptr<DisplayReport> const& display_report);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<graphics::Display> create_display(
@@ -51,8 +47,6 @@ private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 
     std::shared_ptr<DisplayReport> const display_report;
-    std::shared_ptr<graphics::DisplayConfigurationPolicy> const display_config;
-    std::shared_ptr<graphics::GLConfig> const gl_config;
 
     //the concept of guest platform is strange, it only exists to deny creating a
     //host display in a nested context. It should go away soon.

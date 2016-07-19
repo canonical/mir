@@ -88,9 +88,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     return std::make_shared<mgn::Platform>(
                         platform_library,
                         host_connection,
-                        the_display_report(),
-                        the_display_configuration_policy(),
-                        the_gl_config());
+                        the_display_report());
                 }
 
                 // fallback to standalone if host socket is unset

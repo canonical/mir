@@ -30,14 +30,10 @@ namespace mgn = mir::graphics::nested;
 mgn::Platform::Platform(
     std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<DisplayConfigurationPolicy> const& display_config,
-    std::shared_ptr<GLConfig> const& gl_config) :
+    std::shared_ptr<mg::DisplayReport> const& display_report):
     library(library),
     connection(connection),
     display_report(display_report),
-    display_config(display_config),
-    gl_config(gl_config),
     guest_platform(library->load_function<mg::CreateGuestPlatform>(
         "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection))
 {
