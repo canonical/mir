@@ -151,7 +151,7 @@ target_link_libraries(
 mir_add_wrapped_executable(mir_umock_unit_tests
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
-  $<TARGET_OBJECTS:mir-platform-input-stub>
+  $<TARGET_OBJECTS:mir-test-input-framework>
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
