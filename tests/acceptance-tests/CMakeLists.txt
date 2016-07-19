@@ -78,7 +78,7 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
-  -Wl,--whole-archive
+  -Wl,--whole-archive #LP: #1601810
   mir-test-assist
   -Wl,--no-whole-archive
 
