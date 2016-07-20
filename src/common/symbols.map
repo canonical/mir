@@ -377,19 +377,19 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::set_pointer_buttons*;
        MirInputDeviceStateEvent::set_when*;
        MirInputDeviceStateEvent::when*;
+       mir::time::SteadyClock::now*;
+       mir::time::SteadyClock::min_wait_until*;
+       android::MotionEvent::initialize*;
+       mir::dispatch::epoll_to_fd_event*;
+       mir::dispatch::fd_event_to_epoll*;
+       mir::dispatch::ReadableFd*;
+       vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;
 
 MIR_COMMON_0.25 {
   global:
     extern "C++" {
-      mir::time::SteadyClock::now*;
-      mir::time::SteadyClock::min_wait_until*;
-      android::MotionEvent::initialize*;
-      mir::dispatch::epoll_to_fd_event*;
-      mir::dispatch::fd_event_to_epoll*;
-      mir::dispatch::ReadableFd*;
-      vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.24;
 
