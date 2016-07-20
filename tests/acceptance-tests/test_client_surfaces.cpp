@@ -269,10 +269,10 @@ TEST_F(ClientSurfaces, can_be_tooltips)
 TEST_F(ClientSurfaces, can_be_tips)
 {
     auto parent = mtf::make_any_surface(connection);
-    MirRectangle zone_rect{100, 200, 100, 100};
+    MirRectangle rect{100, 200, 100, 100};
 
     auto spec = mir_connection_create_spec_for_tip(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &zone_rect, mir_edge_attachment_any);
+        mir_pixel_format_abgr_8888, parent, &rect, mir_edge_attachment_any);
     ASSERT_THAT(spec, NotNull());
 
     auto tooltip = mir_surface_create_sync(spec);
