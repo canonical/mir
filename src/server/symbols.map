@@ -835,9 +835,3 @@ MIR_SERVER_0.24 {
   };
  local: *;
 };
-
-MIR_SERVER_0.25 {
- global:
-  extern "C++" {
-  };
-} MIR_SERVER_0.24;

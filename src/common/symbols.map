@@ -386,11 +386,3 @@ MIR_COMMON_0.24 {
        vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;
-
-MIR_COMMON_0.25 {
-  global:
-    extern "C++" {
-    };
-} MIR_COMMON_0.24;
-
-
