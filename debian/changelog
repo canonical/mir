@@ -112,6 +112,16 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
 
+mir (0.23.4+16.10.20160719.1-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.4 (https://launchpad.net/mir/+milestone/0.23.4)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Android graphics platform doesn't get packaged for arm64 (LP: #1579866)
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Tue, 19 Jul 2016 17:49:47 +0000
+
 mir (0.23.3+16.10.20160707.1-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.3 (https://launchpad.net/mir/+milestone/0.23.3)
