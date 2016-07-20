@@ -118,6 +118,17 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
+    // If our surface width/height *possibly* changed lets update the input bounds
+    if (modifications.state.is_set() ||
+        modifications.width.is_set() ||
+        modifications.height.is_set())
+    {
+        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+        {
+            seat->set_confinement_regions({surface->input_bounds()});
+        }
+    }
+
     if (modifications.confine_pointer.is_set())
     {
         if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
