@@ -26,9 +26,9 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added an input platform that the nested server can use.
       . Allow configuration of the application_not_responding_detector
       . Handle server-side keymapping using XKBMapper.
-      . remove the offscreen display.
-      . add callback option to notify shells that the server is about to stop.
-      . add logging for ANativeWindow events on android.
+      . Remove the offscreen display.
+      . Add callback option to notify shells that the server is about to stop.
+      . Add logging for ANativeWindow events on Android.
     - Bugs fixed:
       . usage of std:call_once in mirclient causes TLS collisions with some
         android devices (LP: #1599867)
