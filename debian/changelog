@@ -15,7 +15,6 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
         to measure client-to-screen latency.
       . Added (build-time) support for desktop full OpenGL servers (disabled
         by default in favor of GLESv2).
-      . Introduced new buffer semantics (NBS) and enabled it by default.
       . Avoided using libmirserver in mir_demo_standalone_render_overlays,
         making bringup traces less cluttered.
       . Removed TilingWindowManager from example servers.
