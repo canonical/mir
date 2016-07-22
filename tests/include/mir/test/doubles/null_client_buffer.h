@@ -54,8 +54,8 @@ public:
     geometry::Size sz;
 
     MirNativeBuffer* as_mir_native_buffer() const { return nullptr; }
-    void set_fence(MirNativeFence, MirBufferAccess) {}
-    MirNativeFence get_fence() const { return nullptr; }
+    void set_fence(MirNativeFence*, MirBufferAccess) {}
+    MirNativeFence* get_fence() const { return nullptr; }
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) { return true; }
 };
 
