@@ -369,6 +369,8 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
             }
             break;
         }
+        default:
+            break;
     }
 
     return false;
