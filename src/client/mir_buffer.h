@@ -43,8 +43,8 @@ public:
     virtual std::shared_ptr<ClientBuffer> client_buffer() const = 0;
     virtual MirGraphicsRegion map_region() = 0;
 
-    virtual void set_fence(MirNativeFence, MirBufferAccess) = 0;
-    virtual MirNativeFence get_fence() const = 0;
+    virtual void set_fence(MirNativeFence*, MirBufferAccess) = 0;
+    virtual MirNativeFence* get_fence() const = 0;
     virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) = 0;
 
     virtual MirBufferUsage buffer_usage() const = 0;

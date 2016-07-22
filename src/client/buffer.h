@@ -53,8 +53,8 @@ public:
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
 
-    void set_fence(MirNativeFence, MirBufferAccess) override;
-    MirNativeFence get_fence() const override;
+    void set_fence(MirNativeFence*, MirBufferAccess) override;
+    MirNativeFence* get_fence() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
 
     MirBufferUsage buffer_usage() const override;

@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_ANDROID_FENCE_H_
 #define MIR_GRAPHICS_ANDROID_FENCE_H_
 
-#include <chrono>
 namespace mir
 {
 namespace graphics
@@ -36,8 +35,6 @@ public:
     virtual ~Fence() = default;
 
     virtual void wait() = 0;
-    virtual bool wait_for(std::chrono::milliseconds) = 0;
-    virtual void reset_fence() = 0;
     //TODO: (kdub) use the Fd type instead of NativeFence
     virtual void merge_with(NativeFence& merge_fd) = 0;
     virtual NativeFence copy_native_handle() const = 0;
