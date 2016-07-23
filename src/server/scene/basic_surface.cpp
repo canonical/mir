@@ -131,6 +131,12 @@ void ms::SurfaceObservers::cursor_image_removed()
         { observer->cursor_image_removed(); });
 }
 
+void ms::SurfaceObservers::confinement_region_updated(geom::Rectangle const& rect)
+{
+    for_each([rect](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->confinement_region_updated(rect); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -282,6 +288,11 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         surface_rect.top_left = top_left;
     }
     observers.moved_to(top_left);
+
+    if (confine_pointer_state_ == mir_pointer_confined_to_surface)
+    {
+        observers.confinement_region_updated(surface_rect);
+    }
 }
 
 float ms::BasicSurface::alpha() const
@@ -364,6 +375,11 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
         surface_rect.size = new_size;
     }
     observers.resized_to(new_size);
+
+    if (confine_pointer_state_ == mir_pointer_confined_to_surface)
+    {
+        observers.confinement_region_updated(surface_rect);
+    }
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -895,6 +911,11 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
             });
     }
     observers.moved_to(surface_rect.top_left);
+
+    if (confine_pointer_state_ == mir_pointer_confined_to_surface)
+    {
+        observers.confinement_region_updated(surface_rect);
+    }
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
