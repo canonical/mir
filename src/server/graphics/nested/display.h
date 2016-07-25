@@ -113,7 +113,7 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<Platform> const& platform,
+        std::shared_ptr<graphics::Platform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
@@ -143,7 +143,7 @@ public:
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
 private:
-    std::shared_ptr<Platform> const platform;
+    std::shared_ptr<graphics::Platform> const platform;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
