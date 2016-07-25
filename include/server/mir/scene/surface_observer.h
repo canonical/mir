@@ -23,6 +23,7 @@
 #include "mir_toolkit/events/event.h"
 
 #include "mir/input/input_reception_mode.h"
+#include "mir/geometry/rectangle.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -59,6 +60,7 @@ public:
                                 std::string const& variant, std::string const& options) = 0;
     virtual void renamed(char const* name) = 0;
     virtual void cursor_image_removed() = 0;
+    virtual void confinement_region_updated(geometry::Rectangle const& rect) = 0;
 
 protected:
     SurfaceObserver() = default;
