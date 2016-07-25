@@ -248,3 +248,20 @@ TEST(NoTLSFuture, retrieving_future_twice_throws)
     void_promise.reset();
     non_void_promise.reset();
 }
+
+TEST(NoTLSFuture, future_returned_from_then_resolves_to_return_value_of_closure)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<int> base_promise;
+
+    auto base_future = base_promise.get_future();
+
+    mcl::NoTLSFuture<std::string> transformed_future = base_future.then(
+        [](auto&& resolved_future)
+        {
+            return std::to_string(resolved_future.get());
+        });
+
+    base_promise.set_value(254);
+    EXPECT_THAT(transformed_future.get(), StrEq("254"));
+}
