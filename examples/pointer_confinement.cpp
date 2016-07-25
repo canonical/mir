@@ -66,8 +66,8 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
     if (mir_input_event_get_type(event) == mir_input_event_type_pointer)
     {
         auto const* pev = mir_input_event_get_pointer_event(event);
-        auto dx = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x);
-        auto dy = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y);
+        auto dx = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x) / 2;
+        auto dy = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y) / 2;
 
         mouse_x.fetch_add(dx);
         // - because opengl coords
@@ -173,9 +173,19 @@ int main(int argc, char* argv[])
     "}                         \n";
 
     int sqaure_size = 10;
-    unsigned int width = 400, height = 400;
+    unsigned int width = 0, height = 0;
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
+
+    width  /= 2;
+    height /= 2;
+
+    auto spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+    mir_surface_spec_set_width (spec, width);
+    mir_surface_spec_set_height(spec, height);
+
+    mir_surface_apply_spec(mir_eglapp_native_surface(), spec);
+    mir_surface_spec_release(spec);
 
     mouse_x = width  / 2;
     mouse_y = height / 2;
@@ -206,7 +216,7 @@ int main(int argc, char* argv[])
     MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, handle_event, nullptr);
 
-    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+    spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
     mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(surface, spec);
