@@ -22,7 +22,6 @@
 #include "buffer_registrar.h"
 #include "buffer.h"
 #include <hardware/gralloc.h>
-#include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
@@ -107,36 +106,16 @@ MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
     return native_buffer->anwb();
 }
 
-void mcla::Buffer::set_fence(MirNativeFence fence, MirBufferAccess access)
+void mcla::Buffer::set_fence(MirNativeFence*, MirBufferAccess)
 {
-    if (!fence)
-        native_buffer->reset_fence();
-    else if (access == mir_read)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::read); 
-    else if (access == mir_read_write)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::write); 
-    else
-        BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
 }
 
-MirNativeFence mcla::Buffer::get_fence() const
+MirNativeFence* mcla::Buffer::get_fence() const
 {
-    api_user_fence = mir::Fd(native_buffer->copy_fence());
-    fd = api_user_fence;
-    return &fd; 
+    return nullptr;
 }
 
-bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ns)
+bool mcla::Buffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
 {
-    // could use std::chrono::floor once we're using C++17
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
-    if (ms > ns)
-        ms = ms - std::chrono::milliseconds{1};
-
-    if (access == mir_read)
-        return native_buffer->ensure_available_for(mga::BufferAccess::read, ms); 
-    if (access == mir_read_write)
-        return native_buffer->ensure_available_for(mga::BufferAccess::write, ms); 
-
-    BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
+    return true;
 }

@@ -22,7 +22,6 @@
 
 #include "android_native_buffer.h"
 #include "mir/aging_buffer.h"
-#include "mir/fd.h"
 
 #include <system/window.h>
 #include <memory>
@@ -51,8 +50,8 @@ public:
     void update_from(MirBufferPackage const& update_package) override;
     void fill_update_msg(MirBufferPackage& message) override;
     MirNativeBuffer* as_mir_native_buffer() const override;
-    void set_fence(MirNativeFence, MirBufferAccess) override;
-    MirNativeFence get_fence() const override;
+    void set_fence(MirNativeFence*, MirBufferAccess) override;
+    MirNativeFence* get_fence() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
 
     Buffer(const Buffer&) = delete;
@@ -60,9 +59,6 @@ public:
 private:
     void pack_native_window_buffer();
 
-    mir::Fd mutable api_user_fence;
-    int mutable fd;
- 
     std::shared_ptr<BufferRegistrar> const buffer_registrar;
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     MirPixelFormat const buffer_pf;

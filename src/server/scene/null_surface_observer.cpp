@@ -39,3 +39,4 @@ void ms::NullSurfaceObserver::keymap_changed(MirInputDeviceId /* id */, std::str
 }
 void ms::NullSurfaceObserver::renamed(char const*) {}
 void ms::NullSurfaceObserver::cursor_image_removed() {}
+void ms::NullSurfaceObserver::confinement_region_updated(geometry::Rectangle const& /*rect*/) {}

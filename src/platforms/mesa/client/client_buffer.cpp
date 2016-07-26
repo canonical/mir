@@ -148,11 +148,11 @@ MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
     return native_buffer_handle().get();
 }
 
-void mclm::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
+void mclm::ClientBuffer::set_fence(MirNativeFence*, MirBufferAccess)
 {
 }
 
-MirNativeFence mclm::ClientBuffer::get_fence() const
+MirNativeFence* mclm::ClientBuffer::get_fence() const
 {
     return nullptr;
 }

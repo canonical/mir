@@ -51,11 +51,9 @@ class SyncFence : public Fence
 public:
     explicit SyncFence(std::shared_ptr<SyncFileOps> const&, Fd fd);
 
-    void wait() override;
-    bool wait_for(std::chrono::milliseconds) override;
-    void reset_fence() override;
-    void merge_with(NativeFence& merge_fd) override;
-    NativeFence copy_native_handle() const override;
+    void wait();
+    void merge_with(NativeFence& merge_fd);
+    NativeFence copy_native_handle() const;
 
 private:
     SyncFence(SyncFence const&) = delete;

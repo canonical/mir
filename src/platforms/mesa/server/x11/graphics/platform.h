@@ -48,7 +48,6 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;

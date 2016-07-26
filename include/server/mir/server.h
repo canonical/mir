@@ -188,6 +188,10 @@ public:
     /// If multiple callbacks are added they will be invoked in the sequence added.
     void add_init_callback(std::function<void()> const& init_callback);
 
+    /// Add a callback to be invoked when the server is about to stop,
+    /// If multiple callbacks are added they will be invoked in the reverse sequence added.
+    void add_stop_callback(std::function<void()> const& stop_callback);
+
     /// Set a handler for exceptions. This is invoked in a catch (...) block and
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)

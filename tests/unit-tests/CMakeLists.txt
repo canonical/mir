@@ -113,7 +113,6 @@ mir_add_wrapped_executable(mir_unit_tests
 
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
-  ${MIR_COMMON_OBJECTS}
 )
 
 mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -140,6 +139,8 @@ target_link_libraries(
   mir-test-static
   mir-test-framework-static
 
+  mircommon
+
   ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
@@ -151,9 +152,9 @@ target_link_libraries(
 mir_add_wrapped_executable(mir_umock_unit_tests
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
+  $<TARGET_OBJECTS:mir-test-input-framework>
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
-  ${MIR_COMMON_OBJECTS}
 )
 
 add_dependencies(mir_umock_unit_tests GMock)

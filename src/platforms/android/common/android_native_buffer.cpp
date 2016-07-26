@@ -41,23 +41,10 @@ void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
     fence->wait();
 }
 
-bool mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent, std::chrono::milliseconds ms)
-{
-    if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
-        return true;
-
-    return fence->wait_for(ms);
-}
-
 void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
 {
     fence->merge_with(merge_fd);
     access = updated_access;
-}
-
-void mga::AndroidNativeBuffer::reset_fence()
-{
-    fence->reset_fence();
 }
 
 ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const

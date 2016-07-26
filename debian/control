@@ -25,8 +25,8 @@ Build-Depends: cmake,
                libprotobuf-dev,
                pkg-config,
                android-headers-23,
-               libhardware-dev [i386 amd64 armhf],
-               libandroid-properties-dev [i386 amd64 armhf],
+               libhardware-dev [i386 amd64 armhf arm64],
+               libandroid-properties-dev [i386 amd64 armhf arm64],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
@@ -36,7 +36,7 @@ Build-Depends: cmake,
                libgtest-dev,
                google-mock (>= 1.6.0+svn437),
 # only enable valgrind once it's been tested to work on each architecture:
-               valgrind [amd64 i386 armhf],
+               valgrind [amd64 i386 armhf arm64],
                libglib2.0-dev,
                libfreetype6-dev,
                abi-compliance-checker,
@@ -277,7 +277,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  Contains a tool for stress testing the Mir display server
 
 Package: mir-android-diagnostics
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -302,7 +302,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x9
+Package: mir-platform-graphics-mesa-x10
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -316,7 +316,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms9
+Package: mir-platform-graphics-mesa-kms10
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -330,9 +330,9 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-android9
+Package: mir-platform-graphics-android10
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -388,7 +388,7 @@ Description: Display server for Ubuntu - client platform library for Mesa develo
 
 Package: mir-client-platform-android5
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -406,8 +406,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms9,
-         mir-platform-graphics-mesa-x9,
+         mir-platform-graphics-mesa-kms10,
+         mir-platform-graphics-mesa-x10,
          mir-client-platform-mesa5,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - desktop driver metapackage
@@ -419,11 +419,11 @@ Description: Display server for Ubuntu - desktop driver metapackage
 
 Package: mir-graphics-drivers-android
 Section: libs
-Architecture: i386 amd64 armhf
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-android9,
+         mir-platform-graphics-android10,
          mir-client-platform-android5,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - android driver metapackage
