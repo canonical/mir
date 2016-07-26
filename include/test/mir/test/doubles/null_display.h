@@ -72,7 +72,7 @@ class NullDisplay : public graphics::Display,
     {
         return nullptr;
     }
-    graphics::NativeDisplay* native_display()
+    graphics::NativeDisplay* native_display() override
     {
         return this;
     }
