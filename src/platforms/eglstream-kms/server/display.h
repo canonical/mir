@@ -33,7 +33,8 @@ class GLConfig;
 namespace eglstream
 {
 
-class Display : public mir::graphics::Display
+class Display : public mir::graphics::Display,
+                public mir::graphics::NativeDisplay
 {
 public:
     Display(
@@ -63,6 +64,8 @@ public:
     std::unique_ptr<GLContext> create_gl_context() override;
 
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
 
 private:
     mir::Fd const drm_node;

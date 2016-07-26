@@ -50,6 +50,7 @@ public:
     MOCK_METHOD1(create_hardware_cursor, std::shared_ptr<graphics::Cursor>(std::shared_ptr<graphics::CursorImage> const&));
     MOCK_METHOD0(create_gl_context, std::unique_ptr<graphics::GLContext>());
     MOCK_METHOD2(create_virtual_output, std::unique_ptr<graphics::VirtualOutput>(int, int));
+    MOCK_METHOD0(native_display, graphics::NativeDisplay*());
 };
 
 }
