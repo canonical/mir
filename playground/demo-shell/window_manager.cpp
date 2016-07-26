@@ -391,7 +391,7 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
         action == mir_pointer_action_motion &&
         vscroll != 0.0f)
     {
-        zoom_exponent += vscroll > 0.0f ? 1.0f : -1.0f;
+        zoom_exponent += vscroll;
 
         // Negative exponents do work too, but disable them until
         // there's a clear edge to the desktop.

@@ -24,6 +24,7 @@
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -33,6 +34,26 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace msh = mir::shell;
+namespace geom = mir::geometry;
+
+namespace
+{
+
+struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
+{
+    UpdateConfinementOnSurfaceChanges(std::shared_ptr<mi::Seat> seat) :
+        seat(seat)
+    {
+    }
+
+    void confinement_region_updated(geom::Rectangle const& rect)
+    {
+        seat->set_confinement_regions({rect});
+    }
+
+    std::shared_ptr<mi::Seat> seat;
+};
+}
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
@@ -48,7 +69,8 @@ msh::AbstractShell::AbstractShell(
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
-    report(report)
+    report(report),
+    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(seat))
 {
 }
 
@@ -243,7 +265,10 @@ void msh::AbstractShell::set_focus_to_locked(
         seat->reset_confinement_regions();
 
         if (current_focus)
+        {
             current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+            current_focus->remove_observer(focus_surface_observer);
+        }
 
         if (surface)
         {
@@ -256,6 +281,7 @@ void msh::AbstractShell::set_focus_to_locked(
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+            surface->add_observer(focus_surface_observer);
         }
         else
         {
