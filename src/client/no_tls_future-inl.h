@@ -118,6 +118,7 @@ protected:
         std::unique_lock<std::mutex> lock;
         bool call_continuation;
     };
+
     class ReadLock
     {
     public:
