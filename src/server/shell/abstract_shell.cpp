@@ -41,17 +41,34 @@ namespace
 
 struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
 {
-    UpdateConfinementOnSurfaceChanges(std::shared_ptr<mi::Seat> seat) :
-        seat(seat)
+    UpdateConfinementOnSurfaceChanges(std::shared_ptr<mi::Seat> seat,
+                                      std::shared_ptr<ms::Surface> const& surface) :
+        seat(seat),
+        surface(surface)
     {
     }
 
-    void confinement_region_updated(geom::Rectangle const& rect)
+    void resized_to(geom::Size const& /*size*/) override
     {
-        seat->set_confinement_regions({rect});
+        update_confinement_region();
+    }
+
+    void moved_to(geom::Point const& /*top_left*/) override
+    {
+        update_confinement_region();
+    }
+
+private:
+    void update_confinement_region()
+    {
+        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+        {
+            seat->set_confinement_regions({surface->input_bounds()});
+        }
     }
 
     std::shared_ptr<mi::Seat> seat;
+    std::shared_ptr<ms::Surface> const surface;
 };
 }
 
@@ -69,8 +86,7 @@ msh::AbstractShell::AbstractShell(
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
-    report(report),
-    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(seat))
+    report(report)
 {
 }
 
@@ -281,10 +297,13 @@ void msh::AbstractShell::set_focus_to_locked(
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+
+            focus_surface_observer = std::make_shared<UpdateConfinementOnSurfaceChanges>(seat, surface);
             surface->add_observer(focus_surface_observer);
         }
         else
         {
+            focus_surface_observer = nullptr;
             input_targeter->clear_focus();
         }
     }

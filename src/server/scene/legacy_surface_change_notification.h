@@ -49,7 +49,6 @@ public:
                         std::string const& variant, std::string const& options) override;
     void renamed(char const*) override;
     void cursor_image_removed() override;
-    void confinement_region_updated(geometry::Rectangle const& rect) override;
 
 private:
     std::function<void()> const notify_scene_change;

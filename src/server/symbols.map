@@ -835,10 +835,3 @@ MIR_SERVER_0.24 {
   };
  local: *;
 };
-
-MIR_SERVER_0.25 {
- global:
-  extern "C++" {
-    mir::scene::NullSurfaceObserver::confinement_region_updated*;
-  };
-} MIR_SERVER_0.24;
