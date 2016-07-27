@@ -29,6 +29,7 @@
 #include <condition_variable>
 #include <future>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace mir
 {
@@ -47,14 +48,14 @@ public:
     void wait() const
     {
         std::unique_lock<std::mutex> lk(mutex);
-        cv.wait(lk, [this]{ return set || broken; });
+        cv.wait(lk, [this]{ return set || captured_exception; });
     }
 
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (cv.wait_for(lk, timeout_duration, [this]{ return set || broken; }))
+        if (cv.wait_for(lk, timeout_duration, [this]{ return set || captured_exception; }))
             return std::future_status::ready;
         return std::future_status::timeout;
     }
@@ -63,11 +64,30 @@ public:
     {
         {
             std::lock_guard<std::mutex> lk(mutex);
-            if (set)
+            if (set || captured_exception)
             {
                 return;
             }
-            broken = true;
+
+            captured_exception = std::make_exception_ptr(
+                boost::enable_error_info(std::runtime_error("broken_promise"))
+                    << boost::throw_function(__PRETTY_FUNCTION__)
+                    << boost::throw_file(__FILE__)
+                    << boost::throw_line(__LINE__));
+        }
+        continuation();
+        cv.notify_all();
+    }
+
+    void set_exception(std::exception_ptr const& exception)
+    {
+        {
+            std::lock_guard<std::mutex> lock{mutex};
+            if (set || captured_exception)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error{"promise_already_satisfied"});
+            }
+            captured_exception = exception;
         }
         continuation();
         cv.notify_all();
@@ -95,7 +115,7 @@ protected:
         WriteLock(WriteLock&&) = default;
         WriteLock& operator=(WriteLock&&) = default;
 
-        ~WriteLock() noexcept(false)
+        ~WriteLock()
         {
             parent.set = true;
             lock.unlock();
@@ -113,11 +133,10 @@ protected:
         ReadLock(PromiseStateBase& parent)
             : lock{parent.mutex}
         {
-            parent.cv.wait(lock, [&parent]{ return parent.set || parent.broken; });
-            if (parent.broken)
+            parent.cv.wait(lock, [&parent]{ return parent.set || parent.captured_exception; });
+            if (parent.captured_exception)
             {
-                //clang has problems with std::future_error::what() on vivid+overlay
-                BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
+                std::rethrow_exception(parent.captured_exception);
             }
         }
     private:
@@ -137,7 +156,7 @@ private:
     std::mutex mutable mutex;
     std::condition_variable mutable cv;
     bool set{false};
-    bool broken{false};
+    std::exception_ptr captured_exception;
 
     class OneShotContinuation
     {
@@ -375,6 +394,11 @@ public:
         return NoTLSFuture<T>(state);
     }
 
+    void set_exception(std::exception_ptr const& exception)
+    {
+        state->set_exception(exception);
+    }
+
 protected:
     std::shared_ptr<PromiseState<T>> state;
 private:
@@ -420,7 +444,14 @@ std::function<void()> NoTLSFutureBase<T>::make_continuation_for(
          completion = std::move(continuation),
          state = NoTLSFutureBase<T>::state]()
         {
-            promise->set_value(completion(NoTLSFuture<T>(std::move(state))));
+            try
+            {
+                promise->set_value(completion(NoTLSFuture<T>(std::move(state))));
+            }
+            catch (...)
+            {
+                promise->set_exception(std::current_exception());
+            }
         };
 }
 
@@ -435,8 +466,15 @@ std::function<void()> NoTLSFutureBase<T>::make_continuation_for(
          completion = std::move(continuation),
          state = NoTLSFutureBase<T>::state]()
         {
-            completion(NoTLSFuture<T>(std::move(state)));
-            promise->set_value();
+            try
+            {
+                completion(NoTLSFuture<T>(std::move(state)));
+                promise->set_value();
+            }
+            catch (...)
+            {
+                promise->set_exception(std::current_exception());
+            }
         };
 }
 

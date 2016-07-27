@@ -301,3 +301,55 @@ TEST(NoTLSFuture, void_future_is_invalid_after_retreival)
 
     EXPECT_FALSE(future.valid());
 }
+
+TEST(NoTLSFuture, exception_in_continuation_is_captured)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<int> promise;
+
+    auto future = promise.get_future();
+
+    auto transformed_future = future.then(
+        [](auto&&)
+        {
+            BOOST_THROW_EXCEPTION(std::system_error(ENODATA, std::system_category(), "Theyms takin my data"));
+        });
+
+    promise.set_value(42);
+
+    try
+    {
+        transformed_future.get();
+    }
+    catch (std::system_error const& err)
+    {
+        EXPECT_THAT(err.code(), Eq(std::error_code(ENODATA, std::system_category())));
+        EXPECT_THAT(err.what(), HasSubstr("Theyms takin my data"));
+    }
+}
+
+TEST(NoTLSFuture, exception_in_void_continuation_is_captured)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<void> promise;
+
+    auto future = promise.get_future();
+
+    auto transformed_future = future.then(
+        [](auto&&)
+        {
+            BOOST_THROW_EXCEPTION(std::system_error(ENODATA, std::system_category(), "Theyms takin my data"));
+        });
+
+    promise.set_value();
+
+    try
+    {
+        transformed_future.get();
+    }
+    catch (std::system_error const& err)
+    {
+        EXPECT_THAT(err.code(), Eq(std::error_code(ENODATA, std::system_category())));
+        EXPECT_THAT(err.what(), HasSubstr("Theyms takin my data"));
+    }
+}
