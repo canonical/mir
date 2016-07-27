@@ -354,3 +354,8 @@ std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width
     };
     return {std::make_unique<mga::VirtualOutput>(enable_virtual_output, disable_virtual_output)};
 }
+
+mg::NativeDisplay* mga::Display::native_display()
+{
+    return this;
+}
