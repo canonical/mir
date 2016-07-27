@@ -87,12 +87,6 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
-    /// Sets an override functor for creating the cookie authority.
-    /// A secret can be saved and any process this secret is shared
-    /// with can verify Mir-generated cookies, or produce their own.
-    void override_the_cookie_authority(
-        std::function<std::shared_ptr<cookie::Authority>()> const& cookie_authority_builder);
-
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
     void apply_settings();
@@ -194,6 +188,10 @@ public:
     /// If multiple callbacks are added they will be invoked in the sequence added.
     void add_init_callback(std::function<void()> const& init_callback);
 
+    /// Add a callback to be invoked when the server is about to stop,
+    /// If multiple callbacks are added they will be invoked in the reverse sequence added.
+    void add_stop_callback(std::function<void()> const& stop_callback);
+
     /// Set a handler for exceptions. This is invoked in a catch (...) block and
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)
@@ -247,6 +245,11 @@ public:
 
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
+
+    /// Sets an override functor for creating the cookie authority.
+    /// A secret can be saved and any process this secret is shared
+    /// with can verify Mir-generated cookies, or produce their own.
+    void override_the_cookie_authority(Builder<cookie::Authority> const& cookie_authority_builder);
 
     /// Sets an override functor for creating the coordinate translator.
     void override_the_coordinate_translator(

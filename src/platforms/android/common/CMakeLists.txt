@@ -14,4 +14,5 @@ add_library(
   syncfence.cpp
   egl_sync_fence.cpp
   egl_sync_extensions.cpp
+  native_window_report.cpp
 )

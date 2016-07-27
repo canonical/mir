@@ -104,6 +104,9 @@ TEST_F(XKBMapper, when_device_keymap_is_set_maps_generic_us_english_keys)
     EXPECT_EQ(XKB_KEY_dollar, map_key(mir_keyboard_action_up, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_up, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
+
+    EXPECT_EQ(XKB_KEY_Super_L, map_key(mir_keyboard_action_down, KEY_LEFTMETA));
+    EXPECT_EQ(XKB_KEY_Super_R, map_key(mir_keyboard_action_down, KEY_RIGHTMETA));
 }
 
 TEST_F(XKBMapper, when_surface_keymap_is_set_maps_generic_us_english_keys)
@@ -116,6 +119,9 @@ TEST_F(XKBMapper, when_surface_keymap_is_set_maps_generic_us_english_keys)
     EXPECT_EQ(XKB_KEY_dollar, map_key(mir_keyboard_action_up, KEY_4));
     EXPECT_EQ(XKB_KEY_Shift_L, map_key(mir_keyboard_action_up, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_4, map_key(mir_keyboard_action_down, KEY_4));
+
+    EXPECT_EQ(XKB_KEY_Super_L, map_key(mir_keyboard_action_down, KEY_LEFTMETA));
+    EXPECT_EQ(XKB_KEY_Super_R, map_key(mir_keyboard_action_down, KEY_RIGHTMETA));
 }
 
 TEST_F(XKBMapper, key_repeats_do_not_recurse_modifier_state)
@@ -172,6 +178,28 @@ TEST_F(XKBMapper, key_strokes_of_modifier_key_update_modifier)
     mapper.set_keymap_for_device(keyboard_us, mi::Keymap{});
     map_event(keyboard_us, mir_keyboard_action_down, KEY_LEFTSHIFT);
     map_event(keyboard_us, mir_keyboard_action_up, KEY_LEFTSHIFT);
+}
+
+TEST_F(XKBMapper, maps_kernel_meta_to_mir_meta)  // AKA "Super"
+{   // Regression test for LP: #1602966
+    const MirInputEventModifiers meta_left =
+        mir_input_event_modifier_meta_left | mir_input_event_modifier_meta;
+    const MirInputEventModifiers meta_right =
+        mir_input_event_modifier_meta_right | mir_input_event_modifier_meta;
+
+    InSequence seq;
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(meta_left)));
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(mir_input_event_modifier_none)));
+
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(meta_right)));
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(mir_input_event_modifier_none)));
+
+    auto keyboard_us = MirInputDeviceId{0};
+    mapper.set_keymap_for_device(keyboard_us, mi::Keymap{});
+    map_event(keyboard_us, mir_keyboard_action_down, KEY_LEFTMETA);
+    map_event(keyboard_us, mir_keyboard_action_up, KEY_LEFTMETA);
+    map_event(keyboard_us, mir_keyboard_action_down, KEY_RIGHTMETA);
+    map_event(keyboard_us, mir_keyboard_action_up, KEY_RIGHTMETA);
 }
 
 TEST_F(XKBMapper, maps_modifier_keys_according_to_keymap)

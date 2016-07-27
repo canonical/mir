@@ -53,8 +53,6 @@ void null_event_handler(MirSurface*, MirEvent const*, void*)
 
 struct Client
 {
-    MirSurface* surface{nullptr};
-
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 
     Client(std::string const& con, std::string const& name)
@@ -90,6 +88,22 @@ struct Client
         }
     }
 
+    void resize(int width, int height)
+    {
+        auto spec = mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_width (spec, width);
+        mir_surface_spec_set_height(spec, height);
+
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+
+        received_resize.wait_for(1s);
+        if (!received_resize.raised())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become resized"));
+        }
+    }
+
     void handle_surface_event(MirSurfaceEvent const* event)
     {
         auto const attrib = mir_surface_event_get_attribute(event);
@@ -111,15 +125,19 @@ struct Client
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        switch (type)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
-
-        }
-        if (type == mir_event_type_input)
-        {
+        case mir_event_type_surface:
+            client->handle_surface_event(mir_event_get_surface_event(ev));
+            break;
+        case mir_event_type_input:
             client->handle_input(ev);
+            break;
+        case mir_event_type_resize:
+            client->received_resize.raise();
+            break;
+        default:
+            break;
         }
     }
     ~Client()
@@ -132,9 +150,11 @@ struct Client
         mir_connection_release(connection);
     }
 
+    MirSurface* surface{nullptr};
     MirConnection* connection;
     mir::test::Signal ready_to_accept_events;
     mir::test::Signal all_events_received;
+    mir::test::Signal received_resize;
     bool exposed = false;
     bool focused = false;
 };
@@ -208,6 +228,27 @@ TEST_F(PointerConfinement, test_we_generate_relative_after_boundary)
         .WillOnce(mt::WakeUp(&client.all_events_received));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width + 1, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(10, 0));
+
+    client.all_events_received.wait_for(10s);
+}
+
+TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
+{
+    using namespace ::testing;
+
+    positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+    Client client(new_connection(), first);
+
+    client.resize(surface_width + 100, surface_height);
+
+    InSequence seq;
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(surface_width + 100 - 1, 0)));
+    EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width + 100 - 1, 0), mt::PointerEventWithDiff(10, 0))))
+        .WillOnce(mt::WakeUp(&client.all_events_received));
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width + 101, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(10, 0));
 
     client.all_events_received.wait_for(10s);

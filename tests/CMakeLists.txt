@@ -107,6 +107,7 @@ target_link_libraries(mir-test-assist
   mirclient
   mirserver
 
+  mir-test-doubles-platform-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
