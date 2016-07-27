@@ -61,22 +61,15 @@ public:
 
     void break_promise()
     {
-        bool run_continuation{false};
         {
             std::lock_guard<std::mutex> lk(mutex);
-            if (!set)
+            if (set)
             {
-                broken = true;
-                if (continuation)
-                {
-                    run_continuation = true;
-                }
+                return;
             }
+            broken = true;
         }
-        if (run_continuation)
-        {
-            continuation();
-        }
+        continuation();
         cv.notify_all();
     }
 
@@ -98,7 +91,6 @@ protected:
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error{"promise_already_satisfied"});
             }
-            call_continuation = static_cast<bool>(parent.continuation);
         }
         WriteLock(WriteLock&&) = default;
         WriteLock& operator=(WriteLock&&) = default;
@@ -107,16 +99,12 @@ protected:
         {
             parent.set = true;
             lock.unlock();
-            if (call_continuation)
-            {
-                parent.continuation();
-            }
+            parent.continuation();
             parent.cv.notify_all();
         }
     private:
         PromiseStateBase& parent;
         std::unique_lock<std::mutex> lock;
-        bool call_continuation;
     };
 
     class ReadLock
@@ -154,7 +142,10 @@ private:
     class OneShotContinuation
     {
     public:
-        OneShotContinuation() = default;
+        OneShotContinuation()
+            : OneShotContinuation([](){})
+        {
+        }
 
         OneShotContinuation(std::function<void()>&& continuation)
             : continuation{std::move(continuation)}
@@ -169,11 +160,7 @@ private:
         void operator()()
         {
             continuation();
-            continuation = nullptr;
-        }
-        operator bool() const
-        {
-            return static_cast<bool>(continuation);
+            continuation = [](){};
         }
     private:
         std::function<void()> continuation;
