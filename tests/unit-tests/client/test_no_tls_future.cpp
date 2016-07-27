@@ -265,3 +265,15 @@ TEST(NoTLSFuture, future_returned_from_then_resolves_to_return_value_of_closure)
     base_promise.set_value(254);
     EXPECT_THAT(transformed_future.get(), StrEq("254"));
 }
+
+TEST(NoTLSFuture, can_transport_move_only_items)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<std::unique_ptr<int>> promise;
+
+    auto future = promise.get_future();
+
+    promise.set_value(std::make_unique<int>(42));
+
+    EXPECT_THAT(*future.get(), Eq(42));
+}

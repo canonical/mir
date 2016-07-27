@@ -202,7 +202,7 @@ public:
     T get_value()
     {
         auto lock = PromiseStateBase<T>::ensure_read_context();
-        return value;
+        return std::move(value);
     }
 
 private:
