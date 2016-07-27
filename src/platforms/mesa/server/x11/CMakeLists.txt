@@ -25,7 +25,7 @@ target_link_libraries(
   mirplatformservermesax11
   PRIVATE
   mirplatform
-  EGL
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
   X11
   mirsharedmesaservercommon-static
