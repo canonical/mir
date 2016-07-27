@@ -133,7 +133,6 @@ target_link_libraries(
   kms_utils
 
   mirclient-static
-  mirclientrpc-static
   mirclientlttng-static
 
   mir-test-static
@@ -169,7 +168,6 @@ target_link_libraries(
   client_platform_common
 
   mirclient-static
-  mirclientrpc-static
   mirclientlttng-static
 
   mir-test-static
