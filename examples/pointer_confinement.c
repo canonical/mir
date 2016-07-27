@@ -74,16 +74,6 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
         // - because opengl coords
         mouse_y += -dy;
     }
-    else if (mir_input_event_get_type(event) == mir_input_event_type_touch)
-    {
-        MirTouchEvent const* tev = mir_input_event_get_touch_event(event);
-        float dx = mir_touch_event_axis_value(tev, 0, mir_pointer_axis_relative_x);
-        float dy = mir_touch_event_axis_value(tev, 0, mir_pointer_axis_relative_y);
-
-        mouse_x += dx;
-        // - because opengl coords
-        mouse_y += -dy;
-    }
     else if (mir_input_event_get_type(event) == mir_input_event_type_key)
     {
         MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(event);
