@@ -277,3 +277,27 @@ TEST(NoTLSFuture, can_transport_move_only_items)
 
     EXPECT_THAT(*future.get(), Eq(42));
 }
+
+TEST(NoTLSFuture, future_is_invalid_after_retreival)
+{
+    mcl::NoTLSPromise<int> promise;
+
+    auto future = promise.get_future();
+
+    promise.set_value(42);
+    future.get();
+
+    EXPECT_FALSE(future.valid());
+}
+
+TEST(NoTLSFuture, void_future_is_invalid_after_retreival)
+{
+    mcl::NoTLSPromise<void> promise;
+
+    auto future = promise.get_future();
+
+    promise.set_value();
+    future.get();
+
+    EXPECT_FALSE(future.valid());
+}
