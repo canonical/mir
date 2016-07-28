@@ -28,6 +28,17 @@
 
 using namespace testing;
 
+namespace
+{
+std::string create_temp_dir()
+{
+    char temp_dir[] = "temp_dir_XXXXXX";
+    if (mkdtemp(temp_dir) == nullptr)
+        throw std::system_error(errno, std::system_category(), "Failed to create temp dir");
+
+    return temp_dir;
+}
+
 struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 {
     MOCK_METHOD1(command_line_handler, void(std::vector<std::string> const&));
@@ -46,11 +57,9 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
         server.add_configuration_option(test_config_key, "", mir::OptionType::string);
 
-        clean_test_files();
-
-        add_to_environment(env_xdg_config_home, fake_xdg_config_home);
-        add_to_environment(env_home, fake_home);
-        add_to_environment(env_xdg_config_dirs, fake_xdg_config_dirs);
+        add_to_environment(env_xdg_config_home, fake_xdg_config_home.c_str());
+        add_to_environment(env_home, fake_home.c_str());
+        add_to_environment(env_xdg_config_dirs, fake_xdg_config_dirs.c_str());
     }
 
     void TearDown() override
@@ -64,21 +73,13 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
     static constexpr char const* const env_home = "HOME";
     static constexpr char const* const env_xdg_config_dirs = "XDG_CONFIG_DIRS";
 
-    static constexpr char const* const fake_xdg_config_home = "fake_xdg_config_home";
-    static constexpr char const* const fake_home = "fake_home";
-    static constexpr char const* const fake_home_config = "fake_home/.config";
-    static constexpr char const* const fake_xdg_config_dirs =
-        "fake_xdg_config_dir0:fake_xdg_config_dir1";
-    static constexpr char const* const fake_xdg_config_dir0 = "fake_xdg_config_dir0";
-    static constexpr char const* const fake_xdg_config_dir1 = "fake_xdg_config_dir1";
-
     static constexpr char const* const not_found = "not found";
     std::string const config_filename{"test.config"};
     static constexpr char const* const test_config_key = "config_dir";
 
-    void create_config_file_in(char const* dir)
+    void create_config_file_in(std::string const& dir)
     {
-        mkdir(dir, 0700);
+        mkdir(dir.c_str(), 0700);
 
         auto const filename = dir + ('/' + config_filename);
 
@@ -86,10 +87,10 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
         config << test_config_key << '=' << dir << std::endl;
     }
 
-    void remove_config_file_in(char const* dir)
+    void remove_config_file_in(std::string const& dir)
     {
         remove((dir + ('/' + config_filename)).c_str());
-        remove(dir);
+        remove(dir.c_str());
     }
 
     void clean_test_files()
@@ -98,9 +99,20 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
         remove_config_file_in(fake_xdg_config_dir1);
         remove_config_file_in(fake_xdg_config_home);
         remove_config_file_in(fake_home_config);
-        remove(fake_home);
+        remove(fake_home.c_str());
+        remove(temp_dir.c_str());
     }
+
+    std::string const temp_dir = create_temp_dir();
+    std::string const fake_xdg_config_home = temp_dir + "/fake_xdg_config_home";
+    std::string const fake_home = temp_dir + "/fake_home";
+    std::string const fake_home_config = temp_dir + "/fake_home/.config";
+    std::string const fake_xdg_config_dir0 = temp_dir + "/fake_xdg_config_dir0";
+    std::string const fake_xdg_config_dir1 = temp_dir + "/fake_xdg_config_dir1";
+    std::string const fake_xdg_config_dirs =
+        fake_xdg_config_dir0 + ":" + fake_xdg_config_dir1;
 };
+}
 
 TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_handler)
 {
@@ -137,7 +149,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)
 
 TEST_F(ServerConfigurationOptions, are_read_from_home_config_file)
 {
-    mkdir(fake_home, 0700);
+    mkdir(fake_home.c_str(), 0700);
     create_config_file_in(fake_home_config);
 
     // $HOME is only used if $XDG_CONFIG_HOME isn't set
