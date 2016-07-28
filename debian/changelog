@@ -8,6 +8,8 @@ mir (0.23.5-0ubuntu1) UNRELEASED; urgency=medium
     - Bugs fixed:
       . OSK flickers and buttons are sometimes invisble (LP: #1590765)
       . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
+      . [testsfail] Process.* (memory leak in libhybris generated when probing
+        android platforms) (LP: #1602199)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 27 Jul 2016 08:36:06 -0400
 
