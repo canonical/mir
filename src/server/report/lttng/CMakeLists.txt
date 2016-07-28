@@ -32,6 +32,7 @@ set(
   input_report.cpp
   message_processor_report.cpp
   lttng_report_factory.cpp
+  seat_report.cpp
   session_mediator_report.cpp
   scene_report.cpp
   server_tracepoint_provider.cpp

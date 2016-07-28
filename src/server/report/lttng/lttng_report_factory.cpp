@@ -23,6 +23,7 @@
 #include "display_report.h"
 #include "input_report.h"
 #include "message_processor_report.h"
+#include "seat_report.h"
 #include "scene_report.h"
 #include "session_mediator_report.h"
 #include "shared_library_prober_report.h"
@@ -60,6 +61,11 @@ std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::LttngReportF
 std::shared_ptr<mir::input::InputReport> mir::report::LttngReportFactory::create_input_report()
 {
     return std::make_shared<lttng::InputReport>();
+}
+
+std::shared_ptr<mir::input::SeatReport> mir::report::LttngReportFactory::create_seat_report()
+{
+    return std::make_shared<lttng::SeatReport>();
 }
 
 std::shared_ptr<mir::SharedLibraryProberReport> mir::report::LttngReportFactory::create_shared_library_prober_report()

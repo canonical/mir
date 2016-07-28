@@ -26,6 +26,7 @@
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -80,12 +81,13 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
+    NiceMock<mtd::MockSeatReport> mock_seat_report;
     mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
     mi::BasicSeat seat{
         mt::fake_shared(mock_dispatcher),mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock)};
+        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock), mt::fake_shared(mock_seat_report)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
         cookie_authority, mt::fake_shared(key_mapper)};

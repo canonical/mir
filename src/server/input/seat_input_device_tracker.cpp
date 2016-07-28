@@ -23,6 +23,7 @@
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/key_mapper.h"
+#include "mir/input/seat_report.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
@@ -46,9 +47,10 @@ mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatch
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
                                                    std::shared_ptr<InputRegion> const& input_region,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
-                                                   std::shared_ptr<time::Clock> const& clock)
+                                                   std::shared_ptr<time::Clock> const& clock,
+                                                   std::shared_ptr<SeatReport> const& report)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, buttons{0},
+      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, report{report}, buttons{0},
       confine_function{[input_region](mir::geometry::Point& pos) { input_region->confine(pos); }}
 {
 }
@@ -201,20 +203,25 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 
 void mi::SeatInputDeviceTracker::set_confinement_regions(geometry::Rectangles const& regions)
 {
+    std::lock_guard<std::mutex> lg(region_mutex);
     confine_function = [regions, this](mir::geometry::Point& pos)
     {
         input_region->confine(pos);
         regions.confine(pos);
     };
+
+    report->seat_set_confinement_region_called(regions);
 }
 
 void mi::SeatInputDeviceTracker::reset_confinement_regions()
 {
+    std::lock_guard<std::mutex> lg(region_mutex);
     confine_function = [this](mir::geometry::Point& pos) { input_region->confine(pos); };
 }
 
 void mi::SeatInputDeviceTracker::confine_pointer()
 {
+    std::lock_guard<std::mutex> lg(region_mutex);
     mir::geometry::Point const old{cursor_x, cursor_y};
     auto confined = old;
     confine_function(confined);

@@ -26,6 +26,7 @@
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -56,6 +57,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     Nice<mtd::MockInputSeat> mock_seat;
+    Nice<mtd::MockSeatReport> mock_seat_report;
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
@@ -68,7 +70,8 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock)};
+        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock),
+        mt::fake_shared(mock_seat_report)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };

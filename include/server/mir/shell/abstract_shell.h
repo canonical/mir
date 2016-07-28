@@ -122,6 +122,8 @@ public:
 
     bool handle(MirEvent const& event) override;
 
+    void update_focused_surface_confined_region();
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;

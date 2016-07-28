@@ -41,10 +41,8 @@ namespace
 
 struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
 {
-    UpdateConfinementOnSurfaceChanges(std::shared_ptr<mi::Seat> seat,
-                                      std::shared_ptr<ms::Surface> const& surface) :
-        seat(seat),
-        surface(surface)
+    UpdateConfinementOnSurfaceChanges(msh::AbstractShell* shell) :
+        shell(shell)
     {
     }
 
@@ -61,14 +59,10 @@ struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
 private:
     void update_confinement_region()
     {
-        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
-        {
-            seat->set_confinement_regions({surface->input_bounds()});
-        }
+        shell->update_focused_surface_confined_region();
     }
 
-    std::shared_ptr<mi::Seat> seat;
-    std::shared_ptr<ms::Surface> const surface;
+    msh::AbstractShell* shell;
 };
 }
 
@@ -86,12 +80,23 @@ msh::AbstractShell::AbstractShell(
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
-    report(report)
+    report(report),
+    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this))
 {
 }
 
 msh::AbstractShell::~AbstractShell() noexcept
 {
+}
+
+void msh::AbstractShell::update_focused_surface_confined_region()
+{
+    auto const current_focus = focus_surface.lock();
+
+    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_surface)
+    {
+        seat->set_confinement_regions({current_focus->input_bounds()});
+    }
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
@@ -297,13 +302,10 @@ void msh::AbstractShell::set_focus_to_locked(
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-
-            focus_surface_observer = std::make_shared<UpdateConfinementOnSurfaceChanges>(seat, surface);
             surface->add_observer(focus_surface_observer);
         }
         else
         {
-            focus_surface_observer = nullptr;
             input_targeter->clear_focus();
         }
     }
@@ -372,3 +374,4 @@ void msh::AbstractShell::raise(SurfaceSet const& surfaces)
     surface_stack->raise(surfaces);
     report->surfaces_raised(surfaces);
 }
+

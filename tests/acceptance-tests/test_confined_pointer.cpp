@@ -22,6 +22,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
+#include "mir/test/doubles/mock_seat_report.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/placement_applying_shell.h"
@@ -34,7 +35,7 @@
 
 #include <boost/throw_exception.hpp>
 
-
+namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -171,6 +172,12 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
                 return shell;
             });
 
+        server.override_the_seat_report([this]
+            {
+                mock_seat_report = std::make_shared<NiceMock<mtd::MockSeatReport>>();
+                return mock_seat_report;
+            });
+
         HeadlessInProcessServer::SetUp();
 
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
@@ -194,6 +201,7 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     NiceMock<MockSurfaceObserver> surface_observer;
     mir::test::Signal resized_signaled;
 
+    std::shared_ptr<mtd::MockSeatReport> mock_seat_report;
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
     geom::Rectangle screen_geometry{{0,0}, {800,600}};
     mtf::ClientInputRegions input_regions;
@@ -249,15 +257,13 @@ TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
     latest_shell_surface()->add_observer(fake);
 
     geom::Size new_size = {surface_width + 100, surface_height};
-    EXPECT_CALL(surface_observer, resized_to(new_size)).
-            WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
+    EXPECT_CALL(surface_observer, resized_to(new_size)).Times(1);
+
+    EXPECT_CALL(*mock_seat_report, seat_set_confinement_region_called(_)).
+            WillRepeatedly(InvokeWithoutArgs([&] { change_observed(); }));
 
     client.resize(surface_width + 100, surface_height);
     resized_signaled.wait_for(1s);
-    
-    // We get that a resized_to happened, but we've to wait a little bit for the seat to be updated from the
-    // observer it self. The order of the observers are not guaranteed
-    std::this_thread::sleep_for(1s);
 
     InSequence seq;
     EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));

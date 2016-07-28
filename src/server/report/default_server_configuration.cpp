@@ -118,6 +118,15 @@ auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::
         });
 }
 
+auto mir::DefaultServerConfiguration::the_seat_report() -> std::shared_ptr<mi::SeatReport>
+{
+    return seat_report(
+        [this]()->std::shared_ptr<mi::SeatReport>
+        {
+            return report_factory(options::input_report_opt)->create_seat_report();
+        });
+}
+
 auto mir::DefaultServerConfiguration::the_scene_report() -> std::shared_ptr<ms::SceneReport>
 {
     return scene_report(
