@@ -51,8 +51,8 @@ public:
     void update_from(MirBufferPackage const&);
     void fill_update_msg(MirBufferPackage&);
     MirNativeBuffer* as_mir_native_buffer() const;
-    void set_fence(MirNativeFence*, MirBufferAccess);
-    MirNativeFence* get_fence() const;
+    void set_fence(MirNativeFence, MirBufferAccess);
+    MirNativeFence get_fence() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout);
 
 private:
