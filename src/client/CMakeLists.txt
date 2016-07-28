@@ -99,8 +99,8 @@ add_library(mirclientobjects OBJECT
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
-add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
+add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 
 set_target_properties(mirclient
 
@@ -119,7 +119,6 @@ set(LINKS
 
 target_link_libraries(mirclient
   LINK_PRIVATE
-  mirclientrpc-static
   mirclientlttng-static
   LINK_PUBLIC
   ${MIR_CLIENT_REFERENCES}
@@ -155,7 +154,6 @@ target_link_libraries(mirclient-debug-extension
   mirclient-static  # Link statically; only copy what you need.
                     # This allows access to private symbols normally hidden
                     # in the shared version of libmirclient.
-  mirclientrpc-static
   mirclientlttng-static
   PUBLIC
   ${LINKS}
