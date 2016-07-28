@@ -154,6 +154,10 @@ struct WrappingDisplay : mg::Display
     {
         return display->create_virtual_output(width, height);
     }
+    mg::NativeDisplay* native_display() override
+    {
+        return display->native_display();
+    }
 
     std::shared_ptr<Display> const display;
 };
