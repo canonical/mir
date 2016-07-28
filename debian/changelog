@@ -4,9 +4,8 @@ mir (0.23.5-0ubuntu1) UNRELEASED; urgency=medium
     - ABI summary:
       . No ABI changes in any libraries.
     - Enhancements:
-      . Enable internal usage of more flexible graphics buffer submission,
-        precursing client API additions. 
-    - Bugs fixed:
+      . Enable new buffer semantics (NBS) by default.
+    - Bugs re-fixed:
       . OSK flickers and buttons are sometimes invisble (LP: #1590765)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 27 Jul 2016 08:36:06 -0400
