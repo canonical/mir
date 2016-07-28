@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_GL_CONTEXT_H_
 #define MIR_GRAPHICS_ANDROID_GL_CONTEXT_H_
 
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/graphics/egl_resources.h"
 #include "swapping_gl_context.h"
 #include "mir_toolkit/common.h"
@@ -37,7 +37,7 @@ namespace android
 class FramebufferBundle;
 
 //helper base class that doesn't have an egl surface.
-class GLContext : public graphics::GLContext
+class GLContext : public renderer::gl::Context
 {
 public:
     ~GLContext();
@@ -50,7 +50,7 @@ protected:
     GLContext(GLContext const& shared_gl_context);
 
     void release_current() const override;
-    using graphics::GLContext::make_current;
+    using renderer::gl::Context::make_current;
     void make_current(EGLSurface) const;
 
     EGLDisplay const egl_display;

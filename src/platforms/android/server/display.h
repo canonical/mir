@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
 #include "hwc_configuration.h"
@@ -49,7 +50,8 @@ class DisplayDevice;
 class NativeWindowReport;
 
 class Display : public graphics::Display,
-                public graphics::NativeDisplay
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
     explicit Display(
@@ -79,10 +81,11 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
     NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     void on_hotplug();

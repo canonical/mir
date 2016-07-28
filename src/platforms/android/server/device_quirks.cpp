@@ -131,7 +131,7 @@ mga::GPUInfo query_gl_for_gpu_info()
     return { std::move(vendor), std::move(renderer) };
 }
 
-mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+mga::GPUInfo determine_gpu_info(mir::renderer::gl::Context const& context)
 {
     EGLDisplay current_display = eglGetCurrentDisplay();
     EGLContext current_context = eglGetCurrentContext();
@@ -152,7 +152,9 @@ mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
 }
 }
 
-mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mg::GLContext const& context)
+mga::DeviceQuirks::DeviceQuirks(
+    PropertiesWrapper const& properties,
+    mir::renderer::gl::Context const& context)
     : device_name(determine_device_name(properties)),
       gpu_info(determine_gpu_info(context)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),

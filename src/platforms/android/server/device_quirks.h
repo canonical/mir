@@ -27,9 +27,9 @@ namespace boost{ namespace program_options {class options_description;}}
 namespace mir
 {
 namespace options{ class Option; }
+namespace renderer{ namespace gl{ class Context; }}
 namespace graphics
 {
-class GLContext;
 namespace android
 {
 class PropertiesWrapper
@@ -65,7 +65,7 @@ class DeviceQuirks
 public:
     DeviceQuirks(PropertiesWrapper const& properties);
     DeviceQuirks(PropertiesWrapper const& properties, mir::options::Option const& options);
-    DeviceQuirks(PropertiesWrapper const& properties, graphics::GLContext const& context);
+    DeviceQuirks(PropertiesWrapper const& properties, renderer::gl::Context const& context);
 
     unsigned int num_framebuffers() const;
     bool gralloc_cannot_be_closed_safely() const;

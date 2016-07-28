@@ -140,7 +140,7 @@ mga::GLContext::GLContext(
 }
 
 mga::GLContext::GLContext(GLContext const& shared_gl_context) :
-    mg::GLContext(),
+    mir::renderer::gl::Context(),
     egl_display(shared_gl_context.egl_display),
     egl_config(shared_gl_context.egl_config),
     egl_context{egl_display,
