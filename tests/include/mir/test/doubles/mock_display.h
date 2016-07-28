@@ -20,7 +20,6 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/main_loop.h"
 #include "mir/test/gmock_fixes.h"
@@ -48,7 +47,6 @@ public:
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
     MOCK_METHOD1(create_hardware_cursor, std::shared_ptr<graphics::Cursor>(std::shared_ptr<graphics::CursorImage> const&));
-    MOCK_METHOD0(create_gl_context, std::unique_ptr<graphics::GLContext>());
     MOCK_METHOD2(create_virtual_output, std::unique_ptr<graphics::VirtualOutput>(int, int));
     MOCK_METHOD0(native_display, graphics::NativeDisplay*());
 };
