@@ -80,6 +80,7 @@ private:
     void update_spots();
     void update_states();
     bool filter_input_event(MirInputEvent const* event);
+    void confine_function(mir::geometry::Point& p) const;
     void confine_pointer();
 
     std::shared_ptr<InputDispatcher> const dispatcher;
@@ -110,9 +111,9 @@ private:
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
-    std::function<void(mir::geometry::Point&)> confine_function;
+    mir::geometry::Rectangles confined_region;
 
-    std::mutex region_mutex;
+    std::mutex mutable region_mutex;
 };
 
 }
