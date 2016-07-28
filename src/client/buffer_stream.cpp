@@ -308,9 +308,9 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         unsigned int initial_nbuffers) :
         vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers),
         current(nullptr),
-        future(vault.withdraw()),
         size_(size)
     {
+        future = vault.withdraw();
     }
 
     void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat) override
@@ -403,10 +403,13 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         current_swap_interval = interval;
     }
 
+    // Future must be before vault, to ensure vault's destruction marks future
+    // as ready.
+    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
+
     mcl::BufferVault vault;
     std::mutex mutable mutex;
     std::shared_ptr<mcl::MirBuffer> current{nullptr};
-    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
     geom::Size size_;
