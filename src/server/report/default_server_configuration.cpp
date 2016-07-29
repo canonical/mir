@@ -123,7 +123,7 @@ auto mir::DefaultServerConfiguration::the_seat_report() -> std::shared_ptr<mi::S
     return seat_report(
         [this]()->std::shared_ptr<mi::SeatReport>
         {
-            return report_factory(options::input_report_opt)->create_seat_report();
+            return report_factory(options::seat_report_opt)->create_seat_report();
         });
 }
 

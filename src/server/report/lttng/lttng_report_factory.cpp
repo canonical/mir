@@ -65,7 +65,7 @@ std::shared_ptr<mir::input::InputReport> mir::report::LttngReportFactory::create
 
 std::shared_ptr<mir::input::SeatReport> mir::report::LttngReportFactory::create_seat_report()
 {
-    return std::make_shared<lttng::SeatReport>();
+    BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
 }
 
 std::shared_ptr<mir::SharedLibraryProberReport> mir::report::LttngReportFactory::create_shared_library_prober_report()
