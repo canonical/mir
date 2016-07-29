@@ -96,7 +96,8 @@ private:
     EGLSurface const egl_surf;
 };
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay
 {
 public:
     explicit Display(::Display* x_dpy,
@@ -124,6 +125,8 @@ public:
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
 
 private:
     X11EGLDisplay const egl_display;

@@ -83,6 +83,29 @@ TEST_F(SyncSwTest, sync_wait)
     fence2.wait();
 }
 
+//timeout is in msecs
+TEST_F(SyncSwTest, sync_wait_with_timeout_times_out)
+{
+    using namespace std::literals::chrono_literals;
+    auto timeout = 150ms;
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd_value, SYNC_IOC_WAIT, TimeoutMatches(timeout.count())))
+        .WillOnce(testing::Return(-1));
+
+    mga::SyncFence fence1(mock_fops, std::move(dummy_fd));
+    EXPECT_FALSE(fence1.wait_for(timeout));
+}
+
+TEST_F(SyncSwTest, sync_wait_with_timeout_clears)
+{
+    using namespace std::literals::chrono_literals;
+    auto timeout = 150ms;
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd_value, SYNC_IOC_WAIT, TimeoutMatches(timeout.count())))
+        .WillOnce(testing::Return(0));
+
+    mga::SyncFence fence1(mock_fops, std::move(dummy_fd));
+    EXPECT_TRUE(fence1.wait_for(timeout));
+}
+
 namespace
 {
 struct IoctlSetter

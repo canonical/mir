@@ -375,3 +375,8 @@ std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*wid
 {
     return nullptr;
 }
+
+mg::NativeDisplay* mgn::Display::native_display()
+{
+    return this;
+}
