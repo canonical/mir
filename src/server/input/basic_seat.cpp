@@ -34,12 +34,12 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<time::Clock> const& clock,
                          std::shared_ptr<mi::SeatReport> const& report) :
       input_state_tracker{dispatcher,
-      touch_visualizer,
-      cursor_listener,
-      input_region,
-      key_mapper,
-      clock,
-      report},
+                          touch_visualizer,
+                          cursor_listener,
+                          input_region,
+                          key_mapper,
+                          clock,
+                          report},
       input_region{input_region}
 {
 }
