@@ -85,7 +85,7 @@ private:
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
-    void set_size(std::unique_lock<std::mutex>& lk, geometry::Size new_size);
+    void set_size(std::unique_lock<std::mutex>const& lk, geometry::Size new_size);
 
     std::shared_ptr<Buffer> checked_buffer_from_map(int id);
 
