@@ -32,16 +32,17 @@ namespace mcla = mir::client::android;
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+using namespace testing;
 
-struct AndroidClientBuffer : public ::testing::Test
+struct AndroidClientBuffer : Test
 {
     AndroidClientBuffer() :
-        mock_registrar{std::make_shared<testing::NiceMock<mtd::MockBufferRegistrar>>()},
+        mock_registrar{std::make_shared<NiceMock<mtd::MockBufferRegistrar>>()},
         native_handle{std::make_shared<native_handle_t>()},
         mock_native_buffer{std::make_shared<mtd::MockAndroidNativeBuffer>(size)}
     {
-        ON_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
-            .WillByDefault(testing::Return(mock_native_buffer));
+        ON_CALL(*mock_registrar, register_buffer(_, _))
+            .WillByDefault(Return(mock_native_buffer));
         package.height = height.as_int();
         package.width = width.as_int();
         package.stride = stride.as_int();
@@ -60,8 +61,8 @@ struct AndroidClientBuffer : public ::testing::Test
 
 TEST_F(AndroidClientBuffer, registers_native_handle_with_correct_size)
 {
-    EXPECT_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
-        .WillOnce(testing::Return(mock_native_buffer));
+    EXPECT_CALL(*mock_registrar, register_buffer(_, _))
+        .WillOnce(Return(mock_native_buffer));
 
     mcla::Buffer buffer(mock_registrar, package, pf);
     EXPECT_EQ(size, buffer.size());
@@ -131,4 +132,74 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
     EXPECT_THAT(msg.data_items, Eq(1));
     EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::unfenced)));
     EXPECT_THAT(msg.fd_items, Eq(0));
+}
+
+TEST_F(AndroidClientBuffer, can_update_fences)
+{
+    int fake_fence = 8482;
+    MirNativeFence fence = &fake_fence;
+    Sequence seq;
+    EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::BufferAccess::write))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_native_buffer, update_usage(_, mga::BufferAccess::read))
+        .InSequence(seq);
+    mcla::Buffer buffer(mock_registrar, package, pf);
+    buffer.set_fence(fence, mir_read_write);
+    buffer.set_fence(fence, mir_read);
+}
+
+TEST_F(AndroidClientBuffer, updating_fences_with_null_resets_fence)
+{
+    EXPECT_CALL(*mock_native_buffer, reset_fence());
+    mcla::Buffer buffer(mock_registrar, package, pf);
+    buffer.set_fence(nullptr, mir_read_write);
+}
+
+TEST_F(AndroidClientBuffer, updating_fences_with_made_up_access_throws)
+{
+    int fence = 21;
+    mcla::Buffer buffer(mock_registrar, package, pf);
+    EXPECT_THROW({
+        buffer.set_fence(&fence, static_cast<MirBufferAccess>(111));
+    }, std::invalid_argument);
+}
+
+TEST_F(AndroidClientBuffer, can_retreive_fences)
+{
+    int fake_fence = 42;
+    EXPECT_CALL(*mock_native_buffer, copy_fence())
+        .WillOnce(Return(fake_fence));
+    
+    mcla::Buffer buffer(mock_registrar, package, pf);
+    auto fence = buffer.get_fence();
+    ASSERT_THAT(fence, Ne(nullptr));
+    EXPECT_THAT(*static_cast<decltype(fake_fence)*>(fence), Eq(fake_fence));
+}
+
+TEST_F(AndroidClientBuffer, can_wait_fence)
+{
+    using namespace std::literals::chrono_literals;
+    Sequence seq;
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::read, 0ms))
+        .InSequence(seq)
+        .WillOnce(Return(false));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
+        .InSequence(seq)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
+        .InSequence(seq)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
+        .InSequence(seq)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 11ms))
+        .InSequence(seq)
+        .WillOnce(Return(true));
+
+    mcla::Buffer buffer(mock_registrar, package, pf);
+    EXPECT_FALSE(buffer.wait_fence(mir_read, 150ns));
+    EXPECT_TRUE(buffer.wait_fence(mir_read_write, 10499999ns));
+    EXPECT_TRUE(buffer.wait_fence(mir_read_write, 10500001ns));
+    EXPECT_TRUE(buffer.wait_fence(mir_read_write, 10999999ns));
+    EXPECT_TRUE(buffer.wait_fence(mir_read_write, 11000001ns));
 }
