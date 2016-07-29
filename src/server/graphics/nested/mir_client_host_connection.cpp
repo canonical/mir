@@ -418,3 +418,18 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
 {
     event_callback(event, source_frame);
 }
+
+std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(graphics::BufferProperties const&)
+{
+    return nullptr;
+}
+
+MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
+{
+    return nullptr;
+}
+
+MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
+{
+    return MirGraphicsRegion{};
+}

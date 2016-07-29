@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_NESTED_BUFFER_H_
 #define MIR_GRAPHICS_NESTED_BUFFER_H_
 
+#include "mir_toolkit/client_types_nbs.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_basic.h"
 #include <memory>
@@ -46,6 +47,7 @@ public:
 private:
     std::shared_ptr<HostConnection> const connection;
     BufferProperties const properties;
+    std::shared_ptr<MirBuffer> buffer;
 };
 }
 }
