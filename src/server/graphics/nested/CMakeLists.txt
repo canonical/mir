@@ -14,3 +14,9 @@ add_library(
   platform.cpp
   buffer.cpp
 )
+
+#target_link_libraries(
+#  mirnestedgraphics
+#  mirplatformgraphicscommon
+#)
+

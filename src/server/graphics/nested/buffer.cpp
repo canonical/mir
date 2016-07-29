@@ -20,6 +20,7 @@
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
+namespace geom = mir::geometry;
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
@@ -27,4 +28,39 @@ mgn::Buffer::Buffer(
     connection(connection),
     properties(properties)
 {
+}
+
+std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
+{
+    return nullptr;
+}
+
+geom::Size mgn::Buffer::size() const
+{
+    return {};
+}
+
+geom::Stride mgn::Buffer::stride() const
+{
+    return {};
+}
+
+MirPixelFormat mgn::Buffer::pixel_format() const
+{
+    return mir_pixel_format_invalid;
+}
+
+void mgn::Buffer::write(unsigned char const* pixels, size_t size)
+{
+    (void)pixels;(void)size;
+}
+
+void mgn::Buffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+{
+    (void) do_with_pixels;
+}
+
+mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
+{
+    return nullptr;
 }

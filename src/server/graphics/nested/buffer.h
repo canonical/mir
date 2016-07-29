@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_BUFFER_H_
 
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_basic.h"
 #include <memory>
 
 namespace mir
@@ -29,10 +30,19 @@ namespace graphics
 namespace nested
 {
 class HostConnection;
-class Buffer
+class Buffer : public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<HostConnection> const& connection, BufferProperties const& properties);
+
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+    geometry::Size size() const override;
+    geometry::Stride stride() const override;
+    MirPixelFormat pixel_format() const override;
+    void write(unsigned char const* pixels, size_t size) override;
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
+    NativeBufferBase* native_buffer_base() override;
+
 private:
     std::shared_ptr<HostConnection> const connection;
     BufferProperties const properties;

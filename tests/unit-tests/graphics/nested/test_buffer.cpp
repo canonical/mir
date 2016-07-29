@@ -20,6 +20,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/stub_host_connection.h"
 #include "mir/test/fake_shared.h"
+#include "mir/renderer/gl/texture_source.h"
 #include "mir_toolkit/client_types_nbs.h"
 
 #include <gtest/gtest.h>
@@ -29,25 +30,107 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
+namespace geom = mir::geometry;
+
 using namespace testing;
 namespace
 {
 struct MockHostConnection : mtd::StubHostConnection
 {
     MOCK_METHOD1(create_buffer, std::shared_ptr<MirBuffer>(mg::BufferProperties const&));
+    MOCK_METHOD1(get_native_handle, MirNativeBuffer*(MirBuffer*));
+    MOCK_METHOD1(get_graphics_region, MirGraphicsRegion(MirBuffer*));
 };
 
 struct NestedBuffer : Test
 {
+    NestedBuffer()
+    {
+        //ON_CALL(mock_connection, create_buffer(_))
+         //   .WillByDefault(Return(buffer.get()));
+    }
     MockHostConnection mock_connection;
-    mg::BufferProperties properties;
+    mg::BufferProperties properties{{10, 20}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
     std::shared_ptr<MirBuffer> buffer;
 };
 }
 
-TEST_F(NestedBuffer, creates_buffer)
+TEST_F(NestedBuffer, creates_buffer_when_constructed)
 {
     EXPECT_CALL(mock_connection, create_buffer(properties))
         .WillOnce(Return(buffer));
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+}
+
+TEST_F(NestedBuffer, generates_valid_id)
+{
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    EXPECT_THAT(buffer.id().as_value(), Gt(0));
+}
+
+TEST_F(NestedBuffer, has_correct_properties)
+{
+    auto expected_stride = mir::geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}; 
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    EXPECT_THAT(buffer.size(), Eq(properties.size));
+    EXPECT_THAT(buffer.pixel_format(), Eq(properties.format));
+    EXPECT_THAT(buffer.stride(), Eq(expected_stride));
+}
+
+TEST_F(NestedBuffer, no_gl_support_for_now)
+{
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    auto native_base = buffer.native_buffer_base();
+    EXPECT_THAT(native_base, Ne(nullptr));
+    EXPECT_THAT(dynamic_cast<mir::renderer::gl::TextureSource*>(native_base), Eq(nullptr));
+}
+
+TEST_F(NestedBuffer, native_buffer_handle)
+{
+    MirNativeBuffer handle;
+    EXPECT_CALL(mock_connection, get_native_handle(_))
+        .WillOnce(Return(&handle));
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    auto native_handle = buffer.native_buffer_handle();
+    EXPECT_THAT(&handle, Eq(native_handle.get()));
+}
+
+TEST_F(NestedBuffer, writes_to_region)
+{
+    geom::Size size{ 1, 1 };
+    auto format = mir_pixel_format_abgr_8888;
+    unsigned int data = 0x11223344;
+    MirGraphicsRegion region {
+        size.width.as_int(), size.height.as_int(),
+        size.width.as_int() * MIR_BYTES_PER_PIXEL(format),
+        format, reinterpret_cast<char*>(&data)
+    };
+
+    EXPECT_CALL(mock_connection, get_graphics_region(_))
+        .WillOnce(Return(region));
+
+    unsigned int new_data = 0x11111111;
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    buffer.write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));
+    EXPECT_THAT(data, Eq(new_data));
+}
+
+TEST_F(NestedBuffer, reads_from_region)
+{
+    geom::Size size{ 1, 1 };
+    auto format = mir_pixel_format_abgr_8888;
+    unsigned int data = 0x11223344;
+    MirGraphicsRegion region {
+        size.width.as_int(), size.height.as_int(),
+        size.width.as_int() * MIR_BYTES_PER_PIXEL(format),
+        format, reinterpret_cast<char*>(&data)
+    };
+
+    EXPECT_CALL(mock_connection, get_graphics_region(_))
+        .WillOnce(Return(region));
+
+    unsigned int read_data = 0x11111111;
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    buffer.read([&] (auto pix) { read_data = *pix; } );
+    EXPECT_THAT(read_data, Eq(data));
 }
