@@ -1,4 +1,4 @@
-mir (0.23.5-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.5 (https://launchpad.net/mir/+milestone/0.23.5)
     - ABI summary:
@@ -12,7 +12,7 @@ mir (0.23.5-0ubuntu1) UNRELEASED; urgency=medium
         android platforms) (LP: #1602199)
       . CI InputEvents failure in krillin (LP: #1603145)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 27 Jul 2016 08:36:06 -0400
+ -- Kevin DuBois <kdub432@gmail.com>  Fri, 29 Jul 2016 11:31:02 +0000
 
 mir (0.23.4+16.10.20160719.1-0ubuntu1) yakkety; urgency=medium
 
