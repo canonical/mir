@@ -10,6 +10,7 @@ mir (0.23.5-0ubuntu1) UNRELEASED; urgency=medium
       . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
       . [testsfail] Process.* (memory leak in libhybris generated when probing
         android platforms) (LP: #1602199)
+      . CI InputEvents failure in krillin (LP: #1603145)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 27 Jul 2016 08:36:06 -0400
 
