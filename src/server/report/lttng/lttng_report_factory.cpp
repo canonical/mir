@@ -23,7 +23,6 @@
 #include "display_report.h"
 #include "input_report.h"
 #include "message_processor_report.h"
-#include "seat_report.h"
 #include "scene_report.h"
 #include "session_mediator_report.h"
 #include "shared_library_prober_report.h"
