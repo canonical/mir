@@ -18,6 +18,7 @@
 
 #include "mir/scene/null_surface_observer.h"
 #include "mir/input/input_device_info.h"
+#include "mir/geometry/rectangles.h"
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"

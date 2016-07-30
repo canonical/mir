@@ -32,7 +32,16 @@ namespace null
 class SeatReport : public input::SeatReport
 {
 public:
+    virtual void seat_add_device(uint64_t id) override;
+    virtual void seat_remove_device(uint64_t id) override;
+    virtual void seat_dispatch_event(MirEvent const& event) override;
+    virtual void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) override;
+    virtual void seat_create_device_state() override;
+    virtual void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) override;
+    virtual void seat_set_pointer_state(uint64_t id, unsigned buttons) override;
+    virtual void seat_set_cursor_position(float cursor_x, float cursor_y) override;
     virtual void seat_set_confinement_region_called(geometry::Rectangles const& regions) override;
+    virtual void seat_reset_confinement_regions() override;
 };
 
 }

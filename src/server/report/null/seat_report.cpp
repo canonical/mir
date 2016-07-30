@@ -21,6 +21,42 @@
 namespace mrn  = mir::report::null;
 namespace geom = mir::geometry;
 
+void mrn::SeatReport::seat_add_device(uint64_t /*id*/)
+{
+}
+
+void mrn::SeatReport::seat_remove_device(uint64_t /*id*/)
+{
+}
+
+void mrn::SeatReport::seat_dispatch_event(MirEvent const& /*event*/)
+{
+}
+
+void mrn::SeatReport::seat_get_rectangle_for(uint64_t /*id*/, geometry::Rectangle const& /*out_rect*/)
+{
+}
+
+void mrn::SeatReport::seat_create_device_state()
+{
+}
+
+void mrn::SeatReport::seat_set_key_state(uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/)
+{
+}
+
+void mrn::SeatReport::seat_set_pointer_state(uint64_t /*id*/, unsigned /*buttons*/)
+{
+}
+
+void mrn::SeatReport::seat_set_cursor_position(float /*cursor_x*/, float /*cursor_y*/)
+{
+}
+
 void mrn::SeatReport::seat_set_confinement_region_called(geom::Rectangles const& /*regions*/)
+{
+}
+
+void mrn::SeatReport::seat_reset_confinement_regions()
 {
 }

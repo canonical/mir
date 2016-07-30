@@ -22,6 +22,8 @@
 #include "mir/input/seat_report.h"
 #include <gmock/gmock.h>
 
+class MirEvent;
+
 namespace mir
 {
 namespace test
@@ -32,7 +34,16 @@ namespace doubles
 class MockSeatReport : public input::SeatReport
 {
 public:
+    MOCK_METHOD1(seat_add_device, void(uint64_t /*id*/));
+    MOCK_METHOD1(seat_remove_device, void(uint64_t /*id*/));
+    MOCK_METHOD1(seat_dispatch_event, void(MirEvent const& /*event*/));
+    MOCK_METHOD2(seat_get_rectangle_for, void(uint64_t /*id*/, geometry::Rectangle const& /*out_rect*/));
+    MOCK_METHOD0(seat_create_device_state, void());
+    MOCK_METHOD2(seat_set_key_state, void(uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/));
+    MOCK_METHOD2(seat_set_pointer_state, void(uint64_t /*id*/, unsigned /*buttons*/));
+    MOCK_METHOD2(seat_set_cursor_position, void(float /*cursor_x*/, float /*cursor_y*/));
     MOCK_METHOD1(seat_set_confinement_region_called, void(geometry::Rectangles const& /*regions*/));
+    MOCK_METHOD0(seat_reset_confinement_regions, void());
 };
 
 }

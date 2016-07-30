@@ -16,15 +16,55 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "seat_report.h"
+#include <sstream>
 
+#include "seat_report.h"
+#include "mir/events/event.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/logging/logger.h"
-namespace ml = mir::logging;
-namespace mrl = mir::report::logging;
+#include "mir/input/device.h"
+
+namespace mi   = mir::input;
+namespace ml   = mir::logging;
+namespace mrl  = mir::report::logging;
+namespace geom = mir::geometry;
 
 namespace
 {
 char const* const component = "input::Seat";
+
+std::string scan_codes_to_string(std::vector<uint32_t> const& scan_codes)
+{
+    std::stringstream ss;
+    ss << "{";
+
+    for (auto const& s : scan_codes)
+    {
+        ss << s << ", ";
+    }
+
+    auto str = ss.str();
+
+    // Remove the extra , and space
+    str.pop_back();
+    str.pop_back();
+
+    return str + "}";
+}
+
+std::string rectangle_to_string(geom::Rectangle const& rect)
+{
+    std::stringstream ss;
+    ss << "{"
+       << rect.top_left.x.as_int() << ", "
+       << rect.top_left.y.as_int() << ", "
+       << rect.size.width.as_int() << ", "
+       << rect.size.height.as_int()
+       << "}";
+
+    return ss.str();
+}
+
 }
 
 mrl::SeatReport::SeatReport(std::shared_ptr<ml::Logger> const& log) :
@@ -32,12 +72,96 @@ mrl::SeatReport::SeatReport(std::shared_ptr<ml::Logger> const& log) :
 {
 }
 
-void mrl::SeatReport::seat_set_confinement_region_called(geometry::Rectangles const& regions)
+void mrl::SeatReport::seat_add_device(uint64_t id)
 {
+    std::stringstream ss;
+    ss << "Add device"
+       << " device_id=" << id;
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_remove_device(uint64_t id)
+{
+    std::stringstream ss;
+    ss << "Remove device"
+       << " device_id=" << id;
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_dispatch_event(MirEvent const& event)
+{
+    std::stringstream ss;
+    ss << "Dispatch event"
+       << " event_type=" << event.type();
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect)
+{
+    std::stringstream ss;
+    ss << "Get rectangle for"
+       << " device_id=" << id
+       << " out_rect=" << rectangle_to_string(out_rect);
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_create_device_state()
+{
+    std::stringstream ss;
+    ss << "Create device state";
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes)
+{
+    std::stringstream ss;
+    ss << "Set key state"
+       << " device_id="  << id
+       << " scan_codes=" << scan_codes_to_string(scan_codes);
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_set_pointer_state(uint64_t id, unsigned buttons)
+{
+    std::stringstream ss;
+    ss << "Set pointer state"
+       << " devie_id=" << id
+       << " buttons="  << buttons;
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_set_cursor_position(float cursor_x, float cursor_y)
+{
+    std::stringstream ss;
+    ss << "Set cursor position"
+       << " cursor_x=" << cursor_x
+       << " cursor_y=" << cursor_y;
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_set_confinement_region_called(geom::Rectangles const& regions)
+{
+    std::stringstream ss;
+
     auto bound_rect = regions.bounding_rectangle();
-    log->log(ml::Severity::informational, "set_confinement_region(\"" +
-                                          std::to_string(bound_rect.top_left.x.as_int()) + " " +
-                                          std::to_string(bound_rect.top_left.y.as_int()) + " " +
-                                          std::to_string(bound_rect.size.width.as_int()) + " " +
-                                          std::to_string(bound_rect.size.height.as_int()) + "\")", component);
+    ss << "Set confinement region"
+       << " regions=" << rectangle_to_string(bound_rect);
+
+    log->log(ml::Severity::informational, ss.str(), component);
+}
+
+void mrl::SeatReport::seat_reset_confinement_regions()
+{
+    std::stringstream ss;
+    ss << "Reset confinement regions";
+
+    log->log(ml::Severity::informational, ss.str(), component);
 }

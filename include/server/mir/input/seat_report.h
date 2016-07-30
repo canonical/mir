@@ -20,10 +20,18 @@
 #ifndef MIR_INPUT_SEAT_REPORT_H_
 #define MIR_INPUT_SEAT_REPORT_H_
 
-#include "mir/geometry/rectangles.h"
+#include <string>
+#include <vector>
+
+class MirEvent;
 
 namespace mir
 {
+namespace geometry
+{
+class Rectangles;
+class Rectangle;
+}
 namespace input
 {
 class SeatReport
@@ -31,7 +39,16 @@ class SeatReport
 public:
     virtual ~SeatReport() = default;
     
+    virtual void seat_add_device(uint64_t id) = 0;
+    virtual void seat_remove_device(uint64_t id) = 0;
+    virtual void seat_dispatch_event(MirEvent const& event) = 0;
+    virtual void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) = 0;
+    virtual void seat_create_device_state() = 0;
+    virtual void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) = 0;
+    virtual void seat_set_pointer_state(uint64_t id, unsigned buttons) = 0;
+    virtual void seat_set_cursor_position(float cursor_x, float cursor_y) = 0;
     virtual void seat_set_confinement_region_called(geometry::Rectangles const& regions) = 0;
+    virtual void seat_reset_confinement_regions() = 0;
 };
 }
 }
