@@ -20,7 +20,6 @@
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
 #include "virtual_output.h"
@@ -335,11 +334,6 @@ auto mga::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
-{
-    return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
-}
-
 std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width, int height)
 {
     auto enable_virtual_output = [this, width, height]
@@ -358,4 +352,9 @@ std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width
 mg::NativeDisplay* mga::Display::native_display()
 {
     return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
+{
+    return std::make_unique<mga::PbufferGLContext>(gl_context);
 }

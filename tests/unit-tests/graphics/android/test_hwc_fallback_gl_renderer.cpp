@@ -17,10 +17,10 @@
  */
 
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/gl/program_factory.h"
 #include "mir/gl/primitive.h"
 #include "mir/gl/texture.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/stub_renderable.h"
@@ -52,7 +52,7 @@ public:
     MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mgl::TextureCache>());
 };
 
-class MockContext : public mg::GLContext
+class MockContext : public mir::renderer::gl::Context
 {
 public:
     MOCK_CONST_METHOD0(make_current, void());

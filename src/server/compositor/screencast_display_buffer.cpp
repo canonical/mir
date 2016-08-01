@@ -21,8 +21,9 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
@@ -42,6 +43,14 @@ auto as_texture_source(mg::Buffer* buffer)
     return tex;
 }
 
+auto as_context_source(mg::Display* display)
+{
+    auto const ctx = dynamic_cast<mrgl::ContextSource*>(display->native_display());
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+    return ctx;
+}
+
 template <void (*Generate)(GLsizei,GLuint*), void (*Delete)(GLsizei,GLuint const*)>
 mc::detail::GLResource<Delete> allocate_gl_resource()
 {
@@ -58,7 +67,7 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     Schedule& free_queue,
     Schedule& ready_queue,
     mg::Display& display)
-    : gl_context(display.create_gl_context()),
+    : gl_context(as_context_source(&display)->create_gl_context()),
       rect(rect), mirror_mode_(mirror_mode),
       free_queue(free_queue), ready_queue(ready_queue),
       old_fbo(), old_viewport()

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
 #define MIR_TEST_DOUBLES_NULL_GL_CONTEXT_H_
 
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullGLContext : public graphics::GLContext
+class NullGLContext : public renderer::gl::Context
 {
 public:
     void make_current() const {}
