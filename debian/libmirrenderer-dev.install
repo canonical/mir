@@ -1,2 +1,2 @@
-usr/include/mirrenderer
+usr/include/mirrenderer/mir/renderer/*.h
 usr/lib/*/pkgconfig/mirrenderer.pc
