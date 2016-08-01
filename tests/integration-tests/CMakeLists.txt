@@ -75,7 +75,6 @@ target_link_libraries(
   mirclient-debug-extension
   mirclient-static
   mirdraw
-  mirclientrpc-static
   mirclientlttng-static
 
   mircommon

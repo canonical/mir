@@ -180,3 +180,22 @@ TEST_F(NativeBuffer, ignores_clears_egl_fence_failure)
         .WillOnce(Return(false));
     buffer.wait_for_unlock_by_gpu();
 }
+
+TEST_F(NativeBuffer, resets_fence)
+{
+    EXPECT_CALL(*mock_fence, reset_fence());
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
+    buffer.reset_fence();
+}
+
+TEST_F(NativeBuffer, waits_with_timeout)
+{
+    using namespace std::literals::chrono_literals;
+    EXPECT_CALL(*mock_fence, wait_for(10ms))
+        .Times(2)
+        .WillOnce(Return(true))
+        .WillOnce(Return(false));
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
+    EXPECT_TRUE(buffer.ensure_available_for(mga::BufferAccess::write, 10ms));
+    EXPECT_FALSE(buffer.ensure_available_for(mga::BufferAccess::write, 10ms));
+}
