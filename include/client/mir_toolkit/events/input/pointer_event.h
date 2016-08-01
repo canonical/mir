@@ -48,6 +48,7 @@ typedef enum {
     mir_pointer_action_leave = 3,
     /* Axis values have changed for the pointer */
     mir_pointer_action_motion = 4,
+
     mir_pointer_actions
 } MirPointerAction;
 
@@ -67,6 +68,7 @@ typedef enum {
     mir_pointer_axis_relative_x = 4,
 /* Relative axis containing the last reported y differential from the pointer */
     mir_pointer_axis_relative_y = 5,
+
     mir_pointer_axes
 } MirPointerAxis;
 

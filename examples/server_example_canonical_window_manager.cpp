@@ -712,8 +712,12 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
         case mir_touch_action_down:
             is_drag = false;
 
-        default:
+        case mir_touch_action_change:
             continue;
+
+        case mir_touch_actions:
+            abort();
+            break;
         }
     }
 

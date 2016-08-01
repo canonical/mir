@@ -51,6 +51,7 @@ typedef enum {
     /* System policy has triggered a key repeat on a key
        which was already down */
     mir_keyboard_action_repeat,
+
     mir_keyboard_actions
 } MirKeyboardAction;
 

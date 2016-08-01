@@ -683,8 +683,12 @@ bool msh::CanonicalWindowManagerPolicy::handle_touch_event(MirTouchEvent const* 
         case mir_touch_action_down:
             is_drag = false;
 
-        default:
+        case mir_touch_action_change:
             continue;
+
+        case mir_touch_actions:
+            abort();
+            return false;
         }
     }
 
