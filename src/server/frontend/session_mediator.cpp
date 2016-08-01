@@ -493,19 +493,30 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_release_buffers_called(session->name());
+    if (request->has_id())
+    {
+        auto stream_id = mf::BufferStreamId{request->id().value()};
+        try
+        {
+            auto stream = session->get_buffer_stream(stream_id);
+            for (auto i = 0; i < request->buffers().size(); i++)
+            {
+                mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
+                stream->disassociate_buffer(buffer_id);
+            }
+        }
+        catch(...)
+        {
+        }
+    }
     for (auto i = 0; i < request->buffers().size(); i++)
     {
         mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-        if (request->has_id())
-        {
-            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-            stream->disassociate_buffer(buffer_id);
-        }
         session->destroy_buffer(buffer_id);
     }
    done->Run();
 }
- 
+
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
