@@ -16,29 +16,32 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_CONTEXT_H_
-#define MIR_GRAPHICS_GL_CONTEXT_H_
+#ifndef MIR_RENDERER_GL_CONTEXT_H_
+#define MIR_RENDERER_GL_CONTEXT_H_
 
 namespace mir
 {
-namespace graphics
+namespace renderer
+{
+namespace gl
 {
 
-class GLContext
+class Context
 {
 public:
-    virtual ~GLContext() = default;
+    virtual ~Context() = default;
 
     virtual void make_current() const = 0;
     virtual void release_current() const = 0;
 
 protected:
-    GLContext() = default;
-    GLContext(GLContext const&) = delete;
-    GLContext& operator=(GLContext const&) = delete;
+    Context() = default;
+    Context(Context const&) = delete;
+    Context& operator=(Context const&) = delete;
 };
 
 }
 }
+}
 
-#endif /* MIR_GRAPHICS_GL_CONTEXT_H_ */
+#endif /* MIR_RENDERER_GL_CONTEXT_H_ */

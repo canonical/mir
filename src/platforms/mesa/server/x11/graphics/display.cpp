@@ -360,11 +360,6 @@ auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
-{
-    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
-}
-
 std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
@@ -373,4 +368,9 @@ std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*wid
 mg::NativeDisplay* mgx::Display::native_display()
 {
     return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
+{
+    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
 }

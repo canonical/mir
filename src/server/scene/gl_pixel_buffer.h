@@ -31,7 +31,13 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class GLContext;
+}
+namespace renderer
+{
+namespace gl
+{
+class Context;
+}
 }
 
 namespace scene
@@ -40,7 +46,7 @@ namespace scene
 class GLPixelBuffer : public PixelBuffer
 {
 public:
-    GLPixelBuffer(std::unique_ptr<graphics::GLContext> gl_context);
+    GLPixelBuffer(std::unique_ptr<renderer::gl::Context> gl_context);
     ~GLPixelBuffer() noexcept;
 
     void fill_from(graphics::Buffer& buffer);
@@ -52,7 +58,7 @@ private:
     void prepare();
     void copy_and_convert_pixel_line(char* src, char* dst);
 
-    std::unique_ptr<graphics::GLContext> const gl_context;
+    std::unique_ptr<renderer::gl::Context> const gl_context;
     GLuint tex;
     GLuint fbo;
     std::vector<char> pixels;

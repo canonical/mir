@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_SURFACELESS_EGL_CONTEXT_H_
 
 #include "mir/graphics/egl_resources.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 
 #include <EGL/egl.h>
 
@@ -29,7 +29,7 @@ namespace mir
 namespace graphics
 {
 
-class SurfacelessEGLContext : public GLContext
+class SurfacelessEGLContext : public renderer::gl::Context
 {
 public:
     SurfacelessEGLContext(EGLDisplay egl_display, EGLContext shared_context);

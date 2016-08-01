@@ -155,14 +155,6 @@ public:
     virtual std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) = 0;
 
     /**
-     * Creates a GLContext object that shares resources with the Display's GL context.
-     *
-     * This is usually implemented as a shared EGL context. This object can be used
-     * to access graphics resources from an arbitrary thread.
-     */
-    virtual std::unique_ptr<GLContext> create_gl_context() = 0;
-
-    /**
      * Creates a virtual output
      *  \returns null if the implementation does not support virtual outputs
      */

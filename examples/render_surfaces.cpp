@@ -26,7 +26,6 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/buffer_stream_factory.h"
@@ -36,6 +35,8 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -91,6 +92,14 @@ std::atomic<bool> created{false};
 static const float min_alpha = 0.3f;
 
 char const* const surfaces_to_render = "surfaces-to-render";
+
+auto as_context_source(mg::Display* display)
+{
+    auto ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display->native_display());
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+    return ctx;
+}
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -343,7 +352,7 @@ public:
         auto const buffer_stream_factory = the_buffer_stream_factory();
         auto const surface_factory = the_surface_factory();
         auto const surface_stack = the_surface_stack();
-        auto const gl_context = the_display()->create_gl_context();
+        auto const gl_context = as_context_source(the_display().get())->create_gl_context();
 
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
