@@ -52,19 +52,6 @@ std::string scan_codes_to_string(std::vector<uint32_t> const& scan_codes)
     return str + "}";
 }
 
-std::string rectangle_to_string(geom::Rectangle const& rect)
-{
-    std::stringstream ss;
-    ss << "{"
-       << rect.top_left.x.as_int() << ", "
-       << rect.top_left.y.as_int() << ", "
-       << rect.size.width.as_int() << ", "
-       << rect.size.height.as_int()
-       << "}";
-
-    return ss.str();
-}
-
 }
 
 mrl::SeatReport::SeatReport(std::shared_ptr<ml::Logger> const& log) :
@@ -104,15 +91,7 @@ void mrl::SeatReport::seat_get_rectangle_for(uint64_t id, geometry::Rectangle co
     std::stringstream ss;
     ss << "Get rectangle for"
        << " device_id=" << id
-       << " out_rect=" << rectangle_to_string(out_rect);
-
-    log->log(ml::Severity::informational, ss.str(), component);
-}
-
-void mrl::SeatReport::seat_create_device_state()
-{
-    std::stringstream ss;
-    ss << "Create device state";
+       << " out_rect=" << out_rect;
 
     log->log(ml::Severity::informational, ss.str(), component);
 }
@@ -153,7 +132,7 @@ void mrl::SeatReport::seat_set_confinement_region_called(geom::Rectangles const&
 
     auto bound_rect = regions.bounding_rectangle();
     ss << "Set confinement region"
-       << " regions=" << rectangle_to_string(bound_rect);
+       << " regions=" << bound_rect;
 
     log->log(ml::Severity::informational, ss.str(), component);
 }

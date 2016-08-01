@@ -259,8 +259,6 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
         cursor_y,
         std::move(devices));
 
-    report->seat_create_device_state();
-
     return out_ev;
 }
 

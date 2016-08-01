@@ -37,10 +37,6 @@ void mrn::SeatReport::seat_get_rectangle_for(uint64_t /*id*/, geometry::Rectangl
 {
 }
 
-void mrn::SeatReport::seat_create_device_state()
-{
-}
-
 void mrn::SeatReport::seat_set_key_state(uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/)
 {
 }
