@@ -19,6 +19,7 @@
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -419,17 +420,58 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
     event_callback(event, source_frame);
 }
 
-std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(graphics::BufferProperties const&)
+namespace {
+void abuffer_created(MirBuffer* buffer, void* context)
 {
-    return nullptr;
+    auto connection = static_cast<mgn::MirClientHostConnection::BufferCreation*>(context);
+    connection->connection->buffer_created(buffer, connection);
+}
 }
 
-MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
+void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* c)
 {
-    return nullptr;
+    std::unique_lock<std::mutex> lk(c->mut);
+    c->b = b;
+    c->cv.notify_all();
 }
 
-MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
+std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const& properties)
 {
-    return MirGraphicsRegion{};
+    c.push_back(std::make_shared<BufferCreation>(this, count++));
+    auto r = c.back().get(); 
+
+    mir_connection_allocate_buffer(
+        mir_connection,
+        properties.size.width.as_int(),
+        properties.size.height.as_int(),
+        properties.format,
+        mir_buffer_usage_hardware,
+        abuffer_created, r);
+
+    std::unique_lock<std::mutex> lk(r->mut);
+    r->cv.wait(lk, [&]{ return r->b; });
+
+    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
+    for(auto it = c.begin(); it != c.end();)
+    {
+        if (r->count == (*it)->count)
+            it = c.erase(it);
+        else
+            it++;
+    }
+
+    if (!mir_buffer_is_valid(b.get()))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+    return b;
+}
+
+MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer* buffer)
+{
+    return mir_buffer_get_native_buffer(buffer, mir_read_write);
+}
+
+MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer* buffer)
+{
+    return mir_buffer_get_graphics_region(buffer, mir_read_write);
 }

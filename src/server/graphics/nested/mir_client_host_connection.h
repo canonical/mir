@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 
 struct MirConnection;
 
@@ -83,7 +84,22 @@ public:
     MirNativeBuffer* get_native_handle(MirBuffer*) override;
     MirGraphicsRegion get_graphics_region(MirBuffer*) override;
 
+    struct BufferCreation
+    {
+        BufferCreation(MirClientHostConnection* c, int co) : connection(c), count(co) {}
+
+        MirClientHostConnection* connection;
+        int count;
+        std::mutex mut;
+        std::condition_variable cv;
+        MirBuffer* b = nullptr;
+    };
+    void buffer_created(MirBuffer*, BufferCreation*);
+
 private:
+    int count = 0;
+    std::vector<std::shared_ptr<BufferCreation>> c;
+
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;
 
@@ -111,6 +127,7 @@ private:
         std::vector<uint8_t> buffer;
     };
     NestedCursorImage stored_cursor_image;
+
 };
 
 }
