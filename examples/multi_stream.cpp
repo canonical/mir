@@ -263,9 +263,6 @@ int main(int argc, char* argv[])
         bounce_position(arrangement[2].displacement_x, top_dx, -100, 300);
         bounce_position(arrangement[2].displacement_y, top_dy, -100, 300);
 
-        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
-        mir_surface_apply_spec(surface, spec);
-
         bounce_position(baseColour, dbase, 128, 255);
         bounce_position(topColour, dtop, 200, 255);
         bounce_position(bottomColour, dbottom, 100, 255);
@@ -273,13 +270,14 @@ int main(int argc, char* argv[])
         bounce_position(topSize, dTopSize, 70, 120);
 
         top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-
-        arrangement[1].stream = *top;
+        arrangement[2].stream = *top;
 
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(*top, 0, topColour, 0, 128);
 
+        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
+        mir_surface_apply_spec(surface, spec);
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);
