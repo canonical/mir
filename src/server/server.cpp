@@ -36,9 +36,9 @@
 #include "mir/cookie/authority.h"
 
 // TODO these are used to frig a stub renderer when running headless
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 
 #include <iostream>
 
@@ -204,7 +204,7 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
 // TODO these are used to frig a stub renderer when running headless
 namespace
 {
-class StubGLRenderer : public mir::compositor::Renderer
+class StubGLRenderer : public mir::renderer::Renderer
 {
 public:
     StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
@@ -236,11 +236,11 @@ public:
     mir::renderer::gl::RenderTarget* const render_target;
 };
 
-class StubGLRendererFactory : public mir::compositor::RendererFactory
+class StubGLRendererFactory : public mir::renderer::RendererFactory
 {
 public:
     auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
-    -> std::unique_ptr<mir::compositor::Renderer>
+    -> std::unique_ptr<mir::renderer::Renderer>
     {
         return std::make_unique<StubGLRenderer>(display_buffer);
     }
@@ -258,7 +258,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     }
 
     // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
-    auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
+    auto the_renderer_factory() -> std::shared_ptr<renderer::RendererFactory> override
     {
         auto const& options = the_options();
         if (options->is_set(options::platform_graphics_lib))
