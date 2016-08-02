@@ -148,6 +148,17 @@ static void handle_event(MirSurface* surface, MirEvent const* event, void* conte
     }
 }
 
+static float fmodulus(float x, float y)
+{
+    float mod = fmod(x, y);
+    if (mod < 0.0f)
+    {
+        mod += y;
+    }
+
+    return mod;
+}
+
 int main(int argc, char* argv[])
 {
     char const v_shader_src[] =
@@ -239,13 +250,8 @@ int main(int argc, char* argv[])
          *| 5-1    2  |
          *|-----------|
         **/
-        float mod_x = fmod(mouse_x, width);
-        float mod_y = fmod(mouse_y, height);
-
-        if (mod_x < 0)
-            mod_x += width;
-        if (mod_y < 0)
-            mod_y += height;
+        float mod_x = fmodulus(mouse_x, width);
+        float mod_y = fmodulus(mouse_y, height);
 
         float four_zero_x = normalize(mod_x, width,  sqaure_size);
         float four_zero_y = normalize(mod_y, height, sqaure_size);
