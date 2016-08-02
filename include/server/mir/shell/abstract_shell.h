@@ -122,6 +122,8 @@ public:
 
     bool handle(MirEvent const& event) override;
 
+    void update_focused_surface_confined_region();
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;
@@ -136,7 +138,7 @@ private:
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
-    std::shared_ptr<scene::SurfaceObserver> const focus_surface_observer;
+    std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
 
     void set_focus_to_locked(
         std::unique_lock<std::mutex> const& lock,

@@ -41,17 +41,28 @@ namespace
 
 struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
 {
-    UpdateConfinementOnSurfaceChanges(std::shared_ptr<mi::Seat> seat) :
-        seat(seat)
+    UpdateConfinementOnSurfaceChanges(msh::AbstractShell* shell) :
+        shell(shell)
     {
     }
 
-    void confinement_region_updated(geom::Rectangle const& rect)
+    void resized_to(geom::Size const& /*size*/) override
     {
-        seat->set_confinement_regions({rect});
+        update_confinement_region();
     }
 
-    std::shared_ptr<mi::Seat> seat;
+    void moved_to(geom::Point const& /*top_left*/) override
+    {
+        update_confinement_region();
+    }
+
+private:
+    void update_confinement_region()
+    {
+        shell->update_focused_surface_confined_region();
+    }
+
+    msh::AbstractShell* shell;
 };
 }
 
@@ -70,12 +81,22 @@ msh::AbstractShell::AbstractShell(
     window_manager(wm_builder(this)),
     seat(seat),
     report(report),
-    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(seat))
+    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this))
 {
 }
 
 msh::AbstractShell::~AbstractShell() noexcept
 {
+}
+
+void msh::AbstractShell::update_focused_surface_confined_region()
+{
+    auto const current_focus = focus_surface.lock();
+
+    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_surface)
+    {
+        seat->set_confinement_regions({current_focus->input_bounds()});
+    }
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
@@ -357,3 +378,4 @@ void msh::AbstractShell::raise(SurfaceSet const& surfaces)
     surface_stack->raise(surfaces);
     report->surfaces_raised(surfaces);
 }
+

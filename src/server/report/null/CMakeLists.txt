@@ -8,6 +8,7 @@ add_library(
     message_processor_report.cpp
     null_report_factory.cpp
     scene_report.cpp
+    seat_report.cpp
     session_mediator_report.cpp
     shell_report.cpp
     shell_report.h

@@ -61,6 +61,10 @@ class SessionCoordinator;
 class SurfaceFactory;
 class CoordinateTranslator;
 }
+namespace input
+{
+class SeatReport;
+}
 
 class Fd;
 class MainLoop;
@@ -282,6 +286,9 @@ public:
 
     /// Sets an override functor for creating the session mediator report.
     void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
+
+    /// Sets an override functor for creating the seat report.
+    void override_the_seat_report(Builder<input::SeatReport> const& seat_report_builder);
 
     /// Sets an override functor for creating the shell.
     void override_the_shell(Builder<shell::Shell> const& wrapper);

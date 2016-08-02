@@ -99,6 +99,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
+    MACRO(seat_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
