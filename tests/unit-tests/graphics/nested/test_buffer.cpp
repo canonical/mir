@@ -92,7 +92,8 @@ TEST_F(NestedBuffer, native_buffer_handle)
         .WillOnce(Return(&handle));
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     auto native_handle = buffer.native_buffer_handle();
-    EXPECT_THAT(&handle, Eq(native_handle.get()));
+    EXPECT_THAT(&handle, Eq(native_handle->platform_handle().get()));
+    EXPECT_THAT(buffer.get(), Eq(native_handle->nested_handle().get()));
 }
 
 TEST_F(NestedBuffer, writes_to_region)
