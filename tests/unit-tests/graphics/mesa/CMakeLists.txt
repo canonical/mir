@@ -12,7 +12,7 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
 endif()
 
 add_library(unit_test_graphics_mesa_common OBJECT
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_ipc_operations.cpp
+#  ${CMAKE_CURRENT_SOURCE_DIR}/test_ipc_operations.cpp
 )
 
 list(APPEND UNIT_TEST_SOURCES

@@ -142,7 +142,7 @@ add_library(
   mirplatformgraphicsstub MODULE
 
   platform_graphics_dummy.cpp
-  stubbed_graphics_platform.cpp
+#  stubbed_graphics_platform.cpp
 )
 
 target_link_libraries(

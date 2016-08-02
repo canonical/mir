@@ -21,6 +21,7 @@
 #include "client_buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "native_buffer.h"
 
 #include <cstring>
 #include <boost/throw_exception.hpp>

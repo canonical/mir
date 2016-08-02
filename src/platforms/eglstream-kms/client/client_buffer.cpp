@@ -122,10 +122,15 @@ MirPixelFormat mcle::ClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
+std::shared_ptr<mir::graphics::NativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
 {
+    auto buffer = std::make_shared<mir::graphics::NativeBuffer>();
+    auto b = (MirBufferPackage*)buffer.get();
+ 
     creation_package->age = age();
-    return creation_package;
+
+    *b = *creation_package;
+    return buffer;
 }
 
 void mcle::ClientBuffer::update_from(MirBufferPackage const&)

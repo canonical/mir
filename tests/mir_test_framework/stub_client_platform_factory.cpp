@@ -68,12 +68,13 @@ std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native
 
 MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* buf) const
 {
-    static_cast<void>(buf);
-#if defined(MESA_KMS) || defined(MESA_X11)
-    return buf;
-#else
+//    static_cast<void>(buf);
+//#if defined(MESA_KMS) || defined(MESA_X11)
+//    return buf;
+//#else
+    (void)buf;
     return nullptr;
-#endif
+//#endif
 }
 
 MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConfig) const

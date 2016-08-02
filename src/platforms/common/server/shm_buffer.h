@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 namespace mir
 {

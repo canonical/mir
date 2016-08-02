@@ -18,6 +18,7 @@
 
 #include "software_buffer.h"
 #include "shm_file.h"
+#include "native_buffer.h"
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
@@ -34,5 +35,9 @@ mge::SoftwareBuffer::SoftwareBuffer(
 
 std::shared_ptr<mg::NativeBuffer> mge::SoftwareBuffer::native_buffer_handle() const
 {
-    return to_mir_buffer_package();
+    auto buffer = std::make_shared<mg::NativeBuffer>();
+    auto b = (MirBufferPackage*) buffer.get();
+    auto c = to_mir_buffer_package();
+    *b = *c;
+    return buffer;
 }

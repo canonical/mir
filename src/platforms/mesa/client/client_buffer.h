@@ -23,6 +23,7 @@
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
+#include "native_buffer.h"
 
 #include <memory>
 
@@ -49,7 +50,7 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     MirPixelFormat pixel_format() const;
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const;
     void update_from(MirBufferPackage const&);
     void fill_update_msg(MirBufferPackage&);
     MirNativeBuffer* as_mir_native_buffer() const;

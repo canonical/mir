@@ -22,6 +22,7 @@
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"

@@ -21,7 +21,7 @@ include_directories(
 )
 
 add_library(unit_test_client_platform_mesa OBJECT
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer.cpp
+#  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mesa_native_display_container.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_native_surface.cpp

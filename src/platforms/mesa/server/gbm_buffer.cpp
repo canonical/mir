@@ -20,6 +20,7 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
+#include "native_buffer.h"
 
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -164,9 +165,9 @@ void mgm::GBMBuffer::gl_bind_to_texture()
     texture_binder->gl_bind_to_texture();
 }
 
-std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
+std::shared_ptr<mg::NativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<GBMNativeBuffer>();
+    auto temp = std::make_shared<NativeBuffer>();
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
