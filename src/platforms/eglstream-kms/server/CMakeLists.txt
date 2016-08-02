@@ -27,6 +27,7 @@ mir_add_library_with_symbols(
   kms_display_configuration.cpp
   egl_output.h
   egl_output.cpp
+  software_buffer.cpp
 )
 
 target_link_libraries(

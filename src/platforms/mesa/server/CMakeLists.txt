@@ -18,6 +18,7 @@ add_library(
   drm_close_threadsafe.cpp
   gbm_buffer.cpp
   ipc_operations.cpp
+  software_buffer.cpp
 )
 
 target_link_libraries(

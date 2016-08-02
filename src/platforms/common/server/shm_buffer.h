@@ -41,21 +41,27 @@ class ShmBuffer : public BufferBasic, public NativeBufferBase,
 public:
     static bool supports(MirPixelFormat);
 
-    ShmBuffer(std::unique_ptr<ShmFile> shm_file,
-              geometry::Size const& size,
-              MirPixelFormat const& pixel_format);
     ~ShmBuffer() noexcept;
 
     geometry::Size size() const override;
     geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
     void gl_bind_to_texture() override;
     void bind() override;
     void secure_for_render() override;
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     NativeBufferBase* native_buffer_base() override;
+
+    //each platform will have to return the NativeBuffer type that the platform has defined.
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const = 0;
+
+protected:
+    ShmBuffer(std::unique_ptr<ShmFile> shm_file,
+              geometry::Size const& size,
+              MirPixelFormat const& pixel_format);
+
+    std::shared_ptr<MirBufferPackage> to_mir_buffer_package() const;
 
 private:
     ShmBuffer(ShmBuffer const&) = delete;
