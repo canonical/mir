@@ -239,17 +239,25 @@ int main(int argc, char* argv[])
          *| 5-1    2  |
          *|-----------|
         **/
-        float four_zero_x = normalize(fmod(mouse_x, width), width,  sqaure_size);
-        float four_zero_y = normalize(fmod(mouse_y, height), height, sqaure_size);
+        float mod_x = fmod(mouse_x, width);
+        float mod_y = fmod(mouse_y, height);
 
-        float five_one_x  = normalize(fmod(mouse_x, width), width, 0.0f);
-        float five_one_y  = normalize(fmod(mouse_y, height), height, 0.0f);
+        if (mod_x < 0)
+            mod_x += width;
+        if (mod_y < 0)
+            mod_y += height;
 
-        float two_x       = normalize(fmod(mouse_x, width), width, sqaure_size);
-        float two_y       = normalize(fmod(mouse_y, height), height, 0.0f);
+        float four_zero_x = normalize(mod_x, width,  sqaure_size);
+        float four_zero_y = normalize(mod_y, height, sqaure_size);
 
-        float three_x     = normalize(fmod(mouse_x, width), width, 0.0f);
-        float three_y     = normalize(fmod(mouse_y, height), height, sqaure_size);
+        float five_one_x  = normalize(mod_x, width, 0.0f);
+        float five_one_y  = normalize(mod_y, height, 0.0f);
+
+        float two_x       = normalize(mod_x, width, sqaure_size);
+        float two_y       = normalize(mod_y, height, 0.0f);
+
+        float three_x     = normalize(mod_x, width, 0.0f);
+        float three_y     = normalize(mod_y, height, sqaure_size);
 
         GLfloat square_vert[] = { five_one_x , five_one_y , 0.0f,
                                   two_x      , two_y      , 0.0f,
