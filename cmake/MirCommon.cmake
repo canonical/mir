@@ -170,11 +170,7 @@ function (mir_precompiled_header TARGET HEADER)
     set(TARGET_COMPILE_DEFINITIONS "$<$<BOOL:${TARGET_COMPILE_DEFINITIONS}>:-D$<JOIN:${TARGET_COMPILE_DEFINITIONS},\n-D>\n>")
 
     foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
-      if (${dir} MATCHES "usr/include")
-        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -isystem ${dir}")
-      else()
-        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
-      endif()
+      set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
     endforeach()
 
     # So.
