@@ -6,11 +6,12 @@ mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
     - Enhancements:
       . Enable new buffer semantics (NBS) by default.
     - Bugs fixed:
-      . OSK flickers and buttons are sometimes invisble (LP: #1590765)
       . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
       . [testsfail] Process.* (memory leak in libhybris generated when probing
         android platforms) (LP: #1602199)
-      . CI InputEvents failure in krillin (LP: #1603145)
+      . unity8/libmirclient gives up and terminates prematurely with
+        "std::exception::what: disconnected: no new buffers" via
+        ExchangeSemantics::submit() (LP: #1506358)
 
  -- Kevin DuBois <kdub432@gmail.com>  Fri, 29 Jul 2016 11:31:02 +0000
 
