@@ -30,7 +30,7 @@ namespace eglstream
 class ClientPlatform : public client::ClientPlatform
 {
 public:
-    ClientPlatform(ClientContext* const context);
+    ClientPlatform(ClientContext* const);
 
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
@@ -40,9 +40,6 @@ public:
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
-
-private:
-    ClientContext* const context;
 };
 
 }
