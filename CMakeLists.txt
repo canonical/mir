@@ -207,9 +207,11 @@ include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 #
 # Full OpenGL support is possibly complete but not yet perfect. So is
-# presently disabled by default. See the TODOs in:
-#   src/platform/graphics/egl_extensions.cpp: glEGLImageTargetTexture2DOES
-#   src/platforms/common/server/shm_buffer.cpp: glTexImage2D
+# presently disabled by default due to:
+#   1. Black windows bug: https://bugs.freedesktop.org/show_bug.cgi?id=92265
+#   2. Use of glEGLImageTargetTexture2DOES in:
+#        src/platform/graphics/egl_extensions.cpp
+#      possibly shouldn't work even though it does. Or should it?
 #
 #if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
 #    TARGET_ARCH STREQUAL "i386-linux-gnu")

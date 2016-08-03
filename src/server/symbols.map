@@ -839,6 +839,6 @@ MIR_SERVER_0.24 {
 MIR_SERVER_0.25 {
  global:
   extern "C++" {
-    mir::scene::NullSurfaceObserver::confinement_region_updated*;
+    mir::Server::override_the_seat_report*;
   };
 } MIR_SERVER_0.24;

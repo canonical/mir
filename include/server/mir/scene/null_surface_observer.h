@@ -45,7 +45,6 @@ public:
     void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout, std::string const& variant, std::string const& options) override;
     void renamed(char const* name) override;
     void cursor_image_removed() override;
-    void confinement_region_updated(geometry::Rectangle const& rect) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

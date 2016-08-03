@@ -124,6 +124,7 @@ MIRPLATFORM_0.25 {
     mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
+    mir::options::seat_report_opt*;
     mir::options::log_opt_value*;
     mir::options::lttng_opt_value*;
     mir::options::msg_processor_report_opt*;

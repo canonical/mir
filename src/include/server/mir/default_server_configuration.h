@@ -122,6 +122,7 @@ class MirClientHostConnection;
 namespace input
 {
 class InputReport;
+class SeatReport;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
@@ -302,6 +303,7 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
+    virtual std::shared_ptr<input::SeatReport> the_seat_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
 
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
@@ -366,6 +368,7 @@ protected:
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
+    CachedPtr<input::SeatReport> seat_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
