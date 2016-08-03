@@ -6,7 +6,6 @@ add_definitions(
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)
- # include_directories(${PROJECT_SOURCE_DIR}/src/platforms/android/include)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
 endif()
 

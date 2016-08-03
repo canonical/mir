@@ -20,6 +20,7 @@
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/display_buffer.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -61,7 +62,7 @@ public:
         , stub_gbm_native_buffer{
              std::make_shared<StubGBMNativeBuffer>(display_area.size)}
         , stub_shm_native_buffer{
-             std::make_shared<MirNativeBuffer>()}
+             std::make_shared<NativeBuffer>()}
         , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -119,8 +120,8 @@ protected:
     std::shared_ptr<MockBuffer> mock_software_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
     std::shared_ptr<FakeRenderable> fake_software_renderable;
-    std::shared_ptr<mesa::GBMNativeBuffer> stub_gbm_native_buffer;
-    std::shared_ptr<MirNativeBuffer> stub_shm_native_buffer;
+    std::shared_ptr<NativeBuffer> stub_gbm_native_buffer;
+    std::shared_ptr<NativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;

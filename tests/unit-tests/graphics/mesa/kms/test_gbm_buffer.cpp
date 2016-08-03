@@ -25,6 +25,7 @@
 
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/gbm_buffer.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "src/platforms/mesa/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"

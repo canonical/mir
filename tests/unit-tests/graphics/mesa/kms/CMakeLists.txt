@@ -1,12 +1,13 @@
 mir_add_wrapped_executable(
   mir_unit_tests_mesa-kms
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_software_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_multi_monitor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_real_kms_output.cpp
