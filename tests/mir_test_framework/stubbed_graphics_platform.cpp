@@ -32,6 +32,8 @@
 
 #ifdef ANDROID
 #include "mir/test/doubles/stub_android_native_buffer.h"
+#else
+#include "src/platforms/mesa/include/native_buffer.h"
 #endif
 
 #include <sys/types.h>

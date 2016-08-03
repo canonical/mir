@@ -18,9 +18,11 @@
 
 #include "src/platforms/mesa/server/ipc_operations.h"
 #include "src/platforms/mesa/server/drm_authentication.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_buffer.h"
@@ -69,7 +71,7 @@ struct IpcOperations : public ::testing::Test
 
     MockDRMOperations mock_drm_ops;
     mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops)};
-    MirBufferPackage native_handle;
+    mg::NativeBuffer native_handle;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     geom::Stride dummy_stride{4390};
     geom::Size dummy_size{123, 345};

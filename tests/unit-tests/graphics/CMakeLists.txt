@@ -28,7 +28,7 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
   add_subdirectory(kms-utils/)
   add_subdirectory(mesa/)
   list (APPEND UNIT_TEST_SOURCES
-#    ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
   )
 endif()
 

@@ -6,6 +6,7 @@ add_definitions(
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)
+ # include_directories(${PROJECT_SOURCE_DIR}/src/platforms/android/include)
   add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
 endif()
 
@@ -38,7 +39,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
-  ${PROJECT_SOURCE_DIR}/src/platforms/android/include
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
