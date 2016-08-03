@@ -70,6 +70,12 @@ mir_add_wrapped_executable(mir_demo_client_target
 target_link_libraries(mir_demo_client_target
   eglapp
 )
+mir_add_wrapped_executable(mir_demo_client_pointer_confinement
+  pointer_confinement.c
+)
+target_link_libraries(mir_demo_client_pointer_confinement
+  eglapp
+)
 mir_add_wrapped_executable(mir_demo_client_camera
   camera.c
 )
