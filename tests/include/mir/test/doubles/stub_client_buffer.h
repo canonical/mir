@@ -22,6 +22,10 @@
 #include "src/include/client/mir/client_buffer.h"
 #include <unistd.h>
 
+#ifndef ANDROID
+#include "src/platforms/mesa/include/native_buffer.h"
+#endif
+
 namespace mir
 {
 namespace test
@@ -65,12 +69,13 @@ struct StubClientBuffer : client::ClientBuffer
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
     {
-//#ifndef ANDROID
-//        return package;
-//#else
-//        return std::shared_ptr<graphics::NativeBuffer>();
-//#endif
+#ifndef ANDROID
+        auto pp = (MirBufferPackage*) native.get();
+        *pp = *package; 
+        return native;
+#else
         return nullptr;
+#endif
     }
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
@@ -83,6 +88,7 @@ struct StubClientBuffer : client::ClientBuffer
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;
     MirPixelFormat pf_;
+    std::shared_ptr<graphics::NativeBuffer> native {std::make_shared<graphics::NativeBuffer>()};
 };
 
 }
