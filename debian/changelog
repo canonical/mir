@@ -112,6 +112,22 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
 
+mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.5 (https://launchpad.net/mir/+milestone/0.23.5)
+    - ABI summary:
+      . No ABI changes in any libraries.
+    - Enhancements:
+      . Enable new buffer semantics (NBS) by default.
+    - Bugs fixed:
+      . OSK flickers and buttons are sometimes invisble (LP: #1590765)
+      . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
+      . [testsfail] Process.* (memory leak in libhybris generated when probing
+        android platforms) (LP: #1602199)
+      . CI InputEvents failure in krillin (LP: #1603145)
+
+ -- Kevin DuBois <kdub432@gmail.com>  Fri, 29 Jul 2016 11:31:02 +0000
+
 mir (0.23.4+16.10.20160719.1-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.4 (https://launchpad.net/mir/+milestone/0.23.4)
