@@ -33,13 +33,6 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . usage of std:call_once in mirclient causes TLS collisions with some
         android devices (LP: #1599867)
       . AltGr not working on external keyboards (LP: #1565236)
-      . Performance loss with NBS and overlays on (LP: #1578159)
-      . [regression] NBS causes sudden loss of performance after surface
-        resizes (LP: #1579076)
-      . Mir fails to build in vivid+overlay: COMPOSITOR_TRACE_CALL
-        (LP: #1584601)
-      . Using NBS, X apps under Unity8 need interaction to start in
-        pocket-desktop (LP: #1584784)
       . [regression] unity8 fails to start when built with 0.24 series (lp:mir)
         (LP: #1597717)
       . CI failure in MirSurfaceVisibilityEvent.exposed_received_when_surface_
@@ -51,7 +44,6 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . mouse is getting stuck on a phantom edge (LP: #1580774)
       . [testsfail] in MirSurfaceVisibilityEvent.exposed_received_when_surface_
         raised_over_occluding_surface [never called] (LP: #1581385)
-      . OSK flickers and buttons are sometimes invisble (LP: #1590765)
       . [enhancement] Add support for full OpenGL compositing (LP: #1420581)
       . [testsfail] ServerSignal.terminate_handler_is_called_for_SIGINT|SIGTERM
         (LP: #1570353)
@@ -61,8 +53,6 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
         new_display_configuration (LP: #1576760)
       . mir server crashed in what(): drmModeMoveCursor failed (returned -13)
         (LP: #1579630)
-      . [regression] MIR_CLIENT_PERF_REPORT is showing bogus render times and
-        buffer lag (LP: #1581368)
       . mirtest-dev is hard to use as the objects used are compiled with LTO
         (LP: #1583536)
       . [testsfail] ClientLogging.reports_performance [Value of: lag]
@@ -93,8 +83,6 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] The Super/Windows key doesn't work any more (LP: #1602966)
       . mir_acceptance_tests.bin: double free or corruption (fasttop)
         (LP: #1603114)
-      . [testsfail] Process.* (memory leak in libhybris generated when probing
-        android platforms) (LP: #1602199)
       . ftbfs in linking libmir-test-assist.a in xenial+overlay and
         yakkety+overlay (LP: #1601810)
       . [testsfail] failure in NestedInput.on_input_device_state_nested_*
