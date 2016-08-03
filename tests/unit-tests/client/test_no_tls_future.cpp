@@ -118,7 +118,7 @@ TEST(NoTLSFuture, then_is_not_called_until_promise_is_fulfilled_by_moving)
 
     EXPECT_FALSE(called);
 
-    promise.set_value(std::move(std::string{expected}));
+    promise.set_value(std::string{expected});
     EXPECT_TRUE(called);
 }
 
