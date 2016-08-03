@@ -73,12 +73,19 @@ struct ShmMemoryRegion : mcl::MemoryRegion
     size_t const size_in_bytes;
 };
 
+std::shared_ptr<mir::graphics::NativeBuffer> to_native_buffer(MirBufferPackage const& package)
+{
+    auto buffer = std::make_shared<mir::graphics::NativeBuffer>();
+    *static_cast<MirBufferPackage*>(buffer.get()) = package;
+    return buffer;
+}
+
 }
 
 mcle::ClientBuffer::ClientBuffer(
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
-    : creation_package{package},
+    : creation_package{to_native_buffer(*package)},
       rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
@@ -124,13 +131,8 @@ MirPixelFormat mcle::ClientBuffer::pixel_format() const
 
 std::shared_ptr<mir::graphics::NativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
 {
-    auto buffer = std::make_shared<mir::graphics::NativeBuffer>();
-    auto b = (MirBufferPackage*)buffer.get();
- 
     creation_package->age = age();
-
-    *b = *creation_package;
-    return buffer;
+    return creation_package;
 }
 
 void mcle::ClientBuffer::update_from(MirBufferPackage const&)

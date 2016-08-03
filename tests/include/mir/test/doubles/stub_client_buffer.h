@@ -70,8 +70,7 @@ struct StubClientBuffer : client::ClientBuffer
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
     {
 #ifndef ANDROID
-        auto pp = (MirBufferPackage*) native.get();
-        *pp = *package; 
+        *static_cast<MirBufferPackage*>(native.get()) = *package; 
         return native;
 #else
         return nullptr;

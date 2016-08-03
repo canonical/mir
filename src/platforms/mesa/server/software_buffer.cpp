@@ -29,16 +29,20 @@ mgm::SoftwareBuffer::SoftwareBuffer(
     std::unique_ptr<mgc::ShmFile> shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format) :
-    ShmBuffer(std::move(shm_file), size, pixel_format)
+    ShmBuffer(std::move(shm_file), size, pixel_format),
+    native_buffer(create_native_buffer())
 {
+}
+
+std::shared_ptr<mg::NativeBuffer> mgm::SoftwareBuffer::create_native_buffer()
+{
+    auto buffer = std::make_shared<mg::NativeBuffer>();
+    *static_cast<MirBufferPackage*>(buffer.get()) = *to_mir_buffer_package();
+    buffer->bo = nullptr;
+    return buffer;
 }
 
 std::shared_ptr<mg::NativeBuffer> mgm::SoftwareBuffer::native_buffer_handle() const
 {
-    auto buffer = std::make_shared<mg::NativeBuffer>();
-    auto b = (MirBufferPackage*) buffer.get();
-    auto c = to_mir_buffer_package();
-    *b = *c;
-    return buffer;
-//    return to_mir_buffer_package();
+    return native_buffer;
 }

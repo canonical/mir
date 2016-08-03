@@ -57,7 +57,7 @@ public:
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout);
 
 private:
-    std::shared_ptr<MirBufferPackage> const creation_package;
+    std::shared_ptr<graphics::NativeBuffer> const creation_package;
     geometry::Rectangle const rect;
     MirPixelFormat const buffer_pf;
 };

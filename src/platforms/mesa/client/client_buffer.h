@@ -60,7 +60,7 @@ public:
 
 private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
-    std::shared_ptr<MirBufferPackage> const creation_package;
+    std::shared_ptr<graphics::NativeBuffer> const creation_package;
     geometry::Rectangle const rect;
     MirPixelFormat const buffer_pf;
 };

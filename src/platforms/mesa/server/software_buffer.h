@@ -41,6 +41,9 @@ public:
         MirPixelFormat const& pixel_format);
 
     std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+private:
+    std::shared_ptr<NativeBuffer> create_native_buffer();
+    std::shared_ptr<NativeBuffer> const native_buffer;
 };
 
 }
