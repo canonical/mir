@@ -87,7 +87,9 @@ struct StubClientBuffer : client::ClientBuffer
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;
     MirPixelFormat pf_;
+#ifndef ANDROID
     std::shared_ptr<graphics::NativeBuffer> native {std::make_shared<graphics::NativeBuffer>()};
+#endif
 };
 
 }

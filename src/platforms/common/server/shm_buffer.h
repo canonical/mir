@@ -55,7 +55,7 @@ public:
     NativeBufferBase* native_buffer_base() override;
 
     //each platform will have to return the NativeBuffer type that the platform has defined.
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const = 0;
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override = 0;
 
 protected:
     ShmBuffer(std::unique_ptr<ShmFile> shm_file,

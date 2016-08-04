@@ -70,7 +70,12 @@ public:
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
     {
-#if defined(MESA_KMS) || defined(MESA_X11)
+#ifdef ANDROID
+        auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        auto anwb = native_buffer->anwb();
+        anwb->width = properties.size.width.as_int();
+        anwb->height = properties.size.width.as_int();
+#else
         auto native_buffer = std::make_shared<mg::NativeBuffer>();
         native_buffer->data_items = 1;
         native_buffer->data[0] = 0xDEADBEEF;
@@ -86,11 +91,6 @@ public:
         {
             native_buffer->flags |= mir_buffer_flag_can_scanout;
         }
-#else
-        auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        auto anwb = native_buffer->anwb();
-        anwb->width = properties.size.width.as_int();
-        anwb->height = properties.size.width.as_int();
 #endif
         return native_buffer;
     }

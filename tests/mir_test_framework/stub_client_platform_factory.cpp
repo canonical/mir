@@ -23,6 +23,8 @@
 #include "mir/client_context.h"
 #if defined(MESA_KMS) || defined(MESA_X11)
 #include "src/platforms/mesa/include/native_buffer.h"
+#else
+#include "src/platforms/android/include/native_buffer.h"
 #endif
 
 #include <unistd.h>

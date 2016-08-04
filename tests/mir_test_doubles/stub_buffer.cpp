@@ -33,5 +33,7 @@ auto mtd::StubBuffer::create_native_buffer()
     return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
 #elif ANDROID
     return std::make_shared<StubAndroidNativeBuffer>();
+#else
+    return nullptr;
 #endif
 }
