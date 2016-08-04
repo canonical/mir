@@ -132,6 +132,9 @@ suite=${dist}
 " >> mstrap.conf
 done
 
+mkdir -p etc/apt
+ln -fs /etc/apt/trusted.gpg etc/apt/trusted.gpg
+
 # Fakeroot is required to stop the apt update command giving up
 fakeroot multistrap -f mstrap.conf 
 
