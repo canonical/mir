@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RENDERER_FACTORY_H_
-#define MIR_COMPOSITOR_RENDERER_FACTORY_H_
+#ifndef MIR_RENDERER_RENDERER_FACTORY_H_
+#define MIR_RENDERER_RENDERER_FACTORY_H_
 
 #include <memory>
 
@@ -27,7 +27,7 @@ namespace graphics
 {
 struct DisplayBuffer;
 }
-namespace compositor
+namespace renderer
 {
 
 class Renderer;
@@ -48,4 +48,4 @@ protected:
 }
 }
 
-#endif /* MIR_COMPOSITOR_RENDERER_FACTORY_H_ */
+#endif /* MIR_RENDERER_RENDERER_FACTORY_H_ */

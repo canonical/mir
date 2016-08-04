@@ -21,11 +21,11 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/renderer/renderer.h"
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
@@ -36,7 +36,7 @@ namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     renderer(renderer),

@@ -41,13 +41,11 @@ class MultiplexingDispatchable;
 }
 namespace compositor
 {
-class Renderer;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class RendererFactory;
 class CompositorReport;
 class FrameDroppingPolicyFactory;
 }
@@ -157,6 +155,11 @@ namespace report
 class ReportFactory;
 }
 
+namespace renderer
+{
+class RendererFactory;
+}
+
 class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
@@ -197,7 +200,7 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<renderer::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -397,7 +400,7 @@ protected:
     CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
-    CachedPtr<compositor::RendererFactory> renderer_factory;
+    CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;

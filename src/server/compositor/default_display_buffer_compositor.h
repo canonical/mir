@@ -29,25 +29,28 @@ namespace graphics
 {
 class DisplayBuffer;
 }
+namespace renderer
+{
+class Renderer;
+}
 namespace compositor
 {
 
 class Scene;
-class Renderer;
 
 class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 {
 public:
     DefaultDisplayBufferCompositor(
         graphics::DisplayBuffer& display_buffer,
-        std::shared_ptr<Renderer> const& renderer,
+        std::shared_ptr<renderer::Renderer> const& renderer,
         std::shared_ptr<CompositorReport> const& report);
 
     void composite(SceneElementSequence&& scene_sequence) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;
-    std::shared_ptr<Renderer> const renderer;
+    std::shared_ptr<renderer::Renderer> const renderer;
     std::shared_ptr<CompositorReport> const report;
 };
 

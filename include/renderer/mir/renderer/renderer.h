@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,18 +16,16 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RENDERER_H_
-#define MIR_COMPOSITOR_RENDERER_H_
+#ifndef MIR_RENDERER_RENDERER_H_
+#define MIR_RENDERER_RENDERER_H_
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
-#include <mir_toolkit/common.h>
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
-namespace graphics { class Buffer; }
-
-namespace compositor
+namespace renderer
 {
 
 class Renderer
@@ -50,4 +48,4 @@ protected:
 }
 }
 
-#endif // MIR_COMPOSITOR_RENDERER_H_
+#endif // MIR_RENDERER_RENDERER_H_
