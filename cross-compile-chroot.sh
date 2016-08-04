@@ -104,8 +104,10 @@ fi
 gcc_variant=
 if [ "${dist}" = "vivid" ]; then
     gcc_variant=-4.9
-elif [ "${dist}" = "xenial" ]; then
+elif [ "${dist}" = "wily" -o "${dist}" = "xenial"  ]; then
     gcc_variant=-5
+elif [ "${dist}" = "yakkety" ]; then
+    gcc_variant=-6
 fi
 
 case ${target_arch} in
