@@ -20,9 +20,7 @@ include_directories(
 set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
-mir_add_library_with_symbols(mircookie SHARED
-
-  ${symbol_map}
+add_library(mircookie SHARED
   authority.cpp
   const_memcmp.cpp
   hmac_cookie.cpp
@@ -32,6 +30,7 @@ set_target_properties(mircookie
   PROPERTIES
   SOVERSION ${MIRCOOKIE_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 target_link_libraries(mircookie
