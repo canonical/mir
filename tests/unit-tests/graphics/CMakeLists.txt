@@ -12,10 +12,8 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_anonymous_shm_file.cpp
 )
 
-
 list(APPEND UMOCK_UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp)
 
-add_subdirectory(nested/)
 add_subdirectory(egl_mock/)
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
