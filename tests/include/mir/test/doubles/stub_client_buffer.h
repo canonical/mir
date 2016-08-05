@@ -19,6 +19,11 @@
 #ifndef MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_H_
 
+
+#ifdef ANDROID
+#include "mir/test/doubles/stub_android_native_buffer.h"
+#endif
+
 #include "src/include/client/mir/client_buffer.h"
 #include <unistd.h>
 
@@ -68,7 +73,7 @@ struct StubClientBuffer : client::ClientBuffer
 #ifndef ANDROID
         return package;
 #else
-        return std::shared_ptr<graphics::NativeBuffer>();
+        return std::make_shared<StubAndroidNativeBuffer>();
 #endif
     }
     void update_from(MirBufferPackage const&) override {}
