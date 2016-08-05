@@ -32,12 +32,12 @@ struct InterpreterResourceTest : public ::testing::Test
 {
     void SetUp()
     {
-        stub_buffer1 = std::make_shared<mtd::StubBuffer>();
-        stub_buffer2 = std::make_shared<mtd::StubBuffer>();
-        stub_buffer3 = std::make_shared<mtd::StubBuffer>();
         native_buffer1 = std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>();
         native_buffer2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
         native_buffer3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+        stub_buffer1 = std::make_shared<mtd::StubBuffer>(native_buffer1);
+        stub_buffer2 = std::make_shared<mtd::StubBuffer>(native_buffer2);
+        stub_buffer3 = std::make_shared<mtd::StubBuffer>(native_buffer3);
     }
 
     std::shared_ptr<mtd::StubBuffer> stub_buffer1;
