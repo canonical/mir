@@ -9,4 +9,3 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
     ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
   )
 endif()
-

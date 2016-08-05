@@ -102,6 +102,7 @@ add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 add_subdirectory(renderers/gl)
+add_subdirectory(platforms/)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

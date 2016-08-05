@@ -62,4 +62,4 @@ public:
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 };
 
-#include "../test_graphics_platform.h"
+#include "../../../graphics/test_graphics_platform.h"

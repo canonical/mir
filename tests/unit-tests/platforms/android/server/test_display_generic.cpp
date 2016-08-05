@@ -72,4 +72,4 @@ public:
     mir::UniqueModulePtr<mg::Platform> platform;
 };
 
-#include "../test_display.h"
+#include "../../../graphics/test_display.h"
