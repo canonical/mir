@@ -20,6 +20,7 @@
 #ifndef MIR_PLATFORM_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 #define MIR_PLATFORM_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 
+#include <cstddef>  // to fix missing #includes in graphics.h from hardware.h
 #include <hardware/hardware.h>
 #include "mir_toolkit/mir_native_buffer.h" 
 
