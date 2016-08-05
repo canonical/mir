@@ -13,21 +13,10 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 
-list(APPEND UMOCK_UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
-    )
+list(APPEND UMOCK_UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp)
 
 add_subdirectory(nested/)
-
 add_subdirectory(egl_mock/)
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_subdirectory(kms-utils/)
-  add_subdirectory(mesa/)
-  list (APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
-  )
-endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 set(UMOCK_UNIT_TEST_SOURCES ${UMOCK_UNIT_TEST_SOURCES} PARENT_SCOPE)

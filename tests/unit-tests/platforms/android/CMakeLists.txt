@@ -1,3 +1,5 @@
+add_definitions(-DANDROID)
+
 include_directories(
   ${ANDROID_HEADERS_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/src/platforms/android/include

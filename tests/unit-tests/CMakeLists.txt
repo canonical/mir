@@ -37,7 +37,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
@@ -180,15 +179,6 @@ target_link_libraries(
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
-
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-target_link_libraries(mir_unit_tests
-  mirsharedmesaservercommon-static
-)
-target_link_libraries(mir_umock_unit_tests
-  mirsharedmesaservercommon-static
-)
-endif()
 
 target_link_libraries(mir_unit_tests
 

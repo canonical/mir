@@ -70,6 +70,18 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   )
 endif()
 
+#stub_buffer.h needs to know what platform its stubbing for now. hopefully it
+#will define a stub platform native type to use in the near future.
+if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_definitions(-DANDROID)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+  add_definitions(-DMESA_KMS)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_definitions(-DMESA_X11)
+endif()
+
 # We don't want LTO objects in a published archive (libmir-test-assist.a)
 string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

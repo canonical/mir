@@ -20,7 +20,6 @@ mir_add_wrapped_executable(
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
   $<TARGET_OBJECTS:mir-umock-test-framework>
 )
-
 add_dependencies(mir_unit_tests_mesa-kms GMock)
 
 target_link_libraries(

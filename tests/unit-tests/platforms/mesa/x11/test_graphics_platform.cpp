@@ -86,4 +86,4 @@ public:
     ::testing::NiceMock<mtd::MockX11> mock_x11;
 };
 
-#include "../../test_graphics_platform.h"
+#include "../../../graphics/test_graphics_platform.h"
