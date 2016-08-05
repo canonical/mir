@@ -130,7 +130,6 @@ target_link_libraries(
   mircommon
   client_platform_common
   server_platform_common
-  kms_utils
 
   mirclient-static
   mirclientlttng-static
