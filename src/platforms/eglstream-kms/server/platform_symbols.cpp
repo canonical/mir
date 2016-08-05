@@ -106,22 +106,17 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
             message << " " << missing_extension;
         }
 
-        mir::log(
-            mir::logging::Severity::debug,
-            "platform-eglstream",
-            "EGLStream platform is unsupported: %s",
-            message.str().c_str());
+        mir::log_debug("EGLStream platform is unsupported: %s",
+                       message.str().c_str());
         return mg::PlatformPriority::unsupported;
     }
 
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        mir::log(
-            mir::logging::Severity::informational,
-            "platform-eglstream",
-            "Platform claims to support EGL_EXT_device_base, but eglQueryDevicesEXT falied: %s",
-            mg::egl_category().message(eglGetError()).c_str());
+        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
+                      "eglQueryDevicesEXT falied: %s",
+                      mg::egl_category().message(eglGetError()).c_str());
         return mg::PlatformPriority::unsupported;
     }
 
@@ -137,26 +132,19 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
             auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
             if (device_extensions)
             {
-                mir::log(
-                    mir::logging::Severity::debug,
-                    "platform-eglstream",
-                    "Found EGLDeviceEXT with device extensions: %s", device_extensions);
+                mir::log_debug("Found EGLDeviceEXT with device extensions: %s",
+                               device_extensions);
                 return strstr(device_extensions, "EGL_EXT_device_drm") != NULL;
             }
             else
             {
-                mir::log(
-                    mir::logging::Severity::debug,
-                    "platform-eglstream",
-                    "Found EGLDeviceEXT with no device extensions");
+                mir::log_debug("Found EGLDeviceEXT with no device extensions");
                 return false;
             }
         }))
     {
-        mir::log(
-            mir::logging::Severity::debug,
-            "platform-eglstream",
-            "EGLDeviceEXTs found, but none support required EGL_EXT_device_drm extension");
+        mir::log_debug("EGLDeviceEXTs found, but none support required "
+                       "EGL_EXT_device_drm extension");
         return mg::PlatformPriority::unsupported;
     }
 
