@@ -478,6 +478,20 @@ Description: Display server for Ubuntu - performance testing framework
  tests for Mir. It also contains a few interesting performance tests written
  using the framework.
 
+Package: libmirrenderer-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         libmircommon-dev,
+         libmirplatform-dev
+Description: Display server for Ubuntu - Renderer development files
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains header files required for renderer development.
+
 Package: mir-renderer-gl-dev
 Section: libdevel
 Architecture: linux-any

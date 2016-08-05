@@ -24,22 +24,25 @@
 
 namespace mir
 {
+namespace renderer
+{
+class RendererFactory;
+}
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
-class RendererFactory;
 
 class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFactory
 {
 public:
     DefaultDisplayBufferCompositorFactory(
-        std::shared_ptr<RendererFactory> const& renderer_factory,
+        std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
         std::shared_ptr<CompositorReport> const& report);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
-    std::shared_ptr<RendererFactory> const renderer_factory;
+    std::shared_ptr<renderer::RendererFactory> const renderer_factory;
     std::shared_ptr<CompositorReport> const report;
 };
 

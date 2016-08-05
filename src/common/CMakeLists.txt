@@ -39,8 +39,7 @@ set(
 set(MIRCOMMON_ABI 6)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
-mir_add_library_with_symbols(mircommon SHARED
-  ${symbol_map}
+add_library(mircommon SHARED
   ${MIR_COMMON_SOURCES}
 )
 
@@ -53,6 +52,7 @@ set_target_properties(mircommon
   PROPERTIES
   SOVERSION ${MIRCOMMON_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
