@@ -38,7 +38,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
-  ${PROJECT_SOURCE_DIR}/src/platforms/android/include
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
@@ -187,20 +186,6 @@ target_link_libraries(mir_unit_tests
 )
 target_link_libraries(mir_umock_unit_tests
   mirsharedmesaservercommon-static
-)
-endif()
-
-if (MIR_BUILD_PLATFORM_ANDROID)
-target_link_libraries(mir_umock_unit_tests
-  mirsharedandroid-static
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
-)
-
-target_link_libraries(mir_unit_tests 
-  mirsharedandroid-static
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
 

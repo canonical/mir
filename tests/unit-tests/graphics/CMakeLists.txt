@@ -20,9 +20,6 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
 add_subdirectory(nested/)
 
 add_subdirectory(egl_mock/)
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_subdirectory(android/)
-endif()
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   add_subdirectory(kms-utils/)
