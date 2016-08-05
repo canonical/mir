@@ -60,6 +60,13 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
             {11, std::make_shared<testing::NiceMock<MockKMSOutput>>()},
             {12, std::make_shared<testing::NiceMock<MockKMSOutput>>()}}
     {
+        // These need to be established before Cursor construction:
+        for (auto& entry : outputs)
+        {
+            auto& out = *entry.second;
+            ON_CALL(out, has_cursor())
+                .WillByDefault(Return(true));
+        }
     }
 
     std::shared_ptr<mgm::KMSOutput> get_kms_output_for(uint32_t connector_id)
@@ -458,7 +465,7 @@ TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
     /* No checking of existing cursor state */
-    EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
+    EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(1);
     EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[12], has_cursor()).Times(0);
 
@@ -469,13 +476,27 @@ TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
     output_container.verify_and_clear_expectations();
 }
 
+TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*output_container.outputs[10], has_cursor())
+        .WillOnce(Return(false));
+
+    EXPECT_THROW(
+        mgm::Cursor cursor_tmp(mock_gbm.fake_gbm.device, output_container,
+           std::make_shared<StubCurrentConfiguration>(),
+           std::make_shared<StubCursorImage>())
+    , std::runtime_error);
+}
 
 TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 {
     using namespace testing;
 
     EXPECT_CALL(*output_container.outputs[10], has_cursor())
-        .WillOnce(Return(false));
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
     EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
 
     EXPECT_CALL(*output_container.outputs[11], has_cursor())
@@ -637,7 +658,8 @@ TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
     EXPECT_CALL(*output_container.outputs[11], move_cursor(geom::Point{50,25}));
     EXPECT_CALL(*output_container.outputs[10], clear_cursor());
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor())
+        .Times(2);
 
     cursor.move_to({150, 75});
     cursor.suspend();
