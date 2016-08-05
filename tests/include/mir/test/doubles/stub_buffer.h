@@ -116,6 +116,8 @@ public:
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override {
         if (native_buffer)
             return native_buffer;
+
+        printf("THROWEY\n");
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot access native buffer"));
     }
 

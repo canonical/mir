@@ -87,6 +87,16 @@ CMAKE_DEPENDENT_OPTION(
   "MIR_BUILD_UNIT_TESTS"
   OFF)
 
+add_subdirectory(platforms/)
+if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_definitions(-DANDROID)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+  add_definitions(-DMESA_KMS)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_definitions(-DMESA_X11)
+endif()
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
@@ -101,7 +111,6 @@ add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 add_subdirectory(renderers/gl)
-add_subdirectory(platforms/)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
