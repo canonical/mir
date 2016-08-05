@@ -99,7 +99,7 @@ add_library(mirclientobjects OBJECT
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
+add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 
 set_target_properties(mirclient
@@ -107,6 +107,7 @@ set_target_properties(mirclient
   PROPERTIES
   SOVERSION ${MIRCLIENT_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 set(LINKS
@@ -144,8 +145,7 @@ install(
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
 
-mir_add_library_with_symbols(mirclient-debug-extension SHARED
-  ${debug_symbol_map}
+add_library(mirclient-debug-extension SHARED
   mir_debug_api.cpp
 )
 
@@ -165,6 +165,7 @@ set_target_properties(
   PROPERTIES
   SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${debug_symbol_map}"
+  LINK_DEPENDS ${debug_symbol_map}
 )
 
 install(
