@@ -387,3 +387,22 @@ TEST_F(DeviceQuirks, detects_gl_vendor_and_renderer_for_egl_quirk)
     mga::DeviceQuirks broken_quirks(mock_ops, options);
     EXPECT_FALSE(broken_quirks.working_egl_sync());
 }
+
+TEST_F(DeviceQuirks, detects_gl_vendor_on_device_with_only_argb_8888_support)
+{
+    using namespace testing;
+    ON_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+        .WillByDefault(DoAll(
+                          SetArgPointee<3>(HAL_PIXEL_FORMAT_BGRA_8888),
+                          Return(EGL_TRUE)));
+    //In the reality, Qualcomm does support abgr_8888. But we do this to make sure gl_vendor will be checked.
+    EXPECT_CALL(mock_gl, glGetString(GL_VENDOR))
+        .Times(1)
+        .WillOnce(Return(reinterpret_cast<const unsigned char*>("Qualcomm")));
+    EXPECT_CALL(mock_gl, glGetString(GL_RENDERER))
+        .Times(1);
+    MockOps mock_ops;
+
+    mga::DeviceQuirks quirks(mock_ops, options);
+    EXPECT_TRUE(quirks.working_egl_sync());
+}
