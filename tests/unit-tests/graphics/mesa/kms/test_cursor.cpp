@@ -658,8 +658,9 @@ TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
     EXPECT_CALL(*output_container.outputs[11], move_cursor(geom::Point{50,25}));
     EXPECT_CALL(*output_container.outputs[10], clear_cursor());
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
-    EXPECT_CALL(*output_container.outputs[12], clear_cursor())
-        .Times(2);
+    EXPECT_CALL(*output_container.outputs[12], has_cursor())
+        .WillRepeatedly(Return(false));
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
     cursor.move_to({150, 75});
     cursor.suspend();
