@@ -41,7 +41,7 @@ class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBa
 public:
     StubBuffer()
         : StubBuffer{
-              nullptr,//create_native_buffer(),
+              nullptr,
               graphics::BufferProperties{
                   geometry::Size{},
                   mir_pixel_format_abgr_8888,
@@ -53,7 +53,7 @@ public:
 
     StubBuffer(geometry::Size const& size)
         : StubBuffer{
-              nullptr,//create_native_buffer(),
+              nullptr,
               graphics::BufferProperties{
                   size,
                   mir_pixel_format_abgr_8888,
@@ -113,11 +113,10 @@ public:
 
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override {
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
+    {
         if (native_buffer)
             return native_buffer;
-
-        printf("THROWEY\n");
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot access native buffer"));
     }
 
@@ -147,8 +146,6 @@ public:
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
     std::vector<unsigned char> written_pixels;
-
-//    std::shared_ptr<graphics::NativeBuffer> create_native_buffer();
 };
 }
 }
