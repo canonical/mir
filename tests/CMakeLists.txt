@@ -25,6 +25,9 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
 
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers
   include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
