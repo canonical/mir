@@ -1105,7 +1105,7 @@ TEST_F(Display, enabling_virtual_output_updates_display_configuration)
     virtual_output->enable();
 
     bool found_matching_size{false};
-    display.configuration()->for_each_output([&found_matching_size](mg::DisplayConfigurationOutput const& output)
+    display.configuration()->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         if(output.extents().size == geom::Size{virtual_output_width, virtual_output_height})
             found_matching_size = true;
