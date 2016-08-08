@@ -14,10 +14,7 @@ add_library(mirclientplatformeglstreamobjects OBJECT
   client_buffer.cpp
 )
 
-mir_add_library_with_symbols(
-  mirclientplatformeglstream MODULE
-
-  ${symbol_map}
+add_library(mirclientplatformeglstream MODULE
   $<TARGET_OBJECTS:mirclientplatformeglstreamobjects>
 )
 
@@ -28,6 +25,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_CLIENT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 target_link_libraries(mirclientplatformeglstream
