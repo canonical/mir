@@ -25,17 +25,8 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers

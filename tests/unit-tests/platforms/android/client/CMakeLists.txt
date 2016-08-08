@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES
+list(APPEND ANDROID_UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gralloc_registrar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_native_window.cpp
@@ -24,4 +24,4 @@ list(APPEND UNIT_TEST_SOURCES
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
 )
 
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+set(ANDROID_UNIT_TEST_SOURCES ${ANDROID_UNIT_TEST_SOURCES} PARENT_SCOPE)
