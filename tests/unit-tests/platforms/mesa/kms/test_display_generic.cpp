@@ -78,4 +78,4 @@ public:
     mtf::UdevEnvironment fake_devices;
 };
 
-#include "../../../graphics/test_display.h"
+#include "../../test_display.h"

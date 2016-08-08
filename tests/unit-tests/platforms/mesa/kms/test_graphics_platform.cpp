@@ -83,4 +83,4 @@ public:
     mtf::UdevEnvironment fake_devices;
 };
 
-#include "../../../graphics/test_graphics_platform.h"
+#include "../../test_graphics_platform.h"
