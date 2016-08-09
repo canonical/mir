@@ -8,7 +8,6 @@ include_directories(
   ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
   ${UMOCKDEV_INCLUDE_DIRS}
-  ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
 add_definitions(
@@ -135,15 +134,6 @@ set_target_properties(
 
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
