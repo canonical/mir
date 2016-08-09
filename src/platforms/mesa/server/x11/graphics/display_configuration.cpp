@@ -42,7 +42,8 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             mir_power_mode_on,
             orientation,
             1.0f,
-            mir_form_factor_monitor},
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }

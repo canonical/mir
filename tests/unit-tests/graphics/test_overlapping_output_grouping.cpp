@@ -96,7 +96,8 @@ public:
                 info.power_mode,
                 info.orientation,
                 1.0f,
-                mir_form_factor_monitor
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown
             };
 
             f(output);
