@@ -242,7 +242,7 @@ TEST_F(HwcWrapper, turns_vsync_off)
 TEST_F(HwcWrapper, accesses_display_config)
 {
     using namespace testing;
-    std::array<uint32_t, 3> id_array{ 5u, 7u, 10u };
+    std::array<uint32_t, 3> id_array{ { 5u, 7u, 10u } };
     std::vector<mga::ConfigId> ids{id_array.size()};
     auto array_it = id_array.begin();
     for( auto& id : ids )
