@@ -100,6 +100,12 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
  
  -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
 
+mir (0.23.5+16.10.20160729-0ubuntu2) yakkety; urgency=medium
+
+  * No-change rebuild for boost soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 04 Aug 2016 08:25:48 +0000
+
 mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.5 (https://launchpad.net/mir/+milestone/0.23.5)
