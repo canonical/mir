@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
@@ -38,7 +39,6 @@
 #include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
-#include "stub_platform_native_buffer.h"
 
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;

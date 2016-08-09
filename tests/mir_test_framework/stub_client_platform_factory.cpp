@@ -21,7 +21,7 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "mir/client_context.h"
-#include "stub_platform_native_buffer.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <unistd.h>
