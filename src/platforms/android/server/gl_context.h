@@ -46,6 +46,8 @@ protected:
     GLContext(MirPixelFormat display_format,
               GLConfig const& gl_config,
               DisplayReport& report);
+    GLContext(GLConfig const& gl_config,
+              DisplayReport& report);
 
     GLContext(GLContext const& shared_gl_context);
 
@@ -66,6 +68,9 @@ class PbufferGLContext : public GLContext
 public:
     PbufferGLContext(MirPixelFormat display_format,
               GLConfig const& gl_config,
+              DisplayReport& report);
+
+    PbufferGLContext(GLConfig const& gl_config,
               DisplayReport& report);
 
     PbufferGLContext(PbufferGLContext const& shared_gl_context);
