@@ -37,6 +37,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     mir::client::ClientContext* const context;
+    MirNativeBuffer mutable native_buffer;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

@@ -453,6 +453,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 
     surface = mir_surface_create_sync(spec);
 
+    printf("1111\n");
     MirNativeBuffer *native;
     auto bs = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_get_current_buffer(bs, &native);
@@ -464,6 +465,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_surface_spec_set_width(spec, 100);
     mir_surface_spec_set_height(spec, 100);
 
+    printf("2222\n");
     surface = mir_surface_create_sync(spec);
     bs = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_get_current_buffer(bs, &native);
@@ -477,6 +479,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_surface_spec_set_height(spec, 600);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
+    printf("3333\n");
     surface = mir_surface_create_sync(spec);
     bs = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_get_current_buffer(bs, &native);
@@ -487,6 +490,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
+    printf("4444\n");
     surface = mir_surface_create_sync(spec);
     bs = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_get_current_buffer(bs, &native);
