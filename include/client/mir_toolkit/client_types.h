@@ -313,17 +313,6 @@ typedef enum MirOutputConnectionState
     mir_output_connection_state_unknown
 } MirOutputConnectionState;
 
-/* TODO: How does this interact with MirOrientation? */
-typedef enum MirSubpixelArrangement
-{
-    mir_subpixel_arrangement_unknown,           /**< Arrangement of subpixels cannot be determined */
-    mir_subpixel_arrangement_horizontal_rgb,    /**< Subpixels are arranged horizontally, R, G, B from left to right */
-    mir_subpixel_arrangement_horizontal_bgr,    /**< Subpixels are arranged horizontally, B, G, R from left to right */
-    mir_subpixel_arrangement_vertical_rgb,      /**< Subpixels are arranged vertically, R, G, B from top to bottom */
-    mir_subpixel_arrangement_vertical_bgr,      /**< Subpixels are arranged vertically, B, G, R from top to bottom */
-    mir_subpixel_arrangement_none               /**< Device does not have addressable subpixels */
-} MirSubpixelArrangement;
-
 typedef struct MirDisplayMode
 {
     uint32_t vertical_resolution;
