@@ -35,9 +35,9 @@ namespace graphics
  *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
  *
  * The simplistic structure is intentional, as all these values need to
- * be passed from the server to clients and clients of clients unmodified.
+ * be passed from the server to clients, and clients of clients, unmodified.
  * Even clients of clients of clients (GLX app under Xmir under Unity8 under
- * USC).
+ * USC)!
  */
 struct Frame
 {
