@@ -302,7 +302,11 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const&)
 {
     if (display_preset)
-        return mir::make_module_ptr<WrappingDisplay>(std::move(display_preset));
+    {
+        decltype(display_preset) temp;
+        swap(temp, display_preset);
+        return mir::make_module_ptr<WrappingDisplay>(temp);
+    }
 
     return mir::make_module_ptr<mtd::StubDisplay>(display_rects);
 }
