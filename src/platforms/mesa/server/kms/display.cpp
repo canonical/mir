@@ -29,9 +29,9 @@
 
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/renderer/gl/context.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -53,7 +53,7 @@ int errno_from_exception(std::exception const& e)
     return (errno_ptr != nullptr) ? *errno_ptr : -1;
 }
 
-class GBMGLContext : public mg::GLContext
+class GBMGLContext : public mir::renderer::gl::Context
 {
 public:
     GBMGLContext(mgm::helpers::GBMHelper const& gbm,
@@ -368,11 +368,6 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return locked_cursor;
 }
 
-std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
-{
-    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
-}
-
 void mgm::Display::clear_connected_unused_outputs()
 {
     current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
@@ -397,4 +392,14 @@ void mgm::Display::clear_connected_unused_outputs()
 std::unique_ptr<mg::VirtualOutput> mgm::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
+}
+
+mg::NativeDisplay* mgm::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
+{
+    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }

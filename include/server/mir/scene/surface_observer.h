@@ -23,6 +23,7 @@
 #include "mir_toolkit/events/event.h"
 
 #include "mir/input/input_reception_mode.h"
+#include "mir/geometry/rectangle.h"
 
 #include <glm/glm.hpp>
 #include <string>

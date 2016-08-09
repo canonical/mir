@@ -45,7 +45,9 @@ struct StubAndroidNativeBuffer : public graphics::NativeBuffer
     auto copy_fence() const -> graphics::android::NativeFence override { return -1; }
 
     void ensure_available_for(graphics::android::BufferAccess) {}
+    bool ensure_available_for(graphics::android::BufferAccess, std::chrono::milliseconds) { return true; }
     void update_usage(graphics::android::NativeFence&, graphics::android::BufferAccess) {}
+    void reset_fence() {}
 
     void lock_for_gpu() {};
     void wait_for_unlock_by_gpu() {};

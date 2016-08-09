@@ -27,7 +27,7 @@
 
 namespace mir
 {
-namespace geometry { class Rectangle; }
+namespace geometry { struct Rectangle; }
 namespace scene
 {
 class SurfaceObserver;

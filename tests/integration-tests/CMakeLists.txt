@@ -58,7 +58,6 @@ mir_add_wrapped_executable(
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
-  ${MIR_COMMON_OBJECTS}
 )
 
 mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -76,8 +75,9 @@ target_link_libraries(
   mirclient-debug-extension
   mirclient-static
   mirdraw
-  mirclientrpc-static
   mirclientlttng-static
+
+  mircommon
 
   ${PROTOBUF_LITE_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -96,7 +96,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${LIBHARDWARE_LIBRARIES}
   ${MIR_PLATFORM_REFERENCES}
-  ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
 )
 

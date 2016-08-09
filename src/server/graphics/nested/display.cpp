@@ -23,7 +23,6 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/pixel_format_utils.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
@@ -124,7 +123,7 @@ EGLContext mgn::detail::EGLDisplayHandle::egl_context() const
     return egl_context_;
 }
 
-std::unique_ptr<mg::GLContext> mgn::detail::EGLDisplayHandle::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mgn::detail::EGLDisplayHandle::create_gl_context()
 {
     EGLint const attribs[] =
     {
@@ -366,12 +365,17 @@ auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     // So we can't do this: return std::make_shared<Cursor>(connection, initial_image);
 }
 
-std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
-{
-    return egl_display.create_gl_context();
-}
-
 std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
+}
+
+mg::NativeDisplay* mgn::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
+{
+    return egl_display.create_gl_context();
 }

@@ -1,4 +1,4 @@
-MIR_SERVER_0.22 {
+MIR_SERVER_0.24 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -812,15 +812,7 @@ MIR_SERVER_0.22 {
     mir::run_mir*;
     mir::DisplayServer::stop*;
     vtable?for?mir::shell::CanonicalWindowManagerPolicy;
-    VTT?for?mir::shell::CanonicalWindowManagerPolicy
-    ;
-  };
- local: *;
-};
-
-MIR_SERVER_0.24 {
- global:
-  extern "C++" {
+    VTT?for?mir::shell::CanonicalWindowManagerPolicy;
     mir::DefaultServerConfiguration::the_key_mapper*;
     mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     mir::Server::wrap_application_not_responding_detector*;
@@ -838,13 +830,15 @@ MIR_SERVER_0.24 {
     vtable?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
     vtable?for?mir::input::KeyboardConfiguration;
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
+    mir::DefaultServerConfiguration::the_stop_callback*;
+    mir::Server::add_stop_callback*;
   };
-} MIR_SERVER_0.22;
+ local: *;
+};
 
 MIR_SERVER_0.25 {
  global:
   extern "C++" {
-    mir::DefaultServerConfiguration::the_stop_callback*;
-    mir::Server::add_stop_callback*;
+    mir::Server::override_the_seat_report*;
   };
 } MIR_SERVER_0.24;

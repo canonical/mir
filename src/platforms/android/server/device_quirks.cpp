@@ -50,13 +50,13 @@ char const* const working_egl_sync_opt = "use-eglsync-quirk";
 std::string const egl_sync_default = "default";
 std::string const egl_sync_force_on = "force_on";
 std::string const egl_sync_force_off = "force_off";
- 
+
 
 std::string determine_device_name(mga::PropertiesWrapper const& properties)
 {
     char const default_value[] = "";
     char value[PROP_VALUE_MAX] = "";
-    char const key[] = "ro.product.device"; 
+    char const key[] = "ro.product.device";
     properties.property_get(key, value, default_value);
     return std::string{value};
 }
@@ -131,7 +131,7 @@ mga::GPUInfo query_gl_for_gpu_info()
     return { std::move(vendor), std::move(renderer) };
 }
 
-mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
+mga::GPUInfo determine_gpu_info(mir::renderer::gl::Context const& context)
 {
     EGLDisplay current_display = eglGetCurrentDisplay();
     EGLContext current_context = eglGetCurrentContext();
@@ -152,7 +152,9 @@ mga::GPUInfo determine_gpu_info(mg::GLContext const& context)
 }
 }
 
-mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mg::GLContext const& context)
+mga::DeviceQuirks::DeviceQuirks(
+    PropertiesWrapper const& properties,
+    mir::renderer::gl::Context const& context)
     : device_name(determine_device_name(properties)),
       gpu_info(determine_gpu_info(context)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),
@@ -165,13 +167,13 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mg::GLConte
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties) :
-    DeviceQuirks(properties, mga::PbufferGLContext{mir_pixel_format_abgr_8888, config, report})
+    DeviceQuirks(properties, mga::PbufferGLContext{config, report})
 {
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option const& options)
     : device_name(determine_device_name(properties)),
-      gpu_info(determine_gpu_info(mga::PbufferGLContext(mir_pixel_format_abgr_8888, config, report))),
+      gpu_info(determine_gpu_info(mga::PbufferGLContext(config, report))),
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),

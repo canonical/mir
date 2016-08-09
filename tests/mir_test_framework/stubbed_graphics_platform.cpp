@@ -146,13 +146,13 @@ struct WrappingDisplay : mg::Display
     {
         return display->create_hardware_cursor(initial_image);
     }
-    std::unique_ptr<mg::GLContext> create_gl_context() override
-    {
-        return display->create_gl_context();
-    }
     std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
     {
         return display->create_virtual_output(width, height);
+    }
+    mg::NativeDisplay* native_display() override
+    {
+        return display->native_display();
     }
 
     std::shared_ptr<Display> const display;

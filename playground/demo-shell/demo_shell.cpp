@@ -27,7 +27,7 @@
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/options/option.h"
 #include "server_example_host_lifecycle_event_listener.h"
 

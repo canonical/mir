@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "kms_display_configuration.h"
 #include "mir/fd.h"
+#include "mir/renderer/gl/context_source.h"
 
 namespace mir
 {
@@ -33,7 +34,9 @@ class GLConfig;
 namespace eglstream
 {
 
-class Display : public mir::graphics::Display
+class Display : public mir::graphics::Display,
+                public mir::graphics::NativeDisplay,
+                public mir::renderer::gl::ContextSource
 {
 public:
     Display(
@@ -60,9 +63,11 @@ public:
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
 
-    std::unique_ptr<GLContext> create_gl_context() override;
-
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     mir::Fd const drm_node;

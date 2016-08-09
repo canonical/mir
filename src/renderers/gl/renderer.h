@@ -21,7 +21,7 @@
 
 #include "program_family.h"
 
-#include <mir/compositor/renderer.h>
+#include <mir/renderer/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
@@ -56,7 +56,7 @@ private:
     renderer::gl::RenderTarget* const render_target;
 };
 
-class Renderer : public compositor::Renderer
+class Renderer : public renderer::Renderer
 {
 public:
     Renderer(graphics::DisplayBuffer& display_buffer);

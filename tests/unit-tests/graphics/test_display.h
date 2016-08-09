@@ -21,6 +21,19 @@
 
 #include "mir/test/doubles/mock_display_configuration.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
+
+namespace
+{
+auto as_context_source(mg::Display* display)
+{
+    auto const ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display->native_display());
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+    return ctx;
+}
+}
 
 TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)
 {
@@ -66,7 +79,7 @@ TEST_F(DisplayTestGeneric, gl_context_make_current_uses_shared_context)
            .WillOnce(Return(new_context));
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
 
-        auto gl_ctx = display->create_gl_context();
+        auto const gl_ctx = as_context_source(display.get())->create_gl_context();
 
         ASSERT_NE(nullptr, gl_ctx);
 
@@ -93,7 +106,7 @@ TEST_F(DisplayTestGeneric, gl_context_releases_context)
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
 
-        auto gl_ctx = display->create_gl_context();
+        auto const gl_ctx = as_context_source(display.get())->create_gl_context();
 
         ASSERT_NE(nullptr, gl_ctx);
 

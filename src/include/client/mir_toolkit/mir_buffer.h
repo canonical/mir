@@ -123,7 +123,7 @@ MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAcc
  *   \return                The fence associated with buffer 
  *
  **/
-MirNativeFence* mir_buffer_get_fence(MirBuffer*);
+MirNativeFence mir_buffer_get_fence(MirBuffer*);
 
 /**
  * Protect the buffer's contents by associating a native fence with it.
@@ -138,7 +138,7 @@ MirNativeFence* mir_buffer_get_fence(MirBuffer*);
  **/
 void mir_buffer_associate_fence(
     MirBuffer* buffer,
-    MirNativeFence* native_fence,
+    MirNativeFence native_fence,
     MirBufferAccess access);
 
 /** Wait for the fence associated with the buffer to signal. After returning,

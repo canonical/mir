@@ -26,12 +26,12 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
+#include "mir/renderer/gl/context.h"
 
 #include <drm/drm.h>
 #include <xf86drmMode.h>
@@ -329,9 +329,19 @@ std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor(
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mge::Display::create_gl_context()
+std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
-    class GLContext : public mg::GLContext
+    return nullptr;
+}
+
+mg::NativeDisplay* mge::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
+{
+    class GLContext : public renderer::gl::Context
     {
     public:
         GLContext(EGLDisplay display, EGLContext context)
@@ -357,7 +367,3 @@ std::unique_ptr<mg::GLContext> mge::Display::create_gl_context()
     return std::make_unique<GLContext>(display, context);
 }
 
-std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*width*/, int /*height*/)
-{
-    return nullptr;
-}
