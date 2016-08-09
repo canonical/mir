@@ -25,13 +25,54 @@ namespace mtd = mir::test::doubles;
 
 mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
         geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
-        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{1}, px_size, mm_size, format, vrefresh, connected)
+        StubDisplayConfigurationOutput(px_size, mm_size, format, vrefresh, connected, mir_subpixel_arrangement_unknown)
+{
+}
+
+mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
+    geometry::Size px_size,
+    geometry::Size mm_size,
+    MirPixelFormat format,
+    double vrefresh,
+    bool connected,
+    MirSubpixelArrangement subpixel_arrangement) :
+    StubDisplayConfigurationOutput(
+        graphics::DisplayConfigurationOutputId{1},
+        px_size,
+        mm_size,
+        format,
+        vrefresh,
+        connected,
+        subpixel_arrangement)
 {
 }
 
 mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
     graphics::DisplayConfigurationOutputId id,
-    geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
+    geometry::Size px_size,
+    geometry::Size mm_size,
+    MirPixelFormat format,
+    double vrefresh,
+    bool connected) :
+    StubDisplayConfigurationOutput(
+        id,
+        px_size,
+        mm_size,
+        format,
+        vrefresh,
+        connected,
+        mir_subpixel_arrangement_unknown)
+{
+}
+
+mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
+    graphics::DisplayConfigurationOutputId id,
+    geometry::Size px_size,
+    geometry::Size mm_size,
+    MirPixelFormat format,
+    double vrefresh,
+    bool connected,
+    MirSubpixelArrangement /*subpixel_arrangement*/) :
         DisplayConfigurationOutput{
             id,
             graphics::DisplayConfigurationCardId{0},

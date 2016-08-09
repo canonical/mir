@@ -36,8 +36,28 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
     StubDisplayConfigurationOutput(
         geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected);
 
+    StubDisplayConfigurationOutput(
+        geometry::Size px_size,
+        geometry::Size mm_size,
+        MirPixelFormat format,
+        double vrefresh,
+        bool connected,
+        MirSubpixelArrangement subpixel_arrangement);
+
     StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
-        geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected);
+        geometry::Size px_size,
+        geometry::Size mm_size,
+        MirPixelFormat format,
+        double vrefresh,
+        bool connected);
+
+    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
+        geometry::Size px_size,
+        geometry::Size mm_size,
+        MirPixelFormat format,
+        double vrefresh,
+        bool connected,
+        MirSubpixelArrangement subpixel_arrangement);
 
     StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
         std::vector<graphics::DisplayConfigurationMode> modes, std::vector<MirPixelFormat> formats);

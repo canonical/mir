@@ -284,6 +284,7 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
 struct DisplayPowerSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPowerMode> {};
 struct DisplayOrientationSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirOrientation> {};
 struct DisplayFormatSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPixelFormat> {};
+struct DisplaySubpixelSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirSubpixelArrangement> {};
 
 TEST_P(DisplayPowerSetting, can_get_power_mode)
 {
@@ -392,11 +393,54 @@ TEST_P(DisplayFormatSetting, can_get_all_output_format)
     client.disconnect();
 }
 
+TEST_P(DisplaySubpixelSetting, can_get_all_subpixel_arrangements)
+{
+    using namespace testing;
+
+    auto subpixel_arrangement = GetParam();
+    mtd::StubDisplayConfigurationOutput output{
+        {1920, 1200},
+        {200, 100},
+        mir_pixel_format_abgr_8888,
+        60.0,
+        true,
+        subpixel_arrangement};
+    mtd::StubDisplayConfig single_subpixel_config({output});
+
+    mock_display.emit_configuration_change_event(mt::fake_shared(single_subpixel_config));
+    mock_display.wait_for_configuration_change_handler();
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        EXPECT_THAT(mir_output_get_subpixel_arrangement(output), Eq(subpixel_arrangement));
+    }
+
+    client.disconnect();
+}
+
+
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayPowerSetting,
     Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off));
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayFormatSetting,
     ValuesIn(formats));
+
+INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplaySubpixelSetting,
+    Values(
+        mir_subpixel_arrangement_unknown,
+        mir_subpixel_arrangement_horizontal_rgb,
+        mir_subpixel_arrangement_horizontal_bgr,
+        mir_subpixel_arrangement_vertical_rgb,
+        mir_subpixel_arrangement_vertical_bgr,
+        mir_subpixel_arrangement_none));
 
 TEST_F(DisplayConfigurationTest, client_received_configuration_matches_server_config)
 {
