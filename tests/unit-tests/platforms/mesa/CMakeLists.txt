@@ -14,3 +14,5 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
   add_definitions(-DMESA_X11)
   add_subdirectory(x11/)
 endif()
+
+add_subdirectory(client/)

@@ -26,10 +26,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_no_tls_future.cpp
 )
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11" )
-  add_subdirectory("mesa")
-endif()
-
 if (NOT MIR_DISABLE_INPUT)
 add_subdirectory("input")
 endif()
