@@ -715,7 +715,6 @@ MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
 {
-    printf("GETCURRENT\n");
     auto buffer = get_current_buffer();
     auto handle = buffer->native_buffer_handle();
     return client_platform->convert_native_buffer(handle.get());
