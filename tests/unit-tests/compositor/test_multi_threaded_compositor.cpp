@@ -797,7 +797,7 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
     /* Timeout here in case the exception from setting the scene callback put the compositor
      * in a bad state that did not allow it to composite (hence no records gathered)
      */
-    auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(5);
     while (!db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records) &&
            std::chrono::steady_clock::now() <= time_out)
     {
