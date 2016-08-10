@@ -328,6 +328,30 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
     });
 }
 
+TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
+{   // Regression test related to LP: #1610054
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmModeSetCursor(_, _, _, _, _))
+        .Times(1)
+        .WillOnce(Return(-ENXIO));
+    union gbm_bo_handle some_handle;
+    some_handle.u64 = 0xbaadf00d;
+    ON_CALL(mock_gbm, gbm_bo_get_handle(_)).WillByDefault(Return(some_handle));
+    ON_CALL(mock_gbm, gbm_bo_get_width(_)).WillByDefault(Return(34));
+    ON_CALL(mock_gbm, gbm_bo_get_height(_)).WillByDefault(Return(56));
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_TRUE(output.set_crtc(987));
+    struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
+    output.set_cursor(dummy);
+    EXPECT_FALSE(output.has_cursor());
+}
+
 TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_except};

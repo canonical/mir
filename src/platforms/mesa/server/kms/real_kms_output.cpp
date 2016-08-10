@@ -194,6 +194,7 @@ void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
 {
     if (current_crtc)
     {
+        has_cursor_ = true;
         if (auto result = drmModeSetCursor(
                 drm_fd,
                 current_crtc->crtc_id,
@@ -201,11 +202,10 @@ void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
                 gbm_bo_get_width(buffer),
                 gbm_bo_get_height(buffer)))
         {
+            has_cursor_ = false;
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)",
                              strerror(-result));
         }
-
-        has_cursor_ = true;
     }
 }
 
