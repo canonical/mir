@@ -20,7 +20,7 @@
 #include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -80,16 +80,16 @@ struct StubRenderer : mtd::StubRenderer
     mutable std::vector<mg::BufferID> rendered_buffers_;
 };
 
-class StubRendererFactory : public mc::RendererFactory
+class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(
+    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(
         mg::DisplayBuffer&) override
     {
         std::lock_guard<std::mutex> lock{mutex};
         renderer_ = new StubRenderer();
         renderer_created_cv.notify_all();
-        return std::unique_ptr<mc::Renderer>{renderer_};
+        return std::unique_ptr<mir::renderer::Renderer>{renderer_};
     }
 
     StubRenderer* renderer()
@@ -122,7 +122,7 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
             [] { return std::make_shared<StubRendererFactory>(); });
     }
 
-    std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
+    std::shared_ptr<mir::renderer::RendererFactory> the_renderer_factory() override
     {
         return the_stub_renderer_factory();
     }

@@ -100,7 +100,3 @@ void ms::LegacySurfaceChangeNotification::renamed(char const*)
 {
     notify_scene_change();
 }
-
-void ms::LegacySurfaceChangeNotification::confinement_region_updated(geometry::Rectangle const&)
-{
-}

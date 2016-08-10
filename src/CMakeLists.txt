@@ -24,6 +24,7 @@ add_subdirectory(platform/)
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
+add_subdirectory(renderer/)
 add_subdirectory(renderers/)
 add_subdirectory(gl/)
 

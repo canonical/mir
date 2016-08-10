@@ -55,8 +55,7 @@ mge::Platform::Platform(
     EGLDeviceEXT device,
     std::shared_ptr<EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& /*report*/)
-    : device{device},
-      display{EGL_NO_DISPLAY},
+    : display{EGL_NO_DISPLAY},
       drm_node{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)}
 {
     using namespace std::literals;

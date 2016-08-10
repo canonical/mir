@@ -28,7 +28,7 @@
 #include "mir/test/doubles/stub_renderer.h"
 #include "mir/test/doubles/stub_input_sender.h"
 
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
@@ -47,12 +47,12 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class StubRendererFactory : public mc::RendererFactory
+class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(mg::DisplayBuffer&)
+    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mg::DisplayBuffer&)
     {
-        return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
+        return std::unique_ptr<mir::renderer::Renderer>(new mtd::StubRenderer());
     }
 };
 
@@ -93,7 +93,7 @@ std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_renderer_factory()
+std::shared_ptr<mir::renderer::RendererFactory> mtf::StubbedServerConfiguration::the_renderer_factory()
 {
     auto options = the_options();
 

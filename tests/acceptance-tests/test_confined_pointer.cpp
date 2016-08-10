@@ -16,14 +16,18 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/test/event_matchers.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/input/input_device_info.h"
-#include "mir_test_framework/fake_input_device.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir/geometry/rectangles.h"
 
+#include "mir/test/event_matchers.h"
+#include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
-#include "mir_test_framework/placement_applying_shell.h"
+#include "mir/test/doubles/mock_seat_report.h"
+#include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/placement_applying_shell.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -32,19 +36,26 @@
 
 #include <boost/throw_exception.hpp>
 
-
+namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mi = mir::input;
+namespace ms = mir::scene;
 namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
+using namespace testing;
 
 namespace
 {
 int const surface_width  = 100;
 int const surface_height = 100;
+
+struct MockSurfaceObserver : public ms::NullSurfaceObserver
+{
+    MOCK_METHOD1(resized_to, void(geom::Size const&));
+};
 }
 
 void null_event_handler(MirSurface*, MirEvent const*, void*)
@@ -96,12 +107,6 @@ struct Client
 
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
-
-        received_resize.wait_for(1s);
-        if (!received_resize.raised())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become resized"));
-        }
     }
 
     void handle_surface_event(MirSurfaceEvent const* event)
@@ -133,9 +138,6 @@ struct Client
         case mir_event_type_input:
             client->handle_input(ev);
             break;
-        case mir_event_type_resize:
-            client->received_resize.raise();
-            break;
         default:
             break;
         }
@@ -154,7 +156,6 @@ struct Client
     MirConnection* connection;
     mir::test::Signal ready_to_accept_events;
     mir::test::Signal all_events_received;
-    mir::test::Signal received_resize;
     bool exposed = false;
     bool focused = false;
 };
@@ -168,9 +169,14 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
         server.wrap_shell(
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
             {
-                //return wrapped;
                 shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
                 return shell;
+            });
+
+        server.override_the_seat_report([this]
+            {
+                mock_seat_report = std::make_shared<NiceMock<mtd::MockSeatReport>>();
+                return mock_seat_report;
             });
 
         HeadlessInProcessServer::SetUp();
@@ -178,11 +184,25 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
+    std::shared_ptr<ms::Surface> latest_shell_surface() const
+    {
+        auto const result = shell->latest_surface.lock();
+//      ASSERT_THAT(result, NotNull()); //<= doesn't compile!?
+        EXPECT_THAT(result, NotNull());
+        return result;
+    }
+
+    void change_observed() { resized_signaled.raise(); }
+
     std::string const mouse_name = "mouse";
     std::string const mouse_unique_id = "mouse-uid";
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{mouse_name, mouse_unique_id, mi::DeviceCapability::pointer})};
 
+    NiceMock<MockSurfaceObserver> surface_observer;
+    mir::test::Signal resized_signaled;
+
+    std::shared_ptr<mtd::MockSeatReport> mock_seat_report;
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
     geom::Rectangle screen_geometry{{0,0}, {800,600}};
     mtf::ClientInputRegions input_regions;
@@ -193,8 +213,6 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
 
 TEST_F(PointerConfinement, test_we_hit_pointer_confined_boundary)
 {
-    using namespace ::testing;
-
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client client(new_connection(), first);
 
@@ -216,8 +234,6 @@ TEST_F(PointerConfinement, test_we_hit_pointer_confined_boundary)
 
 TEST_F(PointerConfinement, test_we_generate_relative_after_boundary)
 {
-    using namespace ::testing;
-
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client client(new_connection(), first);
 
@@ -235,12 +251,20 @@ TEST_F(PointerConfinement, test_we_generate_relative_after_boundary)
 
 TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
 {
-    using namespace ::testing;
-
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client client(new_connection(), first);
 
+    auto fake = mt::fake_shared(surface_observer);
+    latest_shell_surface()->add_observer(fake);
+
+    geom::Size new_size = {surface_width + 100, surface_height};
+    EXPECT_CALL(surface_observer, resized_to(new_size)).Times(1);
+
+    EXPECT_CALL(*mock_seat_report, seat_set_confinement_region_called(_)).
+            WillRepeatedly(InvokeWithoutArgs([&] { change_observed(); }));
+
     client.resize(surface_width + 100, surface_height);
+    resized_signaled.wait_for(1s);
 
     InSequence seq;
     EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));

@@ -84,7 +84,11 @@ TEST_F(IpcOperations, packs_buffer_correctly)
         EXPECT_CALL(mock_buffer_msg, pack_fd(mtd::RawFdMatcher(native_handle.fd[i])));
     for(auto i = 0; i < native_handle.data_items; i++)
         EXPECT_CALL(mock_buffer_msg, pack_data(native_handle.data[i]));
+#ifndef __clang__
+    // FIXME: Why can't clang compile this on yakkety (with the
+    //        gcc6 headers)? (LP: #1609612)
     EXPECT_CALL(mock_buffer_msg, pack_stride(dummy_stride));
+#endif
     EXPECT_CALL(mock_buffer_msg, pack_flags(testing::_));
     EXPECT_CALL(mock_buffer_msg, pack_size(dummy_size));
 

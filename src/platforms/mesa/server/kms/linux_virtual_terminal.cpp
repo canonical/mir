@@ -169,7 +169,7 @@ void mgm::LinuxVirtualTerminal::register_switch_handlers(
 
 void mgm::LinuxVirtualTerminal::restore()
 {
-    if (vt_fd.fd() > 0)
+    if (vt_fd.fd() >= 0)
     {
         fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
         fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);

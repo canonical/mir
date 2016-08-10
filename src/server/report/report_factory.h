@@ -41,6 +41,7 @@ class DisplayReport;
 namespace input
 {
 class InputReport;
+class SeatReport;
 }
 namespace scene
 {
@@ -61,6 +62,7 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() = 0;
     virtual std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() = 0;
     virtual std::shared_ptr<input::InputReport> create_input_report() = 0;
+    virtual std::shared_ptr<input::SeatReport> create_seat_report() = 0;
     virtual std::shared_ptr<SharedLibraryProberReport> create_shared_library_prober_report() = 0;
     virtual std::shared_ptr<shell::ShellReport> create_shell_report() = 0;
 

@@ -41,13 +41,11 @@ class MultiplexingDispatchable;
 }
 namespace compositor
 {
-class Renderer;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class RendererFactory;
 class CompositorReport;
 class FrameDroppingPolicyFactory;
 }
@@ -122,6 +120,7 @@ class MirClientHostConnection;
 namespace input
 {
 class InputReport;
+class SeatReport;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
@@ -154,6 +153,11 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
+}
+
+namespace renderer
+{
+class RendererFactory;
 }
 
 class DefaultServerConfiguration : public virtual ServerConfiguration
@@ -196,7 +200,7 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<renderer::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -302,6 +306,7 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
+    virtual std::shared_ptr<input::SeatReport> the_seat_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
 
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
@@ -366,6 +371,7 @@ protected:
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
+    CachedPtr<input::SeatReport> seat_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
@@ -394,7 +400,7 @@ protected:
     CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
-    CachedPtr<compositor::RendererFactory> renderer_factory;
+    CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;

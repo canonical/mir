@@ -360,9 +360,19 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
             Display& display;
         };
 
-        cursor = locked_cursor = std::make_shared<Cursor>(gbm->device, output_container,
-            std::make_shared<KMSCurrentConfiguration>(*this),
-            initial_image);
+        try
+        {
+            locked_cursor = std::make_shared<Cursor>(gbm->device,
+                              output_container,
+                              std::make_shared<KMSCurrentConfiguration>(*this),
+                              initial_image);
+        }
+        catch (std::runtime_error const&)
+        {
+            // That's OK, we don't need a hardware cursor. Returning null
+            // is allowed and will trigger a fallback to software.
+        }
+        cursor = locked_cursor;
     }
 
     return locked_cursor;

@@ -112,12 +112,15 @@ mgm::Cursor::Cursor(
         output_container(output_container),
         current_position(),
         visible(true),
+        last_set_failed(false),
         buffer(gbm),
         buffer_width(gbm_bo_get_width(buffer)),
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
     show(*initial_image);
+    if (last_set_failed)
+        throw std::runtime_error("Initial KMS cursor set failed");
 }
 
 mgm::Cursor::~Cursor() noexcept
@@ -270,6 +273,8 @@ void mgm::Cursor::place_cursor_at_locked(
     if (!visible)
         return;
 
+    bool set_on_all_outputs = true;
+
     for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
     {
         if (output_rect.contains(position))
@@ -284,6 +289,8 @@ void mgm::Cursor::place_cursor_at_locked(
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
                 output.set_cursor(buffer);
+                if (!output.has_cursor())
+                    set_on_all_outputs = false;
             }
         }
         else
@@ -294,4 +301,6 @@ void mgm::Cursor::place_cursor_at_locked(
             }
         }
     });
+
+    last_set_failed = !set_on_all_outputs;
 }
