@@ -88,14 +88,14 @@ public:
     void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
     {
     }
-    std::shared_ptr<mcl::MirBuffer> buffer(int) const
+    std::shared_ptr<mcl::MirBuffer> buffer(int) const override
     {
         return nullptr;
     }
-    void insert(int, std::shared_ptr<mcl::MirBuffer> const&)
+    void insert(int, std::shared_ptr<mcl::MirBuffer> const&) override
     {
     }
-    void erase(int)
+    void erase(int) override
     {
     }
 };

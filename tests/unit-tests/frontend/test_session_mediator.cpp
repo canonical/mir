@@ -119,7 +119,7 @@ public:
         ON_CALL(*this, destroy_buffer(_))
             .WillByDefault(Invoke([this](mg::BufferID){ ++destroy_buffers;}));
     }
-    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
+    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const override
     {
         if (mock_surfaces.find(surface) == mock_surfaces.end())
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
@@ -176,7 +176,7 @@ public:
 
     mf::SurfaceId create_surface(
         ms::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&)
+        std::shared_ptr<mf::EventSink> const&) override
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
@@ -185,7 +185,7 @@ public:
         return id;
     }
 
-    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&)
+    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&) override
     {
         mf::BufferStreamId id{last_stream_id};
         if (mock_streams.end() == mock_streams.find(id))
@@ -194,13 +194,13 @@ public:
         return id;
     }
 
-    void destroy_surface(mf::SurfaceId surface)
+    void destroy_surface(mf::SurfaceId surface) override
     {
         mock_surfaces.erase(surface);
     }
 
     
-    mg::BufferID create_buffer(mg::BufferProperties const&)
+    mg::BufferID create_buffer(mg::BufferProperties const&) override
     {
         buffer_count++;
         return mg::BufferID{3};

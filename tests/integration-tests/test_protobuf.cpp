@@ -97,7 +97,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
 
     void client_pid(int /*pid*/) override {}
 
-    bool dispatch(mfd::Invocation const& invocation, std::vector<mir::Fd> const& fds)
+    bool dispatch(mfd::Invocation const& invocation, std::vector<mir::Fd> const& fds) override
     {
         if ("function" == invocation.method_name())
         {
@@ -181,7 +181,7 @@ struct DemoPrivateProtobuf : mtf::InProcessServer
 
     std::shared_ptr<DemoConnectionCreator> demo_connection_creator;
 
-    void SetUp()
+    void SetUp() override
     {
         ::demo_mir_server = &demo_mir_server;
 

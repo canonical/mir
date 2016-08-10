@@ -73,16 +73,16 @@ public:
         return {{},{}};
     }
 
-    void set_cursor_image(graphics::CursorImage const&)
+    void set_cursor_image(graphics::CursorImage const&) override
     {
     }
-    void hide_cursor()
+    void hide_cursor() override
     {
     }
 
-    auto graphics_platform_library() -> std::string { return {}; }
+    auto graphics_platform_library() -> std::string override { return {}; }
 
-    graphics::nested::UniqueInputConfig create_input_device_config()
+    graphics::nested::UniqueInputConfig create_input_device_config() override
     {
         return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
                                                    mir_input_config_destroy);
