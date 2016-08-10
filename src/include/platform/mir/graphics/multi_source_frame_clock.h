@@ -41,11 +41,13 @@ public:
     virtual ~MultiSourceFrameClock() = default;
     void add_child_clock(std::weak_ptr<FrameClock>);
 private:
-    typedef std::lock_guard<FrameMutex> Lock;
+    typedef std::mutex Mutex;
+    typedef std::lock_guard<Mutex> Lock;
     typedef void const* ChildId;
 
     void synchronize(Lock const&);
     void on_child_frame(ChildId, Frame const&);
+
     struct Child
     {
         std::weak_ptr<FrameClock> clock;
@@ -53,6 +55,8 @@ private:
         Frame last_frame;
         Frame contributed_to_multi_frame;
     };
+
+    Mutex mutex;
     std::unordered_map<ChildId, Child> children;
     Frame last_sync;
     Frame last_multi_frame;

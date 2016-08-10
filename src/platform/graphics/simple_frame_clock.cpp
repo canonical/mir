@@ -22,16 +22,16 @@ namespace mir { namespace graphics {
 
 void SimpleFrameClock::set_frame_callback(FrameCallback const& cb)
 {
-    std::lock_guard<FrameMutex> lock(frame_mutex);
-    frame_callback = cb;
+    std::lock_guard<Mutex> lock(mutex);
+    callback = cb;
 }
 
 void SimpleFrameClock::notify_frame(Frame const& frame)
 {
-    std::unique_lock<FrameMutex> lock(frame_mutex);
-    if (frame_callback)
+    std::unique_lock<Mutex> lock(mutex);
+    if (callback)
     {
-        auto cb = frame_callback;
+        auto cb = callback;
         lock.unlock();
         cb(frame);
     }

@@ -22,7 +22,7 @@ namespace mir { namespace graphics {
 
 void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
 {
-    Lock lock(frame_mutex);
+    Lock lock(mutex);
     if (auto clock = w.lock())
     {
         ChildId id = clock.get();
@@ -63,11 +63,11 @@ void MultiSourceFrameClock::synchronize(Lock const&)
 void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                                            Frame const& child_frame)
 {
-    FrameCallback callback;
-    Frame callback_arg;
+    bool notify = false;
+    Frame notify_arg;
 
     {
-        Lock lock(frame_mutex);
+        Lock lock(mutex);
         auto found = children.find(child_id);
         if (found != children.end())
         {
@@ -85,8 +85,8 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                 last_multi_frame.clock_id = last_sync.clock_id;
                 last_multi_frame.ust = last_sync.ust +
                                        child_frame.ust - child.last_sync.ust;
-                callback = frame_callback;
-                callback_arg = last_multi_frame;
+                notify = true;
+                notify_arg = last_multi_frame;
             }
 
             child.last_frame = child_frame;
@@ -101,8 +101,8 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
         }
     }
 
-    if (callback)
-        callback(callback_arg);
+    if (notify)
+        notify_frame(notify_arg);
 }
 
 }} // namespace mir::graphics

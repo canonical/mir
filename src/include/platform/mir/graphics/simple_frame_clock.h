@@ -34,10 +34,10 @@ public:
     virtual void set_frame_callback(FrameCallback const&) override;
 protected:
     void notify_frame(Frame const&);
-
-    typedef std::mutex FrameMutex;
-    mutable FrameMutex frame_mutex;
-    FrameCallback frame_callback;
+private:
+    typedef std::mutex Mutex;
+    mutable Mutex mutex;
+    FrameCallback callback;
 };
 
 }
