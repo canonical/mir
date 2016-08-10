@@ -32,11 +32,8 @@ typedef std::function<void(Frame const&)> FrameCallback;
 /**
  * A FrameClock is a source of 'Frame' counters to sync rendering to.
  *
- * You may wonder why a trivial interface like this should set a callback
- * rather than just providing a getter function for the latest Frame.
- * The main reason right now is to support the multi-monitor frame sync
- * algorithm (MultiSourceFrameClock) efficiently without polling.
- * TODO: Possible to eliminate that need??
+ * It's called a frame 'clock' rather than a frame 'source' so as to not
+ * imply this is the source of pixels.
  */
 class FrameClock
 {
