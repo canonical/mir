@@ -366,6 +366,92 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
     }
 }
 
+TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
+{
+    using namespace ::testing;
+    using namespace std::chrono_literals;
+
+    /* Set up DRM resources */
+    uint32_t const crtc0_id{10};
+    uint32_t const encoder0_id{20};
+    uint32_t const connector0_id{30};
+    geom::Size const connector0_physical_size_mm{480, 270};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
+
+    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+
+    resources.reset();
+
+    resources.add_crtc(crtc0_id, modes0[1]);
+
+    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+
+    resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
+                            DRM_MODE_CONNECTED, encoder0_id,
+                            modes0, possible_encoder_ids_empty,
+                            connector0_physical_size_mm,
+                            DRM_MODE_SUBPIXEL_NONE);
+
+    resources.prepare();
+
+    struct TestData
+    {
+        drmModeSubPixel drm_subpixel;
+        MirSubpixelArrangement mir_subpixel;
+    };
+    std::vector<TestData> const test_data = {
+        { DRM_MODE_SUBPIXEL_UNKNOWN, mir_subpixel_arrangement_unknown },
+        { DRM_MODE_SUBPIXEL_HORIZONTAL_RGB, mir_subpixel_arrangement_horizontal_rgb },
+        { DRM_MODE_SUBPIXEL_HORIZONTAL_BGR, mir_subpixel_arrangement_horizontal_bgr },
+        { DRM_MODE_SUBPIXEL_VERTICAL_RGB, mir_subpixel_arrangement_vertical_rgb },
+        { DRM_MODE_SUBPIXEL_VERTICAL_BGR, mir_subpixel_arrangement_vertical_bgr },
+        { DRM_MODE_SUBPIXEL_NONE, mir_subpixel_arrangement_none }
+    };
+
+    auto display = create_display(create_platform());
+    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+
+    for (auto& data : test_data)
+    {
+
+        resources.reset();
+
+        resources.add_crtc(crtc0_id, modes0[1]);
+
+        resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+
+        resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
+                                DRM_MODE_CONNECTED, encoder0_id,
+                                modes0, possible_encoder_ids_empty,
+                                connector0_physical_size_mm,
+                                data.drm_subpixel);
+
+        resources.prepare();
+
+        MainLoop ml;
+        mt::Signal handler_signal;
+        display->register_configuration_change_handler(ml.ml, [&handler_signal]{handler_signal.raise();});
+        fake_devices.emit_device_changed(syspath);
+        ASSERT_TRUE(handler_signal.wait_for(10s));
+
+
+        /* Test body */
+        auto conf = display->configuration();
+
+
+        size_t output_count{0};
+
+        conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+                              {
+                                  EXPECT_THAT(output.subpixel_arrangement, Eq(data.mir_subpixel));
+                                  ++output_count;
+                              });
+
+        EXPECT_THAT(output_count, Ge(1));
+    }
+}
+
 TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
 {
     uint32_t const crtc0_id{10};
