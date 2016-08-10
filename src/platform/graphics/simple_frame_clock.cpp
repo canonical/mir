@@ -26,4 +26,15 @@ void SimpleFrameClock::set_frame_callback(FrameCallback const& cb)
     frame_callback = cb;
 }
 
+void SimpleFrameClock::notify_frame(Frame const& frame)
+{
+    std::unique_lock<FrameMutex> lock(frame_mutex);
+    if (frame_callback)
+    {
+        auto cb = frame_callback;
+        lock.unlock();
+        cb(frame);
+    }
+}
+
 }} // namespace mir::graphics

@@ -224,6 +224,7 @@ MIRPLATFORM_0.25 {
     vtable?for?mir::options::ProgramOption;
     
     mir::graphics::SimpleFrameClock::set_frame_callback*;
+    mir::graphics::SimpleFrameClock::notify_frame*;
     typeinfo?for?mir::graphics::SimpleFrameClock;
     vtable?for?mir::graphics::SimpleFrameClock;
     mir::graphics::MultiSourceFrameClock::set_frame_callback*;

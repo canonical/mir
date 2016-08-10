@@ -116,14 +116,7 @@ void mgx::DisplayBuffer::swap_buffers()
             frame.ust = ust;
         }
     }
-
-    std::unique_lock<FrameMutex> lock(frame_mutex);
-    if (frame_callback)
-    {
-        auto cb = frame_callback;
-        lock.unlock();
-        cb(frame);
-    }
+    notify_frame(frame);
 }
 
 void mgx::DisplayBuffer::bind()

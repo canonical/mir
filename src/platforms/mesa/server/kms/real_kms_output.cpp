@@ -182,13 +182,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     }
 
     auto frame = page_flipper->wait_for_flip(current_crtc->crtc_id);
-    std::unique_lock<FrameMutex> lock(frame_mutex);
-    if (frame_callback)
-    {
-        auto cb = frame_callback;
-        lock.unlock();
-        cb(frame);
-    }
+    notify_frame(frame);
 }
 
 void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
