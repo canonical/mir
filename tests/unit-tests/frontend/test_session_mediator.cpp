@@ -29,6 +29,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "src/server/scene/basic_surface.h"
@@ -88,6 +89,7 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mr = mir::report;
 
+using namespace ::testing;
 namespace
 {
 
@@ -112,6 +114,11 @@ public:
 class StubbedSession : public mtd::StubSession
 {
 public:
+    StubbedSession()
+    {
+        ON_CALL(*this, destroy_buffer(_))
+            .WillByDefault(Invoke([this](mg::BufferID){ ++destroy_buffers;}));
+    }
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
         if (mock_surfaces.find(surface) == mock_surfaces.end())
@@ -199,10 +206,8 @@ public:
         return mg::BufferID{3};
     }
 
-    void destroy_buffer(mg::BufferID)
-    {
-        destroy_buffers++;
-    }
+    MOCK_METHOD1(destroy_buffer_stream, void(mf::BufferStreamId));
+    MOCK_METHOD1(destroy_buffer, void(mg::BufferID));
 
     int num_alloc_requests()
     {
@@ -252,7 +257,7 @@ struct SessionMediator : public ::testing::Test
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          stubbed_session{std::make_shared<StubbedSession>()},
+          stubbed_session{std::make_shared<NiceMock<StubbedSession>>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           mediator{
             shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
@@ -314,7 +319,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
-    std::shared_ptr<StubbedSession> const stubbed_session;
+    std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     mf::SessionMediator mediator;
 
@@ -332,7 +337,6 @@ struct SessionMediator : public ::testing::Test
 
 TEST_F(SessionMediator, disconnect_releases_session)
 {
-    using namespace ::testing;
     EXPECT_CALL(*shell, close_session(_))
         .Times(1);
 
@@ -1395,4 +1399,54 @@ TEST_F(SessionMediator, destructor_removes_orphaned_screencast_sessions)
 
     mediator.reset();
 
+}
+
+TEST_F(SessionMediator, disassociates_buffers_from_stream_before_destroying)
+{
+    mp::BufferRelease release_buffer;
+    mp::Void null;
+
+    auto stream_id = mf::BufferStreamId{42};
+    auto buffer_id = mir::graphics::BufferID{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    auto buffer_item = release_buffer.add_buffers();
+    buffer_item->set_buffer_id(buffer_id.as_value());
+    release_buffer.mutable_id()->set_value(stream_id.as_value());
+
+    EXPECT_CALL(*stream, disassociate_buffer(buffer_id));
+    EXPECT_CALL(*stubbed_session, destroy_buffer(buffer_id));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.release_buffers(&release_buffer, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw)
+{
+    mp::BufferStreamId stream_to_release;
+    mp::BufferRelease release_buffer;
+    mp::Void null;
+
+    auto stream_id = mf::BufferStreamId{42};
+    auto buffer_id = mir::graphics::BufferID{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    auto buffer_item = release_buffer.add_buffers();
+    buffer_item->set_buffer_id(buffer_id.as_value());
+    release_buffer.mutable_id()->set_value(stream_id.as_value());
+
+    stream_to_release.set_value(stream_id.as_value());
+
+    EXPECT_CALL(*stubbed_session, destroy_buffer_stream(stream_id));
+    EXPECT_CALL(*stubbed_session, destroy_buffer(buffer_id));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.release_buffer_stream(&stream_to_release, &null, null_callback.get());
+    stream.reset();
+
+    EXPECT_NO_THROW(
+        mediator.release_buffers(&release_buffer, &null, null_callback.get());
+        );
 }
