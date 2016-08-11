@@ -110,12 +110,23 @@ void mgx::DisplayBuffer::swap_buffers()
         uint64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
-            last_frame_.msc = msc;
-            // Always monotonic? The Chromium source suggests no. But the
-            // libdrm source says you can only find out with drmGetCap :(
-            // This appears to be correct for all modern systems though...
-            last_frame_.clock_id = CLOCK_MONOTONIC;
-            last_frame_.ust = ust;
+            auto delta = msc - last_frame_.msc;
+            if (delta)
+            {
+                last_frame_.msc = msc;
+
+                // Always monotonic? The Chromium source suggests no. But the
+                // libdrm source says you can only find out with drmGetCap :(
+                // This appears to be correct for all modern systems though...
+                last_frame_.clock_id = CLOCK_MONOTONIC;
+
+                // We might not see every physical frame here since we're at
+                // a high level, so need to approximate prev_ust in the case
+                // we missed the previous one or more frames...
+                last_frame_.prev_ust = last_frame_.ust +
+                                       (ust - last_frame_.ust) / delta;
+                last_frame_.ust = ust;
+            }
         }
     }
 }
