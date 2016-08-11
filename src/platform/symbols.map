@@ -223,14 +223,14 @@ MIRPLATFORM_0.25 {
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
     
-    mir::graphics::SimpleFrameClock::set_frame_callback*;
-    mir::graphics::SimpleFrameClock::notify_frame*;
-    typeinfo?for?mir::graphics::SimpleFrameClock;
-    vtable?for?mir::graphics::SimpleFrameClock;
-    mir::graphics::MultiSourceFrameClock::set_frame_callback*;
-    mir::graphics::MultiSourceFrameClock::add_child_clock*;
-    typeinfo?for?mir::graphics::MultiSourceFrameClock;
-    vtable?for?mir::graphics::MultiSourceFrameClock;
+    mir::graphics::SimpleOutput::set_frame_callback*;
+    mir::graphics::SimpleOutput::notify_frame*;
+    typeinfo?for?mir::graphics::SimpleOutput;
+    vtable?for?mir::graphics::SimpleOutput;
+    mir::graphics::MultiOutput::set_frame_callback*;
+    mir::graphics::MultiOutput::add_child_output*;
+    typeinfo?for?mir::graphics::MultiOutput;
+    vtable?for?mir::graphics::MultiOutput;
 
     # These are "private" (declared in src/include) but are used by libmirserver.
     # They are also likely to be needed by any 3rd party "graphics platform" 

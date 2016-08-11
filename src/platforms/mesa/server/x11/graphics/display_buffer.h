@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/simple_frame_clock.h"
+#include "mir/graphics/simple_output.h"
 #include "mir/renderer/gl/render_target.h"
 #include "gl_context.h"
 
@@ -37,7 +37,7 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::NativeDisplayBuffer,
                       public renderer::gl::RenderTarget,
-                      public SimpleFrameClock
+                      public SimpleOutput
 {
 public:
     DisplayBuffer(

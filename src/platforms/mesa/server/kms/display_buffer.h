@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/multi_source_frame_clock.h"
+#include "mir/graphics/multi_output.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
@@ -109,7 +109,7 @@ private:
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
 
-    MultiSourceFrameClock frame_clock;
+    MultiOutput frame_clock; // TODO
 };
 
 }

@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_FRAME_CLOCK_H_
-#define MIR_GRAPHICS_FRAME_CLOCK_H_
+#ifndef MIR_GRAPHICS_OUTPUT_H_
+#define MIR_GRAPHICS_OUTPUT_H_
 
-#include "frame.h"
+#include "mir/graphics/frame.h"
 #include <functional>
 
 namespace mir { namespace graphics {
@@ -27,18 +27,22 @@ namespace mir { namespace graphics {
 typedef std::function<void(Frame const&)> FrameCallback;
 
 /**
- * A FrameClock is a source of 'Frame' counters to sync rendering to.
+ * Output is a generic output abstraction for unifying common traits of
+ * physical outputs, cloned monitor groups, and display buffers through
+ * the stack.
  *
- * It's called a frame 'clock' rather than a frame 'source' so as to not
- * imply this is the source of pixels.
+ * Its present purpose is to provide access to Frame information. In future
+ * it may also provide other grouped information such as the best recommended
+ * sub-pixel arrangement to use. Such information is dictated by physical
+ * outputs, but needs to be known at a much higher level during rendering.
  */
-class FrameClock
+class Output
 {
 public:
-    virtual ~FrameClock() = default;
+    virtual ~Output() = default;
     virtual void set_frame_callback(FrameCallback const&) = 0;
 };
 
 }} // namespace mir::graphics
 
-#endif // MIR_GRAPHICS_FRAME_CLOCK_H_
+#endif // MIR_GRAPHICS_OUTPUT_H_

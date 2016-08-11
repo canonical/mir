@@ -16,25 +16,27 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/simple_frame_clock.h"
+#ifndef MIR_GRAPHICS_SIMPLE_OUTPUT_H_
+#define MIR_GRAPHICS_SIMPLE_OUTPUT_H_
+
+#include "mir/graphics/output.h"
+#include <mutex>
 
 namespace mir { namespace graphics {
 
-void SimpleFrameClock::set_frame_callback(FrameCallback const& cb)
+class SimpleOutput : virtual public Output
 {
-    std::lock_guard<Mutex> lock(mutex);
-    callback = cb;
-}
-
-void SimpleFrameClock::notify_frame(Frame const& frame)
-{
-    std::unique_lock<Mutex> lock(mutex);
-    if (callback)
-    {
-        auto cb = callback;
-        lock.unlock();
-        cb(frame);
-    }
-}
+public:
+    virtual ~SimpleOutput() = default;
+    virtual void set_frame_callback(FrameCallback const&) override;
+protected:
+    void notify_frame(Frame const&);
+private:
+    typedef std::mutex Mutex;
+    mutable Mutex mutex;
+    FrameCallback callback;
+};
 
 }} // namespace mir::graphics
+
+#endif // MIR_GRAPHICS_SIMPLE_OUTPUT_H_

@@ -23,7 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/frame_clock.h"
+#include "mir/graphics/output.h"
 #include "mir_toolkit/common.h"
 
 #include <gbm.h>
@@ -35,7 +35,7 @@ namespace graphics
 namespace mesa
 {
 
-class KMSOutput : virtual public FrameClock
+class KMSOutput : virtual public Output
 {
 public:
     virtual ~KMSOutput() = default;

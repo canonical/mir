@@ -16,25 +16,25 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/multi_source_frame_clock.h"
+#include "mir/graphics/multi_output.h"
 
 namespace mir { namespace graphics {
 
-void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
+void MultiOutput::add_child_output(std::weak_ptr<Output> w)
 {
     Lock lock(mutex);
-    if (auto clock = w.lock())
+    if (auto output = w.lock())
     {
-        ChildId id = clock.get();
-        children[id].clock = std::move(w);
+        ChildId id = output.get();
+        children[id].output = std::move(w);
         synchronize(lock);
-        clock->set_frame_callback(
-            std::bind(&MultiSourceFrameClock::on_child_frame,
+        output->set_frame_callback(
+            std::bind(&MultiOutput::on_child_frame,
                       this, id, std::placeholders::_1) );
     }
 }
 
-void MultiSourceFrameClock::synchronize(Lock const&)
+void MultiOutput::synchronize(Lock const&)
 {
     last_sync = last_multi_frame;
 
@@ -42,7 +42,7 @@ void MultiSourceFrameClock::synchronize(Lock const&)
     while (c != children.end())
     {
         auto& child = c->second;
-        if (child.clock.expired())
+        if (child.output.expired())
         {
             /*
              * Lazy deferred clean-up. We don't need to do this any sooner
@@ -60,7 +60,7 @@ void MultiSourceFrameClock::synchronize(Lock const&)
     }
 }
 
-void MultiSourceFrameClock::on_child_frame(ChildId child_id,
+void MultiOutput::on_child_frame(ChildId child_id,
                                            Frame const& child_frame)
 {
     bool notify = false;
