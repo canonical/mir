@@ -33,21 +33,21 @@ class StubInputScene : public input::Scene
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
     {
     }
-    void add_observer(std::shared_ptr<scene::Observer> const& /* observer */)
+    void add_observer(std::shared_ptr<scene::Observer> const& /* observer */) override
     {
     }
-    void remove_observer(std::weak_ptr<scene::Observer> const& /* observer */)
+    void remove_observer(std::weak_ptr<scene::Observer> const& /* observer */) override
     {
     }
 
-    void add_input_visualization(std::shared_ptr<graphics::Renderable> const& /* overlay */)
+    void add_input_visualization(std::shared_ptr<graphics::Renderable> const& /* overlay */) override
     {
     }
-    void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& /* overlay */)
+    void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& /* overlay */) override
     {
     }
     
-    void emit_scene_changed()
+    void emit_scene_changed() override
     {
     }
 };

@@ -88,7 +88,7 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return buffer_factory;
     }
-    MirPlatformMessage* platform_operation(MirPlatformMessage const* /* request */)
+    MirPlatformMessage* platform_operation(MirPlatformMessage const* /* request */) override
     {
         return nullptr;
     }

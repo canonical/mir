@@ -112,13 +112,13 @@ struct BufferQueueProducer : ProducerSystem
             std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
     }
 
-    bool can_produce()
+    bool can_produce() override
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         return buffer;
     }
 
-    mg::BufferID current_id()
+    mg::BufferID current_id() override
     {
         if (buffer)
             return buffer->id();
@@ -126,7 +126,7 @@ struct BufferQueueProducer : ProducerSystem
             return mg::BufferID{INT_MAX};
     }
 
-    void produce()
+    void produce() override
     {
         mg::Buffer* b = nullptr;
         if (can_produce())
@@ -148,20 +148,20 @@ struct BufferQueueProducer : ProducerSystem
         }
     }
 
-    std::vector<BufferEntry> production_log()
+    std::vector<BufferEntry> production_log() override
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         return entries;
     }
 
-    geom::Size last_size()
+    geom::Size last_size() override
     {
         if (buffer)
             return buffer->size();
         return geom::Size{};
     }
 
-    void reset_log()
+    void reset_log() override
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         return entries.clear();
@@ -196,12 +196,12 @@ struct BufferQueueConsumer : ConsumerSystem
         return b;
     }
 
-    std::vector<BufferEntry> consumption_log()
+    std::vector<BufferEntry> consumption_log() override
     {
         return entries;
     }
 
-    geom::Size last_size()
+    geom::Size last_size() override
     {
         return last_size_;
     }

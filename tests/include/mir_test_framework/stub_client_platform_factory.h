@@ -28,13 +28,13 @@ namespace mir_test_framework
 struct StubClientPlatform : public mir::client::ClientPlatform
 {
     StubClientPlatform(mir::client::ClientContext* context);
-    MirPlatformType platform_type() const;
-    void populate(MirPlatformPackage& package) const;
+    MirPlatformType platform_type() const override;
+    void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
-    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory();
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface* surface);
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
-    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const;
+    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override;
+    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface* surface) override;
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     mir::client::ClientContext* const context;
 };
