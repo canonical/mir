@@ -22,10 +22,7 @@
 #include "frame.h"
 #include <functional>
 
-namespace mir
-{
-namespace graphics
-{
+namespace mir { namespace graphics {
 
 typedef std::function<void(Frame const&)> FrameCallback;
 
@@ -42,7 +39,6 @@ public:
     virtual void set_frame_callback(FrameCallback const&) = 0;
 };
 
-}
-}
+}} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_FRAME_CLOCK_H_

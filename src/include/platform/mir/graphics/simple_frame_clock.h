@@ -22,10 +22,7 @@
 #include "frame_clock.h"
 #include <mutex>
 
-namespace mir
-{
-namespace graphics
-{
+namespace mir { namespace graphics {
 
 class SimpleFrameClock : virtual public FrameClock
 {
@@ -40,7 +37,6 @@ private:
     FrameCallback callback;
 };
 
-}
-}
+}} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_SIMPLE_FRAME_CLOCK_H_

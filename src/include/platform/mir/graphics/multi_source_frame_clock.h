@@ -25,10 +25,7 @@
 #include <unordered_map>
 #include <mutex>
 
-namespace mir
-{
-namespace graphics
-{
+namespace mir { namespace graphics {
 
 /**
  * MultiSourceFrameClock is a virtual display clock that can represent any
@@ -62,7 +59,6 @@ private:
     Frame last_multi_frame;
 };
 
-}
-}
+}} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_MULTI_SOURCE_FRAME_CLOCK_H_

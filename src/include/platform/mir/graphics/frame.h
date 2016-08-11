@@ -22,10 +22,7 @@
 #include <cstdint>
 #include <ctime>
 
-namespace mir
-{
-namespace graphics
-{
+namespace mir { namespace graphics {
 
 /**
  * Frame is a unique identifier for a frame displayed on a physical output.
@@ -67,7 +64,6 @@ struct Frame
     }
 };
 
-}
-}
+}} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_FRAME_H_
