@@ -20,11 +20,8 @@
 #define MIR_GRAPHICS_OUTPUT_H_
 
 #include "mir/graphics/frame.h"
-#include <functional>
 
 namespace mir { namespace graphics {
-
-typedef std::function<void(Frame const&)> FrameCallback;
 
 /**
  * Output is a generic output abstraction for unifying attributes of
@@ -41,7 +38,7 @@ class Output
 {
 public:
     virtual ~Output() = default;
-    virtual void set_frame_callback(FrameCallback const&) = 0;
+    virtual Frame last_frame() const = 0;
 };
 
 }} // namespace mir::graphics

@@ -55,6 +55,8 @@ struct Frame
                             expected and simply represents the reality that
                             scanning out a new frame takes longer than
                             returning from the flip or swap function. */
+    uint64_t prev_ust = 0; /**< Unadjusted System Time of the frame that
+                                came before this one (which had msc-1) */
 
     bool operator<(Frame const& rhs) const
     {

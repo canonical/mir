@@ -21,7 +21,6 @@
 
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/graphics/simple_output.h"
 
 #include <memory>
 #include <mutex>
@@ -35,7 +34,7 @@ namespace mesa
 
 class PageFlipper;
 
-class RealKMSOutput : public SimpleOutput, public KMSOutput
+class RealKMSOutput : public KMSOutput
 {
 public:
     RealKMSOutput(int drm_fd, uint32_t connector_id,
@@ -59,6 +58,8 @@ public:
 
     void set_power_mode(MirPowerMode mode) override;
 
+    Frame last_frame() const override;
+
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
@@ -79,6 +80,8 @@ private:
     int dpms_enum_id;
 
     std::mutex power_mutex;
+
+    Frame last_frame_;
 };
 
 }

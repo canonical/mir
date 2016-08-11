@@ -118,6 +118,8 @@ mgm::DisplayBuffer::DisplayBuffer(
     for (auto const& output : outputs)
         frame_clock.add_child_output(output);
 
+#if 0
+    // TODO replace this
     frame_clock.set_frame_callback([](Frame const& frame)
     {
         unsigned long long frame_seq = frame.msc;
@@ -134,6 +136,7 @@ mgm::DisplayBuffer::DisplayBuffer(
                         age_usec, frame_usec - prev);
         prev = frame_usec;
     });
+#endif
 
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();

@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/simple_output.h"
+#include "mir/graphics/output.h"
 #include "mir/renderer/gl/render_target.h"
 #include "gl_context.h"
 
@@ -37,7 +37,7 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::NativeDisplayBuffer,
                       public renderer::gl::RenderTarget,
-                      public SimpleOutput
+                      public Output
 {
 public:
     DisplayBuffer(
@@ -59,6 +59,8 @@ public:
     MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
+    Frame last_frame() const override;
+
 private:
     geometry::Size const size;
     EGLDisplay const egl_dpy;
@@ -70,6 +72,7 @@ private:
         (EGLDisplay dpy, EGLSurface surface, uint64_t *ust,
          uint64_t *msc, uint64_t *sbc);
     EglGetSyncValuesCHROMIUM* eglGetSyncValues;
+    Frame last_frame_;
 };
 
 }

@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MULTI_OUTPUT_H_
 #define MIR_GRAPHICS_MULTI_OUTPUT_H_
 
-#include "mir/graphics/simple_output.h"
+#include "mir/graphics/output.h"
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -32,18 +32,18 @@ namespace mir { namespace graphics {
  * if you have multiple outputs, MultiOutput will emit frame callbacks
  * at the speed of the fastest one.
  */
-class MultiOutput : public SimpleOutput
+class MultiOutput : public Output
 {
 public:
     virtual ~MultiOutput() = default;
     void add_child_output(std::weak_ptr<Output>);
+    virtual Frame last_frame() const override;
 private:
     typedef std::mutex Mutex;
     typedef std::lock_guard<Mutex> Lock;
     typedef void const* ChildId;
 
     void synchronize(Lock const&);
-    void on_child_frame(ChildId, Frame const&);
 
     struct Child
     {

@@ -37,11 +37,8 @@ void page_flip_handler(int /*fd*/, unsigned int seq,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    mg::Frame frame;
-    frame.msc = seq;
-    frame.clock_id = page_flip_data->clock_id;
-    frame.ust = sec*1000000ULL + usec;
-    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id, frame);
+    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id,
+                                              seq, sec*1000000ULL + usec);
 }
 
 }
@@ -168,9 +165,14 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }
 
-void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, Frame const& frame)
+void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, uint64_t msc,
+                                           uint64_t ust)
 {
     report->report_vsync(crtc_id);
-    completed_page_flips[crtc_id] = frame;
+    Frame& frame = completed_page_flips[crtc_id];
+    frame.msc = msc;
+    frame.prev_ust = frame.ust;
+    frame.ust = ust;
+    frame.clock_id = clock_id;
     pending_page_flips.erase(crtc_id);
 }

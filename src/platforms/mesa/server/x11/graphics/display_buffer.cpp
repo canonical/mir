@@ -37,6 +37,8 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                     egl_ctx{c},
                                     orientation_{o}
 {
+#if 0
+    // TODO: Replace this
     set_frame_callback([](Frame const& frame)
     {
         unsigned long long frame_seq = frame.msc;
@@ -53,6 +55,7 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                         age_usec, frame_usec - prev);
         prev = frame_usec;
     });
+#endif
 
     /*
      * EGL_CHROMIUM_sync_control is not an official standard, but Google
@@ -102,21 +105,24 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
-    Frame frame;
     if (eglGetSyncValues) // We allow for this to be missing because calling
     {                     // it may also fail, which needs handling too...
         uint64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
-            frame.msc = msc;
+            last_frame_.msc = msc;
             // Always monotonic? The Chromium source suggests no. But the
             // libdrm source says you can only find out with drmGetCap :(
             // This appears to be correct for all modern systems though...
-            frame.clock_id = CLOCK_MONOTONIC;
-            frame.ust = ust;
+            last_frame_.clock_id = CLOCK_MONOTONIC;
+            last_frame_.ust = ust;
         }
     }
-    notify_frame(frame);
+}
+
+mg::Frame mgx::DisplayBuffer::last_frame() const
+{
+    return last_frame_;
 }
 
 void mgx::DisplayBuffer::bind()

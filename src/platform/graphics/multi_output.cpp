@@ -28,9 +28,11 @@ void MultiOutput::add_child_output(std::weak_ptr<Output> w)
         ChildId id = output.get();
         children[id].output = std::move(w);
         synchronize(lock);
+        /* TODO
         output->set_frame_callback(
             std::bind(&MultiOutput::on_child_frame,
                       this, id, std::placeholders::_1) );
+        */
     }
 }
 
@@ -60,48 +62,10 @@ void MultiOutput::synchronize(Lock const&)
     }
 }
 
-void MultiOutput::on_child_frame(ChildId child_id, Frame const& child_frame)
+Frame MultiOutput::last_frame() const
 {
-    bool notify = false;
-    Frame notify_arg;
-
-    {
-        Lock lock(mutex);
-        auto found = children.find(child_id);
-        if (found != children.end())
-        {
-            auto& child = found->second;
-            if (child.contributed_to_multi_frame.msc == last_multi_frame.msc)
-            {
-                /*
-                 * This is the primary/fastest display.
-                 * Note our last_multi_frame counters must remain monotonic,
-                 * even if the primary display changes to a child display with
-                 * lower counters...
-                 */
-                last_multi_frame.msc = last_sync.msc +
-                                       child_frame.msc - child.last_sync.msc;
-                last_multi_frame.clock_id = last_sync.clock_id;
-                last_multi_frame.ust = last_sync.ust +
-                                       child_frame.ust - child.last_sync.ust;
-                notify = true;
-                notify_arg = last_multi_frame;
-            }
-
-            child.last_frame = child_frame;
-            child.contributed_to_multi_frame = last_multi_frame;
-
-            /*
-             * So what happens when the primary display vanishes? A secondary
-             * display catches up next frame, and one frame later that
-             * secondary display now qualifies as the primary display (if
-             * statement).
-             */
-        }
-    }
-
-    if (notify)
-        notify_frame(notify_arg);
+    // TODO
+    return {};
 }
 
 }} // namespace mir::graphics
