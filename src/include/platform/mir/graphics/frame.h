@@ -64,6 +64,16 @@ struct Frame
         // that's unlikely but handle it anyway: A>B iff 0 < A-B < (4.8B years)
         return (int64_t)(rhs.msc - msc) > 0;
     }
+
+    Frame predict_next() const
+    {
+        Frame next;
+        next.msc = msc + 1;
+        next.clock_id = clock_id;
+        next.prev_ust = ust;
+        next.ust = ust + ust - prev_ust;
+        return next;
+    }
 };
 
 }} // namespace mir::graphics
