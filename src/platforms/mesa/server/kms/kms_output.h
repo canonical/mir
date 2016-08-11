@@ -35,7 +35,7 @@ namespace graphics
 namespace mesa
 {
 
-class KMSOutput : virtual public Output
+class KMSOutput : public Output
 {
 public:
     virtual ~KMSOutput() = default;
