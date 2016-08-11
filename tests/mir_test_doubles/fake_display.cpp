@@ -22,21 +22,35 @@
 
 #include "mir/graphics/event_handler_register.h"
 
+#include <system_error>
+#include <boost/throw_exception.hpp>
+
 #include <unistd.h>
+#include <sys/eventfd.h>
 
 namespace mtd = mir::test::doubles;
 
 
 mtd::FakeDisplay::FakeDisplay()
     : config{std::make_shared<StubDisplayConfig>()},
+      wakeup_trigger{::eventfd(0, EFD_CLOEXEC)},
       handler_called{false}
 {
+    if (wakeup_trigger == Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to create wakeup FD"));
+    }
 }
 
 mtd::FakeDisplay::FakeDisplay(std::vector<geometry::Rectangle> const& output_rects) :
     config{std::make_shared<StubDisplayConfig>(output_rects)},
+    wakeup_trigger{::eventfd(0, EFD_CLOEXEC)},
     handler_called{false}
 {
+    if (wakeup_trigger == Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to create wakeup FD"));
+    }
     for (auto const& rect : output_rects)
         groups.emplace_back(new StubDisplaySyncGroup({rect}));
 }
@@ -57,12 +71,16 @@ void mtd::FakeDisplay::register_configuration_change_handler(
     mir::graphics::DisplayConfigurationChangeHandler const& handler)
 {
     handlers.register_fd_handler(
-        {p.read_fd()},
+        {wakeup_trigger},
         this,
         [this, handler](int fd)
             {
-                char c;
-                if (read(fd, &c, 1) == 1)
+                eventfd_t value;
+                if (eventfd_read(fd, &value) == -1)
+                {
+                    BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to read from wakeup FD"));
+                }
+                if (value > 0)
                 {
                     handler();
                     handler_called = true;
@@ -89,7 +107,10 @@ void mtd::FakeDisplay::emit_configuration_change_event(
 {
     handler_called = false;
     config = std::make_shared<StubDisplayConfig>(*new_config);
-    if (write(p.write_fd(), "a", 1)) {}
+    if (eventfd_write(wakeup_trigger, 1) == -1)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to write to wakeup FD"));
+    }
 }
 
 void mtd::FakeDisplay::wait_for_configuration_change_handler()
