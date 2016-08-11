@@ -135,7 +135,7 @@ struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
         server_configuration.exec();
     }
 
-    void TearDown()
+    void TearDown() override
     {
         test_complete_fence.ready();
         server_configuration.on_exit();

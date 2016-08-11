@@ -67,7 +67,7 @@ bool should_fail()
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *)
+    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *) override
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
@@ -85,12 +85,12 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         return nullptr;
     }
 
-    MirPlatformType platform_type() const
+    MirPlatformType platform_type() const override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return MirPlatformType::mir_platform_type_gbm;
     }
-    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
+    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override
     {
         if (should_fail<Method::create_buffer_factory, failure_set>())
         {
@@ -98,11 +98,11 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         }
         return std::make_shared<mtd::StubClientBufferFactory>();
     }
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
     {
         return std::shared_ptr<EGLNativeDisplayType>{};
     }
-    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const
+    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return nullptr;

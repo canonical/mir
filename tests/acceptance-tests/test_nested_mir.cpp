@@ -263,7 +263,7 @@ struct ObservantShell : msh::Shell
         wrapped->focus_next_session();
     }
 
-    auto focused_session() const -> std::shared_ptr<msc::Session>
+    auto focused_session() const -> std::shared_ptr<msc::Session> override
     {
         return wrapped->focused_session();
     }

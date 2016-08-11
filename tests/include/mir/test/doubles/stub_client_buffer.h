@@ -74,10 +74,10 @@ struct StubClientBuffer : client::ClientBuffer
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
 
-    MirNativeBuffer* as_mir_native_buffer() const { return nullptr; }
-    void set_fence(MirNativeFence, MirBufferAccess) {}
-    MirNativeFence get_fence() const { return nullptr; }
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) { return true; }
+    MirNativeBuffer* as_mir_native_buffer() const override { return nullptr; }
+    void set_fence(MirNativeFence, MirBufferAccess) override {}
+    MirNativeFence get_fence() const override { return nullptr; }
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override { return true; }
 
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;
