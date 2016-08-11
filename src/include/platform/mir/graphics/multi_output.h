@@ -28,9 +28,9 @@
 namespace mir { namespace graphics {
 
 /**
- * MultiOutput is a virtual display clock that can represent any
- * number of child clocks. It ticks at the rate of the fastest child,
- * providing the user (and hence client app) a single clock to sync to.
+ * MultiOutput implements multi-monitor frame synchronization. This means
+ * if you have multiple outputs, MultiOutput will emit frame callbacks
+ * at the speed of the fastest one.
  */
 class MultiOutput : public SimpleOutput
 {

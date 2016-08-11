@@ -60,8 +60,7 @@ void MultiOutput::synchronize(Lock const&)
     }
 }
 
-void MultiOutput::on_child_frame(ChildId child_id,
-                                           Frame const& child_frame)
+void MultiOutput::on_child_frame(ChildId child_id, Frame const& child_frame)
 {
     bool notify = false;
     Frame notify_arg;

@@ -25,16 +25,16 @@
 namespace mir { namespace graphics {
 
 /**
- * Frame is a unique identifier for a frame displayed on a physical output.
+ * Frame is a unique identifier for a frame displayed on an output.
  *
- * This weird terminology is actually very standard in graphics texts,
+ * This "MSC/UST" terminology is actually pretty standard in graphics texts,
  * OpenGL and Xorg. The basic design is best described in:
  *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
  *
  * The simplistic structure is intentional, as all these values need to
- * be passed from the server to clients, and clients of clients, unmodified.
- * Even clients of clients of clients (GLX app under Xmir under Unity8 under
- * USC)!
+ * be passed unmodified from the server to clients, and clients of clients
+ * (even clients of clients of clients like a GLX app under Xmir under Unity8
+ * under USC)!
  */
 struct Frame
 {
