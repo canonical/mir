@@ -27,14 +27,15 @@ namespace mir { namespace graphics {
 typedef std::function<void(Frame const&)> FrameCallback;
 
 /**
- * Output is a generic output abstraction for unifying common traits of
- * physical outputs, cloned monitor groups, and display buffers through
- * the stack.
- *
- * Its present purpose is to provide access to Frame information. In future
- * it may also provide other grouped information such as the best recommended
- * sub-pixel arrangement to use. Such information is dictated by physical
- * outputs, but needs to be known at a much higher level during rendering.
+ * Output is a generic output abstraction for unifying attributes of
+ * physical outputs to a high level where they are required in rendering.
+ * Such attibutes of physical outputs required during rendering are:
+ *   - Frame timing information
+ *   - Sub-pixel RGB arrangement
+ *   - Resolution
+ * Although we usually like to abstract low-level implementation details,
+ * such attributes of the physical display need to be known at a high level
+ * in order to render with optimal visual quality and precision.
  */
 class Output
 {
