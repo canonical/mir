@@ -20,10 +20,7 @@
 #define MIR_GRAPHICS_MULTI_OUTPUT_H_
 
 #include "mir/graphics/output.h"
-#include <functional>
 #include <memory>
-#include <unordered_map>
-#include <mutex>
 
 namespace mir { namespace graphics {
 
@@ -39,24 +36,7 @@ public:
     void add_child_output(std::weak_ptr<Output>);
     virtual Frame last_frame() const override;
 private:
-    typedef std::mutex Mutex;
-    typedef std::lock_guard<Mutex> Lock;
-    typedef void const* ChildId;
-
-    void synchronize(Lock const&);
-
-    struct Child
-    {
-        std::weak_ptr<Output> output;
-        Frame last_sync;
-        Frame last_frame;
-        Frame contributed_to_multi_frame;
-    };
-
-    Mutex mutex;
-    std::unordered_map<ChildId, Child> children;
-    Frame last_sync;
-    Frame last_multi_frame;
+    // TODO: children
 };
 
 }} // namespace mir::graphics

@@ -22,44 +22,8 @@ namespace mir { namespace graphics {
 
 void MultiOutput::add_child_output(std::weak_ptr<Output> w)
 {
-    Lock lock(mutex);
-    if (auto output = w.lock())
-    {
-        ChildId id = output.get();
-        children[id].output = std::move(w);
-        synchronize(lock);
-        /* TODO
-        output->set_frame_callback(
-            std::bind(&MultiOutput::on_child_frame,
-                      this, id, std::placeholders::_1) );
-        */
-    }
-}
-
-void MultiOutput::synchronize(Lock const&)
-{
-    last_sync = last_multi_frame;
-
-    auto c = children.begin();
-    while (c != children.end())
-    {
-        auto& child = c->second;
-        if (child.output.expired())
-        {
-            /*
-             * Lazy deferred clean-up. We don't need to do this any sooner
-             * because a deleted child (which no longer generates callbacks)
-             * doesn't affect results at all. This means we don't need to
-             * ask graphics platforms to tell us when an output is removed.
-             */
-            c = children.erase(c);
-        }
-        else
-        {
-            child.last_sync = child.last_frame;
-            ++c;
-        }
-    }
+    // TODO
+    (void)w;
 }
 
 Frame MultiOutput::last_frame() const
