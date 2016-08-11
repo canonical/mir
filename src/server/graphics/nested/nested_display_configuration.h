@@ -59,6 +59,7 @@ private:
     {
         float scale;
         MirFormFactor form_factor;
+        MirSubpixelArrangement subpixel_arrangement;
     };
     std::unordered_map<uint32_t, LocalOutputConfig> mutable local_config;
 

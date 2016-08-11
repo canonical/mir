@@ -216,6 +216,7 @@ message DisplayOutput {
   optional sint32 orientation = 16;
   optional float scale_factor = 17;
   optional uint32 form_factor = 18;
+  optional uint32 subpixel_arrangement = 19;
 }
 
 message Connection {
