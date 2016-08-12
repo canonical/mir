@@ -98,6 +98,7 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . Physical "screen" size reported by the X11 backend is same as pixel
         count, fixing dpi to 25.4 (LP: #1596051)
       . Mir build and test failures with gcc-6 and LTO (LP: #1610215)
+      . [regression] Trust prompt not shown when starting camera (LP: #1612256)
  
  -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
 
