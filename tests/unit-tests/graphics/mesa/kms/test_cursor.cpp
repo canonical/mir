@@ -113,7 +113,8 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_power_mode_on,
                 mir_orientation_normal,
                 1.0f,
-                mir_form_factor_monitor
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown
             },
             {
                 mg::DisplayConfigurationOutputId{11},
@@ -134,7 +135,8 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_power_mode_on,
                 mir_orientation_normal,
                 1.0f,
-                mir_form_factor_monitor
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown
             },
             {
                 mg::DisplayConfigurationOutputId{12},
@@ -155,7 +157,8 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_power_mode_on,
                 mir_orientation_right,
                 1.0f,
-                mir_form_factor_monitor
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown
             }}}
     {
     }

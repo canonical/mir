@@ -320,7 +320,8 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         power_mode(master.power_mode),
         orientation(master.orientation),
         scale(master.scale),
-        form_factor(master.form_factor)
+        form_factor(master.form_factor),
+        subpixel_arrangement(master.subpixel_arrangement)
 {
 }
 

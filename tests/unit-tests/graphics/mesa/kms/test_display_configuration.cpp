@@ -234,7 +234,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -252,7 +253,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -270,7 +272,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         }
     };
 
@@ -428,7 +431,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -446,7 +450,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
     };
 
@@ -468,7 +473,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -486,7 +492,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
     };
 
@@ -617,7 +624,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
     };
 
@@ -640,7 +648,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_power_mode_on,
             mir_orientation_normal,
             1.0f,
-            mir_form_factor_monitor
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown
         },
     };
 

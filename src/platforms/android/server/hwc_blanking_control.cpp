@@ -166,7 +166,8 @@ mg::DisplayConfigurationOutput populate_config(
         external_mode,
         mir_orientation_normal,
         1.0f,
-        form_factor
+        form_factor,
+        mir_subpixel_arrangement_unknown
     };
 }
 

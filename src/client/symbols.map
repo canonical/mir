@@ -419,5 +419,6 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
 MIR_CLIENT_0.25 {  # New functions in Mir 0.25
   global:
     mir_connection_create_spec_for_tip;
+    mir_output_get_subpixel_arrangement;
 } MIR_CLIENT_0.24;
 
