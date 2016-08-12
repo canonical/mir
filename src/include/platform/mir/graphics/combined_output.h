@@ -16,20 +16,32 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/multi_output.h"
+#ifndef MIR_GRAPHICS_COMBINED_OUTPUT_H_
+#define MIR_GRAPHICS_COMBINED_OUTPUT_H_
+
+#include "mir/graphics/output.h"
+#include <memory>
 
 namespace mir { namespace graphics {
 
-void MultiOutput::add_child_output(std::weak_ptr<Output> w)
+/**
+ * CombinedOutput is a proxy representing any number of other outputs.
+ * It returns compatible attributes that best match the whole set of its child
+ * outputs. This is for use in multi-monitor scenarios where you only want
+ * to render a frame once, with one frame timing measurement and one
+ * sub-pixel arrangement.
+ */
+class CombinedOutput : public Output
 {
-    // TODO
-    (void)w;
-}
+public:
+    virtual ~CombinedOutput() = default;
+    virtual Frame last_frame() const override;
 
-Frame MultiOutput::last_frame() const
-{
-    // TODO
-    return {};
-}
+    void add_child_output(std::weak_ptr<Output>);
+private:
+    // TODO: children
+};
 
 }} // namespace mir::graphics
+
+#endif // MIR_GRAPHICS_COMBINED_OUTPUT_H_

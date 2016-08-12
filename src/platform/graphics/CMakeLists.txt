@@ -11,7 +11,7 @@ set(
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
   platform_probe.cpp
-  multi_output.cpp
+  combined_output.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT

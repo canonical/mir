@@ -16,29 +16,20 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MULTI_OUTPUT_H_
-#define MIR_GRAPHICS_MULTI_OUTPUT_H_
-
-#include "mir/graphics/output.h"
-#include <memory>
+#include "mir/graphics/combined_output.h"
 
 namespace mir { namespace graphics {
 
-/**
- * MultiOutput implements multi-monitor frame synchronization. This means
- * if you have multiple outputs, MultiOutput will emit frame callbacks
- * at the speed of the fastest one.
- */
-class MultiOutput : public Output
+void CombinedOutput::add_child_output(std::weak_ptr<Output> w)
 {
-public:
-    virtual ~MultiOutput() = default;
-    void add_child_output(std::weak_ptr<Output>);
-    virtual Frame last_frame() const override;
-private:
-    // TODO: children
-};
+    // TODO
+    (void)w;
+}
+
+Frame CombinedOutput::last_frame() const
+{
+    // TODO
+    return {};
+}
 
 }} // namespace mir::graphics
-
-#endif // MIR_GRAPHICS_MULTI_OUTPUT_H_
