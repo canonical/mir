@@ -49,7 +49,6 @@ struct SurfaceComposition : Test
             std::string("SurfaceComposition"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
-            false,
             std::list<ms::StreamInfo> { { stream, {0,0}, {} } },
             create_input_channel(),
             create_input_sender(),
