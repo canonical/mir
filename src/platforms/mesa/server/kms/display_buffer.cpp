@@ -116,11 +116,11 @@ mgm::DisplayBuffer::DisplayBuffer(
       page_flips_pending{false}
 {
     for (auto const& output : outputs)
-        frame_clock.add_child_output(output);
+        add_child_output(output);
 
 #if 0
     // TODO replace this
-    frame_clock.set_frame_callback([](Frame const& frame)
+    set_frame_callback([](Frame const& frame)
     {
         unsigned long long frame_seq = frame.msc;
         unsigned long long frame_usec = frame.ust;

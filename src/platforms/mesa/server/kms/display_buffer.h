@@ -48,6 +48,7 @@ class KMSOutput;
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
+                      public graphics::MultiOutput,
                       public renderer::gl::RenderTarget
 {
 public:
@@ -108,8 +109,6 @@ private:
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
-
-    MultiOutput frame_clock; // TODO
 };
 
 }
