@@ -46,7 +46,6 @@ namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
-
 namespace
 {
 
