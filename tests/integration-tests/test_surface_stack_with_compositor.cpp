@@ -128,7 +128,6 @@ struct SurfaceStackCompositor : public testing::Test
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,
-            false,
             streams,
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mtd::StubInputSender>(),
