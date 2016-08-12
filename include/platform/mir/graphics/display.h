@@ -81,6 +81,9 @@ public:
      * scene too early results in up to one whole frame of extra lag if
      * rendering is fast or skipped altogether (bypass/overlays). But sampling
      * too late and we might miss the deadline. If unsure just return zero.
+     *
+     * This is equivalent to:
+     * https://www.opengl.org/registry/specs/NV/glx_delay_before_swap.txt
      */
     virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
