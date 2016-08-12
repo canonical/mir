@@ -72,7 +72,6 @@ private:
         (EGLDisplay dpy, EGLSurface surface, uint64_t *ust,
          uint64_t *msc, uint64_t *sbc);
     EglGetSyncValuesCHROMIUM* eglGetSyncValues;
-    Frame last_frame_;
 };
 
 }

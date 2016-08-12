@@ -104,36 +104,36 @@ void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+}
 
+mg::Frame mgx::DisplayBuffer::last_frame() const
+{
+    Frame frame;
     if (eglGetSyncValues) // We allow for this to be missing because calling
     {                     // it may also fail, which needs handling too...
         uint64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
-            auto delta = msc - last_frame_.msc;
+            auto delta = msc - frame.msc;
             if (delta)
             {
-                last_frame_.msc = msc;
+                frame.msc = msc;
 
                 // Always monotonic? The Chromium source suggests no. But the
                 // libdrm source says you can only find out with drmGetCap :(
                 // This appears to be correct for all modern systems though...
-                last_frame_.clock_id = CLOCK_MONOTONIC;
+                frame.clock_id = CLOCK_MONOTONIC;
 
                 // We might not see every physical frame here since we're at
                 // a high level, so need to approximate prev_ust in the case
                 // we missed the previous one or more frames...
-                last_frame_.prev_ust = last_frame_.ust +
-                                       (ust - last_frame_.ust) / delta;
-                last_frame_.ust = ust;
+                frame.prev_ust = frame.ust +
+                                       (ust - frame.ust) / delta;
+                frame.ust = ust;
             }
         }
     }
-}
-
-mg::Frame mgx::DisplayBuffer::last_frame() const
-{
-    return last_frame_;
+    return frame;
 }
 
 void mgx::DisplayBuffer::bind()
