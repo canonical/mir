@@ -35,10 +35,8 @@ bool mgm::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& r
     if (!bypass_is_feasible)
         return false;
 
-    const mir::geometry::Rectangle empty;
-
-    //offscreen surfaces don't affect if bypass is possible 
-    if (view_area.intersection_with(renderable->screen_position()) == empty)
+    //offscreen surfaces don't affect if bypass is possible
+    if (!view_area.overlaps(renderable->screen_position()))
         return false;
 
     auto const is_opaque = !((renderable->alpha() != 1.0f) || renderable->shaped());
