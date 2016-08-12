@@ -212,6 +212,22 @@ typedef enum MirFormFactor
     mir_form_factor_projector,
 } MirFormFactor;
 
+
+/**
+ * Physical arrangement of subpixels on the physical output
+ *
+ * This is always relative to the “natural” orientation of the display - mir_orientation_normal.
+ */
+typedef enum MirSubpixelArrangement
+{
+    mir_subpixel_arrangement_unknown,           /**< Arrangement of subpixels cannot be determined */
+    mir_subpixel_arrangement_horizontal_rgb,    /**< Subpixels are arranged horizontally, R, G, B from left to right */
+    mir_subpixel_arrangement_horizontal_bgr,    /**< Subpixels are arranged horizontally, B, G, R from left to right */
+    mir_subpixel_arrangement_vertical_rgb,      /**< Subpixels are arranged vertically, R, G, B from top to bottom */
+    mir_subpixel_arrangement_vertical_bgr,      /**< Subpixels are arranged vertically, B, G, R from top to bottom */
+    mir_subpixel_arrangement_none               /**< Device does not have regular subpixels */
+} MirSubpixelArrangement;
+
 /**
  * Shell chrome
  */

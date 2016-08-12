@@ -71,7 +71,8 @@ auto display_output(
                                               mode,
                                               mir_orientation_normal,
                                               1.0f,
-                                              mir_form_factor_phone
+                                              mir_form_factor_phone,
+                                              mir_subpixel_arrangement_unknown
         };
 }
 
