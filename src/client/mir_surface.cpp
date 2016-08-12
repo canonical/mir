@@ -127,9 +127,9 @@ MirSurface::MirSurface(
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
       creation_handle(handle),
-      size(spec.width.is_set() && spec.height.is_set() ? geom::Size{spec.width.value(), spec.height.value()} : geom::Size{0,0}),
-      format(spec.pixel_format.is_set() ? spec.pixel_format.value() : mir_pixel_format_invalid),
-      usage(spec.buffer_usage.is_set() ? spec.buffer_usage.value() : mir_buffer_usage_hardware),
+      size({surface_proto.width(), surface_proto.height()}),
+      format(static_cast<MirPixelFormat>(surface_proto.pixel_format())),
+      usage(static_cast<MirBufferUsage>(surface_proto.buffer_usage())),
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
     for(int i = 0; i < surface_proto.attributes_size(); i++)
