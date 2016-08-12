@@ -63,17 +63,15 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
      * (GLX_OML_sync_control). And Mesa/Intel implemented the backend for it
      * (EGL on X11 only).
      *
-     * It never got formally standardized and is only documented historically:
-     *   https://src.chromium.org/viewvc/chrome?revision=289893&view=revision
-     * For many reasons...
+     * It never got formally standardized but is documented here:
      *   https://bugs.chromium.org/p/chromium/issues/detail?id=366935
      *
-     * However the issue was resovled in Google's eyes as they stopped building
-     * ChromeOS on X11 and switched to Freon (which implements it KMS-style
-     * the same way we do in the Mir mesa-kms driver).
+     * The the issue was resovled in Google's eyes as they stopped using X11
+     * for ChromeOS and switched to Freon (which implements it KMS-style
+     * the same way we do in the mesa-kms driver).
      *
      * EGL_CHROMIUM_sync_control however remains implemented in Mesa for X11
-     * since then...
+     * since the time ChromeOS did use it...
      */
     auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
     eglGetSyncValues =
