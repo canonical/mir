@@ -170,8 +170,15 @@ void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, uint64_t msc,
 {
     report->report_vsync(crtc_id);
     Frame& frame = completed_page_flips[crtc_id];
+    /*
+     * Estimate min_ust_interval based on previous flip. The KMSOutput
+     * class must improve on this estimate using its knowledge of the current
+     * display mode, so that we don't accidentally stop adaptive frame rate
+     * technologies like GSync/FreeSync from working.
+     */
+    if (frame.ust && msc > frame.msc)
+        frame.min_ust_interval = (ust - frame.ust)/(msc - frame.msc);
     frame.msc = msc;
-    frame.prev_ust = frame.ust;
     frame.ust = ust;
     frame.clock_id = clock_id;
     pending_page_flips.erase(crtc_id);

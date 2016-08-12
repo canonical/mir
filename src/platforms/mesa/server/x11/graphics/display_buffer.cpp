@@ -128,18 +128,13 @@ mg::Frame mgx::DisplayBuffer::last_frame() const
             if (delta)
             {
                 frame.msc = msc;
-
                 // Always monotonic? The Chromium source suggests no. But the
                 // libdrm source says you can only find out with drmGetCap :(
                 // This appears to be correct for all modern systems though...
                 frame.clock_id = CLOCK_MONOTONIC;
-
-                // We might not see every physical frame here since we're at
-                // a high level, so need to approximate prev_ust in the case
-                // we missed the previous one or more frames...
-                frame.prev_ust = frame.ust +
-                                       (ust - frame.ust) / delta;
                 frame.ust = ust;
+                // TODO: Get the correct frame.min_ust_interval
+                frame.min_ust_interval = 1000000/60;
             }
         }
     }

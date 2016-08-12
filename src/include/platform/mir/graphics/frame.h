@@ -24,6 +24,8 @@
 
 namespace mir { namespace graphics {
 
+enum { MAX_FREESYNC_HZ = 240 };
+
 /**
  * Frame is a unique identifier for a frame displayed on an output.
  *
@@ -55,24 +57,26 @@ struct Frame
                             expected and simply represents the reality that
                             scanning out a new frame takes longer than
                             returning from the flip or swap function. */
-    uint64_t prev_ust = 0; /**< Unadjusted System Time of the frame that
-                                came before this one (which had msc-1) */
+    uint64_t min_ust_interval = 1000000/MAX_FREESYNC_HZ;
+                       /**< The minimum time interval you should expect between
+                            frames on this device. We may update and recalculate
+                            this value on each frame, so you should keep
+                            checking it. The time between physical display
+                            frames is variable in a post-GSync/FreeSync world
+                            so you can't simply estimate when the next
+                            frame will be based on the previous ones. Instead
+                            you should always assume the worst case in which
+                            the display is running at maximum refresh rate -
+                            which is the minimum frame interval.
+                            Fixed frequency displays MUST change this value
+                            to match their actual frame interval for correct
+                            operation. */
 
     bool operator<(Frame const& rhs) const
     {
         // Wrap-around would take 9.7 billion years on a 60Hz display, so
         // that's unlikely but handle it anyway: A>B iff 0 < A-B < (4.8B years)
         return (int64_t)(rhs.msc - msc) > 0;
-    }
-
-    Frame predict_next() const
-    {
-        Frame next;
-        next.msc = msc + 1;
-        next.clock_id = clock_id;
-        next.prev_ust = ust;
-        next.ust = ust + ust - prev_ust;
-        return next;
     }
 };
 
