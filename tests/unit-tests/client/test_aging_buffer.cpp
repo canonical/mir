@@ -64,22 +64,22 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
     }
 
-    MirNativeBuffer* as_mir_native_buffer() const
+    MirNativeBuffer* as_mir_native_buffer() const override
     {
         exit(1);
     }
 
-    void set_fence(MirNativeFence, MirBufferAccess)
+    void set_fence(MirNativeFence, MirBufferAccess) override
     {
         exit(1);
     }
 
-    MirNativeFence get_fence() const
+    MirNativeFence get_fence() const override
     {
         exit(1);
     }
 
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override
     {
         exit(1);
     }

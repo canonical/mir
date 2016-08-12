@@ -91,7 +91,7 @@ public:
         display->for_each_display_sync_group(f);
     }
 
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
         return std::unique_ptr<mg::DisplayConfiguration>(
             new mtd::NullDisplayConfiguration

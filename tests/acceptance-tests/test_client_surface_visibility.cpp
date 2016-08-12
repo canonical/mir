@@ -62,6 +62,8 @@ public:
         return result;
     }
 
+    using msh::ShellWrapper::raise;
+
     std::shared_ptr<ms::Surface> surface(int index)
     {
         return surfaces[index].lock();
