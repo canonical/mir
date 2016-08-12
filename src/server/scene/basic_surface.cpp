@@ -796,7 +796,7 @@ public:
         glm::mat4 const& transform,
         float alpha,
         mg::Renderable::ID id)
-    : stream{stream},
+    : underlying_buffer_stream{stream},
       compositor_id{compositor_id},
       alpha_{alpha},
       screen_position_(position),
@@ -812,7 +812,7 @@ public:
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)
-            compositor_buffer = stream->lock_compositor_buffer(compositor_id);
+            compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
         return compositor_buffer;
     }
 
@@ -826,14 +826,14 @@ public:
     { return transformation_; }
 
     bool shaped() const override
-    { return mg::contains_alpha(stream->pixel_format()); }
+    { return mg::contains_alpha(underlying_buffer_stream->pixel_format()); }
  
     mg::Renderable::ID id() const override
     { return id_; }
 private:
-    std::shared_ptr<mc::BufferStream> const stream;
+    std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
-    void const* compositor_id;
+    void const*const compositor_id;
     float const alpha_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
