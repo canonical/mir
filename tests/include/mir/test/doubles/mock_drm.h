@@ -51,7 +51,8 @@ public:
     void add_connector(uint32_t connector_id, uint32_t type, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
                        std::vector<uint32_t>& possible_encoder_ids,
-                       geometry::Size const& physical_size);
+                       geometry::Size const& physical_size,
+                       drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
 
     void prepare();
     void reset();
