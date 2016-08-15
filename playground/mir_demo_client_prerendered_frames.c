@@ -71,9 +71,8 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirPresentationChain* chain, MirBuffer* buffer, void* client_context)
+static void available_callback(MirBuffer* buffer, void* client_context)
 {
-    (void)chain;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;
@@ -162,6 +161,12 @@ int main(int argc, char** argv)
     mir_surface_spec_add_presentation_chain(
         spec, width, height, displacement_x, displacement_y, chain);
     MirSurface* surface = mir_surface_create_sync(spec);
+    if (!mir_surface_is_valid(surface))
+    {
+        printf("could not create MirSurface\n");
+        return -1;
+    }
+
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;
@@ -175,12 +180,18 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         buffer_available[i].buffer = NULL;
 
-        mir_presentation_chain_allocate_buffer(
-            chain, width, height, format, usage, available_callback, &buffer_available[i]);
+        mir_connection_allocate_buffer(
+            connection, width, height, format, usage, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)
             pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
+
+        if (!mir_buffer_is_valid(buffer_available[i].buffer))
+        {
+            printf("could not create MirBuffer\n");
+            return -1;
+        }
 
         float max_radius = distance(0, 0, width, height) / 2.0f;
         float radius_i = ((float) i + 1) / num_prerendered_frames * max_radius;

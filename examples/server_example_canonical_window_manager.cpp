@@ -276,7 +276,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
             surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
-    titlebar_info.init_titlebar(titlebar);
+    titlebar_info.init_titlebar(session, titlebar);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
@@ -416,11 +416,17 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         auto const state = handle_set_state(surface, modifications.state.value());
         surface->configure(mir_surface_attrib_state, state);
     }
+
+    if (modifications.confine_pointer.is_set())
+    {
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
+    }
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     fullscreen_surfaces.erase(surface);
+    bool const is_active_surface{surface.lock() == active_surface()};
 
     auto& info = tools->info_for(surface);
 
@@ -457,11 +463,19 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-    if (surfaces.empty() && session == tools->focused_session())
+    if (is_active_surface)
     {
         active_surface_.reset();
-        tools->focus_next_session();
-        select_active_surface(tools->focused_surface());
+
+        if (surfaces.empty())
+        {
+            tools->focus_next_session();
+            select_active_surface(tools->focused_surface());
+        }
+        else
+        {
+            select_active_surface(surfaces[0].lock());
+        }
     }
 }
 

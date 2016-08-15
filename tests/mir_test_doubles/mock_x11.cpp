@@ -43,6 +43,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&enter_notify_event_return, 0, sizeof(XEvent));
     std::memset(&leave_notify_event_return, 0, sizeof(XEvent));
     std::memset(&visual_info, 0, sizeof(XVisualInfo));
+    std::memset(&screen, 0, sizeof screen);
     visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
@@ -56,6 +57,10 @@ mtd::FakeX11Resources::FakeX11Resources()
     motion_event_return.type = MotionNotify;
     enter_notify_event_return.type = EnterNotify;
     leave_notify_event_return.type = LeaveNotify;
+    screen.width = 1024;
+    screen.height = 768;
+    screen.mwidth = 338;
+    screen.mwidth = 270;
 }
 
 mtd::MockX11::MockX11()
@@ -67,6 +72,9 @@ mtd::MockX11::MockX11()
 
     ON_CALL(*this, XOpenDisplay(_))
     .WillByDefault(Return(fake_x11.display));
+
+    ON_CALL(*this, XDefaultScreenOfDisplay(fake_x11.display))
+    .WillByDefault(Return(&fake_x11.screen));
 
     ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
     .WillByDefault(DoAll(SetArgPointee<3>(1),
@@ -213,4 +221,19 @@ int XGrabPointer(Display* display, Window grab_window, Bool owner_events,
 int XUngrabPointer(Display* display, Time time)
 {
     return global_mock->XUngrabKeyboard(display, time);
+}
+
+Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
+{
+    return global_mock->XInternAtom(display, atom_name, only_if_exists);
+}
+
+Status XSetWMProtocols(Display* display, Window w, Atom* protocols, int count)
+{
+    return global_mock->XSetWMProtocols(display, w, protocols, count);
+}
+
+Screen* XDefaultScreenOfDisplay(Display* display)
+{
+    return global_mock->XDefaultScreenOfDisplay(display);
 }

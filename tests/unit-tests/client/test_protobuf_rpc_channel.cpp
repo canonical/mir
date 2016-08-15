@@ -62,11 +62,12 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_CONST_METHOD2(with_surface_do,
         void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
     MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&));
+        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
-        void(std::function<void(mcl::BufferReceiver*)> const&));
-    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
-    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+        void(std::function<void(mcl::ClientBufferStream*)> const&));
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
+    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
+    MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
     MOCK_METHOD1(erase, void(int));
 }; 
  
@@ -78,17 +79,20 @@ public:
     {
     }
     void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&) const override
+        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
-    void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
+    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
-    std::shared_ptr<mcl::Buffer> buffer(int) const
+    void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
+    {
+    }
+    std::shared_ptr<mcl::MirBuffer> buffer(int) const
     {
         return nullptr;
     }
-    void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    void insert(int, std::shared_ptr<mcl::MirBuffer> const&)
     {
     }
     void erase(int)
@@ -680,17 +684,17 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
 struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
-    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mir::protobuf::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
-        MirPresentationChain*,
+        MirConnection*,
         mir::geometry::Size, MirPixelFormat, MirBufferUsage,
         mir_buffer_callback, void*));
 };
 
 namespace
 {
-void buffer_cb(MirPresentationChain*, MirBuffer*, void*)
+void buffer_cb(MirBuffer*, void*)
 {
 }
 

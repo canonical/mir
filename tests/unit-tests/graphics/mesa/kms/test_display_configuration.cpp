@@ -672,6 +672,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     resources.reset();
     resources.add_crtc(crtc_ids[0], modes1[1]);
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
+    resources.add_encoder(encoder_ids[1], 0, possible_crtcs_mask_empty);
     resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
                             DRM_MODE_CONNECTED, encoder_ids[1],
                             modes1, possible_encoder_ids_empty,

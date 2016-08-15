@@ -1,3 +1,113 @@
+mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 41
+      . mircommon ABI unchanged at 6
+      . mirplatform ABI bumped to 12
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 10
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+      . Added a new tool 'mirvanity' which can use a high speed video camera
+        to measure client-to-screen latency.
+      . Added (build-time) support for desktop full OpenGL servers (disabled
+        by default in favor of GLESv2).
+      . Introduced new buffer semantics (NBS) and enabled it by default.
+      . Avoided using libmirserver in mir_demo_standalone_render_overlays,
+        making bringup traces less cluttered.
+      . Removed TilingWindowManager from example servers.
+      . Added two new mir_*_performance_test tools that are run as part of
+        'mir_performance_tests'.
+      . Added pointer confinement to the client API.
+      . Added new platform supporting software EGLStreams.
+      . Added an input platform that the nested server can use.
+      . Allow configuration of the application_not_responding_detector
+      . Handle server-side keymapping using XKBMapper.
+      . Remove the offscreen display.
+      . Add callback option to notify shells that the server is about to stop.
+      . Add logging for ANativeWindow events on Android.
+    - Bugs fixed:
+      . usage of std:call_once in mirclient causes TLS collisions with some
+        android devices (LP: #1599867)
+      . AltGr not working on external keyboards (LP: #1565236)
+      . [regression] unity8 fails to start when built with 0.24 series (lp:mir)
+        (LP: #1597717)
+      . CI failure in MirSurfaceVisibilityEvent.exposed_received_when_surface_
+        raised_over_occluding_surface [called twice - over-saturated and active]
+        (LP: #1556045)
+      . package-built mir_demo_server does not start on device (LP: #1577357)
+      . During surface creation, first stream in spec becomes default stream.
+        (LP: #1577967)
+      . mouse is getting stuck on a phantom edge (LP: #1580774)
+      . [testsfail] in MirSurfaceVisibilityEvent.exposed_received_when_surface_
+        raised_over_occluding_surface [never called] (LP: #1581385)
+      . [enhancement] Add support for full OpenGL compositing (LP: #1420581)
+      . [testsfail] ServerSignal.terminate_handler_is_called_for_SIGINT|SIGTERM
+        (LP: #1570353)
+      . [testsfail] ClientLatency.triple_buffered_client_has_less_than_two_
+        frames_latency (LP: #1576690)
+      . [testsfail] NestedServer.when_monitor_plugged_in_client_is_notified_of_
+        new_display_configuration (LP: #1576760)
+      . mir server crashed in what(): drmModeMoveCursor failed (returned -13)
+        (LP: #1579630)
+      . mirtest-dev is hard to use as the objects used are compiled with LTO
+        (LP: #1583536)
+      . [testsfail] ClientLogging.reports_performance [Value of: lag]
+        (LP: #1583970)
+      . [ FAILED ] ClientLogging.reports_performance (Value of: nbuffers)
+        (LP: #1584603)
+      . [ FAILED ] ClientLogging.reports_performance (Value of: render)
+        (LP: #1584605)
+      . ClientCredsTestFixture.session_authorizer_receives_pid_of_connecting_
+        clients failure (LP: #1587604)
+      . Mir on X11 ignores mir::graphics::GLConfig depth & stencil buffer size
+        (LP: #1589632)
+      . Need to support pointer confinement (LP: #1590099)
+      . [tests] given_nested_server_set_base_display_configuration_when_
+        monitor_plugged_in_configuration_is_reset fails (LP: #1591354)
+      . CI failure in DemoInProcessServerWithStubClientPlatform.surface_
+        creation_does_not_leak_fds (LP: #1598802)
+      . Screen is squashed/distorted when rotated in Mir-on-X11 (LP: #1577262)
+      . --display-report=log shows some invalid uninitialized EGL attribute
+        values (LP: #1582066)
+      . mir_demo_client_eglplasma falls back to software rendering on i915
+        (Intel Atoms), which explains why it's so slow (LP: #1583532)
+      . [regression] x11 platform only draws to a small part of the x11 window
+        (LP: #1598267)
+      . mir ftbfs in yakkety builders (LP: #1600343)
+      . Autolanding keeps failing: mock_egl.h:89:7: error: type 'struct
+        MockEGL' violates one definition rule [-Werror=odr] (LP: #1603303)
+      . [regression] The Super/Windows key doesn't work any more (LP: #1602966)
+      . mir_acceptance_tests.bin: double free or corruption (fasttop)
+        (LP: #1603114)
+      . ftbfs in linking libmir-test-assist.a in xenial+overlay and
+        yakkety+overlay (LP: #1601810)
+      . [testsfail] failure in NestedInput.on_input_device_state_nested_*
+        (LP: #1602646)  
+      . mirtest-dev provides an incorrect .pc file (LP: #1603080)
+      . mir_test_framework::server_platform_path(), 
+        mir_test_framework::server_platform() don't support use in a downstream
+        test built against mir-test-assist (LP: #1603091)
+      . Servers based on Mir need a hook to execute code when the server is
+        closing (LP: #1593655)
+      . Android graphics platform doesn't get packaged for arm64 (LP: #157866)
+      . memory leaks in unit tests on android (LP: #1253486)
+      . Physical "screen" size reported by the X11 backend is same as pixel
+        count, fixing dpi to 25.4 (LP: #1596051)
+      . Mir build and test failures with gcc-6 and LTO (LP: #1610215)
+      . [regression] Trust prompt not shown when starting camera (LP: #1612256)
+ 
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
+
+mir (0.23.5+16.10.20160729-0ubuntu2) yakkety; urgency=medium
+
+  * No-change rebuild for boost soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 04 Aug 2016 08:25:48 +0000
+
 mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.23.5 (https://launchpad.net/mir/+milestone/0.23.5)
@@ -6,11 +116,12 @@ mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
     - Enhancements:
       . Enable new buffer semantics (NBS) by default.
     - Bugs fixed:
-      . OSK flickers and buttons are sometimes invisble (LP: #1590765)
       . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
       . [testsfail] Process.* (memory leak in libhybris generated when probing
         android platforms) (LP: #1602199)
-      . CI InputEvents failure in krillin (LP: #1603145)
+      . unity8/libmirclient gives up and terminates prematurely with
+        "std::exception::what: disconnected: no new buffers" via
+        ExchangeSemantics::submit() (LP: #1506358)
 
  -- Kevin DuBois <kdub432@gmail.com>  Fri, 29 Jul 2016 11:31:02 +0000
 

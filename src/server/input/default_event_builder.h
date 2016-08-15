@@ -31,11 +31,14 @@ class Authority;
 }
 namespace input
 {
+class Seat;
+
 class DefaultEventBuilder : public EventBuilder
 {
 public:
     explicit DefaultEventBuilder(MirInputDeviceId device_id,
-                                 std::shared_ptr<cookie::Authority> const& cookie_authority);
+                                 std::shared_ptr<cookie::Authority> const& cookie_authority,
+                                 std::shared_ptr<Seat> const& seat);
 
     EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) override;
 
@@ -50,9 +53,11 @@ public:
 
     EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) override;
 
+    EventUPtr device_state_event(float cursor_x, float cursor_y) override;
 private:
     MirInputDeviceId const device_id;
     std::shared_ptr<cookie::Authority> const cookie_authority;
+    std::shared_ptr<Seat> const seat;
 };
 }
 }

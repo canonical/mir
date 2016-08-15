@@ -36,10 +36,10 @@ public:
     virtual ~AsyncBufferFactory() = default;
     AsyncBufferFactory() = default;
 
-    virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
+    virtual std::unique_ptr<MirBuffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -55,10 +55,10 @@ private:
 class BufferFactory : public AsyncBufferFactory
 {
 public:
-    std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
+    std::unique_ptr<MirBuffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -68,11 +68,12 @@ public:
 
 private:
     std::mutex mutex;
+    int error_id { -1 };
     struct AllocationRequest
     {
         AllocationRequest(
             std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-            MirPresentationChain* chain,
+            MirConnection* connection,
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
@@ -80,7 +81,7 @@ private:
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
-        MirPresentationChain* chain;
+        MirConnection* connection;
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;

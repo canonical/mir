@@ -37,6 +37,7 @@
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -82,6 +83,7 @@ struct SessionManagerSetup : public testing::Test
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
+        mir_pointer_unconfined,
         false,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mi::InputChannel>(),
@@ -95,6 +97,7 @@ struct SessionManagerSetup : public testing::Test
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplay display{2};
     mtd::NullEventSink event_sink;
+    mtd::StubBufferAllocator allocator;
 
     ms::SessionManager session_manager{mt::fake_shared(surface_stack),
         mt::fake_shared(stub_surface_factory),
@@ -104,7 +107,8 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mt::fake_shared(allocator)};
 };
 
 }
@@ -156,6 +160,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplay display{2};
+    mtd::StubBufferAllocator allocator;
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_stack),
@@ -166,7 +171,8 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mt::fake_shared(allocator)};
 };
 }
 
@@ -197,6 +203,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplay display{3};
+    mtd::StubBufferAllocator allocator;
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_stack),
@@ -207,7 +214,8 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mt::fake_shared(allocator)};
 };
 }
 

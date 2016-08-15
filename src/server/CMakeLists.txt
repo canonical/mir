@@ -75,7 +75,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
   $<TARGET_OBJECTS:mirnestedgraphics>
-  $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
 
   $<TARGET_OBJECTS:mirrenderergl>
@@ -84,7 +83,7 @@ set(MIR_SERVER_OBJECTS
 
 set(MIR_SERVER_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
@@ -109,7 +108,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
@@ -125,7 +124,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 40) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 41) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

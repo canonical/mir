@@ -36,6 +36,7 @@
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
 #include "mir/test/stub_server_tool.h"
+#include "mir/test/doubles/mock_mir_buffer.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
@@ -86,10 +87,10 @@ struct PresentationChainCallback
 struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
-    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mp::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -592,81 +593,6 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     config_wait_handle->wait_for_all();
 }
 
-static MirSurface *surface;
-static void surface_callback(MirSurface* surf, void*)
-{
-    surface = surf;
-}
-
-static bool unfocused_received;
-static void surface_event_callback(MirSurface *, MirEvent const *ev, void *)
-{
-    if (mir_event_type_surface != mir_event_get_type(ev))
-        return;
-    auto surface_ev = mir_event_get_surface_event(ev);
-    if (mir_surface_attrib_focus != mir_surface_event_get_attribute(surface_ev))
-        return;
-    if (mir_surface_unfocused != mir_surface_event_get_attribute_value(surface_ev))
-        return;
-    unfocused_received = true;
-}
-
-TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
-{
-    using namespace testing;
-
-    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
-    params.surface_name = __PRETTY_FUNCTION__;
-
-    unfocused_received = false;
-
-    MirWaitHandle *wait_handle = connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    wait_handle = connection->create_surface(params, &surface_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_focused));
-
-    surface->set_event_handler(&surface_event_callback, nullptr);
-
-    wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    wait_handle = connection->disconnect();
-    wait_handle->wait_for_all();
-
-    EXPECT_TRUE(unfocused_received);
-}
-
-TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_release)
-{
-    using namespace testing;
-
-    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
-    params.surface_name = __PRETTY_FUNCTION__;
-
-    unfocused_received = false;
-
-    MirWaitHandle *wait_handle = connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    wait_handle = connection->create_surface(params, &surface_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    surface->handle_event(*mev::make_event(mf::SurfaceId{surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused));
-
-    surface->set_event_handler(&surface_event_callback, nullptr);
-
-    wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
-    wait_handle->wait_for_all();
-
-    wait_handle = connection->disconnect();
-    wait_handle->wait_for_all();
-
-    EXPECT_FALSE(unfocused_received);
-}
-
 namespace
 {
 
@@ -932,7 +858,7 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, nullptr, size, format, usage, nullptr, nullptr));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
 
     connection->allocate_buffer(size, format, usage, nullptr, nullptr);
 }
@@ -940,11 +866,16 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
 TEST_F(MirConnectionTest, can_release_buffer_from_connection)
 {
     int buffer_id = 1320;
+    testing::NiceMock<mtd::MockMirBuffer> mock_buffer;
+    ON_CALL(mock_buffer, valid())
+        .WillByDefault(Return(true)); 
+    ON_CALL(mock_buffer, rpc_id())
+        .WillByDefault(Return(buffer_id)); 
     mp::BufferRelease release_msg;
     auto released_buffer = release_msg.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
 
     EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg)));
 
-    connection->release_buffer(buffer_id);
+    connection->release_buffer(&mock_buffer);
 }

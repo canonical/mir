@@ -274,7 +274,7 @@ public:
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    void submit_buffer(mcl::Buffer& buffer) override
+    void submit_buffer(mcl::MirBuffer& buffer) override
     {
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
@@ -405,8 +405,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     mcl::BufferVault vault;
     std::mutex mutable mutex;
-    std::shared_ptr<mcl::Buffer> current{nullptr};
-    mir::client::NoTLSFuture<std::shared_ptr<mcl::Buffer>> future;
+    std::shared_ptr<mcl::MirBuffer> current{nullptr};
+    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
     geom::Size size_;

@@ -1,4 +1,4 @@
-MIRPLATFORM_11 {
+MIRPLATFORM_0.24 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -118,7 +118,7 @@ MIRPLATFORM_11 {
     mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::fatal_abort_opt*;
+    mir::options::fatal_except_opt*;
     mir::options::frontend_threads_opt*;
     mir::options::glog*;
     mir::options::glog_log_dir*;
@@ -135,7 +135,6 @@ MIRPLATFORM_11 {
     mir::options::no_server_socket_opt*;
     mir::options::platform_input_lib*;
     mir::options::off_opt_value*;
-    mir::options::offscreen_opt*;
     mir::options::Option::get*;
     mir::options::Option::is_set*;
     mir::options::Option::operator*;
@@ -255,6 +254,7 @@ MIRPLATFORM_11 {
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
+    mir::udev::Context::ctx*;
     mir::udev::Enumerator::begin*;
     mir::udev::Enumerator::end*;
     mir::udev::Enumerator::?Enumerator*;
@@ -281,10 +281,3 @@ MIRPLATFORM_11 {
   };
  local: *;
 };
-
-MIR_PLATFORM_0.21 {  # New symbols in Mir 0.21
- global:
-  extern "C++" {
-    mir::udev::Context::ctx*;
-  };
-} MIRPLATFORM_11;

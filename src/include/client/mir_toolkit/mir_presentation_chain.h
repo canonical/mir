@@ -82,27 +82,6 @@ MirPresentationChain* mir_connection_create_presentation_chain_sync(
  */
 void mir_presentation_chain_release(MirPresentationChain* presentation_chain);
 
-/** Allocate a MirBuffer and do not wait for the server to return it.
- *
- *  The callback will be called when the buffer is available for use.
- *  It will be called once when created, and once per every
- *  mir_presentation_chain_submit_buffer.
- *
- *   \param [in] presentation_chain    The presentation chain
- *   \param [in] width                 Requested buffer width
- *   \param [in] height                Requested buffer height
- *   \param [in] buffer_usage          Requested buffer usage
- *   \param [in] available_callback    The callback called when the buffer
- *                                     is available
- *   \param [in] available_context     The context for the available_callback
- **/
-void mir_presentation_chain_allocate_buffer(
-    MirPresentationChain* presentation_chain, 
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage,
-    mir_buffer_callback available_callback, void* available_context);
-
 /** Submit a buffer to the server so the server can display it.
  *
  *  The server will notify the client when the buffer is available again via

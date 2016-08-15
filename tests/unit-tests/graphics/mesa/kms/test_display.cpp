@@ -26,6 +26,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
+#include "mir/fatal.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -237,7 +238,7 @@ TEST_F(MesaDisplayTest, create_display)
     /* Create an EGL window surface backed by the gbm surface */
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,
                                                  mock_egl.fake_configs[0],
-                                                 (EGLNativeWindowType)mock_gbm.fake_gbm.surface, _))
+                                                 mock_gbm.fake_gbm.surface, _))
         .Times(Exactly(1));
 
     /* Swap the EGL window surface to bring the back buffer to the front */
@@ -446,6 +447,7 @@ TEST_F(MesaDisplayTest, post_update)
 
 TEST_F(MesaDisplayTest, post_update_flip_failure)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
     using namespace testing;
 
     auto const crtc_id = get_connected_crtc_id();

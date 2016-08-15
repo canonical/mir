@@ -23,6 +23,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/input/composite_event_filter.h"
+#include "mir/input/event_filter.h"
 #include "mir/options/default_configuration.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/default_server_configuration.h"
@@ -41,6 +43,37 @@
 #include <iostream>
 
 namespace mo = mir::options;
+namespace mi = mir::input;
+
+namespace
+{
+struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
+{
+    bool handle(MirEvent const&) override { return false; }
+    void append(std::shared_ptr<mi::EventFilter> const& filter) override
+    {
+        append_event_filters.push_back(filter);
+    }
+    void prepend(std::shared_ptr<mi::EventFilter> const& filter) override
+    {
+        prepend_event_filters.push_back(filter);
+    }
+
+    void move_filters(std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter)
+    {
+        for (auto const& filter : prepend_event_filters)
+            composite_event_filter->prepend(filter);
+
+        for (auto const& filter : append_event_filters)
+            composite_event_filter->append(filter);
+
+        append_event_filters.clear();
+        prepend_event_filters.clear();
+    }
+    std::vector<std::shared_ptr<mi::EventFilter>> prepend_event_filters;
+    std::vector<std::shared_ptr<mi::EventFilter>> append_event_filters;
+};
+}
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor)\
@@ -48,7 +81,8 @@ namespace mo = mir::options;
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(shell)\
-    MACRO(surface_stack)
+    MACRO(surface_stack)\
+    MACRO(application_not_responding_detector)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -68,13 +102,13 @@ namespace mo = mir::options;
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
-    MACRO(coordinate_translator)
+    MACRO(coordinate_translator) \
+    MACRO(persistent_surface_store)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
     MACRO(the_compositor_report)\
-    MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
     MACRO(the_cursor)\
     MACRO(the_display)\
@@ -96,7 +130,8 @@ namespace mo = mir::options;
     MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
-    MACRO(the_application_not_responding_detector)
+    MACRO(the_application_not_responding_detector)\
+    MACRO(the_persistent_surface_store)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -113,11 +148,14 @@ struct mir::Server::Self
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
+    std::function<void()> stop_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
     Terminator terminator{};
     EmergencyCleanupHandler emergency_cleanup_handler;
+    std::shared_ptr<TemporaryCompositeEventFilter> temporary_event_filter{
+        std::make_shared<TemporaryCompositeEventFilter>()};
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -233,6 +271,11 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
+    std::function<void()> the_stop_callback() override
+    {
+        return self->stop_callback;
+    }
+
     using mir::DefaultServerConfiguration::the_options;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
@@ -316,6 +359,19 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
     self->init_callback = updated;
 }
 
+void mir::Server::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    auto const& existing = self->stop_callback;
+
+    auto const updated = [=]
+        {
+            stop_callback();
+            existing();
+        };
+
+    self->stop_callback = updated;
+}
+
 void mir::Server::set_command_line_handler(
     std::function<void(int argc, char const* const* argv)> const& command_line_hander)
 {
@@ -383,6 +439,9 @@ void mir::Server::run()
         verify_accessing_allowed(self->server_config);
 
         auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+        auto const composite_event_filter = self->server_config->the_composite_event_filter();
+
+        self->temporary_event_filter->move_filters(composite_event_filter);
 
         if (self->emergency_cleanup_handler)
             emergency_cleanup->add(self->emergency_cleanup_handler);
@@ -424,7 +483,10 @@ void mir::Server::stop()
     mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
+        {
+            self->stop_callback();
             main_loop->stop();
+        }
 }
 
 bool mir::Server::exited_normally()
@@ -494,6 +556,14 @@ void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 FOREACH_WRAPPER(MIR_SERVER_WRAP)
 
 #undef MIR_SERVER_WRAP
+
+auto mir::Server::the_composite_event_filter() const -> decltype(self->server_config->the_composite_event_filter())
+{
+    if (self->server_config)
+        return self->server_config->the_composite_event_filter();
+    else
+        return self->temporary_event_filter;
+}
 
 void mir::Server::add_configuration_option(
     std::string const& option,

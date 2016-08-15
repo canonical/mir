@@ -106,7 +106,7 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(
-            [](mcl::BufferReceiver* receiver) {
+            [](mcl::ClientBufferStream* receiver) {
                 if (receiver) receiver->buffer_unavailable();
             });
     }
@@ -312,7 +312,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 if (seq.buffer_request().has_id())
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                    [&] (mcl::BufferReceiver* receiver) {
+                    [&] (mcl::ClientBufferStream* receiver) {
                         receiver->buffer_available(seq.buffer_request().buffer());
                     });
                 }
@@ -321,7 +321,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();
-                    std::shared_ptr<mcl::Buffer> buffer;
+                    std::shared_ptr<mcl::MirBuffer> buffer;
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:

@@ -329,6 +329,7 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
+    void error_buffer(mg::BufferProperties const&, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
@@ -391,7 +392,7 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(mcl::Buffer& buffer)
+    void submit_buffer(mcl::MirBuffer& buffer)
     {
         mp::Buffer buffer_req;
         buffer_req.set_buffer_id(buffer.rpc_id());
@@ -431,7 +432,7 @@ struct ScheduledProducer : ProducerSystem
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
                 auto& ipc_buffer = request.buffer();
-                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                std::shared_ptr<mcl::MirBuffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }
@@ -591,12 +592,12 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         else
         {
             ipc = std::make_shared<StubIpcSystem>();
+            map = std::make_shared<mc::BufferMap>(
+                    std::make_shared<StubEventSink>(ipc),
+                    std::make_shared<mtd::StubBufferAllocator>());
             auto submit_stream = std::make_shared<mc::Stream>(
                 drop_policy,
-                std::make_unique<mc::BufferMap>(
-                    mf::BufferStreamId{2},
-                    std::make_shared<StubEventSink>(ipc),
-                    std::make_shared<mtd::StubBufferAllocator>()),
+                map,
                 geom::Size{100,100},
                 mir_pixel_format_abgr_8888);
             auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
@@ -610,12 +611,9 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
                     submit_stream->swap_buffers(&b, [](mg::Buffer*){});
                 });
             ipc->on_allocate(
-                [weak_stream](geom::Size sz)
+                [this](geom::Size sz)
                 {
-                    auto submit_stream = weak_stream.lock();
-                    if (!submit_stream)
-                        return;
-                    submit_stream->allocate_buffer(
+                    map->add_buffer(
                         mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
 
@@ -674,6 +672,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
+    std::shared_ptr<mc::BufferMap> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};

@@ -68,10 +68,9 @@ struct NestedDisplay : testing::Test
         auto nested_display_raw = new mgn::Display{
             platform,
             std::make_shared<SingleDisplayHostConnection>(),
-            mt::fake_shared(null_input_dispatcher),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
-            gl_config, std::make_shared<mtd::StubCursorListener>()};
+            gl_config};
 
         return std::unique_ptr<mgn::Display>{nested_display_raw};
     }

@@ -16,7 +16,6 @@ set(
   mock_input_device.cpp
   mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
-  stub_buffer.cpp
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
@@ -41,7 +40,7 @@ set(
 
 if (MIR_BUILD_PLATFORM_MESA_X11)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
     ${DRM_INCLUDE_DIRS}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
@@ -53,7 +52,7 @@ endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
@@ -71,11 +70,16 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   )
 endif()
 
+# We don't want LTO objects in a published archive (libmir-test-assist.a)
+string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 add_library(mir-public-test-doubles OBJECT
   nested_mock_egl.cpp
   null_logger.cpp
   stub_display_configuration.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/stub_display_configuration.h
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
+  stub_buffer.cpp
 )
 
 add_library(mir-test-doubles-static STATIC

@@ -10,6 +10,7 @@ set(
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
+  server_stop_callback.cpp
   test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
@@ -19,6 +20,7 @@ set(
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
+  test_confined_pointer.cpp
   test_client_surfaces.cpp
   test_client_logging.cpp
   test_custom_window_management.cpp
@@ -55,6 +57,7 @@ set(
   test_surface_raise.cpp
   test_client_cookie.cpp
   test_new_display_configuration.cpp
+  test_persistent_surface_store.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")

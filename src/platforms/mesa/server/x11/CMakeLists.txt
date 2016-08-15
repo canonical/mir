@@ -26,7 +26,7 @@ target_link_libraries(
   PRIVATE
   mirplatform
   EGL
-  GLESv2
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
   X11
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}

@@ -60,11 +60,11 @@ namespace client
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 class ClientBufferStream;
-class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
 class AsyncBufferFactory;
+class MirBuffer;
 
 namespace rpc
 {
@@ -138,7 +138,7 @@ public:
     void register_error_callback(mir_error_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate_graphics_module(MirModuleProperties& properties);
+    void populate_graphics_module(MirModuleProperties& properties) override;
     MirDisplayConfiguration* create_copy_of_display_config();
     std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
@@ -198,7 +198,7 @@ public:
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
-    void release_buffer(int buffer_id);
+    void release_buffer(mir::client::MirBuffer* buffer);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -311,8 +311,6 @@ private:
 
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
-
     mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;

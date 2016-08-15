@@ -22,7 +22,8 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mir
 {

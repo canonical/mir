@@ -24,7 +24,7 @@
 #include "mir/fatal.h"
 
 #include <boost/throw_exception.hpp>
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 
 #include <stdexcept>
 #include <chrono>

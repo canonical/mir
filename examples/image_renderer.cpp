@@ -49,7 +49,9 @@ const GLchar* vertex_shader_src =
 
 const GLchar* fragment_shader_src =
 {
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"

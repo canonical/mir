@@ -53,21 +53,21 @@ mc::BufferStreamFactory::BufferStreamFactory(
 
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& buffers,
     mg::BufferProperties const& buffer_properties)
 {
-    return create_buffer_stream(id, sink, nbuffers, buffer_properties);
+    return create_buffer_stream(id, buffers, nbuffers, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& buffers,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
     if (nbuffers == 0)
     {
         return std::make_shared<mc::Stream>(
             *policy_factory,
-            std::make_unique<mc::BufferMap>(id, sink, gralloc),
+            buffers,
             buffer_properties.size, buffer_properties.format);
     }
     else
@@ -76,4 +76,10 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
             nbuffers, gralloc, buffer_properties, *policy_factory);
         return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
     }
+}
+
+std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
+        std::shared_ptr<mf::BufferSink> const& sink)
+{
+    return std::make_shared<mc::BufferMap>(sink, gralloc);
 }

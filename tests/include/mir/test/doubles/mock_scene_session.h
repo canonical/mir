@@ -72,6 +72,10 @@ struct MockSceneSession : public scene::Session
     
     MOCK_METHOD2(configure_streams, void(scene::Surface&, std::vector<shell::StreamSpecification> const&));
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<scene::Surface> const&));
+
+    MOCK_METHOD1(create_buffer, graphics::BufferID(graphics::BufferProperties const&));
+    MOCK_METHOD1(destroy_buffer, void(graphics::BufferID));
+    MOCK_METHOD1(get_buffer, std::shared_ptr<graphics::Buffer>(graphics::BufferID));
 };
 
 }

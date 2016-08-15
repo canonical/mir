@@ -40,5 +40,9 @@ bool is_appropriate_module(mcl::ClientContext* context)
     mir::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
     MirPlatformPackage package;
     context->populate_server_package(package);
-    return Matches(mtf::IsStubPlatformPackage())(package);
+    MirModuleProperties module_properties;
+    context->populate_graphics_module(module_properties);
+    return
+        Matches(mtf::IsStubPlatformPackage())(package) &&
+        (strcmp(module_properties.name, "mir:stub-graphics") == 0);
 }

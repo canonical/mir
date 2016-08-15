@@ -80,8 +80,7 @@ INSTANTIATE_TEST_CASE_P(
         "constructor",
         "create_buffer_allocator",
         "create_display",
-        "make_ipc_operations",
-        "egl_native_display"
+        "make_ipc_operations"
     ));
 
 using ServerShutdownDeathTest = ServerShutdown;
@@ -163,10 +162,8 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
     };
 }
 
-TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fatal_error)
+TEST_F(ServerShutdownDeathTest, abort_on_fatal_error)
 {
-    add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_ABORT", "");
-
     mt::CrossProcessSync sync;
 
     run_in_server_and_disable_core_dump([&]
@@ -191,6 +188,7 @@ TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fata
 TEST_F(ServerShutdownDeathTest, mir_fatal_error_during_init_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
 
+    add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_EXCEPT", "");
     add_to_environment("MIR_SERVER_FILE", mir_test_socket);
     server.add_init_callback([&] { mir::fatal_error("Bang"); });
     server.apply_settings();

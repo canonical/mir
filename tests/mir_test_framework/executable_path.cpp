@@ -19,12 +19,14 @@
  */
 
 #include "mir_test_framework/executable_path.h"
+#include <mir/fatal.h>
 
 #include <libgen.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/filesystem.hpp>
+#include <dlfcn.h>
 
 std::string mir_test_framework::executable_path()
 {
@@ -42,7 +44,19 @@ std::string mir_test_framework::executable_path()
 
 std::string mir_test_framework::library_path()
 {
-    return executable_path() + "/../lib";
+    static char libpath[1024];
+
+    if (!libpath[0])
+    {
+        // Try to find the location of libmircommon.so
+        Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
+        dladdr(reinterpret_cast<void*>(&mir::fatal_error_abort), &library_info);
+
+        strncpy(libpath, library_info.dli_fname, sizeof libpath);
+        dirname(libpath);
+    }
+
+    return libpath;
 }
 
 std::string mir_test_framework::server_platform_path()

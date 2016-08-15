@@ -25,6 +25,7 @@
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/signal.h"
+#include "mir/test/spin_wait.h"
 
 #include <mutex>
 #include <condition_variable>
@@ -81,6 +82,10 @@ struct MockVisibilityCallback
     MOCK_METHOD2(handle, void(MirSurface*,MirSurfaceVisibility));
 };
 
+void null_event_callback(MirSurface*, MirEvent const*, void*)
+{
+}
+
 void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
 {
     if (mir_event_get_type(event) != mir_event_type_surface)
@@ -96,12 +101,12 @@ void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
         static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
 }
 
-MirSurface* create_surface(MirConnection* connection, geom::Size size,
+MirSurface* create_surface(MirConnection* connection, const char* name, geom::Size size,
     testing::NiceMock<MockVisibilityCallback>& mock_callback)
 {
     auto const spec = mir_connection_create_spec_for_normal_surface(
         connection, size.width.as_int(), size.height.as_int(), mir_pixel_format_bgr_888);
-    mir_surface_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
+    mir_surface_spec_set_name(spec, name);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_surface_spec_set_event_handler(spec, &event_callback, &mock_callback);
     auto surface = mir_surface_create_sync(spec);
@@ -111,14 +116,15 @@ MirSurface* create_surface(MirConnection* connection, geom::Size size,
 
 struct Surface
 {
-    Surface(MirConnection* connection, geom::Size size) :
-        surface(create_surface(connection, size, callback))
+    Surface(MirConnection* connection, char const* name, geom::Size size) :
+        surface(create_surface(connection, name, size, callback))
     {
-        wait_for_visible();
+        wait_for_visible_and_focused();
     }
 
     ~Surface()
     {
+        mir_surface_set_event_handler(surface, null_event_callback, nullptr);
         mir_surface_release_sync(surface);
     }
 
@@ -146,7 +152,7 @@ struct Surface
     }
 
 private:
-    void wait_for_visible()
+    void wait_for_visible_and_focused()
     {
         expect_surface_visibility_event_after(
             mir_surface_visibility_exposed,
@@ -154,6 +160,12 @@ private:
             {
                 mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
             });
+
+        // GMock is behaving strangely, checking expectations after they
+        // have been cleared, so we use spin_wait() instead.
+        mt::spin_wait_for_condition_or_timeout(
+            [this] { return mir_surface_get_focus(surface) == mir_surface_focused; },
+            std::chrono::seconds{2});
     }
 
     testing::NiceMock<MockVisibilityCallback> callback;
@@ -172,7 +184,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
             });
 
         mtf::ConnectedClientHeadlessServer::SetUp();
-        surface = std::make_unique<Surface>(connection, small_size);
+        surface = std::make_unique<Surface>(connection, "small", small_size);
     }
 
     void TearDown() override
@@ -184,7 +196,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
     void create_larger_surface_on_top()
     {
-        second_surface = std::make_unique<Surface>(connection, large_size);
+        second_surface = std::make_unique<Surface>(connection, "large", large_size);
         shell.lock()->raise(1);
     }
 

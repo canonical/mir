@@ -20,7 +20,7 @@
 #ifndef MIR_GL_PRIMITIVE_H_
 #define MIR_GL_PRIMITIVE_H_
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 
 namespace mir
 {

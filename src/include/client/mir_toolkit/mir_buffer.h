@@ -29,6 +29,54 @@
 extern "C" {
 #endif
 
+/** Allocate a MirBuffer and do not wait for the server to return it.
+ *
+ *  The callback will be called when the buffer is available for use.
+ *  It will be called once when created, and once per every
+ *  mir_presentation_chain_submit_buffer.
+ *
+ *   \param [in] presentation_chain    The presentation chain
+ *   \param [in] width                 Requested buffer width
+ *   \param [in] height                Requested buffer height
+ *   \param [in] buffer_usage          Requested buffer usage
+ *   \param [in] available_callback    The callback called when the buffer
+ *                                     is available
+ *   \param [in] available_context     The context for the available_callback
+ **/
+void mir_connection_allocate_buffer(
+    MirConnection* connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage,
+    mir_buffer_callback available_callback, void* available_context);
+
+/** Test for a valid buffer
+ *   \param [in] buffer    The buffer
+ *   \return               True if the buffer is valid, or false otherwise.
+ **/
+bool mir_buffer_is_valid(MirBuffer* buffer);
+
+/** Retrieve a text description an error associated with a MirBuffer.
+ *  The returned string is owned by the library and remains valid until the
+ *  buffer or the associated connection has been released.
+ *   \param [in] buffer    The buffer
+ *   \return               A text description of any error resulting in an
+ *                         invalid buffer, or the empty string "" if the
+ *                         connection is valid.
+ **/
+char const *mir_buffer_get_error_message(MirBuffer* buffer);
+
+/** Reassign the callback that the MirBuffer will call when the buffer is
+ *  available for use again
+ *  \param [in] buffer      The buffer
+ *  \param [in] available_callback    The callback called when the buffer
+ *                                     is available
+ *  \param [in] available_context     The context for the available_callback
+ */
+void mir_buffer_set_callback(
+    MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context);
+
 /** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.

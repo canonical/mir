@@ -17,6 +17,7 @@
  */
 
 #include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_buffer.h"
 
 namespace mtd = mir::test::doubles;
 
@@ -138,6 +139,20 @@ void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*su
 
 void mtd::StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
 {
+}
+
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::graphics::BufferProperties const&)
+{
+    return mir::graphics::BufferID(3);
+}
+
+void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
+{
+}
+
+std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
+{
+    return std::make_shared<mtd::StubBuffer>();
 }
 
 namespace
