@@ -155,7 +155,8 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
                                           uint32_t encoder_id,
                                           std::vector<drmModeModeInfo>& modes,
                                           std::vector<uint32_t>& possible_encoder_ids,
-                                          geom::Size const& physical_size)
+                                          geom::Size const& physical_size,
+                                          drmModeSubPixel subpixel_arrangement)
 {
     drmModeConnector connector = drmModeConnector();
 
@@ -169,6 +170,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
     connector.count_encoders = possible_encoder_ids.size();
     connector.mmWidth = physical_size.width.as_uint32_t();
     connector.mmHeight = physical_size.height.as_uint32_t();
+    connector.subpixel = subpixel_arrangement;
 
     connectors.push_back(connector);
 }
