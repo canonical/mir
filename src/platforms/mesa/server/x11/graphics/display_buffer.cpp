@@ -128,6 +128,8 @@ mg::Frame mgx::DisplayBuffer::last_frame() const
     if (eglGetSyncValues) // We allow for this to be missing because calling
     {                     // it may also fail, which needs handling too...
         uint64_t ust, msc, sbc;
+        // XXX If this really requires a context to work then it needs to move
+        //     back into swap_buffers.
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
             auto delta = msc - frame.msc;
