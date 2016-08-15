@@ -94,12 +94,18 @@ struct BasicSurfaceTest : public testing::Test
         name,
         rect,
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
+
+    BasicSurfaceTest()
+    {
+        // use an opaque pixel format by default
+        ON_CALL(*mock_buffer_stream, pixel_format())
+            .WillByDefault(testing::Return(mir_pixel_format_xrgb_8888));
+    }
 };
 
 }
@@ -122,7 +128,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, mir_pointer_unconfined, false, 
+                name, rect, mir_pointer_unconfined,
                 std::list<ms::StreamInfo> {
                     { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
@@ -143,7 +149,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, mir_pointer_unconfined, false, streams,
+                name, rect, mir_pointer_unconfined, streams,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
 
@@ -267,7 +273,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         name,
         rect,
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
@@ -308,7 +313,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         name,
         geom::Rectangle{pt, one_by_one},
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
@@ -350,7 +354,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         name,
         geom::Rectangle{{0,0}, {100,100}},
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
@@ -491,7 +494,6 @@ TEST_F(BasicSurfaceTest, stores_parent)
         geom::Rectangle{{0,0}, {100,100}},
         parent,
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
@@ -679,7 +681,6 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
         name,
         rect,
         mir_pointer_unconfined,
-        false,
         streams,
         std::shared_ptr<mi::InputChannel>(),
         mt::fake_shared(mock_sender),
@@ -1074,6 +1075,27 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
     EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
+}
+
+TEST_F(BasicSurfaceTest, renderables_of_transparent_buffer_streams_are_shaped)
+{
+    using namespace testing;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    geom::Displacement d0{0,0};
+    geom::Displacement d1{19,99};
+    ON_CALL(*buffer_stream, pixel_format())
+        .WillByDefault(Return(mir_pixel_format_argb_8888));
+
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, d0, {} },
+        { buffer_stream, d1, {} },
+    };
+    surface.set_streams(streams);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0]->shaped(), false);
+    EXPECT_THAT(renderables[1]->shaped(), true);
 }
 
 namespace
