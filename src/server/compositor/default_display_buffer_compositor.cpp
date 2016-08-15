@@ -63,16 +63,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     }
 
     /*
-     * TODO: The plan is to eventually record what the main DisplayBuffer
-     *       is per Renderable. That is the "only" or the "main/fastest"
-     *       display buffer that the Renderable is used on. In doing this
-     *       clients will be able to query important information they need
-     *       such as what is the best frame clock to sync their rendering to
-     *       or what is the best sub-pixel RGB ordering to assume for a
-     *       specific surface, based on which monitor(s) it is visible on.
-     */
-
-    /*
      * Note: Buffer lifetimes are ensured by the two objects holding
      *       references to them; scene_elements and renderable_list.
      *       So no buffer is going to be released back to the client till
