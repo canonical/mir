@@ -116,7 +116,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       page_flips_pending{false}
 {
     for (auto const& output : outputs)
-        add_child_output(output);
+        add_proxy_to(output);
 
 #if 0
     // TODO replace this

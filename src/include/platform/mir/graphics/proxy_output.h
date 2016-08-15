@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_COMBINED_OUTPUT_H_
-#define MIR_GRAPHICS_COMBINED_OUTPUT_H_
+#ifndef MIR_GRAPHICS_PROXY_OUTPUT_H_
+#define MIR_GRAPHICS_PROXY_OUTPUT_H_
 
 #include "mir/graphics/output.h"
 #include <memory>
@@ -25,26 +25,26 @@
 namespace mir { namespace graphics {
 
 /**
- * CombinedOutput is a proxy representing any number of other outputs.
+ * ProxyOutput is a proxy representing any number of other outputs.
  * It returns compatible attributes that best match the whole set of its child
  * outputs. This is for use in multi-monitor scenarios where you only want
  * to render each frame once, and have it looking correct on multiple outputs.
  *
- * Presently CombinedOutput is used to implement multi-monitor frame
- * timing. In future it could also be used for calculating the best sub-pixel
- * arrangement that matches a set of outputs etc.
+ * Presently ProxyOutput is used to implement multi-monitor frame timing.
+ * In future it could also be used for calculating the best sub-pixel
+ * arrangement to match differing display hardware.
  */
-class CombinedOutput : public Output
+class ProxyOutput : public Output
 {
 public:
-    virtual ~CombinedOutput() = default;
+    virtual ~ProxyOutput() = default;
     virtual Frame last_frame() const override;
 
-    void add_child_output(std::weak_ptr<Output>);
+    void add_proxy_to(std::weak_ptr<Output>);
 private:
     // TODO: children
 };
 
 }} // namespace mir::graphics
 
-#endif // MIR_GRAPHICS_COMBINED_OUTPUT_H_
+#endif // MIR_GRAPHICS_PROXY_OUTPUT_H_

@@ -16,17 +16,17 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/combined_output.h"
+#include "mir/graphics/proxy_output.h"
 
 namespace mir { namespace graphics {
 
-void CombinedOutput::add_child_output(std::weak_ptr<Output> w)
+void ProxyOutput::add_proxy_to(std::weak_ptr<Output> w)
 {
     // TODO
     (void)w;
 }
 
-Frame CombinedOutput::last_frame() const
+Frame ProxyOutput::last_frame() const
 {
     // TODO
     return {};

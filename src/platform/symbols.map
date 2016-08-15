@@ -223,10 +223,10 @@ MIRPLATFORM_0.25 {
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
     
-    mir::graphics::CombinedOutput::add_child_output*;
-    mir::graphics::CombinedOutput::last_frame*;
-    typeinfo?for?mir::graphics::CombinedOutput;
-    vtable?for?mir::graphics::CombinedOutput;
+    mir::graphics::ProxyOutput::add_proxy_to*;
+    mir::graphics::ProxyOutput::last_frame*;
+    typeinfo?for?mir::graphics::ProxyOutput;
+    vtable?for?mir::graphics::ProxyOutput;
 
     # These are "private" (declared in src/include) but are used by libmirserver.
     # They are also likely to be needed by any 3rd party "graphics platform" 

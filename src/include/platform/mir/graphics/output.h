@@ -24,15 +24,15 @@
 namespace mir { namespace graphics {
 
 /**
- * Output is a generic output abstraction for unifying attributes of
- * physical outputs to a high level where they are required in rendering.
- * Such attibutes of physical outputs required during rendering are:
+ * graphics::Output abstracts low-level characteristics of physical displays
+ * that we need to know during high-level rendering.
+ *
+ * Although we usually like to hide low-level details, some aspects of the
+ * display hardware are required by compositors and clients in order to
+ * render graphics with optimal quality and precision. For example:
  *   - Frame timing information
- *   - Sub-pixel RGB arrangement (future enhancement)
- *   - Resolution (future enhancement?)
- * Although we usually like to abstract low-level implementation details,
- * such attributes of the physical display need to be known at a high level
- * in order to render with optimal visual quality and precision.
+ *   - Sub-pixel RGB arrangement
+ *   - Physical resolution (e.g. DPI)
  */
 class Output
 {
