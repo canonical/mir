@@ -48,10 +48,18 @@ struct NestedBuffer : Test
     {
         ON_CALL(mock_connection, create_buffer(_))
             .WillByDefault(Return(buffer));
+        ON_CALL(mock_connection, get_graphics_region(_))
+            .WillByDefault(Return(region));
     }
     NiceMock<MockHostConnection> mock_connection;
     mg::BufferProperties properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
     std::shared_ptr<MirBuffer> buffer;
+    unsigned int data = 0x11111111;
+    int stride_with_padding = properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format) + 4;
+    MirGraphicsRegion region {
+        properties.size.width.as_int(), properties.size.height.as_int(),
+        stride_with_padding, properties.format, reinterpret_cast<char*>(&data)
+    };
 };
 }
 
@@ -70,11 +78,10 @@ TEST_F(NestedBuffer, generates_valid_id)
 
 TEST_F(NestedBuffer, has_correct_properties)
 {
-    auto expected_stride = mir::geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}; 
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     EXPECT_THAT(buffer.size(), Eq(properties.size));
     EXPECT_THAT(buffer.pixel_format(), Eq(properties.format));
-    EXPECT_THAT(buffer.stride(), Eq(expected_stride));
+    EXPECT_THAT(buffer.stride().as_int(), Eq(stride_with_padding));
 }
 
 TEST_F(NestedBuffer, no_gl_support_for_now)
@@ -95,7 +102,8 @@ TEST_F(NestedBuffer, writes_to_region)
     };
 
     EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .WillOnce(Return(region));
+        .Times(2)
+        .WillRepeatedly(Return(region));
 
     unsigned int new_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
@@ -107,27 +115,20 @@ TEST_F(NestedBuffer, writes_to_region)
 TEST_F(NestedBuffer, throws_if_incorrect_sizing)
 {
     EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .Times(0);
+        .Times(1);
 
-    unsigned int new_data = 0x11111111;
-    auto too_large_size = 4 * sizeof(new_data);
+    auto too_large_size = 4 * sizeof(data);
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     EXPECT_THROW({
-        buffer.write(reinterpret_cast<unsigned char*>(&new_data), too_large_size);
+        buffer.write(reinterpret_cast<unsigned char*>(&data), too_large_size);
     }, std::logic_error);
 }
 
 TEST_F(NestedBuffer, reads_from_region)
 {
-    unsigned int data = 0x11223344;
-    MirGraphicsRegion region {
-        properties.size.width.as_int(), properties.size.height.as_int(),
-        properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format),
-        properties.format, reinterpret_cast<char*>(&data)
-    };
-
     EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .WillOnce(Return(region));
+        .Times(2)
+        .WillRepeatedly(Return(region));
 
     unsigned int read_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);

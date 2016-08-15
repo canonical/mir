@@ -26,12 +26,22 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
+namespace
+{
+//might be good to have a mir_buffer_get_stride instead of determining stride this way
+geom::Stride find_stride(mgn::HostConnection& connection, MirBuffer* buffer)
+{
+    return geom::Stride{ connection.get_graphics_region(buffer).stride };
+}
+}
+
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
     mg::BufferProperties const& properties) :
     connection(connection),
     properties(properties),
-    buffer(connection->create_buffer(properties))
+    buffer(connection->create_buffer(properties)),
+    stride_(find_stride(*connection, buffer.get()))
 {
 }
 
@@ -47,7 +57,7 @@ geom::Size mgn::Buffer::size() const
 
 geom::Stride mgn::Buffer::stride() const
 {
-    return geom::Stride{ properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format) };
+    return stride_;
 }
 
 MirPixelFormat mgn::Buffer::pixel_format() const

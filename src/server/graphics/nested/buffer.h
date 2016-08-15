@@ -48,6 +48,7 @@ private:
     std::shared_ptr<HostConnection> const connection;
     BufferProperties const properties;
     std::shared_ptr<MirBuffer> buffer;
+    geometry::Stride const stride_;
 };
 }
 }
