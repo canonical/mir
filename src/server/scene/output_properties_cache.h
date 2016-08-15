@@ -22,6 +22,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/frame.h"
 
 #include <vector>
 #include <memory>
@@ -39,6 +40,7 @@ struct OutputProperties
     float scale;
     MirFormFactor form_factor;
     graphics::DisplayConfigurationOutputId id;
+    graphics::Frame last_frame;  // TODO
 };
 
 class OutputPropertiesCache
