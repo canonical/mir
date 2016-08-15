@@ -122,7 +122,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride.as_int()))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
@@ -163,7 +163,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride.as_int()))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
@@ -201,7 +201,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride.as_int()))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())

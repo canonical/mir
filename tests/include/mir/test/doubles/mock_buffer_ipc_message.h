@@ -35,7 +35,11 @@ struct MockBufferIpcMessage : public graphics::BufferIpcMessage
     ~MockBufferIpcMessage() noexcept {}
     MOCK_METHOD1(pack_fd, void(Fd const&));
     MOCK_METHOD1(pack_data, void(int));
-    MOCK_METHOD1(pack_stride, void(geometry::Stride));
+    MOCK_METHOD1(pack_stride, void(int));
+    void pack_stride(geometry::Stride stride)
+    {
+        pack_stride(stride.as_int()); 
+    }
     MOCK_METHOD1(pack_flags, void(unsigned int));
     MOCK_METHOD1(pack_size, void(geometry::Size const&));
     MOCK_METHOD0(fds, std::vector<mir::Fd>());
