@@ -50,7 +50,7 @@ struct NestedBuffer : Test
             .WillByDefault(Return(buffer));
     }
     NiceMock<MockHostConnection> mock_connection;
-    mg::BufferProperties properties{{10, 20}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
+    mg::BufferProperties properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
     std::shared_ptr<MirBuffer> buffer;
 };
 }
@@ -85,28 +85,13 @@ TEST_F(NestedBuffer, no_gl_support_for_now)
     EXPECT_THAT(dynamic_cast<mir::renderer::gl::TextureSource*>(native_base), Eq(nullptr));
 }
 
-TEST_F(NestedBuffer, native_buffer_handle)
-{
-    MirNativeBuffer handle;
-    EXPECT_CALL(mock_connection, get_native_handle(_))
-        .WillOnce(Return(&handle));
-    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
-    auto native_handle = buffer.native_buffer_handle();
-    EXPECT_THAT(&handle, Eq(native_handle->platform_handle().get()));
-    EXPECT_THAT(buffer.get(), Eq(native_handle->nested_handle().get()));
-}
-
 TEST_F(NestedBuffer, writes_to_region)
 {
-    geom::Size size{ 1, 1 };
-    auto format = mir_pixel_format_abgr_8888;
-    properties.size = size;
-    properties.format = format;
     unsigned int data = 0x11223344;
     MirGraphicsRegion region {
-        size.width.as_int(), size.height.as_int(),
-        size.width.as_int() * MIR_BYTES_PER_PIXEL(format),
-        format, reinterpret_cast<char*>(&data)
+        properties.size.width.as_int(), properties.size.height.as_int(),
+        properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format),
+        properties.format, reinterpret_cast<char*>(&data)
     };
 
     EXPECT_CALL(mock_connection, get_graphics_region(_))
@@ -125,23 +110,20 @@ TEST_F(NestedBuffer, throws_if_incorrect_sizing)
         .Times(0);
 
     unsigned int new_data = 0x11111111;
+    auto too_large_size = 4 * sizeof(new_data);
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     EXPECT_THROW({
-        buffer.write(reinterpret_cast<unsigned char*>(&new_data), 4 * sizeof(new_data));
+        buffer.write(reinterpret_cast<unsigned char*>(&new_data), too_large_size);
     }, std::logic_error);
 }
 
 TEST_F(NestedBuffer, reads_from_region)
 {
-    geom::Size size{ 1, 1 };
-    auto format = mir_pixel_format_abgr_8888;
-    properties.size = size;
-    properties.format = format;
     unsigned int data = 0x11223344;
     MirGraphicsRegion region {
-        size.width.as_int(), size.height.as_int(),
-        size.width.as_int() * MIR_BYTES_PER_PIXEL(format),
-        format, reinterpret_cast<char*>(&data)
+        properties.size.width.as_int(), properties.size.height.as_int(),
+        properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format),
+        properties.format, reinterpret_cast<char*>(&data)
     };
 
     EXPECT_CALL(mock_connection, get_graphics_region(_))

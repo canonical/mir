@@ -420,58 +420,18 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
     event_callback(event, source_frame);
 }
 
-namespace {
-void abuffer_created(MirBuffer* buffer, void* context)
-{
-    auto connection = static_cast<mgn::MirClientHostConnection::BufferCreation*>(context);
-    connection->connection->buffer_created(buffer, connection);
-}
-}
-
-void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* c)
-{
-    std::unique_lock<std::mutex> lk(c->mut);
-    c->b = b;
-    c->cv.notify_all();
-}
-
 std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferProperties const& properties)
+    mg::BufferProperties const&)
 {
-    c.push_back(std::make_shared<BufferCreation>(this, count++));
-    auto r = c.back().get(); 
-
-    mir_connection_allocate_buffer(
-        mir_connection,
-        properties.size.width.as_int(),
-        properties.size.height.as_int(),
-        properties.format,
-        mir_buffer_usage_hardware,
-        abuffer_created, r);
-
-    std::unique_lock<std::mutex> lk(r->mut);
-    r->cv.wait(lk, [&]{ return r->b; });
-
-    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
-    for(auto it = c.begin(); it != c.end();)
-    {
-        if (r->count == (*it)->count)
-            it = c.erase(it);
-        else
-            it++;
-    }
-
-    if (!mir_buffer_is_valid(b.get()))
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-    return b;
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
 
-MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer* buffer)
+MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
 {
-    return mir_buffer_get_native_buffer(buffer, mir_read_write);
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
 
-MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer* buffer)
+MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
 {
-    return mir_buffer_get_graphics_region(buffer, mir_read_write);
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }

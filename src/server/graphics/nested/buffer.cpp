@@ -37,11 +37,7 @@ mgn::Buffer::Buffer(
 
 std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 {
-    //different platforms have different native buffers. The lifetime of the MirNativeBuffer
-    //is the same as the lifetime of the MirBuffer.
-    auto b = buffer;
-    return std::shared_ptr<mg::NativeBuffer>(
-        connection->get_native_handle(buffer.get()), [b] (auto) {} );
+    return nullptr;
 }
 
 geom::Size mgn::Buffer::size() const
