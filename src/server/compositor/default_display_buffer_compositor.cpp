@@ -63,7 +63,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     }
 
     /*
-     * TODO: The plan is to eventually record what the main Displaybuffer
+     * TODO: The plan is to eventually record what the main DisplayBuffer
      *       is per Renderable. That is the "only" or the "main/fastest"
      *       display buffer that the Renderable is used on. In doing this
      *       clients will be able to query important information they need

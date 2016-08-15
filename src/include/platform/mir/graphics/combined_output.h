@@ -28,8 +28,11 @@ namespace mir { namespace graphics {
  * CombinedOutput is a proxy representing any number of other outputs.
  * It returns compatible attributes that best match the whole set of its child
  * outputs. This is for use in multi-monitor scenarios where you only want
- * to render a frame once, with one frame timing measurement and one
- * sub-pixel arrangement.
+ * to render each frame once, and have it looking correct on multiple outputs.
+ *
+ * Presently CombinedOutput is used to implement multi-monitor frame
+ * timing. In future it could also be used for calculating the best sub-pixel
+ * arrangement that matches a set of outputs etc.
  */
 class CombinedOutput : public Output
 {

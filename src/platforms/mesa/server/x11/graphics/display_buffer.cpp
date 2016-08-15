@@ -58,26 +58,27 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
 #endif
 
     /*
-     * EGL_CHROMIUM_sync_control is not an official standard, but Google
-     * invented it as a way to free Chromium from dependency on GLX
-     * (GLX_OML_sync_control). And Mesa/Intel implemented the backend for it
-     * (EGL on X11 only).
+     * EGL_CHROMIUM_sync_control is an unofficial extension and simplification
+     * that Google copied from:
+     *    https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+     * as a way to free Chromium from depending on GLX. And Mesa implements it
+     * for EGL on X11 only.
      *
      * EGL_CHROMIUM_sync_control never got formally standardized. Google
-     * faced understandable resistance from NVIDIA who pointed out that it
-     * hinders correct operation of the G-Sync adaptive frame rate technology
-     * (as well as AMD's FreeSync).
+     * faced resistance from NVIDIA who pointed out that it hinders correct
+     * operation of the G-Sync adaptive frame rate technology (as well as AMD's
+     * FreeSync).
      *
      * Eventually Google stopped trying to standardize EGL_CHROMIUM_sync_control
      * when they switched ChromeOS over from X11 to Freon. In Freon they instead
-     * now use native KMS, the same way as our mesa-kms driver. It's still
-     * semantically equivalent to EGL_CHROMIUM_sync_control but no longer
-     * requires NVIDIA to approve. :)
+     * now use native KMS, the same way as our mesa-kms driver. In doing so
+     * they have not resolved NVIDIA's complaints, just avoided them.
      *
-     * History: https://bugs.chromium.org/p/chromium/issues/detail?id=366935
+     * History and semi-official spec:
+     *    https://bugs.chromium.org/p/chromium/issues/detail?id=366935
      *
-     * We can however use EGL_CHROMIUM_sync_control today, and have no other
-     * alternative. It is still implemented by Mesa for EGL on X11...
+     * TLDR: We need this, it's the only existing solution for EGL on X11 and
+     *       it still works until further notice...
      */
     auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
     eglGetSyncValues =

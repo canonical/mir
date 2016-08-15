@@ -28,8 +28,8 @@ namespace mir { namespace graphics {
  * physical outputs to a high level where they are required in rendering.
  * Such attibutes of physical outputs required during rendering are:
  *   - Frame timing information
- *   - Sub-pixel RGB arrangement
- *   - Resolution
+ *   - Sub-pixel RGB arrangement (future enhancement)
+ *   - Resolution (future enhancement?)
  * Although we usually like to abstract low-level implementation details,
  * such attributes of the physical display need to be known at a high level
  * in order to render with optimal visual quality and precision.

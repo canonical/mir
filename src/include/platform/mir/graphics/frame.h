@@ -62,15 +62,14 @@ struct Frame
                             frames on this device. We may update and recalculate
                             this value on each frame, so you should keep
                             checking it. The time between physical display
-                            frames is variable in a post-GSync/FreeSync world
-                            so you can't simply estimate when the next
-                            frame will be based on the previous ones. Instead
-                            you should always assume the worst case in which
-                            the display is running at maximum refresh rate -
-                            which is the minimum frame interval.
-                            Fixed frequency displays MUST change this value
-                            to match their actual frame interval for correct
-                            operation. */
+                            frames is variable on modern LCDs so you can't
+                            simply estimate when the next frame will be based
+                            on the previous ones. Instead you should assume the
+                            worst case in which the display is running at
+                            maximum refresh rate (the minimum frame interval).
+                            So your conservative estimate for the next frame is:
+                              next_ust = ust + min_ust_interval
+                            */
 
     bool operator<(Frame const& rhs) const
     {
