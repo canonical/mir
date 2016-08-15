@@ -24,8 +24,6 @@
 
 namespace mir { namespace graphics {
 
-enum { MAX_FREESYNC_HZ = 240 };
-
 /**
  * Frame is a unique identifier for a frame displayed on an output.
  *
@@ -57,17 +55,17 @@ struct Frame
                             expected and simply represents the reality that
                             scanning out a new frame takes longer than
                             returning from the flip or swap function. */
-    uint64_t min_ust_interval = 1000000/MAX_FREESYNC_HZ;
+    uint64_t min_ust_interval = 0;
                        /**< The minimum time interval you should expect between
                             frames on this device. We may update and recalculate
                             this value on each frame, so you should keep
-                            checking it. The time between physical display
-                            frames is variable on modern LCDs so you can't
+                            checking it. The time between physical refreshes
+                            may be variable variable on modern LCDs so you can't
                             simply estimate when the next frame will be based
                             on the previous ones. Instead you should assume the
                             worst case in which the display is running at
                             maximum refresh rate (the minimum frame interval).
-                            So your conservative estimate for the next frame is:
+                            So a conservative estimate for the next frame is:
                               next_ust = ust + min_ust_interval
                             */
 
