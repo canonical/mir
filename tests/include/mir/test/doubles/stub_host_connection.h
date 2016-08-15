@@ -110,7 +110,7 @@ public:
 
     MirGraphicsRegion get_graphics_region(MirBuffer*)
     {
-        return MirGraphicsRegion{};
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
     }
 };
 
