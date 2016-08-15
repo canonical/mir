@@ -413,6 +413,15 @@ void mir_output_set_orientation(MirOutput* output, MirOrientation orientation);
 float mir_output_get_scale_factor(MirOutput const* output);
 
 /**
+ * Get the subpixel arrangement of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The MirSubpixelArrangement corresponding to the physical arrangement of subpixels
+ *              on this display, or mir_subpixel_arrangement_unknown if this cannot be determined.
+ */
+MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* output);
+
+/**
  * Get the form-factor of a connected output.
  *
  * This call succeeds even if the output is not connected, but may return nonsense values.

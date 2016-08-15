@@ -306,6 +306,13 @@ float mir_output_get_scale_factor(MirOutput const* client_output)
     return output->scale_factor();
 }
 
+MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
+}
+
 MirFormFactor mir_output_get_form_factor(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
