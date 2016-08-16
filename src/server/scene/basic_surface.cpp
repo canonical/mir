@@ -28,6 +28,7 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/geometry/displacement.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include "mir/scene/scene_report.h"
 #include "mir/scene/null_surface_observer.h"
@@ -46,6 +47,7 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
@@ -652,15 +654,23 @@ struct CursorImageFromBuffer : public mg::CursorImage
         : buffer_size(buffer.size()),
           hotspot_(hotspot)
     {
-        buffer.read([&](unsigned char const* buffer_pixels)
+        auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
+        if (pixel_source)
         {
-            size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
-                * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
-            pixels = std::unique_ptr<unsigned char[]>(
-                new unsigned char[buffer_size_bytes]
-            );
-            memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
-        });
+            pixel_source->read([&](unsigned char const* buffer_pixels)
+            {
+                size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
+                    * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+                pixels = std::unique_ptr<unsigned char[]>(
+                    new unsigned char[buffer_size_bytes]
+                );
+                memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
+            });
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("could not read from buffer"));
+        }
     }
     void const* as_argb_8888() const
     {
