@@ -84,11 +84,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
-
-        // Release the buffers we did use back to the clients, before starting
-        // on the potentially slow flip().
-        // FIXME: This clear() call is blocking a little because we drive IPC here (LP: #1395421)
-        renderable_list.clear();
     }
 
     report->finished_frame(this);
