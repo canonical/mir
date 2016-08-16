@@ -84,6 +84,18 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
+
+        /*
+         * This is used for the 'early release' optimization to release buffers
+         * we did use back to clients before starting on the potentially slow
+         * post() call.
+         * FIXME: This clear() call is blocking a little because we drive IPC
+         *        here (LP: #1395421). However if the early release
+         *        optimization is disabled or absent (NBS) then this code
+         *        doesn't do anything. In that case the problematic IPC will
+         *        occur in buffer acquisition calls of the next frame instead.
+         */
+        renderable_list.clear();
     }
 
     report->finished_frame(this);
