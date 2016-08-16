@@ -22,6 +22,11 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include "mir/test/current_thread_name.h"
+#if defined(MESA_KMS) || defined(MESA_X11)
+#include "mir/test/doubles/stub_gbm_native_buffer.h"
+#else
+#include "mir/test/doubles/stub_android_native_buffer.h"
+#endif
 
 namespace mir
 {
@@ -35,7 +40,12 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_compositor_buffer = std::make_shared<StubBuffer>();
+#if defined(MESA_KMS) || defined(MESA_X11)
+        auto native_buffer = std::make_shared<StubGBMNativeBuffer>(geometry::Size{}, false);
+#else
+        auto native_buffer = std::make_shared<StubAndroidNativeBuffer>();
+#endif
+        stub_compositor_buffer = std::make_shared<StubBuffer>(native_buffer);
     }
 
 
@@ -83,7 +93,11 @@ public:
     void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
 
-    StubBuffer stub_client_buffer;
+#if defined(MESA_KMS) || defined(MESA_X11)
+    StubBuffer stub_client_buffer{std::make_shared<StubGBMNativeBuffer>(geometry::Size{}, false)};
+#else
+    StubBuffer stub_client_buffer{std::make_shared<StubAndroidNativeBuffer>()};
+#endif
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
     std::string thread_name;
