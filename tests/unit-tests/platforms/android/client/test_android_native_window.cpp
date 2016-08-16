@@ -365,13 +365,5 @@ TEST_F(AndroidNativeWindowTest, returns_error_on_perform_failure)
 {
     EXPECT_CALL(*mock_driver_interpreter, dispatch_driver_request_format(_))
         .WillOnce(Throw(std::runtime_error("")));
-
-    auto perform = [this] (int key, ...)
-    {
-        va_list args;
-        va_start(args, key);
-        EXPECT_THAT(window.perform(&window, key, args), Eq(failure_code));
-        va_end(args);
-    };
-    perform(NATIVE_WINDOW_SET_BUFFERS_FORMAT, 0);
+    EXPECT_THAT(window.perform(&window, NATIVE_WINDOW_SET_BUFFERS_FORMAT, 0), Eq(failure_code));
 }

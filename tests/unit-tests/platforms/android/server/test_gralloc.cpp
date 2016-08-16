@@ -176,7 +176,7 @@ TEST_F(Gralloc, adaptor_gralloc_usage_conversion_fb_gles_with_quirk)
 
     boost::program_options::options_description description;
     description.add_options()("fb-ion-heap", boost::program_options::value<bool>()->default_value(true), "");
-    std::array<char const*, 3> args { "progname", "--fb-ion-heap", "false"};
+    std::array<char const*, 3> args { { "progname", "--fb-ion-heap", "false"} };
     options.parse_arguments(description, args.size(), args.data());
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, options);
 

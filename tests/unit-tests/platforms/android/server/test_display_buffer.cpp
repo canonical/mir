@@ -29,6 +29,7 @@
 #include "mir/test/doubles/stub_driver_interpreter.h"
 #include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_framebuffer_bundle.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
@@ -57,7 +58,8 @@ struct DisplayBuffer : public ::testing::Test
         std::make_shared<mga::PbufferGLContext>(
             mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, mock_display_report)};
     std::shared_ptr<mtd::StubBuffer> stub_buffer{
-        std::make_shared<testing::NiceMock<mtd::StubBuffer>>()};
+        std::make_shared<testing::NiceMock<mtd::StubBuffer>>(
+            std::make_shared<mtd::StubAndroidNativeBuffer>())};
     std::shared_ptr<ANativeWindow> native_window{
         std::make_shared<mg::android::MirNativeWindow>(
             std::make_shared<mtd::StubDriverInterpreter>(),
@@ -92,8 +94,11 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
 {
     using namespace testing;
     mg::RenderableList renderlist{
-        std::make_shared<mtd::StubRenderable>(),
-        std::make_shared<mtd::StubRenderable>()};
+        std::make_shared<mtd::StubRenderable>(
+            std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>())),
+        std::make_shared<mtd::StubRenderable>(
+            std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()))
+    };
 
     EXPECT_CALL(*mock_display_device, compatible_renderlist(Ref(renderlist)))
         .Times(2)
@@ -288,9 +293,12 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
 TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 {
     using namespace testing;
-    auto buffer1 = std::make_shared<mtd::StubRenderable>();
-    auto buffer2 = std::make_shared<mtd::StubRenderable>();
-    auto buffer3 = std::make_shared<mtd::StubRenderable>();
+    auto buffer1 = std::make_shared<mtd::StubRenderable>(
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()));
+    auto buffer2 = std::make_shared<mtd::StubRenderable>(
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()));
+    auto buffer3 = std::make_shared<mtd::StubRenderable>(
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()));
 
     ON_CALL(*mock_display_device, compatible_renderlist(_))
         .WillByDefault(Return(true));
@@ -337,8 +345,10 @@ TEST_F(DisplayBuffer, rejects_lists_if_db_is_rotated)
     ON_CALL(*mock_display_device, compatible_renderlist(testing::_))
         .WillByDefault(testing::Return(true));
     mg::RenderableList const renderlist{
-        std::make_shared<mtd::StubRenderable>(),
-        std::make_shared<mtd::StubRenderable>()};
+        std::make_shared<mtd::StubRenderable>(
+            std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>())),
+        std::make_shared<mtd::StubRenderable>(
+            std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()))};
 
     db.configure(mir_power_mode_on, mir_orientation_inverted, geom::Displacement{0,0});
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
