@@ -115,9 +115,6 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
-    for (auto const& output : outputs)
-        add_proxy_to(output);
-
 #if 0
     // TODO replace this
     set_frame_callback([](Frame const& frame)

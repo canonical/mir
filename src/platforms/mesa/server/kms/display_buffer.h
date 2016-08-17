@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/proxy_output.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
@@ -48,7 +47,6 @@ class KMSOutput;
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
-                      public graphics::ProxyOutput,
                       public renderer::gl::RenderTarget
 {
 public:

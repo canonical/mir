@@ -23,17 +23,6 @@
 
 namespace mir { namespace graphics {
 
-/**
- * graphics::Output abstracts low-level characteristics of physical displays
- * that we need to know during high-level rendering.
- *
- * Although we usually like to hide low-level details, some aspects of the
- * display hardware are required by compositors and clients in order to
- * render graphics with optimal quality and precision. For example:
- *   - Frame timing information
- *   - Sub-pixel RGB arrangement
- *   - Physical resolution (e.g. DPI)
- */
 class Output
 {
 public:
