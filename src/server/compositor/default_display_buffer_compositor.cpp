@@ -91,9 +91,10 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
          * post() call.
          * FIXME: This clear() call is blocking a little because we drive IPC
          *        here (LP: #1395421). However if the early release
-         *        optimization is disabled or absent (NBS) then this code
-         *        doesn't do anything. In that case the problematic IPC will
-         *        occur in buffer acquisition calls of the next frame instead.
+         *        optimization is disabled or absent (LP: #1561418) then this
+         *        clear() doesn't contribute anything. In that case the
+         *        problematic IPC (LP: #1395421) will instead occur in buffer
+         *        acquisition calls when we composite the next frame.
          */
         renderable_list.clear();
     }
