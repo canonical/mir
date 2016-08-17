@@ -120,7 +120,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
     {
         auto c = std::unique_ptr<graphics::android::HwcConfiguration>(new StubHwcConfiguration);
         std::swap(config, c);
-        return std::move(c);
+        return c;
     }
     
     void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
