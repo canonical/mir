@@ -11,7 +11,6 @@ MIRPLATFORM_0.25 {
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
-    mir::graphics::Buffer::write*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;
