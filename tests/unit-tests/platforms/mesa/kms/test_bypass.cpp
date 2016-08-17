@@ -167,6 +167,21 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
     EXPECT_EQ(bypassed, *it);
 }
 
+TEST_F(BypassMatchTest, detects_window_that_intersects_full_screen_window)
+{
+    mgm::BypassMatch matcher(primary_monitor);
+
+    auto bypassable = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
+    auto small_intersection_window = std::make_shared<mtd::FakeRenderable>(1910, 600, 20, 20);
+    mg::RenderableList list{
+        bypassable,
+        small_intersection_window
+    };
+
+    auto it = std::find_if(list.rbegin(), list.rend(), matcher);
+    EXPECT_EQ(list.rend(), it);
+}
+
 TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
 {
     mgm::BypassMatch matcher(primary_monitor);
