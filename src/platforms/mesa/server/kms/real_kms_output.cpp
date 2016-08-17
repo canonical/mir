@@ -203,6 +203,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
 
 mg::Frame mgm::RealKMSOutput::last_frame() const
 {
+    // TODO: locking or just use AtomicFrame
     return last_frame_;
 }
 
