@@ -182,8 +182,7 @@ public:
      * timing information changes many times per second and should not interfere
      * with the more static display configuration.
      */
-    virtual Frame last_frame_on(unsigned output_id) const
-        { (void)output_id; return Frame(); } // TODO: pure virtual
+    virtual Frame last_frame_on(unsigned output_id) const = 0;
 
     Display() = default;
     virtual ~Display() = default;

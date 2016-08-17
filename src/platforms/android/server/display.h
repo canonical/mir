@@ -87,6 +87,8 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
+    Frame last_frame_on(unsigned output_id) const override;
+
 private:
     void on_hotplug();
     void on_vsync(DisplayName) const;

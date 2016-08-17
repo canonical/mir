@@ -358,3 +358,8 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 {
     return std::make_unique<mga::PbufferGLContext>(gl_context);
 }
+
+mg::Frame mga::Display::last_frame_on(unsigned) const
+{
+    return {}; // TODO
+}

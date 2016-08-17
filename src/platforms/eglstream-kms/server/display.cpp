@@ -367,3 +367,7 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
     return std::make_unique<GLContext>(display, context);
 }
 
+mg::Frame mge::Display::last_frame_on(unsigned) const
+{
+    return {}; // TODO
+}
