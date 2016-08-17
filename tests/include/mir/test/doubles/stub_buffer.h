@@ -26,6 +26,9 @@
 #include <vector>
 #include <string.h>
 
+#include <boost/throw_exception.hpp>
+#include <exception>
+
 namespace mir
 {
 namespace test
@@ -38,7 +41,7 @@ class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBa
 public:
     StubBuffer()
         : StubBuffer{
-              create_native_buffer(),
+              nullptr,
               graphics::BufferProperties{
                   geometry::Size{},
                   mir_pixel_format_abgr_8888,
@@ -50,7 +53,7 @@ public:
 
     StubBuffer(geometry::Size const& size)
         : StubBuffer{
-              create_native_buffer(),
+              nullptr,
               graphics::BufferProperties{
                   size,
                   mir_pixel_format_abgr_8888,
@@ -78,12 +81,12 @@ public:
     }
 
     StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{create_native_buffer(), properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
+        : StubBuffer{nullptr, properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
     }
 
     StubBuffer(graphics::BufferID id)
-        : native_buffer(create_native_buffer()),
+        : native_buffer(nullptr),
           buf_size{},
           buf_pixel_format{mir_pixel_format_abgr_8888},
           buf_stride{},
@@ -110,7 +113,12 @@ public:
 
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
+    {
+        if (native_buffer)
+            return native_buffer;
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot access native buffer"));
+    }
 
     void write(unsigned char const* pixels, size_t len) override
     {
@@ -138,8 +146,6 @@ public:
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
     std::vector<unsigned char> written_pixels;
-
-    std::shared_ptr<graphics::NativeBuffer> create_native_buffer();
 };
 }
 }

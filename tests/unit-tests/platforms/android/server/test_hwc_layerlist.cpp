@@ -18,6 +18,7 @@
 
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 #include "src/platforms/android/server/hwc_layerlist.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "hwc_struct_helpers.h"
@@ -35,11 +36,12 @@ struct LayerListTest : public testing::Test
 {
     LayerListTest() :
         layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
-        buffer1{std::make_shared<mtd::StubBuffer>()},
-        buffer2{std::make_shared<mtd::StubBuffer>()},
+        buffer1{std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>())},
+        buffer2{std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>())},
+        buffer3{std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>())},
         renderables{std::make_shared<mtd::StubRenderable>(buffer1),
                     std::make_shared<mtd::StubRenderable>(buffer2),
-                    std::make_shared<mtd::StubRenderable>()}
+                    std::make_shared<mtd::StubRenderable>(buffer3)}
     {
 
         mt::fill_hwc_layer(fbtarget, &visible_rect, disp_frame, *stub_fb, HWC_FRAMEBUFFER_TARGET, 0);
@@ -49,6 +51,7 @@ struct LayerListTest : public testing::Test
     std::shared_ptr<mga::LayerAdapter> layer_adapter;
     std::shared_ptr<mtd::StubBuffer> buffer1;
     std::shared_ptr<mtd::StubBuffer> buffer2;
+    std::shared_ptr<mtd::StubBuffer> buffer3;
     mg::RenderableList renderables;
 
     geom::Rectangle const disp_frame{{0,0}, {44,22}};
@@ -106,7 +109,7 @@ TEST_F(LayerListTest, keeps_track_of_needs_commit)
     mg::RenderableList list2{
         std::make_shared<mtd::StubRenderable>(buffer1),
         std::make_shared<mtd::StubRenderable>(buffer2),
-        std::make_shared<mtd::StubRenderable>()
+        std::make_shared<mtd::StubRenderable>(buffer3)
     };
     list.update_list(list2, offset);
 

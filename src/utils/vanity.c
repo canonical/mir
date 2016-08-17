@@ -463,6 +463,7 @@ static void* capture_thread_func(void* arg)
             state->expected_direction = 0;
 
             if (latency < 10*one_second &&
+                (nhistory || latency > 10*one_millisecond) &&
                 frame_time &&
                 state->display_frame_time)
             {
