@@ -413,3 +413,9 @@ std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
 {
     return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }
+
+mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
+{
+    auto output = output_container.get_kms_output_for(output_id);
+    return output->last_frame();
+}

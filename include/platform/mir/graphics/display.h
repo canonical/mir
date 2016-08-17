@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
+#include "mir/graphics/frame.h"
 #include <memory>
 #include <functional>
 #include <chrono>
@@ -170,6 +171,19 @@ public:
      *  display object is valid.
      */
     virtual NativeDisplay* native_display() = 0;
+
+    /**
+     * Returns timing information for the last frame displayed on a given
+     * output.
+     *
+     * Frame timing will be provided to clients only when they request it.
+     * This is to ensure idle clients never get woken by unwanted events.
+     * It is also distinctly separate from the display configuration as this
+     * timing information changes many times per second and should not interfere
+     * with the more static display configuration.
+     */
+    virtual Frame last_frame_on(unsigned output_id) const
+        { (void)output_id; return Frame(); } // TODO: pure virtual
 
     Display() = default;
     virtual ~Display() = default;
