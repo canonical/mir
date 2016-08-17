@@ -146,8 +146,8 @@ unsigned int mir_buffer_get_stride(MirBuffer* b)
 try
 {
     mir::require(b);
-//    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return 0;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    return buffer->stride().as_uint32_t();
 }
 catch (std::exception const& ex)
 {
