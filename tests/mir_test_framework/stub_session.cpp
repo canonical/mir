@@ -19,6 +19,12 @@
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_buffer.h"
 
+#if defined(MESA_KMS) || defined(MESA_X11)
+#include "mir/test/doubles/stub_gbm_native_buffer.h"
+#else
+#include "mir/test/doubles/stub_android_native_buffer.h"
+#endif
+
 namespace mtd = mir::test::doubles;
 
 mtd::StubSession::StubSession(pid_t pid)
@@ -152,7 +158,12 @@ void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
 
 std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
 {
-    return std::make_shared<mtd::StubBuffer>();
+#if defined(MESA_KMS) || defined(MESA_X11)
+    auto native_buffer = std::make_shared<mtd::StubGBMNativeBuffer>(geometry::Size{}, false);
+#else
+    auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+#endif
+    return std::make_shared<mtd::StubBuffer>(native_buffer);
 }
 
 namespace
