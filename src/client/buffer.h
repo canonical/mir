@@ -60,6 +60,7 @@ public:
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
+    geometry::Stride stride() const override;
 
     MirConnection* allocating_connection() const override;
 

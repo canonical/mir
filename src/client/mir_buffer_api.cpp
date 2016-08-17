@@ -142,6 +142,19 @@ catch (std::exception const& ex)
     return 0;
 }
 
+unsigned int mir_buffer_get_stride(MirBuffer* b)
+try
+{
+    mir::require(b);
+//    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    return 0;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return 0;
+}
+
 unsigned int mir_buffer_get_height(MirBuffer* b)
 try
 {

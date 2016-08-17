@@ -50,6 +50,8 @@ public:
     virtual MirBufferUsage buffer_usage() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
     virtual geometry::Size size() const = 0;
+    virtual geometry::Stride stride() const = 0;
+
     virtual MirConnection* allocating_connection() const = 0;
     virtual void increment_age() = 0;
     virtual bool valid() const = 0;

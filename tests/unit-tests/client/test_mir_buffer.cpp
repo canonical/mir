@@ -43,6 +43,8 @@ struct MirBufferTest : Test
             .WillByDefault(Return(geom::Size{width, height}));
         ON_CALL(*mock_client_buffer, pixel_format())
             .WillByDefault(Return(format)); 
+        ON_CALL(*mock_client_buffer, stride())
+            .WillByDefault(Return(stride));
     }
     MirGraphicsRegion region;
     int buffer_id { 32 };
@@ -227,4 +229,10 @@ TEST_F(MirBufferTest, returns_correct_size)
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
     EXPECT_THAT(buffer.size().height, Eq(height));
     EXPECT_THAT(buffer.size().width, Eq(width));
+}
+
+TEST_F(MirBufferTest, returns_correct_stride)
+{
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    EXPECT_THAT(buffer.stride(), Eq(stride));
 }
