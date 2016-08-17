@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_
 #define MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_
 
+#include "mir/graphics/atomic_frame.h"
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
 
@@ -81,7 +82,7 @@ private:
 
     std::mutex power_mutex;
 
-    Frame last_frame_;
+    AtomicFrame last_frame_;
 };
 
 }

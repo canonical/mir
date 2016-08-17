@@ -185,7 +185,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
                    mgk::connector_name(connector).c_str());
     }
 
-    last_frame_ = page_flipper->wait_for_flip(current_crtc->crtc_id);
+    Frame frame = page_flipper->wait_for_flip(current_crtc->crtc_id);
 
     /*
      * Improve our measurement of min_ust_interval for GSync/FreeSync displays,
@@ -196,15 +196,16 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     if (max_rate > 0)
     {
         uint64_t min_frame_interval_usec = 1000000 / max_rate;
-        if (min_frame_interval_usec < last_frame_.min_ust_interval)
-            last_frame_.min_ust_interval = min_frame_interval_usec;
+        if (min_frame_interval_usec < frame.min_ust_interval)
+            frame.min_ust_interval = min_frame_interval_usec;
     }
+
+    last_frame_.store(frame);
 }
 
 mg::Frame mgm::RealKMSOutput::last_frame() const
 {
-    // TODO: locking or just use AtomicFrame
-    return last_frame_;
+    return last_frame_.load();
 }
 
 void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
