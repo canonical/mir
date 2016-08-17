@@ -21,23 +21,24 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/output.h"
 #include "mir/renderer/gl/render_target.h"
 #include "gl_context.h"
-
 #include <EGL/egl.h>
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class AtomicFrame;
+
 namespace X
 {
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::NativeDisplayBuffer,
-                      public renderer::gl::RenderTarget,
-                      public Output
+                      public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(
@@ -45,6 +46,7 @@ public:
             EGLDisplay const d,
             EGLSurface const s,
             EGLContext const c,
+            std::shared_ptr<AtomicFrame> const& f,
             MirOrientation const o);
 
     geometry::Rectangle view_area() const override;
@@ -59,13 +61,12 @@ public:
     MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    Frame last_frame() const override;
-
 private:
     geometry::Size const size;
     EGLDisplay const egl_dpy;
     EGLSurface const egl_surf;
     EGLContext const egl_ctx;
+    std::shared_ptr<AtomicFrame> const last_frame;
     MirOrientation orientation_;
 
     typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)

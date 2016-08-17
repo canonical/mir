@@ -19,6 +19,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "display_buffer.h"
+#include "atomic_frame.h"
 #include <cstring>
 #include <boost/throw_exception.hpp>
 
@@ -30,11 +31,13 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                   EGLDisplay const d,
                                   EGLSurface const s,
                                   EGLContext const c,
+                                  std::shared_ptr<AtomicFrame> const& f,
                                   MirOrientation const o)
                                   : size{sz},
                                     egl_dpy{d},
                                     egl_surf{s},
                                     egl_ctx{c},
+                                    last_frame{f},
                                     orientation_{o}
 {
 #if 0
@@ -121,16 +124,11 @@ void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
-}
 
-mg::Frame mgx::DisplayBuffer::last_frame() const
-{
     Frame frame;
     if (eglGetSyncValues) // We allow for this to be missing because calling
     {                     // it may also fail, which needs handling too...
         uint64_t ust, msc, sbc;
-        // XXX If this really requires a context to work then it needs to move
-        //     back into swap_buffers.
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
             auto delta = msc - frame.msc;
@@ -147,7 +145,7 @@ mg::Frame mgx::DisplayBuffer::last_frame() const
             }
         }
     }
-    return frame;
+    last_frame->store(frame);
 }
 
 void mgx::DisplayBuffer::bind()

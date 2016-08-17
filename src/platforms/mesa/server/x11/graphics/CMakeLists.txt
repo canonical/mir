@@ -22,6 +22,7 @@ add_library(
   gl_context.cpp
   display_group.cpp
   display_buffer.cpp
+  atomic_frame.cpp
 )
 
 add_library(

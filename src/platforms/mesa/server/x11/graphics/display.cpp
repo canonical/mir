@@ -26,6 +26,7 @@
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
+#include "atomic_frame.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
@@ -283,7 +284,8 @@ mgx::Display::Display(::Display* x_dpy,
       egl_surface{X11EGLSurface(egl_display,
                                 win.egl_config(),
                                 win)},
-                                orientation{mir_orientation_normal}
+      orientation{mir_orientation_normal},
+      last_frame{std::make_shared<AtomicFrame>()}
 {
     auto red_mask = win.red_mask();
     pf = (red_mask == 0xFF0000 ? mir_pixel_format_argb_8888
@@ -294,6 +296,7 @@ mgx::Display::Display(::Display* x_dpy,
                                              egl_display,
                                              egl_surface,
                                              egl_context,
+                                             last_frame,
                                              orientation));
 }
 
@@ -373,4 +376,9 @@ mg::NativeDisplay* mgx::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
     return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
+}
+
+mg::Frame mgx::Display::last_frame_on(unsigned) const
+{
+    return last_frame->load();
 }
