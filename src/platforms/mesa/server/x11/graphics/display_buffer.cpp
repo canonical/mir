@@ -18,8 +18,8 @@
  */
 
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/atomic_frame.h"
 #include "display_buffer.h"
-#include "atomic_frame.h"
 #include <cstring>
 #include <boost/throw_exception.hpp>
 

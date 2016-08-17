@@ -22,11 +22,11 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/atomic_frame.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
 #include "gl_context.h"
-#include "atomic_frame.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>

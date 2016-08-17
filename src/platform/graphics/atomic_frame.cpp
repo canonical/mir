@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "atomic_frame.h"
+#include "mir/graphics/atomic_frame.h"
 
 namespace mir { namespace graphics {
 
