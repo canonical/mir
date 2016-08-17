@@ -115,26 +115,6 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
-#if 0
-    // TODO replace this
-    set_frame_callback([](Frame const& frame)
-    {
-        unsigned long long frame_seq = frame.msc;
-        unsigned long long frame_usec = frame.ust;
-        static unsigned long long prev = frame.ust;
-        struct timespec now;
-        clock_gettime(frame.clock_id, &now);
-        unsigned long long now_usec = now.tv_sec*1000000ULL +
-                                      now.tv_nsec/1000;
-        long long age_usec = now_usec - frame_usec;
-        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus (%lldus ago) delta %lldus\n",
-                        frame_seq,
-                        frame_usec/1000000ULL, frame_usec%1000000ULL,
-                        age_usec, frame_usec - prev);
-        prev = frame_usec;
-    });
-#endif
-
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
     if (rotation == mir_orientation_left || rotation == mir_orientation_right)

@@ -40,26 +40,6 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                     last_frame{f},
                                     orientation_{o}
 {
-#if 0
-    // TODO: Replace this
-    set_frame_callback([](Frame const& frame)
-    {
-        unsigned long long frame_seq = frame.msc;
-        unsigned long long frame_usec = frame.ust;
-        static unsigned long long prev = frame.ust;
-        struct timespec now;
-        clock_gettime(frame.clock_id, &now);
-        unsigned long long now_usec = now.tv_sec*1000000ULL +
-                                      now.tv_nsec/1000;
-        long long age_usec = now_usec - frame_usec;
-        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus (%lldus ago) delta %lldus\n",
-                        frame_seq,
-                        frame_usec/1000000ULL, frame_usec%1000000ULL,
-                        age_usec, frame_usec - prev);
-        prev = frame_usec;
-    });
-#endif
-
     /*
      * EGL_CHROMIUM_sync_control is an unofficial extension and simplification
      * that Google copied from:
