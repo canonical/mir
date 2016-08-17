@@ -58,9 +58,7 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
                     calculate_dpi(mode.size, output.physical_size_mm),
                     output.scale,
                     output.form_factor,
-                    output.id,
-                    mg::Frame()  // TODO
-                });
+                    output.id});
             }
         });
 
