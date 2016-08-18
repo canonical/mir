@@ -17,6 +17,7 @@
  */
 
 #include "host_connection.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "buffer.h"
 #include <string.h>
 #include <boost/throw_exception.hpp>
@@ -26,22 +27,12 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-namespace
-{
-//might be good to have a mir_buffer_get_stride instead of determining stride this way
-geom::Stride find_stride(mgn::HostConnection& connection, MirBuffer* buffer)
-{
-    return geom::Stride{ connection.get_graphics_region(buffer).stride };
-}
-}
-
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
     mg::BufferProperties const& properties) :
     connection(connection),
     properties(properties),
-    buffer(connection->create_buffer(properties)),
-    stride_(find_stride(*connection, buffer.get()))
+    buffer(connection->create_buffer(properties))
 {
 }
 
@@ -57,7 +48,7 @@ geom::Size mgn::Buffer::size() const
 
 geom::Stride mgn::Buffer::stride() const
 {
-    return stride_;
+    return geom::Stride{mir_buffer_get_stride(buffer.get())};
 }
 
 MirPixelFormat mgn::Buffer::pixel_format() const
