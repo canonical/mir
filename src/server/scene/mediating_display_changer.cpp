@@ -31,6 +31,7 @@
 #include "mir/server_action_queue.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
+#include "mir/client_visible_error.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -41,6 +42,25 @@ namespace mt = mir::time;
 
 namespace
 {
+
+class DisplayConfigurationInProgressError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationInProgressError()
+        : ClientVisibleError("Base display configuration already in progress")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return mir_display_configuration_error_in_progress;
+    }
+};
 
 class ApplyNowAndRevertOnScopeExit
 {
@@ -166,7 +186,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         if (preview_configuration_timeout)
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error{"Another client is currently changing base configuration"});
+                DisplayConfigurationInProgressError());
         }
 
         preview_configuration_timeout = alarm_factory->create_alarm(

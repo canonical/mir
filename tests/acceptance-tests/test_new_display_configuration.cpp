@@ -1056,3 +1056,27 @@ TEST_F(DisplayConfigurationTest, can_confirm_base_configuration_without_waiting_
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, receives_error_when_display_configuration_already_in_progress)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    ErrorValidator validator;
+    validator.validate = [&config](MirError const* error)
+    {
+        EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
+        EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_in_progress));
+    };
+    mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+
+    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+
+    client.disconnect();
+}

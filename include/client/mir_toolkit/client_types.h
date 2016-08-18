@@ -472,6 +472,10 @@ typedef enum MirDisplayConfigurationError {
      * Client is not permitted to change global display configuration
      */
     mir_display_configuration_error_unauthorized,
+    /**
+     * A global configuration change request is already pending
+     */
+    mir_display_configuration_error_in_progress,
 } MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(
