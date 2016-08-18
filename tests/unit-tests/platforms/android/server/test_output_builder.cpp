@@ -21,6 +21,7 @@
 #include "src/platforms/android/server/resource_factory.h"
 #include "src/platforms/android/server/hwc_loggers.h"
 #include "src/platforms/android/server/hwc_configuration.h"
+#include "src/platforms/android/server/fb_device.h"
 #include "src/platforms/android/server/device_quirks.h"
 #include "src/platforms/android/server/hwc_layerlist.h"
 #include "mir/test/doubles/mock_buffer.h"
@@ -127,7 +128,36 @@ TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
     factory.create_display_device();
 }
 
-TEST_F(HalComponentFactory, allocates_correct_hwc_configuration)
+TEST_F(HalComponentFactory, allocates_correct_hwc_configuration_for_backup_display)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Throw(std::runtime_error("")));
+
+    mga::HalComponentFactory factory(
+        mock_resource_factory,
+        mock_hwc_report,
+        quirks);
+    auto hwc_config = factory.create_hwc_configuration();
+    EXPECT_THAT(dynamic_cast<mga::FbControl*>(hwc_config.get()), Ne(nullptr));
+}
+
+TEST_F(HalComponentFactory, allocates_correct_hwc_configuration_for_hwc_version_10_to_13)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc10)));
+
+    mga::HalComponentFactory factory(
+        mock_resource_factory,
+        mock_hwc_report,
+        quirks);
+    auto hwc_config = factory.create_hwc_configuration();
+    EXPECT_THAT(dynamic_cast<mga::HwcBlankingControl*>(hwc_config.get()), Ne(nullptr));
+}
+
+TEST_F(HalComponentFactory, allocates_correct_hwc_configuration_for_hwc_version_14_and_later)
 {
     using namespace testing;
     EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
