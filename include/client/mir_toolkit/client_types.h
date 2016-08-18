@@ -476,6 +476,10 @@ typedef enum MirDisplayConfigurationError {
      * A global configuration change request is already pending
      */
     mir_display_configuration_error_in_progress,
+    /**
+     * A cancel request was received, but no global display configuration preview is in progress
+     */
+    mir_display_configuration_error_no_preview_in_progress,
 } MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(

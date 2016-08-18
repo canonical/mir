@@ -62,6 +62,25 @@ public:
     }
 };
 
+class DisplayConfigurationNotInProgressError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationNotInProgressError()
+        : ClientVisibleError("No base display configuration preview in progress")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return mir_display_configuration_error_no_preview_in_progress;
+    }
+};
+
 class ApplyNowAndRevertOnScopeExit
 {
 public:
@@ -199,6 +218,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                     }
                 });
         preview_configuration_timeout->reschedule_in(timeout);
+        currently_previewing_session = session;
     }
 
     server_action_queue->enqueue(
@@ -221,8 +241,50 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
     {
         std::lock_guard<std::mutex> lock{configuration_mutex};
         preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
+        currently_previewing_session = std::weak_ptr<frontend::Session>{};
     }
     set_base_configuration(confirmed_conf);
+}
+
+void
+ms::MediatingDisplayChanger::cancel_base_configuration_preview(
+    std::shared_ptr<mir::frontend::Session> const& session)
+{
+    std::unique_ptr<mt::Alarm> previously_set_alarm;
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+        if (!preview_configuration_timeout || (currently_previewing_session.lock() != session))
+        {
+            BOOST_THROW_EXCEPTION(DisplayConfigurationNotInProgressError());
+        }
+        /* We transfer the alarm out of the lock, because the alarm's callback may try
+         * to *take* the configuration_mutex lock.
+         *
+         * Since cancel() blocks until the callback will definitely not be entered,
+         * we need to call cancel() outside the configuration_mutex lock to avoid possible
+         * deadlocks
+         */
+        previously_set_alarm = std::move(preview_configuration_timeout);
+        preview_configuration_timeout = nullptr;
+        currently_previewing_session = std::weak_ptr<frontend::Session>{};
+    }
+
+    if (previously_set_alarm->cancel())
+    {
+        // We cancelled the alarm, which means it had not already been triggered.
+        // Therefore we need to queue up a switch back to the base display configuration and
+        // send a notification.
+        server_action_queue->enqueue(
+            this,
+            [this, weak_session = std::weak_ptr<mir::frontend::Session>(session)]()
+            {
+                if (auto live_session = weak_session.lock())
+                {
+                    apply_base_config(PauseResumeSystem);
+                    live_session->send_display_config(*base_configuration());
+                }
+            });
+    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>

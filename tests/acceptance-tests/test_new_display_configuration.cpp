@@ -1098,11 +1098,10 @@ TEST_F(DisplayConfigurationTest, can_cancel_base_display_configuration_preview)
     {
         std::atomic<MirDisplayConfig const*> configuration;
         mt::Signal satisfied;
-
     } expectation;
 
     mir_connection_set_display_config_change_callback(
-        connection,
+        client.connection,
         [](MirConnection* connection, void* ctx)
         {
             auto expectation = reinterpret_cast<ConfigurationExpectation*>(ctx);
@@ -1123,7 +1122,170 @@ TEST_F(DisplayConfigurationTest, can_cancel_base_display_configuration_preview)
     expectation.satisfied.reset();
 
     expectation.configuration = old_config.get();
-    mir_connection_cancel_base_display_configuration_preview(connection);
+    mir_connection_cancel_base_display_configuration_preview(client.connection);
 
     EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    ErrorValidator validator;
+    validator.validate = [&config](MirError const* error)
+    {
+        EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
+        EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_no_preview_in_progress));
+    };
+    mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
+
+    mir_connection_cancel_base_display_configuration_preview(client.connection);
+
+    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+
+    validator.received.reset();
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+    mir_connection_confirm_base_display_configuration(client.connection, config.get());
+
+    mir_connection_cancel_base_display_configuration_preview(client.connection);
+
+    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_exactly_one_configuration_event_after_cancel)
+{
+    using namespace std::chrono_literals;
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto old_config = client.get_base_config();
+    auto new_config = client.get_base_config();
+
+    mir_output_set_position(mir_display_config_get_mutable_output(new_config.get(), 0), 88, 42);
+
+    struct ConfigurationExpectation
+    {
+        std::atomic<MirDisplayConfig const*> configuration;
+        mt::Signal satisfied;
+    } expectation;
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        [](MirConnection* connection, void* ctx)
+        {
+            auto expectation = reinterpret_cast<ConfigurationExpectation*>(ctx);
+
+            auto config = mir_connection_create_display_configuration(connection);
+            if (Matches(mt::DisplayConfigMatches(expectation->configuration.load()))(config))
+            {
+                if (expectation->satisfied.raised())
+                {
+                    FAIL() << "Received more than one display configuration event matching filter";
+                }
+                expectation->satisfied.raise();
+            }
+            mir_display_config_release(config);
+        },
+        &expectation);
+
+    expectation.configuration = new_config.get();
+
+    auto timeout_time = std::chrono::steady_clock::now() + 2s;
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 2);
+
+    EXPECT_TRUE(expectation.satisfied.wait_for(2s));
+    expectation.satisfied.reset();
+
+    expectation.configuration = old_config.get();
+    mir_connection_cancel_base_display_configuration_preview(client.connection);
+
+    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+
+    // Sleep until a bit after the preview would timeout to check that the timeout doesn't
+    // send a second event.
+    std::this_thread::sleep_until(timeout_time + 1s);
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuration_in_progress)
+{
+    using namespace std::chrono_literals;
+
+    DisplayClient configuring_client{new_connection()};
+    DisplayClient interfering_client{new_connection()};
+
+    configuring_client.connect();
+    interfering_client.connect();
+
+    auto old_config = configuring_client.get_base_config();
+    auto new_config = configuring_client.get_base_config();
+
+    mir_output_set_position(mir_display_config_get_mutable_output(new_config.get(), 0), 88, 42);
+
+    struct ConfigurationExpectation
+    {
+        std::atomic<MirDisplayConfig const*> configuration;
+        mt::Signal satisfied;
+    } expectation;
+
+    mir_connection_set_display_config_change_callback(
+        configuring_client.connection,
+        [](MirConnection* connection, void* ctx)
+        {
+            auto expectation = reinterpret_cast<ConfigurationExpectation*>(ctx);
+
+            auto config = mir_connection_create_display_configuration(connection);
+            if (Matches(mt::DisplayConfigMatches(expectation->configuration.load()))(config))
+            {
+                expectation->satisfied.raise();
+            }
+            mir_display_config_release(config);
+        },
+        &expectation);
+
+    expectation.configuration = new_config.get();
+    mir_connection_preview_base_display_configuration(configuring_client.connection, new_config.get(), 20);
+
+    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    expectation.satisfied.reset();
+
+    mt::Signal error_received;
+    mir_connection_set_error_callback(
+        interfering_client.connection,
+        [](MirConnection*, MirError const* error, void* ctx)
+        {
+            auto const done = reinterpret_cast<mt::Signal*>(ctx);
+
+            if (mir_error_get_domain(error) == mir_error_domain_display_configuration)
+            {
+                EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_no_preview_in_progress));
+                done->raise();
+            }
+        },
+        &error_received);
+
+    mir_connection_cancel_base_display_configuration_preview(interfering_client.connection);
+
+    EXPECT_TRUE(error_received.wait_for(10s));
+    EXPECT_THAT(configuring_client.get_base_config().get(), mt::DisplayConfigMatches(new_config.get()));
+
+    expectation.configuration = old_config.get();
+    mir_connection_cancel_base_display_configuration_preview(configuring_client.connection);
+
+    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+
+    configuring_client.disconnect();
+    interfering_client.disconnect();
 }
