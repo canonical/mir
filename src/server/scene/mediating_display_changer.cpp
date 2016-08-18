@@ -178,6 +178,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                         live_session->send_display_config(*base_configuration());
                     }
                 });
+        preview_configuration_timeout->reschedule_in(timeout);
     }
 
     server_action_queue->enqueue(
@@ -186,11 +187,6 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         {
             if (auto live_session = session.lock())
             {
-                {
-                    std::lock_guard<std::mutex> lock{configuration_mutex};
-                    preview_configuration_timeout->reschedule_in(timeout);
-                }
-
                 apply_config(conf, PauseResumeSystem);
                 live_session->send_display_config(*conf);
             }
