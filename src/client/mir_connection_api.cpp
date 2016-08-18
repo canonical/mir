@@ -354,6 +354,12 @@ void mir_connection_confirm_base_display_configuration(
     }
 }
 
+void mir_connection_cancel_base_display_configuration_preview(
+    MirConnection* /*connection*/)
+{
+
+}
+
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
 {
