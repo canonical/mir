@@ -82,5 +82,18 @@ void mgn::Buffer::read(std::function<void(unsigned char const*)> const& do_with_
 
 mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
 {
-    return nullptr;
+    return this;
+}
+
+void mgn::Buffer::bind()
+{
+}
+
+void mgn::Buffer::gl_bind_to_texture()
+{
+    bind();
+}
+
+void mgn::Buffer::secure_for_render()
+{
 }

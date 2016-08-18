@@ -84,9 +84,8 @@ struct NestedBuffer : Test
 
     MockEglImageFactory mock_image_factory;
 
-    mtd::MockGL mock_gl;
-    mtd::MockEGL mock_egl;
-
+    NiceMock<mtd::MockGL> mock_gl;
+    NiceMock<mtd::MockEGL> mock_egl;
 };
 }
 
@@ -170,11 +169,8 @@ TEST_F(NestedBuffer, binds_to_texture)
     texture_source->gl_bind_to_texture();
 }
 
-#if 0
 TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
 {
-    int fake_img1 = 110;
-    int fake_img2 = 111;
     int fake_display1 = 112;
     int fake_context1 = 113;
     int fake_display2 = 114;
@@ -184,23 +180,19 @@ TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
     auto texture_source = dynamic_cast<mir::renderer::gl::TextureSource*>(buffer.native_buffer_base());
     ASSERT_THAT(texture_source, Ne(nullptr));
 
-    EXPECT_CALL(*client_buffer, as_mir_native_buffer())
-        .WillOnce(Return(reinterpret_cast<MirBufferPackage*>(&fake_img)));
-
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .Times(3)
-        .WillOnce(Return(fake_display1))
-        .WillOnce(Return(fake_display1))
-        .WillOnce(Return(fake_display2));
-    EXPECT_CALL(mock_egl, eglGetCurrentContext());
+        .WillOnce(Return(&fake_display1))
+        .WillOnce(Return(&fake_display1))
+        .WillOnce(Return(&fake_display2));
+    EXPECT_CALL(mock_egl, eglGetCurrentContext())
         .Times(3)
-        .WillOnce(Return(fake_context1))
-        .WillOnce(Return(fake_context1))
-        .WillOnce(Return(fake_context2));
-    EXPECT_CALL(egl_image_factory, create_image_from(_))
+        .WillOnce(Return(&fake_context1))
+        .WillOnce(Return(&fake_context1))
+        .WillOnce(Return(&fake_context2));
+    EXPECT_CALL(mock_image_factory, create_egl_image_from(_, _, _))
         .Times(2)
-        .WillOnce(Return(&fake_img1));
-        .WillOnce(Return(&fake_img2));
+        .WillRepeatedly(InvokeWithoutArgs([] { return nullptr; }));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
         .Times(3);
 
@@ -208,4 +200,3 @@ TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
     texture_source->gl_bind_to_texture();
     texture_source->gl_bind_to_texture();
 }
-#endif
