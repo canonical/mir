@@ -170,6 +170,13 @@ unsigned int mir_buffer_get_width(MirBuffer* buffer);
  **/
 unsigned int mir_buffer_get_height(MirBuffer* buffer);
 
+/** Retrieve the stride of the buffer in bytes.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The stride of the buffer in bytes
+ **/
+unsigned int mir_buffer_get_stride(MirBuffer* buffer);
+
 /** Retrieve the pixel format of the buffer.
  *
  *   \param [in] buffer   The buffer

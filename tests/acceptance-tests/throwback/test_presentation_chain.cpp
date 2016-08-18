@@ -343,6 +343,7 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     geom::Height height { 33 };
     auto format = mir_pixel_format_abgr_8888;
     auto usage = mir_buffer_usage_software;
+    auto stride = geom::Stride { width.as_int() * MIR_BYTES_PER_PIXEL(format) };
 
     SurfaceWithChainFromStart surface(connection, size, pf);
     mir_connection_allocate_buffer(
@@ -354,6 +355,7 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     EXPECT_THAT(mir_buffer_get_height(buffer), Eq(height.as_uint32_t()));
     EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
     EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
+    EXPECT_THAT(mir_buffer_get_stride(buffer), Eq(stride.as_uint32_t()));
 }
 
 TEST_F(PresentationChain, can_check_valid_buffers)

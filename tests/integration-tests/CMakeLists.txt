@@ -1,4 +1,13 @@
 include(CMakeDependentOption)
+if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_definitions(-DANDROID)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+  add_definitions(-DMESA_KMS)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_definitions(-DMESA_X11)
+endif()
 
 include_directories(
   ${CMAKE_SOURCE_DIR}

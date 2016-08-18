@@ -45,6 +45,7 @@ public:
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
+    geometry::Stride stride() const override;
     MirConnection* allocating_connection() const override;
     void increment_age() override;
     void set_callback(mir_buffer_callback callback, void* context) override;
