@@ -26,7 +26,9 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "presentation_chain.h"
+#include "render_surface.h"
 #include "error_connections.h"
+#include "connection_surface_map.h"
 #include "mir/uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -626,6 +628,50 @@ try
         spec->streams.value().push_back(info);
     else
         spec->streams = std::vector<ContentInfo>{info}; 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_render_surface(
+    MirSurfaceSpec* spec,
+    int /*scaled_width*/, int /*scaled_height*/,
+    int width, int height,
+    int displacement_x, int displacement_y,
+    MirRenderSurface* render_surface)
+try
+{
+    mir::require(spec && render_surface);
+    auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
+    auto id = rs->stream_id();
+
+    if (id >= 0)
+    {
+        MirBufferStream* stream = nullptr;
+
+        auto wh = rs->create_client_buffer_stream(
+            width,
+            height,
+            mir_pixel_format_argb_8888,
+            mir_buffer_usage_hardware,
+            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
+            &stream);
+        wh->wait_for_all();
+
+        ContentInfo info{{displacement_x, displacement_y}, id, {}};
+
+        if (spec->streams.is_set())
+            spec->streams.value().push_back(info);
+        else
+            spec->streams = std::vector<ContentInfo>{info};
+    }
+#if 0
+    if (spec->render_surfaces.is_set())
+        spec->render_surfaces.value().push_back(rs);
+    else
+        spec->render_surfaces = std::vector<mcl::RenderSurface*>{rs};
+#endif
 }
 catch (std::exception const& ex)
 {

@@ -196,10 +196,18 @@ public:
         return input_devices;
     }
 
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> const& connection_surface_map() const
+    {
+        return surface_map;
+    }
+
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
+
+    MirRenderSurface* create_render_surface();
+    void release_render_surface(MirRenderSurface* render_surface);
 
 private:
     //google cant have callbacks with more than 2 args

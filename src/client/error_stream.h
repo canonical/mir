@@ -24,11 +24,16 @@ namespace mir
 {
 namespace client
 {
+class RenderSurface;
 class ErrorStream : public ClientBufferStream
 {
 public:
     ErrorStream(
         std::string const& error_msg, MirConnection* conn,
+        frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
+
+    ErrorStream(
+        std::string const& error_msg, RenderSurface* render_surface,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
 
     MirWaitHandle* get_create_wait_handle();

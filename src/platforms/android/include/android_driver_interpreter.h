@@ -45,6 +45,16 @@ protected:
     AndroidDriverInterpreter& operator=(AndroidDriverInterpreter const&) = delete;
 };
 
+class NullAndroidDriverInterpreter : public AndroidDriverInterpreter
+{
+public:
+    NativeBuffer* driver_requests_buffer() { return nullptr; };
+    void driver_returns_buffer(ANativeWindowBuffer*, int) {};
+    void dispatch_driver_request_format(int) {};
+    void dispatch_driver_request_buffer_count(unsigned int) {};
+    int driver_requests_info(int) const { return 0; };
+    void sync_to_display(bool) {};
+};
 }
 }
 }

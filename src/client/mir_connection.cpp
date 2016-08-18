@@ -36,6 +36,7 @@
 #include "buffer_stream.h"
 #include "screencast_stream.h"
 #include "perf_report.h"
+#include "render_surface.h"
 #include "presentation_chain.h"
 #include "error_chain.h"
 #include "logging/perf_report.h"
@@ -390,7 +391,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             default_stream = std::make_shared<mcl::BufferStream>(
                 this, request->wh, server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
-                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers, nullptr);
             surface_map->insert(default_stream->rpc_id(), default_stream);
         }
         catch (std::exception const& error)
@@ -827,7 +828,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
-            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
+            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers, nullptr);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->callback)
@@ -1271,4 +1272,21 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer->rpc_id());
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+}
+
+MirRenderSurface* MirConnection::create_render_surface()
+{
+    auto egl_native_window = platform->create_egl_native_window(nullptr);
+
+    std::shared_ptr<MirRenderSurface> rs {nullptr};
+    rs = std::make_shared<mcl::RenderSurface>(
+        this, server, surface_map, egl_native_window, nbuffers, platform, buffer_factory, logger);
+    surface_map->insert(egl_native_window.get(), rs);
+
+    return static_cast<MirRenderSurface*>(egl_native_window.get());
+}
+
+void MirConnection::release_render_surface(MirRenderSurface* render_surface)
+{
+    surface_map->erase(static_cast<void*>(render_surface));
 }

@@ -17,6 +17,7 @@
  */
 
 #include "error_stream.h"
+#include "render_surface.h"
 
 namespace mcl = mir::client;
 
@@ -25,6 +26,16 @@ mcl::ErrorStream::ErrorStream(
     mir::frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh) :
     error(error_msg),
     connection_(conn),
+    id(id),
+    wh(wh)
+{
+}
+
+mcl::ErrorStream::ErrorStream(
+    std::string const& error_msg, RenderSurface* render_surface,
+    mir::frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh) :
+    error(error_msg),
+    connection_(render_surface->connection()),
     id(id),
     wh(wh)
 {

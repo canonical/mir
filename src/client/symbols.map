@@ -384,6 +384,10 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_buffer_usage;
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
+    mir_connection_create_render_surface;
+    mir_render_surface_is_valid;
+    mir_render_surface_release;
+    mir_surface_spec_add_render_surface;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

@@ -81,7 +81,8 @@ public:
         mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
-        geometry::Size ideal_size, size_t nbuffers);
+        geometry::Size ideal_size, size_t nbuffers,
+        std::shared_ptr<void> egl_native_window);
     // For surfaceless buffer streams
     BufferStream(
         MirConnection* connection,

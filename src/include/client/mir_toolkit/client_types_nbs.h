@@ -32,6 +32,7 @@ extern "C" {
 typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef void* MirNativeFence;
+typedef struct MirRenderSurface MirRenderSurface;
 
 typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
 typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);

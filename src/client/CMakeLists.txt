@@ -80,6 +80,8 @@ add_library(mirclientobjects OBJECT
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp
+  mir_render_surface_api.cpp
+  render_surface.cpp
   presentation_chain.cpp
   mir_presentation_chain_api.cpp
   mir_buffer_api.cpp
