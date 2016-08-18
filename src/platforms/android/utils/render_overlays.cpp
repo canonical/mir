@@ -28,6 +28,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/display_report.h"
 #include "mir/renderer/gl/render_target.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "mir_image.h"
 #include "as_render_target.h"
 #include "mir/logging/null_shared_library_prober_report.h"
@@ -40,6 +41,7 @@ namespace mg=mir::graphics;
 namespace mo=mir::options;
 namespace geom=mir::geometry;
 namespace me=mir::examples;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -101,7 +103,9 @@ public:
         color |= (green_value << 8);
         pixel_buffer.fill(color);
 
-        back_buffer->write(pixel_buffer.pixels(), pixel_buffer.pixel_size());
+        if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(back_buffer->native_buffer_base()))
+            pixel_source->write(pixel_buffer.pixels(), pixel_buffer.pixel_size());
+
         std::swap(front_buffer, back_buffer);
     }
 

@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 namespace mir
 {
@@ -36,7 +37,8 @@ namespace common
 class ShmFile;
 
 class ShmBuffer : public BufferBasic, public NativeBufferBase,
-                  public renderer::gl::TextureSource
+                  public renderer::gl::TextureSource,
+                  public renderer::software::PixelSource
 {
 public:
     static bool supports(MirPixelFormat);

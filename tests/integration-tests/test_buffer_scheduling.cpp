@@ -19,6 +19,7 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
@@ -45,6 +46,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mrs = mir::renderer::software;
 using namespace testing;
 
 namespace
@@ -137,7 +139,8 @@ struct BufferQueueProducer : ProducerSystem
                 buffer = nullptr;
                 age++;
                 entries.emplace_back(BufferEntry{b->id(), age, Access::unblocked});
-                b->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
+                if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(b->native_buffer_base()))
+                    pixel_source->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
             }
             stream.swap_buffers(b,
                 std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
@@ -190,8 +193,9 @@ struct BufferQueueConsumer : ConsumerSystem
     {
         auto b = stream.lock_compositor_buffer(this);
         last_size_ = b->size();
-        b->read([this, b](unsigned char const* p) {
-            entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
+        if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(b->native_buffer_base()))
+            pixel_source->read([this, b](unsigned char const* p) {
+                entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
         });
         return b;
     }
