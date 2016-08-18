@@ -34,13 +34,13 @@ void AtomicFrame::store(Frame const& f)
     unsigned long long frame_usec = f.ust;
     struct timespec now;
     clock_gettime(f.clock_id, &now);
-    unsigned long long now_usec = now.tv_sec*1000000ULL +
-                                  now.tv_nsec/1000;
+    unsigned long long now_usec = now.tv_sec*1000000ULL + now.tv_nsec/1000;
     long long age_usec = now_usec - frame_usec;
-    fprintf(stderr, "Frame #%llu at %llu.%06llus (%lldus ago) delta %lldus\n",
+    unsigned long long interval = f.min_ust_interval;
+    fprintf(stderr, "Frame #%llu at %llu.%06llus (%lldus ago) interval %lluus\n",
                     frame_seq,
                     frame_usec/1000000ULL, frame_usec%1000000ULL,
-                    age_usec, frame_usec - frame.ust);
+                    age_usec, interval);
 #endif
     frame = f;
 }
