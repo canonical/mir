@@ -382,5 +382,5 @@ std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 
 mg::Frame mgn::Display::last_frame_on(unsigned) const
 {
-    return {}; // TODO: after the client API work is done
+    return {}; // TODO after the client API exists for us to get it
 }
