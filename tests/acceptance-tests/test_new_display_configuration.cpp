@@ -1014,3 +1014,45 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, can_confirm_base_configuration_without_waiting_for_change_event)
+{
+    using namespace testing;
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto new_config = client.get_base_config();
+
+    mir_output_set_position(mir_display_config_get_mutable_output(new_config.get(), 0), 500, 12000);
+
+    auto received_new_configuration = std::make_shared<mt::Signal>();
+    std::function<void(MirDisplayConfig const*)> validator =
+        [received_new_configuration, expected_config = new_config.get()](MirDisplayConfig const* config)
+        {
+            EXPECT_THAT(config, mt::DisplayConfigMatches(expected_config));
+            received_new_configuration->raise();
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        [](MirConnection* conn, void* ctx)
+        {
+            auto validator = *reinterpret_cast<std::function<void(MirDisplayConfig const*)>*>(ctx);
+
+            auto config = mir_connection_create_display_configuration(conn);
+
+            validator(config);
+
+            mir_display_config_release(config);
+        },
+        &validator);
+
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 1);
+    mir_connection_confirm_base_display_configuration(client.connection, new_config.get());
+
+    EXPECT_TRUE(received_new_configuration->wait_for(10s));
+
+    client.disconnect();
+}
