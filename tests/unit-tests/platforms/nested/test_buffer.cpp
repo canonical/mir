@@ -154,7 +154,12 @@ TEST_F(NestedBuffer, reads_from_region)
 
 TEST_F(NestedBuffer, binds_to_texture)
 {
-    mgn::Buffer buffer(mt::fake_shared(mock_connection), mt::fake_shared(mock_image_factory), properties);
+    auto mif = std::make_shared<MockEglImageFactory>();
+    EXPECT_CALL(*mif, create_egl_image_from(_, _, _))
+        .WillRepeatedly(InvokeWithoutArgs([] { printf("E i e i o\n"); return std::make_unique<EGLImageKHR>(); }));
+
+
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), mif, properties);
     auto native_base = buffer.native_buffer_base();
     ASSERT_THAT(native_base, Ne(nullptr));
     auto texture_source = dynamic_cast<mir::renderer::gl::TextureSource*>(native_base);
@@ -162,8 +167,6 @@ TEST_F(NestedBuffer, binds_to_texture)
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay());
     EXPECT_CALL(mock_egl, eglGetCurrentContext());
-    EXPECT_CALL(mock_image_factory, create_egl_image_from(_, _, _))
-        .WillOnce(InvokeWithoutArgs([] { return nullptr; }));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _));
 
     texture_source->gl_bind_to_texture();
@@ -192,7 +195,7 @@ TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
         .WillOnce(Return(&fake_context2));
     EXPECT_CALL(mock_image_factory, create_egl_image_from(_, _, _))
         .Times(2)
-        .WillRepeatedly(InvokeWithoutArgs([] { return nullptr; }));
+        .WillRepeatedly(InvokeWithoutArgs([] { return std::make_unique<EGLImageKHR>(); }));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
         .Times(3);
 

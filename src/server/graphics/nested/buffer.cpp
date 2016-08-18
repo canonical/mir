@@ -19,6 +19,7 @@
 #include "host_connection.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "buffer.h"
+#include "egl_image_factory.h"
 #include <string.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -87,6 +88,26 @@ mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
 
 void mgn::Buffer::bind()
 {
+    static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    DispContextPair current
+    {
+        eglGetCurrentDisplay(),
+        eglGetCurrentContext()
+    };
+
+    EGLImageKHR image;
+    auto it = egl_image_map.find(current);
+    if (it == egl_image_map.end())
+    {
+        auto i = factory->create_egl_image_from(buffer.get(), current.first, image_attrs);
+        image = *i;
+        egl_image_map[current] = std::move(i);
+    }
+    else
+    {
+        image = *(it->second);
+    }
+    egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 }
 
 void mgn::Buffer::gl_bind_to_texture()

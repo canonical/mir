@@ -59,7 +59,7 @@ public:
 private:
     EGLExtensions egl_extensions;
     std::shared_ptr<HostConnection> const connection;
-    std::shared_ptr<EglImageFactory> const& factory;
+    std::shared_ptr<EglImageFactory> const factory;
     std::shared_ptr<MirBuffer> buffer;
     geometry::Stride const stride_;
 
