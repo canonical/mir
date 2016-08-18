@@ -29,8 +29,10 @@ namespace geom = mir::geometry;
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<EglImageFactory> const& factory,
     mg::BufferProperties const& properties) :
     connection(connection),
+    factory(factory),
     buffer(connection->create_buffer(properties))
 {
 }
