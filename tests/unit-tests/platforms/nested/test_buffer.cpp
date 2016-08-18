@@ -52,11 +52,15 @@ struct NestedBuffer : Test
             .WillByDefault(Return(mirbuffer));
         ON_CALL(*client_buffer, stride())
             .WillByDefault(Return(geom::Stride{stride_with_padding}));
+        ON_CALL(*client_buffer, size())
+            .WillByDefault(Return(properties.size));
+        ON_CALL(*client_buffer, pixel_format())
+            .WillByDefault(Return(properties.format));
     }
     NiceMock<MockHostConnection> mock_connection;
     mg::BufferProperties properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
 
-    std::shared_ptr<mtd::MockClientBuffer> client_buffer = std::make_shared<mtd::MockClientBuffer>();
+    std::shared_ptr<mtd::MockClientBuffer> client_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
     std::shared_ptr<mir::client::MirBuffer> buffer = std::make_shared<mir::client::Buffer>(
         nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_software);
     std::shared_ptr<MirBuffer> mirbuffer { reinterpret_cast<MirBuffer*>(buffer.get()), [](auto){}};

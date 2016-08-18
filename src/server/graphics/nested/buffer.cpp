@@ -31,7 +31,6 @@ mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
     mg::BufferProperties const& properties) :
     connection(connection),
-    properties(properties),
     buffer(connection->create_buffer(properties))
 {
 }
@@ -43,7 +42,7 @@ std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 
 geom::Size mgn::Buffer::size() const
 {
-    return properties.size;
+    return geom::Size{ mir_buffer_get_width(buffer.get()), mir_buffer_get_height(buffer.get()) };
 }
 
 geom::Stride mgn::Buffer::stride() const
@@ -53,7 +52,7 @@ geom::Stride mgn::Buffer::stride() const
 
 MirPixelFormat mgn::Buffer::pixel_format() const
 {
-    return properties.format;
+    return mir_buffer_get_pixel_format(buffer.get());
 }
 
 void mgn::Buffer::write(unsigned char const* pixels, size_t pixel_size)
@@ -64,11 +63,11 @@ void mgn::Buffer::write(unsigned char const* pixels, size_t pixel_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
     auto region = connection->get_graphics_region(buffer.get());
-    for (int i = 0; i < properties.size.height.as_int(); i++)
+    for (int i = 0; i < region.height; i++)
     {
         int line_offset_in_buffer = stride().as_uint32_t()*i;
-        int line_offset_in_source = bpp*properties.size.width.as_int()*i;
-        memcpy(region.vaddr + line_offset_in_buffer, pixels + line_offset_in_source, properties.size.width.as_int() * bpp);
+        int line_offset_in_source = bpp * region.width * i;
+        memcpy(region.vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region.width * bpp);
     }
 }
 

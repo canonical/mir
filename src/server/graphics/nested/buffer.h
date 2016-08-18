@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_NESTED_BUFFER_H_
 
 #include "mir_toolkit/client_types_nbs.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_basic.h"
 #include <memory>
 
@@ -28,6 +27,7 @@ namespace mir
 {
 namespace graphics
 {
+class BufferProperties;
 namespace nested
 {
 class HostConnection;
@@ -46,8 +46,8 @@ public:
 
 private:
     std::shared_ptr<HostConnection> const connection;
-    BufferProperties const properties;
     std::shared_ptr<MirBuffer> buffer;
+    geometry::Stride const stride_;
 };
 }
 }
