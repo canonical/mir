@@ -429,8 +429,8 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
 
         resources.prepare();
 
-        MainLoop ml;
         mt::Signal handler_signal;
+        MainLoop ml;
         display->register_configuration_change_handler(ml.ml, [&handler_signal]{handler_signal.raise();});
         fake_devices.emit_device_changed(syspath);
         ASSERT_TRUE(handler_signal.wait_for(10s));

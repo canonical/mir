@@ -210,21 +210,19 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev);
 
 /*
- * 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * _________________________
  *< Don't use mir_event_ref >
- *-------------------------
+ * -------------------------
  *       \   ^__^
  *        \  (oo)\_______
-*            (__)\       )\/\
+ *           (__)\       )\/\
  *                ||----w |
  *                ||     || 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy until 
- * such point whereas direct MirEvent access as deprecated. This means you must
- * use the return value as your new reference 
- *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy
+ * until such time that direct MirEvent access is deprecated. This means you
+ * must use the return value as your new reference.
  */
 
 /**

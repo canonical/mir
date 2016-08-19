@@ -68,9 +68,6 @@ public:
     virtual void bind() override;
     virtual void secure_for_render() override;
 
-    void write(unsigned char const* pixels, size_t size) override;
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
-
     NativeBufferBase* native_buffer_base() override;
 
 private:
