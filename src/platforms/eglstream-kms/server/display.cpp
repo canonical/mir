@@ -369,5 +369,10 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
 
 mg::Frame mge::Display::last_frame_on(unsigned) const
 {
-    return {}; // TODO by someone with a working NVIDIA driver
+    /*
+     * TODO: Implement this properly using the hardware counters from somewhere.
+     *       Failing that, some fake frame counting in post() would suffice
+     *       to get things working.
+     */
+    return {};
 }
