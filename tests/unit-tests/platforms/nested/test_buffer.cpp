@@ -156,7 +156,7 @@ TEST_F(NestedBuffer, binds_to_texture)
 {
     auto mif = std::make_shared<MockEglImageFactory>();
     EXPECT_CALL(*mif, create_egl_image_from(_, _, _))
-        .WillRepeatedly(InvokeWithoutArgs([] { printf("E i e i o\n"); return std::make_unique<EGLImageKHR>(); }));
+        .WillRepeatedly(InvokeWithoutArgs([] { return std::make_unique<EGLImageKHR>(); }));
 
 
     mgn::Buffer buffer(mt::fake_shared(mock_connection), mif, properties);
