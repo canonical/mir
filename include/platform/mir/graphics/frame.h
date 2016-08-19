@@ -44,16 +44,13 @@ struct Frame
                             can be estimated). */
     clockid_t clock_id = CLOCK_MONOTONIC;
                        /**< The system clock identifier that 'ust' is measured
-                            by. Usually monotonic, but not always. */
+                            by. Display drivers usually use CLOCK_MONOTONIC
+                            but not always. */
     uint64_t ust = 0;  /**< Unadjusted System Time in microseconds of the frame
-                            displayed by the output, relative to clock_id.
-                            NOTE that comparing 'ust' to the current system
-                            time (at least in the server process) you will
-                            often find that 'ust' is in the future by a few
-                            microseconds and not yet in the past. This is to be
-                            expected and simply reflects the reality that
-                            scanning out a new frame can take longer than
-                            returning from the function that requested it. */
+                            displayed by the output, relative to:
+                              clock_gettime(frame.clock_id, &tp);
+                            It is crucial that all processes use the same
+                            clock_id when comparing Frame information. */
     uint64_t min_ust_interval = 0;
                        /**< The shortest time possible to the next frame you
                             should expect. This value may change over time and
