@@ -392,12 +392,10 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         {
             if (!surface_proto->has_error())
                 surface_proto->set_error(error.what());
-            // failed to create buffer_stream, so clean up FDs it doesn't own
+            // Clean up surface_proto's direct fds; BufferStream has cleaned up any owned by
+            // surface_proto->buffer_stream()
             for (auto i = 0; i < surface_proto->fd_size(); i++)
                 ::close(surface_proto->fd(i));
-            if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
-                for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
-                    ::close(surface_proto->buffer_stream().buffer().fd(i));
         }
     }
 

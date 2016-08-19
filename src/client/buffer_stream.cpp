@@ -450,7 +450,15 @@ mcl::BufferStream::BufferStream(
     }
 
     if (protobuf_bs->has_error())
+    {
+        if (protobuf_bs->has_buffer())
+        {
+            for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+                ::close(protobuf_bs->buffer().fd(i));
+        }
+
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+    }
 
     try
     {
