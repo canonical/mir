@@ -181,6 +181,10 @@ public:
      * It is also distinctly separate from the display configuration as this
      * timing information changes many times per second and should not interfere
      * with the more static display configuration.
+     *
+     * Note: Using unsigned here because DisplayConfigurationOutputId is
+     * troublesome (can't be forward declared) and including
+     * display_configuration.h to get it would be an overkill.
      */
     virtual Frame last_frame_on(unsigned output_id) const = 0;
 
