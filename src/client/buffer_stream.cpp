@@ -549,7 +549,6 @@ mcl::BufferStream::BufferStream(
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
-    egl_native_window_ = client_platform->create_egl_native_window(this);
     if (protobuf_bs->has_buffer())
     {
         buffer_depository = std::make_unique<ExchangeSemantics>(
@@ -567,6 +566,8 @@ mcl::BufferStream::BufferStream(
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
+
+    egl_native_window_ = client_platform->create_egl_native_window(this);
 }
 
 mcl::BufferStream::~BufferStream()
