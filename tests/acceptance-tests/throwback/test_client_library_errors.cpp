@@ -235,6 +235,22 @@ TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descriptors_on_error)
+{
+    using namespace testing;
+
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_THAT(connection, IsValid());
+
+    auto surf = mtf::make_any_surface(connection);
+
+    mir_surface_release_sync(surf);
+    mir_connection_release(connection);
+}
+
 namespace
 {
 void recording_surface_callback(MirSurface*, void* ctx)
