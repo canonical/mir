@@ -831,9 +831,6 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     }
     catch (std::exception const& error)
     {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
         stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
             request);
