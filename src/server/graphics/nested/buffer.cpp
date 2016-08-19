@@ -20,6 +20,8 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "buffer.h"
 #include "egl_image_factory.h"
+
+#include <chrono>
 #include <string.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -88,7 +90,6 @@ mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
 
 void mgn::Buffer::bind()
 {
-    static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
     DispContextPair current
     {
         eglGetCurrentDisplay(),
@@ -99,6 +100,7 @@ void mgn::Buffer::bind()
     auto it = egl_image_map.find(current);
     if (it == egl_image_map.end())
     {
+        static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
         auto i = factory->create_egl_image_from(buffer.get(), current.first, image_attrs);
         image = *i;
         egl_image_map[current] = std::move(i);
@@ -107,6 +109,11 @@ void mgn::Buffer::bind()
     {
         image = *(it->second);
     }
+
+    mir_buffer_wait_for_access(
+        buffer.get(),
+        mir_read,
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
     egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 }
 

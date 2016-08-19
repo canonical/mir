@@ -154,12 +154,11 @@ TEST_F(NestedBuffer, reads_from_region)
 
 TEST_F(NestedBuffer, binds_to_texture)
 {
-    auto mif = std::make_shared<MockEglImageFactory>();
-    EXPECT_CALL(*mif, create_egl_image_from(_, _, _))
+    EGLint const expected_image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    EXPECT_CALL(mock_image_factory, create_egl_image_from(mirbuffer.get(), mock_egl.fake_egl_display, mtd::AttrMatches(expected_image_attrs)))
         .WillRepeatedly(InvokeWithoutArgs([] { return std::make_unique<EGLImageKHR>(); }));
 
-
-    mgn::Buffer buffer(mt::fake_shared(mock_connection), mif, properties);
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), mt::fake_shared(mock_image_factory), properties);
     auto native_base = buffer.native_buffer_base();
     ASSERT_THAT(native_base, Ne(nullptr));
     auto texture_source = dynamic_cast<mir::renderer::gl::TextureSource*>(native_base);
@@ -167,6 +166,7 @@ TEST_F(NestedBuffer, binds_to_texture)
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay());
     EXPECT_CALL(mock_egl, eglGetCurrentContext());
+    EXPECT_CALL(*client_buffer, wait_fence(mir_read, _));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _));
 
     texture_source->gl_bind_to_texture();
