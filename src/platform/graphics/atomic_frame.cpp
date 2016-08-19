@@ -30,17 +30,14 @@ void AtomicFrame::store(Frame const& f)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 #if 1
-    unsigned long long frame_seq = f.msc;
-    unsigned long long frame_usec = f.ust;
-    struct timespec now;
-    clock_gettime(f.clock_id, &now);
-    unsigned long long now_usec = now.tv_sec*1000000ULL + now.tv_nsec/1000;
-    long long age_usec = now_usec - frame_usec;
+    unsigned long long msc = f.msc;
+    unsigned long long ust = f.ust;
     unsigned long long interval = f.min_ust_interval;
+    long long age = f.age();
     fprintf(stderr, "Frame #%llu at %llu.%06llus (%lldus ago) interval %lluus\n",
-                    frame_seq,
-                    frame_usec/1000000ULL, frame_usec%1000000ULL,
-                    age_usec, interval);
+                    msc,
+                    ust/1000000ULL, ust%1000000ULL,
+                    age, interval);
 #endif
     frame = f;
 }
