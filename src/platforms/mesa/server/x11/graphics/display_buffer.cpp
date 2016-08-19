@@ -41,11 +41,13 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                     orientation_{o}
 {
     /*
-     * EGL_CHROMIUM_sync_control is an unofficial extension and simplification
-     * that Google copied from:
+     * EGL_CHROMIUM_sync_control is an EGL extension that Google invented/copied
+     * to replace GLX:
      *    https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
-     * as a way to free Chromium from depending on GLX. And Mesa implements it
-     * for EGL on X11 only.
+     * Most noteworthy is that the EGL extension only has one function, as
+     * Google realized that's all you need. You do not need wait functions or
+     * events if you already have accurate timestamps and the ability to sleep
+     * with high precision.
      *
      * EGL_CHROMIUM_sync_control never got formally standardized. Google
      * faced resistance from NVIDIA who pointed out that it hinders correct
@@ -53,15 +55,11 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
      * FreeSync).
      *
      * Eventually Google stopped trying to standardize EGL_CHROMIUM_sync_control
-     * when they switched ChromeOS over from X11 to Freon. In Freon they instead
-     * now use native KMS, the same way as our mesa-kms driver. In doing so
-     * they have not resolved NVIDIA's complaints, just avoided them.
+     * when they switched ChromeOS over from X11 to Freon, which does the same
+     * thing but with native KMS.
      *
-     * History and semi-official spec:
+     * History and spec:
      *    https://bugs.chromium.org/p/chromium/issues/detail?id=366935
-     *
-     * TLDR: We need this, it's the only existing solution for EGL on X11 and
-     *       it still works until further notice...
      */
     auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
     eglGetSyncValues =

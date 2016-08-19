@@ -27,14 +27,15 @@ namespace mir { namespace graphics {
 /**
  * Frame is a unique identifier for a frame displayed on an output.
  *
- * This "MSC/UST" terminology is actually pretty standard in graphics texts,
- * OpenGL and Xorg. The basic design is best described in:
- *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+ * This "MSC/UST" terminology is used because that's what the rest of the
+ * industry calls it:
+ *   GLX: https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+ *   EGL: https://bugs.chromium.org/p/chromium/issues/attachmentText?aid=178027
+ *   WGL: https://www.opengl.org/registry/specs/OML/wgl_sync_control.txt
  *
- * The simplistic structure is intentional, as all these values need to
- * be passed unmodified from the server to clients, and clients of clients
- * (even clients of clients of clients like a GLX app under Xmir under Unity8
- * under USC)!
+ * The simplistic types are intentional as all these values need to be passed
+ * unmodified from the server to clients, and clients of clients (even clients
+ * of clients of clients like a GLX app under Xmir under Unity8 under USC)!
  */
 struct Frame
 {
@@ -43,38 +44,22 @@ struct Frame
                             can be estimated). */
     clockid_t clock_id = CLOCK_MONOTONIC;
                        /**< The system clock identifier that 'ust' is measured
-                            by. Usually monotonic, but might not always be.
-                            To get the current time relative to ust just
-                            call: clock_gettime(clock_id, ...) */
+                            by. Usually monotonic, but not always. */
     uint64_t ust = 0;  /**< Unadjusted System Time in microseconds of the frame
                             displayed by the output, relative to clock_id.
                             NOTE that comparing 'ust' to the current system
                             time (at least in the server process) you will
                             often find that 'ust' is in the future by a few
                             microseconds and not yet in the past. This is to be
-                            expected and simply represents the reality that
-                            scanning out a new frame takes longer than
-                            returning from the flip or swap function. */
+                            expected and simply reflects the reality that
+                            scanning out a new frame can take longer than
+                            returning from the function that requested it. */
     uint64_t min_ust_interval = 0;
-                       /**< The minimum time interval you should expect between
-                            frames on this device. We may update and recalculate
-                            this value on each frame, so you should keep
-                            checking it. The time between physical refreshes
-                            may be variable variable on modern LCDs so you can't
-                            simply estimate when the next frame will be based
-                            on the previous ones. Instead you should assume the
-                            worst case in which the display is running at
-                            maximum refresh rate (the minimum frame interval).
-                            So a conservative estimate for the next frame is:
-                              next_ust = ust + min_ust_interval
-                            */
-
-    bool operator<(Frame const& rhs) const
-    {
-        // Wrap-around would take 9.7 billion years on a 60Hz display, so
-        // that's unlikely but handle it anyway: A>B iff 0 < A-B < (4.8B years)
-        return (int64_t)(rhs.msc - msc) > 0;
-    }
+                       /**< The shortest time possible to the next frame you
+                            should expect. This value may change over time and
+                            should not be assumed to remain constant,
+                            especially as variable framerate displays become
+                            more common. */
 };
 
 }} // namespace mir::graphics
