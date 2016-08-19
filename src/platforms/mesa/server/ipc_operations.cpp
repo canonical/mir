@@ -28,6 +28,7 @@
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>

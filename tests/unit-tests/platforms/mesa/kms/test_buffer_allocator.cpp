@@ -20,6 +20,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platforms/mesa/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"

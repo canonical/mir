@@ -21,17 +21,13 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include "mir/test/doubles/null_display_changer.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/fake_shared.h"
-#if defined(MESA_KMS) || defined(MESA_X11)
-#include "mir/test/doubles/stub_gbm_native_buffer.h"
-#else
-#include "mir/test/doubles/stub_android_native_buffer.h"
-#endif
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -73,11 +69,7 @@ private:
     static bool const connected;
     static bool const used;
     std::shared_ptr<mtd::StubBuffer> stub_buffer { std::make_shared<mtd::StubBuffer>(
-#if defined(MESA_KMS) || defined(MESA_X11)
-        std::make_shared<mtd::StubGBMNativeBuffer>(geom::Size{}, false)
-#else
-        std::make_shared<mtd::StubAndroidNativeBuffer>()
-#endif
+        std::make_shared<mg::NativeBuffer>(mg::BufferProperties{})
     )};
 };
 
@@ -106,13 +98,8 @@ struct Screencast : mtf::BasicClientServerFixture<StubServerConfig>
 
     MirScreencastParameters default_screencast_params {
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-    std::shared_ptr<mtd::StubBuffer> stub_buffer { std::make_shared<mtd::StubBuffer>(
-#if defined(MESA_KMS) || defined(MESA_X11)
-        std::make_shared<mtd::StubGBMNativeBuffer>(geom::Size{}, false)
-#else
-        std::make_shared<mtd::StubAndroidNativeBuffer>()
-#endif
-    )};
+    std::shared_ptr<mtd::StubBuffer> stub_buffer {
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mg::NativeBuffer>(mg::BufferProperties{}))};
 };
 
 }
