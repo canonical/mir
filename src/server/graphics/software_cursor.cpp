@@ -23,12 +23,16 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/input/scene.h"
+#include "mir/renderer/sw/pixel_source.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <mutex>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -180,10 +184,11 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
     // TODO: The buffer pixel format may not be argb_8888, leading to
     // incorrect cursor colors. We need to transform the data to match
     // the buffer pixel format.
-    new_renderable->buffer()->write(
-        static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
-        pixels_size);
-
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(new_renderable->buffer()->native_buffer_base());
+    if (pixel_source)
+        pixel_source->write(static_cast<unsigned char const*>(cursor_image.as_argb_8888()), pixels_size);
+    else
+        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for software cursor"));
     return new_renderable;
 }
 
