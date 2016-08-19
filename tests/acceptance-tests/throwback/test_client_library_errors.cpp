@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/shared_library.h"
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/debug/surface.h"
@@ -33,6 +35,7 @@
 #include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -67,22 +70,31 @@ bool should_fail()
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *) override
+public:
+    ConfigurableFailurePlatform(mcl::ClientContext* context)
+    {
+        mir::SharedLibrary dummy_client_module{mtf::client_platform("dummy.so")};
+        stub_platform =
+            dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context);
+    }
+
+    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *surface) override
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::shared_ptr<EGLNativeWindowType>{};
+        return stub_platform->create_egl_native_window(surface);
     }
 
-    void populate(MirPlatformPackage&) const override
+    void populate(MirPlatformPackage& package) const override
     {
+        stub_platform->populate(package);
     }
 
-    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    MirPlatformMessage* platform_operation(MirPlatformMessage const* message) override
     {
-        return nullptr;
+        return stub_platform->platform_operation(message);
     }
 
     MirPlatformType platform_type() const override
@@ -96,34 +108,36 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<mtd::StubClientBufferFactory>();
+        return stub_platform->create_buffer_factory();
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
     {
-        return std::shared_ptr<EGLNativeDisplayType>{};
+        return stub_platform->create_egl_native_display();
     }
-    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const override
+    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer* buffer) const override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        return nullptr;
+        return stub_platform->convert_native_buffer(buffer);
     }
-    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    MirPixelFormat get_egl_pixel_format(EGLDisplay dpy, EGLConfig config) const override
     {
-        return mir_pixel_format_invalid;
+        return stub_platform->get_egl_pixel_format(dpy, config);
     }
+
+private:
+    mir::UniqueModulePtr<mcl::ClientPlatform> stub_platform;
 };
 
 template<Method failure_set>
 class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
 {
     std::shared_ptr<mir::client::ClientPlatform>
-    create_client_platform(mir::client::ClientContext* /*context*/) override
+    create_client_platform(mir::client::ClientContext* context) override
     {
         if (should_fail<Method::create_client_platform, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<ConfigurableFailurePlatform<failure_set>>();
+        return std::make_shared<ConfigurableFailurePlatform<failure_set>>(context);
     }
 };
 
