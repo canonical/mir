@@ -131,8 +131,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                     packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
                 }
 
-                auto native_buffer = const_cast<mg::Buffer*>(&buffer)->native_buffer_base();
-                packer.pack_stride(geom::Stride{native_handle->stride});
+                packer.pack_stride(mir::geometry::Stride{native_handle->stride});
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }
