@@ -49,7 +49,6 @@ public:
     virtual std::shared_ptr<NativeBuffer> native_buffer_handle() const = 0;
     virtual BufferID id() const = 0;
     virtual geometry::Size size() const = 0;
-//    virtual geometry::Stride stride() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
     virtual NativeBufferBase* native_buffer_base() = 0;

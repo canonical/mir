@@ -113,7 +113,7 @@ public:
 
     virtual geometry::Size size() const override { return buf_size; }
 
-//    virtual geometry::Stride stride() const override { return buf_stride; }
+    virtual geometry::Stride stride() const override { return buf_stride; }
 
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 

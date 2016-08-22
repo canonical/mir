@@ -56,7 +56,7 @@ public:
     ~Buffer();
 
     geometry::Size size() const override;
-//    geometry::Stride stride() const override;
+    geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
     void gl_bind_to_texture() override;
     void bind() override;

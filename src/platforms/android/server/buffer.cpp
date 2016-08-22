@@ -58,14 +58,12 @@ geom::Size mga::Buffer::size() const
     return {anwb->width, anwb->height};
 }
 
-#if 0
 geom::Stride mga::Buffer::stride() const
 {
     ANativeWindowBuffer *anwb = native_buffer->anwb();
     return geom::Stride{anwb->stride *
                         MIR_BYTES_PER_PIXEL(pixel_format())};
 }
-#endif
 
 MirPixelFormat mga::Buffer::pixel_format() const
 {
