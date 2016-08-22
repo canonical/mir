@@ -111,9 +111,6 @@ void mgx::DisplayBuffer::swap_buffers()
         {
             Frame prev = last_frame->load();
             frame.msc = msc;
-            // Always monotonic? The Chromium source suggests no. But the
-            // libdrm source says you can only find out with drmGetCap :(
-            // This appears to be correct for all modern systems though...
             frame.clock_id = CLOCK_MONOTONIC;
             frame.ust = ust;
             frame.min_ust_interval = (prev.msc && prev.ust && msc > prev.msc) ?
