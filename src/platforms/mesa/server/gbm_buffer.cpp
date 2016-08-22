@@ -20,6 +20,7 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
+#include "native_buffer.h"
 
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -164,9 +165,9 @@ void mgm::GBMBuffer::gl_bind_to_texture()
     texture_binder->gl_bind_to_texture();
 }
 
-std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
+std::shared_ptr<mg::NativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<GBMNativeBuffer>();
+    auto temp = std::make_shared<NativeBuffer>();
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
@@ -179,16 +180,6 @@ std::shared_ptr<MirNativeBuffer> mgm::GBMBuffer::native_buffer_handle() const
     temp->height = dim.height.as_int();
 
     return temp;
-}
-
-void mgm::GBMBuffer::write(unsigned char const* /* pixels */, size_t /* size */)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Direct write to GBM hardware allocated buffer not supported"));
-}
-
-void mgm::GBMBuffer::read(std::function<void(unsigned char const*)> const& /* do_with_pixels */)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Direct read from GBM hardware allocated buffer not supported"));
 }
 
 mg::NativeBufferBase* mgm::GBMBuffer::native_buffer_base()

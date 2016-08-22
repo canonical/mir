@@ -18,6 +18,7 @@
 
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mtd = mir::test::doubles;
 
@@ -152,7 +153,8 @@ void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
 
 std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
 {
-    return std::make_shared<mtd::StubBuffer>();
+    return std::make_shared<mtd::StubBuffer>(
+        std::make_shared<graphics::NativeBuffer>(graphics::BufferProperties{}));
 }
 
 namespace

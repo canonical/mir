@@ -7,6 +7,9 @@ include_directories(
 set(
   SOURCES
 
+  # Catch double-free bugs by wrapping close() and abort()ing on EBADF
+  strict_close.cpp
+
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp

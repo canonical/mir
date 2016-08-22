@@ -22,6 +22,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include "mir/test/current_thread_name.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mir
 {
@@ -35,7 +36,8 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_compositor_buffer = std::make_shared<StubBuffer>();
+        stub_compositor_buffer = std::make_shared<StubBuffer>(std::make_shared<graphics::NativeBuffer>(
+            graphics::BufferProperties{}));
     }
 
 
@@ -83,7 +85,7 @@ public:
     void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
 
-    StubBuffer stub_client_buffer;
+    StubBuffer stub_client_buffer{std::make_shared<graphics::NativeBuffer>(graphics::BufferProperties{})};
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
     std::string thread_name;

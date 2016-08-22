@@ -1,5 +1,6 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
@@ -79,7 +80,6 @@ add_library(mir-public-test-doubles OBJECT
   null_logger.cpp
   stub_display_configuration.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/stub_display_configuration.h
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
-  stub_buffer.cpp
 )
 
 add_library(mir-test-doubles-static STATIC

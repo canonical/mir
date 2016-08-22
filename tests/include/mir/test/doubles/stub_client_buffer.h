@@ -33,8 +33,16 @@ struct StubClientBuffer : client::ClientBuffer
 {
     StubClientBuffer(
         std::shared_ptr<MirBufferPackage> const& package,
-        geometry::Size size, MirPixelFormat pf)
-        : package{package}, size_{size}, pf_{pf}
+        geometry::Size size, MirPixelFormat pf,
+        std::shared_ptr<graphics::NativeBuffer> const& buffer) :
+        package{package}, size_{size}, pf_{pf}, buffer{buffer}
+    {
+    }
+
+    StubClientBuffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        geometry::Size size, MirPixelFormat pf) :
+        StubClientBuffer(package, size, pf, nullptr)
     {
     }
 
@@ -65,11 +73,7 @@ struct StubClientBuffer : client::ClientBuffer
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
     {
-#ifndef ANDROID
-        return package;
-#else
-        return std::shared_ptr<graphics::NativeBuffer>();
-#endif
+        return buffer;
     }
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
@@ -82,6 +86,7 @@ struct StubClientBuffer : client::ClientBuffer
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;
     MirPixelFormat pf_;
+    std::shared_ptr<graphics::NativeBuffer> buffer;
 };
 
 }
