@@ -111,11 +111,11 @@ void mgx::DisplayBuffer::swap_buffers()
         {
             Frame prev = last_frame->load();
             frame.msc = msc;
-            frame.clock_id = CLOCK_MONOTONIC;
-            frame.ust = ust;
-            frame.min_ust_interval = (prev.msc && prev.ust && msc > prev.msc) ?
-                                     (ust - prev.ust)/(msc - prev.msc) :
-                                     prev.min_ust_interval;
+            frame.ust = {CLOCK_MONOTONIC, ust};
+            frame.min_ust_interval =
+                (prev.msc && prev.ust.microseconds && msc > prev.msc) ?
+                (ust - prev.ust.microseconds)/(msc - prev.msc) :
+                prev.min_ust_interval;
         }
     }
     last_frame->store(frame);

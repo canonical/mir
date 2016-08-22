@@ -24,12 +24,44 @@
 
 namespace mir { namespace graphics {
 
-inline int64_t current_ust(clockid_t clock_id)
+/**
+ * Maintaining bare integer types is important here because the whole
+ * synchronization architecture relies on multiple processes having
+ * precisely the same understanding of time, no matter how many IPC layers
+ * the data passes through...
+ *
+ * Also note that we use Timestamp instead of std::chrono::time_point because
+ * we need to be able to switch clocks dynamically at runtime, depending on
+ * which one any given driver claims to use.
+ */
+struct Timestamp
 {
-    struct timespec now;
-    clock_gettime(clock_id, &now);
-    return now.tv_sec*1000000ULL + now.tv_nsec/1000;
+    clockid_t clock_id = CLOCK_MONOTONIC;
+    int64_t microseconds = 0;
+
+    static Timestamp now(clockid_t clock_id)
+    {
+        struct timespec ts;
+        clock_gettime(clock_id, &ts);
+        return {clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000};
+    }
+
+    int64_t age() const
+    {
+        return now(clock_id).microseconds - microseconds;
+    }
+};
+
+/* Unused?
+inline int64_t operator-(Timestamp const& a, Timestamp const& b)
+{
+    int64_t offset = 0;
+    if (a.clock_id != b.clock_id)
+        offset = Timestamp::now(a.clock_id).microseconds -
+                 Timestamp::now(b.clock_id).microseconds;
+    return a.microseconds - b.microseconds - offset;
 }
+*/
 
 /**
  * Frame is a unique identifier for a frame displayed on an output.
@@ -39,44 +71,31 @@ inline int64_t current_ust(clockid_t clock_id)
  *   GLX: https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
  *   EGL: https://bugs.chromium.org/p/chromium/issues/attachmentText?aid=178027
  *   WGL: https://www.opengl.org/registry/specs/OML/wgl_sync_control.txt
- *
- * The simplistic int64 types are intentional as all these values originate
- * from the display hardware and must be passed unmodified from the server to
- * clients, and clients of clients (even clients of clients of clients like a
- * GLX app under Xmir under Unity8 under USC)!
  */
 struct Frame
 {
-    int64_t msc = 0;   /**< Media Stream Counter: Counter of the frame
-                            displayed by the output (or as close to it as
-                            can be estimated). */
-    clockid_t clock_id = CLOCK_MONOTONIC;
-                       /**< The system clock identifier that 'ust' is measured
-                            by. Display drivers usually use CLOCK_MONOTONIC
-                            but not always. */
-    int64_t ust = 0;   /**< Unadjusted System Time in microseconds of the frame
-                            displayed by the output, relative to:
-                              clock_gettime(frame.clock_id, &tp);
-                            or
-                              mir::graphics::current_ust(frame.clock_id)
-                            It is crucial that all processes use the same
-                            clock_id when comparing Frame information. */
+    int64_t msc = 0;   /**< Media Stream Counter */
+    Timestamp ust;     /**< Unadjusted System Time */
     int64_t min_ust_interval = 0;
-                       /**< The shortest time possible to the next frame you
-                            should expect. This value may change over time and
-                            should not be assumed to remain constant,
+                       /**< The minimum number of microseconds to the next
+                            frame after this one. This value may change over
+                            time and should not be assumed to remain constant,
                             especially as variable framerate displays become
                             more common. */
 
-    int64_t age() const // might be negative in some cases (in the future)
+    int64_t age() const // might be negative in some cases (in the future).
     {
-        return current_ust(clock_id) - ust;
+        return ust.age();
     }
 
+/* Unused?
     Frame predict_next() const
     {
-        return Frame{msc+1, clock_id, ust+min_ust_interval, min_ust_interval};
+        return Frame{msc+1,
+                     {ust.clock_id, ust.microseconds+min_ust_interval},
+                     min_ust_interval};
     }
+*/
 };
 
 }} // namespace mir::graphics
