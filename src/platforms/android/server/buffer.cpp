@@ -172,7 +172,7 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
         int line_offset_in_source = bpp*width*i;
         memcpy(vaddr + line_offset_in_buffer, data + line_offset_in_source, width * bpp);
     }
- 
+    
     hw_module->unlock(hw_module, native_buffer->handle());
 }
 
