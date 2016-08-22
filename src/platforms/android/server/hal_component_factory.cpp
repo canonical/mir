@@ -50,16 +50,6 @@ mga::HalComponentFactory::HalComponentFactory(
       working_egl_sync(quirks->working_egl_sync()),
       hwc_version{mga::HwcVersion::unknown}
 {
-    bool fb_native_failed_to_load = false;
-
-    try
-    {
-        fb_native = res_factory->create_fb_native_device();
-    } catch (...)
-    {
-        fb_native_failed_to_load = true;
-    }
-
     try
     {
         std::tie(hwc_wrapper, hwc_version) = res_factory->create_hwc_wrapper(hwc_report);
@@ -71,24 +61,9 @@ mga::HalComponentFactory::HalComponentFactory(
 
     if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
-        //We're using FB HAL
-        if (fb_native_failed_to_load)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("fb display is mandory but failed to create one"));
-        }
-        else
-        {
-            //get framebuffers amount from FB HAL but guarantee always 2 fb's allocated
-            num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
-        }
-    }
-    else
-    {
-        if (!fb_native_failed_to_load)
-        {
-            //Close FB HAL as we don't need it.
-            fb_native.reset(); //This will close the FB HAL via destructor
-        }
+        fb_native = res_factory->create_fb_native_device();
+        //guarantee always 2 fb's allocated
+        num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
     }
 
     command_stream_sync_factory = create_command_stream_sync_factory();
