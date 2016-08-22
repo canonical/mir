@@ -33,6 +33,7 @@ namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 using namespace testing;
 namespace
@@ -99,8 +100,23 @@ TEST_F(NestedBuffer, no_gl_support_for_now)
 {
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     auto native_base = buffer.native_buffer_base();
-    EXPECT_THAT(native_base, Eq(nullptr));
     EXPECT_THAT(dynamic_cast<mir::renderer::gl::TextureSource*>(native_base), Eq(nullptr));
+}
+
+TEST_F(NestedBuffer, sw_support_if_requested)
+{
+    mg::BufferProperties sw_properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
+    mg::BufferProperties hw_properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
+
+    {
+        mgn::Buffer buffer(mt::fake_shared(mock_connection), sw_properties);
+        EXPECT_THAT(dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base()), Ne(nullptr));
+    }
+
+    {
+        mgn::Buffer buffer(mt::fake_shared(mock_connection), hw_properties);
+        EXPECT_THAT(dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base()), Eq(nullptr));
+    }
 }
 
 TEST_F(NestedBuffer, writes_to_region)
@@ -117,8 +133,26 @@ TEST_F(NestedBuffer, writes_to_region)
 
     unsigned int new_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
-    buffer.write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));
+    auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
+    ASSERT_THAT(pixel_source, Ne(nullptr));
+    pixel_source->write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));
     EXPECT_THAT(data, Eq(new_data));
+}
+
+TEST_F(NestedBuffer, checks_for_null_vaddr)
+{
+    MirGraphicsRegion region { 1, 1, 1, properties.format, nullptr };
+    EXPECT_CALL(mock_connection, get_graphics_region(_))
+        .WillOnce(Return(region));
+
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
+    ASSERT_THAT(pixel_source, Ne(nullptr));
+
+    unsigned int new_data = 0x11111111;
+    EXPECT_THROW({
+        pixel_source->write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));
+    }, std::logic_error);
 }
 
 //mg::Buffer::write could be improved so that the user doesn't have to generate potentially large buffers.
@@ -126,8 +160,10 @@ TEST_F(NestedBuffer, throws_if_incorrect_sizing)
 {
     auto too_large_size = 4 * sizeof(data);
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
+    ASSERT_THAT(pixel_source, Ne(nullptr));
     EXPECT_THROW({
-        buffer.write(reinterpret_cast<unsigned char*>(&data), too_large_size);
+        pixel_source->write(reinterpret_cast<unsigned char*>(&data), too_large_size);
     }, std::logic_error);
 }
 
@@ -139,7 +175,9 @@ TEST_F(NestedBuffer, reads_from_region)
 
     unsigned int read_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
-    buffer.read([&] (auto pix) {
+    auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
+    ASSERT_THAT(pixel_source, Ne(nullptr));
+    pixel_source->read([&] (auto pix) {
         read_data = *reinterpret_cast<decltype(data) const*>(pix);
     } );
     EXPECT_THAT(read_data, Eq(data));
