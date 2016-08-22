@@ -24,6 +24,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
+#include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
@@ -136,7 +137,8 @@ class StubIpcOps : public mg::PlatformIpcOperations
             message.pack_data(static_cast<int>(native_handle->properties.usage));
             message.pack_data(native_handle->data);
             message.pack_fd(native_handle->fd);
-            message.pack_stride(geom::Stride{buffer.size().width.as_int() * 4});
+            message.pack_stride(
+                geom::Stride{buffer.size().width.as_int() * MIR_BYTES_PER_PIXEL(buffer.pixel_format())});
             message.pack_size(buffer.size());
         }
     }

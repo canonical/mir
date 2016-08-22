@@ -25,6 +25,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "native_buffer.h"
 
 #include "mir/graphics/egl_error.h"
@@ -130,7 +131,9 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                     packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
                 }
 
-//                packer.pack_stride(buffer.stride());
+                auto native_buffer = const_cast<mg::Buffer*>(&buffer)->native_buffer_base();
+                if (auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(native_buffer))
+                    packer.pack_stride(pixel_source->stride());
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }

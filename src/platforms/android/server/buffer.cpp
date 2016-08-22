@@ -165,7 +165,6 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
         !vaddr)
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
-#if 0
     // Copy line by line in case of stride != width*bpp
     for (int i = 0; i < height; i++)
     {
@@ -173,8 +172,6 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
         int line_offset_in_source = bpp*width*i;
         memcpy(vaddr + line_offset_in_buffer, data + line_offset_in_source, width * bpp);
     }
-#endif
-    (void)data;
  
     hw_module->unlock(hw_module, native_buffer->handle());
 }
