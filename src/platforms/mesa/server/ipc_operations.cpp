@@ -22,7 +22,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "mir/renderer/sw/pixel_source.h"
 #include "mir/libname.h"
 #include "display_helpers.h"
 #include "drm_authentication.h"

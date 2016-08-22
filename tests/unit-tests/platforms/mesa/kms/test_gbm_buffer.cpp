@@ -57,6 +57,7 @@ protected:
 
         size = geom::Size{300, 200};
         pf = mir_pixel_format_argb_8888;
+        stride = geom::Stride{4 * size.width.as_uint32_t()};
         usage = mg::BufferUsage::hardware;
         buffer_properties = mg::BufferProperties{size, pf, usage};
 
@@ -68,6 +69,9 @@ protected:
 
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_BO_FORMAT_ARGB8888));
+
+        ON_CALL(mock_gbm, gbm_bo_get_stride(_))
+        .WillByDefault(Return(stride.as_uint32_t()));
 
         platform = std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
@@ -93,6 +97,7 @@ protected:
     // Defaults
     MirPixelFormat pf;
     geom::Size size;
+    geom::Stride stride;
     mg::BufferUsage usage;
     mg::BufferProperties buffer_properties;
 
@@ -119,6 +124,22 @@ TEST_F(GBMBufferTest, buffer_has_expected_pixel_format)
 
     auto buffer(allocator->alloc_buffer(buffer_properties));
     ASSERT_EQ(pf, buffer->pixel_format());
+}
+
+TEST_F(GBMBufferTest, stride_has_sane_value)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    // RGBA 8888 cannot take less than 4 bytes
+    // TODO: is there a *maximum* sane value for stride?
+    geom::Stride minimum(size.width.as_uint32_t() * 4);
+
+    auto buffer(allocator->alloc_buffer(buffer_properties));
+
+    ASSERT_LE(minimum, geom::Stride{buffer->native_buffer_handle()->stride});
 }
 
 TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
@@ -162,6 +183,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_contains_correct_data)
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto handle = buffer->native_buffer_handle();
     EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
+    EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }
 
 TEST_F(GBMBufferTest, buffer_creation_throws_on_prime_fd_failure)
