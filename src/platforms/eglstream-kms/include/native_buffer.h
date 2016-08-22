@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,16 +16,21 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_NATIVE_BUFFER_H_
+#ifndef MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
+#define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
+
+#include "mir_toolkit/mir_native_buffer.h"
 
 namespace mir
 {
 namespace graphics
 {
-//each platform defines its own native type
-class NativeBuffer;
+
+//TODO: a class that allows access to a mgc::ShmFile seems like the appropriate internal type.
+struct NativeBuffer : MirBufferPackage
+{
+};
 }
 }
 
-#endif /* MIR_GRAPHICS_NATIVE_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_ */

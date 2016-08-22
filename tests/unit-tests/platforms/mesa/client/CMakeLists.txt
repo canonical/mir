@@ -18,6 +18,7 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platforms/mesa
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include
 )
 
 add_library(unit_test_client_platform_mesa OBJECT

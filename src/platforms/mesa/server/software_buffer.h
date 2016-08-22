@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,16 +16,39 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_NATIVE_BUFFER_H_
+#ifndef MIR_GRAPHICS_MESA_SOFTWARE_BUFFER_H_
+#define MIR_GRAPHICS_MESA_SOFTWARE_BUFFER_H_
+
+#include "shm_buffer.h"
 
 namespace mir
 {
 namespace graphics
 {
-//each platform defines its own native type
-class NativeBuffer;
+namespace common
+{
+class ShmFile;
+}
+namespace mesa
+{
+
+class SoftwareBuffer: public common::ShmBuffer
+{
+public:
+    SoftwareBuffer(
+        std::unique_ptr<common::ShmFile> shm_file,
+        geometry::Size const& size,
+        MirPixelFormat const& pixel_format);
+
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+private:
+    std::shared_ptr<NativeBuffer> create_native_buffer();
+    std::shared_ptr<NativeBuffer> const native_buffer;
+};
+
+}
 }
 }
 
-#endif /* MIR_GRAPHICS_NATIVE_BUFFER_H_ */
+
+#endif // MIR_GRAPHICS_MESA_SOFTWARE_BUFFER_H_
