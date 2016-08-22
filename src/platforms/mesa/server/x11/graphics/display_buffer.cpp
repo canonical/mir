@@ -106,7 +106,7 @@ void mgx::DisplayBuffer::swap_buffers()
     Frame frame;
     if (eglGetSyncValues) // We allow for this to be missing because calling
     {                     // it may also fail, which needs handling too...
-        uint64_t ust, msc, sbc;
+        int64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
             Frame prev = last_frame->load();

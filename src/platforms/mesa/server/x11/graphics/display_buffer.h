@@ -70,8 +70,8 @@ private:
     MirOrientation orientation_;
 
     typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
-        (EGLDisplay dpy, EGLSurface surface, uint64_t *ust,
-         uint64_t *msc, uint64_t *sbc);
+        (EGLDisplay dpy, EGLSurface surface, int64_t *ust,
+         int64_t *msc, int64_t *sbc);
     EglGetSyncValuesCHROMIUM* eglGetSyncValues;
 };
 

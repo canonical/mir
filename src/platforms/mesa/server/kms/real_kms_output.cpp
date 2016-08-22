@@ -195,7 +195,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     auto max_rate = max_refresh_rate();
     if (max_rate > 0)
     {
-        uint64_t min_frame_interval_usec = 1000000 / max_rate;
+        auto min_frame_interval_usec = 1000000 / max_rate;
         if (min_frame_interval_usec < frame.min_ust_interval)
             frame.min_ust_interval = min_frame_interval_usec;
     }

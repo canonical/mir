@@ -165,8 +165,8 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }
 
-void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, uint64_t msc,
-                                           uint64_t ust)
+void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, int64_t msc,
+                                           int64_t ust)
 {
     report->report_vsync(crtc_id);
     Frame& frame = completed_page_flips[crtc_id];
