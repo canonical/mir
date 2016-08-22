@@ -58,8 +58,6 @@ public:
 
     virtual geometry::Size size() const override;
 
-//    virtual geometry::Stride stride() const override;
-
     virtual MirPixelFormat pixel_format() const override;
 
     virtual std::shared_ptr<NativeBuffer> native_buffer_handle() const override;

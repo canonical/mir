@@ -75,8 +75,11 @@ protected:
         native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
+        anwb.stride = stride.as_int();
         ON_CALL(*native_buffer, handle())
             .WillByDefault(Return(native_buffer_handle.get()));
+        ON_CALL(*native_buffer, anwb())
+            .WillByDefault(Return(&anwb));
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
         ON_CALL(*mock_buffer, stride())
@@ -85,6 +88,7 @@ protected:
         quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context);
     }
 
+    ANativeWindowBuffer anwb;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
     std::shared_ptr<mtd::StubBufferAllocator> stub_buffer_allocator;
     std::shared_ptr<mtd::StubDisplayBuilder> stub_display_builder;
@@ -120,8 +124,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     for (auto i = 0u; i < num_ints; i++)
         EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]));
 
-    EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(Return(stride));
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
@@ -165,8 +167,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
             .Times(1);
     }
 
-    EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(Return(stride));
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
@@ -207,8 +207,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
             .Times(1);
     }
 
-    EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(Return(stride));
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
