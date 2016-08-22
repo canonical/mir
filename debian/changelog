@@ -1,4 +1,4 @@
-mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
     - ABI summary:
@@ -100,7 +100,7 @@ mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
       . Mir build and test failures with gcc-6 and LTO (LP: #1610215)
       . [regression] Trust prompt not shown when starting camera (LP: #1612256)
  
- -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 07 Jul 2016 09:30:44 -0400
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 15 Aug 2016 16:29:03 +0000
 
 mir (0.23.5+16.10.20160729-0ubuntu2) yakkety; urgency=medium
 
