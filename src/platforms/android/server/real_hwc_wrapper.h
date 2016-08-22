@@ -52,7 +52,7 @@ public:
 
     void subscribe_to_events(
         void const* subscriber,
-        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
+        std::function<void(DisplayName, graphics::Timestamp)> const& vsync_callback,
         std::function<void(DisplayName, bool)> const& hotplug_callback,
         std::function<void()> const& invalidate_callback) override;
     void unsubscribe_from_events(void const* subscriber) noexcept override;
@@ -71,7 +71,7 @@ public:
     ConfigId active_config_for(DisplayName name) const override;
     void set_active_config(DisplayName name, ConfigId id) const override;
 
-    void vsync(DisplayName, std::chrono::nanoseconds) noexcept;
+    void vsync(DisplayName, graphics::Timestamp) noexcept;
     void hotplug(DisplayName, bool) noexcept;
     void invalidate() noexcept;
 
@@ -82,7 +82,7 @@ private:
     std::mutex callback_map_lock;
     struct Callbacks
     {
-        std::function<void(DisplayName, std::chrono::nanoseconds)> vsync;
+        std::function<void(DisplayName, graphics::Timestamp)> vsync;
         std::function<void(DisplayName, bool)> hotplug;
         std::function<void()> invalidate;
     };

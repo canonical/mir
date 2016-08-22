@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/frame.h"
 #include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
@@ -91,7 +92,7 @@ public:
 
 private:
     void on_hotplug();
-    void on_vsync(DisplayName) const;
+    void on_vsync(DisplayName, graphics::Timestamp) const;
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;

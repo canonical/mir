@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/frame.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
@@ -151,7 +152,9 @@ mga::Display::Display(
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
         std::bind(&mga::Display::on_hotplug, this),
-        std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
+        std::bind(&mga::Display::on_vsync, this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2))},
     config(
         hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
@@ -296,7 +299,7 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name) const
+void mga::Display::on_vsync(DisplayName name, mg::Timestamp) const
 {
     display_report->report_vsync(as_output_id(name).as_value());
 }
@@ -361,5 +364,5 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 
 mg::Frame mga::Display::last_frame_on(unsigned) const
 {
-    return {}; // TODO by duflu
+    return {}; // TODO: get this from on_vsync above
 }

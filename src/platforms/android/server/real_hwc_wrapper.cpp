@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/frame.h"
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
 #include "display_device_exceptions.h"
@@ -24,6 +25,7 @@
 #include <sstream>
 #include <algorithm>
 
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
 namespace
@@ -66,7 +68,8 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
     mga::HwcCallbacks const* callbacks{nullptr};
     std::unique_lock<std::mutex> lk(callback_lock);
     if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
-        callbacks->self->vsync(display_name(display), std::chrono::nanoseconds{timestamp});
+        callbacks->self->vsync(display_name(display),
+                               mg::Timestamp{CLOCK_MONOTONIC, timestamp});
 }
 
 static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)
@@ -185,7 +188,7 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
 
 void mga::RealHwcWrapper::subscribe_to_events(
         void const* subscriber,
-        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync,
+        std::function<void(DisplayName, mg::Timestamp)> const& vsync,
         std::function<void(DisplayName, bool)> const& hotplug,
         std::function<void()> const& invalidate)
 {
@@ -201,7 +204,7 @@ void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexce
         callback_map.erase(it);
 }
 
-void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp) noexcept
+void mga::RealHwcWrapper::vsync(DisplayName name, mg::Timestamp timestamp) noexcept
 {
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)

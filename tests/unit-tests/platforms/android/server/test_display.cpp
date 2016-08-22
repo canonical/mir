@@ -893,7 +893,7 @@ TEST_F(Display, configures_external_display)
 TEST_F(Display, reports_vsync)
 {
     using namespace testing;
-    std::function<void(mga::DisplayName)> vsync_fn = [](mga::DisplayName){};
+    std::function<void(mga::DisplayName, mg::Timestamp)> vsync_fn = [](mga::DisplayName, mg::Timestamp){};
     auto report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     EXPECT_CALL(*report, report_vsync(_));
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
@@ -910,7 +910,7 @@ TEST_F(Display, reports_vsync)
         null_anw_report,
         mga::OverlayOptimization::enabled);
 
-    vsync_fn(mga::DisplayName::primary);
+    vsync_fn(mga::DisplayName::primary, {});
 }
 
 TEST_F(Display, reports_correct_card_information)
