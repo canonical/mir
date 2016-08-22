@@ -644,28 +644,23 @@ try
 {
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-    auto id = rs->stream_id();
-
-    if (id >= 0)
-    {
         MirBufferStream* stream = nullptr;
 
-        auto wh = rs->create_client_buffer_stream(
-            width,
-            height,
-            mir_pixel_format_argb_8888,
-            mir_buffer_usage_hardware,
-            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-            &stream);
-        wh->wait_for_all();
+    auto wh = rs->create_client_buffer_stream(
+        width,
+        height,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
+        &stream);
+    wh->wait_for_all();
 
-        ContentInfo info{{displacement_x, displacement_y}, id, {}};
+    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id(), {}};
 
-        if (spec->streams.is_set())
-            spec->streams.value().push_back(info);
-        else
-            spec->streams = std::vector<ContentInfo>{info};
-    }
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
 #if 0
     if (spec->render_surfaces.is_set())
         spec->render_surfaces.value().push_back(rs);

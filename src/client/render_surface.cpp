@@ -28,6 +28,7 @@
 #include "lttng/perf_report.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_surface.h"
+#include "mir/client_platform.h"
 
 #include <algorithm>
 #include <unistd.h>
@@ -190,6 +191,7 @@ void mcl::RenderSurface::stream_created(StreamCreationRequest* request_raw)
         id = protobuf_bs->id().value();
         surface_map->insert(mf::BufferStreamId(id), stream);
 
+        platform->use_egl_native_window(wrapped_native_window, stream.get());
         if (request->callback)
             request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
         request->wh->result_received();

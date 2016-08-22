@@ -125,7 +125,6 @@ int main(int argc, char *argv[])
 
     do
     {
-        printf("here %d\n", num_frames);
         glClearColor(red.r, red.g, red.b, red.a);
         glClear(GL_COLOR_BUFFER_BIT);
         eglSwapBuffers(egldisplay, eglsurface);
