@@ -19,6 +19,8 @@ target_link_libraries(
 
   client_platform_common
   server_platform_common
+  mirclient-static
+  mirclientlttng-static
 )
 
 if (MIR_RUN_UNIT_TESTS)

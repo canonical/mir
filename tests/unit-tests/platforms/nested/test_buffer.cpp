@@ -17,8 +17,10 @@
  */
 
 #include "src/server/graphics/nested/buffer.h"
+#include "src/client/buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/stub_host_connection.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir_toolkit/client_types_nbs.h"
@@ -47,13 +49,22 @@ struct NestedBuffer : Test
     NestedBuffer()
     {
         ON_CALL(mock_connection, create_buffer(_))
-            .WillByDefault(Return(buffer));
-        ON_CALL(mock_connection, get_graphics_region(_))
-            .WillByDefault(Return(region));
+            .WillByDefault(Return(mirbuffer));
+        ON_CALL(*client_buffer, stride())
+            .WillByDefault(Return(geom::Stride{stride_with_padding}));
+        ON_CALL(*client_buffer, size())
+            .WillByDefault(Return(properties.size));
+        ON_CALL(*client_buffer, pixel_format())
+            .WillByDefault(Return(properties.format));
     }
     NiceMock<MockHostConnection> mock_connection;
     mg::BufferProperties properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
-    std::shared_ptr<MirBuffer> buffer;
+
+    std::shared_ptr<mtd::MockClientBuffer> client_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+    std::shared_ptr<mir::client::MirBuffer> buffer = std::make_shared<mir::client::Buffer>(
+        nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_software);
+    std::shared_ptr<MirBuffer> mirbuffer { reinterpret_cast<MirBuffer*>(buffer.get()), [](auto){}};
+
     unsigned int data = 0x11111111;
     int stride_with_padding = properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format) + 4;
     MirGraphicsRegion region {
@@ -66,7 +77,7 @@ struct NestedBuffer : Test
 TEST_F(NestedBuffer, creates_buffer_when_constructed)
 {
     EXPECT_CALL(mock_connection, create_buffer(properties))
-        .WillOnce(Return(buffer));
+        .WillOnce(Return(mirbuffer));
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
 }
 
@@ -102,8 +113,7 @@ TEST_F(NestedBuffer, writes_to_region)
     };
 
     EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .Times(2)
-        .WillRepeatedly(Return(region));
+        .WillOnce(Return(region));
 
     unsigned int new_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
@@ -114,9 +124,6 @@ TEST_F(NestedBuffer, writes_to_region)
 //mg::Buffer::write could be improved so that the user doesn't have to generate potentially large buffers.
 TEST_F(NestedBuffer, throws_if_incorrect_sizing)
 {
-    EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .Times(1);
-
     auto too_large_size = 4 * sizeof(data);
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     EXPECT_THROW({
@@ -127,8 +134,8 @@ TEST_F(NestedBuffer, throws_if_incorrect_sizing)
 TEST_F(NestedBuffer, reads_from_region)
 {
     EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .Times(2)
-        .WillRepeatedly(Return(region));
+        .Times(1)
+        .WillOnce(Return(region));
 
     unsigned int read_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
