@@ -57,7 +57,6 @@ protected:
 
         stub_display_builder = std::make_shared<mtd::StubDisplayBuilder>();
         stub_display_report = mr::null_display_report();
-        stride = geom::Stride(300*4);
 
         num_ints = 43;
         num_fds = 55;
@@ -72,10 +71,10 @@ protected:
             native_buffer_handle->data[i] = i;
         }
 
-        native_buffer = std::make_shared<mtd::MockAndroidNativeBuffer>();
+        native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
-        anwb.stride = stride.as_int();
+        anwb.stride = pixel_stride.as_int();
         ON_CALL(*native_buffer, handle())
             .WillByDefault(Return(native_buffer_handle.get()));
         ON_CALL(*native_buffer, anwb())
@@ -83,7 +82,9 @@ protected:
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
         ON_CALL(*mock_buffer, stride())
-            .WillByDefault(Return(stride));
+            .WillByDefault(Return(byte_stride));
+        ON_CALL(*mock_buffer, pixel_format())
+            .WillByDefault(Return(format));
 
         quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context);
     }
@@ -99,7 +100,9 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mtd::NullGLContext context;
     std::shared_ptr<mga::DeviceQuirks> quirks;
-    geom::Stride stride;
+    MirPixelFormat const format = mir_pixel_format_abgr_8888; 
+    geom::Stride const pixel_stride { 300 };
+    geom::Stride const byte_stride { 300 * MIR_BYTES_PER_PIXEL(format) };
     unsigned int num_ints, num_fds;
 };
 
@@ -127,7 +130,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(byte_stride))
         .Times(1);
 #endif
 
@@ -170,7 +173,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(byte_stride))
         .Times(1);
 #endif
 
@@ -210,7 +213,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
 #ifndef __clang__
     // FIXME: Why can't clang compile this on yakkety (with the
     //        gcc6 headers)? (LP: #1609612)
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(byte_stride))
         .Times(1);
 #endif
 
