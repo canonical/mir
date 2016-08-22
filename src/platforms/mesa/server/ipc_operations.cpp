@@ -85,9 +85,7 @@ void mgm::IpcOperations::pack_buffer(
             packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        auto native_buffer = const_cast<mg::Buffer*>(&buffer)->native_buffer_base();
-        if (auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(native_buffer))
-            packer.pack_stride(pixel_source->stride());
+        packer.pack_stride(mir::geometry::Stride{native_handle->stride});
         packer.pack_flags(native_handle->flags);
         packer.pack_size(buffer.size());
     }

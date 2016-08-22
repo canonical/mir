@@ -132,8 +132,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                 }
 
                 auto native_buffer = const_cast<mg::Buffer*>(&buffer)->native_buffer_base();
-                if (auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(native_buffer))
-                    packer.pack_stride(pixel_source->stride());
+                packer.pack_stride(geom::Stride{native_handle->stride});
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }
