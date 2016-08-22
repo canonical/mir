@@ -62,7 +62,7 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
             msg.pack_data(buffer_handle->data[offset++]);
         }
 
-        msg.pack_stride(buffer.stride());
+//        msg.pack_stride(buffer.stride());
         msg.pack_size(buffer.size());
     }
 }

@@ -136,7 +136,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
             message.pack_data(static_cast<int>(native_handle->properties.usage));
             message.pack_data(native_handle->data);
             message.pack_fd(native_handle->fd);
-            message.pack_stride(buffer.stride());
+            message.pack_stride(geom::Stride{buffer.size().width.as_int() * 4});
             message.pack_size(buffer.size());
         }
     }
