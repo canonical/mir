@@ -89,7 +89,8 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
         mir_orientation_normal,
         1.0f,
         mir_form_factor_phone,
-        mir_subpixel_arrangement_unknown
+        mir_subpixel_arrangement_unknown,
+        {}
     };
 }
 

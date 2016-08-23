@@ -111,7 +111,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 mir_output.orientation,
                 local_config.scale,
                 local_config.form_factor,
-                local_config.subpixel_arrangement
+                local_config.subpixel_arrangement,
+                {} // TODO Public API gamma branch
             };
 
             f(output);
@@ -170,7 +171,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 mir_output.orientation,
                 local_config.scale,
                 local_config.form_factor,
-                local_config.subpixel_arrangement
+                local_config.subpixel_arrangement,
+                {} // TODO Public API gamma branch
             };
             UserDisplayConfigurationOutput user(output);
 

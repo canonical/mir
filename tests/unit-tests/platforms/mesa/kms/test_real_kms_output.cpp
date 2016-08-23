@@ -367,3 +367,25 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
         output.clear_crtc();
     }, std::runtime_error);
 }
+
+TEST_F(RealKMSOutputTest, drm_set_gamma)
+{
+    using namespace testing;
+
+    uint32_t const fb_id{67};
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    mg::DisplayGamma gamma{{1}, {2}, {3}};
+
+    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
+                                              1, gamma.red.data(), gamma.green.data(),
+                                              gamma.blue.data()))
+        .Times(1);
+
+    EXPECT_TRUE(output.set_crtc(fb_id));
+    output.set_gamma(gamma);
+}

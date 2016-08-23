@@ -80,6 +80,16 @@ struct DisplayConfigurationMode
 };
 
 /**
+ * Gamma values per display
+ */
+struct DisplayGamma
+{
+    std::vector<uint16_t> red;
+    std::vector<uint16_t> green;
+    std::vector<uint16_t> blue;
+};
+
+/**
  * Configuration information for a display output.
  */
 struct DisplayConfigurationOutput
@@ -124,6 +134,9 @@ struct DisplayConfigurationOutput
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
     bool valid() const;
+
+    /** The current gamma for the disaply */
+    DisplayGamma gamma;
 };
 
 /**
@@ -152,6 +165,8 @@ struct UserDisplayConfigurationOutput
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
+
+    DisplayGamma gamma;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);

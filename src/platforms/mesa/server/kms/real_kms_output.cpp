@@ -23,6 +23,9 @@
 #include "mir/log.h"
 #include <string.h> // strcmp
 
+#include <boost/throw_exception.hpp>
+#include <system_error>
+
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgk = mg::kms;
@@ -114,6 +117,7 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
         fatal_error("Output %s has no associated CRTC to set a framebuffer on",
                     mgk::connector_name(connector).c_str());
     }
+
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
@@ -271,5 +275,27 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
         power_mode = mode;
         drmModeConnectorSetProperty(drm_fd, connector_id,
                                    dpms_enum_id, mode);
+    }
+}
+
+void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
+{
+    if (!ensure_crtc())
+    {
+        fatal_error("Output %s has no associated CRTC to set a framebuffer on",
+                    mgk::connector_name(connector).c_str());
+    }
+
+    int ret;
+    if ((ret = drmModeCrtcSetGamma(
+        drm_fd,
+        current_crtc->crtc_id,
+        gamma.red.size(),
+        const_cast<uint16_t*>(gamma.red.data()),
+        const_cast<uint16_t*>(gamma.green.data()),
+        const_cast<uint16_t*>(gamma.blue.data()))) != 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
     }
 }

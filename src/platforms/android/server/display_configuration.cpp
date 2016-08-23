@@ -66,7 +66,8 @@ mg::DisplayConfigurationOutput make_virtual_config()
         mir_orientation_normal,
         scale,
         form_factor,
-        subpixel_arrangement
+        subpixel_arrangement,
+        {}
     };
 }
 }

@@ -57,6 +57,7 @@ public:
     bool has_cursor() const override;
 
     void set_power_mode(MirPowerMode mode) override;
+    void set_gamma(DisplayGamma const& gamma) override;
 
 private:
     bool ensure_crtc();
