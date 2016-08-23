@@ -113,7 +113,7 @@ private:
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 
-    AtomicFrame last_frame[(int)DisplayName::array_size];
+    AtomicFrame last_frame[DisplayName::array_size];
 };
 
 }
