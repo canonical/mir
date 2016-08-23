@@ -550,15 +550,17 @@ void mf::SessionMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    auto session = weak_session.lock();
+    {
+        auto session = weak_session.lock();
 
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_disconnect_called(session->name());
+        report->session_disconnect_called(session->name());
 
-    shell->close_session(session);
-    destroy_screencast_sessions();
+        shell->close_session(session);
+        destroy_screencast_sessions();
+    }
     weak_session.reset();
 
     done->Run();
