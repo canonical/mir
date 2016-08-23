@@ -99,6 +99,15 @@ mga::HwcBlankingControl::HwcBlankingControl(
 {
 }
 
+mga::HwcBlankingControl::HwcBlankingControl(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
+    MirPixelFormat format) :
+    hwc_device{hwc_device},
+    off{false},
+    format{format}
+{
+}
+
 void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
 {
     if (mode_request == mir_power_mode_on)
@@ -149,7 +158,7 @@ mg::DisplayConfigurationOutput populate_config(
         type = mg::DisplayConfigurationOutputType::displayport;
         form_factor = mir_form_factor_monitor;
     }
-    
+
     return {
         as_output_id(name),
         mg::DisplayConfigurationCardId{0},
@@ -239,7 +248,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
     {
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
+        else
             return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
