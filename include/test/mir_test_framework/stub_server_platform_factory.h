@@ -27,8 +27,6 @@
 #include <memory>
 #include <string>
 
-namespace geom = mir::geometry;
-
 namespace mir
 {
 namespace input
@@ -41,9 +39,9 @@ namespace mir_test_framework
 {
 class FakeInputDevice;
 
-std::shared_ptr<mir::graphics::Platform> make_stubbed_server_graphics_platform(std::vector<geom::Rectangle> const& display_rects);
+std::shared_ptr<mir::graphics::Platform> make_stubbed_server_graphics_platform(std::vector<mir::geometry::Rectangle> const& display_rects);
 
-void set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects);
+void set_next_display_rects(std::unique_ptr<std::vector<mir::geometry::Rectangle>>&& display_rects);
 
 void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
