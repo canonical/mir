@@ -129,12 +129,6 @@ mir::geometry::Size mcl::Buffer::size() const
 {
     return buffer->size();
 }
-
-mir::geometry::Stride mcl::Buffer::stride() const
-{
-    return buffer->stride();
-}
-
 std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
 {
     return buffer;

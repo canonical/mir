@@ -92,13 +92,14 @@ public:
     void secure_for_render() override
     {
     }
-private:
+
+protected:
     mgn::Buffer& buffer;
     std::shared_ptr<MirBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
+private:
     std::shared_ptr<mgn::EglImageFactory> const factory;
     mg::EGLExtensions egl_extensions;
-
     typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
     std::map<DispContextPair, std::unique_ptr<EGLImageKHR>> egl_image_map;
 };
@@ -114,9 +115,6 @@ public:
         std::shared_ptr<mgn::HostConnection> const& connection,
         std::shared_ptr<mgn::EglImageFactory> const& factory) :
         TextureAccess(buffer, native_buffer, connection, factory),
-        buffer(buffer),
-        native_buffer(native_buffer),
-        connection(connection),
         stride_(geom::Stride{connection->get_graphics_region(native_buffer.get()).stride})
     {
     }
@@ -152,9 +150,6 @@ public:
     }
 
 private:
-    mgn::Buffer& buffer;
-    std::shared_ptr<MirBuffer> const native_buffer;
-    std::shared_ptr<mgn::HostConnection> const connection;
     geom::Stride const stride_;
 };
 
@@ -167,6 +162,7 @@ std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::Buffer
     else if (usage == mg::BufferUsage::hardware)
         return std::make_shared<TextureAccess>(*this, buffer, connection, factory);
     else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
         return nullptr;
 }
 
