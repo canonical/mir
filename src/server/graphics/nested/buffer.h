@@ -22,7 +22,6 @@
 #include "mir/renderer/gl/texture_source.h"
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir/graphics/buffer_basic.h"
-#include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include <memory>
@@ -37,9 +36,7 @@ namespace nested
 {
 class HostConnection;
 class EglImageFactory;
-class Buffer : public BufferBasic,
-               public NativeBufferBase,
-               public renderer::gl::TextureSource
+class Buffer : public BufferBasic
 {
 public:
     Buffer(
@@ -51,22 +48,14 @@ public:
     geometry::Size size() const override;
     MirPixelFormat pixel_format() const override;
     NativeBufferBase* native_buffer_base() override;
-    void gl_bind_to_texture() override;
-    void bind() override;
-    void secure_for_render() override;
 
 private:
     std::shared_ptr<NativeBufferBase> create_native_base(BufferUsage const usage);
 
-    EGLExtensions egl_extensions;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<EglImageFactory> const factory;
     std::shared_ptr<MirBuffer> buffer;
     std::shared_ptr<NativeBufferBase> const native_base;
-    geometry::Stride const stride_;
-
-    typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
-    std::map<DispContextPair, std::unique_ptr<EGLImageKHR>> egl_image_map;
 };
 }
 }

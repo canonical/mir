@@ -21,6 +21,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "buffer.h"
 #include "egl_image_factory.h"
+#include "mir/graphics/egl_extensions.h"
 
 #include <chrono>
 #include <string.h>
@@ -30,6 +31,7 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mrs = mir::renderer::software;
+namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
 namespace
@@ -85,12 +87,81 @@ private:
     std::shared_ptr<mgn::HostConnection> const connection;
     geom::Stride const stride_;
 };
+
+
+class TextureAccess :
+    public mg::NativeBufferBase,
+    public mrg::TextureSource
+{
+public:
+    TextureAccess(
+        mgn::Buffer& buffer,
+        std::shared_ptr<MirBuffer> const& native_buffer,
+        std::shared_ptr<mgn::HostConnection> const& connection,
+        std::shared_ptr<mgn::EglImageFactory> const& factory) :
+        buffer(buffer),
+        native_buffer(native_buffer),
+        connection(connection),
+        factory(factory)
+    {
+    }
+
+    void bind() override
+    {
+        DispContextPair current
+        {
+            eglGetCurrentDisplay(),
+            eglGetCurrentContext()
+        };
+
+        EGLImageKHR image;
+        auto it = egl_image_map.find(current);
+        if (it == egl_image_map.end())
+        {
+            static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+            auto i = factory->create_egl_image_from(native_buffer.get(), current.first, image_attrs);
+            image = *i;
+            egl_image_map[current] = std::move(i);
+        }
+        else
+        {
+            image = *(it->second);
+        }
+
+        mir_buffer_wait_for_access(
+            native_buffer.get(),
+            mir_read,
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
+        egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+    }
+
+    void gl_bind_to_texture() override
+    {
+        bind();
+    }
+
+    void secure_for_render() override
+    {
+    }
+private:
+    mgn::Buffer& buffer;
+    std::shared_ptr<MirBuffer> const native_buffer;
+    std::shared_ptr<mgn::HostConnection> const connection;
+    std::shared_ptr<mgn::EglImageFactory> const factory;
+    mg::EGLExtensions egl_extensions;
+
+    typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
+    std::map<DispContextPair, std::unique_ptr<EGLImageKHR>> egl_image_map;
+};
+
 }
 
 std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
 {
     if (usage == mg::BufferUsage::software)
         return std::make_shared<PixelAccess>(*this, buffer, connection);
+    else if (usage == mg::BufferUsage::hardware)
+        return std::make_shared<TextureAccess>(*this, buffer, connection, factory);
     else
         return nullptr;
 }
@@ -123,44 +194,6 @@ MirPixelFormat mgn::Buffer::pixel_format() const
 
 mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
 {
-    return this;
     return native_base.get();
 }
 
-void mgn::Buffer::bind()
-{
-    DispContextPair current
-    {
-        eglGetCurrentDisplay(),
-        eglGetCurrentContext()
-    };
-
-    EGLImageKHR image;
-    auto it = egl_image_map.find(current);
-    if (it == egl_image_map.end())
-    {
-        static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-        auto i = factory->create_egl_image_from(buffer.get(), current.first, image_attrs);
-        image = *i;
-        egl_image_map[current] = std::move(i);
-    }
-    else
-    {
-        image = *(it->second);
-    }
-
-    mir_buffer_wait_for_access(
-        buffer.get(),
-        mir_read,
-        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
-    egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-}
-
-void mgn::Buffer::gl_bind_to_texture()
-{
-    bind();
-}
-
-void mgn::Buffer::secure_for_render()
-{
-}
