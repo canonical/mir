@@ -95,12 +95,9 @@ public:
 TEST_F(HalComponentFactory, builds_hwc_version_10)
 {
     using namespace testing;
-    Sequence seq;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .InSequence(seq);
     EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
-        .InSequence(seq)
         .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc10)));
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc10));
 
     mga::HalComponentFactory factory(
@@ -113,11 +110,7 @@ TEST_F(HalComponentFactory, builds_hwc_version_10)
 TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
 {
     using namespace testing;
-    Sequence seq;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .InSequence(seq);
     EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
-        .InSequence(seq)
         .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc11)));
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc11));
 
@@ -174,12 +167,9 @@ TEST_F(HalComponentFactory, allocates_correct_hwc_configuration_for_hwc_version_
 TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
 {
     using namespace testing;
-    Sequence seq;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .InSequence(seq);
     EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
-        .InSequence(seq)
         .WillOnce(Throw(std::runtime_error("")));
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_legacy_fb_module());
 
     mga::HalComponentFactory factory(
@@ -192,12 +182,9 @@ TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
 TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
 {
     using namespace testing;
-    Sequence seq;
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .InSequence(seq)
-        .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
-        .InSequence(seq)
+        .WillOnce(Throw(std::runtime_error("")));
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_THROW({
@@ -212,14 +199,11 @@ TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
 TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
 {
     using namespace testing;
-    Sequence seq;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+        .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .InSequence(seq)
         .WillOnce(Return(std::make_shared<mtd::MockFBHalDevice>(
             0, 0, mir_pixel_format_abgr_8888, 0, 0.0, 0.0)));
-    EXPECT_CALL(*mock_resource_factory, create_hwc_wrapper(_))
-        .InSequence(seq)
-        .WillOnce(Throw(std::runtime_error("")));
 
     mga::HalComponentFactory factory(
         mock_resource_factory,
@@ -238,11 +222,11 @@ TEST_F(HalComponentFactory, doesnt_complain_if_version_is_supported)
 {
     using namespace testing;
     auto supported_versions = {
-        mga::HwcVersion::hwc10,
-        mga::HwcVersion::hwc11,
-        mga::HwcVersion::hwc12,
-        mga::HwcVersion::hwc13,
-        mga::HwcVersion::hwc14,
+        mga::HwcVersion::hwc10, 
+        mga::HwcVersion::hwc11, 
+        mga::HwcVersion::hwc12, 
+        mga::HwcVersion::hwc13, 
+        mga::HwcVersion::hwc14, 
         mga::HwcVersion::hwc15 };
     for (auto supported_version : supported_versions)
     {
