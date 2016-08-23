@@ -174,20 +174,15 @@ TEST_F(NestedBuffer, binds_to_texture)
 
 TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
 {
-    int fake_display1 = 112;
     int fake_context1 = 113;
-    int fake_display2 = 114;
-    int fake_context2 = 115;
+    int fake_context2 = 114;
 
     mgn::Buffer buffer(mt::fake_shared(mock_connection), mt::fake_shared(mock_image_factory), properties);
     auto texture_source = dynamic_cast<mir::renderer::gl::TextureSource*>(buffer.native_buffer_base());
     ASSERT_THAT(texture_source, Ne(nullptr));
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-        .Times(3)
-        .WillOnce(Return(&fake_display1))
-        .WillOnce(Return(&fake_display1))
-        .WillOnce(Return(&fake_display2));
+        .Times(3);
     EXPECT_CALL(mock_egl, eglGetCurrentContext())
         .Times(3)
         .WillOnce(Return(&fake_context1))
