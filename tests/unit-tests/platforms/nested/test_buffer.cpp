@@ -139,11 +139,11 @@ TEST_F(NestedBuffer, writes_to_region)
         sw_properties.format, reinterpret_cast<char*>(&data)
     };
 
+    unsigned int new_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), mt::fake_shared(mock_image_factory), sw_properties);
 
     EXPECT_CALL(mock_connection, get_graphics_region(_))
         .WillOnce(Return(region));
-    unsigned int new_data = 0x11111111;
     auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
     ASSERT_THAT(pixel_source, Ne(nullptr));
     pixel_source->write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));

@@ -363,7 +363,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
-    mir_buffer_wait_fence;
+    mir_buffer_wait_for_access;
     mir_buffer_get_native_buffer;
     mir_buffer_get_graphics_region;
     mir_buffer_set_callback;

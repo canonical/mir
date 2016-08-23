@@ -16,13 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "host_connection.h"
-#include "mir_toolkit/mir_buffer.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/renderer/gl/texture_source.h"
+#include "mir/graphics/egl_extensions.h"
+#include "mir_toolkit/mir_buffer.h"
+#include "host_connection.h"
 #include "buffer.h"
 #include "egl_image_factory.h"
-#include "mir/graphics/egl_extensions.h"
 
+#include <map>
 #include <chrono>
 #include <string.h>
 #include <boost/throw_exception.hpp>
@@ -36,8 +38,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-
 class TextureAccess :
     public mg::NativeBufferBase,
     public mrg::TextureSource
@@ -57,6 +57,11 @@ public:
 
     void bind() override
     {
+        mir_buffer_wait_for_access(
+            native_buffer.get(),
+            mir_read,
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
+
         DispContextPair current
         {
             eglGetCurrentDisplay(),
@@ -77,10 +82,6 @@ public:
             image = *(it->second);
         }
 
-        mir_buffer_wait_for_access(
-            native_buffer.get(),
-            mir_read,
-            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
         egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     }
 
@@ -152,7 +153,6 @@ public:
 private:
     geom::Stride const stride_;
 };
-
 }
 
 std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
@@ -163,7 +163,6 @@ std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::Buffer
         return std::make_shared<TextureAccess>(*this, buffer, connection, factory);
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
-        return nullptr;
 }
 
 mgn::Buffer::Buffer(
@@ -196,4 +195,3 @@ mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
 {
     return native_base.get();
 }
-

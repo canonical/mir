@@ -19,13 +19,11 @@
 #ifndef MIR_GRAPHICS_NESTED_BUFFER_H_
 #define MIR_GRAPHICS_NESTED_BUFFER_H_
 
-#include "mir/renderer/gl/texture_source.h"
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include <memory>
-#include <map>
 
 namespace mir
 {
