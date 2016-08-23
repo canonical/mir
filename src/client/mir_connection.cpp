@@ -1274,13 +1274,22 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-MirRenderSurface* MirConnection::create_render_surface()
+MirRenderSurface* MirConnection::create_render_surface(int const width, int const height, MirPixelFormat const format)
 {
     auto egl_native_window = platform->create_egl_native_window(nullptr);
 
     std::shared_ptr<MirRenderSurface> rs {nullptr};
     rs = std::make_shared<mcl::RenderSurface>(
-        this, server, surface_map, egl_native_window, nbuffers, platform, buffer_factory, logger);
+        width, height,
+        format,
+        this,
+        server,
+        surface_map,
+        egl_native_window,
+        nbuffers,
+        platform,
+        buffer_factory,
+        logger);
     surface_map->insert(egl_native_window.get(), rs);
 
     return static_cast<MirRenderSurface*>(egl_native_window.get());
@@ -1288,5 +1297,11 @@ MirRenderSurface* MirConnection::create_render_surface()
 
 void MirConnection::release_render_surface(MirRenderSurface* render_surface)
 {
+    auto rs = surface_map->render_surface(render_surface);
+    if (rs->autorelease_content())
+    {
+        rs->release_buffer_stream(nullptr, nullptr);
+    }
+
     surface_map->erase(static_cast<void*>(render_surface));
 }

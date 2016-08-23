@@ -637,21 +637,18 @@ catch (std::exception const& ex)
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     int /*scaled_width*/, int /*scaled_height*/,
-    int width, int height,
     int displacement_x, int displacement_y,
     MirRenderSurface* render_surface)
 try
 {
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-        MirBufferStream* stream = nullptr;
+    MirBufferStream* stream = nullptr;
 
     auto wh = rs->create_client_buffer_stream(
-        width,
-        height,
-        mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result),
+        true,
         &stream);
     wh->wait_for_all();
 

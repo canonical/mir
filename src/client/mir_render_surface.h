@@ -22,14 +22,13 @@
 
 #include "mir_toolkit/mir_render_surface.h"
 
-/*namespace mir
+namespace mir
 {
 namespace client
 {
 class ClientBufferStream;
 }
 }
-*/
 
 class MirRenderSurface
 {
@@ -37,16 +36,17 @@ public:
     virtual ~MirRenderSurface() = default;
     virtual MirConnection* connection() const = 0;
     virtual MirWaitHandle* create_client_buffer_stream(
-        int width, int height,
-        MirPixelFormat format,
         MirBufferUsage buffer_usage,
         mir_buffer_stream_callback callback,
+        bool autorelease,
         void* context) = 0;
     virtual int stream_id() = 0;
-/*    virtual MirWaitHandle* release_buffer_stream(
-        mir::client::ClientBufferStream* stream,
+    virtual bool autorelease_content() const = 0;
+
+    virtual MirWaitHandle* release_buffer_stream(
         mir_buffer_stream_callback callback,
         void* context) = 0;
+/*
     virtual MirSurface* container() = 0;
     virtual MirEGLNativeWindowType egl_native_window() = 0;
 */

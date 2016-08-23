@@ -20,6 +20,7 @@
 #include "render_surface.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include "connection_surface_map.h"
 
 #if 0
 namespace mcl = mir::client;
@@ -36,11 +37,13 @@ void assign_result(void* result, void** context)
 #endif
 
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection)
+    MirConnection* connection,
+    int const width, int const height,
+    MirPixelFormat const format)
 try
 {
     mir::require(connection);
-    return connection->create_render_surface();
+    return connection->create_render_surface(width, height, format);
 }
 catch (std::exception const& ex)
 {
@@ -49,10 +52,13 @@ catch (std::exception const& ex)
 }
 
 bool mir_render_surface_is_valid(
+    MirConnection* connection,
     MirRenderSurface* render_surface)
 try
 {
-    mir::require(render_surface);
+    mir::require(connection &&
+                 render_surface &&
+                 connection->connection_surface_map()->render_surface(render_surface));
     return true;
 }
 catch (std::exception const& ex)
@@ -62,11 +68,12 @@ catch (std::exception const& ex)
 }
 
 void mir_render_surface_release(
+    MirConnection* connection,
     MirRenderSurface* render_surface)
 try
 {
-    mir::require(render_surface);
-    render_surface->connection()->release_render_surface(render_surface);
+    mir::require(connection && render_surface);
+    connection->release_render_surface(render_surface);
 }
 catch (std::exception const& ex)
 {

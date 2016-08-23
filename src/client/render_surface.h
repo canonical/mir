@@ -55,7 +55,9 @@ class DisplayServer;
 class RenderSurface : public MirRenderSurface
 {
 public:
-    RenderSurface(MirConnection* const connection,
+    RenderSurface(int const width, int const height,
+                  MirPixelFormat const format,
+                  MirConnection* const connection,
                   rpc::DisplayServer& display_server,
                   std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
                   std::shared_ptr<void> native_window,
@@ -65,23 +67,25 @@ public:
                   std::shared_ptr<mir::logging::Logger> mir_logger);
     MirConnection* connection() const override;
     MirWaitHandle* create_client_buffer_stream(
-        int width, int height,
-        MirPixelFormat format,
         MirBufferUsage buffer_usage,
         mir_buffer_stream_callback callback,
+        bool autorelease,
         void *context) override;
     int stream_id() override;
-#if 0
+    bool autorelease_content() const override;
+
     MirWaitHandle* release_buffer_stream(
-        ClientBufferStream* stream,
         mir_buffer_stream_callback callback,
         void* context) override;
+#if 0
     void set_container(MirSurface* const surface);
     MirSurface* container() override;
     MirEGLNativeWindowType egl_native_window() override;
 #endif
 
 private:
+    int const width_, height_;
+    MirPixelFormat const format_;
     MirConnection* const connection_;
     rpc::DisplayServer& server;
     std::shared_ptr<ConnectionSurfaceMap> surface_map;
@@ -92,6 +96,8 @@ private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::unique_ptr<mir::protobuf::Void> void_response;
     MirSurface* container_;
+    bool autorelease_;
+    ClientBufferStream* stream_;
 
     struct StreamCreationRequest
     {
@@ -113,12 +119,10 @@ private:
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest* request_raw);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
-#if 0
     struct StreamRelease;
     void released(StreamRelease);
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
-#endif
 
     int id{-1};
     frontend::SurfaceId next_error_id(std::unique_lock<std::mutex> const&);

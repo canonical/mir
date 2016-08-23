@@ -72,6 +72,8 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 }
 
 mcl::RenderSurface::RenderSurface(
+    int const width, int const height,
+    MirPixelFormat const format,
     MirConnection* const connection,
     mclr::DisplayServer& display_server,
     std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
@@ -80,6 +82,9 @@ mcl::RenderSurface::RenderSurface(
     std::shared_ptr<ClientPlatform> client_platform,
     std::shared_ptr<AsyncBufferFactory> async_buffer_factory,
     std::shared_ptr<ml::Logger> mir_logger) :
+        width_(width),
+        height_(height),
+        format_(format),
         connection_(connection),
         server(display_server),
         surface_map(connection_surface_map),
@@ -89,7 +94,9 @@ mcl::RenderSurface::RenderSurface(
         buffer_factory(async_buffer_factory),
         logger(mir_logger),
         void_response(mcl::make_protobuf_object<mp::Void>()),
-        container_(nullptr)
+        container_(nullptr),
+        autorelease_(false),
+        stream_(nullptr)
 {
 }
 
@@ -99,17 +106,18 @@ MirConnection* mcl::RenderSurface::connection() const
 }
 
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
-    int width, int height,
-    MirPixelFormat format,
     MirBufferUsage buffer_usage,
     mir_buffer_stream_callback callback,
+    bool autorelease,
     void* context)
 {
     mp::BufferStreamParameters params;
-    params.set_width(width);
-    params.set_height(height);
-    params.set_pixel_format(format);
+    params.set_width(width_);
+    params.set_height(height_);
+    params.set_pixel_format(format_);
     params.set_buffer_usage(buffer_usage);
+
+    autorelease_ = autorelease;
 
     auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
     request->wh->expect_result();
@@ -191,6 +199,7 @@ void mcl::RenderSurface::stream_created(StreamCreationRequest* request_raw)
         id = protobuf_bs->id().value();
         surface_map->insert(mf::BufferStreamId(id), stream);
 
+        stream_ = stream.get();
         platform->use_egl_native_window(wrapped_native_window, stream.get());
         if (request->callback)
             request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
@@ -212,7 +221,11 @@ int mcl::RenderSurface::stream_id()
     return id;
 }
 
-#if 0
+bool mcl::RenderSurface::autorelease_content() const
+{
+    return autorelease_;
+}
+
 struct mcl::RenderSurface::StreamRelease
 {
     ClientBufferStream* stream;
@@ -223,16 +236,15 @@ struct mcl::RenderSurface::StreamRelease
 };
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
-    ClientBufferStream* stream,
     mir_buffer_stream_callback callback,
     void* context)
 {
     auto new_wait_handle = new MirWaitHandle;
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value() };
+    StreamRelease stream_release{stream_, new_wait_handle, callback, context, stream_->rpc_id().as_value() };
 
     mp::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(stream->rpc_id().as_value());
+    buffer_stream_id.set_value(stream_->rpc_id().as_value());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
@@ -252,9 +264,11 @@ void mcl::RenderSurface::released(StreamRelease data)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     if (data.handle)
         data.handle->result_received();
+    stream_ = nullptr;
     surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
+#if 0
 void mcl::RenderSurface::set_container(MirSurface* const surface)
 {
     container_ = surface;

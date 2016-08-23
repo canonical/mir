@@ -31,18 +31,21 @@ extern "C" {
 #endif
 
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection);
+    MirConnection* connection,
+    int const width, int const height,
+    MirPixelFormat const format);
 
 bool mir_render_surface_is_valid(
+    MirConnection* connection,
     MirRenderSurface* render_surface);
 
 void mir_render_surface_release(
+    MirConnection* connection,
     MirRenderSurface* render_surface);
 
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     int scaled_width, int scaled_height,
-    int width, int height,
     int displacement_x, int displacement_y,
     MirRenderSurface* render_surface);
 
