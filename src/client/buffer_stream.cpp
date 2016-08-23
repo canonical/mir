@@ -450,7 +450,15 @@ mcl::BufferStream::BufferStream(
     }
 
     if (protobuf_bs->has_error())
+    {
+        if (protobuf_bs->has_buffer())
+        {
+            for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+                ::close(protobuf_bs->buffer().fd(i));
+        }
+
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+    }
 
     try
     {
@@ -541,7 +549,6 @@ mcl::BufferStream::BufferStream(
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
-    egl_native_window_ = client_platform->create_egl_native_window(this);
     if (protobuf_bs->has_buffer())
     {
         buffer_depository = std::make_unique<ExchangeSemantics>(
@@ -559,6 +566,8 @@ mcl::BufferStream::BufferStream(
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
+
+    egl_native_window_ = client_platform->create_egl_native_window(this);
 }
 
 mcl::BufferStream::~BufferStream()

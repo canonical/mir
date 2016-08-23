@@ -18,9 +18,11 @@
 
 #include "src/platforms/mesa/server/ipc_operations.h"
 #include "src/platforms/mesa/server/drm_authentication.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_buffer.h"
@@ -53,13 +55,12 @@ struct IpcOperations : public ::testing::Test
         using namespace testing;
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mt::fake_shared(native_handle)));
-        ON_CALL(mock_buffer, stride())
-            .WillByDefault(Return(dummy_stride));
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(dummy_size));
 
         native_handle.data_items = 4;
         native_handle.fd_items = 2;
+        native_handle.stride = dummy_stride.as_int();
         for(auto i=0; i < mir_buffer_package_max; i++)
         {
             native_handle.fd[i] = i;
@@ -69,7 +70,7 @@ struct IpcOperations : public ::testing::Test
 
     MockDRMOperations mock_drm_ops;
     mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops)};
-    MirBufferPackage native_handle;
+    mg::NativeBuffer native_handle;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     geom::Stride dummy_stride{4390};
     geom::Size dummy_size{123, 345};

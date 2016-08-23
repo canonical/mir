@@ -4,17 +4,11 @@ include_directories(
   ${CMAKE_SOURCE_DIR}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
 set(
   SOURCES
+
+  # Catch double-free bugs by wrapping close() and abort()ing on EBADF
+  strict_close.cpp
 
   server_configuration_wrapping.cpp
   server_configuration_options.cpp

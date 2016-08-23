@@ -28,6 +28,7 @@
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -83,7 +84,7 @@ void mgm::IpcOperations::pack_buffer(
             packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        packer.pack_stride(buffer.stride());
+        packer.pack_stride(mir::geometry::Stride{native_handle->stride});
         packer.pack_flags(native_handle->flags);
         packer.pack_size(buffer.size());
     }

@@ -23,6 +23,8 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include <memory>
 #include <map>
 
@@ -47,20 +49,20 @@ public:
 
     std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
     geometry::Size size() const override;
-    geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
-    void write(unsigned char const* pixels, size_t size) override;
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     NativeBufferBase* native_buffer_base() override;
     void gl_bind_to_texture() override;
     void bind() override;
     void secure_for_render() override;
 
 private:
+    std::shared_ptr<NativeBufferBase> create_native_base(BufferUsage const usage);
+
     EGLExtensions egl_extensions;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<EglImageFactory> const factory;
     std::shared_ptr<MirBuffer> buffer;
+    std::shared_ptr<NativeBufferBase> const native_base;
     geometry::Stride const stride_;
 
     typedef std::pair<EGLDisplay, EGLContext> DispContextPair;

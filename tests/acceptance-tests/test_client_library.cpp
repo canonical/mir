@@ -28,14 +28,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#ifdef ANDROID
-/*
- * MirNativeBuffer for Android is defined opaquely, but we now depend on
- * it having width and height fields, for all platforms. So need definition...
- */
-#include <system/window.h>  // for ANativeWindowBuffer AKA MirNativeBuffer
-#endif
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <atomic>
@@ -441,7 +433,6 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_connection_release(connection);
 }
 
-#if defined(MESA_KMS) || defined(MESA_X11)
 TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -498,14 +489,8 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_surface_spec_release(spec);
     mir_connection_release(connection);
 }
-#endif
 
-#ifdef ANDROID
-// Mir's Android test infrastructure isn't quite ready for this yet.
-TEST_F(ClientLibrary, DISABLED_gets_buffer_dimensions)
-#else
 TEST_F(ClientLibrary, gets_buffer_dimensions)
-#endif
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -725,11 +710,7 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * trying to marshall stub buffers causes crashes.
  */
 
-#ifdef ANDROID
-TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
-#else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
-#endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -756,11 +737,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
-#ifdef ANDROID
-TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
-#else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
-#endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -787,11 +764,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     mir_connection_release(connection);
 }
 
-#ifdef ANDROID
-TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_spec)
-#else
 TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
-#endif
 {
     using namespace testing;
 
@@ -823,11 +796,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_connection_release(connection);
 }
 
-#ifdef ANDROID
-TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
-#else
 TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
-#endif
 {
     using namespace testing;
 

@@ -20,6 +20,7 @@
 #include "src/platforms/mesa/client/client_buffer.h"
 #include "src/platforms/mesa/client/client_buffer_factory.h"
 #include "src/platforms/mesa/client/buffer_file_ops.h"
+#include "src/platforms/mesa/include/native_buffer.h"
 
 #include <sys/mman.h>
 #include <gmock/gmock.h>

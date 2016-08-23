@@ -1,5 +1,6 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/include/gl
+    ${PROJECT_SOURCE_DIR}/src/include/sw
 )
 
 include_directories(
