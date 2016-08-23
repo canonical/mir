@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     mir_surface_spec_set_name(spec, appname);
 
     render_surface = mir_connection_create_render_surface(connection, width, height, pixel_format);
-    CHECK(mir_render_surface_is_valid(connection, render_surface), "could not create render surface");
+    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
     mir_surface_spec_add_render_surface(spec, width, height, 0, 0, render_surface);
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    mir_render_surface_release(connection, render_surface);
+    mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 

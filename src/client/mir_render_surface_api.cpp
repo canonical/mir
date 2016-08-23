@@ -36,6 +36,44 @@ void assign_result(void* result, void** context)
 }
 #endif
 
+namespace
+{
+
+// *Native* render surface to connection
+class RenderSurfaceToConnectionMap
+{
+public:
+    void insert(void* render_surface_key, MirConnection* connection)
+    {
+        std::lock_guard<decltype(guard)> lk(guard);
+        connections[render_surface_key] = connection;
+    }
+
+    void erase(void* render_surface_key)
+    {
+        std::lock_guard<decltype(guard)> lk(guard);
+        auto conn_it = connections.find(render_surface_key);
+        if (conn_it != connections.end())
+            connections.erase(conn_it);
+    }
+
+    MirConnection* connection(void* render_surface_key) const
+    {
+        std::shared_lock<decltype(guard)> lk(guard);
+        auto const it = connections.find(render_surface_key);
+        if (it != connections.end())
+            return it->second;
+        else
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not find matching connection"));
+    }
+private:
+    std::shared_timed_mutex mutable guard;
+    std::unordered_map<void*, MirConnection*> connections;
+};
+
+RenderSurfaceToConnectionMap connection_map;
+}
+
 MirRenderSurface* mir_connection_create_render_surface(
     MirConnection* connection,
     int const width, int const height,
@@ -43,7 +81,9 @@ MirRenderSurface* mir_connection_create_render_surface(
 try
 {
     mir::require(connection);
-    return connection->create_render_surface(width, height, format);
+    auto rs = connection->create_render_surface(width, height, format);
+    connection_map.insert(static_cast<void*>(rs), connection);
+    return rs;
 }
 catch (std::exception const& ex)
 {
@@ -52,13 +92,11 @@ catch (std::exception const& ex)
 }
 
 bool mir_render_surface_is_valid(
-    MirConnection* connection,
     MirRenderSurface* render_surface)
 try
 {
-    mir::require(connection &&
-                 render_surface &&
-                 connection->connection_surface_map()->render_surface(render_surface));
+    mir::require(render_surface &&
+                 connection_map.connection(static_cast<void*>(render_surface))->connection_surface_map()->render_surface(render_surface));
     return true;
 }
 catch (std::exception const& ex)
@@ -68,12 +106,12 @@ catch (std::exception const& ex)
 }
 
 void mir_render_surface_release(
-    MirConnection* connection,
     MirRenderSurface* render_surface)
 try
 {
-    mir::require(connection && render_surface);
-    connection->release_render_surface(render_surface);
+    mir::require(render_surface);
+    connection_map.connection(static_cast<void*>(render_surface))->release_render_surface(render_surface);
+    connection_map.erase(static_cast<void*>(render_surface));
 }
 catch (std::exception const& ex)
 {

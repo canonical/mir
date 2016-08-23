@@ -36,11 +36,9 @@ MirRenderSurface* mir_connection_create_render_surface(
     MirPixelFormat const format);
 
 bool mir_render_surface_is_valid(
-    MirConnection* connection,
     MirRenderSurface* render_surface);
 
 void mir_render_surface_release(
-    MirConnection* connection,
     MirRenderSurface* render_surface);
 
 void mir_surface_spec_add_render_surface(
