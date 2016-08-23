@@ -301,6 +301,7 @@ void mga::Display::on_hotplug()
 
 void mga::Display::on_vsync(DisplayName name, mg::Timestamp) const
 {
+    // TODO: last_frame[name].increment_with_timestamp(timestamp)
     display_report->report_vsync(as_output_id(name).as_value());
 }
 
@@ -362,7 +363,7 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
     return std::make_unique<mga::PbufferGLContext>(gl_context);
 }
 
-mg::Frame mga::Display::last_frame_on(unsigned) const
+mg::Frame mga::Display::last_frame_on(unsigned output_id) const
 {
-    return {}; // TODO: get this from on_vsync above
+    return last_frame[output_id].load();
 }

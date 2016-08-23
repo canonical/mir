@@ -33,7 +33,9 @@ enum class DisplayName
 {
     primary = HWC_DISPLAY_PRIMARY,
     external = HWC_DISPLAY_EXTERNAL,
-    virt = HWC_DISPLAY_VIRTUAL
+    virt = HWC_DISPLAY_VIRTUAL,
+
+    array_size
 };
 
 inline auto as_output_id(DisplayName name) -> DisplayConfigurationOutputId

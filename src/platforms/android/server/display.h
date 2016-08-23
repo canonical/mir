@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/frame.h"
+#include "mir/graphics/atomic_frame.h"
 #include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
@@ -111,6 +112,8 @@ private:
     OverlayOptimization const overlay_option;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
+
+    AtomicFrame last_frame[(int)DisplayName::array_size];
 };
 
 }
