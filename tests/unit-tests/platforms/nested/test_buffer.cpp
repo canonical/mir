@@ -57,6 +57,8 @@ struct NestedBuffer : Test
             .WillByDefault(Return(properties.size));
         ON_CALL(*client_buffer, pixel_format())
             .WillByDefault(Return(properties.format));
+        ON_CALL(mock_connection, get_graphics_region(_))
+            .WillByDefault(Return(region));
     }
     NiceMock<MockHostConnection> mock_connection;
     mg::BufferProperties properties{{1, 1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
@@ -93,7 +95,6 @@ TEST_F(NestedBuffer, has_correct_properties)
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     EXPECT_THAT(buffer.size(), Eq(properties.size));
     EXPECT_THAT(buffer.pixel_format(), Eq(properties.format));
-    EXPECT_THAT(buffer.stride().as_int(), Eq(stride_with_padding));
 }
 
 TEST_F(NestedBuffer, no_gl_support_for_now)
@@ -128,11 +129,11 @@ TEST_F(NestedBuffer, writes_to_region)
         properties.format, reinterpret_cast<char*>(&data)
     };
 
-    EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .WillOnce(Return(region));
-
     unsigned int new_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+
+    EXPECT_CALL(mock_connection, get_graphics_region(_))
+        .WillOnce(Return(region));
     auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
     ASSERT_THAT(pixel_source, Ne(nullptr));
     pixel_source->write(reinterpret_cast<unsigned char*>(&new_data), sizeof(new_data));
@@ -141,11 +142,11 @@ TEST_F(NestedBuffer, writes_to_region)
 
 TEST_F(NestedBuffer, checks_for_null_vaddr)
 {
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+
     MirGraphicsRegion region { 1, 1, 1, properties.format, nullptr };
     EXPECT_CALL(mock_connection, get_graphics_region(_))
         .WillOnce(Return(region));
-
-    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
     auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
     ASSERT_THAT(pixel_source, Ne(nullptr));
 
@@ -169,16 +170,23 @@ TEST_F(NestedBuffer, throws_if_incorrect_sizing)
 
 TEST_F(NestedBuffer, reads_from_region)
 {
-    EXPECT_CALL(mock_connection, get_graphics_region(_))
-        .Times(1)
-        .WillOnce(Return(region));
-
     unsigned int read_data = 0x11111111;
     mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+
+    EXPECT_CALL(mock_connection, get_graphics_region(_))
+        .WillOnce(Return(region));
     auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
     ASSERT_THAT(pixel_source, Ne(nullptr));
     pixel_source->read([&] (auto pix) {
         read_data = *reinterpret_cast<decltype(data) const*>(pix);
     } );
     EXPECT_THAT(read_data, Eq(data));
+}
+
+TEST_F(NestedBuffer, has_correct_stride)
+{
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), properties);
+    auto pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer.native_buffer_base());
+    ASSERT_THAT(pixel_source, Ne(nullptr));
+    EXPECT_THAT(pixel_source->stride().as_int(), Eq(stride_with_padding));
 }

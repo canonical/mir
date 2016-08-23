@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir/graphics/buffer_basic.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include <memory>
 
@@ -32,9 +33,7 @@ class BufferProperties;
 namespace nested
 {
 class HostConnection;
-class Buffer : public BufferBasic,
-               public NativeBufferBase,
-               public renderer::software::PixelSource
+class Buffer : public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<HostConnection> const& connection, BufferProperties const& properties);
@@ -43,10 +42,6 @@ public:
     geometry::Size size() const override;
     MirPixelFormat pixel_format() const override;
     NativeBufferBase* native_buffer_base() override;
-
-    void write(unsigned char const* pixels, size_t size) override;
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
-    geometry::Stride stride() const override;
 
 private:
     std::shared_ptr<NativeBufferBase> create_native_base(BufferUsage const usage);

@@ -41,7 +41,8 @@ public:
         std::shared_ptr<mgn::HostConnection> const& connection) :
         buffer(buffer),
         native_buffer(native_buffer),
-        connection(connection)
+        connection(connection),
+        stride_(geom::Stride{connection->get_graphics_region(native_buffer.get()).stride})
     {
     }
 
@@ -56,10 +57,9 @@ public:
         if (!region.vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
-        auto stride_ = buffer.stride();
         for (int i = 0; i < region.height; i++)
         {
-            int line_offset_in_buffer = stride_.as_uint32_t() * i;
+            int line_offset_in_buffer = stride().as_uint32_t() * i;
             int line_offset_in_source = bpp * region.width * i;
             memcpy(region.vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region.width * bpp);
         }
@@ -73,14 +73,14 @@ public:
 
     geom::Stride stride() const override
     {
-        return geom::Stride{0};
-    //    return geom::Stride{mir_buffer_get_stride(buffer.get())};
+        return stride_;
     }
 
 private:
     mgn::Buffer& buffer;
     std::shared_ptr<MirBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
+    geom::Stride const stride_;
 };
 }
 
