@@ -1193,6 +1193,17 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+
+        auto red_bytes = src.gamma_red();
+        std::vector<uint16_t> red(std::begin(red_bytes), std::end(red_bytes));
+
+        auto green_bytes = src.gamma_green();
+        std::vector<uint16_t> green(std::begin(green_bytes), std::end(green_bytes));
+
+        auto blue_bytes = src.gamma_blue();
+        std::vector<uint16_t> blue(std::begin(blue_bytes), std::end(blue_bytes));
+
+        dest.gamma = {red, green, blue};
     });
 
     return config;

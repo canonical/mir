@@ -431,6 +431,14 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* outp
  */
 MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 
+/** Gets if the platform supports gamma correction
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The MirOutputGammaSupported mir_output_gamma_supported otherwise,
+ *               mir_output_gamma_unsupported
+ */
+MirOutputGammaSupported mir_output_gamma_allowed(MirOutput const* client_output);
+
 /** Get the gamma ramp of a display
  *
  * \param [in]  output  The MirOutput to query
