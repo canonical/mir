@@ -301,6 +301,11 @@ void mga::Display::on_hotplug()
 
 void mga::Display::on_vsync(DisplayName name, mg::Timestamp timestamp)
 {
+    /*
+     * XXX It's presently useful but idealistically inefficient that we
+     *     get a callback on every frame, even when the compositor is idle.
+     *     (LP: #1374318)
+     */
     last_frame[name].increment_with_timestamp(timestamp);
     display_report->report_vsync(as_output_id(name).as_value());
 }
@@ -365,5 +370,7 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 
 mg::Frame mga::Display::last_frame_on(unsigned output_id) const
 {
+    if (output_id >= sizeof(last_frame)/sizeof(last_frame[0]))
+         throw std::logic_error("last_frame_on(<invalid output_id>)");
     return last_frame[output_id].load();
 }
