@@ -116,7 +116,7 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
     t.join();
 }
 
-TEST_F(NestedDisplayBuffer, respects_passthrough_option)
+TEST_F(NestedDisplayBuffer, DISABLED_respects_passthrough_option)
 {
     auto optimizable_list = mg::RenderableList{ std::make_shared<mtd::StubRenderable>(rect) };
 
