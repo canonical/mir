@@ -645,12 +645,15 @@ try
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
     MirBufferStream* stream = nullptr;
 
-    auto wh = rs->create_client_buffer_stream(
-        mir_buffer_usage_hardware,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        true,
-        &stream);
-    wh->wait_for_all();
+    if (rs->stream_id() < 0)
+    {
+        auto wh = rs->create_client_buffer_stream(
+            mir_buffer_usage_hardware,
+            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
+            true,
+            &stream);
+        wh->wait_for_all();
+    }
 
     ContentInfo info{{displacement_x, displacement_y}, rs->stream_id(), {}};
 
