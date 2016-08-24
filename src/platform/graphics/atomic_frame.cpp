@@ -21,31 +21,32 @@
 
 namespace mir { namespace graphics {
 
-namespace {
-void log(mir::graphics::Frame const& f)
-{
-    // long long to match printf format
-    long long msc = f.msc,
-              ust = f.ust.microseconds,
-              interval = f.min_ust_interval,
-              age = f.age();
-    mir::log_debug("Frame #%lld at %lld.%06llds (%lldus ago) interval %lldus",
-                   msc, ust/1000000ULL, ust%1000000ULL, age, interval);
-}
-} // mir::graphics::anonymous namespace
-
 Frame AtomicFrame::load() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return frame;
 }
 
+void AtomicFrame::log() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    // long long to match printf format
+    long long msc = frame.msc,
+              ust = frame.ust.microseconds,
+              interval = frame.min_ust_interval,
+              age = frame.age();
+    mir::log_debug("Frame #%lld at %lld.%06llds (%lldus ago) interval %lldus",
+                   msc, ust/1000000ULL, ust%1000000ULL, age, interval);
+}
+
 void AtomicFrame::store(Frame const& f)
 {
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        frame = f;
+    }
     if (1)  // For manual testing of new graphics drivers only
-        log(f);
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    frame = f;
+        log();
 }
 
 }} // namespace mir::graphics

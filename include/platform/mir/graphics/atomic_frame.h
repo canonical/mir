@@ -30,6 +30,7 @@ public:
     Frame load() const;
     void  store(Frame const&);
 protected:
+    void log() const;
     mutable std::mutex mutex;
     Frame frame;
 };
