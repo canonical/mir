@@ -167,7 +167,7 @@ struct UserDisplayConfigurationOutput
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
 
-    DisplayGamma const& gamma;
+    DisplayGamma& gamma;
     MirOutputGammaSupported const& gamma_correction_allowed;
 };
 
