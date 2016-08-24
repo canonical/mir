@@ -16,24 +16,20 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ATOMIC_FRAME_H_
-#define MIR_GRAPHICS_ATOMIC_FRAME_H_
-
-#include "mir/graphics/frame.h"
-#include <mutex>
+#include "mir/graphics/estimate_frame.h"
 
 namespace mir { namespace graphics {
 
-class AtomicFrame
+void EstimateFrame::increment_now()
 {
-public:
-    Frame load() const;
-    void  store(Frame const&);
-protected:
-    mutable std::mutex mutex;
-    Frame frame;
-};
+    increment_with_timestamp(Timestamp::now(CLOCK_MONOTONIC));
+}
+
+void EstimateFrame::increment_with_timestamp(Timestamp t)
+{
+//    std::lock_guard<decltype(mutex)> lock(mutex);
+    // TODO
+    (void)t;
+}
 
 }} // namespace mir::graphics
-
-#endif // MIR_GRAPHICS_ATOMIC_FRAME_H_

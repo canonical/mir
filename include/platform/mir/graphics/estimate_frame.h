@@ -16,24 +16,26 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ATOMIC_FRAME_H_
-#define MIR_GRAPHICS_ATOMIC_FRAME_H_
+#ifndef MIR_GRAPHICS_ESTIMATE_FRAME_H_
+#define MIR_GRAPHICS_ESTIMATE_FRAME_H_
 
-#include "mir/graphics/frame.h"
-#include <mutex>
+#include "mir/graphics/atomic_frame.h"
 
 namespace mir { namespace graphics {
 
-class AtomicFrame
+/**
+ * EstimateFrame provides frame counting for platforms that lack some frame
+ * counting or timestamp features. The result of using EstimateFrame should
+ * be accurate enough for production use but is less ideal than using a
+ * pure AtomicFrame populated directly by the graphics driver.
+ */
+class EstimateFrame : public AtomicFrame
 {
 public:
-    Frame load() const;
-    void  store(Frame const&);
-protected:
-    mutable std::mutex mutex;
-    Frame frame;
+    void increment_now();
+    void increment_with_timestamp(Timestamp t);
 };
 
 }} // namespace mir::graphics
 
-#endif // MIR_GRAPHICS_ATOMIC_FRAME_H_
+#endif // MIR_GRAPHICS_ESTIMATE_FRAME_H_

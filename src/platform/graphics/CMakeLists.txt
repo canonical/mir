@@ -12,6 +12,7 @@ set(
   overlapping_output_grouping.cpp
   platform_probe.cpp
   atomic_frame.cpp
+  estimate_frame.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT
