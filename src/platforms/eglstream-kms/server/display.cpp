@@ -371,8 +371,7 @@ mg::Frame mge::Display::last_frame_on(unsigned) const
 {
     /*
      * TODO: Implement this properly using the hardware counters from somewhere.
-     *       Failing that, some fake frame counting in post() would suffice
-     *       to get things working.
+     *       Failing that, use the EstimateFrame class.
      */
     return {};
 }
