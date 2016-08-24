@@ -151,6 +151,21 @@ MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index);
 MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
 
 /**
+ * Get the index of the output's preferred mode.
+ *
+ * This is provided by the output itself. For modern displays (LCD, OLED, etc)
+ * it is typically a mode with the native resolution.
+ *
+ * An output may not have a preferred mode, in which case this call will return
+ * (size_t)-1.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The index of the output's preferred mode, if it has one, or
+ *              (size_t)-1 if output does not have a preferred mode.
+ */
+size_t mir_output_get_preferred_mode_index(MirOutput const* output);
+
+/**
  * Get a handle to the output's current mode.
  *
  * An output may not have a current mode (for example, if it is disabled), in
@@ -164,6 +179,18 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
  *              current mode, it returns NULL.
  */
 MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
+
+/**
+ * Get the index of to the output's current mode.
+ *
+ * An output may not have a current mode (for example, if it is disabled), in
+ * which case this call will return (size_t)-1.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The index of the output's current mode, if it has one, or
+ *              (size_t)-1 if output does not have a current mode.
+ */
+size_t mir_output_get_current_mode_index(MirOutput const* output);
 
 /**
  * Set the current mode of an output.
