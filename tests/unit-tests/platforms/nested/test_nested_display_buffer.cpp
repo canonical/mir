@@ -38,6 +38,7 @@ namespace mgn = mir::graphics::nested;
 namespace mgnd = mgn::detail;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
 using namespace testing;
 
 namespace
@@ -74,50 +75,6 @@ private:
     void* event_context;
 };
 
-struct NestedDisplayBuffer : Test
-{
-    auto create_display_buffer(std::shared_ptr<mgn::HostSurface> const& surface)
-    {
-        return std::make_shared<mgnd::DisplayBuffer>(
-            egl_display,
-            surface,
-            rectangle,
-            MirPixelFormat{},
-            host_connection);
-    }
-
-    mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
-    NiceMock<mtd::MockEGL> mock_egl;
-    mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
-    EventHostSurface host_surface;
-    
-    std::shared_ptr<mtd::MockHostConnection> host_connection = std::make_shared<mtd::MockHostConnection>();
-    
-};
-
-}
-
-// Regression test for LP: #1612012
-// This test is trying to reproduce a race, so it's not deterministic, but
-// in practice the reproduction rate is very close to 100%.
-TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
-{
-    auto display_buffer = create_display_buffer(mt::fake_shared(host_surface));
-    std::thread t{
-        [&]
-        {
-            for (int i = 0; i < 100; ++i)
-                host_surface.emit_input_event();
-        }};
-
-    display_buffer.reset();
-    t.join();
-}
-
-
-namespace
-{
-
 struct MockHostSurface : mgn::HostSurface
 {
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
@@ -147,7 +104,48 @@ struct StubNestedBuffer :
         return fake_mir_buffer;
     }
 };
+
+struct NestedDisplayBuffer : Test
+{
+    auto create_display_buffer(std::shared_ptr<mgn::HostSurface> const& surface)
+    {
+        return std::make_shared<mgnd::DisplayBuffer>(
+            egl_display,
+            surface,
+            rectangle,
+            MirPixelFormat{},
+            host_connection);
+    }
+
+    mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
+    NiceMock<mtd::MockEGL> mock_egl;
+    mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
+    EventHostSurface host_surface;
+    MockHostSurface mock_host_surface;
+    
+    std::shared_ptr<mtd::MockHostConnection> host_connection = std::make_shared<mtd::MockHostConnection>();
+    
+};
+
 }
+
+// Regression test for LP: #1612012
+// This test is trying to reproduce a race, so it's not deterministic, but
+// in practice the reproduction rate is very close to 100%.
+TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
+{
+    auto display_buffer = create_display_buffer(mt::fake_shared(host_surface));
+    std::thread t{
+        [&]
+        {
+            for (int i = 0; i < 100; ++i)
+                host_surface.emit_input_event();
+        }};
+
+    display_buffer.reset();
+    t.join();
+}
+
 
 TEST_F(NestedDisplayBuffer, creates_stream_for_passthrough)
 {
@@ -156,7 +154,6 @@ TEST_F(NestedDisplayBuffer, creates_stream_for_passthrough)
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
     auto mock_chain = std::make_shared<MockNestedChain>();
-    MockHostSurface mock_host_surface;
 
     EXPECT_CALL(*host_connection, create_chain())
         .WillOnce(Return(mock_chain));
@@ -164,5 +161,56 @@ TEST_F(NestedDisplayBuffer, creates_stream_for_passthrough)
     EXPECT_CALL(mock_host_surface, set_content(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
-    display_buffer->post_renderables_if_optimizable(list);
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
+{
+    mtd::StubBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
+    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_from_output)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Size different_size{rectangle.size.width, rectangle.size.height + geom::DeltaY{1}};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(
+            mt::fake_shared(nested_buffer),
+            geom::Rectangle{rectangle.top_left, different_size})
+    };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
+    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+/* Once we have synchronous MirSurface scene updates, we can probably
+ * passthrough more than one renderable if needed
+ */
+TEST_F(NestedDisplayBuffer, rejects_list_containing_multiple_onscreen_renderables)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Rectangle small_rect { {0, 0}, { 5, 5 }};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle),
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), small_rect) };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
+    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fullscreen_on_top)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Rectangle small_rect { {0, 0}, { 5, 5 }};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), small_rect),
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
 }
