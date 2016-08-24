@@ -1295,13 +1295,18 @@ MirRenderSurface* MirConnection::create_render_surface(int const width, int cons
     return static_cast<MirRenderSurface*>(egl_native_window.get());
 }
 
-void MirConnection::release_render_surface(MirRenderSurface* render_surface)
+MirWaitHandle* MirConnection::release_render_surface(
+    void* render_surface,
+    mir_buffer_stream_callback callback,
+    void* context)
 {
     auto rs = surface_map->render_surface(render_surface);
     if (rs->autorelease_content())
     {
-        rs->release_buffer_stream(nullptr, nullptr);
+        auto wh = rs->release_buffer_stream(render_surface, callback, context);
+        return wh;
     }
 
     surface_map->erase(static_cast<void*>(render_surface));
+    return nullptr;
 }

@@ -38,7 +38,12 @@ MirRenderSurface* mir_connection_create_render_surface(
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface);
 
-void mir_render_surface_release(
+MirWaitHandle* mir_render_surface_release(
+    MirRenderSurface* render_surface,
+    mir_buffer_stream_callback callback,
+    void* context);
+
+void mir_render_surface_release_sync(
     MirRenderSurface* render_surface);
 
 void mir_surface_spec_add_render_surface(

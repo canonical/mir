@@ -36,6 +36,7 @@ typedef struct MirRenderSurface MirRenderSurface;
 
 typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
 typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
+typedef void (*mir_render_surface_callback)(MirRenderSurface*, void* context);
 typedef enum MirBufferAccess
 {
     mir_none,

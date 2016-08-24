@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    mir_render_surface_release(render_surface);
+    mir_render_surface_release_sync(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 

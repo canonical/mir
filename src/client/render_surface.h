@@ -75,6 +75,7 @@ public:
     bool autorelease_content() const override;
 
     MirWaitHandle* release_buffer_stream(
+        void* native_surface,
         mir_buffer_stream_callback callback,
         void* context) override;
 #if 0

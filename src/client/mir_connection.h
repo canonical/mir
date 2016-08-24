@@ -207,7 +207,10 @@ public:
     void release_buffer(mir::client::MirBuffer* buffer);
 
     MirRenderSurface* create_render_surface(int width, int height, MirPixelFormat format);
-    void release_render_surface(MirRenderSurface* render_surface);
+    MirWaitHandle* release_render_surface(
+        void* render_surface,
+        mir_buffer_stream_callback callback,
+        void* context);
 
 private:
     //google cant have callbacks with more than 2 args

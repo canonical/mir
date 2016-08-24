@@ -44,6 +44,7 @@ public:
     virtual bool autorelease_content() const = 0;
 
     virtual MirWaitHandle* release_buffer_stream(
+        void* native_surface,
         mir_buffer_stream_callback callback,
         void* context) = 0;
 /*
