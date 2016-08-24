@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir/graphics/nested_context.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 
 #include <memory>
@@ -40,6 +41,8 @@ namespace nested
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
 
 class HostSurface;
+class HostStream;
+class HostChain;
 class HostConnection : public NestedContext
 {
 public:

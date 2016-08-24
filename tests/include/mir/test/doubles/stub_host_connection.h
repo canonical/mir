@@ -25,6 +25,8 @@
 #include "mir/graphics/platform_operation_message.h"
 
 #include "mir_toolkit/mir_connection.h"
+#include <gmock/gmock.h>
+#include "mir/test/gmock_fixes.h"
 
 namespace mir
 {
@@ -99,6 +101,31 @@ public:
     }
 };
 
+struct MockHostConnection : StubHostConnection
+{
+    MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(graphics::nested::UniqueInputConfig)> const&));
+    MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
+    MOCK_METHOD0(create_chain, std::shared_ptr<graphics::nested::HostChain>());
+
+
+    void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
+    {
+        if (event_callback)
+            event_callback(event, source_frame);
+    }
+
+    MockHostConnection()
+    {
+        using namespace testing;
+        ON_CALL(*this, set_input_device_change_callback(_))
+            .WillByDefault(SaveArg<0>(&device_change_callback));
+        ON_CALL(*this, set_input_event_callback(_))
+            .WillByDefault(SaveArg<0>(&event_callback));
+    }
+
+    std::function<void(graphics::nested::UniqueInputConfig)> device_change_callback;
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
+};
 
 }
 }
