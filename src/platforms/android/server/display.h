@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/frame.h"
-#include "mir/graphics/atomic_frame.h"
+#include "mir/graphics/estimate_frame.h"
 #include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
@@ -93,7 +93,7 @@ public:
 
 private:
     void on_hotplug();
-    void on_vsync(DisplayName, graphics::Timestamp) const;
+    void on_vsync(DisplayName, graphics::Timestamp);
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;
@@ -113,7 +113,7 @@ private:
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 
-    AtomicFrame last_frame[DisplayName::array_size];
+    EstimateFrame last_frame[DisplayName::array_size];
 };
 
 }

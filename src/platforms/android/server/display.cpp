@@ -299,9 +299,9 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name, mg::Timestamp) const
+void mga::Display::on_vsync(DisplayName name, mg::Timestamp timestamp)
 {
-    // TODO: last_frame[name].increment_with_timestamp(timestamp)
+    last_frame[name].increment_with_timestamp(timestamp);
     display_report->report_vsync(as_output_id(name).as_value());
 }
 
