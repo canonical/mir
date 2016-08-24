@@ -19,6 +19,8 @@
 #include "mir/graphics/atomic_frame.h"
 #include "mir/log.h"
 
+namespace mir { namespace graphics {
+
 namespace {
 void log(mir::graphics::Frame const& f)
 {
@@ -30,9 +32,7 @@ void log(mir::graphics::Frame const& f)
     mir::log_debug("Frame #%lld at %lld.%06llds (%lldus ago) interval %lldus",
                    msc, ust/1000000ULL, ust%1000000ULL, age, interval);
 }
-} // anonymous namespace
-
-namespace mir { namespace graphics {
+} // mir::graphics::anonymous namespace
 
 Frame AtomicFrame::load() const
 {
@@ -43,7 +43,7 @@ Frame AtomicFrame::load() const
 void AtomicFrame::store(Frame const& f)
 {
     if (1)  // For manual testing of new graphics drivers only
-        ::log(f);
+        log(f);
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame = f;
 }

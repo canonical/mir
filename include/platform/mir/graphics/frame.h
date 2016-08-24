@@ -36,14 +36,18 @@ namespace mir { namespace graphics {
  */
 struct Timestamp
 {
-    clockid_t clock_id = CLOCK_MONOTONIC;
-    int64_t microseconds = 0;
+    clockid_t clock_id;
+    int64_t microseconds;
+
+    Timestamp() : clock_id{CLOCK_MONOTONIC}, microseconds{0} {}
+    // Note sure why gcc-4.9 (vivid) demands this over {c,u}
+    Timestamp(clockid_t c, int64_t u) : clock_id{c}, microseconds{u} {}
 
     static Timestamp now(clockid_t clock_id)
     {
         struct timespec ts;
         clock_gettime(clock_id, &ts);
-        return {clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000};
+        return Timestamp(clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000);
     }
 
     int64_t age() const
