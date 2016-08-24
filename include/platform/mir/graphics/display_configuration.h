@@ -137,6 +137,7 @@ struct DisplayConfigurationOutput
 
     /** The current gamma for the disaply */
     DisplayGamma gamma;
+    MirOutputGammaSupported gamma_correction_allowed;
 };
 
 /**
@@ -166,7 +167,8 @@ struct UserDisplayConfigurationOutput
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
 
-    DisplayGamma gamma;
+    DisplayGamma const& gamma;
+    MirOutputGammaSupported const& gamma_correction_allowed;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
