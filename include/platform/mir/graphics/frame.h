@@ -52,7 +52,6 @@ struct Timestamp
     }
 };
 
-/* Unused?
 inline int64_t operator-(Timestamp const& a, Timestamp const& b)
 {
     int64_t offset = 0;
@@ -61,7 +60,6 @@ inline int64_t operator-(Timestamp const& a, Timestamp const& b)
                  Timestamp::now(b.clock_id).microseconds;
     return a.microseconds - b.microseconds - offset;
 }
-*/
 
 /**
  * Frame is a unique identifier for a frame displayed on an output.

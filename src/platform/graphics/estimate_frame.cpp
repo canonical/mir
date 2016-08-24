@@ -27,9 +27,12 @@ void EstimateFrame::increment_now()
 
 void EstimateFrame::increment_with_timestamp(Timestamp t)
 {
-//    std::lock_guard<decltype(mutex)> lock(mutex);
-    // TODO
-    (void)t;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    // Only update min_ust_interval after the first frame:
+    if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
+        frame.min_ust_interval = t - frame.ust;
+    frame.ust = t;
+    frame.msc++;
 }
 
 }} // namespace mir::graphics
