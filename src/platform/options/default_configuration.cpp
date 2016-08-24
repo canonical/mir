@@ -44,6 +44,7 @@ char const* const mo::seat_report_opt            = "seat-report";
 char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::host_socket_opt             = "host-socket";
+char const* const mo::nested_passthrough_opt      = "nested-passthrough";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::touchspots_opt              = "enable-touchspots";
@@ -183,6 +184,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
+        (nested_passthrough_opt, po::value<bool>()->default_value(false),
+            "When nested, attempt to optimize composition by passing a client's graphical content directly to the host"
+            " server in certain situations")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),

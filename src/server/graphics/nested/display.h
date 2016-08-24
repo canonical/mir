@@ -24,6 +24,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/renderer/gl/context_source.h"
+#include "passthrough_option.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -121,7 +122,8 @@ public:
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config);
+        std::shared_ptr<GLConfig> const& gl_config,
+        PassthroughOption passthrough_option);
 
     ~Display() noexcept;
 
@@ -153,6 +155,7 @@ private:
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
+    PassthroughOption const passthrough_option;
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;

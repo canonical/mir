@@ -179,11 +179,13 @@ mgn::Display::Display(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config) :
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    PassthroughOption passthrough_option) :
     platform{platform},
     connection{connection},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
+    passthrough_option(passthrough_option),
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
@@ -316,7 +318,8 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                         host_surface,
                         extents,
                         best_output.current_format,
-                        connection));
+                        connection,
+                        passthrough_option));
             }
         });
 

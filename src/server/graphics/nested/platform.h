@@ -20,23 +20,30 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "passthrough_option.h"
 #include <memory>
 
 namespace mir
 {
+namespace options
+{
+class Option;
+}
 namespace graphics
 {
 class DisplayReport;
 namespace nested
 {
 class HostConnection;
+
 class Platform : public graphics::Platform
 {
 public:
     Platform(
         std::shared_ptr<mir::SharedLibrary> const& library, 
         std::shared_ptr<HostConnection> const& connection, 
-        std::shared_ptr<DisplayReport> const& display_report);
+        std::shared_ptr<DisplayReport> const& display_report,
+        options::Option const& options);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<graphics::Display> create_display(
@@ -51,6 +58,7 @@ private:
     //the concept of guest platform is strange, it only exists to deny creating a
     //host display in a nested context. It should go away soon.
     std::shared_ptr<graphics::Platform> const guest_platform;
+    PassthroughOption const passthrough_option;
 };
 }
 }

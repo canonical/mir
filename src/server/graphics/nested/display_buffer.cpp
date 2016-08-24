@@ -35,14 +35,16 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
     MirPixelFormat preferred_format,
-    std::shared_ptr<HostConnection> const& host_connection) :
+    std::shared_ptr<HostConnection> const& host_connection,
+    mgn::PassthroughOption const option) :
     egl_display(egl_display),
     host_surface{host_surface},
     host_connection{host_connection},
     egl_config{egl_display.choose_windowed_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
-    egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
+    egl_surface{egl_display, host_surface->egl_native_window(), egl_config},
+    passthrough_option(option)
 {
     host_surface->set_event_handler(event_thunk, this);
 }

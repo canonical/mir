@@ -23,15 +23,18 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_host_connection.h"
+#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnd = mgn::detail;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -69,17 +72,26 @@ private:
 
 struct NestedDisplayBuffer : testing::Test
 {
-    auto create_display_buffer()
+    auto create_display_buffer(mgn::PassthroughOption option)
     {
         return std::make_shared<mgnd::DisplayBuffer>(
             egl_display,
             mt::fake_shared(host_surface),
-            mir::geometry::Rectangle{},
+            rect,
             MirPixelFormat{},
-            std::make_shared<mtd::StubHostConnection>()
+            std::make_shared<mtd::StubHostConnection>(),
+            option
             );
     }
 
+    auto create_display_buffer()
+    {
+        return create_display_buffer(mgn::PassthroughOption::disabled);
+    }
+    
+
+    geom::Size const size { 1024, 768 }; 
+    geom::Rectangle const rect {{0,0}, size};
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
     EventHostSurface host_surface;
@@ -102,4 +114,15 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 
     display_buffer.reset();
     t.join();
+}
+
+TEST_F(NestedDisplayBuffer, respects_passthrough_option)
+{
+    auto optimizable_list = mg::RenderableList{ std::make_shared<mtd::StubRenderable>(rect) };
+
+    auto enabled_display_buffer = create_display_buffer(mgn::PassthroughOption::enabled);
+    auto disabled_display_buffer = create_display_buffer(mgn::PassthroughOption::disabled);
+
+    EXPECT_TRUE(enabled_display_buffer->post_renderables_if_optimizable(optimizable_list));
+    EXPECT_FALSE(disabled_display_buffer->post_renderables_if_optimizable(optimizable_list));
 }

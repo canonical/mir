@@ -23,6 +23,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "display.h"
 #include "host_surface.h"
+#include "passthrough_option.h"
 
 #include <EGL/egl.h>
 
@@ -47,7 +48,8 @@ public:
         std::shared_ptr<HostSurface> const& host_surface,
         geometry::Rectangle const& area,
         MirPixelFormat preferred_format,
-        std::shared_ptr<HostConnection> const& host_connection
+        std::shared_ptr<HostConnection> const& host_connection,
+        PassthroughOption option
         );
 
     ~DisplayBuffer() noexcept;
@@ -74,6 +76,7 @@ private:
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
     EGLSurfaceHandle const egl_surface;
+    PassthroughOption const passthrough_option;
 
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);

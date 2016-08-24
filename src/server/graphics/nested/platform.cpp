@@ -23,19 +23,34 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/options/option.h"
+#include "mir/options/configuration.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
+namespace mo = mir::options;
+
+namespace
+{
+mgn::PassthroughOption passthrough_from_options(mo::Option const& options)
+{
+    auto enabled = options.is_set(mo::nested_passthrough_opt) &&
+        options.get<bool>(mo::nested_passthrough_opt);
+    return enabled ? mgn::PassthroughOption::enabled : mgn::PassthroughOption::disabled;
+}
+}
 
 mgn::Platform::Platform(
     std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
-    std::shared_ptr<mg::DisplayReport> const& display_report):
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    mo::Option const& options) :
     library(library),
     connection(connection),
     display_report(display_report),
     guest_platform(library->load_function<mg::CreateGuestPlatform>(
-        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection))
+        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection)),
+    passthrough_option(passthrough_from_options(options))
 {
 }
 
@@ -53,7 +68,8 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         connection,
         display_report,
         policy,
-        config);
+        config,
+        passthrough_option);
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
