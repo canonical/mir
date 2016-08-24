@@ -209,7 +209,7 @@ public:
     MirRenderSurface* create_render_surface(int width, int height, MirPixelFormat format);
     MirWaitHandle* release_render_surface(
         void* render_surface,
-        mir_buffer_stream_callback callback,
+        mir_render_surface_callback callback,
         void* context);
 
 private:

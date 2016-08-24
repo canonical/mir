@@ -76,7 +76,7 @@ public:
 
     MirWaitHandle* release_buffer_stream(
         void* native_surface,
-        mir_buffer_stream_callback callback,
+        mir_render_surface_callback callback,
         void* context) override;
 #if 0
     void set_container(MirSurface* const surface);

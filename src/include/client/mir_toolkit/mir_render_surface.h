@@ -40,7 +40,7 @@ bool mir_render_surface_is_valid(
 
 MirWaitHandle* mir_render_surface_release(
     MirRenderSurface* render_surface,
-    mir_buffer_stream_callback callback,
+    mir_render_surface_callback callback,
     void* context);
 
 void mir_render_surface_release_sync(

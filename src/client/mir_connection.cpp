@@ -1297,7 +1297,7 @@ MirRenderSurface* MirConnection::create_render_surface(int const width, int cons
 
 MirWaitHandle* MirConnection::release_render_surface(
     void* render_surface,
-    mir_buffer_stream_callback callback,
+    mir_render_surface_callback callback,
     void* context)
 {
     auto rs = surface_map->render_surface(render_surface);

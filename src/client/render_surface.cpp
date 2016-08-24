@@ -230,7 +230,7 @@ struct mcl::RenderSurface::StreamRelease
 {
     ClientBufferStream* stream;
     MirWaitHandle* handle;
-    mir_buffer_stream_callback callback;
+    mir_render_surface_callback callback;
     void* context;
     int rpc_id;
     void* native_surface;
@@ -238,7 +238,7 @@ struct mcl::RenderSurface::StreamRelease
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     void* native_surface,
-    mir_buffer_stream_callback callback,
+    mir_render_surface_callback callback,
     void* context)
 {
     auto new_wait_handle = new MirWaitHandle;
@@ -263,7 +263,7 @@ MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
 void mcl::RenderSurface::released(StreamRelease data)
 {
     if (data.callback)
-        data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+        data.callback(reinterpret_cast<MirRenderSurface*>(data.native_surface), data.context);
     if (data.handle)
         data.handle->result_received();
     stream_ = nullptr;
