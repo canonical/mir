@@ -74,15 +74,16 @@ struct NestedDisplayBuffer : testing::Test
         return std::make_shared<mgnd::DisplayBuffer>(
             egl_display,
             mt::fake_shared(host_surface),
-            mir::geometry::Rectangle{},
             MirPixelFormat{},
             std::make_shared<mtd::StubHostConnection>()
             );
     }
 
+    mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
     EventHostSurface host_surface;
+    
 };
 
 }
@@ -102,4 +103,52 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 
     display_buffer.reset();
     t.join();
+}
+
+
+struct MockNestedStream
+{
+    MOCK_METHOD1(submit_buffer, void(MirBuffer*));
+};
+
+class mg::NativeBuffer
+{
+public:
+    ~NativeBuffer() = default;
+    virtual MirBuffer* client_handle() const = 0;
+protected:
+    NativeBuffer() = default;
+    NativeBuffer(NativeBuffer const&) = delete;
+    NativeBuffer& operator=(NativeBuffer const&) = delete;
+};
+
+
+struct StubNestedBuffer : mtd::StubBuffer, mg::NativeBuffer,
+                          std::enable_shared_from_this<StubNestedBuffer>
+{
+    mg::NativeBuffer native_buffer_handle() const override
+    {
+        return shared_from_this();
+    }
+
+    MirBuffer* client_handle() const override
+    {
+        return nullptr;
+    }
+};
+
+TEST_F(NestedDisplayBuffer, creates_stream_for_passthrough)
+{
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(rectangle, mt::fake_shared(nested_buffer)) };
+
+    auto mock_stream = std::make_shared<MockNestedStream>();
+    EXPECT_CALL(host_connection, create_buffer_stream(_));
+        .WillOnce(Return(mock_stream));
+    EXPECT_CALL(mock_stream, submit_buffer(&nested_buffer));
+    EXPECT_CALL(host_surface, set_streams(_));
+
+    auto display_buffer = create_display_buffer();
+    display_buffer.post_renderables_if_optimizable(list);
 }
