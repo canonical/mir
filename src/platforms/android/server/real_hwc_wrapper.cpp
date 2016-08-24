@@ -69,7 +69,7 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
     std::unique_lock<std::mutex> lk(callback_lock);
     if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
         callbacks->self->vsync(display_name(display),
-                               mg::Timestamp{CLOCK_MONOTONIC, timestamp});
+                               mg::Timestamp{CLOCK_MONOTONIC, timestamp/1000});
 }
 
 static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)
