@@ -431,6 +431,34 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* outp
  */
 MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 
+/** Get the gamma ramp of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [in]  red     The red gamma ramp
+ * \param [in]  green   The green gamma ramp
+ * \param [in]  blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_get_gamma(MirOutput const* client_output,
+                          uint16_t** red,
+                          uint16_t** green,
+                          uint16_t** blue,
+                          uint32_t*  size);
+
+/** Set the gamma ramp of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [in]  red     The red gamma ramp
+ * \param [in]  green   The green gamma ramp
+ * \param [in]  blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_set_gamma(MirOutput* client_output,
+                          uint16_t const* red,
+                          uint16_t const* green,
+                          uint16_t const* blue,
+                          uint32_t  size);
+
 /**
  * Get the width, in pixels, of a MirOutputMode
  *

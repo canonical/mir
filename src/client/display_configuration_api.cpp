@@ -313,6 +313,47 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* clie
     return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
 }
 
+void mir_output_get_gamma(MirOutput const* client_output,
+                          uint16_t** red,
+                          uint16_t** green,
+                          uint16_t** blue,
+                          uint32_t*  size)
+{
+    auto output = client_to_output(client_output);
+    auto gamma_size  = output->gamma_size();
+
+    *red   = reinterpret_cast<uint16_t*>(
+                 const_cast<char*>(output->gamma_red().data()));
+    *green = reinterpret_cast<uint16_t*>(
+                 const_cast<char*>(output->gamma_green().data()));
+    *blue  = reinterpret_cast<uint16_t*>(
+                 const_cast<char*>(output->gamma_blue().data()));
+
+    *size = gamma_size;
+}
+
+void mir_output_set_gamma(MirOutput* client_output,
+                          uint16_t const* red,
+                          uint16_t const* green,
+                          uint16_t const* blue,
+                          uint32_t  size)
+try
+{
+    auto output = client_to_output(client_output);
+
+    // Since we are going from a uint16_t to a char (int8_t) we times the size by 2
+    std::string gamma_red  (reinterpret_cast<char const*>(red),   size * 2);
+    std::string gamma_green(reinterpret_cast<char const*>(green), size * 2);
+    std::string gamma_blue (reinterpret_cast<char const*>(blue),  size * 2);
+
+    output->set_gamma_red(gamma_red);
+    output->set_gamma_green(gamma_green);
+    output->set_gamma_blue(gamma_blue);
+    output->set_gamma_size(size);
+} catch (...) {
+    abort();
+}
+
 MirFormFactor mir_output_get_form_factor(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);

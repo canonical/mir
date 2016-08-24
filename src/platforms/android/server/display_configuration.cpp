@@ -67,7 +67,8 @@ mg::DisplayConfigurationOutput make_virtual_config()
         scale,
         form_factor,
         subpixel_arrangement,
-        {}
+        {},
+        mir_output_gamma_unsupported
     };
 }
 }
