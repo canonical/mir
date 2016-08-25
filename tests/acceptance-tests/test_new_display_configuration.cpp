@@ -809,6 +809,69 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
+{
+    std::vector<mg::DisplayGamma> const gammas = {
+        {{0, 1, 2, 3}, {0, 1, 2, 3, 4}, {65532, 65533, 65534, 65535}},
+        {{1, 2, 3, 4}, {65532, 65533, 65534, 65535}, {1, 2, 3, 4, 5}},
+        {{65532, 65533, 65534, 65535}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}}
+    };
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&gammas, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+            {
+                output.gamma = gammas[output_num];
+                ++output_num;
+            });
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+        uint16_t* red;
+        uint16_t* green;
+        uint16_t* blue;
+        uint32_t  size;
+
+        mir_output_get_gamma(output, &red, &green, &blue, &size);
+
+        for (size_t r = 0; r < size; r++)
+        {
+            EXPECT_THAT(gammas[i].red[r], red[r]);
+        }
+
+        for (size_t g = 0; g < size; g++)
+        {
+            EXPECT_THAT(gammas[i].green[g], green[g]);
+        }
+
+        for (size_t b = 0; b < size; b++)
+        {
+            EXPECT_THAT(gammas[i].blue[b], blue[b]);
+        }
+
+        EXPECT_THAT(size, gammas[0].red.size());
+    }
+
+    client.disconnect();
+}
+
 TEST_F(DisplayConfigurationTest, preview_base_display_configuration_sends_config_event)
 {
     DisplayClient client{new_connection()};
