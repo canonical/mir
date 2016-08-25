@@ -282,7 +282,7 @@ void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
 {
     if (!ensure_crtc())
     {
-        fatal_error("Output %s has no associated CRTC to set a framebuffer on",
+        fatal_error("Output %s has no associated CRTC to set gamma on",
                     mgk::connector_name(connector).c_str());
     }
 
