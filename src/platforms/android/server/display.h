@@ -21,7 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/frame.h"
-#include "mir/graphics/estimate_frame.h"
+#include "mir/graphics/atomic_frame.h"
 #include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
@@ -113,7 +113,7 @@ private:
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 
-    EstimateFrame last_frame[DisplayName::array_size];
+    AtomicFrame last_frame[DisplayName::array_size];
 };
 
 }

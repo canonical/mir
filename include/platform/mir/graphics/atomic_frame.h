@@ -29,8 +29,10 @@ class AtomicFrame
 public:
     Frame load() const;
     void  store(Frame const&);
-protected:
-    void log() const;
+    void  increment_now();
+    void  increment_with_timestamp(Timestamp t);
+private:
+    void log() const;  // TODO: retire this
     mutable std::mutex mutex;
     Frame frame;
 };
