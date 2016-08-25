@@ -97,7 +97,12 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
                                 sessions.for_each(
                                     [i] (std::shared_ptr<ms::Session> const& session)
                                     {
-                                        session->default_surface()->resize({i + 1, i + 1});
+                                        // Our test harness does *not* guarantee that the default surface
+                                        // exists - surface destruction occurs before session destruction.
+                                        if (auto surface = session->default_surface())
+                                        {
+                                            surface->resize({i + 1, i + 1});
+                                        }
                                     });
                             }
                         });

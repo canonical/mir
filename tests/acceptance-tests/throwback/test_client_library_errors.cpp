@@ -208,7 +208,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
@@ -245,9 +251,14 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surf = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
-    mir_surface_release_sync(surf);
+    mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -268,7 +279,12 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
@@ -289,7 +305,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
