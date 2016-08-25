@@ -132,6 +132,12 @@ typedef mir::ModuleProperties const*(*DescribeModule)();
 
 extern "C"
 {
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 
 /**
  * Function prototype used to return a new host graphics platform. The host graphics platform
@@ -183,6 +189,10 @@ void add_graphics_platform_options(
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 }
 
 #endif // MIR_GRAPHICS_PLATFORM_H_

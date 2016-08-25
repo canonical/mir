@@ -1,13 +1,4 @@
 include(CMakeDependentOption)
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
@@ -20,6 +11,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/gl
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 protobuf_generate_cpp(

@@ -37,6 +37,7 @@ set(MIR_CLIENT_PLATFORM_VERSION ${MIR_CLIENT_PLATFORM_VERSION} PARENT_SCOPE)
 set(server_common_include_dirs
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 # TODO platform implementations shouldn't depend on private APIs

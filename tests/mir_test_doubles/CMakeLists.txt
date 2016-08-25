@@ -1,5 +1,6 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
@@ -68,18 +69,6 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
   )
-endif()
-
-#stub_buffer.h needs to know what platform its stubbing for now. hopefully it
-#will define a stub platform native type to use in the near future.
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
 endif()
 
 # We don't want LTO objects in a published archive (libmir-test-assist.a)

@@ -21,6 +21,7 @@
 
 #include "mir/client_platform_factory.h"
 #include "mir/client_platform.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 namespace mir_test_framework
 {
@@ -37,6 +38,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     mir::client::ClientContext* const context;
+    MirBufferPackage mutable native_buffer;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

@@ -22,6 +22,7 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
+#include "software_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -55,11 +56,8 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
     auto shm_file =
         std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
-    auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
-                                         buffer_properties.format);
-
-    return buffer;
+    return std::make_shared<mge::SoftwareBuffer>(
+        std::move(shm_file), buffer_properties.size, buffer_properties.format);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()

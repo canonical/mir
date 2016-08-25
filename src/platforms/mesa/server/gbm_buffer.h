@@ -40,11 +40,6 @@ class BufferTextureBinder;
 namespace mesa
 {
 
-struct GBMNativeBuffer : MirNativeBuffer
-{
-    struct gbm_bo *bo;
-};
-
 MirPixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(MirPixelFormat format);
 enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
@@ -67,14 +62,11 @@ public:
 
     virtual MirPixelFormat pixel_format() const override;
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
+    virtual std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
 
     virtual void gl_bind_to_texture() override;
     virtual void bind() override;
     virtual void secure_for_render() override;
-
-    void write(unsigned char const* pixels, size_t size) override;
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
 
     NativeBufferBase* native_buffer_base() override;
 
