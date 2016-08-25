@@ -44,11 +44,8 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 public:
     DisplayBuffer(
         EGLDisplayHandle const& egl_display,
-        std::shared_ptr<HostSurface> const& host_surface,
-        geometry::Rectangle const& area,
-        MirPixelFormat preferred_format,
-        std::shared_ptr<HostConnection> const& host_connection
-        );
+        DisplayConfigurationOutput best_output,
+        std::shared_ptr<HostConnection> const& host_connection);
 
     ~DisplayBuffer() noexcept;
 

@@ -36,7 +36,6 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <sstream>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -299,23 +298,11 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
             {
                 complete_display_initialization(egl_config_format);
 
-                std::ostringstream surface_title;
-
-                surface_title << "Mir nested display for output #" << best_output.id.as_value();
-
-                mg::BufferProperties properties(extents.size, egl_config_format, mg::BufferUsage::hardware);
-                std::shared_ptr<mgn::HostStream> host_stream = connection->create_stream(properties);
-                auto const host_surface = connection->create_surface(
-                    host_stream, mir::geometry::Displacement{0, 0}, properties,
-                    surface_title.str().c_str(), static_cast<uint32_t>(best_output.id.as_value()));
-
                 eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,
-                        host_surface,
-                        extents,
-                        best_output.current_format,
+                        best_output,
                         connection));
             }
         });

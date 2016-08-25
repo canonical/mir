@@ -28,10 +28,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnd = mgn::detail;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -67,21 +70,30 @@ private:
     void* event_context;
 };
 
-struct NestedDisplayBuffer : testing::Test
+struct MockHostConnection : mtd::StubHostConnection
 {
-    auto create_display_buffer()
+    MOCK_METHOD5(create_surface, std::shared_ptr<mgn::HostSurface>(
+            std::shared_ptr<mgn::HostStream> const&, geom::Displacement,
+            mg::BufferProperties, char const*, uint32_t));
+};
+
+struct NestedDisplayBuffer : Test
+{
+    NestedDisplayBuffer()
     {
-        return std::make_shared<mgnd::DisplayBuffer>(
-            egl_display,
-            mt::fake_shared(host_surface),
-            mir::geometry::Rectangle{},
-            MirPixelFormat{},
-            std::make_shared<mtd::StubHostConnection>()
-            );
+        ON_CALL(*host_connection, create_surface(_,_,_,_,_))
+            .WillByDefault(Return(mt::fake_shared(host_surface)));
     }
 
-    testing::NiceMock<mtd::MockEGL> mock_egl;
+    auto create_display_buffer()
+    {
+        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, host_connection);
+    }
+
+    NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
+    std::shared_ptr<MockHostConnection> host_connection = std::make_shared<NiceMock<MockHostConnection>>();
+    mg::DisplayConfigurationOutput output;
     EventHostSurface host_surface;
 };
 
