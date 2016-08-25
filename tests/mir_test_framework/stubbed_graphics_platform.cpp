@@ -290,10 +290,19 @@ std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
