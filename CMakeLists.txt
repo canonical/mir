@@ -74,7 +74,7 @@ if(MIR_USE_LD_GOLD)
 endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries

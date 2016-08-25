@@ -50,7 +50,7 @@ public:
      *                     a new (different) sequence to that user each time. For
      *                     consistency, all callers need to determine their id
      *                     in the same way (e.g. always use "this" pointer).
-     * \returns a sequence of mc::SceneElements for the compositor id. The
+     * \returns a sequence of SceneElements for the compositor id. The
      *          sequence is in stacking order from back to front.
      */
     virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
