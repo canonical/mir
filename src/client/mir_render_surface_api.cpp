@@ -124,7 +124,9 @@ catch (std::exception const& ex)
 void mir_render_surface_release_sync(
     MirRenderSurface* render_surface)
 {
-    mir_render_surface_release(render_surface, nullptr, nullptr)->wait_for_all();
+    auto wh = mir_render_surface_release(render_surface, nullptr, nullptr);
+    if (wh)
+        wh->wait_for_all();
 }
 
 MirWaitHandle* mir_render_surface_create_buffer_stream(
@@ -137,24 +139,10 @@ try
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     return rs->create_client_buffer_stream(
-        mir_buffer_usage_hardware,
+        mir_buffer_usage_software,
         callback,
         false,
         context);
-
-/*
-    auto rs = reinterpret_cast<mcl::RenderSurface*>(render_surface);
-
-    auto wh = rs->create_client_buffer_stream(
-        width,
-        height,
-        format,
-        buffer_usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        &stream);
-    wh->wait_for_all();
-    return stream;
-*/
 }
 catch (std::exception const& ex)
 {
@@ -172,25 +160,6 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
 }
 
 #if 0
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
-    MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage)
-
-MirConnection* mir_render_surface_connection(
-    MirRenderSurface* render_surface)
-try
-{
-    mir::require(render_surface);
-    return render_surface->connection();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
 MirSurface* mir_render_surface_container(
     MirRenderSurface* render_surface)
 try
@@ -198,20 +167,6 @@ try
     mir::require(render_surface);
 
     return render_surface->container();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-MirEGLNativeWindowType mir_render_surface_egl_native_window(
-    MirRenderSurface* render_surface)
-try
-{
-    mir::require(render_surface);
-
-    return render_surface->egl_native_window();
 }
 catch (std::exception const& ex)
 {
