@@ -18,6 +18,7 @@
 
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
+#include "host_stream.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -306,17 +307,28 @@ void mgn::MirClientHostConnection::apply_display_config(
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
-    int width, int height, MirPixelFormat pf, char const* name,
-    MirBufferUsage usage, uint32_t output_id)
+    std::shared_ptr<HostStream> const& stream,
+    mir::geometry::Displacement displacement,
+    mg::BufferProperties properties,
+    char const* name, uint32_t output_id)
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_connection_create_spec_for_normal_surface(mir_connection, width, height, pf),
+        mir_connection_create_spec_for_normal_surface(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format),
         mir_surface_spec_release);
+
+    MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
+        mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
     mir_surface_spec_set_name(spec.get(), name);
     mir_surface_spec_set_buffer_usage(spec.get(), usage);
     mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
+    MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
+    mir_surface_spec_set_streams(spec.get(), &info, 1);
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, spec.get()),
@@ -417,4 +429,11 @@ void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(M
 void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
 {
     event_callback(event, source_frame);
+}
+
+std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
+    mg::BufferProperties const& properties)
+{
+    (void)properties;
+    return nullptr;
 }

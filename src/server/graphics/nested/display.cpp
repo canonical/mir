@@ -20,6 +20,7 @@
 #include "nested_display_configuration.h"
 #include "display_buffer.h"
 #include "host_connection.h"
+#include "host_stream.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -29,6 +30,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
@@ -301,13 +303,11 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
                 surface_title << "Mir nested display for output #" << best_output.id.as_value();
 
+                mg::BufferProperties properties(extents.size, egl_config_format, mg::BufferUsage::hardware);
+                std::shared_ptr<mgn::HostStream> host_stream = connection->create_stream(properties);
                 auto const host_surface = connection->create_surface(
-                    extents.size.width.as_int(),
-                    extents.size.height.as_int(),
-                    egl_config_format,
-                    surface_title.str().c_str(),
-                    mir_buffer_usage_hardware,
-                    static_cast<uint32_t>(best_output.id.as_value()));
+                    host_stream, mir::geometry::Displacement{0, 0}, properties,
+                    surface_title.str().c_str(), static_cast<uint32_t>(best_output.id.as_value()));
 
                 eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(

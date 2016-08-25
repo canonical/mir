@@ -21,6 +21,7 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/server/graphics/nested/host_stream.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -54,8 +55,8 @@ public:
 
     std::shared_ptr<graphics::nested::HostSurface>
         create_surface(
-            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
-            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
+            std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+            graphics::BufferProperties, char const*, uint32_t) override
     {
         class NullHostSurface : public graphics::nested::HostSurface
         {
@@ -96,6 +97,10 @@ public:
     }
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
+    }
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&)
+    {
+        return nullptr;
     }
 };
 
