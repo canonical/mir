@@ -100,7 +100,12 @@ public:
     }
     std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&)
     {
-        return nullptr;
+        struct NullStream : graphics::nested::HostStream
+        {
+            MirBufferStream* handle() const override { return nullptr; }
+            EGLNativeWindowType egl_native_window() const override { return 0; }
+        };
+        return std::make_unique<NullStream>();
     }
 };
 

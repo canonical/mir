@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_HOST_STREAM_H_
 
 #include "mir_toolkit/client_types.h"
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -33,6 +34,7 @@ public:
     virtual ~HostStream() = default;
 
     virtual MirBufferStream* handle() const = 0;
+    virtual EGLNativeWindowType egl_native_window() const = 0;
 protected:
     HostStream() = default;
     HostStream(HostStream const&) = delete;

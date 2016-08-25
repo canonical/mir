@@ -32,28 +32,6 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-#if 0
-                std::ostringstream surface_title;
-                surface_title << "Mir nested display for output #" << best_output.id.as_value();
-
-                mg::BufferProperties properties(extents.size, egl_config_format, mg::BufferUsage::hardware);
-                std::shared_ptr<mgn::HostStream> host_stream = connection->create_stream(properties);
-                auto const host_surface = connection->create_surface(
-                    host_stream, mir::geometry::Displacement{0, 0}, properties,
-                    surface_title.str().c_str(), static_cast<uint32_t>(best_output.id.as_value()));
-
-    EGLDisplayHandle const& egl_display,
-    std::shared_ptr<HostSurface> const& host_surface,
-    geometry::Rectangle const& area,
-    MirPixelFormat preferred_format,
-    std::shared_ptr<HostConnection> const& host_connection) :
-
-
-            geometry::Rectangle const& extents = best_output.extents();
-            auto const& egl_config_format = best_output.current_format;
-
-#endif
-
 namespace
 {
 std::shared_ptr<mgn::HostStream> create_host_stream(
@@ -89,7 +67,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
-    egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
+    egl_surface{egl_display, host_stream->egl_native_window(), egl_config} 
 {
     host_surface->set_event_handler(event_thunk, this);
 }

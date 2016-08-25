@@ -193,6 +193,35 @@ private:
     mir::geometry::Displacement cursor_hotspot;
 };
 
+class MirClientHostStream : public mgn::HostStream
+{
+public:
+    MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
+        stream(mir_connection_create_buffer_stream_sync(connection,
+            properties.size.width.as_int(), properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
+    {
+    }
+
+    ~MirClientHostStream()
+    {
+        mir_buffer_stream_release_sync(stream);
+    }
+
+    EGLNativeWindowType egl_native_window() const override
+    {
+        return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
+    }
+
+    MirBufferStream* handle() const override
+    {
+        return stream;
+    }
+private:
+    MirBufferStream* const stream;
+};
+
 }
 
 void const* mgn::MirClientHostConnection::NestedCursorImage::as_argb_8888() const
@@ -434,6 +463,5 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
     mg::BufferProperties const& properties)
 {
-    (void)properties;
-    return nullptr;
+    return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
