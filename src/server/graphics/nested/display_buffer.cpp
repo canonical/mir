@@ -32,7 +32,6 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-
 #if 0
                 std::ostringstream surface_title;
                 surface_title << "Mir nested display for output #" << best_output.id.as_value();
@@ -57,14 +56,22 @@ namespace geom = mir::geometry;
 
 namespace
 {
+std::shared_ptr<mgn::HostStream> create_host_stream(
+    mgn::HostConnection& connection,
+    mg::DisplayConfigurationOutput const& output)
+{
+    mg::BufferProperties properties(output.extents().size, output.current_format, mg::BufferUsage::hardware);
+    return connection.create_stream(properties);
+}
+
 std::shared_ptr<mgn::HostSurface> create_host_surface(
     mgn::HostConnection& connection,
+    std::shared_ptr<mgn::HostStream> const& host_stream,
     mg::DisplayConfigurationOutput const& output)
 {
     std::ostringstream surface_title;
     surface_title << "Mir nested display for output #" << output.id.as_value();
     mg::BufferProperties properties(output.extents().size, output.current_format, mg::BufferUsage::hardware);
-    std::shared_ptr<mgn::HostStream> host_stream = connection.create_stream(properties);
     return connection.create_surface(
         host_stream, mir::geometry::Displacement{0, 0}, properties,
         surface_title.str().c_str(), static_cast<uint32_t>(output.id.as_value()));
@@ -76,7 +83,8 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     mg::DisplayConfigurationOutput best_output,
     std::shared_ptr<HostConnection> const& host_connection) :
     egl_display(egl_display),
-    host_surface{create_host_surface(*host_connection, best_output)},
+    host_stream{create_host_stream(*host_connection, best_output)},
+    host_surface{create_host_surface(*host_connection, host_stream, best_output)},
     host_connection{host_connection},
     egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},

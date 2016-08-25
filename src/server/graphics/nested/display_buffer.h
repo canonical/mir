@@ -33,6 +33,7 @@ namespace graphics
 namespace nested
 {
 class HostSurface;
+class HostStream;
 
 namespace detail
 {
@@ -65,6 +66,7 @@ public:
     DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
     EGLDisplayHandle const& egl_display;
+    std::shared_ptr<HostStream> const host_stream;
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
     EGLConfig const egl_config;
