@@ -200,7 +200,8 @@ void mcl::RenderSurface::stream_created(StreamCreationRequest* request_raw)
         surface_map->insert(mf::BufferStreamId(id), stream);
 
         stream_ = stream.get();
-        platform->use_egl_native_window(wrapped_native_window, stream.get());
+        if (request->parameters.buffer_usage() == mir_buffer_usage_hardware)
+            platform->use_egl_native_window(wrapped_native_window, stream.get());
         if (request->callback)
             request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
         request->wh->result_received();

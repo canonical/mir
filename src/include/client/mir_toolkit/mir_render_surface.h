@@ -52,13 +52,15 @@ void mir_surface_spec_add_render_surface(
     int displacement_x, int displacement_y,
     MirRenderSurface* render_surface);
 
-#if 0
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+MirWaitHandle* mir_render_surface_create_buffer_stream(
     MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage);
+    mir_buffer_stream_callback callback,
+    void* context);
 
+MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+    MirRenderSurface* render_surface);
+
+#if 0
 MirConnection* mir_render_surface_connection(
     MirRenderSurface* render_surface);
 

@@ -24,6 +24,7 @@
 
 #if 0
 namespace mcl = mir::client;
+#endif
 
 namespace
 {
@@ -34,7 +35,6 @@ void assign_result(void* result, void** context)
         *context = result;
 }
 }
-#endif
 
 namespace
 {
@@ -127,16 +127,22 @@ void mir_render_surface_release_sync(
     mir_render_surface_release(render_surface, nullptr, nullptr)->wait_for_all();
 }
 
-#if 0
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+MirWaitHandle* mir_render_surface_create_buffer_stream(
     MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage)
+    mir_buffer_stream_callback callback,
+    void* context)
 try
 {
     mir::require(render_surface);
-    MirBufferStream* stream = nullptr;
+    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    return rs->create_client_buffer_stream(
+        mir_buffer_usage_hardware,
+        callback,
+        false,
+        context);
+
+/*
     auto rs = reinterpret_cast<mcl::RenderSurface*>(render_surface);
 
     auto wh = rs->create_client_buffer_stream(
@@ -148,12 +154,29 @@ try
         &stream);
     wh->wait_for_all();
     return stream;
+*/
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+
+MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+    MirRenderSurface* render_surface)
+{
+    MirBufferStream* stream = nullptr;
+    mir_render_surface_create_buffer_stream(render_surface,
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+    return stream;
+}
+
+#if 0
+MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+    MirRenderSurface* render_surface,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage)
 
 MirConnection* mir_render_surface_connection(
     MirRenderSurface* render_surface)
