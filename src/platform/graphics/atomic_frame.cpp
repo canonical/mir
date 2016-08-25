@@ -21,32 +21,33 @@
 
 namespace mir { namespace graphics {
 
+namespace {
+void log(Frame const& frame)
+{
+    // Enable this only during development
+    if (0) return;
+    // long long to match printf format
+    long long msc = frame.msc,
+              ust = frame.ust.microseconds,
+              interval = frame.min_ust_interval,
+              age = frame.age();
+    mir::log_debug(
+        "Frame counter %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
+        (void*)&frame, msc, ust/1000000, ust%1000000, age, interval);
+}
+} // namesapce mir::graphics::<anonymous>
+
 Frame AtomicFrame::load() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return frame;
 }
 
-void AtomicFrame::log() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    // long long to match printf format
-    long long msc = frame.msc,
-              ust = frame.ust.microseconds,
-              interval = frame.min_ust_interval,
-              age = frame.age();
-    mir::log_debug("Frame #%lld at %lld.%06llds (%lldus ago) interval %lldus",
-                   msc, ust/1000000ULL, ust%1000000ULL, age, interval);
-}
-
 void AtomicFrame::store(Frame const& f)
 {
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        frame = f;
-    }
-    if (1)  // For manual testing of new graphics drivers only
-        log();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    frame = f;
+    log(frame);
 }
 
 void AtomicFrame::increment_now()
@@ -56,15 +57,13 @@ void AtomicFrame::increment_now()
 
 void AtomicFrame::increment_with_timestamp(Timestamp t)
 {
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        // Only update min_ust_interval after the first frame:
-        if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
-            frame.min_ust_interval = t - frame.ust;
-        frame.ust = t;
-        frame.msc++;
-    }
-    log();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    // Only update min_ust_interval after the first frame:
+    if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
+        frame.min_ust_interval = t - frame.ust;
+    frame.ust = t;
+    frame.msc++;
+    log(frame);
 }
 
 }} // namespace mir::graphics
