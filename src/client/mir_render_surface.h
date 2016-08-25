@@ -47,10 +47,6 @@ public:
         void* native_surface,
         mir_render_surface_callback callback,
         void* context) = 0;
-/*
-    virtual MirSurface* container() = 0;
-    virtual MirEGLNativeWindowType egl_native_window() = 0;
-*/
 protected:
     MirRenderSurface(MirRenderSurface const&) = delete;
     MirRenderSurface& operator=(MirRenderSurface const&) = delete;

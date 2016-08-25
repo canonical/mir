@@ -43,14 +43,6 @@ namespace ml = mir::logging;
 
 namespace
 {
-#if 0
-void assign_result(void* result, void** context)
-{
-    if (context)
-        *context = result;
-}
-#endif
-
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -271,34 +263,3 @@ void mcl::RenderSurface::released(StreamRelease data)
     surface_map->erase(mf::BufferStreamId(data.rpc_id));
     surface_map->erase(data.native_surface);
 }
-
-#if 0
-void mcl::RenderSurface::set_container(MirSurface* const surface)
-{
-    container_ = surface;
-}
-
-MirSurface* mcl::RenderSurface::container()
-{
-    return container_;
-}
-
-MirEGLNativeWindowType mcl::RenderSurface::egl_native_window()
-{
-    MirBufferStream* stream = nullptr;
-    auto wh = create_client_buffer_stream(
-        100,
-        100,
-        mir_pixel_format_argb_8888,
-        mir_buffer_usage_hardware,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        &stream);
-    wh->wait_for_all();
-    auto spec = mir_connection_create_spec_for_changes(connection_);
-    mir_surface_spec_add_render_surface(spec, 100, 100, 0, 0, this);
-    mir_surface_apply_spec(container_, spec);
-    mir_surface_spec_release(spec);
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    return reinterpret_cast<MirEGLNativeWindowType>(bs->egl_native_window());
-}
-#endif

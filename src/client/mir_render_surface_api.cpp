@@ -22,10 +22,6 @@
 #include "mir/require.h"
 #include "connection_surface_map.h"
 
-#if 0
-namespace mcl = mir::client;
-#endif
-
 namespace
 {
 // assign_result is compatible with all 2-parameter callbacks
@@ -38,7 +34,7 @@ void assign_result(void* result, void** context)
 
 namespace
 {
-// *Native* render surface to connection
+// 'Native' render surface to connection
 class RenderSurfaceToConnectionMap
 {
 public:
@@ -158,19 +154,3 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
         reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
     return stream;
 }
-
-#if 0
-MirSurface* mir_render_surface_container(
-    MirRenderSurface* render_surface)
-try
-{
-    mir::require(render_surface);
-
-    return render_surface->container();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-#endif

@@ -60,20 +60,6 @@ MirWaitHandle* mir_render_surface_create_buffer_stream(
 MirBufferStream* mir_render_surface_create_buffer_stream_sync(
     MirRenderSurface* render_surface);
 
-#if 0
-MirConnection* mir_render_surface_connection(
-    MirRenderSurface* render_surface);
-
-MirSurface* mir_render_surface_container(
-    MirRenderSurface* render_surface);
-
-MirEGLNativeWindowType mir_render_surface_egl_native_window(
-    MirRenderSurface* render_surface);
-
-MirPresentationChain* mir_render_surface_create_presentation_chain_sync(
-    MirRenderSurface*);
-#endif
-
 #ifdef __cplusplus
 }
 /**@}*/

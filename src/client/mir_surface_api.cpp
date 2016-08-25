@@ -661,12 +661,6 @@ try
         spec->streams.value().push_back(info);
     else
         spec->streams = std::vector<ContentInfo>{info};
-#if 0
-    if (spec->render_surfaces.is_set())
-        spec->render_surfaces.value().push_back(rs);
-    else
-        spec->render_surfaces = std::vector<mcl::RenderSurface*>{rs};
-#endif
 }
 catch (std::exception const& ex)
 {

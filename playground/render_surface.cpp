@@ -13,8 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author:
- *   Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ * Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include <boost/program_options.hpp>
@@ -26,7 +26,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
-#include "mir_toolkit/mir_presentation_chain.h"
 
 #include "client_helpers.h"
 
@@ -220,7 +219,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
-/*
+
     sigset_t halt_signals;
     sigemptyset(&halt_signals);
     sigaddset(&halt_signals, SIGTERM);
@@ -235,9 +234,8 @@ int main(int /*argc*/, char* /*argv*/[])
         POLLIN | POLLERR,
         0
     };
-*/
-    int i=0;
-    while (i++<100/*poll(&signal_poll, 1, 0) <= 0*/)
+
+    while (poll(&signal_poll, 1, 0) <= 0)
     {
         bounce_position(baseColour, dbase, 128, 255);
 
@@ -248,7 +246,7 @@ int main(int /*argc*/, char* /*argv*/[])
     mir_buffer_stream_release_sync(buffer_stream);
     mir_render_surface_release_sync(render_surface);
     mir_surface_release_sync(surface);
-//    close(signal_watch);
+    close(signal_watch);
 
     return 0;
 }

@@ -30,13 +30,6 @@
 
 namespace mir
 {
-#if 0
-namespace protobuf
-{
-class BufferStream;
-}
-#endif
-
 namespace logging
 {
 class Logger;
@@ -46,12 +39,10 @@ namespace client
 class ConnectionSurfaceMap;
 class ClientPlatform;
 class AsyncBufferFactory;
-
 namespace rpc
 {
 class DisplayServer;
 }
-
 class RenderSurface : public MirRenderSurface
 {
 public:
@@ -78,11 +69,6 @@ public:
         void* native_surface,
         mir_render_surface_callback callback,
         void* context) override;
-#if 0
-    void set_container(MirSurface* const surface);
-    MirSurface* container() override;
-    MirEGLNativeWindowType egl_native_window() override;
-#endif
 
 private:
     int const width_, height_;
@@ -130,7 +116,6 @@ private:
     int stream_error_id{-1};
     std::mutex mutex;
 };
-
 }
 }
 #endif /* MIR_CLIENT_RENDER_SURFACE_H */

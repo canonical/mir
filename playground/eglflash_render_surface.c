@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include <mir_toolkit/mir_client_library.h>
