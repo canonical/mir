@@ -868,6 +868,66 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
         EXPECT_THAT(size, gammas[0].red.size());
     }
+}
+
+namespace
+{
+MATCHER_P(IsSameModeAs, mode, "")
+{
+    return mir_output_mode_get_height(arg) == mir_output_mode_get_height(mode) &&
+        mir_output_mode_get_width(arg) == mir_output_mode_get_width(mode) &&
+        mir_output_mode_get_refresh_rate(arg) == mir_output_mode_get_refresh_rate(mode);
+}
+}
+
+TEST_F(DisplayConfigurationTest, get_current_mode_index_invariants)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        if (auto mode = mir_output_get_current_mode(output))
+        {
+            auto indexed_mode = mir_output_get_mode(output, mir_output_get_current_mode_index(output));
+            EXPECT_THAT(indexed_mode, IsSameModeAs(mode));
+        }
+        else
+        {
+            EXPECT_THAT(mir_output_get_current_mode_index(output), Eq(std::numeric_limits<size_t>::max()));
+        }
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, get_preferred_mode_index_invariants)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        if (auto mode = mir_output_get_preferred_mode(output))
+        {
+            auto indexed_mode = mir_output_get_mode(output, mir_output_get_preferred_mode_index(output));
+            EXPECT_THAT(indexed_mode, IsSameModeAs(mode));
+        }
+        else
+        {
+            EXPECT_THAT(mir_output_get_preferred_mode_index(output), Eq(std::numeric_limits<size_t>::max()));
+        }
+    }
 
     client.disconnect();
 }

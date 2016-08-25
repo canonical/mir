@@ -42,10 +42,10 @@ public:
     FakeInputDeviceImpl(mir::input::InputDeviceInfo const& info);
     void emit_device_removal() override;
     void emit_runtime_error() override;
-    void emit_event(synthesis::KeyParameters const& key_params) override;
-    void emit_event(synthesis::ButtonParameters const& button) override;
-    void emit_event(synthesis::MotionParameters const& motion) override;
-    void emit_event(synthesis::TouchParameters const& touch) override;
+    void emit_event(mir::input::synthesis::KeyParameters const& key_params) override;
+    void emit_event(mir::input::synthesis::ButtonParameters const& button) override;
+    void emit_event(mir::input::synthesis::MotionParameters const& motion) override;
+    void emit_event(mir::input::synthesis::TouchParameters const& touch) override;
 
 private:
     class InputDevice : public mir::input::InputDevice
@@ -57,10 +57,10 @@ private:
         void start(mir::input::InputSink* destination, mir::input::EventBuilder* builder) override;
         void stop() override;
 
-        void synthesize_events(synthesis::KeyParameters const& key_params);
-        void synthesize_events(synthesis::ButtonParameters const& button);
-        void synthesize_events(synthesis::MotionParameters const& motion);
-        void synthesize_events(synthesis::TouchParameters const& touch);
+        void synthesize_events(mir::input::synthesis::KeyParameters const& key_params);
+        void synthesize_events(mir::input::synthesis::ButtonParameters const& button);
+        void synthesize_events(mir::input::synthesis::MotionParameters const& motion);
+        void synthesize_events(mir::input::synthesis::TouchParameters const& touch);
         mir::input::InputDeviceInfo get_device_info() override
         {
             return info;
@@ -72,7 +72,7 @@ private:
         void apply_settings(mir::input::TouchpadSettings const& settings) override;
 
     private:
-        MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
+        MirPointerAction update_buttons(mir::input::synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);
         void map_touch_coordinates(float& x, float& y);
 

@@ -26,10 +26,15 @@
 #include "mir/graphics/renderable.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/input/scene.h"
+#include "mir/renderer/sw/pixel_source.h"
+
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -102,8 +107,12 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
 {
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
-    
-    touchspot_buffer->write(touchspot_image.pixel_data, pixels_size);
+
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(touchspot_buffer->native_buffer_base());
+    if (pixel_source)
+        pixel_source->write(touchspot_image.pixel_data, pixels_size);
+    else
+        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for touchspot"));
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)

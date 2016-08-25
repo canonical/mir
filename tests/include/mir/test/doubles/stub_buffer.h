@@ -23,6 +23,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include <vector>
 #include <string.h>
 
@@ -36,7 +37,10 @@ namespace test
 namespace doubles
 {
 
-class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBase
+class StubBuffer :
+    public graphics::BufferBasic,
+    public graphics::NativeBufferBase,
+    public renderer::software::PixelSource
 {
 public:
     StubBuffer()

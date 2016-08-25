@@ -144,7 +144,7 @@ void mgc::ShmBuffer::gl_bind_to_texture()
     }
 }
 
-std::shared_ptr<MirNativeBuffer> mgc::ShmBuffer::native_buffer_handle() const
+std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
 

@@ -22,6 +22,7 @@
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
+#include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include MIR_SERVER_GL_H
@@ -211,9 +212,7 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                auto gbm_native =
-                    static_cast<mgm::GBMNativeBuffer*>(native.get());
-                if (auto bufobj = get_buffer_object(gbm_native->bo))
+                if (auto bufobj = get_buffer_object(native->bo))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;

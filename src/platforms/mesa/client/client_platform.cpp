@@ -25,6 +25,7 @@
 #include "mir/client_context.h"
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "native_buffer.h"
 
 #include <cstring>
 

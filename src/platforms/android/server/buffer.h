@@ -22,6 +22,7 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <hardware/gralloc.h>
 
@@ -45,7 +46,8 @@ namespace android
 {
 
 class Buffer: public BufferBasic, public NativeBufferBase,
-              public renderer::gl::TextureSource
+              public renderer::gl::TextureSource,
+              public renderer::software::PixelSource
 {
 public:
     Buffer(gralloc_module_t const* hw_module,
