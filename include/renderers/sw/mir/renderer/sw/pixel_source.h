@@ -38,6 +38,7 @@ public:
     virtual void write(unsigned char const* pixels, size_t size) = 0;
     //FIXME: correct read, it doesn't give size or format information about the pixels.
     virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
+    virtual geometry::Stride stride() const = 0;
 
 protected:
     PixelSource() = default;

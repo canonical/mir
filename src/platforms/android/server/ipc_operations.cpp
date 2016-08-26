@@ -62,7 +62,9 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
             msg.pack_data(buffer_handle->data[offset++]);
         }
 
-        msg.pack_stride(buffer.stride());
+        mir::geometry::Stride byte_stride{
+            native_buffer->anwb()->stride * MIR_BYTES_PER_PIXEL(buffer.pixel_format())};
+        msg.pack_stride(byte_stride);
         msg.pack_size(buffer.size());
     }
 }
