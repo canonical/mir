@@ -58,9 +58,10 @@ void AtomicFrame::increment_now()
 void AtomicFrame::increment_with_timestamp(Timestamp t)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    // Only update min_ust_interval after the first frame:
-    if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
-        frame.min_ust_interval = t - frame.ust;
+    if (frame.ust.clock_id != t.clock_id) // unlikely, but easy to handle
+        frame.min_ust_interval = 0;
+    else if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
+        frame.min_ust_interval = t.microseconds - frame.ust.microseconds;
     frame.ust = t;
     frame.msc++;
     log(frame);
