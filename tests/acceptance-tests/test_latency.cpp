@@ -53,7 +53,6 @@ public:
     void post()
     {
         std::lock_guard<std::mutex> lock{mutex};
-        printf("POST!\n");
         visible_frame++;
         posted.notify_one();
     }
@@ -61,7 +60,6 @@ public:
     void record_submission(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        printf("SUBMISSION RECORD\n");
         submissions.push_back({submission_id, visible_frame});
     }
 
@@ -73,7 +71,6 @@ public:
 
         for (auto i = submissions.begin(); i != submissions.end(); i++)
         {
-            printf("SUB ID %i  BID %i\n", submission_id, i->buffer_id);
             if (i->buffer_id == submission_id)
             {
                 // The server is skipping a frame we gave it, which may or
