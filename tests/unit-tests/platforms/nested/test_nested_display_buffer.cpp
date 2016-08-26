@@ -81,6 +81,11 @@ struct NestedDisplayBuffer : Test
 {
     NestedDisplayBuffer()
     {
+        output.top_left = { 0, 0 };
+        output.current_mode_index = 0;
+        output.orientation = mir_orientation_normal;
+        output.current_format = mir_pixel_format_abgr_8888;
+        output.modes = { { { 10, 11 }, 55.0f } };
         ON_CALL(*host_connection, create_surface(_,_,_,_,_))
             .WillByDefault(Return(mt::fake_shared(host_surface)));
     }
