@@ -24,12 +24,15 @@
 
 namespace mir { namespace graphics {
 
-/**
- * Maintaining bare integer types is important here because the whole
- * synchronization architecture relies on multiple processes having
- * precisely the same understanding of time, no matter how many IPC layers
- * the data passes through...
- *
+/*
+ * Using bare types because it's critical we maintain these values accurately
+ * from the driver code and then passed all the way to clients, and clients of
+ * clients. Existing drivers and APIs seem to use int64_t for this, and it
+ * has to be signed because sometimes time is negative (in the future).
+ */
+typedef int64_t Microseconds;
+
+/*
  * Also note that we use Timestamp instead of std::chrono::time_point because
  * we need to be able to switch clocks dynamically at runtime, depending on
  * which one any given driver claims to use.
@@ -37,11 +40,11 @@ namespace mir { namespace graphics {
 struct Timestamp
 {
     clockid_t clock_id;
-    int64_t microseconds;
+    Microseconds microseconds;
 
     Timestamp() : clock_id{CLOCK_MONOTONIC}, microseconds{0} {}
     // Note sure why gcc-4.9 (vivid) demands this over {c,u}
-    Timestamp(clockid_t c, int64_t u) : clock_id{c}, microseconds{u} {}
+    Timestamp(clockid_t c, Microseconds u) : clock_id{c}, microseconds{u} {}
 
     static Timestamp now(clockid_t clock_id)
     {
@@ -50,7 +53,7 @@ struct Timestamp
         return Timestamp(clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000);
     }
 
-    int64_t age() const
+    Microseconds age() const
     {
         return now(clock_id).microseconds - microseconds;
     }
@@ -69,14 +72,14 @@ struct Frame
 {
     int64_t msc = 0;   /**< Media Stream Counter */
     Timestamp ust;     /**< Unadjusted System Time */
-    int64_t min_ust_interval = 0;
+    Microseconds min_ust_interval = 0;
                        /**< The minimum number of microseconds to the next
                             frame after this one. This value may change over
                             time and should not be assumed to remain constant,
                             especially as variable framerate displays become
                             more common. */
 
-    int64_t age() const // might be negative in some cases (in the future).
+    Microseconds age() const // might be negative in some cases (in the future).
     {
         return ust.age();
     }
