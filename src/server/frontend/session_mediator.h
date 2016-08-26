@@ -45,7 +45,6 @@ class Authority;
 namespace graphics
 {
 class Buffer;
-class Display;
 class DisplayConfiguration;
 class GraphicBufferAllocator;
 }

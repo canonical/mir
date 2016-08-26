@@ -32,19 +32,19 @@ struct MockDisplayConfiguration : public graphics::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(
         for_each_card,
-        void(std::function<void(mg::DisplayConfigurationCard const&)>));
+        void(std::function<void(graphics::DisplayConfigurationCard const&)>));
 
     MOCK_CONST_METHOD1(
         for_each_output,
-        void(std::function<void(mg::DisplayConfigurationOutput const&)>));
+        void(std::function<void(graphics::DisplayConfigurationOutput const&)>));
 
     MOCK_METHOD1(
         for_each_output,
-        void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
+        void(std::function<void(graphics::UserDisplayConfigurationOutput&)>));
 
     MOCK_CONST_METHOD0(valid, bool());
 
-    std::unique_ptr<mg::DisplayConfiguration> clone() const
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const
     {
         throw std::runtime_error("MockDisplayConfiguration::clone is not implemented");
     }
