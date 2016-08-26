@@ -160,6 +160,7 @@ struct OrderTrackingDBC : mc::DisplayBufferCompositor
 
     void composite(mc::SceneElementSequence&& scene_sequence) override
     {
+        printf("TT\n");
         ordering->note_scene_element_sequence(scene_sequence);
         wrapped->composite(std::move(scene_sequence));
     }
@@ -193,6 +194,7 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
     void SetUp() override
     {
         ordering = std::make_shared<Ordering>();
+        printf("WRAP IN TEST\n");
         server.wrap_display_buffer_compositor_factory(
             [this](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
             {

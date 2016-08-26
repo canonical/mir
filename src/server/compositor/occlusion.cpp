@@ -18,8 +18,8 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/occlusion.h"
 #include "mir/graphics/renderable.h"
-#include "occlusion.h"
 
 #include <vector>
 
