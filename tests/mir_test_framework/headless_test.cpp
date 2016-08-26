@@ -22,12 +22,6 @@
 
 #include "mir/shared_library.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/compositor/occlusion.h"
-#include "mir/graphics/display_buffer.h"
-#include "mir/renderer/gl/render_target.h"
 #include "mir_test_framework/executable_path.h"
 
 #include <boost/throw_exception.hpp>

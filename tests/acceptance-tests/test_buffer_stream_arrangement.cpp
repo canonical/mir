@@ -172,9 +172,8 @@ struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
     {
     }
 
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db) override
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&) override
     {
-            (void)db;
         return std::make_unique<OrderTrackingDBC>(ordering);
     }
 
