@@ -26,7 +26,6 @@ MIR_SERVER_0.24 {
     mir::compositor::SceneElement::?SceneElement*;
     mir::compositor::SceneElement::SceneElement*;
     mir::compositor::Scene::Scene*;
-    mir::compositor::filter_occlusions_from*;
     mir::frontend::BufferSink::?BufferSink*;
     mir::frontend::BufferSink::BufferSink*;
     mir::frontend::BufferSink::operator*;

@@ -20,7 +20,6 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/occlusion.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/geometry/rectangle.h"
 #include <algorithm>
@@ -45,12 +44,12 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
 
         mg::RenderableList filter(
             mc::SceneElementSequence& elements,
-            geom::Rectangle const& area)
+            geom::Rectangle const& display_area)
         {
             mg::RenderableList renderables;
             for (auto it = elements.rbegin(); it != elements.rend(); it++)
             {
-                auto const area = (*it)->renderable()->screen_position().intersection_with(area);
+                auto const area = (*it)->renderable()->screen_position().intersection_with(display_area);
                 bool offscreen = (area == geom::Rectangle{});
                 bool occluded = false;
                 for(auto& r : renderables)
