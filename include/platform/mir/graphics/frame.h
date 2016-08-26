@@ -72,7 +72,7 @@ struct Frame
 {
     int64_t msc = 0;   /**< Media Stream Counter */
     Timestamp ust;     /**< Unadjusted System Time */
-    Microseconds min_ust_interval = 0;
+    Microseconds min_period = 0;
                        /**< The minimum number of microseconds to the next
                             frame after this one. This value may change over
                             time and should not be assumed to remain constant,
@@ -88,8 +88,8 @@ struct Frame
     Frame predict_next() const
     {
         return Frame{msc+1,
-                     {ust.clock_id, ust.microseconds+min_ust_interval},
-                     min_ust_interval};
+                     {ust.clock_id, ust.microseconds+min_period},
+                     min_period};
     }
 */
 };

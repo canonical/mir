@@ -29,7 +29,7 @@ void log(Frame const& frame)
     // long long to match printf format
     long long msc = frame.msc,
               ust = frame.ust.microseconds,
-              interval = frame.min_ust_interval,
+              interval = frame.min_period,
               age = frame.age();
     mir::log_debug(
         "Frame counter %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
@@ -59,9 +59,9 @@ void AtomicFrame::increment_with_timestamp(Timestamp t)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (frame.ust.clock_id != t.clock_id) // unlikely, but easy to handle
-        frame.min_ust_interval = 0;
-    else if (frame.msc || frame.ust.microseconds || frame.min_ust_interval)
-        frame.min_ust_interval = t.microseconds - frame.ust.microseconds;
+        frame.min_period = 0;
+    else if (frame.msc || frame.ust.microseconds || frame.min_period)
+        frame.min_period = t.microseconds - frame.ust.microseconds;
     frame.ust = t;
     frame.msc++;
     log(frame);

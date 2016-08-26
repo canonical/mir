@@ -188,7 +188,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     Frame frame = page_flipper->wait_for_flip(current_crtc->crtc_id);
 
     /*
-     * Improve our measurement of min_ust_interval for GSync/FreeSync displays,
+     * Improve our measurement of min_period for GSync/FreeSync displays,
      * which might be able to do even shorter intervals than our latest
      * measurement suggests...
      */
@@ -196,8 +196,8 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     if (max_rate > 0)
     {
         auto min_frame_interval_usec = 1000000 / max_rate;
-        if (min_frame_interval_usec < frame.min_ust_interval)
-            frame.min_ust_interval = min_frame_interval_usec;
+        if (min_frame_interval_usec < frame.min_period)
+            frame.min_period = min_frame_interval_usec;
     }
 
     last_frame_.store(frame);
