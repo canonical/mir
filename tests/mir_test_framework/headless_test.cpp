@@ -56,21 +56,27 @@ mtf::HeadlessTest::HeadlessTest()
 
                 void composite(mir::compositor::SceneElementSequence&& seq) override
                 {
-                    printf("COMPOSITE IN FIXTURE\n");
-                    if (render_target)
-                        render_target->make_current();
-
                     auto occluded = mir::compositor::filter_occlusions_from(seq, db.view_area());
                     for(auto const& element : occluded)
                         element->occluded();
-
-                    for (auto const& element : seq)
+                    mir::graphics::RenderableList renderlist;
+                    for(auto const& r : seq)
                     {
-                        element->rendered();
-                        element->renderable()->buffer(); // We need to consume a buffer to unblock client tests
+                        r->rendered();
+                        renderlist.push_back(r->renderable());
                     }
 
+                    if (db.post_renderables_if_optimizable(renderlist))
+                        return;
+
                     // Invoke GL renderer specific functions if the DisplayBuffer supports them
+                    if (render_target)
+                        render_target->make_current();
+
+                    // We need to consume a buffer to unblock client tests
+                    for (auto const& renderable : renderlist)
+                        renderable->buffer(); 
+
                     if (render_target)
                         render_target->swap_buffers();
                 }
@@ -81,7 +87,6 @@ mtf::HeadlessTest::HeadlessTest()
         }
     };
 
-    printf("WRAP IN FIXETURE\n");
     server.override_the_display_buffer_compositor_factory([]
     {
         return std::make_shared<HeadlessCompositorFactory>();
