@@ -48,38 +48,24 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             geom::Rectangle const& area)
         {
             mg::RenderableList renderables;
-            std::vector<geom::Rectangle> coverage;
-
-            auto it = elements.rbegin();
-            while (it != elements.rend())
+            for (auto it = elements.rbegin(); it != elements.rend(); it++)
             {
-                auto r = (*it)->renderable();
-                auto const window = r->screen_position().intersection_with(area);
-                bool onscreen = (window != geom::Rectangle{});
+                auto const area = (*it)->renderable()->screen_position().intersection_with(area);
+                bool offscreen = (area == geom::Rectangle{});
                 bool occluded = false;
-                bool opaque = !r->shaped() && (r->alpha() == 1.0f);
-                for(auto& r : coverage)
-                {
-                    if (r.contains(window)) {
-                        occluded = true;
-                        break;}
-                }
+                for(auto& r : renderables)
+                    occluded |= r->screen_position().contains(area) && !r->shaped() && (r->alpha() == 1.0f);
 
-                if (!onscreen || occluded)
+                if (offscreen || occluded)
                 {
                     (*it)->occluded();
                 }
                 else
                 {
                     (*it)->rendered();
-                    renderables.push_back(r);
+                    renderables.push_back((*it)->renderable());
                 }
-
-                if (opaque)
-                    coverage.push_back(window);
-                it++;
             }
-
             std::reverse(renderables.begin(), renderables.end());
             return renderables;
         }
