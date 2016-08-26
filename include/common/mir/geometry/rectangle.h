@@ -64,6 +64,11 @@ struct Rectangle
     bool overlaps(Rectangle const& r) const;
 
     Rectangle intersection_with(Rectangle const& r) const;
+
+    X left() const   { return top_left.x; }
+    X right() const  { return bottom_right().x; }
+    Y top() const    { return top_left.y; } 
+    Y bottom() const { return bottom_right().y; }
 };
 
 inline constexpr bool operator == (Rectangle const& lhs, Rectangle const& rhs)

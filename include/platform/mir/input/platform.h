@@ -109,6 +109,13 @@ typedef ModuleProperties const*(*DescribeModule)();
 
 extern "C"
 {
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
 /**
  * Function used to initialize an input platform.
  *
@@ -159,5 +166,9 @@ mir::input::PlatformPriority probe_input_platform(mir::options::Option const& op
  * \ingroup platform_enablement
  */
 mir::ModuleProperties const* describe_input_module();
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 }
 #endif // MIR_INPUT_PLATFORM_H_
