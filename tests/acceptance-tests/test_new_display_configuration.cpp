@@ -731,10 +731,8 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
 {
     std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
     current_config->for_each_output(
-        [](mg::UserDisplayConfigurationOutput& output)
+        [output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
         {
-            static int output_num{0};
-
             output.scale = 1 + 0.25f * output_num;
             ++output_num;
         });
@@ -775,10 +773,8 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 
     std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
     current_config->for_each_output(
-        [&form_factors](mg::UserDisplayConfigurationOutput& output)
+        [&form_factors, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
             {
-                static int output_num{0};
-
                 output.form_factor = form_factors[output_num];
                 ++output_num;
             });
@@ -944,9 +940,8 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_reverts_afte
 
     DisplayConfigMatchingContext context;
     auto reverted = std::make_shared<mt::Signal>();
-    context.matcher = [old_config, new_config, reverted](MirDisplayConfig* conf)
+    context.matcher = [old_config, new_config, reverted, call_count = 0](MirDisplayConfig* conf) mutable
         {
-            static int call_count{0};
             ++call_count;
             if (call_count == 1)
             {
@@ -1009,9 +1004,8 @@ TEST_F(DisplayConfigurationTest, display_configuration_sticks_after_confirmation
 
     DisplayConfigMatchingContext context;
     auto signalled_twice = std::make_shared<mt::Signal>();
-    context.matcher = [new_config, signalled_twice](MirDisplayConfig* conf)
+    context.matcher = [new_config, signalled_twice, call_count = 0](MirDisplayConfig* conf) mutable
         {
-            static int call_count{0};
             ++call_count;
             EXPECT_THAT(conf, mt::DisplayConfigMatches(new_config.get()));
             if (call_count == 2)
