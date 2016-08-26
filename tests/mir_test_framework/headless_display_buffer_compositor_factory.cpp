@@ -55,8 +55,9 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             {
                 auto r = (*it)->renderable();
                 auto const window = r->screen_position().intersection_with(area);
-
-                bool occluded = (window == geom::Rectangle{});
+                bool onscreen = (window != geom::Rectangle{});
+                bool occluded = false;
+                bool opaque = !r->shaped() && (r->alpha() == 1.0f);
                 for(auto& r : coverage)
                 {
                     if (r.contains(window)) {
@@ -64,17 +65,18 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
                         break;}
                 }
 
-                if (r->shaped() || !occluded)
+                if (!onscreen || occluded)
+                {
+                    (*it)->occluded();
+                }
+                else
                 {
                     (*it)->rendered();
                     renderables.push_back(r);
                 }
-                else
-                {
-                    (*it)->occluded();
-                }
 
-                coverage.push_back(window);
+                if (opaque)
+                    coverage.push_back(window);
                 it++;
             }
 
