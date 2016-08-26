@@ -37,6 +37,16 @@ namespace doubles
 class StubHostConnection : public graphics::nested::HostConnection
 {
 public:
+    StubHostConnection(std::shared_ptr<graphics::nested::HostSurface> const& surf) :
+        surface(surf)
+    {
+    }
+
+    StubHostConnection() :
+        StubHostConnection(std::make_shared<NullHostSurface>())
+    {
+    }
+
     std::vector<int> platform_fd_items() override { return {}; }
 
     EGLNativeDisplayType egl_native_display() override { return {}; }
@@ -58,14 +68,7 @@ public:
             std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
             graphics::BufferProperties, char const*, uint32_t) override
     {
-        class NullHostSurface : public graphics::nested::HostSurface
-        {
-        public:
-            EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(mir_surface_event_callback, void*) override {}
-        };
-
-        return std::make_shared<NullHostSurface>();
+        return surface;
     }
 
     graphics::PlatformOperationMessage platform_operation(
@@ -107,6 +110,14 @@ public:
         };
         return std::make_unique<NullStream>();
     }
+
+    class NullHostSurface : public graphics::nested::HostSurface
+    {
+    public:
+        EGLNativeWindowType egl_native_window() override { return {}; }
+        void set_event_handler(mir_surface_event_callback, void*) override {}
+    };
+    std::shared_ptr<graphics::nested::HostSurface> const surface;
 };
 
 

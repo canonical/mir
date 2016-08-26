@@ -70,13 +70,6 @@ private:
     void* event_context;
 };
 
-struct MockHostConnection : mtd::StubHostConnection
-{
-    MOCK_METHOD5(create_surface, std::shared_ptr<mgn::HostSurface>(
-            std::shared_ptr<mgn::HostStream> const&, geom::Displacement,
-            mg::BufferProperties, char const*, uint32_t));
-};
-
 struct NestedDisplayBuffer : Test
 {
     NestedDisplayBuffer()
@@ -86,8 +79,6 @@ struct NestedDisplayBuffer : Test
         output.orientation = mir_orientation_normal;
         output.current_format = mir_pixel_format_abgr_8888;
         output.modes = { { { 10, 11 }, 55.0f } };
-        ON_CALL(*host_connection, create_surface(_,_,_,_,_))
-            .WillByDefault(Return(mt::fake_shared(host_surface)));
     }
 
     auto create_display_buffer()
@@ -97,9 +88,10 @@ struct NestedDisplayBuffer : Test
 
     NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
-    std::shared_ptr<MockHostConnection> host_connection = std::make_shared<NiceMock<MockHostConnection>>();
-    mg::DisplayConfigurationOutput output;
     EventHostSurface host_surface;
+    std::shared_ptr<mtd::StubHostConnection> host_connection =
+        std::make_shared<mtd::StubHostConnection>(mt::fake_shared(host_surface));
+    mg::DisplayConfigurationOutput output;
 };
 
 }
