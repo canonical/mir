@@ -22,10 +22,14 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/occlusion.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/geometry/rectangle.h"
+#include <algorithm>
 
 namespace mtf = mir_test_framework;
 namespace mg = mir::graphics;
 namespace mrg = mir::renderer::gl;
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 std::unique_ptr<mir::compositor::DisplayBufferCompositor>
 mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBuffer& db)
@@ -39,18 +43,48 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         {
         }
 
-        void composite(mir::compositor::SceneElementSequence&& seq) override
+        mg::RenderableList filter(
+            mc::SceneElementSequence& elements,
+            geom::Rectangle const& area)
         {
-            auto occluded = mir::compositor::filter_occlusions_from(seq, db.view_area());
-            for(auto const& element : occluded)
-                element->occluded();
-            mg::RenderableList renderlist;
-            for(auto const& r : seq)
+            mg::RenderableList renderables;
+            std::vector<geom::Rectangle> coverage;
+
+            auto it = elements.rbegin();
+            while (it != elements.rend())
             {
-                r->rendered();
-                renderlist.push_back(r->renderable());
+                auto r = (*it)->renderable();
+                auto const window = r->screen_position().intersection_with(area);
+
+                bool occluded = (window == geom::Rectangle{});
+                for(auto& r : coverage)
+                {
+                    if (r.contains(window)) {
+                        occluded = true;
+                        break;}
+                }
+
+                if (r->shaped() || !occluded)
+                {
+                    (*it)->rendered();
+                    renderables.push_back(r);
+                }
+                else
+                {
+                    (*it)->occluded();
+                }
+
+                coverage.push_back(window);
+                it++;
             }
 
+            std::reverse(renderables.begin(), renderables.end());
+            return renderables;
+        }
+
+        void composite(mir::compositor::SceneElementSequence&& seq) override
+        {
+            auto renderlist = filter(seq, db.view_area());
             if (db.post_renderables_if_optimizable(renderlist))
                 return;
 
