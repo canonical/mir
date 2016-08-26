@@ -18,11 +18,25 @@
 
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/executable_path.h"
+#include "headless_display_buffer_compositor_factory.h"
 
+#include "mir/shared_library.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/compositor/occlusion.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/renderer/gl/render_target.h"
+#include "mir_test_framework/executable_path.h"
 namespace mtf = mir_test_framework;
 
 mtf::HeadlessNestedServerRunner::HeadlessNestedServerRunner(std::string const& connect_string)
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_HOST_SOCKET", connect_string.c_str());
+    server.override_the_display_buffer_compositor_factory([]
+    {
+        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
+    });
 }

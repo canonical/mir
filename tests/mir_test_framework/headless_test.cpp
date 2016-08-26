@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/headless_test.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
+#include "headless_display_buffer_compositor_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/geometry/rectangle.h"
@@ -39,57 +40,9 @@ mtf::HeadlessTest::HeadlessTest()
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
-
-    struct HeadlessCompositorFactory : mir::compositor::DisplayBufferCompositorFactory
-    {
-        std::unique_ptr<mir::compositor::DisplayBufferCompositor> create_compositor_for(
-            mir::graphics::DisplayBuffer& display_buffer) override
-        {
-            struct HeadlessDBC : mir::compositor::DisplayBufferCompositor
-            {
-                HeadlessDBC(mir::graphics::DisplayBuffer& db) :
-                    db(db),
-                    render_target(dynamic_cast<mir::renderer::gl::RenderTarget*>(
-                        db.native_display_buffer()))
-                {
-                }
-
-                void composite(mir::compositor::SceneElementSequence&& seq) override
-                {
-                    auto occluded = mir::compositor::filter_occlusions_from(seq, db.view_area());
-                    for(auto const& element : occluded)
-                        element->occluded();
-                    mir::graphics::RenderableList renderlist;
-                    for(auto const& r : seq)
-                    {
-                        r->rendered();
-                        renderlist.push_back(r->renderable());
-                    }
-
-                    if (db.post_renderables_if_optimizable(renderlist))
-                        return;
-
-                    // Invoke GL renderer specific functions if the DisplayBuffer supports them
-                    if (render_target)
-                        render_target->make_current();
-
-                    // We need to consume a buffer to unblock client tests
-                    for (auto const& renderable : renderlist)
-                        renderable->buffer(); 
-
-                    if (render_target)
-                        render_target->swap_buffers();
-                }
-                mir::graphics::DisplayBuffer& db;
-                mir::renderer::gl::RenderTarget* const render_target;
-            };
-            return std::make_unique<HeadlessDBC>(display_buffer);
-        }
-    };
-
     server.override_the_display_buffer_compositor_factory([]
     {
-        return std::make_shared<HeadlessCompositorFactory>();
+        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
     });
 }
 
