@@ -371,7 +371,7 @@ mg::Frame mge::Display::last_frame_on(unsigned) const
 {
     /*
      * TODO: Implement this properly using the hardware counters from somewhere.
-     *       Failing that, use the EstimateFrame class.
+     *       Or just use the less precise AtomicFrame.increment() in post().
      */
     return {};
 }
