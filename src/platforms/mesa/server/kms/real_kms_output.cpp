@@ -118,7 +118,6 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
                     mgk::connector_name(connector).c_str());
     }
 
-
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
                               &connector->connector_id, 1,
@@ -286,14 +285,13 @@ void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
                     mgk::connector_name(connector).c_str());
     }
 
-    int ret;
-    if ((ret = drmModeCrtcSetGamma(
+    if (drmModeCrtcSetGamma(
         drm_fd,
         current_crtc->crtc_id,
         gamma.red.size(),
         const_cast<uint16_t*>(gamma.red.data()),
         const_cast<uint16_t*>(gamma.green.data()),
-        const_cast<uint16_t*>(gamma.blue.data()))) != 0)
+        const_cast<uint16_t*>(gamma.blue.data())) != 0)
     {
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
