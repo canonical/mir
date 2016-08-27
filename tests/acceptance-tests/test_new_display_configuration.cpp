@@ -872,6 +872,73 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_can_set_gamma)
+{
+    std::vector<mg::DisplayGamma> const gammas = {
+        {{0, 1, 2, 3}, {0, 1, 2, 3, 4}, {65532, 65533, 65534, 65535}},
+        {{1, 2, 3, 4}, {65532, 65533, 65534, 65535}, {1, 2, 3, 4, 5}},
+        {{65532, 65533, 65534, 65535}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}}
+    };
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(client_config.get(), i);
+
+        mir_output_set_gamma(output,
+                             gammas[i].red.data(),
+                             gammas[i].green.data(),
+                             gammas[i].blue.data(),
+                             gammas[i].red.size());
+    }
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [c = client_config.get()](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(c));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&gammas, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+            {
+                for (size_t r = 0; r < output.gamma.red.size(); r++)
+                {
+                    EXPECT_THAT(output.gamma.red[r], gammas[output_num].red[r]);
+                }
+
+                for (size_t g = 0; g < output.gamma.green.size(); g++)
+                {
+                    EXPECT_THAT(output.gamma.green[g], gammas[output_num].green[g]);
+                }
+
+                for (size_t b = 0; b < output.gamma.blue.size(); b++)
+                {
+                    EXPECT_THAT(output.gamma.blue[b], gammas[output_num].blue[b]);
+                }
+
+                ++output_num;
+            });
+
+    client.disconnect();
+}
+
 namespace
 {
 MATCHER_P(IsSameModeAs, mode, "")

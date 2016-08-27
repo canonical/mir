@@ -1169,6 +1169,15 @@ void mf::SessionMediator::raise_surface(
     done->Run();
 }
 
+namespace
+{
+std::vector<uint16_t> convert_int8_string_to_uint16_vector(std::string const& bytes)
+{
+    auto raw_bytes = reinterpret_cast<uint16_t const*>(bytes.data());
+    return std::vector<uint16_t>(raw_bytes, raw_bytes + bytes.size() / 2);
+}
+}
+
 std::shared_ptr<mg::DisplayConfiguration>
 mf::SessionMediator::unpack_and_sanitize_display_configuration(
     mir::protobuf::DisplayConfiguration const* protobuf_config)
@@ -1196,14 +1205,9 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
 
-        auto red_bytes = src.gamma_red();
-        std::vector<uint16_t> red(std::begin(red_bytes), std::end(red_bytes));
-
-        auto green_bytes = src.gamma_green();
-        std::vector<uint16_t> green(std::begin(green_bytes), std::end(green_bytes));
-
-        auto blue_bytes = src.gamma_blue();
-        std::vector<uint16_t> blue(std::begin(blue_bytes), std::end(blue_bytes));
+        auto red   = convert_int8_string_to_uint16_vector(src.gamma_red());
+        auto green = convert_int8_string_to_uint16_vector(src.gamma_green());
+        auto blue  = convert_int8_string_to_uint16_vector(src.gamma_blue());
 
         dest.gamma = {red, green, blue};
     });
