@@ -346,7 +346,7 @@ MirOutputGammaSupported mir_output_gamma_allowed(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return static_cast<MirOutputGammaSupported>(output->gamma_correction_allowed());
+    return static_cast<MirOutputGammaSupported>(output->gamma_supported());
 }
 
 void mir_output_get_gamma(MirOutput const* client_output,

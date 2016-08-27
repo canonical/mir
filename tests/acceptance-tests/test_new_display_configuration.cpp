@@ -868,6 +868,8 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
         EXPECT_THAT(size, gammas[0].red.size());
     }
+
+    client.disconnect();
 }
 
 namespace
