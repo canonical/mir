@@ -98,7 +98,7 @@ public:
                 1.0f,
                 mir_form_factor_monitor,
                 mir_subpixel_arrangement_unknown,
-                {},
+                {{}, {}, {}},
                 mir_output_gamma_unsupported
             };
 
