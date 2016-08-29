@@ -90,7 +90,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
         1.0f,
         mir_form_factor_phone,
         mir_subpixel_arrangement_unknown,
-        {{}, {}, {}},
+        {},
         mir_output_gamma_unsupported
     };
 }

@@ -41,6 +41,11 @@ MIRPLATFORM_0.25 {
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::operator*;
     mir::graphics::DisplayConfiguration::valid*;
+    mir::graphics::DisplayGamma::DisplayGamma*;
+    mir::graphics::DisplayGamma::red*;
+    mir::graphics::DisplayGamma::green*;
+    mir::graphics::DisplayGamma::blue*;
+    mir::graphics::DisplayGamma::size*;
     mir::graphics::Display::configure*;
     mir::graphics::Display::create_gl_context*;
     mir::graphics::Display::create_hardware_cursor*;

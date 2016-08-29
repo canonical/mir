@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/display_gamma.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -80,16 +81,6 @@ struct DisplayConfigurationMode
 };
 
 /**
- * Gamma values per display
- */
-struct DisplayGamma
-{
-    std::vector<uint16_t> red;
-    std::vector<uint16_t> green;
-    std::vector<uint16_t> blue;
-};
-
-/**
  * Configuration information for a display output.
  */
 struct DisplayConfigurationOutput
@@ -130,14 +121,14 @@ struct DisplayConfigurationOutput
     /** Subpixel arrangement of this output */
     MirSubpixelArrangement subpixel_arrangement;
 
+    /** The current gamma for the display */
+    DisplayGamma gamma;
+    MirOutputGammaSupported gamma_supported;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
     bool valid() const;
-
-    /** The current gamma for the disaply */
-    DisplayGamma gamma;
-    MirOutputGammaSupported gamma_supported;
 };
 
 /**
@@ -163,12 +154,11 @@ struct UserDisplayConfigurationOutput
     float& scale;
     MirFormFactor& form_factor;
     MirSubpixelArrangement& subpixel_arrangement;
+    DisplayGamma& gamma;
+    MirOutputGammaSupported const& gamma_supported;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
-
-    DisplayGamma& gamma;
-    MirOutputGammaSupported const& gamma_supported;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);

@@ -379,11 +379,13 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
-    mg::DisplayGamma gamma{{1}, {2}, {3}};
+    mg::DisplayGamma gamma{{1}, {2}, {3}, 1};
 
     EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
-                                              1, gamma.red.data(), gamma.green.data(),
-                                              gamma.blue.data()))
+                                              gamma.size(),
+                                              const_cast<uint16_t*>(gamma.red()),
+                                              const_cast<uint16_t*>(gamma.green()),
+                                              const_cast<uint16_t*>(gamma.blue())))
         .Times(1);
 
     EXPECT_TRUE(output.set_crtc(fb_id));

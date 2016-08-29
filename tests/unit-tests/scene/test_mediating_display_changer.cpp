@@ -73,7 +73,7 @@ auto display_output(
                                               1.0f,
                                               mir_form_factor_phone,
                                               mir_subpixel_arrangement_unknown,
-                                              {{}, {}, {}},
+                                              {},
                                               mir_output_gamma_unsupported
         };
 }
