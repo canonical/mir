@@ -62,20 +62,20 @@ public:
             mir_read,
             std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
 
-        DispContextPair current
+        ImageResources resources
         {
             eglGetCurrentDisplay(),
             eglGetCurrentContext()
         };
 
         EGLImageKHR image;
-        auto it = egl_image_map.find(current);
+        auto it = egl_image_map.find(resources);
         if (it == egl_image_map.end())
         {
             static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-            auto i = factory->create_egl_image_from(native_buffer.get(), current.first, image_attrs);
+            auto i = factory->create_egl_image_from(native_buffer.get(), resources.first, image_attrs);
             image = *i;
-            egl_image_map[current] = std::move(i);
+            egl_image_map[resources] = std::move(i);
         }
         else
         {
@@ -101,8 +101,8 @@ protected:
 private:
     std::shared_ptr<mgn::EglImageFactory> const factory;
     mg::EGLExtensions egl_extensions;
-    typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
-    std::map<DispContextPair, std::unique_ptr<EGLImageKHR>> egl_image_map;
+    typedef std::pair<EGLDisplay, EGLContext> ImageResources;
+    std::map<ImageResources, std::unique_ptr<EGLImageKHR>> egl_image_map;
 };
 
 class PixelAndTextureAccess :
