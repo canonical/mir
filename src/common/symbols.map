@@ -1,5 +1,9 @@
-MIR_COMMON_5 {
+MIR_COMMON_0.25 {
  global:
+  __android_log_assert;
+  __android_log_print;
+  systemTime;
+  toMillisecondTimeoutDelay;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
@@ -111,7 +115,6 @@ MIR_COMMON_5 {
     mir::default_server_socket;
     mir::libraries_for_path*;
     mir::logging::input_timestamp*;
-    mir::logging::log*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
@@ -139,16 +142,8 @@ MIR_COMMON_5 {
 
     mir::SignalBlocker::SignalBlocker*;
     mir::SignalBlocker::?SignalBlocker*;
-  };
-};
 
-MIR_COMMON_5.1 {  # New functions in Mir 0.16
- global:
-    __android_log_assert;
-    __android_log_print;
-    systemTime;
-    toMillisecondTimeoutDelay;
-    extern "C++" {
+# New functions in Mir 0.16
       android::InputChannel::InputChannel*;
       android::InputChannel::openInputFdPair*;
       android::InputConsumer::consume*;
@@ -170,9 +165,7 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       android::IntSet::remove*;
       android::KeyEvent::initialize*;
       android::MotionEvent::getAxisValue*;
-      android::MotionEvent::getAxisValue*;
       android::MotionEvent::getHistoricalAxisValue*;
-      android::MotionEvent::getRawAxisValue*;
       android::MotionEvent::getRawAxisValue*;
       android::PointerCoords::copyFrom*;
       android::PointerCoords::getAxisValue*;
@@ -191,37 +184,26 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       mir::write_to_log;
       typeinfo?for?android::RefBase;
       vtable?for?android::IntSet;
-      mir::dispatch::ReadableFd::ReadableFd*;
-      mir::dispatch::ReadableFd::?ReadableFd*;
-      mir::dispatch::ReadableFd::watch_fd*;
-      mir::dispatch::ReadableFd::dispatch*;
-      mir::dispatch::ReadableFd::relevant_events*;
+      vtable?for?mir::dispatch::ReadableFd;
+      mir::dispatch::ReadableFd*;
+      #mir::dispatch::ReadableFd::ReadableFd*;
+      #mir::dispatch::ReadableFd::?ReadableFd*;
+      #mir::dispatch::ReadableFd::watch_fd*;
+      #mir::dispatch::ReadableFd::dispatch*;
+      #mir::dispatch::ReadableFd::relevant_events*;
       mir::logger::Logger::log*;
-    };
-  local: *;
-} MIR_COMMON_5;
 
-MIR_COMMON_5v19 { # New functions in Mir 0.19.0
-  global:
-    extern "C++" {
+# New functions in Mir 0.19.0
       typeinfo?for?mir::logging::SharedLibraryProberReport;
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
       typeinfo?for?mir::logging::DumbConsoleLogger;
       mir::detail::libname_impl*;
-    };
-} MIR_COMMON_5.1;
 
-MIR_COMMON_0.19.1 { # New functions in Mir 0.19.1
-  global:
-    extern "C++" {
+# New functions in Mir 0.19.1
       mir::select_libraries_for_path*;
-    };
-} MIR_COMMON_5v19;  # <- Note Mir 0.19.0 used the wrong syntax
 
-MIR_COMMON_0.22 {
-  global:
-    extern "C++" {
+# New functions in Mir 0.22
        MirEvent::to_surface*;
        MirEvent::to_resize*;
        MirEvent::to_orientation*;
@@ -351,12 +333,8 @@ MIR_COMMON_0.22 {
        MirPromptSessionEvent::MirPromptSessionEvent*;
        MirPromptSessionEvent::new_state*;
        MirPromptSessionEvent::set_new_state*;
-    };
-} MIR_COMMON_0.19.1;
 
-MIR_COMMON_0.24 {
-  global:
-    extern "C++" {
+# New functions in Mir 0.24
        android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
@@ -382,7 +360,5 @@ MIR_COMMON_0.24 {
        android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
-       mir::dispatch::ReadableFd*;
-       vtable?for?mir::dispatch::ReadableFd;
     };
-} MIR_COMMON_0.22;
+};

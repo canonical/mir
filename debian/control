@@ -100,7 +100,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon6 (= ${binary:Version}), 
+Depends: libmircommon7 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
          ${misc:Depends},
@@ -288,7 +288,7 @@ Description: Display Server for Ubuntu - android platform diagnostics utility
  .
  Contains a tool for checking the graphics components of android devices.
 
-Package: libmircommon6
+Package: libmircommon7
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
