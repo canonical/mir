@@ -186,11 +186,6 @@ MIR_COMMON_0.25 {
       vtable?for?android::IntSet;
       vtable?for?mir::dispatch::ReadableFd;
       mir::dispatch::ReadableFd*;
-      #mir::dispatch::ReadableFd::ReadableFd*;
-      #mir::dispatch::ReadableFd::?ReadableFd*;
-      #mir::dispatch::ReadableFd::watch_fd*;
-      #mir::dispatch::ReadableFd::dispatch*;
-      #mir::dispatch::ReadableFd::relevant_events*;
       mir::logger::Logger::log*;
 
 # New functions in Mir 0.19.0
