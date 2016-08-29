@@ -288,10 +288,10 @@ void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
     if (drmModeCrtcSetGamma(
         drm_fd,
         current_crtc->crtc_id,
-        gamma.red.size(),
-        const_cast<uint16_t*>(gamma.red.data()),
-        const_cast<uint16_t*>(gamma.green.data()),
-        const_cast<uint16_t*>(gamma.blue.data())) != 0)
+        gamma.size(),
+        const_cast<uint16_t*>(gamma.red()),
+        const_cast<uint16_t*>(gamma.green()),
+        const_cast<uint16_t*>(gamma.blue())) != 0)
     {
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));

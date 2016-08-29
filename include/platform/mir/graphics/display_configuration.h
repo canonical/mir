@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/display_gamma.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -77,16 +78,6 @@ struct DisplayConfigurationMode
 {
     geometry::Size size;
     double vrefresh_hz;
-};
-
-/**
- * Gamma values per display
- */
-struct DisplayGamma
-{
-    std::vector<uint16_t> red;
-    std::vector<uint16_t> green;
-    std::vector<uint16_t> blue;
 };
 
 /**
