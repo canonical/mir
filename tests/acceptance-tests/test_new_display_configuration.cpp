@@ -113,6 +113,17 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
         mtf::ConnectedClientWithASurface::SetUp();
     }
 
+    void apply_config_change_and_wait_for_propagation(
+        std::shared_ptr<mg::DisplayConfiguration> const& new_config)
+    {
+        mock_display.emit_configuration_change_event(new_config);
+        // This waits until the configuration change event has propagated to MediatingDisplayChanger...
+        mock_display.wait_for_configuration_change_handler();
+        // ...and MediatingDisplayChanger will defer *actually* processing this to the mainloop,
+        // so wait until that has been processed before returning.
+        wait_for_server_actions_to_finish(*server.the_main_loop());
+    }
+
     testing::NiceMock<MockDisplay> mock_display;
     StubAuthorizer stub_authorizer;
 };
@@ -300,6 +311,9 @@ TEST_P(DisplayPowerSetting, can_get_power_mode)
             output.power_mode = mode;
         });
 
+    // We don't use apply_config_change_and_wait_for_propagation() here as
+    // that simulates a hardware change to which the default configuration policy
+    // will be applied... and that switches all the enabled monitors on!
     server.the_display_configuration_controller()->set_base_configuration(server_config);
     wait_for_server_actions_to_finish(*server.the_main_loop());
 
@@ -333,8 +347,7 @@ TEST_P(DisplayOrientationSetting, can_get_orientation)
             output.orientation = orientation;
         });
 
-    mock_display.emit_configuration_change_event(server_config);
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(server_config);
 
     DisplayClient client{new_connection()};
 
@@ -374,8 +387,7 @@ TEST_P(DisplayFormatSetting, can_get_all_output_format)
     auto format = GetParam();
     mtd::StubDisplayConfig single_format_config(1, {format});
 
-    mock_display.emit_configuration_change_event(mt::fake_shared(single_format_config));
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_format_config));
 
     DisplayClient client{new_connection()};
 
@@ -407,8 +419,7 @@ TEST_P(DisplaySubpixelSetting, can_get_all_subpixel_arrangements)
         subpixel_arrangement};
     mtd::StubDisplayConfig single_subpixel_config({output});
 
-    mock_display.emit_configuration_change_event(mt::fake_shared(single_subpixel_config));
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_subpixel_config));
 
     DisplayClient client{new_connection()};
 
@@ -462,8 +473,7 @@ TEST_F(DisplayConfigurationTest, client_received_configuration_matches_server_co
 
     auto config = std::make_shared<mtd::StubDisplayConfig>(outputs);
 
-    mock_display.emit_configuration_change_event(config);
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(config);
 
     DisplayClient client{new_connection()};
 
@@ -495,8 +505,7 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
 
     std::vector<mg::DisplayConfigurationOutput> outputs{monitor};
 
-    mock_display.emit_configuration_change_event(std::make_shared<mtd::StubDisplayConfig>(outputs));
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(std::make_shared<mtd::StubDisplayConfig>(outputs));
 
     DisplayClient client{new_connection()};
 
@@ -545,8 +554,7 @@ TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orient
 
     std::shared_ptr<mg::DisplayConfiguration> server_config;
     server_config = std::make_shared<mtd::StubDisplayConfig>(outputs);
-    mock_display.emit_configuration_change_event(server_config);
-    mock_display.wait_for_configuration_change_handler();
+    apply_config_change_and_wait_for_propagation(server_config);
 
     DisplayClient client{new_connection()};
     client.connect();
