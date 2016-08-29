@@ -164,6 +164,30 @@ TEST_F(NestedDisplayBuffer, creates_stream_for_passthrough)
     EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
 }
 
+#if 0
+TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
+{
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_chain = std::make_shared<MockNestedChain>();
+
+    EXPECT_CALL(*host_connection, create_stream())
+        .WillOnce(Return(mock_stream));
+    EXPECT_CALL(*host_connection, create_chain())
+        .WillOnce(Return(mock_chain));
+    EXPECT_CALL(*mock_chain, submit_buffer(nested_buffer.fake_mir_buffer));
+
+    EXPECT_CALL(mock_host_surface, set_content(_))
+        .Times(2);
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_surface));
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    display_buffer->post_gl();
+}
+#endif
+
 TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
 {
     mtd::StubBuffer nested_buffer; 
