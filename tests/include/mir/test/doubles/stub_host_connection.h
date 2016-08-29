@@ -21,6 +21,8 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/server/graphics/nested/host_stream.h"
+#include "src/server/graphics/nested/host_chain.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -38,6 +40,16 @@ namespace doubles
 class StubHostConnection : public graphics::nested::HostConnection
 {
 public:
+    StubHostConnection(std::shared_ptr<graphics::nested::HostSurface> const& surf) :
+        surface(surf)
+    {
+    }
+
+    StubHostConnection() :
+        StubHostConnection(std::make_shared<NullHostSurface>())
+    {
+    }
+
     std::vector<int> platform_fd_items() override { return {}; }
 
     EGLNativeDisplayType egl_native_display() override { return {}; }
@@ -56,17 +68,10 @@ public:
 
     std::shared_ptr<graphics::nested::HostSurface>
         create_surface(
-            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
-            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
+            std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+            graphics::BufferProperties, char const*, uint32_t) override
     {
-        class NullHostSurface : public graphics::nested::HostSurface
-        {
-        public:
-            EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(mir_surface_event_callback, void*) override {}
-        };
-
-        return std::make_shared<NullHostSurface>();
+        return surface;
     }
 
     graphics::PlatformOperationMessage platform_operation(
@@ -99,14 +104,43 @@ public:
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
     }
+
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) override
+    {
+        struct NullStream : graphics::nested::HostStream
+        {
+            MirBufferStream* handle() const override { return nullptr; }
+            EGLNativeWindowType egl_native_window() const override { return 0; }
+        };
+        return std::make_unique<NullStream>();
+    }
+
+    std::shared_ptr<graphics::nested::HostChain> create_chain()
+    {
+        struct NullHostChain : graphics::nested::HostChain
+        {
+        };
+        return std::make_unique<NullHostChain>();
+    }
+
+    class NullHostSurface : public graphics::nested::HostSurface
+    {
+    public:
+        EGLNativeWindowType egl_native_window() override { return {}; }
+        void set_event_handler(mir_surface_event_callback, void*) override {}
+    };
+    std::shared_ptr<graphics::nested::HostSurface> const surface;
 };
 
 struct MockHostConnection : StubHostConnection
 {
     MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(graphics::nested::UniqueInputConfig)> const&));
     MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
-    MOCK_METHOD0(create_chain, std::shared_ptr<graphics::nested::HostChain>());
-
+    MOCK_METHOD0(create_chain, std::unique_ptr<graphics::nested::HostChain>());
+    MOCK_METHOD1(create_stream, std::unique_ptr<graphics::nested::HostStream>(graphics::BufferProperties const&));
+    MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
+        (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+         graphics::BufferProperties, char const*, uint32_t));
 
     void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
     {

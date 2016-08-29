@@ -33,6 +33,16 @@ public:
 };
 
 using ModuleFunction = mir::UniqueModulePtr<SomeInterface> (*)();
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 extern "C" mir::UniqueModulePtr<SomeInterface> module_create_instance();
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #endif

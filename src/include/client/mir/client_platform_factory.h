@@ -47,7 +47,16 @@ extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
 }
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 extern "C" mir::UniqueModulePtr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext* context);
 extern "C" bool is_appropriate_module(mir::client::ClientContext* context);
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #endif /* MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_ */
