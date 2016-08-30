@@ -33,21 +33,22 @@ mg::DisplayGamma::DisplayGamma(uint16_t const* red,
 {
 }
 
-mg::DisplayGamma::DisplayGamma(std::string const& red,
-                               std::string const& green,
-                               std::string const& blue) :
-    red_  (red.size()),
-    green_(red.size()),
-    blue_ (red.size())
+mg::DisplayGamma::DisplayGamma(std::string const& bytes_red,
+                               std::string const& bytes_green,
+                               std::string const& bytes_blue) :
+    red_  (bytes_red.size() / 2),
+    green_(bytes_red.size() / 2),
+    blue_ (bytes_red.size() / 2)
 {
-    if (red.size() != green.size() || green.size() != blue.size())
+    if (bytes_red.size() != bytes_green.size() ||
+        bytes_green.size() != bytes_blue.size())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Mismatch gamma LUT size"));
     }
 
-    std::copy(std::begin(red),   std::end(red),   reinterpret_cast<char*>(red_.data()));
-    std::copy(std::begin(green), std::end(green), reinterpret_cast<char*>(green_.data()));
-    std::copy(std::begin(blue),  std::end(blue),  reinterpret_cast<char*>(blue_.data()));
+    std::copy(std::begin(bytes_red),   std::end(bytes_red),   reinterpret_cast<char*>(red_.data()));
+    std::copy(std::begin(bytes_green), std::end(bytes_green), reinterpret_cast<char*>(green_.data()));
+    std::copy(std::begin(bytes_blue),  std::end(bytes_blue),  reinterpret_cast<char*>(blue_.data()));
 }
 
 uint16_t const* mg::DisplayGamma::red() const
