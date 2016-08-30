@@ -16,7 +16,6 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include <string>
 #include <cstdint>
 #include <vector>
 
@@ -30,27 +29,28 @@ class DisplayGamma
 public:
     DisplayGamma() = default;
 
-    DisplayGamma(uint16_t const* red,
-                 uint16_t const* green,
-                 uint16_t const* blue,
-                 uint32_t size);
+    DisplayGamma(std::vector<uint16_t> const& red,
+                 std::vector<uint16_t> const& green,
+                 std::vector<uint16_t> const& blue);
 
-    DisplayGamma(std::string const& bytes_red,
-                 std::string const& bytes_green,
-                 std::string const& bytes_blue);
+    DisplayGamma(std::vector<uint16_t>&& red,
+                 std::vector<uint16_t>&& green,
+                 std::vector<uint16_t>&& blue);
 
     DisplayGamma(DisplayGamma const& gamma) = default;
-    DisplayGamma(DisplayGamma&& gamma)      = default;
+    DisplayGamma(DisplayGamma&& gamma) = default;
 
     DisplayGamma& operator=(DisplayGamma const& gamma) = default;
-    DisplayGamma& operator=(DisplayGamma&& gamma)      = default;
+    DisplayGamma& operator=(DisplayGamma&& gamma) = default;
 
-    uint16_t const* red()   const;
+    uint16_t const* red() const;
     uint16_t const* green() const;
-    uint16_t const* blue()  const;
+    uint16_t const* blue() const;
     uint32_t size() const;
 
 private:
+    void throw_if_lut_size_mismatch() const;
+
     std::vector<uint16_t> red_;
     std::vector<uint16_t> green_;
     std::vector<uint16_t> blue_;

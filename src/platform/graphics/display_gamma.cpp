@@ -23,32 +23,33 @@
 
 namespace mg = mir::graphics;
 
-mg::DisplayGamma::DisplayGamma(uint16_t const* red,
-                               uint16_t const* green,
-                               uint16_t const* blue,
-                               uint32_t size) :
-    red_  (std::vector<uint16_t>(red,   red   + size)),
-    green_(std::vector<uint16_t>(green, green + size)),
-    blue_ (std::vector<uint16_t>(blue,  blue  + size))
+mg::DisplayGamma::DisplayGamma(std::vector<uint16_t> const& red,
+                               std::vector<uint16_t> const& green,
+                               std::vector<uint16_t> const& blue) :
+    red_(red),
+    green_(green),
+    blue_(blue)
 {
+    throw_if_lut_size_mismatch();
 }
 
-mg::DisplayGamma::DisplayGamma(std::string const& bytes_red,
-                               std::string const& bytes_green,
-                               std::string const& bytes_blue) :
-    red_  (bytes_red.size() / 2),
-    green_(bytes_red.size() / 2),
-    blue_ (bytes_red.size() / 2)
+mg::DisplayGamma::DisplayGamma(std::vector<uint16_t>&& red,
+                               std::vector<uint16_t>&& green,
+                               std::vector<uint16_t>&& blue) :
+    red_(std::move(red)),
+    green_(std::move(green)),
+    blue_(std::move(blue))
 {
-    if (bytes_red.size() != bytes_green.size() ||
-        bytes_green.size() != bytes_blue.size())
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Mismatch gamma LUT size"));
-    }
+    throw_if_lut_size_mismatch();
+}
 
-    std::copy(std::begin(bytes_red),   std::end(bytes_red),   reinterpret_cast<char*>(red_.data()));
-    std::copy(std::begin(bytes_green), std::end(bytes_green), reinterpret_cast<char*>(green_.data()));
-    std::copy(std::begin(bytes_blue),  std::end(bytes_blue),  reinterpret_cast<char*>(blue_.data()));
+void mg::DisplayGamma::throw_if_lut_size_mismatch() const
+{
+    if (red_.size() != green_.size() ||
+        green_.size() != blue_.size())
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Different gamma LUT sizes"));
+    }
 }
 
 uint16_t const* mg::DisplayGamma::red() const
