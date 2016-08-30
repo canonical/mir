@@ -95,8 +95,6 @@ geom::Size mgm::RealKMSOutput::size() const
 
 int mgm::RealKMSOutput::max_refresh_rate() const
 {
-    // TODO: In future when DRM exposes FreeSync/Adaptive Sync/G-Sync info
-    //       this value may be calculated differently.
     if (mode_index < static_cast<size_t>(connector->count_modes))
     {
         drmModeModeInfo const& current_mode = connector->modes[mode_index];

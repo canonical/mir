@@ -35,6 +35,7 @@ add_library(mir-public-test-framework OBJECT
   executable_path.cpp
   headless_in_process_server.cpp
   headless_nested_server_runner.cpp
+  headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp

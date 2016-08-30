@@ -55,13 +55,12 @@ struct IpcOperations : public ::testing::Test
         using namespace testing;
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mt::fake_shared(native_handle)));
-        ON_CALL(mock_buffer, stride())
-            .WillByDefault(Return(dummy_stride));
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(dummy_size));
 
         native_handle.data_items = 4;
         native_handle.fd_items = 2;
+        native_handle.stride = dummy_stride.as_int();
         for(auto i=0; i < mir_buffer_package_max; i++)
         {
             native_handle.fd[i] = i;
