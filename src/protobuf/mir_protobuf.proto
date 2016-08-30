@@ -46,6 +46,12 @@ message SurfaceParameters {
   optional int32 shell_chrome = 24;
   repeated StreamConfiguration stream = 25; 
   optional int32 confine_pointer = 26;
+
+  optional int32 placement_hints = 27;
+  optional int32 surface_placement_gravity = 28;
+  optional int32 aux_rect_placement_gravity = 29;
+  optional int32 aux_rect_placement_offset_x = 30;
+  optional int32 aux_rect_placement_offset_y = 31;
 }
 
 message SurfaceAspectRatio
