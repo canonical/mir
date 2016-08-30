@@ -21,7 +21,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-
 namespace mg = mir::graphics;
 
 mg::DisplayGamma::DisplayGamma(uint16_t const* red,
