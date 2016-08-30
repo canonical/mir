@@ -392,13 +392,9 @@ try
     auto output = client_to_output(client_output);
 
     // Since we are going from a uint16_t to a char (int8_t) we are doubling the size
-    std::string gamma_red  (reinterpret_cast<char const*>(red),   size * 2);
-    std::string gamma_green(reinterpret_cast<char const*>(green), size * 2);
-    std::string gamma_blue (reinterpret_cast<char const*>(blue),  size * 2);
-
-    output->set_gamma_red(gamma_red);
-    output->set_gamma_green(gamma_green);
-    output->set_gamma_blue(gamma_blue);
+    output->set_gamma_red  (reinterpret_cast<char const*>(red),   size * 2);
+    output->set_gamma_green(reinterpret_cast<char const*>(green), size * 2);
+    output->set_gamma_blue (reinterpret_cast<char const*>(blue),  size * 2);
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
