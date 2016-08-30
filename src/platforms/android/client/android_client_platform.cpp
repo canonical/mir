@@ -98,7 +98,7 @@ MirPlatformMessage* mcla::AndroidClientPlatform::platform_operation(
 
 MirNativeBuffer* mcla::AndroidClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    return dynamic_cast<mga::NativeBuffer*>(buf)->anwb();
+    return mga::to_native_buffer_checked(buf)->anwb();
 }
 
 MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(

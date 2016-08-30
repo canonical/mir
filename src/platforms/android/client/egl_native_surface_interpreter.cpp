@@ -22,6 +22,7 @@
 #include "mir/client_buffer.h"
 #include <system/window.h>
 #include <hardware/gralloc.h>
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
@@ -41,8 +42,8 @@ mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface&
 mga::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
-    auto buffer_to_driver = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer->native_buffer_handle());
-
+    auto buffer_to_driver = mga::to_native_buffer_checked(buffer->native_buffer_handle());
+    
     ANativeWindowBuffer* anwb = buffer_to_driver->anwb();
     anwb->format = driver_pixel_format;
     return buffer_to_driver.get();

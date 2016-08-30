@@ -49,7 +49,7 @@ mga::ServerRenderWindow::ServerRenderWindow(
 mga::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = fb_bundle->buffer_for_render();
-    auto handle = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer->native_buffer_handle());
+    auto handle = mga::to_android_native_checked(buffer->native_buffer_handle());
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
 }

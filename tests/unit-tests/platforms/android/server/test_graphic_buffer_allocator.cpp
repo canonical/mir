@@ -125,7 +125,7 @@ TEST_F(GraphicBufferAllocator, test_buffer_reconstruction_from_MirNativeBuffer)
     auto buffer = allocator.reconstruct_from(anwb.get(), mir_pixel_format_abgr_8888);
     ASSERT_THAT(buffer, Ne(nullptr));
     EXPECT_THAT(buffer->size(), Eq(geom::Size{width, height}));
-    auto native = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer->native_buffer_handle()); 
+    auto native = mga::to_android_native_checked(buffer->native_buffer_handle());
     EXPECT_THAT(native->anwb(), Eq(anwb.get()));
     EXPECT_THAT(inc_count, Eq(1));
     EXPECT_THAT(dec_count, Eq(0));

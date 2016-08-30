@@ -55,12 +55,12 @@ void mir::test::fill_hwc_layer(
     mir::graphics::Buffer const& buffer,
     int type, int flags)
 {
-    auto native = std::dynamic_pointer_cast<mir::graphics::android::NativeBuffer>(buffer.native_buffer_handle());
+    auto native = mga::to_android_native_checked(buffer.native_buffer_handle());
     *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
     layer.compositionType = type;
     layer.hints = 0;
     layer.flags = flags;
-    layer.handle = native ? native->handle() : nullptr;
+    layer.handle = native->handle();
     layer.transform = 0;
     layer.blending = HWC_BLENDING_NONE;
     layer.sourceCrop = *visible_rect;

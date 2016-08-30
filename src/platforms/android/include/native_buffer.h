@@ -22,6 +22,7 @@
 #include "mir/graphics/native_buffer.h"
 #include "fence.h"
 #include <system/window.h>
+#include <memory>
 
 namespace mir
 {
@@ -63,6 +64,11 @@ protected:
     NativeBuffer(NativeBuffer const&) = delete;
     NativeBuffer& operator=(NativeBuffer const&) = delete;
 };
+
+android::NativeBuffer* to_native_buffer_checked(graphics::NativeBuffer* buffer);
+std::shared_ptr<android::NativeBuffer> to_native_buffer_checked(
+    std::shared_ptr<graphics::NativeBuffer> const& buffer);
+
 
 }
 }
