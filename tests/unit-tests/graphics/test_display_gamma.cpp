@@ -102,24 +102,13 @@ TEST(DisplayGammaString, test_display_gamma_even_string_converts_correct_uint16)
     std::string b_str{static_cast<char>(254),
                       static_cast<char>(255)};
 
-    auto convert_char_to_uint16 = [](std::string const& str)
-    {
-        uint16_t out;
-        std::copy(std::begin(str), std::end(str), reinterpret_cast<char*>(&out));
-        return out;
-    };
-
-    uint16_t r_expect = convert_char_to_uint16(r_str);
-    uint16_t g_expect = convert_char_to_uint16(g_str);
-    uint16_t b_expect = convert_char_to_uint16(b_str);
-
     mg::DisplayGamma gamma(r_str, g_str, b_str);
 
     ASSERT_THAT(gamma.size(), 1);
 
-    EXPECT_THAT(gamma.red()[0],   r_expect);
-    EXPECT_THAT(gamma.green()[0], g_expect);
-    EXPECT_THAT(gamma.blue()[0],  b_expect);
+    EXPECT_THAT(gamma.red()[0],   r_str[1] << CHAR_BIT | r_str[0]);
+    EXPECT_THAT(gamma.green()[0], g_str[1] << CHAR_BIT | g_str[0]);
+    EXPECT_THAT(gamma.blue()[0],  b_str[1] << CHAR_BIT | b_str[0]);
 }
 
 TEST(DisplayGammaEmpty, test_display_gamma_empty)
