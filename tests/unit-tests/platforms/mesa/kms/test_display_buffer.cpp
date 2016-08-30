@@ -98,7 +98,6 @@ public:
             .WillByDefault(Return(stub_gbm_native_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
 
-        memset(stub_shm_native_buffer.get(), 0, sizeof(MirNativeBuffer));
         stub_shm_native_buffer->flags = 0;  // Is not a hardware/GBM buffer
 
         ON_CALL(*mock_software_buffer, size())

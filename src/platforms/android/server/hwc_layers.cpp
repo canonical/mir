@@ -224,7 +224,7 @@ bool mga::HWCLayer::setup_layer(
 
     visible_rect = hwc_layer->displayFrame;
 
-    auto native_buffer = std::dynamic_pointer_cast<mga::NativeBuffer>(associated_buffer->native_buffer_handle());
+    auto native_buffer = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer->native_buffer_handle());
     needs_commit |= (hwc_layer->handle != native_buffer->handle());
     hwc_layer->handle = native_buffer->handle();
 
