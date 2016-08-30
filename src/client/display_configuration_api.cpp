@@ -347,7 +347,7 @@ uint32_t mir_output_get_gamma_size(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return (output->gamma_red().size() / 2);
+    return (output->gamma_red().size() / (sizeof(uint16_t) / sizeof(char)));
 }
 
 MirDisplayGammaSupported mir_output_gamma_supported(MirOutput const* client_output)
@@ -366,16 +366,19 @@ try
 {
     auto output = client_to_output(client_output);
 
-    auto red_bytes   = output->gamma_red();
+    auto red_bytes = output->gamma_red();
     auto green_bytes = output->gamma_green();
-    auto blue_bytes  = output->gamma_blue();
+    auto blue_bytes = output->gamma_blue();
 
     // Check our number of bytes is eqaul to our uint16_t size
-    mir::require(red_bytes.size() / 2 == size);
+    mir::require(red_bytes.size() / (sizeof(uint16_t) / sizeof(char)) == size);
 
-    std::copy(std::begin(red_bytes),   std::end(red_bytes),   reinterpret_cast<char*>(red));
-    std::copy(std::begin(green_bytes), std::end(green_bytes), reinterpret_cast<char*>(green));
-    std::copy(std::begin(blue_bytes),  std::end(blue_bytes),  reinterpret_cast<char*>(blue));
+    std::copy(std::begin(red_bytes), std::end(red_bytes),
+        reinterpret_cast<char*>(red));
+    std::copy(std::begin(green_bytes), std::end(green_bytes),
+        reinterpret_cast<char*>(green));
+    std::copy(std::begin(blue_bytes), std::end(blue_bytes),
+        reinterpret_cast<char*>(blue));
 
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
@@ -392,9 +395,12 @@ try
     auto output = client_to_output(client_output);
 
     // Since we are going from a uint16_t to a char (int8_t) we are doubling the size
-    output->set_gamma_red  (reinterpret_cast<char const*>(red),   size * 2);
-    output->set_gamma_green(reinterpret_cast<char const*>(green), size * 2);
-    output->set_gamma_blue (reinterpret_cast<char const*>(blue),  size * 2);
+    output->set_gamma_red(reinterpret_cast<char const*>(red),
+        size * (sizeof(uint16_t) / sizeof(char)));
+    output->set_gamma_green(reinterpret_cast<char const*>(green),
+        size * (sizeof(uint16_t) / sizeof(char)));
+    output->set_gamma_blue(reinterpret_cast<char const*>(blue),
+        size * (sizeof(uint16_t) / sizeof(char)));
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
