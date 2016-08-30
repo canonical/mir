@@ -85,6 +85,8 @@ std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native
 MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* b) const
 {
     auto buf = dynamic_cast<mtf::NativeBuffer*>(b);
+    if (!buf)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
     native_buffer.data_items = 1;
     native_buffer.data[0] = buf->data;
     native_buffer.fd_items = 1;

@@ -151,7 +151,9 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
 
 MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
 {
-    return dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get());
+    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
 
 void mclm::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)

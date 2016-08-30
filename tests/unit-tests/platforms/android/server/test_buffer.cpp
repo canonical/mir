@@ -97,12 +97,12 @@ TEST_F(AndroidBuffer, returns_native_buffer_times_two)
 
     mga::Buffer buffer(&gralloc, mock_native_buffer, extensions);
     {
-        auto native_resource = mga::to_android_native_checked(buffer.native_buffer_handle());
+        auto native_resource = mga::to_native_buffer_checked(buffer.native_buffer_handle());
         EXPECT_EQ(std::static_pointer_cast<mg::NativeBuffer>(mock_native_buffer), native_resource);
         native_resource->update_usage(acquire_fake_fence_fd1, mga::BufferAccess::write);
     }
     {
-        auto native_resource = mga::to_android_native_checked(buffer.native_buffer_handle());
+        auto native_resource = mga::to_native_buffer_checked(buffer.native_buffer_handle());
         EXPECT_EQ(std::static_pointer_cast<mg::NativeBuffer>(mock_native_buffer), native_resource);
         native_resource->update_usage(acquire_fake_fence_fd2, mga::BufferAccess::read);
     }

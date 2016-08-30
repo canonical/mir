@@ -110,6 +110,7 @@ TEST_F(MesaBufferAllocatorTest, large_hardware_buffers_bypass)
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
+    ASSERT_THAT(native, Ne(nullptr));
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
 }
 
@@ -126,6 +127,7 @@ TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
+    ASSERT_THAT(native, Ne(nullptr));
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
 }
 
@@ -140,6 +142,7 @@ TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
     auto buf = allocator->alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
+    ASSERT_THAT(native, Ne(nullptr));
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
 }
 
@@ -160,6 +163,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
+    ASSERT_THAT(native, Ne(nullptr));
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
 }
 

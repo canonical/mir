@@ -55,7 +55,7 @@ void mir::test::fill_hwc_layer(
     mir::graphics::Buffer const& buffer,
     int type, int flags)
 {
-    auto native = mga::to_android_native_checked(buffer.native_buffer_handle());
+    auto native = mir::graphics::android::to_native_buffer_checked(buffer.native_buffer_handle());
     *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
     layer.compositionType = type;
     layer.hints = 0;

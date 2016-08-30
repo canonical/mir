@@ -140,6 +140,7 @@ TEST_F(GBMBufferTest, stride_has_sane_value)
     auto buffer(allocator->alloc_buffer(buffer_properties));
 
     auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
+    ASSERT_THAT(native, Ne(nullptr));
     ASSERT_LE(minimum, geom::Stride{native->stride});
 }
 
@@ -149,6 +150,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto native_handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
+    ASSERT_THAT(native_handle, Ne(nullptr));
     EXPECT_EQ(1, native_handle->fd_items);
     EXPECT_EQ(0, native_handle->data_items);
 }
@@ -183,6 +185,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_contains_correct_data)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
+    ASSERT_THAT(handle, Ne(nullptr));
     EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
     EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }

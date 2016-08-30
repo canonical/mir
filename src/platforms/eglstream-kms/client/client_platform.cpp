@@ -65,7 +65,7 @@ MirPlatformMessage* mcle::ClientPlatform::platform_operation(MirPlatformMessage 
 
 MirNativeBuffer* mcle::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    if (auto native = dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(native_buffer_handle().get());
+    if (auto native = dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(buf))
         return native;
     BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert to NativeBuffer")); 
 }

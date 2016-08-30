@@ -134,6 +134,8 @@ class StubIpcOps : public mg::PlatformIpcOperations
         if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
             auto native_handle = std::dynamic_pointer_cast<mtf::NativeBuffer>(buffer.native_buffer_handle());
+            if (!native_handle)
+                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             message.pack_data(static_cast<int>(native_handle->properties.usage));
             message.pack_data(native_handle->data);
             message.pack_fd(native_handle->fd);
