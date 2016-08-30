@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
 
+#include "mir/graphics/native_buffer.h"
 #include "fence.h"
 #include <system/window.h>
 
@@ -39,9 +40,8 @@ enum class BufferAccess
     read,
     write
 };
-}
 
-class NativeBuffer
+class NativeBuffer : public graphics::NativeBuffer
 {
 public:
     virtual ~NativeBuffer() = default;
@@ -64,6 +64,7 @@ protected:
     NativeBuffer& operator=(NativeBuffer const&) = delete;
 };
 
+}
 }
 }
 

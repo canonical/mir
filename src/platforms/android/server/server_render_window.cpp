@@ -46,10 +46,10 @@ mga::ServerRenderWindow::ServerRenderWindow(
 {
 }
 
-mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+mga::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = fb_bundle->buffer_for_render();
-    auto handle = buffer->native_buffer_handle();
+    auto handle = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer->native_buffer_handle());
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
 }

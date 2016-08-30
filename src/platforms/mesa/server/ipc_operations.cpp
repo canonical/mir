@@ -74,7 +74,7 @@ void mgm::IpcOperations::pack_buffer(
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        auto native_handle = buffer.native_buffer_handle();
+        auto native_handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
         for(auto i=0; i<native_handle->data_items; i++)
         {
             packer.pack_data(native_handle->data[i]);

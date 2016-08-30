@@ -137,8 +137,7 @@ MirPlatformMessage* mclm::ClientPlatform::platform_operation(
 
 MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    //MirNativeBuffer is type-compatible with the MirNativeBuffer
-    return buf;
+    return dynamic_cast<mir::graphics::mesa::NativeBuffer*>(buf);
 }
 
 
