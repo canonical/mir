@@ -199,6 +199,68 @@ typedef enum MirEdgeAttachment
                               mir_edge_attachment_horizontal
 } MirEdgeAttachment;
 
+// Inspired by GdkGravity
+/**
+ * Reference point for aligning a window relative to a rectangle.
+ */
+typedef enum MirPlacementGravity
+{
+    mir_placement_gravity_northwest = 1,   // the reference point is at the top left corner.
+    mir_placement_gravity_north,           // the reference point is in the middle of the top edge.
+    mir_placement_gravity_northeast,       // the reference point is at the top right corner.
+    mir_placement_gravity_west,            // the reference point is at the middle of the left edge.
+    mir_placement_gravity_centre,          // the reference point is at the center of the window.
+    mir_placement_gravity_east,            // the reference point is at the middle of the right edge.
+    mir_placement_gravity_southwest,       // the reference point is at the lower left corner.
+    mir_placement_gravity_south,           // the reference point is at the middle of the lower edge.
+    mir_placement_gravity_southeast,       // the reference point is at the lower right corner.
+} MirPlacementGravity;
+
+// Inspired by GdkAnchorHints
+/**
+ * Positioning hints for aligning a window relative to a rectangle.
+ *
+ * These hints determine how the window should be positioned in the case that
+ * the surface would fall off-screen if placed in its ideal position.
+ *
+ * For example, mir_placement_hints_flip_x will invert the x component of
+ * aux_rect_placement_offset and replace mir_placement_gravity_northwest with
+ * mir_placement_gravity_northeast and vice versa if the window extends
+ * beyond the left or right edges of the monitor.
+ *
+ * If mir_placement_hints_slide_x is set, the window can be shifted
+ * horizontally to fit on-screen.
+ *
+ * If mir_placement_hints_resize_x is set, the window can be shrunken
+ * horizontally to fit.
+ *
+ * If mir_placement_hints_antipodes is set then the rect gravity may be
+ * substituted with the opposite corner (e.g. mir_placement_gravity_northeast
+ * to mir_placement_gravity_southwest) in combination with other options.
+ *
+ * When multiple flags are set, flipping should take precedence over sliding,
+ * which should take precedence over resizing.
+ */
+typedef enum MirPlacementHints
+{
+    mir_placement_hints_flip_x   = 1 << 0,  // allow flipping anchors horizontally
+    mir_placement_hints_flip_y   = 1 << 1,  // allow flipping anchors vertically
+    mir_placement_hints_slide_x  = 1 << 2,  // allow sliding window horizontally
+    mir_placement_hints_slide_y  = 1 << 3,  // allow sliding window vertically
+    mir_placement_hints_resize_x = 1 << 4,  // allow resizing window horizontally
+    mir_placement_hints_resize_y = 1 << 5,  // allow resizing window vertically
+    mir_placement_hints_antipodes= 1 << 6,  // allow flipping aux_anchor to opposite corner
+
+    // allow flipping anchors on both axes
+        mir_placement_hints_flip_any = mir_placement_hints_flip_x|mir_placement_hints_flip_y,
+
+    // allow sliding window on both axes
+        mir_placement_hints_slide_any  = mir_placement_hints_slide_x|mir_placement_hints_slide_y,
+
+    // allow resizing window on both axes
+        mir_placement_hints_resize_any = mir_placement_hints_resize_x|mir_placement_hints_resize_y,
+} MirPlacementHints;
+
 /**
  * Form factor associated with a physical output
  */
