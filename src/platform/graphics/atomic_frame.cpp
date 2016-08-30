@@ -21,22 +21,6 @@
 
 namespace mir { namespace graphics {
 
-namespace {
-void log(Frame const& frame)
-{
-    // Enable this only during development
-    if (0) return;
-    // long long to match printf format
-    long long msc = frame.msc,
-              ust = frame.ust.microseconds,
-              interval = 0, // TODO replace
-              age = frame.age();
-    mir::log_debug(
-        "Frame counter %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
-        (void*)&frame, msc, ust/1000000, ust%1000000, age, interval);
-}
-} // namesapce mir::graphics::<anonymous>
-
 Frame AtomicFrame::load() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -47,12 +31,12 @@ void AtomicFrame::store(Frame const& f)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame = f;
-    log(frame);
+    report_new_frame(lock);
 }
 
 void AtomicFrame::increment_now()
 {
-    increment_with_timestamp(Timestamp::now(CLOCK_MONOTONIC));
+    increment_with_timestamp(Timestamp::now(frame.ust.clock_id));
 }
 
 void AtomicFrame::increment_with_timestamp(Timestamp t)
@@ -60,7 +44,27 @@ void AtomicFrame::increment_with_timestamp(Timestamp t)
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame.ust = t;
     frame.msc++;
-    log(frame);
+    report_new_frame(lock);
+}
+
+void AtomicFrame::report_new_frame(std::lock_guard<std::mutex> const&)
+{
+    // In future someone may choose to make this call a proper report but
+    // for the time being we only need a little logging during development...
+
+    // Enable this only during development
+    if (0) return;
+
+    // long long to match printf format
+    long long msc = frame.msc,
+              ust = frame.ust.microseconds,
+              interval = frame.ust.microseconds - prev_ust.microseconds,
+              age = frame.age();
+    mir::log_debug(
+        "AtomicFrame %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
+        (void*)this, msc, ust/1000000, ust%1000000, age, interval);
+
+    prev_ust = frame.ust;
 }
 
 }} // namespace mir::graphics
