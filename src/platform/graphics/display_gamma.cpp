@@ -40,7 +40,8 @@ mg::DisplayGamma::DisplayGamma(std::string const& bytes_red,
     green_(bytes_red.size() / 2),
     blue_ (bytes_red.size() / 2)
 {
-    if (bytes_red.size() != bytes_green.size() || bytes_green.size() != bytes_blue.size())
+    if (bytes_red.size()   != bytes_green.size() ||
+        bytes_green.size() != bytes_blue.size())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Mismatch gamma LUT size"));
     }

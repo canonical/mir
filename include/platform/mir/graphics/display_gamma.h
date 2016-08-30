@@ -35,9 +35,9 @@ public:
                  uint16_t const* blue,
                  uint32_t size);
 
-    DisplayGamma(std::string const& red,
-                 std::string const& green,
-                 std::string const& blue);
+    DisplayGamma(std::string const& bytes_red,
+                 std::string const& bytes_green,
+                 std::string const& bytes_blue);
 
     DisplayGamma(DisplayGamma const& gamma) = default;
     DisplayGamma(DisplayGamma&& gamma)      = default;
