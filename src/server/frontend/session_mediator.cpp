@@ -1169,15 +1169,6 @@ void mf::SessionMediator::raise_surface(
     done->Run();
 }
 
-namespace
-{
-std::vector<uint16_t> convert_int8_string_to_uint16_vector(std::string const& bytes)
-{
-    auto raw_bytes = reinterpret_cast<uint16_t const*>(bytes.data());
-    return std::vector<uint16_t>(raw_bytes, raw_bytes + bytes.size() / 2);
-}
-}
-
 std::shared_ptr<mg::DisplayConfiguration>
 mf::SessionMediator::unpack_and_sanitize_display_configuration(
     mir::protobuf::DisplayConfiguration const* protobuf_config)
@@ -1205,11 +1196,14 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
 
-        auto red   = convert_int8_string_to_uint16_vector(src.gamma_red());
-        auto green = convert_int8_string_to_uint16_vector(src.gamma_green());
-        auto blue  = convert_int8_string_to_uint16_vector(src.gamma_blue());
-
-        dest.gamma = {red, green, blue};
+        try
+        {
+            dest.gamma = {src.gamma_red(), src.gamma_green(), src.gamma_blue()};
+        }
+        catch (std::logic_error const& /*e*/)
+        {
+            dest.gamma = {};
+        }
     });
 
     return config;

@@ -18,6 +18,10 @@
 
 #include "mir/graphics/display_gamma.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
+
 namespace mg = mir::graphics;
 
 mg::DisplayGamma::DisplayGamma(uint16_t const* red,
@@ -32,12 +36,16 @@ mg::DisplayGamma::DisplayGamma(uint16_t const* red,
 
 mg::DisplayGamma::DisplayGamma(std::string const& red,
                                std::string const& green,
-                               std::string const& blue,
-                               uint32_t size) :
-    red_  (size),
-    green_(size),
-    blue_ (size)
+                               std::string const& blue) :
+    red_  (red.size()),
+    green_(red.size()),
+    blue_ (red.size())
 {
+    if (red.size() != green.size() || green.size() != blue.size())
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Mismatch gamma LUT size"));
+    }
+
     std::copy(std::begin(red),   std::end(red),   reinterpret_cast<char*>(red_.data()));
     std::copy(std::begin(green), std::end(green), reinterpret_cast<char*>(green_.data()));
     std::copy(std::begin(blue),  std::end(blue),  reinterpret_cast<char*>(blue_.data()));

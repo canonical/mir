@@ -461,12 +461,22 @@ MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 /** Gets if the platform supports gamma correction
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The MirOutputGammaSupported mir_output_gamma_supported otherwise,
- *               mir_output_gamma_unsupported
+ * \returns     The MirDisplayGammaSupported mir_display_gamma_supported otherwise,
+ *               mir_display_gamma_unsupported
  */
-MirOutputGammaSupported mir_output_gamma_allowed(MirOutput const* client_output);
+MirDisplayGammaSupported mir_output_gamma_supported(MirOutput const* client_output);
+
+/** Gets the gamma size
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The size of the gamma ramp LUT
+ *
+ */
+uint32_t mir_output_get_gamma_size(MirOutput const* client_output);
 
 /** Get the gamma ramp of a display
+ *
+ * Copies the gammas into user created buffers up to the size provided
  *
  * \param [in]  output  The MirOutput to query
  * \param [in]  red     The red gamma ramp
@@ -475,10 +485,10 @@ MirOutputGammaSupported mir_output_gamma_allowed(MirOutput const* client_output)
  * \param [in]  size    The size of the gamma ramp
  */
 void mir_output_get_gamma(MirOutput const* client_output,
-                          uint16_t** red,
-                          uint16_t** green,
-                          uint16_t** blue,
-                          uint32_t*  size);
+                          uint16_t* red,
+                          uint16_t* green,
+                          uint16_t* blue,
+                          uint32_t  size);
 
 /** Set the gamma ramp of a display
  *

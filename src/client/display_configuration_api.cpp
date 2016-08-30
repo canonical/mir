@@ -20,6 +20,7 @@
 #include <mir/require.h>
 
 #include "display_configuration.h"
+#include "mir/uncaught.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -342,31 +343,35 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* clie
     return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
 }
 
-MirOutputGammaSupported mir_output_gamma_allowed(MirOutput const* client_output)
+MirDisplayGammaSupported mir_output_gamma_supported(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return static_cast<MirOutputGammaSupported>(output->gamma_supported());
+    return static_cast<MirDisplayGammaSupported>(output->gamma_supported());
 }
 
 void mir_output_get_gamma(MirOutput const* client_output,
-                          uint16_t** red,
-                          uint16_t** green,
-                          uint16_t** blue,
-                          uint32_t*  size)
+                          uint16_t* red,
+                          uint16_t* green,
+                          uint16_t* blue,
+                          uint32_t  size)
+try
 {
     auto output = client_to_output(client_output);
-    // Going from int8_t to uint16_t so reducing size by half
-    auto gamma_size = output->gamma_red().size() / 2;
 
-    *red   = reinterpret_cast<uint16_t*>(
-                 const_cast<char*>(output->gamma_red().data()));
-    *green = reinterpret_cast<uint16_t*>(
-                 const_cast<char*>(output->gamma_green().data()));
-    *blue  = reinterpret_cast<uint16_t*>(
-                 const_cast<char*>(output->gamma_blue().data()));
+    auto red_bytes   = output->gamma_red();
+    auto green_bytes = output->gamma_green();
+    auto blue_bytes  = output->gamma_blue();
 
-    *size = gamma_size;
+    mir::require(red_bytes.size()   == size);
+
+    std::copy(std::begin(red_bytes),   std::end(red_bytes),   reinterpret_cast<char*>(red));
+    std::copy(std::begin(green_bytes), std::end(green_bytes), reinterpret_cast<char*>(green));
+    std::copy(std::begin(blue_bytes),  std::end(blue_bytes),  reinterpret_cast<char*>(blue));
+
+} catch (std::exception const& e) {
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
 }
 
 void mir_output_set_gamma(MirOutput* client_output,
@@ -386,7 +391,8 @@ try
     output->set_gamma_red(gamma_red);
     output->set_gamma_green(gamma_green);
     output->set_gamma_blue(gamma_blue);
-} catch (...) {
+} catch (std::exception const& e) {
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
 }
 
