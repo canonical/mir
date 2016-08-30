@@ -811,7 +811,7 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 
 TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 {
-    uint32_t size = 4;
+    uint32_t const size = 4;
     uint16_t a[]  = {0, 1, 2, 3};
     uint16_t b[]  = {1, 2, 3, 4};
     uint16_t c[]  = {65532, 65533, 65534, 65535};
@@ -847,12 +847,13 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
     for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
     {
-        //ASSERT_THAT(mir_output_get_gamma_size(), size);
-
         auto output = mir_display_config_get_output(client_config.get(), i);
-        uint16_t* red   = nullptr;
-        uint16_t* green = nullptr;
-        uint16_t* blue  = nullptr;
+
+        ASSERT_THAT(mir_output_get_gamma_size(output), size);
+
+        uint16_t red[size];
+        uint16_t green[size];
+        uint16_t blue[size];
 
         mir_output_get_gamma(output, red, green, blue, size);
 

@@ -343,6 +343,13 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* clie
     return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
 }
 
+uint32_t mir_output_get_gamma_size(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    return (output->gamma_red().size() / 2);
+}
+
 MirDisplayGammaSupported mir_output_gamma_supported(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
@@ -363,7 +370,8 @@ try
     auto green_bytes = output->gamma_green();
     auto blue_bytes  = output->gamma_blue();
 
-    mir::require(red_bytes.size()   == size);
+    // Check our number of bytes is eqaul to our uint16_t size
+    mir::require(red_bytes.size() / 2 == size);
 
     std::copy(std::begin(red_bytes),   std::end(red_bytes),   reinterpret_cast<char*>(red));
     std::copy(std::begin(green_bytes), std::end(green_bytes), reinterpret_cast<char*>(green));
