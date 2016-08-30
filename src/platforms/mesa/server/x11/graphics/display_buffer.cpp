@@ -103,14 +103,12 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
-    Frame frame;
-    if (eglGetSyncValues) // We allow for this to be missing because calling
-    {                     // it may also fail, which needs handling too...
+    if (eglGetSyncValues)
+    {
         int64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
-            frame = {msc, {CLOCK_MONOTONIC, ust}};
+            last_frame->store({msc, {CLOCK_MONOTONIC, ust}});
     }
-    last_frame->store(frame);
 }
 
 void mgx::DisplayBuffer::bind()
