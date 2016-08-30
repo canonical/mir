@@ -1196,14 +1196,7 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
 
-        try
-        {
-            dest.gamma = {src.gamma_red(), src.gamma_green(), src.gamma_blue()};
-        }
-        catch (std::logic_error const& /*e*/)
-        {
-            dest.gamma = {};
-        }
+        dest.gamma = {src.gamma_red(), src.gamma_green(), src.gamma_blue()};
     });
 
     return config;
