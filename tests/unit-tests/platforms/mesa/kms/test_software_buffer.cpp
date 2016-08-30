@@ -57,7 +57,7 @@ TEST_F(SoftwareBufferTest, native_buffer_contains_correct_data)
     size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
 
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
 
     EXPECT_EQ(1, native_buffer->fd_items);
     EXPECT_EQ(stub_shm_file->fake_fd, native_buffer->fd[0]);
@@ -69,5 +69,6 @@ TEST_F(SoftwareBufferTest, native_buffer_contains_correct_data)
 
 TEST_F(SoftwareBufferTest, cannot_be_used_for_bypass)
 {
-    EXPECT_FALSE(buffer.native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
+    auto native_buffer = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
+    EXPECT_FALSE(native_buffer->flags & mir_buffer_flag_can_scanout);
 }

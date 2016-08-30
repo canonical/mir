@@ -66,7 +66,7 @@ MirPlatformMessage* mcle::ClientPlatform::platform_operation(MirPlatformMessage 
 MirNativeBuffer* mcle::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
     // Only buffers we currently support are ShmBuffers, which are type-compatible
-    return buf;
+    return dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(buf);
 }
 
 

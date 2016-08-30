@@ -73,9 +73,9 @@ struct ShmMemoryRegion : mcl::MemoryRegion
     size_t const size_in_bytes;
 };
 
-std::shared_ptr<mir::graphics::NativeBuffer> to_native_buffer(MirBufferPackage const& package)
+std::shared_ptr<mir::graphics::eglstream::NativeBuffer> to_native_buffer(MirBufferPackage const& package)
 {
-    auto buffer = std::make_shared<mir::graphics::NativeBuffer>();
+    auto buffer = std::make_shared<mir::graphics::eglstream::NativeBuffer>();
     *static_cast<MirBufferPackage*>(buffer.get()) = package;
     return buffer;
 }
@@ -148,7 +148,7 @@ void mcle::ClientBuffer::fill_update_msg(MirBufferPackage& package)
 MirNativeBuffer* mcle::ClientBuffer::as_mir_native_buffer() const
 {
     //mesa has a POD native type for now. can return it directly to client API.
-    return native_buffer_handle().get();
+    return dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(native_buffer_handle().get());
 }
 
 void mcle::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)

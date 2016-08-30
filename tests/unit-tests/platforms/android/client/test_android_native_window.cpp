@@ -50,14 +50,14 @@ public:
         ON_CALL(*this, driver_requests_buffer())
             .WillByDefault(Return(buffer.get()));
     }
-    MOCK_METHOD0(driver_requests_buffer, mir::graphics::NativeBuffer*());
+    MOCK_METHOD0(driver_requests_buffer, mga::NativeBuffer*());
     MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, int));
     MOCK_METHOD1(dispatch_driver_request_format, void(int));
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
     MOCK_METHOD1(sync_to_display, void(bool));
     MOCK_METHOD1(dispatch_driver_request_buffer_count, void(unsigned int));
 
-    std::shared_ptr<mir::graphics::NativeBuffer> buffer;
+    std::shared_ptr<mga::NativeBuffer> buffer;
 };
 
 class AndroidNativeWindowTest : public ::Test

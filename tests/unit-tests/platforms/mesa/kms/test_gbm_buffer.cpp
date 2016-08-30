@@ -139,7 +139,8 @@ TEST_F(GBMBufferTest, stride_has_sane_value)
 
     auto buffer(allocator->alloc_buffer(buffer_properties));
 
-    ASSERT_LE(minimum, geom::Stride{buffer->native_buffer_handle()->stride});
+    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
+    ASSERT_LE(minimum, geom::Stride{native->stride});
 }
 
 TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
@@ -147,7 +148,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
     using namespace testing;
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
-    auto native_handle = buffer->native_buffer_handle();
+    auto native_handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
     EXPECT_EQ(1, native_handle->fd_items);
     EXPECT_EQ(0, native_handle->data_items);
 }
@@ -181,7 +182,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_contains_correct_data)
             .WillOnce(DoAll(SetArgPointee<3>(prime_fd), Return(0)));
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
-    auto handle = buffer->native_buffer_handle();
+    auto handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
     EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
     EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }

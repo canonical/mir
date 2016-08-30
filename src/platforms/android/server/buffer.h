@@ -45,13 +45,14 @@ struct EGLExtensions;
 namespace android
 {
 
+class NativeBuffer;
 class Buffer: public BufferBasic, public NativeBufferBase,
               public renderer::gl::TextureSource,
               public renderer::software::PixelSource
 {
 public:
     Buffer(gralloc_module_t const* hw_module,
-           std::shared_ptr<NativeBuffer> const& buffer_handle,
+           std::shared_ptr<android::NativeBuffer> const& buffer_handle,
            std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
@@ -80,7 +81,7 @@ private:
     std::map<DispContextPair,EGLImageKHR> egl_image_map;
 
     std::mutex mutable content_lock;
-    std::shared_ptr<NativeBuffer> native_buffer;
+    std::shared_ptr<android::NativeBuffer> native_buffer;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
 

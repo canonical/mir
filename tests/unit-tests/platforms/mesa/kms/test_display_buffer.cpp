@@ -62,7 +62,7 @@ public:
         , stub_gbm_native_buffer{
              std::make_shared<StubGBMNativeBuffer>(display_area.size)}
         , stub_shm_native_buffer{
-             std::make_shared<NativeBuffer>()}
+             std::make_shared<mir::graphics::mesa::NativeBuffer>()}
         , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -120,8 +120,8 @@ protected:
     std::shared_ptr<MockBuffer> mock_software_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
     std::shared_ptr<FakeRenderable> fake_software_renderable;
-    std::shared_ptr<NativeBuffer> stub_gbm_native_buffer;
-    std::shared_ptr<NativeBuffer> stub_shm_native_buffer;
+    std::shared_ptr<mir::graphics::mesa::NativeBuffer> stub_gbm_native_buffer;
+    std::shared_ptr<mir::graphics::mesa::NativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;

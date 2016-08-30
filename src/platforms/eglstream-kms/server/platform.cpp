@@ -120,7 +120,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
         {
             if (msg_type == mg::BufferIpcMsgType::full_msg)
             {
-                auto native_handle = buffer.native_buffer_handle();
+                auto native_handle = std::dynamic_pointer_cast<mge::NativeBuffer>(buffer.native_buffer_handle());
                 for(auto i=0; i<native_handle->data_items; i++)
                 {
                     packer.pack_data(native_handle->data[i]);
