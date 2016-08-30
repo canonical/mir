@@ -25,101 +25,85 @@ namespace mg = mir::graphics;
 
 namespace
 {
-uint16_t const r[]{1};
-uint16_t const g[]{2};
-uint16_t const b[]{3};
-uint32_t const size{1};
+std::vector<uint16_t> const r{1};
+std::vector<uint16_t> const g{2};
+std::vector<uint16_t> const b{3};
 }
 
-class MockDisplayGammaUint16 : public testing::Test
+class MockDisplayGamma : public testing::Test
 {
 public:
-    MockDisplayGammaUint16() :
-        gamma(r, g, b, size)
+    MockDisplayGamma() :
+        gamma(r, g, b)
     {
     }
 
     mg::DisplayGamma gamma;
 };
 
-TEST_F(MockDisplayGammaUint16, test_uint16_display_gamma_size)
+TEST_F(MockDisplayGamma, test_uint16_display_gamma_size)
 {
-    EXPECT_THAT(gamma.size(), size);
+    EXPECT_THAT(gamma.size(), r.size());
 }
 
-TEST_F(MockDisplayGammaUint16, test_uint16_display_gamma_rgb_correct)
+TEST_F(MockDisplayGamma, test_uint16_display_gamma_rgb_correct)
 {
     ASSERT_THAT(gamma.size(), gamma.size());
-    EXPECT_THAT(gamma.red()[0],   r[0]);
+    EXPECT_THAT(gamma.red()[0], r[0]);
     EXPECT_THAT(gamma.green()[0], g[0]);
-    EXPECT_THAT(gamma.blue()[0],  b[0]);
+    EXPECT_THAT(gamma.blue()[0], b[0]);
 }
 
-TEST_F(MockDisplayGammaUint16, test_display_gamma_copy_ctor)
+TEST_F(MockDisplayGamma, test_display_gamma_copy_ctor)
 {
     mg::DisplayGamma gamma_second(gamma);
 
-    ASSERT_THAT(gamma_second.size(),     gamma.size());
-    EXPECT_THAT(gamma_second.red()[0],   gamma.red()[0]);
+    ASSERT_THAT(gamma_second.size(), gamma.size());
+    EXPECT_THAT(gamma_second.red()[0], gamma.red()[0]);
     EXPECT_THAT(gamma_second.green()[0], gamma.green()[0]);
-    EXPECT_THAT(gamma_second.blue()[0],  gamma.blue()[0]);
+    EXPECT_THAT(gamma_second.blue()[0], gamma.blue()[0]);
 }
 
-TEST_F(MockDisplayGammaUint16, test_display_gamma_assign_copy_ctor)
+TEST_F(MockDisplayGamma, test_display_gamma_assign_copy_ctor)
 {
     mg::DisplayGamma gamma_second = gamma;
 
-    ASSERT_THAT(gamma_second.size(),     gamma.size());
-    EXPECT_THAT(gamma_second.red()[0],   gamma.red()[0]);
+    ASSERT_THAT(gamma_second.size(), gamma.size());
+    EXPECT_THAT(gamma_second.red()[0], gamma.red()[0]);
     EXPECT_THAT(gamma_second.green()[0], gamma.green()[0]);
-    EXPECT_THAT(gamma_second.blue()[0],  gamma.blue()[0]);
+    EXPECT_THAT(gamma_second.blue()[0], gamma.blue()[0]);
 }
 
-TEST_F(MockDisplayGammaUint16, test_display_gamma_move_ctor)
+TEST_F(MockDisplayGamma, test_display_gamma_move_ctor)
 {
-    mg::DisplayGamma gamma_second(mg::DisplayGamma(r, g, b, size));
+    mg::DisplayGamma gamma_second(mg::DisplayGamma(r, g, b));
 
-    ASSERT_THAT(gamma_second.size(),     size);
-    EXPECT_THAT(gamma_second.red()[0],   r[0]);
+    ASSERT_THAT(gamma_second.size(), r.size());
+    EXPECT_THAT(gamma_second.red()[0], r[0]);
     EXPECT_THAT(gamma_second.green()[0], g[0]);
-    EXPECT_THAT(gamma_second.blue()[0],  b[0]);
+    EXPECT_THAT(gamma_second.blue()[0], b[0]);
 }
 
-TEST_F(MockDisplayGammaUint16, test_display_gamma_assign_move_ctor)
+TEST_F(MockDisplayGamma, test_display_gamma_assign_move_ctor)
 {
-    mg::DisplayGamma gamma_second = mg::DisplayGamma(r, g, b, size);
+    mg::DisplayGamma gamma_second = mg::DisplayGamma(r, g, b);
 
-    ASSERT_THAT(gamma_second.size(),     size);
-    EXPECT_THAT(gamma_second.red()[0],   r[0]);
+    ASSERT_THAT(gamma_second.size(), r.size());
+    EXPECT_THAT(gamma_second.red()[0], r[0]);
     EXPECT_THAT(gamma_second.green()[0], g[0]);
-    EXPECT_THAT(gamma_second.blue()[0],  b[0]);
+    EXPECT_THAT(gamma_second.blue()[0], b[0]);
 }
 
-TEST(DisplayGammaString, test_display_gamma_even_string_converts_correct_uint16)
+TEST_F(MockDisplayGamma, test_display_gamma_move_vector_ctor)
 {
-    std::string r_str{1, 2};
-    std::string g_str{2, 3};
-    std::string b_str{static_cast<char>(254),
-                      static_cast<char>(255)};
+    mg::DisplayGamma gamma_second = mg::DisplayGamma(std::vector<uint16_t>{1}, 
+                                                     std::vector<uint16_t>{2},
+                                                     std::vector<uint16_t>{3});
 
-    auto convert_char_to_uint16 = [](std::string const& str)
-    {
-        uint16_t out;
-        std::copy(std::begin(str), std::end(str), reinterpret_cast<char*>(&out));
-        return out;
-    };
-
-    uint16_t r_expect = convert_char_to_uint16(r_str);
-    uint16_t g_expect = convert_char_to_uint16(g_str);
-    uint16_t b_expect = convert_char_to_uint16(b_str);
-
-    mg::DisplayGamma gamma(r_str, g_str, b_str);
-
-    ASSERT_THAT(gamma.size(), 1);
-
-    EXPECT_THAT(gamma.red()[0],   r_expect);
-    EXPECT_THAT(gamma.green()[0], g_expect);
-    EXPECT_THAT(gamma.blue()[0],  b_expect);
+    ASSERT_THAT(gamma_second.size(), r.size());
+    EXPECT_THAT(gamma_second.red()[0], r[0]);
+    EXPECT_THAT(gamma_second.green()[0], g[0]);
+    EXPECT_THAT(gamma_second.blue()[0], b[0]);
 }
 
 TEST(DisplayGammaEmpty, test_display_gamma_empty)

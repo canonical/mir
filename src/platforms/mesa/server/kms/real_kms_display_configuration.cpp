@@ -180,9 +180,9 @@ mg::DisplayGamma mgm::RealKMSDisplayConfiguration::get_drm_gamma(
     drmModeCrtc const* crtc) const
 {
     uint32_t gamma_size = crtc->gamma_size;
-    uint16_t red  [gamma_size];
+    uint16_t red[gamma_size];
     uint16_t green[gamma_size];
-    uint16_t blue [gamma_size];
+    uint16_t blue[gamma_size];
 
     int ret;
     if ((ret = drmModeCrtcGetGamma(drm_fd, crtc->crtc_id, gamma_size, red, green, blue)) != 0)
@@ -191,7 +191,9 @@ mg::DisplayGamma mgm::RealKMSDisplayConfiguration::get_drm_gamma(
             std::system_error(errno, std::system_category(), "drmModeCrtcGetGamma Failed"));
     }
 
-    return {red, green, blue, gamma_size};
+    return {std::vector<uint16_t>(red, red + gamma_size),
+            std::vector<uint16_t>(green, green + gamma_size),
+            std::vector<uint16_t>(blue, blue + gamma_size)};
 }
 
 void mgm::RealKMSDisplayConfiguration::update()

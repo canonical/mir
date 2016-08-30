@@ -812,13 +812,13 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 {
     uint32_t const size = 4;
-    uint16_t a[]  = {0, 1, 2, 3};
-    uint16_t b[]  = {1, 2, 3, 4};
-    uint16_t c[]  = {65532, 65533, 65534, 65535};
+    std::vector<uint16_t> const a{0, 1, 2, 3};
+    std::vector<uint16_t> const b{1, 2, 3, 4};
+    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
     std::vector<mg::DisplayGamma> const gammas = {
-        {a, b, c, size},
-        {b, c, a, size},
-        {c, a, b, size}
+        {a, b, c},
+        {b, c, a},
+        {c, a, b}
     };
 
     std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
@@ -878,14 +878,13 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
 TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 {
-    uint32_t size = 4;
-    uint16_t a[]  = {0, 1, 2, 3};
-    uint16_t b[]  = {1, 2, 3, 4};
-    uint16_t c[]  = {65532, 65533, 65534, 65535};
+    std::vector<uint16_t> const a{0, 1, 2, 3};
+    std::vector<uint16_t> const b{1, 2, 3, 4};
+    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
     std::vector<mg::DisplayGamma> const gammas = {
-        {a, b, c, size},
-        {b, c, a, size},
-        {c, a, b, size}
+        {a, b, c},
+        {b, c, a},
+        {c, a, b}
     };
 
     DisplayClient client{new_connection()};
