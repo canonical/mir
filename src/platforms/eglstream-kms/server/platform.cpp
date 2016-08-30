@@ -121,6 +121,8 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
             if (msg_type == mg::BufferIpcMsgType::full_msg)
             {
                 auto native_handle = std::dynamic_pointer_cast<mge::NativeBuffer>(buffer.native_buffer_handle());
+                if (!native_handle)
+                    BOOST_THROW_EXCEPTION(std::invalid_argument{"could not convert NativeBuffer"});
                 for(auto i=0; i<native_handle->data_items; i++)
                 {
                     packer.pack_data(native_handle->data[i]);

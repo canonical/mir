@@ -93,12 +93,12 @@ mga::NativeBuffer* mga::to_native_buffer_checked(mg::NativeBuffer* buffer)
 {
     if (auto native = dynamic_cast<mga::NativeBuffer*>(buffer))
         return native;
-    BOOST_THROW_EXCEPTION(std::runtime_error("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
+    BOOST_THROW_EXCEPTION(std::invalid_argument("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::to_native_buffer_checked(std::shared_ptr<mg::NativeBuffer> const& buffer)
 {
     if (auto native = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer))
         return native;
-    BOOST_THROW_EXCEPTION(std::runtime_error("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
+    BOOST_THROW_EXCEPTION(std::invalid_argument("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
 }

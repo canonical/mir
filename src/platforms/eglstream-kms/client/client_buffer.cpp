@@ -147,8 +147,9 @@ void mcle::ClientBuffer::fill_update_msg(MirBufferPackage& package)
 
 MirNativeBuffer* mcle::ClientBuffer::as_mir_native_buffer() const
 {
-    //mesa has a POD native type for now. can return it directly to client API.
-    return dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(native_buffer_handle().get());
+    if (auto native = dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(native_buffer_handle().get());
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert to NativeBuffer"));
 }
 
 void mcle::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
