@@ -108,15 +108,7 @@ void mgx::DisplayBuffer::swap_buffers()
     {                     // it may also fail, which needs handling too...
         int64_t ust, msc, sbc;
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
-        {
-            Frame prev = last_frame->load();
-            frame.msc = msc;
-            frame.ust = {CLOCK_MONOTONIC, ust};
-            frame.min_period =
-                (prev.msc && prev.ust.microseconds && msc > prev.msc) ?
-                (ust - prev.ust.microseconds)/(msc - prev.msc) :
-                prev.min_period;
-        }
+            frame = {msc, {CLOCK_MONOTONIC, ust}};
     }
     last_frame->store(frame);
 }

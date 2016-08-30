@@ -72,26 +72,11 @@ struct Frame
 {
     int64_t msc = 0;   /**< Media Stream Counter */
     Timestamp ust;     /**< Unadjusted System Time */
-    Microseconds min_period = 0;
-                       /**< The minimum number of microseconds to the next
-                            frame after this one. This value may change over
-                            time and should not be assumed to remain constant,
-                            especially as variable framerate displays become
-                            more common. */
 
     Microseconds age() const // might be negative in some cases (in the future).
     {
         return ust.age();
     }
-
-/* Unused?
-    Frame predict_next() const
-    {
-        return Frame{msc+1,
-                     {ust.clock_id, ust.microseconds+min_period},
-                     min_period};
-    }
-*/
 };
 
 }} // namespace mir::graphics

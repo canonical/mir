@@ -95,12 +95,8 @@ geom::Size mgm::RealKMSOutput::size() const
 
 int mgm::RealKMSOutput::max_refresh_rate() const
 {
-    if (mode_index < static_cast<size_t>(connector->count_modes))
-    {
-        drmModeModeInfo const& current_mode = connector->modes[mode_index];
-        return current_mode.vrefresh;
-    }
-    return 0;
+    drmModeModeInfo const& current_mode = connector->modes[mode_index];
+    return current_mode.vrefresh;
 }
 
 void mgm::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
@@ -183,22 +179,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
                    mgk::connector_name(connector).c_str());
     }
 
-    Frame frame = page_flipper->wait_for_flip(current_crtc->crtc_id);
-
-    /*
-     * Improve our measurement of min_period for GSync/FreeSync displays,
-     * which might be able to do even shorter intervals than our latest
-     * measurement suggests...
-     */
-    auto max_rate = max_refresh_rate();
-    if (max_rate > 0)
-    {
-        auto min_frame_interval_usec = 1000000 / max_rate;
-        if (min_frame_interval_usec < frame.min_period)
-            frame.min_period = min_frame_interval_usec;
-    }
-
-    last_frame_.store(frame);
+    last_frame_.store(page_flipper->wait_for_flip(current_crtc->crtc_id));
 }
 
 mg::Frame mgm::RealKMSOutput::last_frame() const
