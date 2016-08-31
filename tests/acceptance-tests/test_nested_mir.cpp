@@ -458,7 +458,9 @@ private:
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
     mir::CachedPtr<MockDisplayConfigurationPolicy> mock_display_configuration_policy_;
     std::shared_ptr<std::promise<void>> ready_for_input = std::make_shared<std::promise<void>>();
-    mir::UniqueModulePtr<mtf::FakeInputDevice> fake_device{ mtf::add_fake_input_device(mi::InputDeviceInfo{})};
+    mir::UniqueModulePtr<mtf::FakeInputDevice> fake_device{mtf::add_fake_input_device(mi::InputDeviceInfo{
+        "test-devce", "test-device",
+        mi::DeviceCapability::pointer | mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer
@@ -586,8 +588,8 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
 struct Client
 {
-    explicit Client(NestedMirRunner& nested_mir, char const* name = __PRETTY_FUNCTION__) :
-        connection(mir_connect_sync(nested_mir.new_connection().c_str(), name))
+    explicit Client(NestedMirRunner& nested_mir) :
+        connection(mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__))
     {}
 
     ~Client() { mir_connection_release(connection); }
@@ -628,7 +630,7 @@ struct Client
 struct ClientWithADisplayChangeCallback : virtual Client
 {
     ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
-        Client(nested_mir, __PRETTY_FUNCTION__)
+        Client(nested_mir)
     {
         mir_connection_set_display_config_change_callback(connection, callback, context);
     }
@@ -637,7 +639,7 @@ struct ClientWithADisplayChangeCallback : virtual Client
 struct ClientWithAPaintedSurface : virtual Client
 {
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
-        Client(nested_mir, __PRETTY_FUNCTION__),
+        Client(nested_mir),
         surface(mtf::make_any_surface(connection))
     {
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
@@ -663,7 +665,7 @@ struct ClientWithAPaintedSurface : virtual Client
 struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPaintedSurface
 {
     ClientWithAPaintedSurfaceAndABufferStream(NestedMirRunner& nested_mir) :
-        Client(nested_mir, __PRETTY_FUNCTION__),
+        Client(nested_mir),
         ClientWithAPaintedSurface(nested_mir),
         buffer_stream(mir_connection_create_buffer_stream_sync(
             connection,
