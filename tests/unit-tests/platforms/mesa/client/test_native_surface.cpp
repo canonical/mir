@@ -16,18 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/platforms/mesa/include/native_buffer.h"
 #include "src/platforms/mesa/client/native_surface.h"
 #include "mir/client_buffer.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_client_buffer.h"
-
+#include "mir/test/fake_shared.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
+namespace mtd=mt::doubles;
 namespace mcl=mir::client;
-namespace mcl=mir::client;
-namespace mclg=mir::client::mesa;
+namespace mg=mir::graphics;
+namespace mclg=mcl::mesa;
 namespace geom=mir::geometry;
 
 class MesaClientNativeSurfaceTest : public ::testing::Test
@@ -44,10 +46,16 @@ public:
             .WillByDefault(Return(surf_params));
         ON_CALL(mock_surface, get_current_buffer())
             .WillByDefault(Return(
-                std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
+                mt::fake_shared(mock_buffer)));
+        ON_CALL(mock_buffer, native_buffer_handle())
+            .WillByDefault(Return(
+                mt::fake_shared(native_buffer)));
     }
 
     MirSurfaceParameters surf_params;
+    const char* error_msg = "thrown as part of test";
+    mg::NativeBuffer native_buffer;
+    testing::NiceMock<mtd::MockClientBuffer> mock_buffer;
     testing::NiceMock<mtd::MockEGLNativeSurface> mock_surface;
     mclg::NativeSurface native_surface{mock_surface};
 };
@@ -55,7 +63,7 @@ public:
 TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
 {
     MirSurfaceParameters params;
-    native_surface.surface_get_parameters(&native_surface, &params);
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_get_parameters(&native_surface, &params));
     EXPECT_EQ(surf_params.width, params.width);
     EXPECT_EQ(surf_params.height, params.height);
     EXPECT_EQ(surf_params.pixel_format, params.pixel_format);
@@ -72,7 +80,7 @@ TEST_F(MesaClientNativeSurfaceTest, first_advance_skips_request)
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
 
-    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_advance_buffer(&native_surface, &buffer_package));
 }
 
 TEST_F(MesaClientNativeSurfaceTest, basic_advance)
@@ -88,8 +96,8 @@ TEST_F(MesaClientNativeSurfaceTest, basic_advance)
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
 
-    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
-    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_advance_buffer(&native_surface, &buffer_package));
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_advance_buffer(&native_surface, &buffer_package));
 }
 
 TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
@@ -102,8 +110,8 @@ TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
     EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,1))
         .InSequence(seq);
 
-    native_surface.set_swapinterval(0);
-    native_surface.set_swapinterval(1);
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.set_swapinterval(0));
+    EXPECT_EQ(MIR_MESA_TRUE, native_surface.set_swapinterval(1));
 }
 
 TEST_F(MesaClientNativeSurfaceTest, swapinterval_unsupported_request)
@@ -119,10 +127,10 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_advance_buffer_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_surface, get_current_buffer())
-        .WillOnce(Throw(std::runtime_error("")));
+        .WillOnce(Throw(std::runtime_error(error_msg)));
 
     MirBufferPackage buffer_package;
-    EXPECT_THAT(native_surface.advance_buffer(&buffer_package), Eq(MIR_MESA_FALSE));
+    EXPECT_EQ(MIR_MESA_FALSE, native_surface.advance_buffer(&buffer_package));
 }
 
 TEST_F(MesaClientNativeSurfaceTest, returns_error_on_get_parameters_failure)
@@ -130,10 +138,10 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_get_parameters_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_surface, get_parameters())
-        .WillOnce(Throw(std::runtime_error("")));
+        .WillOnce(Throw(std::runtime_error(error_msg)));
 
     MirSurfaceParameters surface_params;
-    EXPECT_THAT(native_surface.get_parameters(&surface_params), Eq(MIR_MESA_FALSE));
+    EXPECT_EQ(MIR_MESA_FALSE, native_surface.get_parameters(&surface_params));
 }
 
 TEST_F(MesaClientNativeSurfaceTest, returns_error_on_set_swap_interval_failure)
@@ -141,7 +149,7 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_set_swap_interval_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_surface, request_and_wait_for_configure(_,_))
-        .WillOnce(Throw(std::runtime_error("")));
+        .WillOnce(Throw(std::runtime_error(error_msg)));
 
-    EXPECT_THAT(native_surface.set_swapinterval(0), Eq(MIR_MESA_FALSE));
+    EXPECT_EQ(MIR_MESA_FALSE, native_surface.set_swapinterval(0));
 }
