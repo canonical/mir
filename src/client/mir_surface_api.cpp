@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -723,7 +723,7 @@ catch (std::exception const& ex)
 
 void mir_surface_spec_set_placement(
     MirSurfaceSpec*     spec,
-    const MirRectangle* rect,
+    MirRectangle const* rect,
     MirPlacementGravity rect_gravity,
     MirPlacementGravity surface_gravity,
     MirPlacementHints   placement_hints,
