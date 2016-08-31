@@ -57,7 +57,7 @@ public:
     mg::mesa::NativeBuffer native_buffer;
     testing::NiceMock<mtd::MockClientBuffer> mock_buffer;
     testing::NiceMock<mtd::MockEGLNativeSurface> mock_surface;
-    mclg::NativeSurface native_surface{mock_surface};
+    mclg::NativeSurface native_surface{&mock_surface};
 };
 
 TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
