@@ -43,72 +43,25 @@ public:
 
 TEST_F(MockDisplayGamma, test_uint16_display_gamma_size)
 {
-    EXPECT_THAT(gamma.size(), r.size());
+    EXPECT_THAT(gamma.red.size(), r.size());
 }
 
 TEST_F(MockDisplayGamma, test_uint16_display_gamma_rgb_correct)
 {
-    ASSERT_THAT(gamma.size(), gamma.size());
-    EXPECT_THAT(gamma.red()[0], r[0]);
-    EXPECT_THAT(gamma.green()[0], g[0]);
-    EXPECT_THAT(gamma.blue()[0], b[0]);
-}
-
-TEST_F(MockDisplayGamma, test_display_gamma_copy_ctor)
-{
-    mg::DisplayGamma gamma_second(gamma);
-
-    ASSERT_THAT(gamma_second.size(), gamma.size());
-    EXPECT_THAT(gamma_second.red()[0], gamma.red()[0]);
-    EXPECT_THAT(gamma_second.green()[0], gamma.green()[0]);
-    EXPECT_THAT(gamma_second.blue()[0], gamma.blue()[0]);
-}
-
-TEST_F(MockDisplayGamma, test_display_gamma_assign_copy_ctor)
-{
-    mg::DisplayGamma gamma_second = gamma;
-
-    ASSERT_THAT(gamma_second.size(), gamma.size());
-    EXPECT_THAT(gamma_second.red()[0], gamma.red()[0]);
-    EXPECT_THAT(gamma_second.green()[0], gamma.green()[0]);
-    EXPECT_THAT(gamma_second.blue()[0], gamma.blue()[0]);
-}
-
-TEST_F(MockDisplayGamma, test_display_gamma_move_ctor)
-{
-    mg::DisplayGamma gamma_second(mg::DisplayGamma(r, g, b));
-
-    ASSERT_THAT(gamma_second.size(), r.size());
-    EXPECT_THAT(gamma_second.red()[0], r[0]);
-    EXPECT_THAT(gamma_second.green()[0], g[0]);
-    EXPECT_THAT(gamma_second.blue()[0], b[0]);
-}
-
-TEST_F(MockDisplayGamma, test_display_gamma_assign_move_ctor)
-{
-    mg::DisplayGamma gamma_second = mg::DisplayGamma(r, g, b);
-
-    ASSERT_THAT(gamma_second.size(), r.size());
-    EXPECT_THAT(gamma_second.red()[0], r[0]);
-    EXPECT_THAT(gamma_second.green()[0], g[0]);
-    EXPECT_THAT(gamma_second.blue()[0], b[0]);
-}
-
-TEST_F(MockDisplayGamma, test_display_gamma_move_vector_ctor)
-{
-    mg::DisplayGamma gamma_second = mg::DisplayGamma(std::vector<uint16_t>{1}, 
-                                                     std::vector<uint16_t>{2},
-                                                     std::vector<uint16_t>{3});
-
-    ASSERT_THAT(gamma_second.size(), r.size());
-    EXPECT_THAT(gamma_second.red()[0], r[0]);
-    EXPECT_THAT(gamma_second.green()[0], g[0]);
-    EXPECT_THAT(gamma_second.blue()[0], b[0]);
+    ASSERT_THAT(gamma.red.size(), r.size());
+    EXPECT_THAT(gamma.red[0], r[0]);
+    EXPECT_THAT(gamma.green[0], g[0]);
+    EXPECT_THAT(gamma.blue[0], b[0]);
 }
 
 TEST(DisplayGammaEmpty, test_display_gamma_empty)
 {
     mg::DisplayGamma gamma;
 
-    EXPECT_THAT(gamma.size(), 0);
+    EXPECT_THAT(gamma.red.size(), 0);
+}
+
+TEST(DisplayGammaEmpty, test_invalid_lut_size_display_gamma_throw)
+{
+    EXPECT_THROW({ mg::DisplayGamma({1}, {2, 3}, {4, 5, 6}); }, std::logic_error);
 }
