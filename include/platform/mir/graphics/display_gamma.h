@@ -33,27 +33,9 @@ public:
                  std::vector<uint16_t> const& green,
                  std::vector<uint16_t> const& blue);
 
-    DisplayGamma(std::vector<uint16_t>&& red,
-                 std::vector<uint16_t>&& green,
-                 std::vector<uint16_t>&& blue);
-
-    DisplayGamma(DisplayGamma const& gamma) = default;
-    DisplayGamma(DisplayGamma&& gamma) = default;
-
-    DisplayGamma& operator=(DisplayGamma const& gamma) = default;
-    DisplayGamma& operator=(DisplayGamma&& gamma) = default;
-
-    uint16_t const* red() const;
-    uint16_t const* green() const;
-    uint16_t const* blue() const;
-    uint32_t size() const;
-
-private:
-    void throw_if_lut_size_mismatch() const;
-
-    std::vector<uint16_t> red_;
-    std::vector<uint16_t> green_;
-    std::vector<uint16_t> blue_;
+    std::vector<uint16_t> red;
+    std::vector<uint16_t> green;
+    std::vector<uint16_t> blue;
 };
 
 }

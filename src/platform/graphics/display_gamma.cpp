@@ -26,48 +26,13 @@ namespace mg = mir::graphics;
 mg::DisplayGamma::DisplayGamma(std::vector<uint16_t> const& red,
                                std::vector<uint16_t> const& green,
                                std::vector<uint16_t> const& blue) :
-    red_(red),
-    green_(green),
-    blue_(blue)
+    red(red),
+    green(green),
+    blue(blue)
 {
-    throw_if_lut_size_mismatch();
-}
-
-mg::DisplayGamma::DisplayGamma(std::vector<uint16_t>&& red,
-                               std::vector<uint16_t>&& green,
-                               std::vector<uint16_t>&& blue) :
-    red_(std::move(red)),
-    green_(std::move(green)),
-    blue_(std::move(blue))
-{
-    throw_if_lut_size_mismatch();
-}
-
-void mg::DisplayGamma::throw_if_lut_size_mismatch() const
-{
-    if (red_.size() != green_.size() ||
-        green_.size() != blue_.size())
+    if (red.size() != green.size() ||
+        green.size() != blue.size())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Different gamma LUT sizes"));
     }
-}
-
-uint16_t const* mg::DisplayGamma::red() const
-{
-    return red_.data();
-}
-
-uint16_t const* mg::DisplayGamma::green() const
-{
-    return green_.data();
-}
-
-uint16_t const* mg::DisplayGamma::blue() const
-{
-    return blue_.data();
-}
-
-uint32_t mg::DisplayGamma::size() const
-{
-    return red_.size();
 }

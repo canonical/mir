@@ -382,10 +382,10 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
     mg::DisplayGamma gamma{{1}, {2}, {3}};
 
     EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
-                                              gamma.size(),
-                                              const_cast<uint16_t*>(gamma.red()),
-                                              const_cast<uint16_t*>(gamma.green()),
-                                              const_cast<uint16_t*>(gamma.blue())))
+                                              gamma.red.size(),
+                                              const_cast<uint16_t*>(gamma.red.data()),
+                                              const_cast<uint16_t*>(gamma.green.data()),
+                                              const_cast<uint16_t*>(gamma.blue.data())))
         .Times(1);
 
     EXPECT_TRUE(output.set_crtc(fb_id));
