@@ -97,6 +97,21 @@ public:
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
     }
+    
+    std::shared_ptr<MirBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+
+    MirNativeBuffer* get_native_handle(MirBuffer*)
+    {
+        return nullptr;
+    }
+
+    MirGraphicsRegion get_graphics_region(MirBuffer*)
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
+    }
 };
 
 
