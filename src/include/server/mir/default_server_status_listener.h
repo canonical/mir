@@ -37,6 +37,14 @@ public:
     virtual void started()
     {
     }
+
+    virtual void ready_for_user_input()
+    {
+    }
+
+    virtual void stop_receiving_input()
+    {
+    }
 };
 }
 
