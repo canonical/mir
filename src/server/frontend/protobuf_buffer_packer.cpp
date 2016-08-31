@@ -71,12 +71,12 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     protobuf_output.set_form_factor(display_output.form_factor);
     protobuf_output.set_subpixel_arrangement(display_output.subpixel_arrangement);
     protobuf_output.set_gamma_supported(display_output.gamma_supported);
-    protobuf_output.set_gamma_red(reinterpret_cast<int8_t const*>(display_output.gamma.red()),
-        display_output.gamma.size() * 2);
-    protobuf_output.set_gamma_green(reinterpret_cast<int8_t const*>(display_output.gamma.green()),
-        display_output.gamma.size() * 2);
-    protobuf_output.set_gamma_blue(reinterpret_cast<int8_t const*>(display_output.gamma.blue()),
-        display_output.gamma.size() * 2);
+    protobuf_output.set_gamma_red(reinterpret_cast<int8_t const*>(display_output.gamma.red.data()),
+        display_output.gamma.red.size() * sizeof(uint16_t) / sizeof(char));
+    protobuf_output.set_gamma_green(reinterpret_cast<int8_t const*>(display_output.gamma.green.data()),
+        display_output.gamma.green.size() * sizeof(uint16_t) / sizeof(char));
+    protobuf_output.set_gamma_blue(reinterpret_cast<int8_t const*>(display_output.gamma.blue.data()),
+        display_output.gamma.blue.size() * sizeof(uint16_t) / sizeof(char));
 }
 
 }

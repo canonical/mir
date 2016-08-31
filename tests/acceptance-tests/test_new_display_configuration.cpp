@@ -859,17 +859,17 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
         for (size_t r = 0; r < size; r++)
         {
-            EXPECT_THAT(gammas[i].red()[r], red[r]);
+            EXPECT_THAT(gammas[i].red[r], red[r]);
         }
 
         for (size_t g = 0; g < size; g++)
         {
-            EXPECT_THAT(gammas[i].green()[g], green[g]);
+            EXPECT_THAT(gammas[i].green[g], green[g]);
         }
 
         for (size_t b = 0; b < size; b++)
         {
-            EXPECT_THAT(gammas[i].blue()[b], blue[b]);
+            EXPECT_THAT(gammas[i].blue[b], blue[b]);
         }
     }
 
@@ -898,10 +898,10 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
         auto output = mir_display_config_get_mutable_output(client_config.get(), i);
 
         mir_output_set_gamma(output,
-                             gammas[i].red(),
-                             gammas[i].green(),
-                             gammas[i].blue(),
-                             gammas[i].size());
+                             gammas[i].red.data(),
+                             gammas[i].green.data(),
+                             gammas[i].blue.data(),
+                             gammas[i].red.size());
     }
 
     DisplayConfigMatchingContext context;
@@ -925,19 +925,19 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
     current_config->for_each_output(
         [&gammas, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
             {
-                for (size_t r = 0; r < output.gamma.size(); r++)
+                for (size_t r = 0; r < output.gamma.red.size(); r++)
                 {
-                    EXPECT_THAT(output.gamma.red()[r], gammas[output_num].red()[r]);
+                    EXPECT_THAT(output.gamma.red[r], gammas[output_num].red[r]);
                 }
 
-                for (size_t g = 0; g < output.gamma.size(); g++)
+                for (size_t g = 0; g < output.gamma.green.size(); g++)
                 {
-                    EXPECT_THAT(output.gamma.green()[g], gammas[output_num].green()[g]);
+                    EXPECT_THAT(output.gamma.green[g], gammas[output_num].green[g]);
                 }
 
-                for (size_t b = 0; b < output.gamma.size(); b++)
+                for (size_t b = 0; b < output.gamma.green.size(); b++)
                 {
-                    EXPECT_THAT(output.gamma.blue()[b], gammas[output_num].blue()[b]);
+                    EXPECT_THAT(output.gamma.blue[b], gammas[output_num].blue[b]);
                 }
 
                 ++output_num;

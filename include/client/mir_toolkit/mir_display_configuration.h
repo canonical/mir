@@ -464,7 +464,7 @@ MirFormFactor mir_output_get_form_factor(MirOutput const* output);
  * \returns     The MirDisplayGammaSupported mir_display_gamma_supported otherwise,
  *               mir_display_gamma_unsupported
  */
-MirDisplayGammaSupported mir_output_gamma_supported(MirOutput const* client_output);
+MirDisplayGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output);
 
 /** Gets the gamma size
  *

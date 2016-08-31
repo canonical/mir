@@ -178,7 +178,7 @@ mg::DisplayConfigurationOutput populate_config(
         form_factor,
         mir_subpixel_arrangement_unknown,
         {},
-        mir_display_gamma_unsupported
+        mir_output_gamma_unsupported
     };
 }
 
