@@ -285,6 +285,11 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
 
     #undef COPY_IF_SET
 
@@ -621,6 +626,11 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(parent_id);
     // aux_rect is a special case (below)
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(edge_attachment);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
