@@ -106,3 +106,11 @@ void mf::AuthorizingDisplayChanger::confirm_base_configuration(
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
     }
 }
+
+void
+mir::frontend::AuthorizingDisplayChanger::cancel_base_configuration_preview(std::shared_ptr<mir::frontend::Session> const& session)
+{
+    // There's no particular reason to require authorisation here - it only takes effect if the client
+    // has already been authorised to change configuration.
+    changer->cancel_base_configuration_preview(session);
+}
