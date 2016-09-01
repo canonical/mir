@@ -53,7 +53,7 @@ private:
     void add_or_update_output(kms::DRMModeResources const& resources, drmModeConnector const& connector);
     std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
     std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
-    DisplayGamma get_drm_gamma(drmModeCrtc const* crtc) const;
+    GammaCurves get_drm_gamma(drmModeCrtc const* crtc) const;
 
     int drm_fd;
     DisplayConfigurationCard card;

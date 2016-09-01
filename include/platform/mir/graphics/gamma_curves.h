@@ -24,14 +24,14 @@ namespace mir
 namespace graphics
 {
 
-class DisplayGamma
+class GammaCurves
 {
 public:
-    DisplayGamma() = default;
+    GammaCurves() = default;
 
-    DisplayGamma(std::vector<uint16_t> const& red,
-                 std::vector<uint16_t> const& green,
-                 std::vector<uint16_t> const& blue);
+    GammaCurves(std::vector<uint16_t> const& red,
+                std::vector<uint16_t> const& green,
+                std::vector<uint16_t> const& blue);
 
     std::vector<uint16_t> red;
     std::vector<uint16_t> green;

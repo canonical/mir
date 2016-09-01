@@ -277,7 +277,7 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
     }
 }
 
-void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
+void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 {
     if (!ensure_crtc())
     {

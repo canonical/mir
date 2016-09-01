@@ -23,7 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
-#include "mir/graphics/display_gamma.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -122,7 +122,7 @@ struct DisplayConfigurationOutput
     MirSubpixelArrangement subpixel_arrangement;
 
     /** The current gamma for the display */
-    DisplayGamma gamma;
+    GammaCurves gamma;
     MirOutputGammaSupported gamma_supported;
 
     /** The logical rectangle occupied by the output, based on its position,
@@ -154,7 +154,7 @@ struct UserDisplayConfigurationOutput
     float& scale;
     MirFormFactor& form_factor;
     MirSubpixelArrangement& subpixel_arrangement;
-    DisplayGamma& gamma;
+    GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);

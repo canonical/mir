@@ -176,7 +176,7 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
     return conf_mode_index;
 }
 
-mg::DisplayGamma mgm::RealKMSDisplayConfiguration::get_drm_gamma(
+mg::GammaCurves mgm::RealKMSDisplayConfiguration::get_drm_gamma(
     drmModeCrtc const* crtc) const
 {
     uint32_t gamma_size = crtc->gamma_size;
@@ -227,7 +227,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                                          mir_pixel_format_xrgb_8888};
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
-    DisplayGamma gamma;
+    GammaCurves gamma;
 
     /* Get information about the current mode */
     if (connector.encoder_id)

@@ -60,7 +60,7 @@ private:
         float scale;
         MirFormFactor form_factor;
         MirSubpixelArrangement subpixel_arrangement;
-        DisplayGamma gamma;
+        GammaCurves gamma;
         MirOutputGammaSupported gamma_supported;
     };
     std::unordered_map<uint32_t, LocalOutputConfig> mutable local_config;

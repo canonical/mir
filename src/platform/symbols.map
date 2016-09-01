@@ -41,11 +41,6 @@ MIRPLATFORM_0.25 {
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::operator*;
     mir::graphics::DisplayConfiguration::valid*;
-    mir::graphics::DisplayGamma::DisplayGamma*;
-    mir::graphics::DisplayGamma::red*;
-    mir::graphics::DisplayGamma::green*;
-    mir::graphics::DisplayGamma::blue*;
-    mir::graphics::DisplayGamma::size*;
     mir::graphics::Display::configure*;
     mir::graphics::Display::create_gl_context*;
     mir::graphics::Display::create_hardware_cursor*;
@@ -62,6 +57,7 @@ MIRPLATFORM_0.25 {
     mir::graphics::EventHandlerRegister::register_fd_handler*;
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
+    mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::GLConfig::depth_buffer_bits*;
     mir::graphics::GLConfig::?GLConfig*;
     mir::graphics::GLConfig::GLConfig*;

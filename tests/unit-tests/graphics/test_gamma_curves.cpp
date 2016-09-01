@@ -16,7 +16,7 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@gmail.com>
  */
 
-#include "mir/graphics/display_gamma.h"
+#include "mir/graphics/gamma_curves.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,23 +30,23 @@ std::vector<uint16_t> const g{2};
 std::vector<uint16_t> const b{3};
 }
 
-class MockDisplayGamma : public testing::Test
+class MockGammaCurves : public testing::Test
 {
 public:
-    MockDisplayGamma() :
+    MockGammaCurves() :
         gamma(r, g, b)
     {
     }
 
-    mg::DisplayGamma gamma;
+    mg::GammaCurves gamma;
 };
 
-TEST_F(MockDisplayGamma, test_uint16_display_gamma_size)
+TEST_F(MockGammaCurves, test_uint16_gamma_curves_size)
 {
     EXPECT_THAT(gamma.red.size(), r.size());
 }
 
-TEST_F(MockDisplayGamma, test_uint16_display_gamma_rgb_correct)
+TEST_F(MockGammaCurves, test_uint16_gamma_curves_rgb_correct)
 {
     ASSERT_THAT(gamma.red.size(), r.size());
     EXPECT_THAT(gamma.red[0], r[0]);
@@ -54,14 +54,14 @@ TEST_F(MockDisplayGamma, test_uint16_display_gamma_rgb_correct)
     EXPECT_THAT(gamma.blue[0], b[0]);
 }
 
-TEST(DisplayGammaEmpty, test_display_gamma_empty)
+TEST(GammaCurvesEmpty, test_gamma_curves_empty)
 {
-    mg::DisplayGamma gamma;
+    mg::GammaCurves gamma;
 
     EXPECT_THAT(gamma.red.size(), 0);
 }
 
-TEST(DisplayGammaEmpty, test_invalid_lut_size_display_gamma_throw)
+TEST(GammaCurvesEmpty, test_invalid_lut_size_gamma_curves_throw)
 {
-    EXPECT_THROW({ mg::DisplayGamma({1}, {2, 3}, {4, 5, 6}); }, std::logic_error);
+    EXPECT_THROW({ mg::GammaCurves({1}, {2, 3}, {4, 5, 6}); }, std::logic_error);
 }
