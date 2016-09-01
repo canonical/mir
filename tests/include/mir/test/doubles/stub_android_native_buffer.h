@@ -28,7 +28,7 @@ namespace test
 {
 namespace doubles
 {
-struct StubAndroidNativeBuffer : public graphics::NativeBuffer
+struct StubAndroidNativeBuffer : public graphics::android::NativeBuffer
 {
     StubAndroidNativeBuffer()
     {

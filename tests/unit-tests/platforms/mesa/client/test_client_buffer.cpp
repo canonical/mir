@@ -30,7 +30,7 @@
 
 namespace geom=mir::geometry;
 namespace mclg=mir::client::mesa;
-
+namespace mgm=mir::graphics::mesa;
 namespace
 {
 
@@ -102,7 +102,8 @@ TEST_F(MesaClientBufferTest, DISABLED_buffer_returns_set_package)
 
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
-    auto package_return = buffer.native_buffer_handle();
+    auto package_return = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
+    ASSERT_THAT(package_return, Ne(nullptr));
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
     EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
     EXPECT_EQ(package_return->stride, package_copy->stride);
