@@ -58,7 +58,8 @@ public:
     void confirm_base_configuration(
         std::shared_ptr<Session> const&,
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
-
+    void cancel_base_configuration_preview(
+        std::shared_ptr<Session> const& session) override;
 
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;
