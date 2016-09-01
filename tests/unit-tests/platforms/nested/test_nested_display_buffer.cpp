@@ -43,6 +43,9 @@ using namespace testing;
 
 namespace
 {
+struct FunkyBuffer : mg::NativeBuffer
+{
+};
 
 class EventHostSurface : public mgn::HostSurface
 {
@@ -161,15 +164,15 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 
 TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 {
-    MockHostSurface mock_host_surface;
+    NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
 
     StubNestedBuffer nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
-    auto mock_stream = std::make_unique<MockNestedStream>();
-    auto mock_chain = std::make_unique<MockNestedChain>();
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
     EXPECT_CALL(*mock_chain, submit_buffer(nested_buffer.fake_mir_buffer));
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
@@ -186,14 +189,14 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 
 TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
 {
-    MockHostSurface mock_host_surface;
+    NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
     StubNestedBuffer nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
-    auto mock_stream = std::make_unique<MockNestedStream>();
-    auto mock_chain = std::make_unique<MockNestedChain>();
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
     EXPECT_CALL(*mock_chain, submit_buffer(nested_buffer.fake_mir_buffer));
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
@@ -213,17 +216,25 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
 
 TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
 {
-    struct FunkyBuffer : mg::NativeBuffer
-    {
-    };
-    auto foreign_native_buffer = std::make_shared<FunkyBuffer>();
-
-    mtd::StubBuffer nested_buffer(foreign_native_buffer); 
+    mtd::StubBuffer foreign_buffer(std::make_shared<FunkyBuffer>());
+ 
     mg::RenderableList list =
-        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(foreign_buffer), rectangle) };
 
     auto display_buffer = create_display_buffer(host_connection);
     EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, accepts_list_with_unshown_unknown_buffers)
+{
+    StubNestedBuffer nested_buffer; 
+    mtd::StubBuffer foreign_buffer(std::make_shared<FunkyBuffer>());
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(foreign_buffer), rectangle),
+          std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
 }
 
 TEST_F(NestedDisplayBuffer, rejects_empty_list)

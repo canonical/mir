@@ -111,7 +111,6 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     auto& passthrough_layer = list.back();
     auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(
         passthrough_layer->buffer()->native_buffer_handle().get());
-    printf("NESTED BBB %X\n", (int)(long)nested_buffer);
     if (!nested_buffer)
         return false;
 
@@ -119,11 +118,9 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         host_chain = host_connection->create_chain();
 
     host_chain->submit_buffer(nested_buffer->client_handle());
-//passthrough_layer->buffer()->native_buffer_handle()->client_handle());
 
     if (content != BackingContent::chain)
         host_surface->set_content(0);
-
     return true;
 }
 
