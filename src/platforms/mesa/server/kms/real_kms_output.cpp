@@ -285,15 +285,24 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
                     mgk::connector_name(connector).c_str());
     }
 
-    if (drmModeCrtcSetGamma(
-        drm_fd,
-        current_crtc->crtc_id,
-        gamma.red.size(),
-        const_cast<uint16_t*>(gamma.red.data()),
-        const_cast<uint16_t*>(gamma.green.data()),
-        const_cast<uint16_t*>(gamma.blue.data())) != 0)
+    if (gamma.red.size() != gamma.green.size() ||
+        gamma.green.size() != gamma.blue.size())
     {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
+        mir::log_warning("set_gamma: invalid gamma sizes (r: %i g: %i b: %i)",
+                          gamma.red.size(), gamma.green.size(), gamma.blue.size());
+    }
+    else
+    {
+        if (drmModeCrtcSetGamma(
+            drm_fd,
+            current_crtc->crtc_id,
+            gamma.red.size(),
+            const_cast<uint16_t*>(gamma.red.data()),
+            const_cast<uint16_t*>(gamma.green.data()),
+            const_cast<uint16_t*>(gamma.blue.data())) != 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
+        }
     }
 }
