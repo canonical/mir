@@ -250,11 +250,11 @@ typedef enum MirPointerConfinementState
 /**
  * Supports gamma correction
  */
-typedef enum MirDisplayGammaSupported
+typedef enum MirOutputGammaSupported
 {
     mir_output_gamma_unsupported,
     mir_output_gamma_supported
-} MirDisplayGammaSupported;
+} MirOutputGammaSupported;
 
 /**@}*/
 

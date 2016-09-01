@@ -461,10 +461,10 @@ MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 /** Gets if the platform supports gamma correction
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The MirDisplayGammaSupported mir_display_gamma_supported otherwise,
+ * \returns     The MirOutputGammaSupported mir_display_gamma_supported otherwise,
  *               mir_display_gamma_unsupported
  */
-MirDisplayGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output);
+MirOutputGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output);
 
 /** Gets the gamma size
  *

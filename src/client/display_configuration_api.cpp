@@ -350,11 +350,11 @@ uint32_t mir_output_get_gamma_size(MirOutput const* client_output)
     return (output->gamma_red().size() / (sizeof(uint16_t) / sizeof(char)));
 }
 
-MirDisplayGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output)
+MirOutputGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return static_cast<MirDisplayGammaSupported>(output->gamma_supported());
+    return static_cast<MirOutputGammaSupported>(output->gamma_supported());
 }
 
 void mir_output_get_gamma(MirOutput const* client_output,
