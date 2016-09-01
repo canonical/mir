@@ -288,21 +288,19 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     if (gamma.red.size() != gamma.green.size() ||
         gamma.green.size() != gamma.blue.size())
     {
-        mir::log_warning("set_gamma: invalid gamma sizes (r: %i g: %i b: %i)",
-                          gamma.red.size(), gamma.green.size(), gamma.blue.size());
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("set_gamma: mismatch gamma LUT sizes"));
     }
-    else
+
+    if (drmModeCrtcSetGamma(
+        drm_fd,
+        current_crtc->crtc_id,
+        gamma.red.size(),
+        const_cast<uint16_t*>(gamma.red.data()),
+        const_cast<uint16_t*>(gamma.green.data()),
+        const_cast<uint16_t*>(gamma.blue.data())) != 0)
     {
-        if (drmModeCrtcSetGamma(
-            drm_fd,
-            current_crtc->crtc_id,
-            gamma.red.size(),
-            const_cast<uint16_t*>(gamma.red.data()),
-            const_cast<uint16_t*>(gamma.green.data()),
-            const_cast<uint16_t*>(gamma.blue.data())) != 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
-        }
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
     }
 }
