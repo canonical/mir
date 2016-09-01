@@ -277,12 +277,19 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
     }
 }
 
-void mgm::RealKMSOutput::set_gamma(mg::DisplayGamma const& gamma)
+void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 {
     if (!ensure_crtc())
     {
         fatal_error("Output %s has no associated CRTC to set gamma on",
                     mgk::connector_name(connector).c_str());
+    }
+
+    if (gamma.red.size() != gamma.green.size() ||
+        gamma.green.size() != gamma.blue.size())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::invalid_argument("set_gamma: mismatch gamma LUT sizes"));
     }
 
     if (drmModeCrtcSetGamma(

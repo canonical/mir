@@ -16,16 +16,16 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/graphics/display_gamma.h"
+#include "mir/graphics/gamma_curves.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
 
-mg::DisplayGamma::DisplayGamma(std::vector<uint16_t> const& red,
-                               std::vector<uint16_t> const& green,
-                               std::vector<uint16_t> const& blue) :
+mg::GammaCurves::GammaCurves(std::vector<uint16_t> const& red,
+                             std::vector<uint16_t> const& green,
+                             std::vector<uint16_t> const& blue) :
     red(red),
     green(green),
     blue(blue)
