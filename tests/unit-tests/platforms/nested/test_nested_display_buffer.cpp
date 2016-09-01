@@ -98,7 +98,7 @@ struct MockNestedStream : mgn::HostStream
 
 struct StubNestedBuffer :
     mtd::StubBuffer,
-    mg::NativeBuffer,
+    mgn::NativeBuffer,
     std::enable_shared_from_this<StubNestedBuffer>
 {
     int const fake_buffer = 15122235;
@@ -213,10 +213,10 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
 
 TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
 {
-//    C++17
-//    auto foreign_native_buffer = std::reinterpret_pointer_cast<mg::NativeBuffer>(std::make_shared<int>(8));
-    int fake_native = 34;
-    auto foreign_native_buffer = std::shared_ptr<mg::NativeBuffer>(reinterpret_cast<mg::NativeBuffer*>(&fake_native), [](auto){});
+    struct FunkyBuffer : mg::NativeBuffer
+    {
+    };
+    auto foreign_native_buffer = std::make_shared<FunkyBuffer>();
 
     mtd::StubBuffer nested_buffer(foreign_native_buffer); 
     mg::RenderableList list =
