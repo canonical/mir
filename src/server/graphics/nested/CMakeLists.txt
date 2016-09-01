@@ -12,4 +12,5 @@ add_library(
   mir_client_host_connection.cpp
   cursor.cpp
   platform.cpp
+  buffer.cpp
 )

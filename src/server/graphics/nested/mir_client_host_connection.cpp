@@ -21,6 +21,7 @@
 #include "host_stream.h"
 #include "host_chain.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -473,5 +474,21 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
 
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
-    return nullptr;
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }

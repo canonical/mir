@@ -202,52 +202,6 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
 
-// TODO these are used to frig a stub renderer when running headless
-namespace
-{
-class StubGLRenderer : public mir::renderer::Renderer
-{
-public:
-    StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
-        : render_target{
-            dynamic_cast<mir::renderer::gl::RenderTarget*>(
-                display_buffer.native_display_buffer())}
-    {
-    }
-
-    void set_viewport(mir::geometry::Rectangle const&) override {}
-    void set_output_transform(MirOrientation, MirMirrorMode) override {}
-
-    void render(mir::graphics::RenderableList const& renderables) const override
-    {
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->make_current();
-
-        for (auto const& r : renderables)
-            r->buffer(); // We need to consume a buffer to unblock client tests
-
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->swap_buffers();
-    }
-
-    void suspend() override {}
-
-    mir::renderer::gl::RenderTarget* const render_target;
-};
-
-class StubGLRendererFactory : public mir::renderer::RendererFactory
-{
-public:
-    auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
-    -> std::unique_ptr<mir::renderer::Renderer>
-    {
-        return std::make_unique<StubGLRenderer>(display_buffer);
-    }
-};
-}
-
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
@@ -256,20 +210,6 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         DefaultServerConfiguration(configuration_options),
         self(self.get())
     {
-    }
-
-    // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
-    auto the_renderer_factory() -> std::shared_ptr<renderer::RendererFactory> override
-    {
-        auto const& options = the_options();
-        if (options->is_set(options::platform_graphics_lib))
-        {
-            auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
-
-            if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
-                return std::make_shared<StubGLRendererFactory>();
-        }
-        return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
     std::function<void()> the_stop_callback() override

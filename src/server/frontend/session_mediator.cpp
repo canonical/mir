@@ -767,6 +767,21 @@ void mf::SessionMediator::confirm_base_display_configuration(
     done->Run();
 }
 
+void mf::SessionMediator::cancel_base_display_configuration_preview(
+    mir::protobuf::Void const* /*request*/,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->cancel_base_configuration_preview(session);
+
+    done->Run();
+}
+
 void mf::SessionMediator::create_screencast(
     const mir::protobuf::ScreencastParameters* parameters,
     mir::protobuf::Screencast* protobuf_screencast,

@@ -7,6 +7,6 @@ Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION@
 Requires.private: mirclient
-Requires: mirplatform
+Requires: mirplatform uuid
 Libs: -L@LIBDIR@ -lmirserver -lmircommon
 Cflags: -I@INCLUDEDIR@
