@@ -105,7 +105,7 @@ public:
     {
     }
 
-    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) override
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) const override
     {
         struct NullStream : graphics::nested::HostStream
         {
@@ -115,10 +115,11 @@ public:
         return std::make_unique<NullStream>();
     }
 
-    std::shared_ptr<graphics::nested::HostChain> create_chain()
+    std::unique_ptr<graphics::nested::HostChain> create_chain() const override
     {
         struct NullHostChain : graphics::nested::HostChain
         {
+            void submit_buffer(MirBuffer*) override {}
         };
         return std::make_unique<NullHostChain>();
     }
@@ -128,6 +129,7 @@ public:
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
         void set_event_handler(mir_surface_event_callback, void*) override {}
+        void set_content(int) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
 };
@@ -136,8 +138,8 @@ struct MockHostConnection : StubHostConnection
 {
     MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(graphics::nested::UniqueInputConfig)> const&));
     MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
-    MOCK_METHOD0(create_chain, std::unique_ptr<graphics::nested::HostChain>());
-    MOCK_METHOD1(create_stream, std::unique_ptr<graphics::nested::HostStream>(graphics::BufferProperties const&));
+    MOCK_CONST_METHOD0(create_chain, std::unique_ptr<graphics::nested::HostChain>());
+    MOCK_CONST_METHOD1(create_stream, std::unique_ptr<graphics::nested::HostStream>(graphics::BufferProperties const&));
     MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
         (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
          graphics::BufferProperties, char const*, uint32_t));

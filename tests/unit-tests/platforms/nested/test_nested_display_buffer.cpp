@@ -69,6 +69,9 @@ public:
             event_handler(nullptr, ev.get(), event_context);
     }
 
+    void set_content(int) override
+    {
+    }
 private:
     std::mutex event_mutex;
     mir_surface_event_callback event_handler;
@@ -115,11 +118,11 @@ struct NestedDisplayBuffer : Test
 {
     NestedDisplayBuffer()
     {
-        output.top_left = { 0, 0 };
+        output.top_left = rectangle.top_left;
         output.current_mode_index = 0;
         output.orientation = mir_orientation_normal;
         output.current_format = mir_pixel_format_abgr_8888;
-        output.modes = { { { 10, 11 }, 55.0f } };
+        output.modes = { { rectangle.size, 55.0f } };
     }
 
     auto create_display_buffer(std::shared_ptr<mgn::HostConnection> const& connection)
@@ -210,10 +213,22 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
 
 TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
 {
-    mtd::StubBuffer nested_buffer; 
+//    C++17
+//    auto foreign_native_buffer = std::reinterpret_pointer_cast<mg::NativeBuffer>(std::make_shared<int>(8));
+    int fake_native = 34;
+    auto foreign_native_buffer = std::shared_ptr<mg::NativeBuffer>(reinterpret_cast<mg::NativeBuffer*>(&fake_native), [](auto){});
+
+    mtd::StubBuffer nested_buffer(foreign_native_buffer); 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_empty_list)
+{
+    mg::RenderableList list;
     auto display_buffer = create_display_buffer(host_connection);
     EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
 }

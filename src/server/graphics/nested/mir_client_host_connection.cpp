@@ -19,6 +19,7 @@
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
 #include "host_stream.h"
+#include "host_chain.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -110,6 +111,10 @@ public:
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
         mir_surface_release_sync(mir_surface);
+    }
+
+    void set_content(int) override
+    {
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -461,7 +466,12 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
 }
 
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
-    mg::BufferProperties const& properties)
+    mg::BufferProperties const& properties) const
 {
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
+}
+
+std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
+{
+    return nullptr;
 }

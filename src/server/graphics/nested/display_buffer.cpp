@@ -20,7 +20,9 @@
 
 #include "host_connection.h"
 #include "host_stream.h"
+#include "native_buffer.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/buffer.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/events/event_private.h"
 
@@ -64,6 +66,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     host_stream{create_host_stream(*host_connection, best_output)},
     host_surface{create_host_surface(*host_connection, host_stream, best_output)},
     host_connection{host_connection},
+    host_chain{nullptr},
     egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
@@ -90,6 +93,8 @@ void mgn::detail::DisplayBuffer::release_current()
 
 void mgn::detail::DisplayBuffer::swap_buffers()
 {
+    if (content != BackingContent::stream)
+        host_surface->set_content(0);
     eglSwapBuffers(egl_display, egl_surface);
 }
 
@@ -97,9 +102,28 @@ void mgn::detail::DisplayBuffer::bind()
 {
 }
 
-bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
+bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
 {
-    return false;
+    if (list.empty() || (list.back()->screen_position() != area) ||
+        (list.back()->alpha() != 1.0f) || (list.back()->shaped()))
+        return false;
+
+    auto& passthrough_layer = list.back();
+    auto nested_buffer = dynamic_cast<mg::NativeBuffer*>(
+        passthrough_layer->buffer()->native_buffer_handle().get());
+    printf("NESTED BBB %X\n", (int)(long)nested_buffer);
+    if (!nested_buffer)
+        return false;
+
+    if (!host_chain)
+        host_chain = host_connection->create_chain();
+
+    host_chain->submit_buffer(passthrough_layer->buffer()->native_buffer_handle()->client_handle());
+
+    if (content != BackingContent::chain)
+        host_surface->set_content(0);
+
+    return true;
 }
 
 MirOrientation mgn::detail::DisplayBuffer::orientation() const

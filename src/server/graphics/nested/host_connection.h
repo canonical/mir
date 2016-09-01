@@ -43,7 +43,6 @@ namespace nested
 {
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
 
-class HostStream;
 class HostSurface;
 class HostStream;
 class HostChain;
@@ -56,7 +55,8 @@ public:
     virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
-    virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) = 0;
+    virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
+    virtual std::unique_ptr<HostChain> create_chain() const = 0;
     virtual std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,
