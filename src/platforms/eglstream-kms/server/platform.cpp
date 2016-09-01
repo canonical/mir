@@ -130,7 +130,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                     packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
                 }
 
-                packer.pack_stride(buffer.stride());
+                packer.pack_stride(mir::geometry::Stride{native_handle->stride});
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }
