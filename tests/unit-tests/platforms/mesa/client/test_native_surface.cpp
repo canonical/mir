@@ -153,3 +153,38 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_set_swap_interval_failure)
 
     EXPECT_EQ(MIR_MESA_FALSE, native_surface.set_swapinterval(0));
 }
+
+TEST_F(MesaClientNativeSurfaceTest, null_native_surface_returns_error)
+{
+    using namespace testing;
+
+    MirSurfaceParameters params;
+    MirBufferPackage buffer_package;
+
+    mclg::NativeSurface null_native_surface{nullptr};
+
+    EXPECT_EQ(MIR_MESA_FALSE,
+        null_native_surface.surface_get_parameters(&null_native_surface, &params));
+    EXPECT_EQ(MIR_MESA_FALSE,
+        null_native_surface.surface_advance_buffer(&null_native_surface, &buffer_package));
+    EXPECT_EQ(MIR_MESA_FALSE,
+        null_native_surface.surface_set_swapinterval(&null_native_surface, 1));
+}
+
+TEST_F(MesaClientNativeSurfaceTest, native_surface_after_null_returns_success)
+{
+    using namespace testing;
+
+    MirSurfaceParameters params;
+    MirBufferPackage buffer_package;
+
+    mclg::NativeSurface native_surface{nullptr};
+
+    native_surface.use_native_surface(&mock_surface);
+    EXPECT_EQ(MIR_MESA_TRUE,
+        native_surface.surface_get_parameters(&native_surface, &params));
+    EXPECT_EQ(MIR_MESA_TRUE,
+            native_surface.surface_advance_buffer(&native_surface, &buffer_package));
+    EXPECT_EQ(MIR_MESA_TRUE,
+            native_surface.surface_set_swapinterval(&native_surface, 1));
+}
