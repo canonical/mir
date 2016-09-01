@@ -815,7 +815,7 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
     std::vector<uint16_t> const a{0, 1, 2, 3};
     std::vector<uint16_t> const b{1, 2, 3, 4};
     std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
-    std::vector<mg::DisplayGamma> const gammas = {
+    std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
         {c, a, b}
@@ -881,7 +881,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
     std::vector<uint16_t> const a{0, 1, 2, 3};
     std::vector<uint16_t> const b{1, 2, 3, 4};
     std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
-    std::vector<mg::DisplayGamma> const gammas = {
+    std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
         {c, a, b}
