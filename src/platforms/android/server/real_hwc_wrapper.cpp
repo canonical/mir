@@ -71,7 +71,7 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
     // on various devices confirms this is the case...
     if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
         callbacks->self->vsync(display_name(display),
-                               mg::Timestamp{CLOCK_MONOTONIC, timestamp/1000});
+                               mg::Frame::Timestamp{CLOCK_MONOTONIC, timestamp/1000});
 }
 
 static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)
@@ -190,7 +190,7 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
 
 void mga::RealHwcWrapper::subscribe_to_events(
         void const* subscriber,
-        std::function<void(DisplayName, mg::Timestamp)> const& vsync,
+        std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync,
         std::function<void(DisplayName, bool)> const& hotplug,
         std::function<void()> const& invalidate)
 {
@@ -206,7 +206,7 @@ void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexce
         callback_map.erase(it);
 }
 
-void mga::RealHwcWrapper::vsync(DisplayName name, mg::Timestamp timestamp) noexcept
+void mga::RealHwcWrapper::vsync(DisplayName name, mg::Frame::Timestamp timestamp) noexcept
 {
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)

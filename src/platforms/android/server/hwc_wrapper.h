@@ -51,7 +51,7 @@ public:
     //As with the HWC api, these events MUST NOT call-back to the other functions in HwcWrapper. 
     virtual void subscribe_to_events(
         void const* subscriber,
-        std::function<void(DisplayName, graphics::Timestamp)> const& vsync_callback,
+        std::function<void(DisplayName, graphics::Frame::Timestamp)> const& vsync_callback,
         std::function<void(DisplayName, bool)> const& hotplug_callback,
         std::function<void()> const& invalidate_callback) = 0;
     virtual void unsubscribe_from_events(void const* subscriber) noexcept = 0;

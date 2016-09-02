@@ -57,7 +57,7 @@ private:
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
-    void notify_vsync(DisplayName, graphics::Timestamp);
+    void notify_vsync(DisplayName, graphics::Frame::Timestamp);
 };
 
 }

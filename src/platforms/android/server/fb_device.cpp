@@ -95,7 +95,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
 
 mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(
         std::function<void()> const&,
-        std::function<void(DisplayName, mg::Timestamp)> const&)
+        std::function<void(DisplayName, mg::Frame::Timestamp)> const&)
 {
     return nullptr;
 }

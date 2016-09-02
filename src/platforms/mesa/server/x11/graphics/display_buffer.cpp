@@ -105,7 +105,10 @@ void mgx::DisplayBuffer::swap_buffers()
     if (eglGetSyncValues &&
         eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
     {
+        // EGL_CHROMIUM_get_sync_values says to use CLOCK_MONOTONIC and
+        // measurements confirm that's what Mesa is using...
         last_frame->store({msc, {CLOCK_MONOTONIC, ust}});
+        (void)sbc; // unused
     }
     else  // Extension not available? Fall back to a reasonable estimate:
     {

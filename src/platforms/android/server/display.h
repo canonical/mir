@@ -93,7 +93,7 @@ public:
 
 private:
     void on_hotplug();
-    void on_vsync(DisplayName, graphics::Timestamp);
+    void on_vsync(DisplayName, graphics::Frame::Timestamp);
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;

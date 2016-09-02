@@ -299,7 +299,7 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name, mg::Timestamp timestamp)
+void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
 {
     /*
      * XXX It's presently useful but idealistically inefficient that we

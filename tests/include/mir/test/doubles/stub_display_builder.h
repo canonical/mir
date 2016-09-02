@@ -57,7 +57,7 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
     MOCK_METHOD1(active_config_for, graphics::DisplayConfigurationOutput(graphics::android::DisplayName));
     MOCK_METHOD2(subscribe_to_config_changes,
         graphics::android::ConfigChangeSubscription(
-            std::function<void()> const&, std::function<void(graphics::android::DisplayName, mir::graphics::Timestamp)> const&));
+            std::function<void()> const&, std::function<void(graphics::android::DisplayName, mir::graphics::Frame::Timestamp)> const&));
 };
 
 struct StubHwcConfiguration : public graphics::android::HwcConfiguration
@@ -77,7 +77,7 @@ struct StubHwcConfiguration : public graphics::android::HwcConfiguration
     graphics::android::ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const&,
         std::function<void(graphics::android::DisplayName,
-                           graphics::Timestamp)> const&
+                           graphics::Frame::Timestamp)> const&
         ) override
     {
         return nullptr;

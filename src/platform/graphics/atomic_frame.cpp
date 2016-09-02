@@ -36,10 +36,10 @@ void AtomicFrame::store(Frame const& f)
 
 void AtomicFrame::increment_now()
 {
-    increment_with_timestamp(Timestamp::now(frame.ust.clock_id));
+    increment_with_timestamp(Frame::Timestamp::now(frame.ust.clock_id));
 }
 
-void AtomicFrame::increment_with_timestamp(Timestamp t)
+void AtomicFrame::increment_with_timestamp(Frame::Timestamp t)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame.ust = t;
@@ -59,7 +59,7 @@ void AtomicFrame::report_new_frame(std::lock_guard<std::mutex> const&)
     long long msc = frame.msc,
               ust = frame.ust.microseconds,
               interval = frame.ust.microseconds - prev_ust.microseconds,
-              now = Timestamp::now(frame.ust.clock_id).microseconds,
+              now = Frame::Timestamp::now(frame.ust.clock_id).microseconds,
               age = now - ust;
     mir::log_debug(
         "AtomicFrame %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",

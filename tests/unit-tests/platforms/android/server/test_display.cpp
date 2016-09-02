@@ -893,7 +893,7 @@ TEST_F(Display, configures_external_display)
 TEST_F(Display, reports_vsync)
 {
     using namespace testing;
-    std::function<void(mga::DisplayName, mg::Timestamp)> vsync_fn = [](mga::DisplayName, mg::Timestamp){};
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> vsync_fn = [](mga::DisplayName, mg::Frame::Timestamp){};
     auto report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     EXPECT_CALL(*report, report_vsync(_));
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
