@@ -239,6 +239,7 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         });
 }
 
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
 {
 public:
@@ -276,6 +277,7 @@ private:
     std::vector<Moveable>& moveables;
     uint32_t frames;
 };
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
 class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -460,6 +462,7 @@ try
     render_surfaces.run();
 
     return render_surfaces.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    ///\internal [main_tag]
 }
 catch (...)
 {
