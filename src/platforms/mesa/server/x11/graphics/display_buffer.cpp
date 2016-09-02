@@ -42,24 +42,22 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
 {
     /*
      * EGL_CHROMIUM_sync_control is an EGL extension that Google invented/copied
-     * to replace GLX:
+     * so they could switch Chrome(ium) from GLX to EGL:
+     *
+     *    https://bugs.chromium.org/p/chromium/issues/detail?id=366935
      *    https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+     *
      * Most noteworthy is that the EGL extension only has one function, as
      * Google realized that's all you need. You do not need wait functions or
      * events if you already have accurate timestamps and the ability to sleep
-     * with high precision.
+     * with high precision. In fact sync logic in clients will have higher
+     * precision if you implement the wait yourself relative to the correct
+     * kernel clock, than using IPC to implement the wait on the server.
      *
-     * EGL_CHROMIUM_sync_control never got formally standardized. Google
-     * faced resistance from NVIDIA who pointed out that it hinders correct
-     * operation of the G-Sync adaptive frame rate technology (as well as AMD's
-     * FreeSync).
-     *
-     * Eventually Google stopped trying to standardize EGL_CHROMIUM_sync_control
-     * when they switched ChromeOS over from X11 to Freon, which does the same
-     * thing but with native KMS.
-     *
-     * History and spec:
-     *    https://bugs.chromium.org/p/chromium/issues/detail?id=366935
+     * EGL_CHROMIUM_sync_control never got formally standardized and no longer
+     * needs to be since they switched ChromeOS over to Freon (native KMS).
+     * However this remains the correct and only way of doing it in EGL on X11.
+     * AFAIK the only existing implementation is Mesa.
      */
     auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
     eglGetSyncValues =
