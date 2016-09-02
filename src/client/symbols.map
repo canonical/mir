@@ -423,8 +423,9 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
     mir_output_get_gamma_size;
+    mir_output_is_gamma_supported;
     mir_output_get_gamma;
     mir_output_set_gamma;
-    mir_output_release_gamma;
+    mir_connection_cancel_base_display_configuration_preview;
 } MIR_CLIENT_0.24;
 

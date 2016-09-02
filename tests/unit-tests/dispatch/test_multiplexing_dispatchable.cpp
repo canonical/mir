@@ -193,10 +193,10 @@ TEST(MultiplexingDispatchableTest, individual_dispatchee_is_not_concurrent)
     using namespace testing;
 
     auto second_dispatch = std::make_shared<mt::Signal>();
-    auto dispatchee = std::make_shared<mt::TestDispatchable>([second_dispatch]()
+    std::atomic<int> canary{0};
+    std::atomic<int> total_count{0};
+    auto dispatchee = std::make_shared<mt::TestDispatchable>([second_dispatch, &canary, &total_count]()
     {
-        static std::atomic<int> canary{0};
-        static std::atomic<int> total_count{0};
 
         ++canary;
         EXPECT_THAT(canary, Eq(1));

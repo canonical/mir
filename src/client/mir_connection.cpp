@@ -1046,6 +1046,26 @@ void MirConnection::preview_base_display_configuration(
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
 }
 
+void MirConnection::cancel_base_display_configuration_preview()
+{
+    mp::Void request;
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
+    server.cancel_base_display_configuration_preview(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
 void MirConnection::confirm_base_display_configuration(
     mp::DisplayConfiguration const& configuration)
 {
