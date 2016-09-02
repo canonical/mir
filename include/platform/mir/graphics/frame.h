@@ -52,11 +52,6 @@ struct Timestamp
         clock_gettime(clock_id, &ts);
         return Timestamp(clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000);
     }
-
-    Microseconds age() const
-    {
-        return now(clock_id).microseconds - microseconds;
-    }
 };
 
 /**
@@ -72,11 +67,6 @@ struct Frame
 {
     int64_t msc = 0;   /**< Media Stream Counter */
     Timestamp ust;     /**< Unadjusted System Time */
-
-    Microseconds age() const // might be negative in some cases (in the future).
-    {
-        return ust.age();
-    }
 };
 
 }} // namespace mir::graphics

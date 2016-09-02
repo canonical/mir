@@ -59,7 +59,8 @@ void AtomicFrame::report_new_frame(std::lock_guard<std::mutex> const&)
     long long msc = frame.msc,
               ust = frame.ust.microseconds,
               interval = frame.ust.microseconds - prev_ust.microseconds,
-              age = frame.age();
+              now = Timestamp::now(frame.ust.clock_id).microseconds,
+              age = now - ust;
     mir::log_debug(
         "AtomicFrame %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
         (void*)this, msc, ust/1000000, ust%1000000, age, interval);
