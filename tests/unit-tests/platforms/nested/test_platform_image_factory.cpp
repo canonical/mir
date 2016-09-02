@@ -51,7 +51,7 @@ struct PlatformImageFactory : Test
     NiceMock<mtd::MockGL> mock_gl;
     NiceMock<mtd::MockEGL> mock_egl;
 
-    MockNativeBuffer buffer;
+    NiceMock<MockNativeBuffer> buffer;
     EGLint attr = 4;
     EGLDisplay display = mock_egl.fake_egl_display;
 };

@@ -47,8 +47,7 @@ namespace
 {
 struct MockEglImageFactory : mgn::EglImageFactory
 {
-    MOCK_CONST_METHOD3(create_egl_image_from,
-        std::unique_ptr<EGLImageKHR>(mgn::NativeBuffer&, EGLDisplay, EGLint const*));
+    MOCK_CONST_METHOD3(create_egl_image_from, mgn::EGLImageUPtr(mgn::NativeBuffer&, EGLDisplay, EGLint const*));
 };
 
 struct MockNativeBuffer : mgn::NativeBuffer

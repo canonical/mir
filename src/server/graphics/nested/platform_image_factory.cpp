@@ -17,12 +17,18 @@
  */
 
 #include "platform_image_factory.h"
+#include "native_buffer.h"
 
 namespace mgn = mir::graphics::nested;
 
-std::unique_ptr<EGLImageKHR> mgn::AndroidImageFactory::create_egl_image_from(
-    mgn::NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const
+auto mgn::AndroidImageFactory::create_egl_image_from(
+    mgn::NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const ->
+    std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>>
 {
-    (void)buffer;(void)display;(void)attrs;
-    return nullptr;
+    auto ext = egl_extensions;
+    return EGLImageUPtr{
+        new EGLImageKHR(
+            egl_extensions->eglCreateImageKHR(display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, buffer.get_native_handle(), attrs)),
+        [ext, display](EGLImageKHR* image) { ext->eglDestroyImageKHR(display, image); delete image; }};
+//        []);
 }

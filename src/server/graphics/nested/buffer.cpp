@@ -101,7 +101,7 @@ private:
     std::shared_ptr<mgn::EglImageFactory> const factory;
     mg::EGLExtensions egl_extensions;
     typedef std::pair<EGLDisplay, EGLContext> ImageResources;
-    std::map<ImageResources, std::unique_ptr<EGLImageKHR>> egl_image_map;
+    std::map<ImageResources, mgn::EGLImageUPtr> egl_image_map;
 };
 
 class PixelAndTextureAccess :

@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_NESTED_PLATFORM_IMAGE_FACTORY_H_
 #define MIR_GRAPHICS_NESTED_PLATFORM_IMAGE_FACTORY_H_
 
+#include "mir/graphics/egl_extensions.h"
 #include "egl_image_factory.h"
 
 namespace mir
@@ -31,8 +32,10 @@ namespace nested
 class AndroidImageFactory : EglImageFactory
 {
 public:
-    std::unique_ptr<EGLImageKHR> create_egl_image_from(
+    std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> create_egl_image_from(
         NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const override;
+private:
+    std::shared_ptr<EGLExtensions> egl_extensions = std::make_shared<EGLExtensions>();
 };
 
 }

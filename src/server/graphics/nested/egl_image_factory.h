@@ -32,11 +32,12 @@ namespace nested
 {
 
 class NativeBuffer;
+typedef std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> EGLImageUPtr;
 class EglImageFactory
 {
 public:
     virtual ~EglImageFactory() = default;
-    virtual std::unique_ptr<EGLImageKHR> create_egl_image_from(
+    virtual EGLImageUPtr create_egl_image_from(
         NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const = 0;
 protected:
     EglImageFactory() = default;
