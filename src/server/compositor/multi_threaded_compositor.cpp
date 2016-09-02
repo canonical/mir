@@ -59,27 +59,15 @@ public:
         std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
-        group{group},
+        group(group),
         scene(scene),
         running{true},
         frames_scheduled{0},
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
+        report{report},
         started_future{started.get_future()}
     {
-        group.for_each_display_buffer(
-            [this, report](mg::DisplayBuffer& buffer)
-            {
-                view_areas.push_back(buffer.view_area());
-                compositors.emplace_back(
-                    std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
-
-                auto const& r = buffer.view_area();
-                auto const comp_id = std::get<1>(compositors.back()).get();
-                report->added_display(r.size.width.as_int(), r.size.height.as_int(),
-                                      r.top_left.x.as_int(), r.top_left.y.as_int(),
-                                      CompositorReport::SubCompositorId{comp_id});
-            });
     }
 
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
@@ -87,19 +75,35 @@ public:
     {
         mir::set_thread_name("Mir/Comp");
 
+        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
+        group.for_each_display_buffer(
+        [this, &compositors](mg::DisplayBuffer& buffer)
+        {
+            compositors.emplace_back(
+                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
+
+            auto const& r = buffer.view_area();
+            auto const comp_id = std::get<1>(compositors.back()).get();
+            report->added_display(r.size.width.as_int(), r.size.height.as_int(),
+                                  r.top_left.x.as_int(), r.top_left.y.as_int(),
+                                  CompositorReport::SubCompositorId{comp_id});
+        });
+
         //Appease TSan, avoid destructor and this thread accessing the same shared_ptr instance
         auto const disp_listener = display_listener;
         auto display_registration = mir::raii::paired_calls(
-            [this, &disp_listener]{for (auto const& area : view_areas) disp_listener->add_display(area);},
-            [this, &disp_listener]{for (auto const& area : view_areas) disp_listener->remove_display(area);});
+            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
+                { disp_listener->add_display(buffer.view_area()); });},
+            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
+                { disp_listener->remove_display(buffer.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
-            [this]
+            [this,&compositors]
             {
                 for (auto& compositor : compositors)
                     scene->register_compositor(std::get<1>(compositor).get());
             },
-            [this]{
+            [this,&compositors]{
                 for (auto& compositor : compositors)
                     scene->unregister_compositor(std::get<1>(compositor).get());
             });
@@ -201,9 +205,8 @@ public:
         std::lock_guard<std::mutex> lock{run_mutex};
         bool took_damage = not_posted_yet;
 
-        for (auto const& area : view_areas)
-            if (damage.overlaps(area))
-                took_damage = true;
+        group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+            { if (damage.overlaps(buffer.view_area())) took_damage = true; });
 
         if (took_damage && num_frames > frames_scheduled)
         {
@@ -237,10 +240,9 @@ private:
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
+    std::shared_ptr<CompositorReport> const report;
     std::promise<void> started;
     std::future<void> started_future;
-    std::vector<mir::geometry::Rectangle> view_areas;
-    std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
     bool not_posted_yet = true;
 };
 
