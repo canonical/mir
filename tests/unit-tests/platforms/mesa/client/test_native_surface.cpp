@@ -25,12 +25,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mt=mir::test;
-namespace mtd=mt::doubles;
-namespace mcl=mir::client;
-namespace mg=mir::graphics;
-namespace mclg=mcl::mesa;
-namespace geom=mir::geometry;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
+namespace mcl = mir::client;
+namespace mclg = mcl::mesa;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 class MesaClientNativeSurfaceTest : public ::testing::Test
 {
