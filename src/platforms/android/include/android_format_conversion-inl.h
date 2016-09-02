@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 
 #include "mir_toolkit/common.h"
+#include <cstddef>  // to fix missing #includes in graphics.h
 #include <system/graphics.h>
 
 namespace mir

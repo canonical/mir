@@ -20,7 +20,8 @@
 
 #include "mir/main_loop.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
@@ -184,7 +185,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_session_event_sink(),
                 the_session_listener(),
                 the_display(),
-                the_application_not_responding_detector());
+                the_application_not_responding_detector(),
+                the_buffer_allocator());
         });
 }
 
@@ -194,8 +196,17 @@ mir::DefaultServerConfiguration::the_pixel_buffer()
     return pixel_buffer(
         [this]()
         {
+            auto as_context_source = [](mg::Display* display)
+            {
+                auto const ctx = dynamic_cast<renderer::gl::ContextSource*>(
+                        display->native_display());
+                if (!ctx)
+                    BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+                return ctx;
+            };
+
             return std::make_shared<ms::GLPixelBuffer>(
-                the_display()->create_gl_context());
+                as_context_source(the_display().get())->create_gl_context());
         });
 }
 
@@ -242,9 +253,17 @@ auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
         [this]() -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
         {
             using namespace std::literals::chrono_literals;
-            return std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
-                *the_main_loop(), 1s);
+            return wrap_application_not_responding_detector(
+                std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
+                    *the_main_loop(), 1s));
         });
+}
+
+auto mir::DefaultServerConfiguration::wrap_application_not_responding_detector(
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& wrapped)
+        -> std::shared_ptr<scene::ApplicationNotRespondingDetector>
+{
+    return wrapped;
 }
 
 std::shared_ptr<msh::DisplayConfigurationController>

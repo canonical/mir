@@ -21,6 +21,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/graphics/gl_config.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -30,8 +31,26 @@
 #include <fcntl.h>
 #include <mutex>
 
+#include <X11/Xatom.h>
+
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
+
+namespace
+{
+auto get_pixel_width(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mwidth) / screen->width;
+}
+auto get_pixel_height(Display *dpy)
+{
+    auto screen = XDefaultScreenOfDisplay(dpy);
+
+    return float(screen->mheight) / screen->height;
+}
+}
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -60,18 +79,21 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
     return egl_dpy;
 }
 
-mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const size)
+mgx::X11Window::X11Window(::Display* x_dpy,
+                          EGLDisplay egl_dpy,
+                          geom::Size const size,
+                          GLConfig const& gl_config)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
-        EGL_ALPHA_SIZE, 0,
-        EGL_DEPTH_SIZE, 0,
-        EGL_STENCIL_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
+        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
+        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
 
@@ -81,7 +103,7 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
 
-    mir::log_info("%d configs found", num_configs);
+    mir::log_info("%d config(s) found", num_configs);
 
     if (num_configs <= 0)
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
@@ -91,13 +113,25 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
     XVisualInfo visTemplate;
+    std::memset(&visTemplate, 0, sizeof visTemplate);
     int num_visuals = 0;
     visTemplate.visualid = vid;
     auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
-    if (!visInfo)
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
+    if (!visInfo || !num_visuals)
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info, or no matching visuals"));
 
-    mir::log_info("%d visuals found", num_visuals);
+    mir::log_info("%d visual(s) found", num_visuals);
+    mir::log_info("Using the first one :");
+    mir::log_info("ID\t\t:\t%d", visInfo->visualid);
+    mir::log_info("screen\t:\t%d", visInfo->screen);
+    mir::log_info("depth\t\t:\t%d", visInfo->depth);
+    mir::log_info("red_mask\t:\t0x%0X", visInfo->red_mask);
+    mir::log_info("green_mask\t:\t0x%0X", visInfo->green_mask);
+    mir::log_info("blue_mask\t:\t0x%0X", visInfo->blue_mask);
+    mir::log_info("colormap_size\t:\t%d", visInfo->colormap_size);
+    mir::log_info("bits_per_rgb\t:\t%d", visInfo->bits_per_rgb);
+
+    r_mask = visInfo->red_mask;
 
     XSetWindowAttributes attr;
     attr.background_pixel = 0;
@@ -110,17 +144,15 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
                       ButtonPressMask     |
                       ButtonReleaseMask   |
                       FocusChangeMask     |
+                      EnterWindowMask     |
+                      LeaveWindowMask     |
                       PointerMotionMask;
-
-    depth = visInfo->depth;
-
-    mir::log_info("Pixel depth = %d", depth);
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
     win = XCreateWindow(x_dpy, root, 0, 0,
                         size.width.as_int(), size.height.as_int(),
-                        0, depth, InputOutput,
+                        0, visInfo->depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
     XFree(visInfo);
@@ -157,6 +189,9 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         };
 
         XSetWMHints(x_dpy, win, &wm_hints);
+
+        Atom wmDeleteMessage = XInternAtom(x_dpy, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(x_dpy, win, &wmDeleteMessage, 1);
     }
 
     XMapWindow(x_dpy, win);
@@ -184,16 +219,20 @@ EGLConfig mgx::X11Window::egl_config() const
     return config;
 }
 
-unsigned int mgx::X11Window::color_depth() const
+unsigned long mgx::X11Window::red_mask() const
 {
-    return depth;
+    return r_mask;
 }
 
 mgx::X11EGLContext::X11EGLContext(EGLDisplay egl_dpy, EGLConfig config)
     : egl_dpy{egl_dpy}
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
     static const EGLint ctx_attribs[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE };
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
@@ -228,12 +267,17 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display* x_dpy, geom::Size const size)
+mgx::Display::Display(::Display* x_dpy,
+                      geom::Size const size,
+                      GLConfig const& gl_config)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
+      pixel_width{get_pixel_width(x_dpy)},
+      pixel_height{get_pixel_height(x_dpy)},
       win{X11Window(x_dpy,
                     egl_display,
-                    size)},
+                    size,
+                    gl_config)},
       egl_context{X11EGLContext(egl_display,
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
@@ -241,10 +285,9 @@ mgx::Display::Display(::Display* x_dpy, geom::Size const size)
                                 win)},
                                 orientation{mir_orientation_normal}
 {
-    if (win.color_depth() == 24)
-        pf = mir_pixel_format_xrgb_8888;
-    else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
+    auto red_mask = win.red_mask();
+    pf = (red_mask == 0xFF0000 ? mir_pixel_format_argb_8888
+                               : mir_pixel_format_abgr_8888);
 
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(size,
@@ -266,7 +309,8 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, size, orientation);
+    return std::make_unique<mgx::DisplayConfiguration>(
+        pf, size, geom::Size{size.width * pixel_width, size.height * pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -316,12 +360,17 @@ auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
-{
-    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
-}
-
 std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
+}
+
+mg::NativeDisplay* mgx::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
+{
+    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
 }

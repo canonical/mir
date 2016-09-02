@@ -88,7 +88,25 @@ MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_tip;
     spec->parent = parent;
+    return spec;
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
+                                                   int width,
+                                                   int height,
+                                                   MirPixelFormat format,
+                                                   MirSurface* parent,
+                                                   MirRectangle* rect,
+                                                   MirEdgeAttachment edge)
+{
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirSurfaceSpec{connection, width, height, format};
+    spec->type = mir_surface_type_tip;
+    spec->parent = parent;
     spec->aux_rect = *rect;
+    spec->edge_attachment = edge;
     return spec;
 }
 
@@ -687,6 +705,16 @@ void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width,
 try
 {
     spec->max_aspect = {width, height};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
+try
+{
+    spec->confine_pointer = state;
 }
 catch (std::exception const& ex)
 {

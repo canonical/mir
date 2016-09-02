@@ -21,7 +21,7 @@
 
 #include "display_server.h"
 #include "buffer_stream_tracker.h"
-
+#include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
 #include "mir/frontend/connection_context.h"
@@ -45,7 +45,6 @@ class Authority;
 namespace graphics
 {
 class Buffer;
-class Display;
 class DisplayConfiguration;
 class GraphicBufferAllocator;
 }
@@ -158,6 +157,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void cancel_base_display_configuration_preview(
+        mir::protobuf::Void const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
@@ -249,6 +252,8 @@ private:
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
 
+    void destroy_screencast_sessions();
+
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
@@ -270,6 +275,7 @@ private:
     std::shared_ptr<input::InputDeviceHub> const hub;
 
     BufferStreamTracker buffer_stream_tracker;
+    ScreencastBufferTracker screencast_buffer_tracker;
 
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;

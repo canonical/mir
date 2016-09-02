@@ -40,6 +40,7 @@ static const char *output_type_name(MirDisplayOutputType t)
         "HDMI-B",
         "TV",
         "eDP",
+        "Virtual"
     };
     return ((unsigned)t < sizeof(name)/sizeof(name[0])) ? name[t] : name[0];
 }

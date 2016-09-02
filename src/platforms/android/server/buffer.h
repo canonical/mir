@@ -22,6 +22,7 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <hardware/gralloc.h>
 
@@ -29,7 +30,9 @@
 #include <condition_variable>
 #include <map>
 
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -43,7 +46,8 @@ namespace android
 {
 
 class Buffer: public BufferBasic, public NativeBufferBase,
-              public renderer::gl::TextureSource
+              public renderer::gl::TextureSource,
+              public renderer::software::PixelSource
 {
 public:
     Buffer(gralloc_module_t const* hw_module,

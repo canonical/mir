@@ -19,7 +19,7 @@
 #include <dlfcn.h>
 #include <stdexcept>
 #include <iostream>
-#include <pthread.h>
+#include <thread>
 
 namespace
 {
@@ -28,14 +28,14 @@ const char* const entry = "main";
 
 // Work around gold (or gcc/libstdc++-4.9 bug, it's not yet clear) bug
 // https://sourceware.org/bugzilla/show_bug.cgi?id=16417 by ensuring the
-// executable links with libpthread.
+// executable links with libpthread. A similar problem, where the pthread
+// link dependency mysteriously disappears, also exists when using LTO
+// with ld.bfd.
 struct GoldBug16417Workaround
 {
     GoldBug16417Workaround()
     {
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_destroy(&attr);
+        std::thread{[]{}}.join();
     }
 } gold_bug_16417_workaround;
 }

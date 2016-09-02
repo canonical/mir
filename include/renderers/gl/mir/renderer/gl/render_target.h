@@ -31,7 +31,7 @@ class RenderTarget
 public:
     virtual ~RenderTarget() = default;
 
-    /** Makes the the current GL render target. */
+    /** Makes GL render target current to calling thread */
     virtual void make_current() = 0;
     /** Releases the current GL render target. */
     virtual void release_current() = 0;
@@ -41,6 +41,10 @@ public:
      * free GL-related resources such as textures and buffers.
      */
     virtual void swap_buffers() = 0;
+    /** Binds any necessary resources (fbos, textures if any)
+     * in preparation for drawing.
+     */
+    virtual void bind() = 0;
 
 protected:
     RenderTarget() = default;

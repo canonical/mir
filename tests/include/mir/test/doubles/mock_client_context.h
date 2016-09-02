@@ -40,6 +40,7 @@ struct MockClientContext : public client::ClientContext
     }
 
     MOCK_METHOD1(populate_server_package, void(MirPlatformPackage&));
+    MOCK_METHOD1(populate_graphics_module, void(MirModuleProperties&));
 };
 
 }

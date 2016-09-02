@@ -29,7 +29,7 @@ namespace
 {
 void set_active_vt(int vt)
 {
-    auto console_fd = open("/dev/console", O_RDONLY | O_NDELAY);
+    auto console_fd = open("/dev/tty0", O_RDONLY | O_NDELAY);
     ioctl(console_fd, VT_ACTIVATE, vt);
     close(console_fd);
 }

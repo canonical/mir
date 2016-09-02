@@ -128,11 +128,52 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq, FdSets const&
     }
 }
 
+void mfd::EventSender::add_buffer(graphics::Buffer& buffer)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->set_operation(mir::protobuf::BufferOperation::add);
+    send_buffer(seq, buffer, mg::BufferIpcMsgType::full_msg);
+}
+
+void mfd::EventSender::error_buffer(graphics::BufferProperties const& properties, std::string const& error)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->set_operation(mir::protobuf::BufferOperation::add);
+    request->mutable_buffer()->set_error(error);
+    request->mutable_buffer()->set_width(properties.size.width.as_int());
+    request->mutable_buffer()->set_height(properties.size.height.as_int());
+    send_event_sequence(seq, {});
+}
+
+void mfd::EventSender::remove_buffer(graphics::Buffer& buffer)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->set_operation(mir::protobuf::BufferOperation::remove);
+    send_buffer(seq, buffer, mg::BufferIpcMsgType::update_msg);
+}
+
+void mfd::EventSender::update_buffer(graphics::Buffer& buffer)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->set_operation(mir::protobuf::BufferOperation::update);
+    send_buffer(seq, buffer, mg::BufferIpcMsgType::update_msg);
+}
+
 void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
 {
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(id.as_value()); 
+    request->mutable_id()->set_value(id.as_value());
+    send_buffer(seq, buffer, type);
+}
+
+void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
+{
+    auto request = seq.mutable_buffer_request();
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};

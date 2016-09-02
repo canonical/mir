@@ -36,6 +36,7 @@ public:
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(swap_buffers, void());
+    MOCK_METHOD0(bind, void());
 };
 
 }

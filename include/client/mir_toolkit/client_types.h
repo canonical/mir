@@ -200,7 +200,8 @@ __attribute__ ((deprecated))
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,
-    mir_platform_type_android
+    mir_platform_type_android,
+    mir_platform_type_eglstream,
 } MirPlatformType;
 
 typedef struct MirPlatformPackage
@@ -281,7 +282,8 @@ typedef enum MirDisplayOutputType
     mir_display_output_type_hdmia,
     mir_display_output_type_hdmib,
     mir_display_output_type_tv,
-    mir_display_output_type_edp
+    mir_display_output_type_edp,
+    mir_display_output_type_virtual
 } MirDisplayOutputType;
 
 typedef enum MirOutputType
@@ -300,7 +302,8 @@ typedef enum MirOutputType
     mir_output_type_hdmia,
     mir_output_type_hdmib,
     mir_output_type_tv,
-    mir_output_type_edp
+    mir_output_type_edp,
+    mir_output_type_virtual
 } MirOutputType;
 
 typedef enum MirOutputConnectionState
@@ -469,6 +472,14 @@ typedef enum MirDisplayConfigurationError {
      * Client is not permitted to change global display configuration
      */
     mir_display_configuration_error_unauthorized,
+    /**
+     * A global configuration change request is already pending
+     */
+    mir_display_configuration_error_in_progress,
+    /**
+     * A cancel request was received, but no global display configuration preview is in progress
+     */
+    mir_display_configuration_error_no_preview_in_progress,
 } MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(

@@ -17,7 +17,7 @@
  */
 
 #include "real_kms_display_configuration.h"
-#include "drm_mode_resources.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
 
 #include <cmath>
@@ -67,6 +67,27 @@ mg::DisplayConfigurationOutputType
 kms_connector_type_to_output_type(uint32_t connector_type)
 {
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+}
+
+MirSubpixelArrangement kms_subpixel_to_mir_subpixel(uint32_t subpixel)
+{
+    switch (subpixel)
+    {
+    case DRM_MODE_SUBPIXEL_UNKNOWN:
+        return mir_subpixel_arrangement_unknown;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_RGB:
+        return mir_subpixel_arrangement_horizontal_rgb;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_BGR:
+        return mir_subpixel_arrangement_horizontal_bgr;
+    case DRM_MODE_SUBPIXEL_VERTICAL_RGB:
+        return mir_subpixel_arrangement_vertical_rgb;
+    case DRM_MODE_SUBPIXEL_VERTICAL_BGR:
+        return mir_subpixel_arrangement_vertical_bgr;
+    case DRM_MODE_SUBPIXEL_NONE:
+        return mir_subpixel_arrangement_none;
+    default:
+        return mir_subpixel_arrangement_unknown;
+    }
 }
 
 }
@@ -155,19 +176,19 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 }
 void mgm::RealKMSDisplayConfiguration::update()
 {
-    DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd};
 
     size_t max_outputs = std::min(resources.num_crtcs(), resources.num_connectors());
     card = {DisplayConfigurationCardId{0}, max_outputs};
 
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
     {
         add_or_update_output(resources, *connector);
     });
 }
 
 void mgm::RealKMSDisplayConfiguration::add_or_update_output(
-    DRMModeResources const& resources,
+    kms::DRMModeResources const& resources,
     drmModeConnector const& connector)
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
@@ -186,12 +207,11 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
     /* Get information about the current mode */
-    auto encoder = resources.encoder(connector.encoder_id);
-    if (encoder)
+    if (connector.encoder_id)
     {
-        auto crtc = resources.crtc(encoder->crtc_id);
-        if (crtc)
-            current_mode_info = crtc->mode;
+        auto encoder = resources.encoder(connector.encoder_id);
+        if (encoder->crtc_id)
+            current_mode_info = resources.crtc(encoder->crtc_id)->mode;
     }
 
     /* Add all the available modes and find the current and preferred one */
@@ -221,7 +241,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
                            mir_power_mode_on, mir_orientation_normal,
-                           1.0f, mir_form_factor_monitor});
+                           1.0f, mir_form_factor_monitor, kms_subpixel_to_mir_subpixel(connector.subpixel)});
     }
     else
     {
@@ -248,6 +268,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.physical_size_mm = physical_size;
         output.connected = connected;
         output.current_format = mir_pixel_format_xrgb_8888;
+        output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector.subpixel);
     }
 }
 

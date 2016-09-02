@@ -103,6 +103,10 @@ void mga::DisplayBuffer::swap_buffers()
         gl_context.swap_buffers();
 }
 
+void mga::DisplayBuffer::bind()
+{
+}
+
 MirOrientation mga::DisplayBuffer::orientation() const
 {
     /*

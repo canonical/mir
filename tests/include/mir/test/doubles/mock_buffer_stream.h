@@ -44,7 +44,7 @@ struct MockBufferStream : public compositor::BufferStream
         ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
         ON_CALL(*this, with_most_recent_buffer_do(testing::_))
-            .WillByDefault(testing::InvokeArgument<0>(*std::make_shared<StubBuffer>()));
+            .WillByDefault(testing::InvokeArgument<0>(testing::ByRef(*buffer)));
         ON_CALL(*this, acquire_client_buffer(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(nullptr));
         ON_CALL(*this, swap_buffers(testing::_, testing::_))
@@ -56,6 +56,7 @@ struct MockBufferStream : public compositor::BufferStream
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{0,0}));
     }
+    std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));
     MOCK_METHOD1(lock_compositor_buffer,
@@ -78,9 +79,8 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(has_submitted_buffer, bool());
-    MOCK_METHOD1(allocate_buffer, graphics::BufferID(graphics::BufferProperties const&));
-    MOCK_METHOD1(remove_buffer, void(graphics::BufferID));
-    MOCK_METHOD2(with_buffer, void(graphics::BufferID, std::function<void(graphics::Buffer&)> const&));
+    MOCK_METHOD1(disassociate_buffer, void(graphics::BufferID));
+    MOCK_METHOD1(associate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(set_scale, void(float));
 };
 }

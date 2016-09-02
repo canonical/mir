@@ -255,12 +255,6 @@ TEST_F(Stream, reports_format)
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }
 
-TEST_F(Stream, can_access_buffer_after_allocation)
-{
-    EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
-    stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
-}
-
 //confusingly, we have two framedrops. One is swapinterval zero, where old buffers are dropped as quickly as possible.
 //In non-framedropping mode, we drop based on a timeout according to a policy, mostly for screen-off scenarios.
 //
@@ -283,8 +277,23 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
         policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto const& buffer : buffers)
-        stream.allocate_buffer({buffer->size(), buffer->pixel_format(), mg::BufferUsage::software});
+        stream.associate_buffer(buffer->id());
 
+    for (auto& buffer : buffers)
+        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+}
+
+TEST_F(Stream, timer_does_not_start_when_no_associated_buffers)
+{
+    auto policy = std::make_unique<MockPolicy>();
+    mtd::FrameDroppingPolicyFactoryMock policy_factory;
+    EXPECT_CALL(*policy, swap_now_blocking())
+        .Times(0);
+    EXPECT_CALL(policy_factory, create_policy(_))
+        .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
+    mc::Stream stream{
+        policy_factory,
+        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 }
@@ -301,7 +310,7 @@ TEST_F(Stream, timer_stops_if_a_buffer_is_available)
         policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto const& buffer : buffers)
-        stream.allocate_buffer({buffer->size(), buffer->pixel_format(), mg::BufferUsage::software});
+        stream.associate_buffer(buffer->id());
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
     stream.lock_compositor_buffer(this);

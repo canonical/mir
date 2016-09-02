@@ -32,12 +32,12 @@ class NullPromptSessionManager: public scene::PromptSessionManager
 {
 public:
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(std::shared_ptr<scene::Session> const&,
-                                                                   scene::PromptSessionCreationParameters const&) const
+                                                                   scene::PromptSessionCreationParameters const&) const override
     {
         return std::shared_ptr<scene::PromptSession>();
     }
 
-    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const&) const
+    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const&) const override
     {
     }
 
@@ -50,26 +50,26 @@ public:
     }
 
     void add_prompt_provider(std::shared_ptr<scene::PromptSession> const&,
-                             std::shared_ptr<scene::Session> const&) const
+                             std::shared_ptr<scene::Session> const&) const override
     {
     }
 
-    void remove_session(std::shared_ptr<scene::Session> const&) const
+    void remove_session(std::shared_ptr<scene::Session> const&) const override
     {
     }
 
-    std::shared_ptr<scene::Session> application_for(std::shared_ptr<scene::PromptSession> const&) const
+    std::shared_ptr<scene::Session> application_for(std::shared_ptr<scene::PromptSession> const&) const override
     {
         return std::shared_ptr<scene::Session>();
     }
 
-    std::shared_ptr<scene::Session> helper_for(std::shared_ptr<scene::PromptSession> const&) const
+    std::shared_ptr<scene::Session> helper_for(std::shared_ptr<scene::PromptSession> const&) const override
     {
         return std::shared_ptr<scene::Session>();
     }
 
     void for_each_provider_in(std::shared_ptr<scene::PromptSession> const&,
-                              std::function<void(std::shared_ptr<scene::Session> const&)> const&) const
+                              std::function<void(std::shared_ptr<scene::Session> const&)> const&) const override
     {
     }
 };

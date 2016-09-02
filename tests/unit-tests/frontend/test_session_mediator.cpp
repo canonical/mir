@@ -29,6 +29,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "src/server/scene/basic_surface.h"
@@ -44,6 +45,7 @@
 #include "mir/test/doubles/mock_frontend_surface.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_event_sink_factory.h"
+#include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_session.h"
@@ -87,6 +89,7 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mr = mir::report;
 
+using namespace ::testing;
 namespace
 {
 
@@ -111,7 +114,12 @@ public:
 class StubbedSession : public mtd::StubSession
 {
 public:
-    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
+    StubbedSession()
+    {
+        ON_CALL(*this, destroy_buffer(_))
+            .WillByDefault(Invoke([this](mg::BufferID){ ++destroy_buffers;}));
+    }
+    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const override
     {
         if (mock_surfaces.find(surface) == mock_surfaces.end())
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
@@ -168,7 +176,7 @@ public:
 
     mf::SurfaceId create_surface(
         ms::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&)
+        std::shared_ptr<mf::EventSink> const&) override
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
@@ -177,7 +185,7 @@ public:
         return id;
     }
 
-    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&)
+    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&) override
     {
         mf::BufferStreamId id{last_stream_id};
         if (mock_streams.end() == mock_streams.find(id))
@@ -186,16 +194,38 @@ public:
         return id;
     }
 
-    void destroy_surface(mf::SurfaceId surface)
+    void destroy_surface(mf::SurfaceId surface) override
     {
         mock_surfaces.erase(surface);
+    }
+
+    
+    mg::BufferID create_buffer(mg::BufferProperties const&) override
+    {
+        buffer_count++;
+        return mg::BufferID{3};
+    }
+
+    MOCK_METHOD1(destroy_buffer_stream, void(mf::BufferStreamId));
+    MOCK_METHOD1(destroy_buffer, void(mg::BufferID));
+
+    int num_alloc_requests()
+    {
+        return buffer_count;
+    }
+
+    int num_destroy_requests()
+    {
+        return destroy_buffers;
     }
 
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
-    int last_surface_id = 0;
     int last_stream_id = 0;
+    int last_surface_id = 0;
+    int buffer_count = 0;
+    int destroy_buffers = 0;
 };
 
 int const StubbedSession::testing_client_input_fd{11};
@@ -227,7 +257,7 @@ struct SessionMediator : public ::testing::Test
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          stubbed_session{std::make_shared<StubbedSession>()},
+          stubbed_session{std::make_shared<NiceMock<StubbedSession>>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           mediator{
             shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
@@ -266,6 +296,20 @@ struct SessionMediator : public ::testing::Test
             mt::fake_shared(mock_hub));
     }
 
+    std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
+           std::shared_ptr<mf::Screencast> const& screencast)
+    {
+        return std::make_shared<mf::SessionMediator>(
+            shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
+            surface_pixel_formats, report,
+            std::make_shared<mtd::NullEventSinkFactory>(),
+            std::make_shared<mtd::NullMessageSender>(),
+            resource_cache, screencast, &connector, nullptr, nullptr,
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::Authority::create(),
+            mt::fake_shared(mock_hub));
+    }
+
     MockConnector connector;
     testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
     testing::NiceMock<mtd::MockInputDeviceHub> mock_hub;
@@ -275,7 +319,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
-    std::shared_ptr<StubbedSession> const stubbed_session;
+    std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     mf::SessionMediator mediator;
 
@@ -293,7 +337,6 @@ struct SessionMediator : public ::testing::Test
 
 TEST_F(SessionMediator, disconnect_releases_session)
 {
-    using namespace ::testing;
     EXPECT_CALL(*shell, close_session(_))
         .Times(1);
 
@@ -592,14 +635,14 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
-    EXPECT_CALL(mock_ipc_operations, pack_buffer(_, Ref(stub_buffer), _));
+    EXPECT_CALL(mock_ipc_operations, pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg));
 
     mediator.create_screencast(&screencast_parameters,
                                &screencast, null_callback.get());
     EXPECT_EQ(stub_buffer.id().as_value(), screencast.buffer_stream().buffer().buffer_id());
 }
 
-TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
+TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
 {
     using namespace testing;
 
@@ -608,12 +651,40 @@ TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
     EXPECT_CALL(mock_ipc_operations,
+        pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg))
+        .Times(1);
+
+    mediator.screencast_buffer(&screencast_id,
+                               &protobuf_buffer, null_callback.get());
+
+    EXPECT_CALL(mock_ipc_operations,
         pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::update_msg))
         .Times(1);
 
     mediator.screencast_buffer(&screencast_id,
                                &protobuf_buffer, null_callback.get());
     EXPECT_EQ(stub_buffer.id().as_value(), protobuf_buffer.buffer_id());
+}
+
+TEST_F(SessionMediator, partially_packs_next_buffer_after_creating_screencast)
+{
+    using namespace testing;
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    auto const& stub_buffer = stub_screencast->stub_buffer;
+
+    mediator.create_screencast(&screencast_parameters,
+                               &screencast, null_callback.get());
+
+    EXPECT_CALL(mock_ipc_operations,
+            pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::update_msg))
+            .Times(1);
+
+    mp::Buffer protobuf_buffer;
+    mediator.screencast_buffer(&screencast.screencast_id(),
+                               &protobuf_buffer, null_callback.get());
+
 }
 
 TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
@@ -954,7 +1025,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
     mediator.submit_buffer(&request, &null, null_callback.get());
 }
 
-TEST_F(SessionMediator, allocates_from_the_correct_stream)
+TEST_F(SessionMediator, allocates_from_the_session)
 {
     using namespace testing;
     auto num_requests = 3u;
@@ -976,15 +1047,11 @@ TEST_F(SessionMediator, allocates_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    EXPECT_CALL(*mock_stream, allocate_buffer(properties))
-        .Times(num_requests)
-        .WillRepeatedly(Return(mg::BufferID{}));
-
     mediator.allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->num_alloc_requests(), Eq(num_requests));
 }
 
-TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
+TEST_F(SessionMediator, removes_buffer_from_the_session)
 {
     using namespace testing;
     auto num_requests = 3u;
@@ -1003,11 +1070,8 @@ TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    EXPECT_CALL(*mock_stream, remove_buffer(mg::BufferID{buffer_id}))
-        .Times(num_requests);
-
     mediator.release_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->num_destroy_requests(), Eq(num_requests));
 }
 
 TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
@@ -1037,8 +1101,6 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
     request.mutable_buffer()->set_buffer_id(buffer1->id().as_value());
 
     InSequence seq;
-    EXPECT_CALL(*mock_stream, with_buffer(buffer1->id(),_))
-        .WillOnce(InvokeArgument<1>(*buffer1));
     EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
     EXPECT_CALL(*mock_stream, swap_buffers(_,_))
         .WillOnce(InvokeArgument<1>(nullptr));
@@ -1292,4 +1354,99 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.input_devices(), mt::InputDevicesMatch(devices));
+}
+
+TEST_F(SessionMediator, disconnect_removes_orphaned_screencast_sessions)
+{
+    using namespace ::testing;
+    auto mock_screencast = std::make_shared<NiceMock<mtd::MockScreencast>>();
+    auto mediator = create_session_mediator_with_screencast(mock_screencast);
+
+    mf::ScreencastSessionId expected_id{7};
+    mtd::StubBuffer stub_buffer;
+    ON_CALL(*mock_screencast, create_session(_,_,_,_,_))
+        .WillByDefault(Return(expected_id));
+    ON_CALL(*mock_screencast, capture(_))
+        .WillByDefault(Return(mt::fake_shared(stub_buffer)));
+
+    EXPECT_CALL(*mock_screencast, destroy_session(expected_id));
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
+    mediator->disconnect(nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediator, destructor_removes_orphaned_screencast_sessions)
+{
+    using namespace ::testing;
+    auto mock_screencast = std::make_shared<NiceMock<mtd::MockScreencast>>();
+    auto mediator = create_session_mediator_with_screencast(mock_screencast);
+
+    mf::ScreencastSessionId expected_id{7};
+    mtd::StubBuffer stub_buffer;
+    ON_CALL(*mock_screencast, create_session(_,_,_,_,_))
+        .WillByDefault(Return(expected_id));
+    ON_CALL(*mock_screencast, capture(_))
+        .WillByDefault(Return(mt::fake_shared(stub_buffer)));
+
+    EXPECT_CALL(*mock_screencast, destroy_session(expected_id));
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
+
+    mediator.reset();
+
+}
+
+TEST_F(SessionMediator, disassociates_buffers_from_stream_before_destroying)
+{
+    mp::BufferRelease release_buffer;
+    mp::Void null;
+
+    auto stream_id = mf::BufferStreamId{42};
+    auto buffer_id = mir::graphics::BufferID{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    auto buffer_item = release_buffer.add_buffers();
+    buffer_item->set_buffer_id(buffer_id.as_value());
+    release_buffer.mutable_id()->set_value(stream_id.as_value());
+
+    EXPECT_CALL(*stream, disassociate_buffer(buffer_id));
+    EXPECT_CALL(*stubbed_session, destroy_buffer(buffer_id));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.release_buffers(&release_buffer, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw)
+{
+    mp::BufferStreamId stream_to_release;
+    mp::BufferRelease release_buffer;
+    mp::Void null;
+
+    auto stream_id = mf::BufferStreamId{42};
+    auto buffer_id = mir::graphics::BufferID{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto buffer1 = std::make_shared<mtd::StubBuffer>();
+
+    auto buffer_item = release_buffer.add_buffers();
+    buffer_item->set_buffer_id(buffer_id.as_value());
+    release_buffer.mutable_id()->set_value(stream_id.as_value());
+
+    stream_to_release.set_value(stream_id.as_value());
+
+    EXPECT_CALL(*stubbed_session, destroy_buffer_stream(stream_id));
+    EXPECT_CALL(*stubbed_session, destroy_buffer(buffer_id));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.release_buffer_stream(&stream_to_release, &null, null_callback.get());
+    stream.reset();
+
+    EXPECT_NO_THROW(
+        mediator.release_buffers(&release_buffer, &null, null_callback.get());
+        );
 }

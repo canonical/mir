@@ -1,4 +1,4 @@
-include_directories(${GLESv2_INCLUDE_DIRS})
+include_directories(${GL_INCLUDE_DIRS})
 
 set(
   GRAPHICS_SOURCES

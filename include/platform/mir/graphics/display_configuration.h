@@ -66,7 +66,8 @@ enum class DisplayConfigurationOutputType
     hdmia,
     hdmib,
     tv,
-    edp
+    edp,
+    virt,
 };
 
 /**
@@ -116,6 +117,9 @@ struct DisplayConfigurationOutput
     /** Form factor of this output; phone display, tablet, monitor, TV, projector... */
     MirFormFactor form_factor;
 
+    /** Subpixel arrangement of this output */
+    MirSubpixelArrangement subpixel_arrangement;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -144,6 +148,7 @@ struct UserDisplayConfigurationOutput
     MirOrientation& orientation;
     float& scale;
     MirFormFactor& form_factor;
+    MirSubpixelArrangement& subpixel_arrangement;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;

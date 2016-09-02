@@ -33,7 +33,7 @@ typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef void* MirNativeFence;
 
-typedef void (*mir_buffer_callback)(MirPresentationChain*, MirBuffer*, void* context);
+typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
 typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
 typedef enum MirBufferAccess
 {

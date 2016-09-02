@@ -46,6 +46,7 @@ typedef enum
     mir_event_type_keymap,
     mir_event_type_input_configuration,
     mir_event_type_surface_output,
+    mir_event_type_input_device_state,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -57,6 +58,7 @@ typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
+typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 
 typedef struct MirCookie MirCookie;
 
@@ -75,6 +77,7 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/input_configuration_event.h"
 #include "mir_toolkit/events/surface_output_event.h"
+#include "mir_toolkit/events/input_device_state_event.h"
 
 #ifdef __cplusplus
 /**
@@ -195,22 +198,31 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  */
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev);
 
+/**
+ * Retrieve the MirInputDeviceStateEvent associated with a MirEvent of
+ * type mir_event_type_input_device_state. The event signifies that the
+ * client has not received the most recent input events, and thus receives
+ * a state update for all attached devices.
+ *
+ * \param [in] event The event
+ * \return           The associated MirInputConfigurationEvent
+ */
+MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev);
+
 /*
- * 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * _________________________
  *< Don't use mir_event_ref >
- *-------------------------
+ * -------------------------
  *       \   ^__^
  *        \  (oo)\_______
-*            (__)\       )\/\
+ *           (__)\       )\/\
  *                ||----w |
  *                ||     || 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy until 
- * such point whereas direct MirEvent access as deprecated. This means you must
- * use the return value as your new reference 
- *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy
+ * until such time that direct MirEvent access is deprecated. This means you
+ * must use the return value as your new reference.
  */
 
 /**

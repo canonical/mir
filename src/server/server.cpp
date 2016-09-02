@@ -23,6 +23,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/input/composite_event_filter.h"
+#include "mir/input/event_filter.h"
 #include "mir/options/default_configuration.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/default_server_configuration.h"
@@ -34,13 +36,44 @@
 #include "mir/cookie/authority.h"
 
 // TODO these are used to frig a stub renderer when running headless
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 
 #include <iostream>
 
 namespace mo = mir::options;
+namespace mi = mir::input;
+
+namespace
+{
+struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
+{
+    bool handle(MirEvent const&) override { return false; }
+    void append(std::shared_ptr<mi::EventFilter> const& filter) override
+    {
+        append_event_filters.push_back(filter);
+    }
+    void prepend(std::shared_ptr<mi::EventFilter> const& filter) override
+    {
+        prepend_event_filters.push_back(filter);
+    }
+
+    void move_filters(std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter)
+    {
+        for (auto const& filter : prepend_event_filters)
+            composite_event_filter->prepend(filter);
+
+        for (auto const& filter : append_event_filters)
+            composite_event_filter->append(filter);
+
+        append_event_filters.clear();
+        prepend_event_filters.clear();
+    }
+    std::vector<std::shared_ptr<mi::EventFilter>> prepend_event_filters;
+    std::vector<std::shared_ptr<mi::EventFilter>> append_event_filters;
+};
+}
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor)\
@@ -48,7 +81,8 @@ namespace mo = mir::options;
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(shell)\
-    MACRO(surface_stack)
+    MACRO(surface_stack)\
+    MACRO(application_not_responding_detector)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -65,16 +99,17 @@ namespace mo = mir::options;
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
+    MACRO(seat_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
-    MACRO(coordinate_translator)
+    MACRO(coordinate_translator) \
+    MACRO(persistent_surface_store)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
     MACRO(the_compositor_report)\
-    MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
     MACRO(the_cursor)\
     MACRO(the_display)\
@@ -96,7 +131,8 @@ namespace mo = mir::options;
     MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
-    MACRO(the_application_not_responding_detector)
+    MACRO(the_application_not_responding_detector)\
+    MACRO(the_persistent_surface_store)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -113,11 +149,14 @@ struct mir::Server::Self
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
+    std::function<void()> stop_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
     Terminator terminator{};
     EmergencyCleanupHandler emergency_cleanup_handler;
+    std::shared_ptr<TemporaryCompositeEventFilter> temporary_event_filter{
+        std::make_shared<TemporaryCompositeEventFilter>()};
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -163,52 +202,6 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
 
-// TODO these are used to frig a stub renderer when running headless
-namespace
-{
-class StubGLRenderer : public mir::compositor::Renderer
-{
-public:
-    StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
-        : render_target{
-            dynamic_cast<mir::renderer::gl::RenderTarget*>(
-                display_buffer.native_display_buffer())}
-    {
-    }
-
-    void set_viewport(mir::geometry::Rectangle const&) override {}
-    void set_output_transform(MirOrientation, MirMirrorMode) override {}
-
-    void render(mir::graphics::RenderableList const& renderables) const override
-    {
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->make_current();
-
-        for (auto const& r : renderables)
-            r->buffer(); // We need to consume a buffer to unblock client tests
-
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->swap_buffers();
-    }
-
-    void suspend() override {}
-
-    mir::renderer::gl::RenderTarget* const render_target;
-};
-
-class StubGLRendererFactory : public mir::compositor::RendererFactory
-{
-public:
-    auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
-    -> std::unique_ptr<mir::compositor::Renderer>
-    {
-        return std::make_unique<StubGLRenderer>(display_buffer);
-    }
-};
-}
-
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
@@ -219,18 +212,9 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     {
     }
 
-    // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
-    auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
+    std::function<void()> the_stop_callback() override
     {
-        auto const& options = the_options();
-        if (options->is_set(options::platform_graphics_lib))
-        {
-            auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
-
-            if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
-                return std::make_shared<StubGLRendererFactory>();
-        }
-        return mir::DefaultServerConfiguration::the_renderer_factory();
+        return self->stop_callback;
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -316,6 +300,19 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
     self->init_callback = updated;
 }
 
+void mir::Server::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    auto const& existing = self->stop_callback;
+
+    auto const updated = [=]
+        {
+            stop_callback();
+            existing();
+        };
+
+    self->stop_callback = updated;
+}
+
 void mir::Server::set_command_line_handler(
     std::function<void(int argc, char const* const* argv)> const& command_line_hander)
 {
@@ -376,34 +373,47 @@ void mir::Server::apply_settings()
 }
 
 void mir::Server::run()
-try
 {
-    mir::log_info("Starting");
-    verify_accessing_allowed(self->server_config);
+    try
+    {
+        mir::log_info("Starting");
+        verify_accessing_allowed(self->server_config);
 
-    auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+        auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+        auto const composite_event_filter = self->server_config->the_composite_event_filter();
 
-    if (self->emergency_cleanup_handler)
-        emergency_cleanup->add(self->emergency_cleanup_handler);
+        self->temporary_event_filter->move_filters(composite_event_filter);
 
-    run_mir(
-        *self->server_config,
-        [&](DisplayServer&) { self->init_callback(); },
-        self->terminator);
+        if (self->emergency_cleanup_handler)
+            emergency_cleanup->add(self->emergency_cleanup_handler);
 
-    self->exit_status = true;
+        run_mir(
+            *self->server_config,
+            [&](DisplayServer&)
+                { self->init_callback(); },
+            self->terminator);
+
+        self->exit_status = true;
+    }
+    catch (...)
+    {
+        if (self->exception_handler)
+            self->exception_handler();
+        else
+            mir::report_exception(std::cerr);
+    }
+    /*
+     * The server_config *must* outlive exception processing as it holds references to
+     * the loaded platforms, and those references are keeping the DSOs loaded.
+     *
+     * If exception has been thrown from a platform DSO then the DSO must not be unloaded
+     * before exception processing has finished.
+     *
+     * This is safe to have outside a try {} catch {} as shared_ptr<>::reset() is specified
+     * as noexcept.
+     */
     self->server_config.reset();
 }
-catch (...)
-{
-    self->server_config = nullptr;
-
-    if (self->exception_handler)
-        self->exception_handler();
-    else
-        mir::report_exception(std::cerr);
-}
-
 auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
 {
     return self->server_config->the_buffer_allocator()->supported_pixel_formats();
@@ -414,7 +424,10 @@ void mir::Server::stop()
     mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
+        {
+            self->stop_callback();
             main_loop->stop();
+        }
 }
 
 bool mir::Server::exited_normally()
@@ -484,6 +497,14 @@ void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 FOREACH_WRAPPER(MIR_SERVER_WRAP)
 
 #undef MIR_SERVER_WRAP
+
+auto mir::Server::the_composite_event_filter() const -> decltype(self->server_config->the_composite_event_filter())
+{
+    if (self->server_config)
+        return self->server_config->the_composite_event_filter();
+    else
+        return self->temporary_event_filter;
+}
 
 void mir::Server::add_configuration_option(
     std::string const& option,

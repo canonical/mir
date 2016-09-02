@@ -56,6 +56,8 @@ private:
     std::shared_ptr<input::InputDeviceRegistry> const registry;
     std::shared_ptr<XInputDevice> const core_keyboard;
     std::shared_ptr<XInputDevice> const core_pointer;
+    bool kbd_grabbed;
+    bool ptr_grabbed;
 };
 
 }

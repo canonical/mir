@@ -73,6 +73,11 @@ bool mtf::Result::signalled() const
     return reason == TerminationReason::child_terminated_by_signal;
 }
 
+bool mtf::Result::exited_normally() const
+{
+    return reason == TerminationReason::child_terminated_normally;
+}
+
 mtf::Process::Process(pid_t pid)
     : pid(pid)
     , terminated(false)

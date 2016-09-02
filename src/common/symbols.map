@@ -219,7 +219,7 @@ MIR_COMMON_0.19.1 { # New functions in Mir 0.19.1
     };
 } MIR_COMMON_5v19;  # <- Note Mir 0.19.0 used the wrong syntax
 
-MIR_COMMON_unreleased {
+MIR_COMMON_0.22 {
   global:
     extern "C++" {
        MirEvent::to_surface*;
@@ -354,3 +354,36 @@ MIR_COMMON_unreleased {
        MirPromptSessionEvent::set_new_state*;
     };
 } MIR_COMMON_0.19.1;
+
+MIR_COMMON_0.24 {
+  global:
+    extern "C++" {
+       android::InputPublisher::publishEventBuffer*;
+       MirEvent::to_input_device_state*;
+       MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
+       MirInputDeviceStateEvent::add_device*;
+       MirInputDeviceStateEvent::clone*;
+       MirInputDeviceStateEvent::deserialize*;
+       MirInputDeviceStateEvent::device_count*;
+       MirInputDeviceStateEvent::device_id*;
+       MirInputDeviceStateEvent::device_pointer_buttons*;
+       MirInputDeviceStateEvent::device_pressed_keys*;
+       MirInputDeviceStateEvent::device_pressed_keys_count*;
+       MirInputDeviceStateEvent::modifiers*;
+       MirInputDeviceStateEvent::pointer_axis*;
+       MirInputDeviceStateEvent::pointer_buttons*;
+       MirInputDeviceStateEvent::serialize*;
+       MirInputDeviceStateEvent::set_modifiers*;
+       MirInputDeviceStateEvent::set_pointer_axis*;
+       MirInputDeviceStateEvent::set_pointer_buttons*;
+       MirInputDeviceStateEvent::set_when*;
+       MirInputDeviceStateEvent::when*;
+       mir::time::SteadyClock::now*;
+       mir::time::SteadyClock::min_wait_until*;
+       android::MotionEvent::initialize*;
+       mir::dispatch::epoll_to_fd_event*;
+       mir::dispatch::fd_event_to_epoll*;
+       mir::dispatch::ReadableFd*;
+       vtable?for?mir::dispatch::ReadableFd;
+    };
+} MIR_COMMON_0.22;

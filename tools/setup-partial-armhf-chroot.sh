@@ -109,17 +109,27 @@ case ${arch} in
         ;;
 esac
 
+# Our chroot is missing the default public keys set up in a real install.
+# So this will provide them and silence the warnings:
+mkdir -p etc/apt
+ln -fs /etc/apt/trusted.gpg etc/apt/trusted.gpg
+
 echo "[General]
 arch=${arch}
 directory=${directory}
 unpack=false
 noauth=true
-bootstrap=Ubuntu ${sources}
+bootstrap=ubuntu-main ubuntu-universe ${sources}
 
-[Ubuntu]
+[ubuntu-main]
 packages=${builddeps}
 source=${source_url}
-suite=${dist}
+suite=${dist} main
+
+[ubuntu-universe]
+packages=${builddeps}
+source=${source_url}
+suite=${dist} universe
 " > mstrap.conf
 
 sourceid=0

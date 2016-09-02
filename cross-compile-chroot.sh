@@ -26,10 +26,10 @@ _do_update_chroot=0
 dist=vivid
 clean=0
 update_build_dir=0
-
+enable_tests=yes
 target_arch=armhf
 
-while getopts "a:cd:hu" OPTNAME
+while getopts "a:cd:hut:" OPTNAME
 do
     case $OPTNAME in
       a )
@@ -54,6 +54,9 @@ do
         echo "Parameter -${OPTARG} needs an argument"
         usage
         exit 1;
+        ;;
+      t )
+        enable_tests=${OPTARG}
         ;;
       * )
         echo "invalid option specified"
@@ -101,6 +104,10 @@ fi
 gcc_variant=
 if [ "${dist}" = "vivid" ]; then
     gcc_variant=-4.9
+elif [ "${dist}" = "wily" -o "${dist}" = "xenial"  ]; then
+    gcc_variant=-5
+elif [ "${dist}" = "yakkety" ]; then
+    gcc_variant=-6
 fi
 
 case ${target_arch} in
@@ -162,7 +169,8 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
-      -DMIR_PLATFORM=${mir_platform} \
+      -DMIR_PLATFORM=${mir_platform} -DMIR_ENABLE_TESTS=${enable_tests}\
+      -DMIR_USE_PRECOMPILED_HEADERS=OFF \
       .. 
 
     make -j${NUM_JOBS} $@

@@ -55,10 +55,13 @@ TEST_F(ServerShutdown, normal_exit_removes_endpoint)
     }
 }
 
+using ServerShutdownWithGraphicsPlatformException = ::testing::TestWithParam<char const*>;
+
 // Regression test for LP: #1528135
-TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exception)
+TEST_P(ServerShutdownWithGraphicsPlatformException, clean_shutdown_on_exception)
 {
     char const* argv = "ServerShutdownWithException";
+    mtf::TemporaryEnvironmentValue exception_set("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS", GetParam());
     mtf::TemporaryEnvironmentValue graphics_platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-throw.so").c_str());
     mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     mir::Server server;
@@ -69,6 +72,16 @@ TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exceptio
     server.apply_settings();
     server.run();
 }
+
+INSTANTIATE_TEST_CASE_P(
+    PlatformExceptions,
+    ServerShutdownWithGraphicsPlatformException,
+    ::testing::Values(
+        "constructor",
+        "create_buffer_allocator",
+        "create_display",
+        "make_ipc_operations"
+    ));
 
 using ServerShutdownDeathTest = ServerShutdown;
 
@@ -149,10 +162,8 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
     };
 }
 
-TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fatal_error)
+TEST_F(ServerShutdownDeathTest, abort_on_fatal_error)
 {
-    add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_ABORT", "");
-
     mt::CrossProcessSync sync;
 
     run_in_server_and_disable_core_dump([&]
@@ -177,6 +188,7 @@ TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fata
 TEST_F(ServerShutdownDeathTest, mir_fatal_error_during_init_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
 
+    add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_EXCEPT", "");
     add_to_environment("MIR_SERVER_FILE", mir_test_socket);
     server.add_init_callback([&] { mir::fatal_error("Bang"); });
     server.apply_settings();

@@ -69,6 +69,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     protobuf_output.set_orientation(display_output.orientation);
     protobuf_output.set_scale_factor(display_output.scale);
     protobuf_output.set_form_factor(display_output.form_factor);
+    protobuf_output.set_subpixel_arrangement(display_output.subpixel_arrangement);
 }
 
 }

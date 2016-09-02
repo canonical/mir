@@ -55,7 +55,8 @@ mcl::ScreencastStream::ScreencastStream(
     client_platform(client_platform),
     factory(client_platform->create_buffer_factory()),
     protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
+    buffer_depository{factory}
 {
     if (!protobuf_bs->has_id())
     {
@@ -89,24 +90,21 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     if (buffer.has_width() && buffer.has_height())
         buffer_size = geom::Size{buffer.width(), buffer.height()};
 
-    if (current_id != buffer.buffer_id())
+    try
     {
-        try
-        {
-            current_buffer = factory->create_buffer(
-                mcl::protobuf_to_native_buffer(buffer),
-                buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
-        }
-        catch (const std::runtime_error& error)
-        {
-            for (int i = 0; i < buffer.fd_size(); i++)
-                ::close(buffer.fd(i));
-            protobuf_bs->set_error(
-                std::string{"Error processing buffer stream creating response:"} +
-                boost::diagnostic_information(error));
-            throw error;
-        }
-        current_id = buffer.buffer_id();
+        auto const pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
+        buffer_depository.deposit_package(mcl::protobuf_to_native_buffer(buffer),
+                                         buffer.buffer_id(), buffer_size,
+                                         pixel_format);
+    }
+    catch (const std::runtime_error& error)
+    {
+        for (int i = 0; i < buffer.fd_size(); i++)
+            ::close(buffer.fd(i));
+        protobuf_bs->set_error(
+            std::string{"Error processing buffer stream creating response:"} +
+            boost::diagnostic_information(error));
+        throw error;
     }
 }
 
@@ -133,8 +131,8 @@ MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& d
 
 std::shared_ptr<mcl::ClientBuffer> mcl::ScreencastStream::get_current_buffer()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return current_buffer;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return buffer_depository.current_buffer();
 }
 
 EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
@@ -144,17 +142,17 @@ EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
 
 std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    auto buffer = buffer_depository.current_buffer();
     if (!secured_region)
-        secured_region = current_buffer->secure_for_cpu_write();
+        secured_region = buffer->secure_for_cpu_write();
     return secured_region;
 }
 
 void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    if(protobuf_bs->buffer().buffer_id() != current_id)
-        process_buffer(protobuf_bs->buffer(), lock);
+    process_buffer(protobuf_bs->buffer(), lock);
     lock.unlock();
 
     done();
@@ -163,7 +161,7 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
 
 MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
         "Screencast",
         buffer_size.width.as_int(),
@@ -180,8 +178,8 @@ void mcl::ScreencastStream::request_and_wait_for_next_buffer()
 
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return current_id;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return buffer_depository.current_buffer_id();
 }
 
 int mcl::ScreencastStream::swap_interval() const
@@ -203,13 +201,13 @@ MirPlatformType mcl::ScreencastStream::platform_type()
 
 mf::BufferStreamId mcl::ScreencastStream::rpc_id() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return mf::BufferStreamId(protobuf_bs->id().value());
 }
 
 bool mcl::ScreencastStream::valid() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 

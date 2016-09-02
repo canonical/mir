@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2012, 2013, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -27,10 +27,10 @@ template<typename Tag, typename ValueType=int>
 class IntWrapper
 {
 public:
-    IntWrapper() : value(0) {}
+    constexpr IntWrapper() : value(0) {}
 
-    explicit IntWrapper(ValueType value) : value(value) {}
-    ValueType as_value() const { return value; }
+    explicit constexpr IntWrapper(ValueType value) : value(value) {}
+    ValueType constexpr as_value() const { return value; }
 
 private:
     ValueType value;
@@ -44,31 +44,31 @@ std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& val
 }
 
 template<typename Tag, typename ValueType>
-inline bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+inline constexpr bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() == rhs.as_value();
 }
 
 template<typename Tag, typename ValueType>
-inline bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+inline constexpr bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() != rhs.as_value();
 }
 
 template<typename Tag, typename ValueType>
-inline bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+inline constexpr bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() <= rhs.as_value();
 }
 
 template<typename Tag, typename ValueType>
-inline bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+inline constexpr bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() >= rhs.as_value();
 }
 
 template<typename Tag, typename ValueType>
-inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+inline constexpr bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
 }
@@ -81,7 +81,7 @@ template<typename Tag, typename ValueType>
 struct hash< ::mir::IntWrapper<Tag,ValueType> >
 {
     std::hash<int> self;
-    std::size_t operator()(::mir::IntWrapper<Tag,ValueType> const& id) const
+    constexpr std::size_t operator()(::mir::IntWrapper<Tag,ValueType> const& id) const
     {
         return self(id.as_value());
     }

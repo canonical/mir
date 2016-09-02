@@ -42,9 +42,10 @@ mg::DisplayConfigurationOutput make_virtual_config()
     size_t const preferred_format_index{0};
     size_t const preferred_mode_index{0};
     bool const connected{false};
-    auto const type = mg::DisplayConfigurationOutputType::lvds;
+    auto const type = mg::DisplayConfigurationOutputType::virt;
     auto const form_factor = mir_form_factor_monitor;
     float const scale{1.0f};
+    auto const subpixel_arrangement = mir_subpixel_arrangement_unknown;
     std::vector<mg::DisplayConfigurationMode> external_modes;
     external_modes.emplace_back(mg::DisplayConfigurationMode{{1920,1080}, vrefresh_hz});
 
@@ -64,7 +65,8 @@ mg::DisplayConfigurationOutput make_virtual_config()
         external_mode,
         mir_orientation_normal,
         scale,
-        form_factor
+        form_factor,
+        subpixel_arrangement
     };
 }
 }

@@ -23,6 +23,8 @@
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
+#include "native_window_report.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include "mir/weak_egl.h"
 #include <EGL/egl.h>
@@ -32,18 +34,6 @@
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
-
-namespace
-{
-
-struct EmptyDeleter
-{
-    void operator()(void*)
-    {
-    }
-};
-
-}
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
     ClientContext* const context)
@@ -62,35 +52,24 @@ std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_bu
 
     gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;
     /* we use an empty deleter because hw_get_module does not give us the ownership of the ptr */
-    EmptyDeleter empty_del;
-    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
+    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, [](auto){});
     auto registrar = std::make_shared<mcla::GrallocRegistrar>(gralloc_dev);
     return std::make_shared<mcla::AndroidClientBufferFactory>(registrar);
 }
 
-namespace
-{
-struct MirNativeWindowDeleter
-{
-    MirNativeWindowDeleter(mga::MirNativeWindow* window)
-     : window(window) {}
-
-    void operator()(void*)
-    {
-        delete window;
-    }
-
-private:
-    mga::MirNativeWindow *window;
-};
-}
-
 std::shared_ptr<void> mcla::AndroidClientPlatform::create_egl_native_window(EGLNativeSurface *surface)
 {
-    auto anativewindow_interpreter = std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface);
-    auto mir_native_window = new mga::MirNativeWindow(anativewindow_interpreter);
-    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);
-    return std::shared_ptr<void>(mir_native_window, deleter);
+    auto log = getenv("MIR_CLIENT_ANDROID_WINDOW_REPORT");
+    std::shared_ptr<mga::NativeWindowReport> report;
+    char const* on_val = "log";
+    if (log && !strncmp(log, on_val, strlen(on_val)))
+        report = std::make_shared<mga::ConsoleNativeWindowReport>(
+            std::make_shared<mir::logging::DumbConsoleLogger>());
+    else
+        report = std::make_shared<mga::NullNativeWindowReport>();
+ 
+    return std::make_shared<mga::MirNativeWindow>(
+        std::make_shared<mcla::EGLNativeSurfaceInterpreter>(*surface), report);
 }
 
 std::shared_ptr<EGLNativeDisplayType>

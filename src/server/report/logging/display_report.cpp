@@ -141,9 +141,9 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     for( auto &i : egl_string_mapping)
     {
         EGLint value;
-        eglGetConfigAttrib(disp, config, i.val, &value);
-        logger->log(ml::Severity::informational,
-            "    [" + i.name + "] : " + std::to_string(value), component());
+        if (eglGetConfigAttrib(disp, config, i.val, &value))
+            logger->log(ml::Severity::informational,
+                "    [" + i.name + "] : " + std::to_string(value), component());
     }
 }
 

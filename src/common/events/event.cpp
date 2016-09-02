@@ -31,6 +31,7 @@
 #include "mir/events/resize_event.h"
 #include "mir/events/surface_event.h"
 #include "mir/events/surface_output_event.h"
+#include "mir/events/input_device_state_event.h"
 
 #include <capnp/serialize.h>
 
@@ -190,4 +191,14 @@ MirSurfaceOutputEvent* MirEvent::to_surface_output()
 MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
 {
     return static_cast<MirSurfaceOutputEvent const*>(this);
+}
+
+MirInputDeviceStateEvent* MirEvent::to_input_device_state()
+{
+    return static_cast<MirInputDeviceStateEvent*>(this);
+}
+
+MirInputDeviceStateEvent const* MirEvent::to_input_device_state() const
+{
+    return static_cast<MirInputDeviceStateEvent const*>(this);
 }

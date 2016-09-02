@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 11)
+set(MIRPLATFORM_ABI 14)
 
 # Add the cookie implementation before exposing any APIs
 add_subdirectory(cookie/)
@@ -25,6 +25,7 @@ add_subdirectory(platform/)
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
+add_subdirectory(renderer/)
 add_subdirectory(renderers/)
 add_subdirectory(gl/)
 
@@ -43,8 +44,6 @@ set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
-set(MIR_COMMON_OBJECTS ${MIR_COMMON_OBJECTS} PARENT_SCOPE)
-set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
 set(MIR_CLIENT_PLATFORM_PATH ${MIR_CLIENT_PLATFORM_PATH} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
 

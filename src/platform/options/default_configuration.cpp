@@ -40,14 +40,14 @@ char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
+char const* const mo::seat_report_opt            = "seat-report";
 char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
-char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
-char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
+char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::nbuffers_opt                = "nbuffers";
 char const* const mo::composite_delay_opt         = "composite-delay";
@@ -162,6 +162,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle to Input report. [{log,lttng,off}]")
         (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the Legacy Input report. [{log,off}]")
+        (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle to Seat report. [{log,off}]")
         (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the SessionMediator report. [{log,lttng,off}]")
         (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),
@@ -181,14 +183,12 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
-        (offscreen_opt,
-            "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
-        (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] abort (to get a core dump)")
+        (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
+            "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
             "This is only interesting for people doing Mir server or client development.");
 

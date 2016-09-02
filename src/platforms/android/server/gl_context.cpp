@@ -103,6 +103,30 @@ EGLConfig select_egl_config_with_format(
     return *pegl_config;
 }
 
+//Sometimes it's useful not to specify a format when one doesn't know which format to use yet.
+//This is used by DeviceQuirks to create a context for finding out GL vendor and renderer.
+EGLConfig select_egl_config_with_any_format(
+    EGLDisplay egl_display, mg::GLConfig const& gl_config)
+{
+    EGLint const required_egl_config_attr [] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
+        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
+        EGL_NONE
+    };
+
+    EGLConfig the_config;
+    EGLint num_returned_config;
+
+    eglChooseConfig(egl_display, required_egl_config_attr, &the_config, 1, &num_returned_config);
+
+    if (num_returned_config != 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config"));
+
+    return the_config;
+}
 }
 
 void mga::GLContext::make_current(EGLSurface egl_surface) const
@@ -139,8 +163,18 @@ mga::GLContext::GLContext(
     report.report_egl_configuration(egl_display, egl_config);
 }
 
+mga::GLContext::GLContext(mg::GLConfig const& gl_config, mg::DisplayReport& report) :
+    egl_display(create_and_initialize_display()),
+    egl_config(select_egl_config_with_any_format(egl_display, gl_config)),
+    egl_context{egl_display,
+                eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr)},
+    own_display(true)
+{
+    report.report_egl_configuration(egl_display, egl_config);
+}
+
 mga::GLContext::GLContext(GLContext const& shared_gl_context) :
-    mg::GLContext(),
+    mir::renderer::gl::Context(),
     egl_display(shared_gl_context.egl_display),
     egl_config(shared_gl_context.egl_config),
     egl_context{egl_display,
@@ -153,6 +187,13 @@ mga::GLContext::GLContext(GLContext const& shared_gl_context) :
 mga::PbufferGLContext::PbufferGLContext(
     MirPixelFormat display_format, mg::GLConfig const& gl_config, mg::DisplayReport& report) :
     GLContext(display_format, gl_config, report),
+    egl_surface{egl_display,
+                eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
+{
+}
+
+mga::PbufferGLContext::PbufferGLContext(mg::GLConfig const& gl_config, mg::DisplayReport& report) :
+    GLContext(gl_config, report),
     egl_surface{egl_display,
                 eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
 {

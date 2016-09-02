@@ -25,8 +25,8 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -100,7 +100,7 @@ public:
 struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
 {
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&,
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubGLBufferStream>();
@@ -124,7 +124,8 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         conf.the_snapshot_strategy(),
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        std::make_shared<mtd::NullEventSink>()
+        std::make_shared<mtd::NullEventSink>(),
+        conf.the_buffer_allocator()
     };
 
     mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);

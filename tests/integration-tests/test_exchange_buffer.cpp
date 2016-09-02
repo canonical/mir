@@ -70,7 +70,7 @@ struct StubBundle : public mc::BufferBundle
     {
     }
 
-    void client_acquire(std::function<void(mg::Buffer* buffer)> complete)
+    void client_acquire(std::function<void(mg::Buffer* buffer)> complete) override
     {
         std::shared_ptr<mg::Buffer> stub_buffer;
         if (buffers_acquired < buffer_id_seq.size())
@@ -81,22 +81,22 @@ struct StubBundle : public mc::BufferBundle
         client_buffers.push_back(stub_buffer);
         complete(stub_buffer.get());
     }
-    void client_release(mg::Buffer*) {}
-    std::shared_ptr<mg::Buffer> compositor_acquire(void const*)
+    void client_release(mg::Buffer*) override {}
+    std::shared_ptr<mg::Buffer> compositor_acquire(void const*) override
         { return std::make_shared<mtd::StubBuffer>(); }
-    void compositor_release(std::shared_ptr<mg::Buffer> const&) {}
-    std::shared_ptr<mg::Buffer> snapshot_acquire()
+    void compositor_release(std::shared_ptr<mg::Buffer> const&) override {}
+    std::shared_ptr<mg::Buffer> snapshot_acquire() override
         { return std::make_shared<mtd::StubBuffer>(); }
-    void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
-    mg::BufferProperties properties() const { return mg::BufferProperties{}; }
-    void allow_framedropping(bool) {}
+    void snapshot_release(std::shared_ptr<mg::Buffer> const&) override {}
+    mg::BufferProperties properties() const override { return mg::BufferProperties{}; }
+    void allow_framedropping(bool) override {}
     void set_mode(mc::MultiMonitorMode) override {}
-    void force_requests_to_complete() {}
-    void resize(const geom::Size&) {}
-    int buffers_ready_for_compositor(void const*) const { return 1; }
-    int buffers_free_for_client() const { return 1; }
-    void drop_old_buffers() {}
-    void drop_client_requests() {}
+    void force_requests_to_complete() override {}
+    void resize(const geom::Size&) override {}
+    int buffers_ready_for_compositor(void const*) const override { return 1; }
+    int buffers_free_for_client() const override { return 1; }
+    void drop_old_buffers() override {}
+    void drop_client_requests() override {}
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
@@ -110,12 +110,14 @@ struct StubBundleFactory : public msc::BufferStreamFactory
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId i, std::shared_ptr<mf::BufferSink> const& s,
+        mf::BufferStreamId i, std::shared_ptr<mf::ClientBuffers> const& s,
         int, mg::BufferProperties const& p) override
     { return create_buffer_stream(i, s, p); }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&) override
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&) override
     { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
+    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&) override
+    { return nullptr; }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
 

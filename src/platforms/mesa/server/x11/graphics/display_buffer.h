@@ -49,6 +49,7 @@ public:
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
+    void bind() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
     void set_orientation(MirOrientation const new_orientation);
 

@@ -19,7 +19,9 @@
 #ifndef MIR_GRAPHICS_EGL_SYNC_EXTENSIONS_H_
 #define MIR_GRAPHICS_EGL_SYNC_EXTENSIONS_H_
 
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 #define EGL_EGLEXT_PROTOTYPES
 
 //Xenial egl has started needing a header (android/native_window.h)

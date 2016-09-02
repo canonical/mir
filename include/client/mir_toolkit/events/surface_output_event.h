@@ -46,10 +46,11 @@ int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev);
 MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev);
 
 /**
- * Retrieve the form factor of the new output configuration of a MirSurfaceOutputEvent
+ * Retrieve the suggested scaling factor of the new output configuration of a
+ * MirSurfaceOutputEvent.
  *
  * \param [in] ev   The event
- * \return          The new form factor of the output the surface is primarily on.
+ * \return          The new scaling factor of the output the surface is primarily on.
  */
 float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev);
 

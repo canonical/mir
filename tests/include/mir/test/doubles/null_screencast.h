@@ -34,7 +34,9 @@ public:
     frontend::ScreencastSessionId create_session(
         geometry::Rectangle const&,
         geometry::Size const&,
-        MirPixelFormat)
+        MirPixelFormat,
+        int,
+        MirMirrorMode)
     {
         return frontend::ScreencastSessionId{1};
     }

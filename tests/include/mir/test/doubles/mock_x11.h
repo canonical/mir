@@ -39,6 +39,7 @@ public:
 
     Display *display;
     Window window;
+    Screen screen;
     XVisualInfo visual_info;
     XEvent keypress_event_return = { 0 };
     XEvent button_release_event_return = { 0 };
@@ -47,6 +48,8 @@ public:
     XEvent focus_out_event_return = { 0 };
     XEvent vscroll_event_return = { 0 };
     XEvent motion_event_return = { 0 };
+    XEvent enter_notify_event_return = { 0 };
+    XEvent leave_notify_event_return = { 0 };
     int pending_events = 1;
 };
 
@@ -75,12 +78,17 @@ public:
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
     MOCK_METHOD1(XDefaultRootWindow, Window(Display*));
+    MOCK_METHOD1(XDefaultScreenOfDisplay, Screen*(Display*));
     MOCK_METHOD6(XGrabKeyboard, int(Display*, Window, Bool, int, int, Time));
     MOCK_METHOD2(XUngrabKeyboard, int(Display*, Time));
     MOCK_METHOD4(XGetErrorText, int(Display*, int, char*, int ));
     MOCK_METHOD1(XSetErrorHandler, XErrorHandler(XErrorHandler));
     MOCK_METHOD0(XInitThreads, Status());
     MOCK_METHOD3(XSetWMHints, int(Display*, Window, XWMHints*));
+    MOCK_METHOD9(XGrabPointer, int(Display*, Window, Bool, unsigned int, int, int, Window, Cursor, Time));
+    MOCK_METHOD2(XUngrabPointer, int(Display*, Time));
+    MOCK_METHOD3(XInternAtom, Atom(Display*, const char*, Bool));
+    MOCK_METHOD4(XSetWMProtocols, Status(Display *, Window, Atom*, int));
 
     FakeX11Resources fake_x11;
 };

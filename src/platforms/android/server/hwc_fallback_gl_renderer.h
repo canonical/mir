@@ -23,6 +23,7 @@
 #include "mir/gl/program.h"
 #include "mir/gl/texture_cache.h"
 #include "mir/graphics/renderable.h"
+#include "mir/renderer/gl/context.h"
 #include <memory>
 
 namespace mir
@@ -53,7 +54,7 @@ class HWCFallbackGLRenderer : public RenderableListCompositor
 public:
     HWCFallbackGLRenderer(
         gl::ProgramFactory const& program_factory,
-        graphics::GLContext const& gl_context,
+        renderer::gl::Context const& gl_context,
         geometry::Rectangle const& screen_position);
 
     void render(RenderableList const&, geometry::Displacement, SwappingGLContext const&) const;

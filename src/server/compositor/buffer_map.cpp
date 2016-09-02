@@ -39,10 +39,8 @@ enum class BufferMap::Owner
 }
 
 mc::BufferMap::BufferMap(
-    mf::BufferStreamId id,
     std::shared_ptr<mf::BufferSink> const& sink,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-    stream_id(id),
     sink(sink),
     allocator(allocator)
 {
@@ -50,17 +48,26 @@ mc::BufferMap::BufferMap(
 
 mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer = allocator->alloc_buffer(properties);
-    buffers[buffer->id()] = {buffer, Owner::client};
-    sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
-    return buffer->id();
+    try
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        auto buffer = allocator->alloc_buffer(properties);
+        buffers[buffer->id()] = {buffer, Owner::client};
+        sink->add_buffer(*buffer);
+        return buffer->id();
+    } catch (std::exception& e)
+    {
+        sink->error_buffer(properties, e.what());
+        throw;
+    }
 }
 
 void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    buffers.erase(checked_buffers_find(id, lk));
+    auto it = checked_buffers_find(id, lk);
+    sink->remove_buffer(*it->second.buffer);
+    buffers.erase(it); 
 }
 
 void mc::BufferMap::send_buffer(mg::BufferID id)
@@ -72,7 +79,7 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
         auto buffer = it->second.buffer;
         it->second.owner = Owner::client;
         lk.unlock();
-        sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::update_msg);
+        sink->update_buffer(*buffer);
     }
 }
 

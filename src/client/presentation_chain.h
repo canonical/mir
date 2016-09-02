@@ -48,15 +48,7 @@ public:
         rpc::DisplayServer& server,
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         std::shared_ptr<AsyncBufferFactory> const& mir_buffer_factory);
-    void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback callback, void* context) override;
     void submit_buffer(MirBuffer* buffer) override;
-    void release_buffer(MirBuffer* buffer) override;
-
-    void buffer_available(mir::protobuf::Buffer const& buffer) override;
-    void buffer_unavailable() override;
-
     MirConnection* connection() const override;
     int rpc_id() const override;
     char const* error_msg() const override;

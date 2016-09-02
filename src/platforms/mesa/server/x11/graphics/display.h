@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "display_group.h"
 #include "mir/geometry/size.h"
@@ -32,6 +33,9 @@ namespace mir
 {
 namespace graphics
 {
+
+class GLConfig;
+
 namespace X
 {
 
@@ -50,18 +54,21 @@ private:
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, mir::geometry::Size const size);
+    X11Window(::Display* const x_dpy,
+              EGLDisplay egl_dpy,
+              geometry::Size const size,
+              GLConfig const& gl_config);
     ~X11Window();
 
     operator Window() const;
     EGLConfig egl_config() const;
-    unsigned int color_depth() const;
+    unsigned long red_mask() const;
 
 private:
     ::Display* const x_dpy;
     Window win;
     EGLConfig config;
-    unsigned int depth;
+    unsigned long r_mask;
 };
 
 class X11EGLContext
@@ -90,10 +97,14 @@ private:
     EGLSurface const egl_surf;
 };
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
-    explicit Display(::Display* x_dpy, mir::geometry::Size const size);
+    explicit Display(::Display* x_dpy,
+                     geometry::Size const size,
+                     GLConfig const& gl_config);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -114,12 +125,17 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     X11EGLDisplay const egl_display;
     mir::geometry::Size const size;
+    float pixel_width;
+    float pixel_height;
     X11Window const win;
     X11EGLContext egl_context;
     X11EGLSurface egl_surface;
@@ -129,6 +145,7 @@ private:
 };
 
 }
+
 }
 }
 #endif /* MIR_GRAPHICS_X_DISPLAY_H_ */

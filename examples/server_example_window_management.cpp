@@ -18,7 +18,6 @@
 
 #include "server_example_window_management.h"
 
-#include "server_example_tiling_window_manager.h"
 #include "server_example_canonical_window_manager.h"
 
 #include "mir/abnormal_exit.h"
@@ -44,9 +43,8 @@ using namespace mir::geometry;
 namespace
 {
 char const* const wm_option = "window-manager";
-char const* const wm_description = "window management strategy [{tiling|fullscreen|canonical|system-compositor}]";
+char const* const wm_description = "window management strategy [{canonical|fullscreen|system-compositor}]";
 
-char const* const wm_tiling = "tiling";
 char const* const wm_fullscreen = "fullscreen";
 char const* const wm_canonical = "canonical";
 char const* const wm_system_compositor = "system-compositor";
@@ -130,11 +128,7 @@ void me::add_window_manager_option_to(Server& server)
             auto const options = server.get_options();
             auto const selection = options->get<std::string>(wm_option);
 
-            if (selection == wm_tiling)
-            {
-                return std::make_shared<TilingWindowManager>(focus_controller);
-            }
-            else if (selection == wm_fullscreen)
+            if (selection == wm_fullscreen)
             {
                 return std::make_shared<FullscreenWindowManager>(focus_controller, server.the_shell_display_layout());
             }

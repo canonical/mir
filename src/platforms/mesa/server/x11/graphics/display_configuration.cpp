@@ -24,16 +24,15 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const size, MirOrientation orientation) :
+mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const pixels, geom::Size const size, MirOrientation orientation) :
     configuration{
             mg::DisplayConfigurationOutputId{1},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
             //TODO: query fps
-            {mg::DisplayConfigurationMode{size, 60.0}},
+            {mg::DisplayConfigurationMode{pixels, 60.0}},
             0,
-            //TODO: query mm-size
             size,
             true,
             true,
@@ -43,7 +42,8 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             mir_power_mode_on,
             orientation,
             1.0f,
-            mir_form_factor_monitor},
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }

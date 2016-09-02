@@ -452,6 +452,9 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev) try
             }
             break;
         }
+        case mir_input_event_types:
+            abort();
+            break;
     }
 
     return false;

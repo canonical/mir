@@ -40,6 +40,10 @@ MIR_PROTOBUF_3 {
     mir::protobuf::Buffer::MergeFrom*;
     mir::protobuf::Buffer::MergePartialFromCodedStream*;
     mir::protobuf::Buffer::New*;
+    mir::protobuf::BufferOperation_IsValid*;
+    mir::protobuf::BufferOperation_MIN*;
+    mir::protobuf::BufferOperation_ARRAYSIZE*;
+    mir::protobuf::BufferOperation_MAX*;
     mir::protobuf::BufferRelease::?BufferRelease*;
     mir::protobuf::BufferRelease::BufferRelease*;
     mir::protobuf::BufferRelease::ByteSize*;

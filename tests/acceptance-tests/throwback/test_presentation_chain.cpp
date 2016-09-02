@@ -188,7 +188,7 @@ private:
     unsigned int callback_count = 0;
 };
 
-void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
+void buffer_callback(MirBuffer* buffer, void* context)
 {
     auto sync = reinterpret_cast<MirBufferSync*>(context);
     sync->buffer_available(buffer);
@@ -201,8 +201,8 @@ TEST_F(PresentationChain, allocation_calls_callback)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -215,8 +215,8 @@ TEST_F(PresentationChain, has_native_buffer)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -233,8 +233,8 @@ TEST_F(PresentationChain, has_native_fence)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -251,8 +251,8 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -277,8 +277,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -303,8 +303,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -325,8 +325,8 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -345,8 +345,8 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     auto usage = mir_buffer_usage_software;
 
     SurfaceWithChainFromStart surface(connection, size, pf);
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(), width.as_int(), height.as_int(), format, usage,
+    mir_connection_allocate_buffer(
+        connection, width.as_int(), height.as_int(), format, usage,
         buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();
@@ -354,4 +354,67 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     EXPECT_THAT(mir_buffer_get_height(buffer), Eq(height.as_uint32_t()));
     EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
     EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
+}
+
+TEST_F(PresentationChain, can_check_valid_buffers)
+{
+    MirBufferSync context;
+    mir_connection_allocate_buffer(
+        connection, size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    ASSERT_THAT(buffer, Ne(nullptr));
+    EXPECT_TRUE(mir_buffer_is_valid(buffer));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer), StrEq(""));
+}
+
+TEST_F(PresentationChain, can_check_invalid_buffers)
+{
+    MirBufferSync context;
+    mir_connection_allocate_buffer(connection, 0, 0, pf, usage, buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    ASSERT_THAT(buffer, Ne(nullptr));
+    EXPECT_FALSE(mir_buffer_is_valid(buffer));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer), Not(StrEq("")));
+    mir_buffer_release(buffer);
+}
+
+namespace
+{
+void another_buffer_callback(MirBuffer* buffer, void* context)
+{
+    buffer_callback(buffer, context);
+}
+}
+TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
+{
+    SurfaceWithChainFromStart surface(connection, size, pf);
+
+    MirBufferSync second_buffer_context;
+    MirBufferSync context;
+    MirBufferSync another_context;
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &second_buffer_context);
+
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    ASSERT_THAT(context.buffer(), Ne(nullptr));
+    ASSERT_TRUE(second_buffer_context.wait_for_buffer(10s));
+    ASSERT_THAT(second_buffer_context.buffer(), Ne(nullptr));
+
+    mir_buffer_set_callback(context.buffer(), another_buffer_callback, &another_context);
+
+    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
+    //flush the 1st buffer out
+    mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
+
+    ASSERT_TRUE(another_context.wait_for_buffer(10s));
+    ASSERT_THAT(another_context.buffer(), Ne(nullptr));
 }

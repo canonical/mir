@@ -21,7 +21,10 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
+
+#include "mir_toolkit/mir_connection.h"
 
 namespace mir
 {
@@ -70,14 +73,45 @@ public:
         return {{},{}};
     }
 
-    void set_cursor_image(graphics::CursorImage const&)
+    void set_cursor_image(graphics::CursorImage const&) override
     {
     }
-    void hide_cursor()
+    void hide_cursor() override
     {
     }
 
-    auto graphics_platform_library() -> std::string { return {}; }
+    auto graphics_platform_library() -> std::string override { return {}; }
+
+    graphics::nested::UniqueInputConfig create_input_device_config() override
+    {
+        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
+                                                   mir_input_config_destroy);
+    }
+
+    void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
+    {
+    }
+    void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&) override
+    {
+    }
+    void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
+    {
+    }
+    
+    std::shared_ptr<MirBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+
+    MirNativeBuffer* get_native_handle(MirBuffer*)
+    {
+        return nullptr;
+    }
+
+    MirGraphicsRegion get_graphics_region(MirBuffer*)
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
+    }
 };
 
 

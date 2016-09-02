@@ -32,11 +32,13 @@ namespace mir
 namespace frontend
 {
 class EventSink;
+class ClientBuffers;
 }
 namespace compositor { class BufferStream; }
 namespace graphics
 {
 class DisplayConfiguration;
+class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -59,7 +61,8 @@ public:
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
         graphics::DisplayConfiguration const& initial_config,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 
@@ -98,6 +101,9 @@ public:
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
+    void destroy_buffer(graphics::BufferID) override;
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -111,6 +117,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
+    std::shared_ptr<frontend::ClientBuffers> const buffers;
 
     frontend::SurfaceId next_id();
 

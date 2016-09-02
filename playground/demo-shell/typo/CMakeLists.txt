@@ -1,4 +1,3 @@
-find_package(GLESv2 REQUIRED)
 find_package(PkgConfig)
 
 pkg_search_module(FREETYPE freetype2)
@@ -13,8 +12,7 @@ add_library(typo STATIC
   ${OPTIONAL_SRCS}
 )
 
-target_link_libraries(typo ${GLESv2_LIBRARIES})
-include_directories(${GLESv2_INCLUDE_DIRS})
+target_link_libraries(typo ${GL_LIBRARIES})
 target_include_directories(typo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (FREETYPE_FOUND)

@@ -21,11 +21,11 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/renderer/renderer.h"
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
@@ -36,7 +36,7 @@ namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     renderer(renderer),
@@ -85,9 +85,17 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 
-        // Release the buffers we did use back to the clients, before starting
-        // on the potentially slow flip().
-        // FIXME: This clear() call is blocking a little because we drive IPC here (LP: #1395421)
+        /*
+         * This is used for the 'early release' optimization to release buffers
+         * we did use back to clients before starting on the potentially slow
+         * post() call.
+         * FIXME: This clear() call is blocking a little because we drive IPC
+         *        here (LP: #1395421). However if the early release
+         *        optimization is disabled or absent (LP: #1561418) then this
+         *        clear() doesn't contribute anything. In that case the
+         *        problematic IPC (LP: #1395421) will instead occur in buffer
+         *        acquisition calls when we composite the next frame.
+         */
         renderable_list.clear();
     }
 
