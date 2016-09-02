@@ -160,7 +160,9 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event
  * \param [in] event The event
  * \return           The associated MirCloseSurfaceEvent
  */
+/// @cond
 __attribute__ ((deprecated))
+/// @endcond
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
 
 /**

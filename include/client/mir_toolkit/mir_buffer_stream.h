@@ -140,7 +140,9 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  *   \return                  One of mir_platform_type_android or 
  *                            mir_platform_type_gbm
  */
+/// @cond
 __attribute__ ((deprecated))
+/// @endcond
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 
 /**
