@@ -39,6 +39,32 @@ mgn::Platform::Platform(
 {
 }
 
+namespace mir {
+namespace graphics {
+namespace nested {
+struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
+{
+    GraphicBufferAllocator(std::shared_ptr<HostConnection> const& connection) :
+        connection(connection)
+    {
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(
+        BufferProperties const& buffer_properties)
+    {
+        printf("MAKE A NESTED BUFF\n");
+        return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+    }
+
+    virtual std::vector<MirPixelFormat> supported_pixel_formats()
+    {
+        return {mir_pixel_format_abgr_8888};
+    }
+
+    std::shared_ptr<HostConnection> const connection;
+};
+}}}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
     return guest_platform->create_buffer_allocator();
