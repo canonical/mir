@@ -101,6 +101,19 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
+    /*
+     * If we wanted more current data (when the compositor is idle and missed
+     * the last frame) then we could do this on demand. However that would
+     * require the caller (Display::last_frame_on) to set the EGL context
+     * first each time, which is less efficient and more complicated than
+     * just getting the sync values here.
+     *   It actually doesn't matter in the end if we only have the sync values
+     * of the last frame used being older than the last physical frame. Because
+     * in that case the client would just end up underestimating the next
+     * frame deadline, render immediately without blocking, and the compositor
+     * would wake up and catch up with the display. So it's what we want
+     * anyway.
+     */
     int64_t ust_usec, msc, sbc;
     if (eglGetSyncValues &&
         eglGetSyncValues(egl_dpy, egl_surf, &ust_usec, &msc, &sbc))
