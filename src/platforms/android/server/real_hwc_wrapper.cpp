@@ -71,7 +71,7 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
     // on various devices confirms this is the case...
     if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
         callbacks->self->vsync(display_name(display),
-                               mg::Frame::Timestamp{CLOCK_MONOTONIC, timestamp/1000});
+                               mg::Frame::Timestamp{CLOCK_MONOTONIC, timestamp});
 }
 
 static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)

@@ -57,13 +57,17 @@ void AtomicFrame::report_new_frame(std::lock_guard<std::mutex> const&)
 
     // long long to match printf format
     long long msc = frame.msc,
-              ust = frame.ust.microseconds,
-              interval = frame.ust.microseconds - prev_ust.microseconds,
-              now = Frame::Timestamp::now(frame.ust.clock_id).microseconds,
-              age = now - ust;
+              ust_ns = frame.ust.nanoseconds,
+              interval_ns = frame.ust.nanoseconds - prev_ust.nanoseconds,
+              now_ns = Frame::Timestamp::now(frame.ust.clock_id).nanoseconds,
+              age_ns = now_ns - ust_ns;
+    static const char usec_utf8[] = "\xce\xbcs";
     mir::log_debug(
-        "AtomicFrame %p: #%lld at %lld.%06llds (%lld\xce\xbcs ago) interval %lld\xce\xbcs",
-        (void*)this, msc, ust/1000000, ust%1000000, age, interval);
+        "AtomicFrame %p: #%lld at %lld.%06llds (%lld%s ago) interval %lld%s",
+        (void*)this,
+        msc, ust_ns/1000000000, (ust_ns%1000000000)/1000,
+        age_ns/1000, usec_utf8,
+        interval_ns/1000, usec_utf8);
 
     prev_ust = frame.ust;
 }

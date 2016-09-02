@@ -101,13 +101,13 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
-    int64_t ust, msc, sbc;
+    int64_t ust_usec, msc, sbc;
     if (eglGetSyncValues &&
-        eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
+        eglGetSyncValues(egl_dpy, egl_surf, &ust_usec, &msc, &sbc))
     {
         // EGL_CHROMIUM_get_sync_values says to use CLOCK_MONOTONIC and
         // measurements confirm that's what Mesa is using...
-        last_frame->store({msc, {CLOCK_MONOTONIC, ust}});
+        last_frame->store({msc, {CLOCK_MONOTONIC, ust_usec*1000}});
         (void)sbc; // unused
     }
     else  // Extension not available? Fall back to a reasonable estimate:

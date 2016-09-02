@@ -43,15 +43,26 @@ struct Frame
     struct Timestamp
     {
         clockid_t clock_id;
-        int64_t microseconds;
-        Timestamp() : clock_id{CLOCK_MONOTONIC}, microseconds{0} {}
-        // Note sure why gcc-4.9 (vivid) demands this TODO
-        Timestamp(clockid_t clk, int64_t usec) : clock_id{clk}, microseconds{usec} {}
+        int64_t nanoseconds;
+
+        Timestamp()
+            : clock_id{CLOCK_MONOTONIC}, nanoseconds{0}
+        {
+        }
+        // Not sure why gcc-4.9 (vivid) demands this. TODO
+        Timestamp(clockid_t clk, int64_t ns)
+            : clock_id{clk}, nanoseconds{ns}
+        {
+        }
+        Timestamp(clockid_t clk, struct timespec const& ts)
+            : clock_id{clk}, nanoseconds{ts.tv_sec*1000000000LL + ts.tv_nsec}
+        {
+        }
         static Timestamp now(clockid_t clock_id)
         {
             struct timespec ts;
             clock_gettime(clock_id, &ts);
-            return Timestamp(clock_id, ts.tv_sec*1000000LL + ts.tv_nsec/1000);
+            return Timestamp(clock_id, ts);
         }
     };
 
