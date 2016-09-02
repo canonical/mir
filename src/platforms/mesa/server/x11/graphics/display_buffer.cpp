@@ -101,11 +101,15 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
-    if (eglGetSyncValues)
+    int64_t ust, msc, sbc;
+    if (eglGetSyncValues &&
+        eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
     {
-        int64_t ust, msc, sbc;
-        if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
-            last_frame->store({msc, {CLOCK_MONOTONIC, ust}});
+        last_frame->store({msc, {CLOCK_MONOTONIC, ust}});
+    }
+    else  // Extension not available? Fall back to a reasonable estimate:
+    {
+        last_frame->increment_now();
     }
 }
 
