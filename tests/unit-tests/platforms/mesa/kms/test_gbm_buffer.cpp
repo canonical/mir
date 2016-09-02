@@ -139,7 +139,7 @@ TEST_F(GBMBufferTest, stride_has_sane_value)
 
     auto buffer(allocator->alloc_buffer(buffer_properties));
 
-    ASSERT_LE(minimum, buffer->stride());
+    ASSERT_LE(minimum, geom::Stride{buffer->native_buffer_handle()->stride});
 }
 
 TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)

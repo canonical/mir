@@ -60,11 +60,6 @@ geom::Size mc::TemporaryBuffer::size() const
     return buffer->size();
 }
 
-geom::Stride mc::TemporaryBuffer::stride() const
-{
-    return buffer->stride();
-}
-
 MirPixelFormat mc::TemporaryBuffer::pixel_format() const
 {
     return buffer->pixel_format();
