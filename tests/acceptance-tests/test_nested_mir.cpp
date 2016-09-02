@@ -1022,7 +1022,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(1))
-        .WillRepeatedly(InvokeWithoutArgs([&]{ condition.raise(); }));
+        .WillOnce(InvokeWithoutArgs([&]{ condition.raise(); }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
     mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
