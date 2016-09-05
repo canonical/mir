@@ -307,7 +307,8 @@ void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
      *     (LP: #1374318)
      */
     last_frame[name].increment_with_timestamp(timestamp);
-    display_report->report_vsync(as_output_id(name).as_value());
+    display_report->report_vsync(as_output_id(name).as_value(),
+                                 last_frame[name].load());
 }
 
 void mga::Display::register_configuration_change_handler(

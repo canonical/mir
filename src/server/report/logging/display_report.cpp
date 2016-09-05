@@ -147,7 +147,8 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     }
 }
 
-void mrl::DisplayReport::report_vsync(unsigned int display_id)
+void mrl::DisplayReport::report_vsync(unsigned int display_id,
+                                      graphics::Frame const&)
 {
     using namespace std::chrono;
     seconds const static report_interval{1};

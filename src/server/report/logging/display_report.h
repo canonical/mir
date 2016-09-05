@@ -33,6 +33,7 @@ namespace logging
 {
 class Logger;
 }
+namespace graphics { struct Frame; }
 namespace report
 {
 namespace logging
@@ -55,7 +56,7 @@ class DisplayReport : public graphics::DisplayReport
     virtual void report_successful_egl_buffer_swap_on_construction() override;
     virtual void report_successful_drm_mode_set_crtc_on_construction() override;
     virtual void report_successful_display_construction() override;
-    virtual void report_vsync(unsigned int display_id) override;
+    virtual void report_vsync(unsigned int display_id, graphics::Frame const&) override;
     virtual void report_drm_master_failure(int error) override;
     virtual void report_vt_switch_away_failure() override;
     virtual void report_vt_switch_back_failure() override;

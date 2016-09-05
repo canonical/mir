@@ -17,6 +17,7 @@
  */
 
 #include "src/server/report/logging/display_report.h"
+#include "mir/graphics/frame.h"
 #include "mir/logging/logger.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -137,8 +138,9 @@ TEST_F(DisplayReport, reports_vsync)
         component));
     mrl::DisplayReport report(logger, clock);
 
-    report.report_vsync(display1_id);
-    report.report_vsync(display2_id);
+    mir::graphics::Frame f;
+    report.report_vsync(display1_id, f);
+    report.report_vsync(display2_id, f);
     clock->advance_by(interval);
-    report.report_vsync(display1_id);
+    report.report_vsync(display1_id, f);
 }
