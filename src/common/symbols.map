@@ -356,4 +356,5 @@ MIR_COMMON_0.25 {
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
     };
+  local: *;
 };
