@@ -34,7 +34,6 @@ public:
     void increment_now();
     void increment_with_timestamp(Frame::Timestamp t);
 private:
-    void report_new_frame(std::lock_guard<std::mutex> const&);
     mutable std::mutex mutex;
     Frame frame;
     Frame::Timestamp prev_ust;

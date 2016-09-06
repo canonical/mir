@@ -16,8 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_LOG_COMPONENT "graphics"
 #include "display_report.h"
 #include "mir/logging/logger.h"
+#include "mir/log.h"
 #include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>
@@ -29,8 +31,7 @@ mrl::DisplayReport::DisplayReport(
     std::shared_ptr<ml::Logger> const& logger,
     std::shared_ptr<time::Clock> const& clock) :
     logger(logger),
-    clock(clock),
-    last_report(clock->now())
+    clock(clock)
 {
 }
 
@@ -40,7 +41,7 @@ mrl::DisplayReport::~DisplayReport()
 
 const char* mrl::DisplayReport::component()
 {
-    static const char* s = "graphics";
+    static const char* s = MIR_LOG_COMPONENT;
     return s;
 }
 
@@ -148,22 +149,28 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
 }
 
 void mrl::DisplayReport::report_vsync(unsigned int display_id,
-                                      graphics::Frame const&)
+                                      graphics::Frame const& frame)
 {
-    using namespace std::chrono;
-    seconds const static report_interval{1};
-    std::unique_lock<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
-    auto now = clock->now();
-    event_map[display_id]++;
-    if (now > last_report + report_interval)
+    if (prev_frame.msc || prev_frame.ust.nanoseconds)
     {
-        for(auto const& event : event_map)
-            logger->log(ml::Severity::informational,
-                std::to_string(event.second) + " vsync events on [" +
-                std::to_string(event.first) + "] over " +
-                std::to_string(duration_cast<milliseconds>(now - last_report).count()) + "ms",
-                component());
-        event_map.clear();
-        last_report = now;
+        auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
+
+        // long long to match printf format on all architectures
+        const long long msc = frame.msc,
+                        ust_ns = frame.ust.nanoseconds,
+                        interval_ns = frame.ust.nanoseconds -
+                                      prev_frame.ust.nanoseconds,
+                        now_ns = now.nanoseconds,
+                        age_ns = now_ns - ust_ns;
+
+        static const char usec_utf8[] = "\xce\xbcs";
+
+        mir::log_info(
+            "vsync %u: #%lld at %lld.%06llds (%lld%s ago) interval %lld%s",
+            display_id,
+            msc, ust_ns/1000000000, (ust_ns%1000000000)/1000,
+            age_ns/1000, usec_utf8,
+            interval_ns/1000, usec_utf8);
     }
+    prev_frame = frame;
 }

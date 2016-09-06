@@ -31,7 +31,6 @@ void AtomicFrame::store(Frame const& f)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame = f;
-    report_new_frame(lock);
 }
 
 void AtomicFrame::increment_now()
@@ -44,32 +43,6 @@ void AtomicFrame::increment_with_timestamp(Frame::Timestamp t)
     std::lock_guard<decltype(mutex)> lock(mutex);
     frame.ust = t;
     frame.msc++;
-    report_new_frame(lock);
-}
-
-void AtomicFrame::report_new_frame(std::lock_guard<std::mutex> const&)
-{
-    // In future someone may choose to make this call a proper report but
-    // for the time being we only need a little logging during development...
-
-    // Enable this only during development
-    if (0) return;
-
-    // long long to match printf format
-    long long msc = frame.msc,
-              ust_ns = frame.ust.nanoseconds,
-              interval_ns = frame.ust.nanoseconds - prev_ust.nanoseconds,
-              now_ns = Frame::Timestamp::now(frame.ust.clock_id).nanoseconds,
-              age_ns = now_ns - ust_ns;
-    static const char usec_utf8[] = "\xce\xbcs";
-    mir::log_debug(
-        "AtomicFrame %p: #%lld at %lld.%06llds (%lld%s ago) interval %lld%s",
-        (void*)this,
-        msc, ust_ns/1000000000, (ust_ns%1000000000)/1000,
-        age_ns/1000, usec_utf8,
-        interval_ns/1000, usec_utf8);
-
-    prev_ust = frame.ust;
 }
 
 }} // namespace mir::graphics
