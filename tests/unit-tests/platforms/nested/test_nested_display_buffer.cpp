@@ -20,6 +20,7 @@
 #include "src/server/graphics/nested/native_buffer.h"
 #include "src/server/graphics/nested/host_stream.h"
 #include "src/server/graphics/nested/host_chain.h"
+#include "src/server/graphics/nested/surface_spec.h"
 
 #include "mir/events/event_builders.h"
 
@@ -72,7 +73,7 @@ public:
             event_handler(nullptr, ev.get(), event_context);
     }
 
-    void set_content(int) override
+    void apply_spec(mgn::SurfaceSpec&) override
     {
     }
 private:
@@ -85,7 +86,7 @@ struct MockHostSurface : mgn::HostSurface
 {
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
     MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
-    MOCK_METHOD1(set_content, void(int));
+    MOCK_METHOD1(apply_spec, void(mgn::SurfaceSpec&));
 };
 
 struct MockNestedChain : mgn::HostChain
@@ -181,7 +182,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
         .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
     EXPECT_CALL(mock_host_connection, create_chain())
         .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
-    EXPECT_CALL(mock_host_surface, set_content(_));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
     EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
@@ -206,7 +207,7 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
     EXPECT_CALL(mock_host_connection, create_chain())
         .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
 
-    EXPECT_CALL(mock_host_surface, set_content(_))
+    EXPECT_CALL(mock_host_surface, apply_spec(_))
         .Times(2);
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));

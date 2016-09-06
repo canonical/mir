@@ -114,7 +114,7 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void set_content(int) override
+    void apply_spec(mgn::SurfaceSpec&) override
     {
     }
 

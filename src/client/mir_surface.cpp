@@ -77,7 +77,7 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
     }
 }
 
-MirSurfaceSpec::MirSurfaceSpec() = default;
+MirSurfaceSpec::MirSurfaceSpec() noexcept = default;
 
 MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}
