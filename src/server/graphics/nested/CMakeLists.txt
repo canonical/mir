@@ -2,6 +2,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 add_library(
   mirnestedgraphics OBJECT
 
@@ -14,4 +15,5 @@ add_library(
   platform.cpp
   buffer.cpp
   platform_image_factory.cpp
+  surface_spec.cpp
 )

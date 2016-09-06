@@ -550,9 +550,9 @@ catch (std::exception const& ex)
     std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
 }
 
-MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection*)
 {
-    return mir_create_surface_spec(connection);
+    return new MirSurfaceSpec{};
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)

@@ -116,7 +116,7 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void set_content(int) override
+    void apply_spec(mgn::SurfaceSpec&) override
     {
     }
 
@@ -524,6 +524,7 @@ void abuffer_created(MirBuffer* buffer, void* context)
 
 void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* c)
 {
+    printf("INCOMING BUFFER\n");
     std::unique_lock<std::mutex> lk(c->mut);
     c->b = b;
     c->cv.notify_all();
@@ -536,7 +537,6 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     c.push_back(std::make_shared<BufferCreation>(this, count++));
     auto r = c.back().get(); 
 
-    printf("MAKE BE\n");
     mir_connection_allocate_buffer(
         mir_connection,
         properties.size.width.as_int(),
@@ -550,8 +550,9 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     if (!mir_buffer_is_valid(r->b))
         BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
 
+    printf("MAKE BE %X\n", (int)(long) r->b);
     auto ar = std::make_shared<XNativeBuffer>(r->b);
-    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
+//    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
     for(auto it = c.begin(); it != c.end();)
     {
         if (r->count == (*it)->count)

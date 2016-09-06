@@ -30,7 +30,7 @@ namespace graphics
 {
 namespace nested
 {
-
+class SurfaceSpec;
 class HostSurface
 {
 public:
@@ -39,7 +39,7 @@ public:
     virtual EGLNativeWindowType egl_native_window() = 0;
     virtual void set_event_handler(mir_surface_event_callback cb,
                                    void* context) = 0;
-    virtual void set_content(int) = 0;
+    virtual void apply_spec(SurfaceSpec&) = 0;
 protected:
     HostSurface() = default;
     HostSurface(HostSurface const&) = delete;

@@ -26,6 +26,7 @@ namespace mg = mir::graphics;
 void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
+    printf("SCHEDULE...\n");
     auto it = std::find(queue.begin(), queue.end(), buffer);
     if (it != queue.end())
         queue.erase(it);
