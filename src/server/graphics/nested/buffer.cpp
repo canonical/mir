@@ -16,10 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "host_connection.h"
-#include "mir_toolkit/mir_buffer.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/renderer/gl/texture_source.h"
+#include "mir/graphics/egl_extensions.h"
+#include "mir_toolkit/mir_buffer.h"
+#include "host_connection.h"
 #include "buffer.h"
+#include "egl_image_factory.h"
+#include "native_buffer.h"
+
+#include <map>
+#include <chrono>
 #include <string.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -27,22 +34,88 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mrs = mir::renderer::software;
+namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
 namespace
 {
-class PixelAccess : public mg::NativeBufferBase,
-                    public mrs::PixelSource
+class TextureAccess :
+    public mg::NativeBufferBase,
+    public mrg::TextureSource
 {
 public:
-    PixelAccess(
+    TextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<MirBuffer> const& native_buffer,
-        std::shared_ptr<mgn::HostConnection> const& connection) :
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
+        std::shared_ptr<mgn::HostConnection> const& connection,
+        std::shared_ptr<mgn::EglImageFactory> const& factory) :
         buffer(buffer),
         native_buffer(native_buffer),
         connection(connection),
-        stride_(geom::Stride{connection->get_graphics_region(native_buffer.get()).stride})
+        factory(factory)
+    {
+    }
+
+    void bind() override
+    {
+        using namespace std::chrono;
+        native_buffer->sync(mir_read, duration_cast<nanoseconds>(seconds(1)));
+
+        ImageResources resources
+        {
+            eglGetCurrentDisplay(),
+            eglGetCurrentContext()
+        };
+
+        EGLImageKHR image;
+        auto it = egl_image_map.find(resources);
+        if (it == egl_image_map.end())
+        {
+            static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+            auto i = factory->create_egl_image_from(*native_buffer, resources.first, image_attrs);
+            image = *i;
+            egl_image_map[resources] = std::move(i);
+        }
+        else
+        {
+            image = *(it->second);
+        }
+
+        egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+    }
+
+    void gl_bind_to_texture() override
+    {
+        bind();
+    }
+
+    void secure_for_render() override
+    {
+    }
+
+protected:
+    mgn::Buffer& buffer;
+    std::shared_ptr<mgn::NativeBuffer> const native_buffer;
+    std::shared_ptr<mgn::HostConnection> const connection;
+private:
+    std::shared_ptr<mgn::EglImageFactory> const factory;
+    mg::EGLExtensions egl_extensions;
+    typedef std::pair<EGLDisplay, EGLContext> ImageResources;
+    std::map<ImageResources, mgn::EGLImageUPtr> egl_image_map;
+};
+
+class PixelAndTextureAccess :
+    public TextureAccess,
+    public mrs::PixelSource
+{
+public:
+    PixelAndTextureAccess(
+        mgn::Buffer& buffer,
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
+        std::shared_ptr<mgn::HostConnection> const& connection,
+        std::shared_ptr<mgn::EglImageFactory> const& factory) :
+        TextureAccess(buffer, native_buffer, connection, factory),
+        stride_(geom::Stride{native_buffer->get_graphics_region().stride})
     {
     }
 
@@ -53,7 +126,7 @@ public:
         if (buffer_size_bytes != pixel_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         if (!region.vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
@@ -67,7 +140,7 @@ public:
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         do_with_pixels(reinterpret_cast<unsigned char*>(region.vaddr));
     }
 
@@ -77,9 +150,6 @@ public:
     }
 
 private:
-    mgn::Buffer& buffer;
-    std::shared_ptr<MirBuffer> const native_buffer;
-    std::shared_ptr<mgn::HostConnection> const connection;
     geom::Stride const stride_;
 };
 }
@@ -87,15 +157,19 @@ private:
 std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
 {
     if (usage == mg::BufferUsage::software)
-        return std::make_shared<PixelAccess>(*this, buffer, connection);
+        return std::make_shared<PixelAndTextureAccess>(*this, buffer, connection, factory);
+    else if (usage == mg::BufferUsage::hardware)
+        return std::make_shared<TextureAccess>(*this, buffer, connection, factory);
     else
-        return nullptr;
+        BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
 }
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<EglImageFactory> const& factory,
     mg::BufferProperties const& properties) :
     connection(connection),
+    factory(factory),
     buffer(connection->create_buffer(properties)),
     native_base(create_native_base(properties.usage))
 {
@@ -103,17 +177,17 @@ mgn::Buffer::Buffer(
 
 std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 {
-    return nullptr;
+    return buffer;
 }
 
 geom::Size mgn::Buffer::size() const
 {
-    return geom::Size{ mir_buffer_get_width(buffer.get()), mir_buffer_get_height(buffer.get()) };
+    return buffer->size();
 }
 
 MirPixelFormat mgn::Buffer::pixel_format() const
 {
-    return mir_buffer_get_pixel_format(buffer.get());
+    return buffer->format();
 }
 
 mg::NativeBufferBase* mgn::Buffer::native_buffer_base()

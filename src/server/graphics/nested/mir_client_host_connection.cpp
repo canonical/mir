@@ -20,6 +20,7 @@
 #include "host_surface.h"
 #include "host_stream.h"
 #include "host_chain.h"
+#include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/raii.h"
@@ -41,6 +42,7 @@
 
 #include <cstring>
 
+namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mi = mir::input;
@@ -474,21 +476,89 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
 
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yut"));
 }
 
-std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferProperties const&)
+namespace
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+struct XNativeBuffer : mgn::NativeBuffer
+{
+    XNativeBuffer(MirBuffer* b) : b(b) { printf("MAKE B %X\n", (int)(long)b); }
+    ~XNativeBuffer() { printf("DESTROY BE\n"); mir_buffer_release(b); }
+
+    void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
+    {
+        mir_buffer_wait_for_access(b, access, ns.count());
+    }
+    MirBuffer* client_handle() const override
+    {
+        return b;
+    }
+    MirNativeBuffer* get_native_handle() override
+    {
+        return mir_buffer_get_native_buffer(b, mir_read_write);
+    }
+    MirGraphicsRegion get_graphics_region() override
+    {
+        return mir_buffer_get_graphics_region(b, mir_read_write);
+    }
+    geom::Size size() const override
+    {
+        return {mir_buffer_get_width(b), mir_buffer_get_height(b) };
+    }
+    MirPixelFormat format() const override
+    {
+        return mir_buffer_get_pixel_format(b);
+    }
+    MirBuffer*b;
+};
 }
 
-MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
+namespace {
+void abuffer_created(MirBuffer* buffer, void* context)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+    auto connection = static_cast<mgn::MirClientHostConnection::BufferCreation*>(context);
+    connection->connection->buffer_created(buffer, connection);
+}
 }
 
-MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
+void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* c)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+    std::unique_lock<std::mutex> lk(c->mut);
+    c->b = b;
+    c->cv.notify_all();
+}
+
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const& properties)
+{
+    c.push_back(std::make_shared<BufferCreation>(this, count++));
+    auto r = c.back().get(); 
+
+    printf("MAKE BE\n");
+    mir_connection_allocate_buffer(
+        mir_connection,
+        properties.size.width.as_int(),
+        properties.size.height.as_int(),
+        properties.format,
+        mir_buffer_usage_hardware,
+        abuffer_created, r);
+
+    std::unique_lock<std::mutex> lk(r->mut);
+    r->cv.wait(lk, [&]{ return r->b; });
+    if (!mir_buffer_is_valid(r->b))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+
+    auto ar = std::make_shared<XNativeBuffer>(r->b);
+    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
+    for(auto it = c.begin(); it != c.end();)
+    {
+        if (r->count == (*it)->count)
+            it = c.erase(it);
+        else
+            it++;
+    }
+
+    return ar;
 }

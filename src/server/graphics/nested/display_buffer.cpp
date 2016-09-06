@@ -114,6 +114,8 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     if (!nested_buffer)
         return false;
 
+    printf("BOOYAKACHA\n");
+    return false;
     if (!host_chain)
         host_chain = host_connection->create_chain();
 

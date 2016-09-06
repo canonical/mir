@@ -19,6 +19,8 @@
 #include "platform.h"
 #include "host_connection.h"
 #include "display.h"
+#include "platform_image_factory.h"
+#include "buffer.h"
 #include "mir/shared_library.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
@@ -52,8 +54,8 @@ struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
     std::shared_ptr<mg::Buffer> alloc_buffer(
         BufferProperties const& buffer_properties)
     {
-        printf("MAKE A NESTED BUFF\n");
-        return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+        auto factory = std::make_shared<mgn::AndroidImageFactory>();
+        return std::make_shared<mgn::Buffer>(connection, factory, buffer_properties);
     }
 
     virtual std::vector<MirPixelFormat> supported_pixel_formats()
@@ -67,7 +69,8 @@ struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    return guest_platform->create_buffer_allocator();
+    return mir::make_module_ptr<GraphicBufferAllocator>(connection);
+//    return guest_platform->create_buffer_allocator();
 }
 
 mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
