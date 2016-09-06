@@ -29,7 +29,7 @@ namespace graphics
 namespace android
 {
 
-enum DisplayName
+enum class DisplayName
 {
     primary  = HWC_DISPLAY_PRIMARY,  // = 0
     external = HWC_DISPLAY_EXTERNAL, // = 1

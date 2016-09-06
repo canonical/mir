@@ -306,9 +306,9 @@ void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
      *     get a callback on every frame, even when the compositor is idle.
      *     (LP: #1374318)
      */
-    last_frame[name].increment_with_timestamp(timestamp);
-    display_report->report_vsync(as_output_id(name).as_value(),
-                                 last_frame[name].load());
+    auto& f = last_frame[static_cast<int>(name)];
+    f.increment_with_timestamp(timestamp);
+    display_report->report_vsync(as_output_id(name).as_value(), f.load());
 }
 
 void mga::Display::register_configuration_change_handler(
