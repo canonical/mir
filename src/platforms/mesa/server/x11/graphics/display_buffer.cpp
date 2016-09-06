@@ -32,12 +32,14 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                   EGLSurface const s,
                                   EGLContext const c,
                                   std::shared_ptr<AtomicFrame> const& f,
+                                  std::shared_ptr<DisplayReport> const& r,
                                   MirOrientation const o)
                                   : size{sz},
                                     egl_dpy{d},
                                     egl_surf{s},
                                     egl_ctx{c},
                                     last_frame{f},
+                                    report{r},
                                     orientation_{o}
 {
     /*
@@ -127,6 +129,8 @@ void mgx::DisplayBuffer::swap_buffers()
     {
         last_frame->increment_now();
     }
+
+    report->report_vsync(0, last_frame->load());
 }
 
 void mgx::DisplayBuffer::bind()

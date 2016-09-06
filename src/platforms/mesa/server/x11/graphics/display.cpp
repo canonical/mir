@@ -270,7 +270,8 @@ mgx::X11EGLSurface::operator EGLSurface() const
 
 mgx::Display::Display(::Display* x_dpy,
                       geom::Size const size,
-                      GLConfig const& gl_config)
+                      GLConfig const& gl_config,
+                      std::shared_ptr<DisplayReport> const& report)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
       pixel_width{get_pixel_width(x_dpy)},
@@ -284,6 +285,7 @@ mgx::Display::Display(::Display* x_dpy,
       egl_surface{X11EGLSurface(egl_display,
                                 win.egl_config(),
                                 win)},
+      report{report},
       orientation{mir_orientation_normal},
       last_frame{std::make_shared<AtomicFrame>()}
 {
@@ -297,6 +299,7 @@ mgx::Display::Display(::Display* x_dpy,
                                              egl_surface,
                                              egl_context,
                                              last_frame,
+                                             report,
                                              orientation));
 }
 
