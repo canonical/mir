@@ -370,8 +370,9 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
 mg::Frame mge::Display::last_frame_on(unsigned) const
 {
     /*
-     * TODO: Implement this properly using the hardware counters from somewhere.
-     *       Or just use the less precise AtomicFrame.increment() in post().
+     * TODO: Implement this later when we have the hardware + driver to test on.
+     *       If no proper hardware counters are available, just call
+     *       AtomicFrame.increment_now() in post() above.
      */
     return {};
 }

@@ -311,6 +311,13 @@ void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
     display_report->report_vsync(as_output_id(name).as_value(), f.load());
 }
 
+mg::Frame mga::Display::last_frame_on(unsigned output_id) const
+{
+    if (output_id >= sizeof(last_frame)/sizeof(last_frame[0]))
+         throw std::logic_error("last_frame_on(<invalid output_id>)");
+    return last_frame[output_id].load();
+}
+
 void mga::Display::register_configuration_change_handler(
     EventHandlerRegister& event_handler,
     DisplayConfigurationChangeHandler const& change_handler)
@@ -367,11 +374,4 @@ mg::NativeDisplay* mga::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 {
     return std::make_unique<mga::PbufferGLContext>(gl_context);
-}
-
-mg::Frame mga::Display::last_frame_on(unsigned output_id) const
-{
-    if (output_id >= sizeof(last_frame)/sizeof(last_frame[0]))
-         throw std::logic_error("last_frame_on(<invalid output_id>)");
-    return last_frame[output_id].load();
 }
