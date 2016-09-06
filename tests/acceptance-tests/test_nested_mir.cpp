@@ -1419,7 +1419,7 @@ TEST_F(NestedServer,
         &client_config_changed);
 
     client.update_display_configuration_applied_to(display,
-        [](MirDisplayConfiguration* config) { config->outputs->used = mir_orientation_inverted; });
+        [](MirDisplayConfiguration* config) { config->outputs->used = true; });
 
     auto const new_hw_config = hw_display_config_for_unplug();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -720,6 +720,29 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
+
+void mir_surface_spec_set_placement(
+    MirSurfaceSpec*     spec,
+    MirRectangle const* rect,
+    MirPlacementGravity rect_gravity,
+    MirPlacementGravity surface_gravity,
+    MirPlacementHints   placement_hints,
+    int                 offset_dx,
+    int                 offset_dy)
+try
+{
+    spec->aux_rect = *rect;
+    spec->aux_rect_placement_gravity = rect_gravity;
+    spec->surface_placement_gravity = surface_gravity;
+    spec->placement_hints = placement_hints;
+    spec->aux_rect_placement_offset_x = offset_dx;
+    spec->aux_rect_placement_offset_y = offset_dy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
