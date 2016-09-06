@@ -35,7 +35,7 @@ struct StubClientBufferFactory : public client::ClientBufferFactory
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size, MirPixelFormat pf)
     {
-        return std::make_shared<StubClientBuffer>(package, size, pf);
+        return std::make_shared<StubClientBuffer>(package, size, pf, nullptr);
     }
 };
 

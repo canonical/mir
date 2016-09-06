@@ -235,7 +235,8 @@ MirWaitHandle* mir_connection_set_base_display_config(
  *
  * The display configuration will automatically revert to the previous
  * settings after timeout_seconds unless confirmed by a call to
- * mir_connection_confirm_base_display_configuration().
+ * mir_connection_confirm_base_display_configuration(), or is reverted
+ * immediately after a call to mir_connection_cancel_display_configuration_preview().
  *
  * If this request succeeds a configuration change event is sent to the
  * client. Clients should register a callback with
@@ -278,6 +279,22 @@ void mir_connection_preview_base_display_configuration(
 void mir_connection_confirm_base_display_configuration(
     MirConnection* connection,
     MirDisplayConfig const* configuration);
+
+/**
+ * Cancel a pending base display configuration preview.
+ *
+ * If this request succeeds a configuration change event is sent to the client,
+ * with the now-current base display configuration.
+ *
+ * This call will fail if there is no display configuration preview current.
+ * A client can detect this by registering a callback with
+ * mir_connection_set_error_callback() and checking for
+ * mir_display_configuration_error_no_preview_in_progress.
+ *
+ * \param [in] connection   The connection
+ */
+void mir_connection_cancel_base_display_configuration_preview(
+    MirConnection* connection);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -122,6 +122,11 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(state);
     SERIALIZE_OPTION_IF_SET(pref_orientation);
     SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(placement_hints);
+    SERIALIZE_OPTION_IF_SET(surface_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_x);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_y);
     SERIALIZE_OPTION_IF_SET(min_width);
     SERIALIZE_OPTION_IF_SET(min_height);
     SERIALIZE_OPTION_IF_SET(max_width);
@@ -392,12 +397,10 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         {
             if (!surface_proto->has_error())
                 surface_proto->set_error(error.what());
-            // failed to create buffer_stream, so clean up FDs it doesn't own
+            // Clean up surface_proto's direct fds; BufferStream has cleaned up any owned by
+            // surface_proto->buffer_stream()
             for (auto i = 0; i < surface_proto->fd_size(); i++)
                 ::close(surface_proto->fd(i));
-            if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
-                for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
-                    ::close(surface_proto->buffer_stream().buffer().fd(i));
         }
     }
 
@@ -833,9 +836,6 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     }
     catch (std::exception const& error)
     {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
         stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
             request);
@@ -1046,6 +1046,26 @@ void MirConnection::preview_base_display_configuration(
     };
 
     server.preview_base_display_configuration(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::cancel_base_display_configuration_preview()
+{
+    mp::Void request;
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
+    server.cancel_base_display_configuration_preview(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));

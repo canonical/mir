@@ -10,8 +10,6 @@ MIRPLATFORM_0.25 {
     mir::graphics::Buffer::native_buffer_handle*;
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
-    mir::graphics::Buffer::stride*;
-    mir::graphics::Buffer::write*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;
@@ -47,6 +45,7 @@ MIRPLATFORM_0.25 {
     mir::graphics::Display::create_hardware_cursor*;
     mir::graphics::Display::Display*;
     mir::graphics::Display::for_each_display_buffer*;
+    mir::graphics::Display::native_display*;
     mir::graphics::Display::pause*;
     mir::graphics::Display::register_configuration_change_handler*;
     mir::graphics::Display::register_pause_resume_handlers*;
@@ -62,11 +61,6 @@ MIRPLATFORM_0.25 {
     mir::graphics::GLConfig::GLConfig*;
     mir::graphics::GLConfig::operator*;
     mir::graphics::GLConfig::stencil_buffer_bits*;
-    mir::graphics::GLContext::?GLContext*;
-    mir::graphics::GLContext::GLContext*;
-    mir::graphics::GLContext::make_current*;
-    mir::graphics::GLContext::operator*;
-    mir::graphics::GLContext::release_current*;
     mir::graphics::GraphicBufferAllocator::alloc_buffer*;
     mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
     mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
@@ -128,6 +122,7 @@ MIRPLATFORM_0.25 {
     mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
+    mir::options::seat_report_opt*;
     mir::options::log_opt_value*;
     mir::options::lttng_opt_value*;
     mir::options::msg_processor_report_opt*;
@@ -161,7 +156,6 @@ MIRPLATFORM_0.25 {
     non-virtual?thunk?to?mir::graphics::DisplayConfiguration::valid*;
     non-virtual?thunk?to?mir::graphics::EventHandlerRegister::?EventHandlerRegister*;
     non-virtual?thunk?to?mir::graphics::GLConfig::?GLConfig*;
-    non-virtual?thunk?to?mir::graphics::GLContext::?GLContext*;
     non-virtual?thunk?to?mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
     non-virtual?thunk?to?mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     non-virtual?thunk?to?mir::graphics::Renderable::?Renderable*;
@@ -190,7 +184,6 @@ MIRPLATFORM_0.25 {
     typeinfo?for?mir::graphics::DisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::EventHandlerRegister;
     typeinfo?for?mir::graphics::GLConfig;
-    typeinfo?for?mir::graphics::GLContext;
     typeinfo?for?mir::graphics::GraphicBufferAllocator;
     typeinfo?for?mir::graphics::Platform;
     typeinfo?for?mir::graphics::PlatformIpcOperations;
@@ -217,7 +210,6 @@ MIRPLATFORM_0.25 {
     vtable?for?mir::graphics::DisplayConfigurationPolicy;
     vtable?for?mir::graphics::EventHandlerRegister;
     vtable?for?mir::graphics::GLConfig;
-    vtable?for?mir::graphics::GLContext;
     vtable?for?mir::graphics::GraphicBufferAllocator;
     vtable?for?mir::graphics::Platform;
     vtable?for?mir::graphics::PlatformIpcOperations;

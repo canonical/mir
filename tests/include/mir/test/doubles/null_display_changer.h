@@ -53,6 +53,10 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
     }
+    void cancel_base_configuration_preview(
+        std::shared_ptr<frontend::Session> const&)
+    {
+    }
 };
 }
 }

@@ -23,6 +23,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -37,6 +38,7 @@ namespace geometry
 {
 struct Rectangle;
 }
+namespace renderer { namespace gl { class Context; }}
 namespace graphics
 {
 class DisplayReport;
@@ -75,7 +77,7 @@ public:
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_config(MirPixelFormat format) const;
     EGLContext egl_context() const;
-    std::unique_ptr<graphics::GLContext> create_gl_context();
+    std::unique_ptr<renderer::gl::Context> create_gl_context();
 
     operator EGLDisplay() const { return egl_display; }
 
@@ -109,11 +111,13 @@ extern EGLint const nested_egl_context_attribs[];
 
 class HostConnection;
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
     Display(
-        std::shared_ptr<Platform> const& platform,
+        std::shared_ptr<graphics::Platform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
@@ -139,11 +143,13 @@ public:
     void resume() override;
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
+    NativeDisplay* native_display() override;
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+
 private:
-    std::shared_ptr<Platform> const platform;
+    std::shared_ptr<graphics::Platform> const platform;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;

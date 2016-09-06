@@ -27,7 +27,7 @@ namespace mir
 {
 namespace geometry
 {
-class Rectangle;
+struct Rectangle;
 }
 namespace test
 {

@@ -25,6 +25,7 @@
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"
+#include "nested/platform.h"
 #include "software_cursor.h"
 
 #include "mir/graphics/gl_config.h"
@@ -84,12 +85,10 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     auto const host_connection = the_host_connection();
 
                     platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
-
-                    auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
-                        "create_guest_platform",
-                        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-
-                    return create_guest_platform(the_display_report(), host_connection);
+                    return std::make_shared<mgn::Platform>(
+                        platform_library,
+                        host_connection,
+                        the_display_report());
                 }
 
                 // fallback to standalone if host socket is unset
@@ -149,20 +148,9 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            if (the_options()->is_set(options::host_socket_opt))
-            {
-                return std::make_shared<mgn::Display>(
-                    the_graphics_platform(),
-                    the_host_connection(),
-                    the_display_report(),
-                    the_display_configuration_policy(),
-                    the_gl_config());
-            }
-            {
-                return the_graphics_platform()->create_display(
-                    the_display_configuration_policy(),
-                    the_gl_config());
-            }
+            return the_graphics_platform()->create_display(
+                the_display_configuration_policy(),
+                the_gl_config());
         });
 }
 

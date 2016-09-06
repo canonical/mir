@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -103,9 +103,10 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
  * \param [in] parent       A valid parent surface for this tooltip.
- * \param [in] rect         A target zone relative to parent.
+ * \param [in] zone         A target zone relative to parent.
  * \return                  A handle that can be passed to mir_surface_create()
  *                          to complete construction.
+ *\deprecated use mir_connection_create_spec_for_tip() instead
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_tooltip(MirConnection* connection,
@@ -113,7 +114,42 @@ mir_connection_create_spec_for_tooltip(MirConnection* connection,
                                        int height,
                                        MirPixelFormat format,
                                        MirSurface* parent,
-                                       MirRectangle* zone);
+                                       MirRectangle* zone)
+    __attribute__((deprecated));
+
+/**
+ * Create a surface specification for a tip surface.
+ *
+ * Positioning of the surface is specified with respect to the parent surface
+ * via an adjacency rectangle. The server will attempt to choose an edge of the
+ * adjacency rectangle on which to place the surface taking in to account
+ * screen-edge proximity or similar constraints. In addition, the server can use
+ * the edge affinity hint to consider only horizontal or only vertical adjacency
+ * edges in the given rectangle.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this tip.
+ * \param [in] rect         The adjacency rectangle. The server is not
+ *                          guaranteed to create a surface at the requested
+ *                          location.
+ * \param [in] edge         The preferred edge direction to attach to. Use
+ *                          mir_edge_attachment_any for no preference.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_tip(MirConnection* connection,
+                                   int width,
+                                   int height,
+                                   MirPixelFormat format,
+                                   MirSurface* parent,
+                                   MirRectangle* rect,
+                                   MirEdgeAttachment edge);
 
 /**
  * Create a surface specification for a modal dialog surface.
@@ -529,6 +565,38 @@ void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome styl
  * \param [in] state The state you would like the pointer confinement to be in.
  */
 void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+
+/**
+ * Set the surface placement on the spec.
+ *
+ * \param [in] spec             the spec to update
+ * \param [in] rect             the destination rectangle to align with
+ * \param [in] rect_gravity     the point on \p rect to align with
+ * \param [in] surface_gravity  the point on the surface to align with
+ * \param [in] placement_hints  positioning hints to use when limited on space
+ * \param [in] offset_dx        horizontal offset to shift w.r.t. \p rect
+ * \param [in] offset_dy        vertical offset to shift w.r.t. \p rect
+ *
+ * Moves a surface to \p rect, aligning their reference points.
+ *
+ * \p rect is relative to the top-left corner of the parent surface.
+ * \p rect_gravity and \p surface_gravity determine the points on \p rect and
+ * the surface to pin together. \p rect's alignment point can be offset by
+ * \p offset_dx and \p offset_dy, which is equivalent to offsetting the
+ * position of the surface.
+ *
+ * \p placement_hints determine how the window should be positioned in the case
+ * that the surface would fall off-screen if placed in its ideal position.
+ * See \ref MirPlacementHints for details.
+ */
+void mir_surface_spec_set_placement(
+    MirSurfaceSpec*     spec,
+    const MirRectangle* rect,
+    MirPlacementGravity rect_gravity,
+    MirPlacementGravity surface_gravity,
+    MirPlacementHints   placement_hints,
+    int                 offset_dx,
+    int                 offset_dy);
 
 /**
  * Set the event handler to be called when events arrive for a surface.

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERER_H_
 #define MIR_TEST_DOUBLES_STUB_RENDERER_H_
 
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
 #include <thread>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class StubRenderer : public compositor::Renderer
+class StubRenderer : public renderer::Renderer
 {
 public:
     void set_viewport(geometry::Rectangle const&) override {}

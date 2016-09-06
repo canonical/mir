@@ -17,8 +17,8 @@
  */
 
 #include "default_display_buffer_compositor_factory.h"
-#include "mir/compositor/renderer_factory.h"
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer_factory.h"
+#include "mir/renderer/renderer.h"
 #include "mir/graphics/display_buffer.h"
 
 #include "default_display_buffer_compositor.h"
@@ -27,7 +27,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory(
-    std::shared_ptr<mc::RendererFactory> const& renderer_factory,
+    std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     renderer_factory{renderer_factory},
     report{report}

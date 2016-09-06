@@ -93,6 +93,7 @@ MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
+    host_surface->set_event_handler(nullptr, nullptr);
 }
 
 void mgn::detail::DisplayBuffer::event_thunk(

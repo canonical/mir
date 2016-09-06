@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/display_listener.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -50,10 +50,10 @@ namespace geom = mir::geometry;
 
 namespace
 {
-class StubRendererFactory : public mc::RendererFactory
+class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer>
+    std::unique_ptr<mir::renderer::Renderer>
         create_renderer_for(mg::DisplayBuffer&) override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
@@ -128,7 +128,6 @@ struct SurfaceStackCompositor : public testing::Test
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,
-            false,
             streams,
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mtd::StubInputSender>(),

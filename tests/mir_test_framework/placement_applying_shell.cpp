@@ -41,6 +41,7 @@ mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
 
     auto const id = wrapped->create_surface(session, creation_parameters, sink);
     auto const surface = session->surface(id);
+    latest_surface = surface;
 
     auto position= client_positions.find(params.name);
     if (position != client_positions.end())

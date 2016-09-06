@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
 #define MIR_GRAPHICS_X_GL_CONTEXT_H_
 
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 
 #include <EGL/egl.h>
 
@@ -31,7 +31,7 @@ namespace graphics
 namespace X
 {
 
-class XGLContext : public graphics::GLContext
+class XGLContext : public renderer::gl::Context
 {
 public:
     XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c);

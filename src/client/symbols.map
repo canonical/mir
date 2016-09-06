@@ -141,6 +141,7 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_name;
     mir_surface_spec_set_parent;
     mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_placement;
     mir_surface_spec_set_preferred_orientation;
     mir_surface_spec_set_state;
     mir_surface_spec_set_streams;
@@ -415,3 +416,13 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
     mir_input_device_state_event_device_pointer_buttons;
     mir_surface_spec_set_pointer_confinement;
 } MIR_CLIENT_0.22;
+
+MIR_CLIENT_0.25 {  # New functions in Mir 0.25
+  global:
+    mir_connection_create_spec_for_tip;
+    mir_output_get_current_mode_index; 
+    mir_output_get_preferred_mode_index;
+    mir_output_get_subpixel_arrangement;
+    mir_connection_cancel_base_display_configuration_preview;
+} MIR_CLIENT_0.24;
+

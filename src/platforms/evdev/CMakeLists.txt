@@ -27,9 +27,7 @@ add_library(mirplatforminputevdevobjects OBJECT
     platform.cpp
     )
 
-mir_add_library_with_symbols(mirplatforminputevdev MODULE
-  ${MIR_INPUT_PLATFORM_VERSION_SCRIPT}
-
+add_library(mirplatforminputevdev MODULE
   platform_factory.cpp
   $<TARGET_OBJECTS:mirplatforminputevdevobjects>
   $<TARGET_OBJECTS:mirevdevutilsobjects>
@@ -42,6 +40,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_INPUT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${MIR_INPUT_PLATFORM_VERSION_SCRIPT}"
+  LINK_DEPENDS ${MIR_INPUT_PLATFORM_VERSION_SCRIPT}
 )
 
 target_link_libraries(mirplatforminputevdev

@@ -13,10 +13,7 @@ configure_file(
 )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-mir_add_library_with_symbols(
-  mirplatformgraphicseglstreamkms MODULE
-
-  ${symbol_map}
+add_library(mirplatformgraphicseglstreamkms MODULE
   platform_symbols.cpp
   platform.cpp
   buffer_allocator.cpp
@@ -27,6 +24,7 @@ mir_add_library_with_symbols(
   kms_display_configuration.cpp
   egl_output.h
   egl_output.cpp
+  software_buffer.cpp
 )
 
 target_link_libraries(
@@ -50,6 +48,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 install(TARGETS mirplatformgraphicseglstreamkms LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

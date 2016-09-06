@@ -73,12 +73,19 @@ struct ShmMemoryRegion : mcl::MemoryRegion
     size_t const size_in_bytes;
 };
 
+std::shared_ptr<mir::graphics::NativeBuffer> to_native_buffer(MirBufferPackage const& package)
+{
+    auto buffer = std::make_shared<mir::graphics::NativeBuffer>();
+    *static_cast<MirBufferPackage*>(buffer.get()) = package;
+    return buffer;
+}
+
 }
 
 mcle::ClientBuffer::ClientBuffer(
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
-    : creation_package{package},
+    : creation_package{to_native_buffer(*package)},
       rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
@@ -122,7 +129,7 @@ MirPixelFormat mcle::ClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
+std::shared_ptr<mir::graphics::NativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
 {
     creation_package->age = age();
     return creation_package;
@@ -144,11 +151,11 @@ MirNativeBuffer* mcle::ClientBuffer::as_mir_native_buffer() const
     return native_buffer_handle().get();
 }
 
-void mcle::ClientBuffer::set_fence(MirNativeFence*, MirBufferAccess)
+void mcle::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
 {
 }
 
-MirNativeFence* mcle::ClientBuffer::get_fence() const
+MirNativeFence mcle::ClientBuffer::get_fence() const
 {
     return nullptr;
 }

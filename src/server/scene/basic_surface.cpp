@@ -26,7 +26,9 @@
 #include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/pixel_format_utils.h"
 #include "mir/geometry/displacement.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include "mir/scene/scene_report.h"
 #include "mir/scene/null_surface_observer.h"
@@ -45,6 +47,7 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
@@ -218,7 +221,6 @@ ms::BasicSurface::BasicSurface(
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
     MirPointerConfinementState state,
-    bool nonrectangular,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
@@ -229,7 +231,6 @@ ms::BasicSurface::BasicSurface(
     surface_alpha(1.0f),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
-    nonrectangular(nonrectangular),
     custom_input_rectangles(),
     surface_buffer_stream(default_stream(layers)),
     server_input_channel(input_channel),
@@ -249,13 +250,12 @@ ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
-    bool nonrectangular,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, state, nonrectangular, layers,
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, state, layers,
                  input_channel, input_sender, cursor_image, report)
 {
 }
@@ -654,15 +654,23 @@ struct CursorImageFromBuffer : public mg::CursorImage
         : buffer_size(buffer.size()),
           hotspot_(hotspot)
     {
-        buffer.read([&](unsigned char const* buffer_pixels)
+        auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
+        if (pixel_source)
         {
-            size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
-                * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
-            pixels = std::unique_ptr<unsigned char[]>(
-                new unsigned char[buffer_size_bytes]
-            );
-            memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
-        });
+            pixel_source->read([&](unsigned char const* buffer_pixels)
+            {
+                size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
+                    * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+                pixels = std::unique_ptr<unsigned char[]>(
+                    new unsigned char[buffer_size_bytes]
+                );
+                memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
+            });
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("could not read from buffer"));
+        }
     }
     void const* as_argb_8888() const
     {
@@ -797,13 +805,10 @@ public:
         geom::Rectangle const& position,
         glm::mat4 const& transform,
         float alpha,
-        bool shaped,
         mg::Renderable::ID id)
     : underlying_buffer_stream{stream},
-      compositor_buffer{nullptr},
       compositor_id{compositor_id},
       alpha_{alpha},
-      shaped_{shaped},
       screen_position_(position),
       transformation_(transform),
       id_(id)
@@ -831,7 +836,7 @@ public:
     { return transformation_; }
 
     bool shaped() const override
-    { return shaped_; }
+    { return mg::contains_alpha(underlying_buffer_stream->pixel_format()); }
  
     mg::Renderable::ID id() const override
     { return id_; }
@@ -840,10 +845,9 @@ private:
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
     void const*const compositor_id;
     float const alpha_;
-    bool const shaped_;
     geom::Rectangle const screen_position_;
     glm::mat4 const transformation_;
-    mg::Renderable::ID const id_; 
+    mg::Renderable::ID const id_;
 };
 }
 
@@ -914,7 +918,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
                 geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
-                transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
+                transformation_matrix, surface_alpha, info.stream.get()));
         }
     }
     return list;

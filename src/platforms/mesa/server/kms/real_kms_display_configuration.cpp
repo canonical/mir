@@ -69,6 +69,27 @@ kms_connector_type_to_output_type(uint32_t connector_type)
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
 }
 
+MirSubpixelArrangement kms_subpixel_to_mir_subpixel(uint32_t subpixel)
+{
+    switch (subpixel)
+    {
+    case DRM_MODE_SUBPIXEL_UNKNOWN:
+        return mir_subpixel_arrangement_unknown;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_RGB:
+        return mir_subpixel_arrangement_horizontal_rgb;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_BGR:
+        return mir_subpixel_arrangement_horizontal_bgr;
+    case DRM_MODE_SUBPIXEL_VERTICAL_RGB:
+        return mir_subpixel_arrangement_vertical_rgb;
+    case DRM_MODE_SUBPIXEL_VERTICAL_BGR:
+        return mir_subpixel_arrangement_vertical_bgr;
+    case DRM_MODE_SUBPIXEL_NONE:
+        return mir_subpixel_arrangement_none;
+    default:
+        return mir_subpixel_arrangement_unknown;
+    }
+}
+
 }
 
 mgm::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
@@ -220,7 +241,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
                            mir_power_mode_on, mir_orientation_normal,
-                           1.0f, mir_form_factor_monitor});
+                           1.0f, mir_form_factor_monitor, kms_subpixel_to_mir_subpixel(connector.subpixel)});
     }
     else
     {
@@ -247,6 +268,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.physical_size_mm = physical_size;
         output.connected = connected;
         output.current_format = mir_pixel_format_xrgb_8888;
+        output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector.subpixel);
     }
 }
 

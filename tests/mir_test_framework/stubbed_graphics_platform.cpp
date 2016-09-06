@@ -22,17 +22,15 @@
 #include "mir/graphics/buffer_ipc_message.h"
 
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
+#include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/test/pipe.h"
 #include "mir/libname.h"
-
-#ifdef ANDROID
-#include "mir/test/doubles/stub_android_native_buffer.h"
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,56 +49,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-
-class StubFDBuffer : public mtd::StubBuffer
-{
-public:
-    StubFDBuffer(mg::BufferProperties const& properties)
-        : StubBuffer(properties),
-          properties{properties}
-    {
-        fd = open("/dev/zero", O_RDONLY);
-        if (fd < 0)
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::system_error(errno, std::system_category(), "Failed to open dummy fd")));
-    }
-
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-    {
-#if defined(MESA_KMS) || defined(MESA_X11)
-        auto native_buffer = std::make_shared<mg::NativeBuffer>();
-        native_buffer->data_items = 1;
-        native_buffer->data[0] = 0xDEADBEEF;
-        native_buffer->fd_items = 1;
-        native_buffer->fd[0] = fd;
-        native_buffer->width = properties.size.width.as_int();
-        native_buffer->height = properties.size.height.as_int();
-
-        native_buffer->flags = 0;
-        if (properties.size.width.as_int() >= 800 &&
-            properties.size.height.as_int() >= 600 &&
-            properties.usage == mg::BufferUsage::hardware)
-        {
-            native_buffer->flags |= mir_buffer_flag_can_scanout;
-        }
-#else
-        auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-        auto anwb = native_buffer->anwb();
-        anwb->width = properties.size.width.as_int();
-        anwb->height = properties.size.width.as_int();
-#endif
-        return native_buffer;
-    }
-
-    ~StubFDBuffer() noexcept
-    {
-        close(fd);
-    }
-private:
-    int fd;
-    const mg::BufferProperties properties;
-};
 
 struct WrappingDisplay : mg::Display
 {
@@ -146,13 +94,13 @@ struct WrappingDisplay : mg::Display
     {
         return display->create_hardware_cursor(initial_image);
     }
-    std::unique_ptr<mg::GLContext> create_gl_context() override
-    {
-        return display->create_gl_context();
-    }
     std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
     {
         return display->create_virtual_output(width, height);
+    }
+    mg::NativeDisplay* native_display() override
+    {
+        return display->native_display();
     }
 
     std::shared_ptr<Display> const display;
@@ -170,7 +118,9 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
                 std::runtime_error("Request for allocation of buffer with invalid size"));
         }
 
-        return std::make_shared<StubFDBuffer>(properties);
+        return std::make_shared<mtd::StubBuffer>(
+            std::make_shared<mg::NativeBuffer>(properties), properties,
+            mir::geometry::Stride{ properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)});
     }
 };
 
@@ -183,21 +133,12 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
         if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
-#if defined(MESA_KMS) || defined(MESA_X11)
             auto native_handle = buffer.native_buffer_handle();
-            for(auto i=0; i<native_handle->data_items; i++)
-            {
-                message.pack_data(native_handle->data[i]);
-            }
-            for(auto i=0; i<native_handle->fd_items; i++)
-            {
-                using namespace mir;
-                message.pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
-            }
-
-            message.pack_flags(native_handle->flags);
-#endif
-            message.pack_stride(buffer.stride());
+            message.pack_data(static_cast<int>(native_handle->properties.usage));
+            message.pack_data(native_handle->data);
+            message.pack_fd(native_handle->fd);
+            message.pack_stride(
+                geom::Stride{buffer.size().width.as_int() * MIR_BYTES_PER_PIXEL(buffer.pixel_format())});
             message.pack_size(buffer.size());
         }
     }
@@ -302,7 +243,11 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const&)
 {
     if (display_preset)
-        return mir::make_module_ptr<WrappingDisplay>(std::move(display_preset));
+    {
+        decltype(display_preset) temp;
+        swap(temp, display_preset);
+        return mir::make_module_ptr<WrappingDisplay>(temp);
+    }
 
     return mir::make_module_ptr<mtd::StubDisplay>(display_rects);
 }
@@ -336,11 +281,6 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
-    EGLNativeDisplayType egl_native_display() const override
-    {
-        return adaptee->egl_native_display();
-    }
-
     std::shared_ptr<mg::NestedContext> const context;
     std::shared_ptr<mg::Platform> const adaptee;
 };
@@ -349,10 +289,19 @@ std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,

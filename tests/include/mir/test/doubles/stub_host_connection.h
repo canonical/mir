@@ -73,16 +73,16 @@ public:
         return {{},{}};
     }
 
-    void set_cursor_image(graphics::CursorImage const&)
+    void set_cursor_image(graphics::CursorImage const&) override
     {
     }
-    void hide_cursor()
+    void hide_cursor() override
     {
     }
 
-    auto graphics_platform_library() -> std::string { return {}; }
+    auto graphics_platform_library() -> std::string override { return {}; }
 
-    graphics::nested::UniqueInputConfig create_input_device_config()
+    graphics::nested::UniqueInputConfig create_input_device_config() override
     {
         return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
                                                    mir_input_config_destroy);
@@ -96,6 +96,21 @@ public:
     }
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
+    }
+    
+    std::shared_ptr<MirBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+
+    MirNativeBuffer* get_native_handle(MirBuffer*)
+    {
+        return nullptr;
+    }
+
+    MirGraphicsRegion get_graphics_region(MirBuffer*)
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
     }
 };
 

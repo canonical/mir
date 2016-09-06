@@ -59,7 +59,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
+MirNativeFence mir_buffer_get_fence(MirBuffer* b)
 try
 {
     mir::require(b);
@@ -72,7 +72,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
+void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence fence, MirBufferAccess access)
 try
 {
     mir::require(b);
@@ -89,7 +89,8 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout));
+     
+    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout)) ? 0 : -1;
 }
 catch (std::exception const& ex)
 {

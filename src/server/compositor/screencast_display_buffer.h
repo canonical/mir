@@ -30,9 +30,17 @@ namespace mir
 namespace graphics
 {
 class Display;
-class GLContext;
 }
-namespace renderer { namespace gl { class TextureSource; }}
+
+namespace renderer
+{
+namespace gl
+{
+class Context;
+class TextureSource;
+}
+}
+
 namespace compositor
 {
 
@@ -111,7 +119,7 @@ public:
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
-    std::unique_ptr<graphics::GLContext> gl_context;
+    std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
     MirMirrorMode const mirror_mode_;
 

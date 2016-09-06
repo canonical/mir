@@ -76,7 +76,7 @@ struct StubDisplayServer : mtd::StubDisplayServer
     void create_surface(
         mp::SurfaceParameters const*,
         mp::Surface* response,
-        google::protobuf::Closure* closure)
+        google::protobuf::Closure* closure) override
     {
         response->mutable_buffer_stream();
         auto before = response->buffer_stream().has_buffer();
@@ -88,7 +88,7 @@ struct StubDisplayServer : mtd::StubDisplayServer
     void create_buffer_stream(
         mp::BufferStreamParameters const*,
         mp::BufferStream* response,
-        google::protobuf::Closure* closure)
+        google::protobuf::Closure* closure) override
     {
         auto before = response->has_buffer();
         closure->Run();

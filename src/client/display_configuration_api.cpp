@@ -161,6 +161,20 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* client_outpu
     }
 }
 
+size_t mir_output_get_preferred_mode_index(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    if (output->preferred_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    {
+        return std::numeric_limits<size_t>::max();
+    }
+    else
+    {
+        return output->preferred_mode();
+    }
+}
+
 MirOutputMode const* mir_output_get_current_mode(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
@@ -174,6 +188,21 @@ MirOutputMode const* mir_output_get_current_mode(MirOutput const* client_output)
         return mode_to_client(&output->mode(output->current_mode()));
     }
 }
+
+size_t mir_output_get_current_mode_index(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    if (output->current_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    {
+        return std::numeric_limits<size_t>::max();
+    }
+    else
+    {
+        return output->current_mode();
+    }
+}
+
 
 void mir_output_set_current_mode(MirOutput* client_output, MirOutputMode const* client_mode)
 {
@@ -304,6 +333,13 @@ float mir_output_get_scale_factor(MirOutput const* client_output)
     auto output = client_to_output(client_output);
 
     return output->scale_factor();
+}
+
+MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
 }
 
 MirFormFactor mir_output_get_form_factor(MirOutput const* client_output)

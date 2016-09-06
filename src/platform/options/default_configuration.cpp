@@ -40,6 +40,7 @@ char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
+char const* const mo::seat_report_opt            = "seat-report";
 char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::host_socket_opt             = "host-socket";
@@ -160,6 +161,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle to Input report. [{log,lttng,off}]")
         (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the Legacy Input report. [{log,off}]")
+        (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle to Seat report. [{log,off}]")
         (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the SessionMediator report. [{log,lttng,off}]")
         (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),

@@ -60,7 +60,7 @@ public:
     {
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         mg::DisplayConfigurationCard card
         {
@@ -71,7 +71,7 @@ public:
         f(card);
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         uint32_t i = 1;
         for (auto const& info : outputs)
@@ -96,7 +96,8 @@ public:
                 info.power_mode,
                 info.orientation,
                 1.0f,
-                mir_form_factor_monitor
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown
             };
 
             f(output);

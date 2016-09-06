@@ -26,6 +26,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include "mir_test_framework/server_runner.h"
 #include "mir/test/validity_matchers.h"
@@ -40,6 +41,7 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -130,10 +132,14 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     ASSERT_THAT(seq, testing::SizeIs(1));
     auto buffer = seq[0]->renderable()->buffer();
     auto valid_content = false;
-    buffer->read([&valid_content, &buffer](unsigned char const* data){
+
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = draw_pattern.check(region);
     });
@@ -188,10 +194,12 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     ASSERT_THAT(seq, testing::SizeIs(1));
     auto buffer = seq[0]->renderable()->buffer();
     auto valid_content = false;
-    buffer->read([&valid_content, &buffer](unsigned char const* data){
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         mt::DrawPatternSolid green_pattern(0xFF00FF00);
         valid_content = green_pattern.check(region);
@@ -296,11 +304,13 @@ TEST_F(AndroidMirDiagnostics, can_allocate_sw_buffer)
     mt::DrawPatternSolid green_pattern(green);
     std::generate(px.begin(), px.end(), [&i]{ if(i++ % 2) return 0x00; else return 0xFF; });
 
-    buffer->write(px.data(), px.size());
-    buffer->read([&](unsigned char const* data){
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+    pixel_source->write(px.data(), px.size());
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = green_pattern.check(region);
     });

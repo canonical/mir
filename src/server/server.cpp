@@ -36,9 +36,9 @@
 #include "mir/cookie/authority.h"
 
 // TODO these are used to frig a stub renderer when running headless
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 
 #include <iostream>
 
@@ -99,6 +99,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
+    MACRO(seat_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
@@ -148,6 +149,7 @@ struct mir::Server::Self
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
+    std::function<void()> stop_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
@@ -200,52 +202,6 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
 
-// TODO these are used to frig a stub renderer when running headless
-namespace
-{
-class StubGLRenderer : public mir::compositor::Renderer
-{
-public:
-    StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
-        : render_target{
-            dynamic_cast<mir::renderer::gl::RenderTarget*>(
-                display_buffer.native_display_buffer())}
-    {
-    }
-
-    void set_viewport(mir::geometry::Rectangle const&) override {}
-    void set_output_transform(MirOrientation, MirMirrorMode) override {}
-
-    void render(mir::graphics::RenderableList const& renderables) const override
-    {
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->make_current();
-
-        for (auto const& r : renderables)
-            r->buffer(); // We need to consume a buffer to unblock client tests
-
-        // Invoke GL renderer specific functions if the DisplayBuffer supports them
-        if (render_target)
-            render_target->swap_buffers();
-    }
-
-    void suspend() override {}
-
-    mir::renderer::gl::RenderTarget* const render_target;
-};
-
-class StubGLRendererFactory : public mir::compositor::RendererFactory
-{
-public:
-    auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
-    -> std::unique_ptr<mir::compositor::Renderer>
-    {
-        return std::make_unique<StubGLRenderer>(display_buffer);
-    }
-};
-}
-
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
@@ -256,18 +212,9 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     {
     }
 
-    // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
-    auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
+    std::function<void()> the_stop_callback() override
     {
-        auto const& options = the_options();
-        if (options->is_set(options::platform_graphics_lib))
-        {
-            auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
-
-            if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
-                return std::make_shared<StubGLRendererFactory>();
-        }
-        return mir::DefaultServerConfiguration::the_renderer_factory();
+        return self->stop_callback;
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -351,6 +298,19 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
         };
 
     self->init_callback = updated;
+}
+
+void mir::Server::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    auto const& existing = self->stop_callback;
+
+    auto const updated = [=]
+        {
+            stop_callback();
+            existing();
+        };
+
+    self->stop_callback = updated;
 }
 
 void mir::Server::set_command_line_handler(
@@ -464,7 +424,10 @@ void mir::Server::stop()
     mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
+        {
+            self->stop_callback();
             main_loop->stop();
+        }
 }
 
 bool mir::Server::exited_normally()

@@ -130,11 +130,10 @@ TEST_F(ThreadedDispatcherTest, doesnt_call_dispatch_after_first_false_return)
 
     int constexpr expected_count{10};
     auto dispatched_more_than_enough = std::make_shared<mt::Signal>();
+    std::atomic<int> dispatch_count{0};
 
-    auto delegate = [dispatched_more_than_enough](md::FdEvents)
+    auto delegate = [dispatched_more_than_enough, &dispatch_count](md::FdEvents)
     {
-        static std::atomic<int> dispatch_count{0};
-
         if (++dispatch_count == expected_count)
         {
             return false;
@@ -288,10 +287,10 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
     auto dispatched = std::make_shared<mt::Signal>();
     constexpr int const threadcount{3};
     constexpr char const* threadname_base{"Madness Thread"};
+    std::atomic<int> dispatch_count{0};
 
-    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched]()
+    auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched, &dispatch_count]()
     {
-        static std::atomic<int> dispatch_count{0};
         char buffer[80] = {0};
         pthread_getname_np(pthread_self(), buffer, sizeof(buffer));
         EXPECT_THAT(buffer, StartsWith(threadname_base));

@@ -25,6 +25,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "native_buffer.h"
 
 #include "mir/graphics/egl_error.h"
 
@@ -55,8 +56,7 @@ mge::Platform::Platform(
     EGLDeviceEXT device,
     std::shared_ptr<EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& /*report*/)
-    : device{device},
-      display{EGL_NO_DISPLAY},
+    : display{EGL_NO_DISPLAY},
       drm_node{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)}
 {
     using namespace std::literals;
@@ -130,7 +130,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                     packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
                 }
 
-                packer.pack_stride(buffer.stride());
+                packer.pack_stride(mir::geometry::Stride{native_handle->stride});
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }
@@ -154,9 +154,4 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     };
 
     return mir::make_module_ptr<NoIPCOperations>();
-}
-
-EGLNativeDisplayType mge::Platform::egl_native_display() const
-{
-    return display;
 }

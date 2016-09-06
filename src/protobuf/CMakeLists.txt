@@ -15,8 +15,7 @@ protobuf_generate_cpp(
 
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/protobuf/symbols.map)
 
-mir_add_library_with_symbols(mirprotobuf SHARED
-  ${symbol_map}
+add_library(mirprotobuf SHARED
   google_protobuf_guard.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
@@ -35,6 +34,7 @@ set_target_properties(
   PROPERTIES
   SOVERSION ${MIRPROTOBUF_ABI}
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 # Export the include directories
