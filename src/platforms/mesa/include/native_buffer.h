@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
 
 #include <mir_toolkit/mir_native_buffer.h>
+
+#include <cstdlib>
 #include <gbm.h>
 
 namespace mir
