@@ -479,9 +479,9 @@ uint32_t mir_output_get_gamma_size(MirOutput const* client_output);
  * Copies the gammas into user created buffers up to the size provided
  *
  * \param [in]  output  The MirOutput to query
- * \param [in]  red     The red gamma ramp
- * \param [in]  green   The green gamma ramp
- * \param [in]  blue    The blue gamma ramp
+ * \param [out] red     The red gamma ramp
+ * \param [out] green   The green gamma ramp
+ * \param [out] blue    The blue gamma ramp
  * \param [in]  size    The size of the gamma ramp
  */
 void mir_output_get_gamma(MirOutput const* client_output,
