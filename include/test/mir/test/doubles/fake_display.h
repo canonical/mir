@@ -25,6 +25,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include <atomic>
+#include <mutex>
 #include <vector>
 
 namespace mir
@@ -60,6 +61,7 @@ private:
     std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
     Fd const wakeup_trigger;
     std::atomic<bool> handler_called;
+    std::mutex mutable configuration_mutex;
 };
 }
 }
