@@ -105,7 +105,7 @@ struct PlatformIpcOperations : graphics::PlatformIpcOperations
                 msg.pack_data(buffer_handle->data[offset++]);
             }
 
-            msg.pack_stride(mir::geometry::Stride{bh->stride});
+            msg.pack_stride(mir::geometry::Stride{bh->stride * 4});
             msg.pack_size(buffer.size());
         }
     }

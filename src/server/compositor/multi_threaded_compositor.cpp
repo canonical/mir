@@ -118,6 +118,7 @@ public:
                 /* Wait until compositing has been scheduled or we are stopped */
                 run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
+                printf("ERE we go\n");
                 /*
                  * Check if we are running before compositing, since we may have
                  * been stopped while waiting for the run_cv above.
@@ -193,6 +194,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
+        printf("SCHEDULE\n");
         if (num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;

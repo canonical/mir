@@ -32,6 +32,7 @@ class HostChain
 public:
     virtual ~HostChain() = default;
     virtual void submit_buffer(MirBuffer*) = 0;
+    virtual MirPresentationChain* handle() = 0;
 protected:
     HostChain() = default;
     HostChain(HostChain const&) = delete;

@@ -21,8 +21,10 @@
 #include "host_stream.h"
 #include "host_chain.h"
 #include "native_buffer.h"
+#include "surface_spec.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -116,8 +118,9 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void apply_spec(mgn::SurfaceSpec&) override
+    void apply_spec(mgn::SurfaceSpec& spec) override
     {
+        mir_surface_apply_spec(mir_surface, spec.handle());
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -474,16 +477,57 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
+
+struct Chain : mgn::HostChain
+{
+    Chain(MirConnection* con) :
+        chain(mir_connection_create_presentation_chain_sync(con))
+    {
+    }
+    ~Chain()
+    {
+        mir_presentation_chain_release(chain);
+    }
+
+    void submit_buffer(MirBuffer* buffer)
+    {
+        if (buffer != current_buf)
+        {
+            printf("PUMP NEW IN\n");
+            current_buf = buffer;
+            mir_presentation_chain_submit_buffer(chain, buffer);
+        }
+    }
+
+    MirPresentationChain* handle()
+    {
+        return chain;
+    }
+private:
+    MirBuffer* current_buf = nullptr;
+    MirPresentationChain* chain;
+};
+
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yut"));
+    return std::make_unique<Chain>(mir_connection);
+
+
+
+
 }
 
 namespace
 {
+void bbuffer_created(MirBuffer* buffer, void* context);
 struct XNativeBuffer : mgn::NativeBuffer
 {
-    XNativeBuffer(MirBuffer* b) : b(b) { printf("MAKE B %X\n", (int)(long)b); }
+    XNativeBuffer(MirBuffer* b) :
+        b(b),
+        mine(true)
+    {
+        mir_buffer_set_callback(b, bbuffer_created, this);
+    }
     ~XNativeBuffer() { printf("DESTROY BE\n"); mir_buffer_release(b); }
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
@@ -510,13 +554,44 @@ struct XNativeBuffer : mgn::NativeBuffer
     {
         return mir_buffer_get_pixel_format(b);
     }
+
+    void tag_submitted()
+    {
+        mine = false;
+    }
+
+    void avail()
+    {
+        mine = true;
+        if (f)
+        {
+            printf("FN!\n");
+            f();
+            f = []{};
+        }
+    }
+
+    void when_back(std::function<void()> const& fn)
+    {
+        f = fn;
+    }
+
+    std::function<void()> f;
     MirBuffer*b;
+    bool mine;
 };
+void bbuffer_created(MirBuffer*, void* context)
+{
+    auto xn = static_cast<XNativeBuffer*>(context);
+    xn->avail();
+}
 }
 
-namespace {
+namespace
+{
 void abuffer_created(MirBuffer* buffer, void* context)
 {
+    printf("INCOMING\n");
     auto connection = static_cast<mgn::MirClientHostConnection::BufferCreation*>(context);
     connection->connection->buffer_created(buffer, connection);
 }
@@ -529,7 +604,6 @@ void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* 
     c->b = b;
     c->cv.notify_all();
 }
-
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const& properties)
@@ -552,7 +626,6 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 
     printf("MAKE BE %X\n", (int)(long) r->b);
     auto ar = std::make_shared<XNativeBuffer>(r->b);
-//    std::shared_ptr<MirBuffer> b(r->b, [](MirBuffer* b) { mir_buffer_release(b); });
     for(auto it = c.begin(); it != c.end();)
     {
         if (r->count == (*it)->count)

@@ -17,7 +17,10 @@
  */
 
 #include "mir_toolkit/mir_surface.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "surface_spec.h"
+#include "host_stream.h"
+#include "host_chain.h"
 
 namespace mgn = mir::graphics::nested;
 
@@ -31,12 +34,19 @@ mgn::SurfaceSpec::~SurfaceSpec()
     mir_surface_spec_release(spec);
 }
 
-void mgn::SurfaceSpec::add_chain(HostChain&, geometry::Displacement disp, geometry::Size size)
+void mgn::SurfaceSpec::add_chain(HostChain& chain, geometry::Displacement disp, geometry::Size size)
 {
+    mir_surface_spec_add_presentation_chain(spec, size.width.as_int(), size.height.as_int(),
+        disp.dx.as_int(), disp.dy.as_int(), chain.handle());
     (void)disp; (void)size;
 }
 
-void mgn::SurfaceSpec::add_stream(HostStream&, geometry::Displacement disp)
+void mgn::SurfaceSpec::add_stream(HostStream& stream, geometry::Displacement disp)
 {
-    (void)disp;
+    mir_surface_spec_add_buffer_stream(spec, disp.dx.as_int(), disp.dy.as_int(), stream.handle());
+}
+
+MirSurfaceSpec* mgn::SurfaceSpec::handle()
+{
+    return spec;
 }

@@ -39,6 +39,7 @@ public:
 
     void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size);
     void add_stream(HostStream&, geometry::Displacement disp);
+    MirSurfaceSpec* handle();
 private:
     MirSurfaceSpec* spec;
 };

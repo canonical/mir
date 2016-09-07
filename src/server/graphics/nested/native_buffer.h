@@ -25,6 +25,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include <chrono>
+#include <functional>
 
 namespace mir
 {
@@ -42,6 +43,8 @@ public:
     virtual MirGraphicsRegion get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
+    virtual void tag_submitted() = 0;
+    virtual void when_back(std::function<void()> const& fn) = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;
