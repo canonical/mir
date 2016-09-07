@@ -51,8 +51,6 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
     default:
         return {{0,0}, size};
     }
-
-    report->report_vsync(0, last_frame->load());
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -76,6 +74,13 @@ void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+
+    /*
+     * Admittedly we are not a real display and will miss some real vsyncs
+     * but this is best-effort. And besides, we don't want Mir reporting all
+     * real vsyncs because that would mean the compositor never sleeps.
+     */
+    report->report_vsync(0);
 }
 
 void mgx::DisplayBuffer::bind()
