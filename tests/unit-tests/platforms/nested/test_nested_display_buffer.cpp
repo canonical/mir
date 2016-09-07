@@ -28,10 +28,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnd = mgn::detail;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -67,22 +70,28 @@ private:
     void* event_context;
 };
 
-struct NestedDisplayBuffer : testing::Test
+struct NestedDisplayBuffer : Test
 {
-    auto create_display_buffer()
+    NestedDisplayBuffer()
     {
-        return std::make_shared<mgnd::DisplayBuffer>(
-            egl_display,
-            mt::fake_shared(host_surface),
-            mir::geometry::Rectangle{},
-            MirPixelFormat{},
-            std::make_shared<mtd::StubHostConnection>()
-            );
+        output.top_left = { 0, 0 };
+        output.current_mode_index = 0;
+        output.orientation = mir_orientation_normal;
+        output.current_format = mir_pixel_format_abgr_8888;
+        output.modes = { { { 10, 11 }, 55.0f } };
     }
 
-    testing::NiceMock<mtd::MockEGL> mock_egl;
+    auto create_display_buffer()
+    {
+        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, host_connection);
+    }
+
+    NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
     EventHostSurface host_surface;
+    std::shared_ptr<mtd::StubHostConnection> host_connection =
+        std::make_shared<mtd::StubHostConnection>(mt::fake_shared(host_surface));
+    mg::DisplayConfigurationOutput output;
 };
 
 }
