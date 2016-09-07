@@ -24,7 +24,7 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "src/server/report/null_report_factory.h"
+#include "src/server/report/null/display_report.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/options/program_option.h"
 #include "mir/test/doubles/mock_drm.h"
@@ -74,7 +74,7 @@ public:
               {
                   XCloseDisplay(display);
               }), mir::geometry::Size{1280,1024},
-              std::shared_ptr<mg::DisplayReport>()/*TODO*/);
+              std::make_shared<mir::report::null::DisplayReport>());
     }
 
     std::shared_ptr<ml::Logger> logger;
