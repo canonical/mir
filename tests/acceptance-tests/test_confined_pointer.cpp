@@ -207,7 +207,7 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     geom::Rectangle screen_geometry{{0,0}, {800,600}};
     mtf::ClientInputRegions input_regions;
     std::string first{"first"};
-    std::string second{"seconed"};
+    std::string second{"second"};
     mtf::ClientPositions positions;
     mtf::TemporaryEnvironmentValue disable_batching{"MIR_CLIENT_INPUT_RATE", "0"};
 };
