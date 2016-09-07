@@ -73,7 +73,8 @@ public:
               [](::Display* display)
               {
                   XCloseDisplay(display);
-              }), mir::geometry::Size{1280,1024});
+              }), mir::geometry::Size{1280,1024},
+              std::shared_ptr<mg::DisplayReport>()/*TODO*/);
     }
 
     std::shared_ptr<ml::Logger> logger;

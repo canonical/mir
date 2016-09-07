@@ -30,11 +30,13 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                   EGLDisplay const d,
                                   EGLSurface const s,
                                   EGLContext const c,
+                                  std::shared_ptr<DisplayReport> const& r,
                                   MirOrientation const o)
                                   : size{sz},
                                     egl_dpy{d},
                                     egl_surf{s},
                                     egl_ctx{c},
+                                    report{r},
                                     orientation_{o}
 {
 }
@@ -49,6 +51,8 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
     default:
         return {{0,0}, size};
     }
+
+    report->report_vsync(0, last_frame->load());
 }
 
 void mgx::DisplayBuffer::make_current()

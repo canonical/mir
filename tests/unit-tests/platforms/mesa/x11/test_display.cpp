@@ -96,7 +96,8 @@ public:
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   mock_gl_config);
+                   mock_gl_config,
+                   std::shared_ptr<mg::DisplayReport>()/*TODO*/);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
