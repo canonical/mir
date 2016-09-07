@@ -279,7 +279,7 @@ TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
     client.all_events_received.wait_for(10s);
 }
 
-TEST_F(PointerConfinement, test_we_cannot_confine_unfocused_surface)
+TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
 {
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     positions[second] = geom::Rectangle{{surface_width / 2, surface_width / 2},
