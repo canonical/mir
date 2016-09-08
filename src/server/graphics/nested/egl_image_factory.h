@@ -22,6 +22,7 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <memory>
 
 namespace mir
 {
@@ -30,12 +31,13 @@ namespace graphics
 namespace nested
 {
 
+class NativeBuffer;
 class EglImageFactory
 {
 public:
     virtual ~EglImageFactory() = default;
     virtual std::unique_ptr<EGLImageKHR> create_egl_image_from(
-        MirBuffer* buffer, EGLDisplay display, EGLint const* attrs) const = 0;
+        NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const = 0;
 protected:
     EglImageFactory() = default;
     EglImageFactory(EglImageFactory const&) = delete;

@@ -477,18 +477,8 @@ std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() con
     BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
 
-std::shared_ptr<MirBuffer> mgn::MirClientHostConnection::create_buffer(
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const&)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
-}
-
-MirNativeBuffer* mgn::MirClientHostConnection::get_native_handle(MirBuffer*)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
-}
-
-MirGraphicsRegion mgn::MirClientHostConnection::get_graphics_region(MirBuffer*)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
