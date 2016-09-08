@@ -25,14 +25,15 @@
 namespace mir { namespace time {
 
 /*
- * Using bare int types because we must maintain these values accurately from
- * the driver code all the way to clients, and clients of clients ad infinitum.
- * int64_t is used because that's what drivers tend to provide and we also need
- * to support negative durations (sometimes things are in the future).
- *   Also note that we use PosixTimestamp instead of std::chrono::time_point as
- * we need to be able to switch clocks dynamically at runtime, depending on
- * which one any given graphics driver claims to use. They will always use one
- * of the kernel clocks...
+ * We need absolute precision here. And sadly that means std::chrono and
+ * mir::time::Timestamp won't suffice...
+ *  - Graphics frame timing needs support for at least the kernel clocks
+ *    CLOCK_REALTIME and CLOCK_MONOTONIC, to be selected at runtime.
+ *  - mir::time::Timestamp is relative to the (wrong) epoch of steady_clock,
+ *    so converting to/from mir::time::Timestamp would be dangerously
+ *    inaccurate at best.
+ *  - We need full 64-bit timestamps that match those of existing (e.g. GLX)
+ *    clients that call clock_gettime.
  */
 
 struct PosixTimestamp
