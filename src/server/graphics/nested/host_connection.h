@@ -45,8 +45,8 @@ namespace nested
 {
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
 
-class HostSurface;
 class HostStream;
+class HostSurface;
 class HostChain;
 class HostSurfaceSpec;
 class NativeBuffer;
@@ -61,6 +61,7 @@ public:
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
     virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
     virtual std::unique_ptr<HostChain> create_chain() const = 0;
+    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
     virtual std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,
@@ -76,7 +77,6 @@ public:
     virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
-    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
 
 protected:
     HostConnection() = default;
