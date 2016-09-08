@@ -127,12 +127,12 @@ TEST_F(DisplayReport, reports_vsync)
     unsigned int display2_id {4492};
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        AllOf(StartsWith("vsync "+std::to_string(display1_id)),
+        AllOf(StartsWith("vsync on "+std::to_string(display1_id)),
               HasSubstr("interval "+std::to_string(microseconds_per_frame))),
         component));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        AllOf(StartsWith("vsync "+std::to_string(display2_id)),
+        AllOf(StartsWith("vsync on "+std::to_string(display2_id)),
               HasSubstr("interval "+std::to_string(microseconds_per_frame))),
         component));
     mrl::DisplayReport report(logger);

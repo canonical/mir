@@ -155,21 +155,21 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 
         // long long to match printf format on all architectures
         const long long msc = frame.msc,
-                        ust_ns = frame.ust.nanoseconds,
-                        now_ns = now.nanoseconds,
-                        age_ns = now_ns - ust_ns,
+                        age_ns = now.nanoseconds - frame.ust.nanoseconds,
                         interval_ns = (frame.ust.nanoseconds -
                                        prev->second.ust.nanoseconds)
-                                    / (frame.msc - prev->second.msc);
+                                    / (frame.msc - prev->second.msc),
+                        hz100 = 100000000000LL / interval_ns;
 
         static const char usec_utf8[] = "\xce\xbcs";
 
         logger->log(component(), ml::Severity::informational,
-            "vsync %u: #%lld at %lld.%06llds (%lld%s ago) interval %lld%s",
+            "vsync on %u: #%lld @now%+lld%s, interval %lld%s (%lld.%2lldHz)",
             display_id,
-            msc, ust_ns/1000000000, (ust_ns%1000000000)/1000,
-            age_ns/1000, usec_utf8,
-            interval_ns/1000, usec_utf8);
+            msc,
+            -age_ns/1000, usec_utf8,
+            interval_ns/1000, usec_utf8,
+            hz100/100, hz100%100);
     }
     prev_frame[display_id] = frame;
 }
