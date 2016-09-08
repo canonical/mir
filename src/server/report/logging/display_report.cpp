@@ -21,6 +21,7 @@
 #include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>
+#include <cstdlib>
 
 namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
@@ -163,18 +164,11 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 
         static const char usec_utf8[] = "\xce\xbcs";
 
-        /*
-         * Note the weird "@now+/-NNN syntax. This is the timestamp of the
-         * frame relative to now. The @now+/- syntax has been chosen in an
-         * attempt to avoid confusion over saying "MMM ago" when MMM is slightly
-         * in the future (thanks KMS) and so would be negative.
-         */
-
         logger->log(component(), ml::Severity::informational,
-            "vsync on %u: #%lld @now%+lld%s, interval %lld%s (%lld.%2lldHz)",
+            "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%2lldHz)",
             display_id,
             msc,
-            -age_ns/1000, usec_utf8,
+            llabs(age_ns)/1000, usec_utf8, age_ns>=0 ? "ago" : "from now",
             interval_ns/1000, usec_utf8,
             hz100/100, hz100%100);
     }
