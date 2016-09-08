@@ -137,13 +137,13 @@ TEST_F(DisplayReport, reports_vsync)
         component));
     mrl::DisplayReport report(logger);
 
-    mir::graphics::Frame f;
-    report.report_vsync(display1_id, f);
-    report.report_vsync(display2_id, f);
-    f.msc++;
-    f.ust.nanoseconds += 1000 * microseconds_per_frame;
-    report.report_vsync(display1_id, f);
-    report.report_vsync(display2_id, f);
+    mir::graphics::Frame frame;
+    report.report_vsync(display1_id, frame);
+    report.report_vsync(display2_id, frame);
+    frame.msc++;
+    frame.ust.nanoseconds += 1000 * microseconds_per_frame;
+    report.report_vsync(display1_id, frame);
+    report.report_vsync(display2_id, frame);
 }
 
 TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
@@ -175,13 +175,13 @@ TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
         component));
 
     mrl::DisplayReport report(logger);
-    mir::graphics::Frame f;
+    mir::graphics::Frame frame;
 
-    report.report_vsync(id, f);
-    f.msc += d1;
-    f.ust.nanoseconds += d1 * 1000LL * microseconds_per_frame;
-    report.report_vsync(id, f);
-    f.msc += d2;
-    f.ust.nanoseconds += d2 * 1000LL * microseconds_per_frame;
-    report.report_vsync(id, f);
+    report.report_vsync(id, frame);
+    frame.msc += d1;
+    frame.ust.nanoseconds += d1 * 1000LL * microseconds_per_frame;
+    report.report_vsync(id, frame);
+    frame.msc += d2;
+    frame.ust.nanoseconds += d2 * 1000LL * microseconds_per_frame;
+    report.report_vsync(id, frame);
 }
