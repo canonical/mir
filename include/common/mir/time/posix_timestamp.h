@@ -43,7 +43,6 @@ struct PosixTimestamp
 
     PosixTimestamp()
         : clock_id{CLOCK_MONOTONIC}, nanoseconds{0} {}
-    // Not sure why gcc-4.9 (vivid) demands this. TODO
     PosixTimestamp(clockid_t clk, int64_t ns)
         : clock_id{clk}, nanoseconds{ns} {}
     PosixTimestamp(clockid_t clk, struct timespec const& ts)
