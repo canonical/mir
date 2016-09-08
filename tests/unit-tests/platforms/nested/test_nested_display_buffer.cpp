@@ -117,6 +117,11 @@ struct StubNestedBuffer :
     {
         return fake_mir_buffer;
     }
+    void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
+    MirNativeBuffer* get_native_handle() override { return nullptr; }
+    MirGraphicsRegion get_graphics_region() override { return MirGraphicsRegion{}; }
+    geom::Size size() const override { return {}; }
+    MirPixelFormat format() const override { return mir_pixel_format_invalid; }
 };
 
 struct NestedDisplayBuffer : Test
