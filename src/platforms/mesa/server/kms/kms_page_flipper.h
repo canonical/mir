@@ -44,7 +44,6 @@ struct PageFlipEventData
 {
     uint32_t crtc_id;
     KMSPageFlipper* flipper;
-    clockid_t clock_id;
 };
 
 class KMSPageFlipper : public PageFlipper
