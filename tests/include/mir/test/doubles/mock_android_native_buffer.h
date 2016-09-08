@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockAndroidNativeBuffer : public graphics::NativeBuffer
+struct MockAndroidNativeBuffer : public graphics::android::NativeBuffer
 {
     MockAndroidNativeBuffer()
     {

@@ -343,8 +343,8 @@ void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height
 /**
  * Set the minimum width, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] width    Minimum width.
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_width  Minimum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -354,8 +354,8 @@ void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
 /**
  * Set the minimum height, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] height   Minimum height.
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_height Minimum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -364,8 +364,8 @@ void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
 /**
  * Set the maximum width, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] width    Maximum width.
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_width  Maximum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -375,8 +375,8 @@ void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
 /**
  * Set the maximum height, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] height   Maximum height.
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_height Maximum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -478,7 +478,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
 /**
  * Set the requested state.
  * \param [in] spec    Specification to mutate
- * \param [in] mode    Requested state
+ * \param [in] state   Requested state
  *
  * \note    If the server is unable to create a surface with the requested state at
  *          the point mir_surface_create() is called it will instead return an invalid surface.
@@ -524,7 +524,7 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
  *
  * \param [in] spec The spec to accumulate the request in.
  * \param [in] rectangles An array of MirRectangles specifying the input shape.
- * \param [in] num_streams The number of elements in the rectangles array.
+ * \param [in] n_rects The number of elements in the rectangles array.
  */
 void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,

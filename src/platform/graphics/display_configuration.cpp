@@ -321,7 +321,9 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         orientation(master.orientation),
         scale(master.scale),
         form_factor(master.form_factor),
-        subpixel_arrangement(master.subpixel_arrangement)
+        subpixel_arrangement(master.subpixel_arrangement),
+        gamma(master.gamma),
+        gamma_supported(master.gamma_supported)
 {
 }
 

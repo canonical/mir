@@ -207,6 +207,7 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     geom::Rectangle screen_geometry{{0,0}, {800,600}};
     mtf::ClientInputRegions input_regions;
     std::string first{"first"};
+    std::string second{"second"};
     mtf::ClientPositions positions;
     mtf::TemporaryEnvironmentValue disable_batching{"MIR_CLIENT_INPUT_RATE", "0"};
 };
@@ -277,3 +278,36 @@ TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
 
     client.all_events_received.wait_for(10s);
 }
+
+TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
+{
+    positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+    positions[second] = geom::Rectangle{{surface_width / 2, surface_width / 2},
+                                        {surface_width, surface_height}};
+    Client client_1(new_connection(), first);
+    Client client_2(new_connection(), second);
+
+    // Attempt to confine client_1 while client_2 is focused
+    auto spec = mir_connection_create_spec_for_changes(client_1.connection);
+    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+
+    mir_surface_apply_spec(client_1.surface, spec);
+    mir_surface_spec_release(spec);
+
+    // We have to wait since we *wont* set the seat here
+    std::this_thread::sleep_for(1s);
+
+    InSequence seq;
+    EXPECT_CALL(client_2, handle_input(mt::PointerEnterEvent()));
+    EXPECT_CALL(client_2, handle_input(mt::PointerEventWithPosition(0, 0)));
+    EXPECT_CALL(client_2, handle_input(mt::PointerEventWithPosition(surface_width - 1, 0)))
+        .WillOnce(mt::WakeUp(&client_2.all_events_received));
+
+    // Move to top_left of our client_2
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width / 2, surface_height / 2));
+    // Move from top_left of our client_2 to the top_left.x + size.width of client_2
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width, 0));
+
+    client_2.all_events_received.wait_for(10s);
+}
+

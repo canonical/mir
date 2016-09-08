@@ -99,7 +99,7 @@ public:
     /**
     * Creates a cookie from a serialized representation
     *
-    * \param [in] blob A blob of bytes representing a serialized cookie
+    * \param [in] raw_cookie A blob of bytes representing a serialized cookie
     * \return          A cookie instance
     */
     virtual std::unique_ptr<Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) = 0;

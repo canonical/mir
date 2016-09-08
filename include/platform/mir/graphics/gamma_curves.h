@@ -7,35 +7,36 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
-
-#include <mir_toolkit/mir_native_buffer.h>
-#include "mir/graphics/native_buffer.h"
-
-#include <gbm.h>
+#include <cstdint>
+#include <vector>
 
 namespace mir
 {
 namespace graphics
 {
-namespace mesa
-{
-struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
-{
-    struct gbm_bo *bo;
-};
-}
-}
-}
 
-#endif /* MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_ */
+class GammaCurves
+{
+public:
+    GammaCurves() = default;
+
+    GammaCurves(std::vector<uint16_t> const& red,
+                std::vector<uint16_t> const& green,
+                std::vector<uint16_t> const& blue);
+
+    std::vector<uint16_t> red;
+    std::vector<uint16_t> green;
+    std::vector<uint16_t> blue;
+};
+
+}
+}

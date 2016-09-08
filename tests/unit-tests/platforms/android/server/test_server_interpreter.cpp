@@ -88,7 +88,7 @@ TEST_F(ServerRenderWindow, returns_buffer_on_request)
         .WillOnce(Return(stub_buffer));
 
     std::shared_ptr<mg::Buffer> tmp = mock_buffer;
-    std::shared_ptr<mg::NativeBuffer> tmp2 = stub_buffer;
+    std::shared_ptr<mga::NativeBuffer> tmp2 = stub_buffer;
     EXPECT_CALL(*mock_cache, store_buffer(tmp, tmp2));
 
     auto rc_buffer = render_window.driver_requests_buffer();
