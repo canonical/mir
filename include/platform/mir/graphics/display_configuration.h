@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -120,6 +121,10 @@ struct DisplayConfigurationOutput
     /** Subpixel arrangement of this output */
     MirSubpixelArrangement subpixel_arrangement;
 
+    /** The current gamma for the display */
+    GammaCurves gamma;
+    MirOutputGammaSupported gamma_supported;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -149,6 +154,8 @@ struct UserDisplayConfigurationOutput
     float& scale;
     MirFormFactor& form_factor;
     MirSubpixelArrangement& subpixel_arrangement;
+    GammaCurves& gamma;
+    MirOutputGammaSupported const& gamma_supported;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;

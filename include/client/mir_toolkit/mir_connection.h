@@ -331,7 +331,7 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
-    unsigned const int format_size, unsigned int *num_valid_formats);
+    unsigned const int formats_size, unsigned int *num_valid_formats);
 
 /**
  * Perform a platform specific operation.
@@ -363,7 +363,7 @@ MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
  * Release this snapshot of the input configuration.
  * This invalidates any pointers retrieved from this structure.
  *
- * \param [in] devices  The input configuration
+ * \param [in] config  The input configuration
  */
 void mir_input_config_destroy(MirInputConfig const* config);
 

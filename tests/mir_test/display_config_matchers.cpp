@@ -85,7 +85,9 @@ public:
                 static_cast<MirOrientation>(protobuf_output.orientation()),
                 1.0f,
                 mir_form_factor_monitor,
-                mir_subpixel_arrangement_unknown
+                mir_subpixel_arrangement_unknown,
+                {},
+                mir_output_gamma_unsupported
             };
 
             /* Modes */
@@ -154,7 +156,9 @@ public:
                 static_cast<MirOrientation>(client_output.orientation),
                 1.0f,
                 mir_form_factor_monitor,
-                mir_subpixel_arrangement_unknown
+                mir_subpixel_arrangement_unknown,
+                {},
+                mir_output_gamma_unsupported
             };
 
             /* Modes */
@@ -216,7 +220,9 @@ public:
                     mir_output_get_orientation(client_output),
                     1.0f,
                     mir_form_factor_monitor,
-                    mir_subpixel_arrangement_unknown
+                    mir_subpixel_arrangement_unknown,
+                    {},
+                    mir_output_gamma_unsupported
                 };
 
             /* Modes */
