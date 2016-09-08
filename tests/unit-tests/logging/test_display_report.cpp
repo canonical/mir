@@ -124,24 +124,27 @@ TEST_F(DisplayReport, eglconfig)
 TEST_F(DisplayReport, reports_vsync)
 {
     using namespace testing;
-    std::chrono::milliseconds interval(1500);
+    int const microseconds_per_frame = 16666;
     unsigned int display1_id {1223};
     unsigned int display2_id {4492};
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        StartsWith("vsync "+std::to_string(display1_id)),
+        AllOf(StartsWith("vsync "+std::to_string(display1_id)),
+              HasSubstr("interval " + std::to_string(microseconds_per_frame))),
         component));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        StartsWith("vsync "+std::to_string(display2_id)),
+        AllOf(StartsWith("vsync "+std::to_string(display2_id)),
+              HasSubstr("interval " + std::to_string(microseconds_per_frame))),
         component));
     mrl::DisplayReport report(logger, clock);
 
     mir::graphics::Frame f;
     report.report_vsync(display1_id, f);
     report.report_vsync(display2_id, f);
-    clock->advance_by(interval);
-    // ^^ Note for the sake of correct deltas we don't report the first frame
+
+    f.msc++;
+    f.ust.nanoseconds += 1000 * microseconds_per_frame;
     report.report_vsync(display1_id, f);
     report.report_vsync(display2_id, f);
 }
