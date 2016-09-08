@@ -23,6 +23,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/frame.h"
 #include "mir/time/clock.h"
+
 #include <memory>
 
 namespace mir

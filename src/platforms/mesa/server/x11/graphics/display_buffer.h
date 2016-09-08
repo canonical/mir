@@ -24,6 +24,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
 #include "gl_context.h"
+
 #include <EGL/egl.h>
 #include <memory>
 
