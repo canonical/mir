@@ -25,6 +25,7 @@
 #include "host_surface.h"
 #include "host_chain.h"
 
+#include <glm/glm.hpp>
 #include <EGL/egl.h>
 
 namespace mir
@@ -84,6 +85,7 @@ private:
         stream,
         chain
     } content;
+    glm::mat4 const identity;
 };
 }
 }

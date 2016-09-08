@@ -111,13 +111,17 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
 {
-    if (list.empty() || (list.back()->screen_position() != area) ||
-        (list.back()->alpha() != 1.0f) || (list.back()->shaped()))
+    if (list.empty() ||
+        (list.back()->screen_position() != area) ||
+        (list.back()->alpha() != 1.0f) ||
+        (list.back()->shaped()) ||
+        (list.back()->transformation() != identity))
+    {
         return false;
+    }
 
-    auto& passthrough_layer = list.back();
-    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(
-        passthrough_layer->buffer()->native_buffer_handle().get());
+    auto passthrough_buffer = list.back()->buffer();
+    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
     if (!nested_buffer)
         return false;
 
@@ -129,7 +133,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     if (content != BackingContent::chain)
     {
         auto spec = host_connection->create_surface_spec();
-        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_layer->buffer()->size());
+        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
