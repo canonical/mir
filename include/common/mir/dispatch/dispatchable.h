@@ -53,11 +53,11 @@ public:
 
     /**
      * \brief Dispatch one pending event
-     * \param [in] event    The set of events current on the file-descriptor
+     * \param [in] events    The set of events current on the file-descriptor
      * \returns False iff no more events will be produced by this Dispatchable.
      *          Dispatch should no longer be called.
      * \note This will dispatch at most one event. If there are multiple events
-     *       specified in \ref event (eg: readable | remote_closed) then dispatch
+     *       specified in \p events (eg: readable | remote_closed) then dispatch
      *       will process only one.
      * \note It is harmless to call dispatch() with an event that does not contain
      *       any of the events from relevant_events(). The function will do

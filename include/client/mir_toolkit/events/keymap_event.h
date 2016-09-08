@@ -41,7 +41,7 @@ extern "C" {
  * \param[out] rules XKB rules describing the new keymap.
  */
 void mir_keymap_event_get_rules(MirKeymapEvent const* ev,
-                                struct xkb_rule_names* names)
+                                struct xkb_rule_names* rules)
     __attribute__ ((deprecated));
 
 /**
@@ -60,7 +60,6 @@ void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev,
  * Retrieve the device id the keymap reported by this MirKeymapEvent applies to
  *
  * \param[in] ev The keymap event
- * \param[out] rules XKB rules describing the new keymap.
  */
 MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev);
 

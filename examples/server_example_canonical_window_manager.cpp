@@ -871,7 +871,7 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
     return std::shared_ptr<ms::Surface>{};
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
+bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<scene::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
     if (!surface)
         return false;
@@ -951,7 +951,7 @@ void me::CanonicalWindowManagerPolicyCopy::apply_resize(
     move_tree(surface, new_pos-surface->top_left());
 }
 
-bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
+bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<scene::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
     if (!surface)
         return false;

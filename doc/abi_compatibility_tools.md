@@ -11,7 +11,7 @@ The targets are:
 
   Compiles all the public libraries in the current tree and checks their ABI against the latest released archive version
 
-* **make abi-check-<library>**
+* **make abi-check-\<library>**
 
   Compiles only the specified library in the current tree and checks its ABI against the latest released archive version
 
