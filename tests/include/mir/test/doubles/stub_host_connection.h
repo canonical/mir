@@ -23,6 +23,7 @@
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/graphics/nested/host_stream.h"
 #include "src/server/graphics/nested/host_chain.h"
+#include "src/server/graphics/nested/host_surface_spec.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -130,7 +131,7 @@ public:
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
         void set_event_handler(mir_surface_event_callback, void*) override {}
-        void apply_spec(graphics::nested::SurfaceSpec&) override {}
+        void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     
@@ -147,6 +148,16 @@ public:
     MirGraphicsRegion get_graphics_region(MirBuffer*)
     {
         return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
+    }
+
+    std::unique_ptr<graphics::nested::HostSurfaceSpec> create_surface_spec()
+    {
+        struct NullSpec : graphics::nested::HostSurfaceSpec
+        {
+            void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
+            void add_stream(graphics::nested::HostStream&, geometry::Displacement) override {}
+        }; 
+        return std::make_unique<NullSpec>();
     }
 };
 

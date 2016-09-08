@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_NESTED_HOST_SURFACE_SPEC_H_
 #define MIR_GRAPHICS_NESTED_HOST_SURFACE_SPEC_H_
 
-#include "mir_toolkit/client_types.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 
@@ -31,16 +30,16 @@ namespace nested
 {
 class HostChain;
 class HostStream;
-class SurfaceSpec
+class HostSurfaceSpec
 {
 public:
-    SurfaceSpec();
-    ~SurfaceSpec();
-
-    void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size);
-    void add_stream(HostStream&, geometry::Displacement disp);
-private:
-    MirSurfaceSpec* spec;
+    virtual ~HostSurfaceSpec() = default;
+    virtual void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size) = 0;
+    virtual void add_stream(HostStream&, geometry::Displacement disp) = 0;
+protected:
+    HostSurfaceSpec() = default;
+    HostSurfaceSpec(HostSurfaceSpec const&) = delete;
+    HostSurfaceSpec& operator=(HostSurfaceSpec const&) = delete;
 };
 }
 }

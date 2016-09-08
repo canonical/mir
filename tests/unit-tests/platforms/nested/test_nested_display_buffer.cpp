@@ -20,7 +20,7 @@
 #include "src/server/graphics/nested/native_buffer.h"
 #include "src/server/graphics/nested/host_stream.h"
 #include "src/server/graphics/nested/host_chain.h"
-#include "src/server/graphics/nested/surface_spec.h"
+#include "src/server/graphics/nested/host_surface_spec.h"
 
 #include "mir/events/event_builders.h"
 
@@ -73,7 +73,7 @@ public:
             event_handler(nullptr, ev.get(), event_context);
     }
 
-    void apply_spec(mgn::SurfaceSpec&) override
+    void apply_spec(mgn::HostSurfaceSpec&) override
     {
     }
 private:
@@ -86,7 +86,7 @@ struct MockHostSurface : mgn::HostSurface
 {
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
     MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
-    MOCK_METHOD1(apply_spec, void(mgn::SurfaceSpec&));
+    MOCK_METHOD1(apply_spec, void(mgn::HostSurfaceSpec&));
 };
 
 struct MockNestedChain : mgn::HostChain

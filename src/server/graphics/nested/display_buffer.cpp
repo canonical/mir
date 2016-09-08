@@ -20,7 +20,7 @@
 
 #include "host_connection.h"
 #include "host_stream.h"
-#include "surface_spec.h"
+#include "host_surface_spec.h"
 #include "native_buffer.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/buffer.h"
@@ -97,10 +97,10 @@ void mgn::detail::DisplayBuffer::swap_buffers()
 {
     if (content != BackingContent::stream)
     {
-        mgn::SurfaceSpec spec;
-        spec.add_stream(*host_stream, geom::Displacement{0,0});
+        auto spec = host_connection->create_surface_spec();
+        spec->add_stream(*host_stream, geom::Displacement{0,0});
         content = BackingContent::stream;
-        host_surface->apply_spec(spec);
+        host_surface->apply_spec(*spec);
     }
     eglSwapBuffers(egl_display, egl_surface);
 }
@@ -128,10 +128,10 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
 
     if (content != BackingContent::chain)
     {
-        mgn::SurfaceSpec spec;
-        spec.add_chain(*host_chain, geom::Displacement{0,0}, passthrough_layer->buffer()->size());
+        auto spec = host_connection->create_surface_spec();
+        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_layer->buffer()->size());
         content = BackingContent::chain;
-        host_surface->apply_spec(spec);
+        host_surface->apply_spec(*spec);
     }
     return true;
 }

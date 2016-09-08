@@ -48,6 +48,7 @@ using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig
 class HostSurface;
 class HostStream;
 class HostChain;
+class HostSurfaceSpec;
 class NativeBuffer;
 class HostConnection : public NestedContext
 {
@@ -75,6 +76,7 @@ public:
     virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
+    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
 
 protected:
     HostConnection() = default;

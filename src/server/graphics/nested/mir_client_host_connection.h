@@ -84,6 +84,7 @@ public:
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
 
 private:
     void update_input_config(UniqueInputConfig input_config);

@@ -13,5 +13,4 @@ add_library(
   cursor.cpp
   platform.cpp
   buffer.cpp
-  surface_spec.cpp
 )

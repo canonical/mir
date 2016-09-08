@@ -114,7 +114,7 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void apply_spec(mgn::SurfaceSpec&) override
+    void apply_spec(mgn::HostSurfaceSpec&) override
     {
     }
 
@@ -479,6 +479,11 @@ std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() con
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
