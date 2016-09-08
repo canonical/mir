@@ -36,7 +36,6 @@ public:
 private:
     mutable std::mutex mutex;
     Frame frame;
-    Frame::Timestamp prev_ust;
 };
 
 }} // namespace mir::graphics
