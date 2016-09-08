@@ -129,11 +129,11 @@ TEST_F(DisplayReport, reports_vsync)
     unsigned int display2_id {4492};
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        _, //StartsWith("vsync "+std::to_string(display1_id)),
+        StartsWith("vsync "+std::to_string(display1_id)),
         component));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        _, //StartsWith("vsync "+std::to_string(display2_id)),
+        StartsWith("vsync "+std::to_string(display2_id)),
         component));
     mrl::DisplayReport report(logger, clock);
 
@@ -141,5 +141,7 @@ TEST_F(DisplayReport, reports_vsync)
     report.report_vsync(display1_id, f);
     report.report_vsync(display2_id, f);
     clock->advance_by(interval);
+    // ^^ Note for the sake of correct deltas we don't report the first frame
     report.report_vsync(display1_id, f);
+    report.report_vsync(display2_id, f);
 }
