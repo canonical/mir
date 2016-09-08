@@ -149,17 +149,18 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 {
     std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
     auto prev = prev_frame.find(display_id);
-    if (prev != prev_frame.end())
+    if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {
         auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
 
         // long long to match printf format on all architectures
         const long long msc = frame.msc,
                         ust_ns = frame.ust.nanoseconds,
-                        interval_ns = frame.ust.nanoseconds -
-                                      prev->second.ust.nanoseconds,
                         now_ns = now.nanoseconds,
-                        age_ns = now_ns - ust_ns;
+                        age_ns = now_ns - ust_ns,
+                        interval_ns = (frame.ust.nanoseconds -
+                                       prev->second.ust.nanoseconds)
+                                    / (frame.msc - prev->second.msc);
 
         static const char usec_utf8[] = "\xce\xbcs";
 
