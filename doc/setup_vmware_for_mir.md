@@ -6,7 +6,7 @@ Here is a quick-start guide for running Mir in VMware:
 1. Go to https://my.vmware.com/web/vmware/downloads and download
    VMware Player (last in Desktop & End-User Computing section).
 
-2. Install VMware player with: sudo bash VMware-Player-<VERSION>.x86_64.bundle
+2. Install VMware player with: sudo bash VMware-Player-\<VERSION>.x86_64.bundle
 
 3. Get the latest vivid daily iso (*not* the unity-next iso!).
 

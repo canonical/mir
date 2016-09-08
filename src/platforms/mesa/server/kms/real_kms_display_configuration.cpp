@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <system_error>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -174,6 +175,27 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 
     return conf_mode_index;
 }
+
+mg::GammaCurves mgm::RealKMSDisplayConfiguration::get_drm_gamma(
+    drmModeCrtc const* crtc) const
+{
+    uint32_t gamma_size = crtc->gamma_size;
+    uint16_t red[gamma_size];
+    uint16_t green[gamma_size];
+    uint16_t blue[gamma_size];
+
+    int ret;
+    if ((ret = drmModeCrtcGetGamma(drm_fd, crtc->crtc_id, gamma_size, red, green, blue)) != 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "drmModeCrtcGetGamma Failed"));
+    }
+
+    return {std::vector<uint16_t>(red, red + gamma_size),
+            std::vector<uint16_t>(green, green + gamma_size),
+            std::vector<uint16_t>(blue, blue + gamma_size)};
+}
+
 void mgm::RealKMSDisplayConfiguration::update()
 {
     kms::DRMModeResources resources{drm_fd};
@@ -205,13 +227,19 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                                          mir_pixel_format_xrgb_8888};
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
+    GammaCurves gamma;
 
     /* Get information about the current mode */
     if (connector.encoder_id)
     {
         auto encoder = resources.encoder(connector.encoder_id);
         if (encoder->crtc_id)
+        {
             current_mode_info = resources.crtc(encoder->crtc_id)->mode;
+
+            auto crtc = resources.crtc(encoder->crtc_id);
+            gamma = get_drm_gamma(crtc.get());
+        }
     }
 
     /* Add all the available modes and find the current and preferred one */
@@ -241,7 +269,9 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
                            mir_power_mode_on, mir_orientation_normal,
-                           1.0f, mir_form_factor_monitor, kms_subpixel_to_mir_subpixel(connector.subpixel)});
+                           1.0f, mir_form_factor_monitor,
+                           kms_subpixel_to_mir_subpixel(connector.subpixel),
+                           gamma, mir_output_gamma_supported});
     }
     else
     {
@@ -269,6 +299,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.connected = connected;
         output.current_format = mir_pixel_format_xrgb_8888;
         output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector.subpixel);
+        output.gamma = gamma;
     }
 }
 

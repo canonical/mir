@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2015 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -111,6 +111,11 @@ struct MirSurfaceSpec
     std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+    mir::optional_value<MirPlacementHints> placement_hints;
+    mir::optional_value<MirPlacementGravity> surface_placement_gravity;
+    mir::optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    mir::optional_value<int> aux_rect_placement_offset_x;
+    mir::optional_value<int> aux_rect_placement_offset_y;
 
     mir::optional_value<int> min_width;
     mir::optional_value<int> min_height;
