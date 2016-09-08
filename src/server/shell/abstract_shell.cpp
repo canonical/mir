@@ -161,7 +161,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
-    if (modifications.confine_pointer.is_set())
+    if (modifications.confine_pointer.is_set() && focused_surface() == surface)
     {
         if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
         {
