@@ -92,6 +92,7 @@ struct MockHostSurface : mgn::HostSurface
 struct MockNestedChain : mgn::HostChain
 {
     MOCK_METHOD1(submit_buffer, void(MirBuffer*));
+    MOCK_CONST_METHOD0(handle, MirPresentationChain*());
 };
 
 struct MockNestedStream : mgn::HostStream
