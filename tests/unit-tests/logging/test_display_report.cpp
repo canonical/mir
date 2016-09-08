@@ -140,9 +140,48 @@ TEST_F(DisplayReport, reports_vsync)
     mir::graphics::Frame f;
     report.report_vsync(display1_id, f);
     report.report_vsync(display2_id, f);
-
     f.msc++;
     f.ust.nanoseconds += 1000 * microseconds_per_frame;
     report.report_vsync(display1_id, f);
     report.report_vsync(display2_id, f);
+}
+
+TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
+{
+    using namespace testing;
+    int const hz = 60;
+    int const microseconds_per_frame = 1000000/hz;
+    unsigned const id{123};
+    int const d1 = 456;
+    int const d2 = 789;
+
+    InSequence seq;
+
+    // Note the expected interval should be unchanged by missed frames
+    auto const id_str = std::to_string(id);
+    auto const interval_str = "interval "+std::to_string(microseconds_per_frame);
+    auto const hz_str = "("+std::to_string(hz)+".00Hz)";
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational,
+        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1)+","),
+              HasSubstr(interval_str),
+              HasSubstr(hz_str)),
+        component));
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational,
+        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1+d2)+","),
+              HasSubstr(interval_str),
+              HasSubstr(hz_str)),
+        component));
+
+    mrl::DisplayReport report(logger);
+    mir::graphics::Frame f;
+
+    report.report_vsync(id, f);
+    f.msc += d1;
+    f.ust.nanoseconds += d1 * 1000LL * microseconds_per_frame;
+    report.report_vsync(id, f);
+    f.msc += d2;
+    f.ust.nanoseconds += d2 * 1000LL * microseconds_per_frame;
+    report.report_vsync(id, f);
 }

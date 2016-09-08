@@ -165,7 +165,7 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
         static const char usec_utf8[] = "\xce\xbcs";
 
         logger->log(component(), ml::Severity::informational,
-            "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%2lldHz)",
+            "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%02lldHz)",
             display_id,
             msc,
             llabs(age_ns)/1000, usec_utf8, age_ns>=0 ? "ago" : "from now",
