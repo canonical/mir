@@ -163,6 +163,13 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 
         static const char usec_utf8[] = "\xce\xbcs";
 
+        /*
+         * Note the weird "@now+/-NNN syntax. This is the timestamp of the
+         * frame relative to now. The @now+/- syntax has been chosen in an
+         * attempt to avoid confusion over saying "MMM ago" when MMM is slightly
+         * in the future (thanks KMS) and so would be negative.
+         */
+
         logger->log(component(), ml::Severity::informational,
             "vsync on %u: #%lld @now%+lld%s, interval %lld%s (%lld.%2lldHz)",
             display_id,
