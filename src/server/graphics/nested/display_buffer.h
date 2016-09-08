@@ -83,7 +83,7 @@ private:
     {
         stream,
         chain
-    } content {BackingContent::stream};
+    } content;
 };
 }
 }
