@@ -32,7 +32,7 @@ namespace graphics
 {
 namespace nested
 {
-class NativeBuffer
+class NativeBuffer : public graphics::NativeBuffer
 {
 public:
     virtual ~NativeBuffer() = default;
