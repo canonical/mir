@@ -24,7 +24,9 @@
 #include "mir/graphics/frame.h"
 #include "mir/time/clock.h"
 
+#include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -68,7 +70,8 @@ class DisplayReport : public graphics::DisplayReport
   private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::shared_ptr<time::Clock> const clock;
-    mir::graphics::Frame prev_frame;
+    std::mutex vsync_event_mutex;
+    std::unordered_map<unsigned int, mir::graphics::Frame> prev_frame;
 };
 }
 }

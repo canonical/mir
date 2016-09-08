@@ -16,10 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_LOG_COMPONENT "graphics"
 #include "display_report.h"
 #include "mir/logging/logger.h"
-#include "mir/log.h"
 #include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>
@@ -41,7 +39,7 @@ mrl::DisplayReport::~DisplayReport()
 
 const char* mrl::DisplayReport::component()
 {
-    static const char* s = MIR_LOG_COMPONENT;
+    static const char* s = "graphics";
     return s;
 }
 
@@ -151,7 +149,9 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
 void mrl::DisplayReport::report_vsync(unsigned int display_id,
                                       graphics::Frame const& frame)
 {
-    if (prev_frame.msc || prev_frame.ust.nanoseconds)
+    std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
+    auto prev = prev_frame.find(display_id);
+    if (prev != prev_frame.end())
     {
         auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
 
@@ -159,18 +159,18 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
         const long long msc = frame.msc,
                         ust_ns = frame.ust.nanoseconds,
                         interval_ns = frame.ust.nanoseconds -
-                                      prev_frame.ust.nanoseconds,
+                                      prev->second.ust.nanoseconds,
                         now_ns = now.nanoseconds,
                         age_ns = now_ns - ust_ns;
 
         static const char usec_utf8[] = "\xce\xbcs";
 
-        mir::log_info(
+        logger->log(component(), ml::Severity::informational,
             "vsync %u: #%lld at %lld.%06llds (%lld%s ago) interval %lld%s",
             display_id,
             msc, ust_ns/1000000000, (ust_ns%1000000000)/1000,
             age_ns/1000, usec_utf8,
             interval_ns/1000, usec_utf8);
     }
-    prev_frame = frame;
+    prev_frame[display_id] = frame;
 }
