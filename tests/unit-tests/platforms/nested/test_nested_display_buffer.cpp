@@ -235,6 +235,16 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
     EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
 }
 
+TEST_F(NestedDisplayBuffer, rejects_list_containing_rotated_buffers)
+{
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubTransformedRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+}
+
 TEST_F(NestedDisplayBuffer, accepts_list_with_unshown_unknown_buffers)
 {
     StubNestedBuffer nested_buffer; 
