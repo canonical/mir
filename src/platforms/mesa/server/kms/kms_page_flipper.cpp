@@ -169,7 +169,9 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, int64_t msc,
                                            int64_t ust)
 {
-    auto& f = completed_page_flips[crtc_id] = {msc, {clock_id, ust}};
+    auto& f = completed_page_flips[crtc_id];
+    f.msc = msc;
+    f.ust = {clock_id, ust};
     report->report_vsync(crtc_id, f);
     pending_page_flips.erase(crtc_id);
 }
