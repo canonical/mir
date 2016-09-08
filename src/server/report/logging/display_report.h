@@ -22,7 +22,6 @@
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/frame.h"
-#include "mir/time/clock.h"
 
 #include <unordered_map>
 #include <memory>
@@ -47,8 +46,7 @@ class DisplayReport : public graphics::DisplayReport
     static const char* component();
 
     DisplayReport(
-        std::shared_ptr<mir::logging::Logger> const& logger,
-        std::shared_ptr<time::Clock> const& clock);
+        std::shared_ptr<mir::logging::Logger> const& logger);
 
     virtual ~DisplayReport();
 
@@ -69,7 +67,6 @@ class DisplayReport : public graphics::DisplayReport
 
   private:
     std::shared_ptr<mir::logging::Logger> const logger;
-    std::shared_ptr<time::Clock> const clock;
     std::mutex vsync_event_mutex;
     std::unordered_map<unsigned int, mir::graphics::Frame> prev_frame;
 };

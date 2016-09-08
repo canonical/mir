@@ -20,7 +20,6 @@
 #include "mir/graphics/frame.h"
 #include "mir/logging/logger.h"
 #include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,7 +40,6 @@ public:
 
 struct DisplayReport : public testing::Test
 {
-    std::shared_ptr<mtd::AdvanceableClock> const clock{std::make_shared<mtd::AdvanceableClock>()};
     std::shared_ptr<MockLogger> logger{std::make_shared<MockLogger>()};
     mtd::MockEGL mock_egl;
 };
@@ -117,7 +115,7 @@ TEST_F(DisplayReport, eglconfig)
             component));
     }
 
-    mrl::DisplayReport report(logger, clock);
+    mrl::DisplayReport report(logger);
     report.report_egl_configuration(disp, config);
 }
 
@@ -137,7 +135,7 @@ TEST_F(DisplayReport, reports_vsync)
         AllOf(StartsWith("vsync "+std::to_string(display2_id)),
               HasSubstr("interval " + std::to_string(microseconds_per_frame))),
         component));
-    mrl::DisplayReport report(logger, clock);
+    mrl::DisplayReport report(logger);
 
     mir::graphics::Frame f;
     report.report_vsync(display1_id, f);

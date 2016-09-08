@@ -26,10 +26,8 @@ namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 
 mrl::DisplayReport::DisplayReport(
-    std::shared_ptr<ml::Logger> const& logger,
-    std::shared_ptr<time::Clock> const& clock) :
-    logger(logger),
-    clock(clock)
+    std::shared_ptr<ml::Logger> const& logger)
+    : logger(logger)
 {
 }
 
