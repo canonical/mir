@@ -191,27 +191,36 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
 {
     NiceMock<MockHostSurface> mock_host_surface;
-    mtd::MockHostConnection mock_host_connection;
+    mtd::StubHostConnection host_connection(mt::fake_shared(mock_host_surface));
+
     StubNestedBuffer nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
-    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
-    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
-    EXPECT_CALL(*mock_chain, submit_buffer(nested_buffer.fake_mir_buffer));
-
-    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
-        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
-    EXPECT_CALL(mock_host_connection, create_stream(_))
-        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
-    EXPECT_CALL(mock_host_connection, create_chain())
-        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
-
     EXPECT_CALL(mock_host_surface, apply_spec(_))
         .Times(2);
 
-    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
     EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    display_buffer->swap_buffers();
+}
+
+TEST_F(NestedDisplayBuffer, only_applies_spec_once_per_mode_toggle)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::StubHostConnection host_connection(mt::fake_shared(mock_host_surface));
+
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+          { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
+
+    EXPECT_CALL(mock_host_surface, apply_spec(_))
+        .Times(2);
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    display_buffer->swap_buffers();
     display_buffer->swap_buffers();
 }
 
