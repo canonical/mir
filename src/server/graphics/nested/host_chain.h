@@ -27,11 +27,12 @@ namespace graphics
 {
 namespace nested
 {
+class NativeBuffer;
 class HostChain
 {
 public:
     virtual ~HostChain() = default;
-    virtual void submit_buffer(MirBuffer*) = 0;
+    virtual void submit_buffer(NativeBuffer&) = 0;
     virtual MirPresentationChain* handle() const = 0;
 protected:
     HostChain() = default;

@@ -124,7 +124,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    host_chain->submit_buffer(nested_buffer->client_handle());
+    host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)
     {

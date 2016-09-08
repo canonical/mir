@@ -91,7 +91,7 @@ struct MockHostSurface : mgn::HostSurface
 
 struct MockNestedChain : mgn::HostChain
 {
-    MOCK_METHOD1(submit_buffer, void(MirBuffer*));
+    MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_CONST_METHOD0(handle, MirPresentationChain*());
 };
 
@@ -106,17 +106,11 @@ struct StubNestedBuffer :
     mgn::NativeBuffer,
     std::enable_shared_from_this<StubNestedBuffer>
 {
-    int const fake_buffer = 15122235;
-    MirBuffer* fake_mir_buffer = const_cast<MirBuffer*>(reinterpret_cast<MirBuffer const*>(&fake_mir_buffer));
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
     {
         return std::const_pointer_cast<StubNestedBuffer>(shared_from_this());
     }
-
-    MirBuffer* client_handle() const override
-    {
-        return fake_mir_buffer;
-    }
+    MirBuffer* client_handle() const override { return nullptr; }
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
     MirNativeBuffer* get_native_handle() override { return nullptr; }
     MirGraphicsRegion get_graphics_region() override { return MirGraphicsRegion{}; }
@@ -180,7 +174,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 
     auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
     auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
-    EXPECT_CALL(*mock_chain, submit_buffer(nested_buffer.fake_mir_buffer));
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
         .WillOnce(Return(mt::fake_shared(mock_host_surface)));
