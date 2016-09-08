@@ -130,6 +130,11 @@ void mgx::DisplayBuffer::swap_buffers()
         last_frame->increment_now();
     }
 
+    /*
+     * Admittedly we are not a real display and will miss some real vsyncs
+     * but this is best-effort. And besides, we don't want Mir reporting all
+     * real vsyncs because that would mean the compositor never sleeps.
+     */
     report->report_vsync(0, last_frame->load());
 }
 

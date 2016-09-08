@@ -8,6 +8,7 @@ mir_add_wrapped_executable(
   $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
   $<TARGET_OBJECTS:mir-umock-test-framework>
+  $<TARGET_OBJECTS:mirnullreport>  # Sub-optimal. We really want to link a lib
 )
 
 add_dependencies(mir_unit_tests_mesa-x11 GMock)

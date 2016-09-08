@@ -301,6 +301,9 @@ mgx::Display::Display(::Display* x_dpy,
                                              last_frame,
                                              report,
                                              orientation));
+
+    report->report_egl_configuration(egl_display, win.egl_config());
+    report->report_successful_display_construction();
 }
 
 mgx::Display::~Display() noexcept

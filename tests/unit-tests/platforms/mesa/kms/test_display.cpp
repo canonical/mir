@@ -235,6 +235,12 @@ TEST_F(MesaDisplayTest, create_display)
     EXPECT_CALL(mock_gbm, gbm_surface_create(mock_gbm.fake_gbm.device,_,_,_,_))
         .Times(Exactly(1));
 
+    /* Get the DRM gamma ramp */
+    EXPECT_CALL(mock_drm, drmModeCrtcGetGamma(mock_drm.fake_drm.fd(),
+                                              crtc_id, fake.crtc.gamma_size,
+                                              _, _, _))
+        .Times(Exactly(1));
+
     /* Create an EGL window surface backed by the gbm surface */
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,
                                                  mock_egl.fake_configs[0],
@@ -279,7 +285,6 @@ TEST_F(MesaDisplayTest, create_display)
                                          _, _))
         .Times(Exactly(1))
         .WillOnce(Return(0));
-
 
     auto display = create_display(create_platform());
 }
