@@ -156,11 +156,11 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 
         // long long to match printf format on all architectures
         const long long msc = frame.msc,
-                        age_ns = now.nanoseconds - frame.ust.nanoseconds,
-                        interval_ns = (frame.ust.nanoseconds -
+                        age_us = (now.nanoseconds - frame.ust.nanoseconds)/1000,
+                        interval_us = (frame.ust.nanoseconds -
                                        prev->second.ust.nanoseconds)
-                                    / (frame.msc - prev->second.msc),
-                        hz100 = 100000000000LL / interval_ns;
+                                    / (1000*(frame.msc - prev->second.msc)),
+                        hz100 = 100000000LL / interval_us;
 
         static const char usec_utf8[] = "\xce\xbcs";
 
@@ -168,8 +168,8 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
             "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%02lldHz)",
             display_id,
             msc,
-            llabs(age_ns)/1000, usec_utf8, age_ns>=0 ? "ago" : "from now",
-            interval_ns/1000, usec_utf8,
+            llabs(age_us), usec_utf8, age_us>=0 ? "ago" : "from now",
+            interval_us, usec_utf8,
             hz100/100, hz100%100);
     }
     prev_frame[display_id] = frame;
