@@ -64,6 +64,7 @@ public:
     std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
     std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
     std::unique_ptr<HostChain> create_chain() const override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
     std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,
@@ -84,7 +85,6 @@ public:
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
-    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
 
 private:
     void update_input_config(UniqueInputConfig input_config);
