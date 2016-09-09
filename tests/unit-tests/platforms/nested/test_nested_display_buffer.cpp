@@ -117,6 +117,12 @@ struct StubNestedBuffer :
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
 };
 
+struct MockNestedBuffer : StubNestedBuffer
+{
+    MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
+};
+
+
 struct NestedDisplayBuffer : Test
 {
     NestedDisplayBuffer()
@@ -167,12 +173,13 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
 
-    StubNestedBuffer nested_buffer; 
+    MockNestedBuffer nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
     auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
     auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_));
     EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
