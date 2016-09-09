@@ -34,7 +34,6 @@ class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
 class CursorImage;
-class GLContext;
 class EventHandlerRegister;
 class VirtualOutput;
 
