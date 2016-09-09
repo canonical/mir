@@ -18,14 +18,14 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "surface_spec.h"
+#include "host_surface_spec.h"
 #include "host_stream.h"
 #include "host_chain.h"
 
 namespace mgn = mir::graphics::nested;
 
-mgn::SurfaceSpec::SurfaceSpec() :
-    spec(mir_connection_create_spec_for_changes(nullptr))
+mgn::SurfaceSpec::SurfaceSpec(MirConnection* c) :
+    spec(mir_connection_create_spec_for_changes(c))
 {
 }
 
