@@ -188,7 +188,7 @@ void ms::MediatingDisplayChanger::configure(
 
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
-                    apply_config(conf, PauseResumeSystem);
+                    apply_config(conf);
             }
         });
 }
@@ -213,7 +213,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                 {
                     if (auto live_session = session.lock())
                     {
-                        apply_base_config(PauseResumeSystem);
+                        apply_base_config();
                         live_session->send_display_config(*base_configuration());
                     }
                 });
@@ -227,7 +227,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         {
             if (auto live_session = session.lock())
             {
-                apply_config(conf, PauseResumeSystem);
+                apply_config(conf);
                 live_session->send_display_config(*conf);
             }
         });
@@ -280,7 +280,7 @@ ms::MediatingDisplayChanger::cancel_base_configuration_preview(
             {
                 if (auto live_session = weak_session.lock())
                 {
-                    apply_base_config(PauseResumeSystem);
+                    apply_base_config();
                     live_session->send_display_config(*base_configuration());
                 }
             });
@@ -296,19 +296,18 @@ ms::MediatingDisplayChanger::base_configuration()
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-    SystemStateHandling pause_resume_system)
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     server_action_queue->enqueue(
         this,
-        [this, conf, pause_resume_system]
+        [this, conf]
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
             display_configuration_policy->apply_to(*conf);
             base_configuration_ = conf;
             if (base_configuration_applied)
-                apply_base_config(pause_resume_system);
+                apply_base_config();
 
             /*
              * Clear all the per-session configurations, since they may have become
@@ -332,31 +331,22 @@ void ms::MediatingDisplayChanger::resume_display_config_processing()
 }
 
 void ms::MediatingDisplayChanger::apply_config(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-    SystemStateHandling pause_resume_system)
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     report->new_configuration(*conf);
-    if (pause_resume_system)
-    {
-        ApplyNowAndRevertOnScopeExit comp{
-            [this] { compositor->stop(); },
-            [this] { compositor->start(); }};
+    ApplyNowAndRevertOnScopeExit comp{
+        [this] { compositor->stop(); },
+        [this] { compositor->start(); }};
 
-        display->configure(*conf);
-    }
-    else
-    {
-        display->configure(*conf);
-    }
+    display->configure(*conf);
     update_input_rectangles(*conf);
 
     base_configuration_applied = false;
 }
 
-void ms::MediatingDisplayChanger::apply_base_config(
-    SystemStateHandling pause_resume_system)
+void ms::MediatingDisplayChanger::apply_base_config()
 {
-    apply_config(base_configuration_, pause_resume_system);
+    apply_config(base_configuration_);
     base_configuration_applied = true;
 }
 
@@ -385,11 +375,11 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     auto const it = config_map.find(session);
     if (it != config_map.end())
     {
-        apply_config(it->second, PauseResumeSystem);
+        apply_config(it->second);
     }
     else if (!base_configuration_applied)
     {
-        apply_base_config(PauseResumeSystem);
+        apply_base_config();
     }
 }
 
@@ -400,7 +390,7 @@ void ms::MediatingDisplayChanger::no_focus_handler()
     focused_session.reset();
     if (!base_configuration_applied)
     {
-        apply_base_config(PauseResumeSystem);
+        apply_base_config();
     }
 }
 
@@ -422,7 +412,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
             base_configuration_ = conf;
             if (base_configuration_applied)
-                apply_base_config(PauseResumeSystem);
+                apply_base_config();
 
             send_config_to_all_sessions(conf);
         });
