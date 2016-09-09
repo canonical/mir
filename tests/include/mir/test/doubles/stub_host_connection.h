@@ -22,7 +22,10 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/graphics/nested/host_stream.h"
+<<<<<<< TREE
 #include "src/server/graphics/nested/host_chain.h"
+=======
+>>>>>>> MERGE-SOURCE
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -104,8 +107,12 @@ public:
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
     }
+<<<<<<< TREE
 
     std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) const override
+=======
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&)
+>>>>>>> MERGE-SOURCE
     {
         struct NullStream : graphics::nested::HostStream
         {
@@ -115,6 +122,7 @@ public:
         return std::make_unique<NullStream>();
     }
 
+<<<<<<< TREE
     std::unique_ptr<graphics::nested::HostChain> create_chain() const override
     {
         struct NullHostChain : graphics::nested::HostChain
@@ -124,12 +132,17 @@ public:
         return std::make_unique<NullHostChain>();
     }
 
+=======
+>>>>>>> MERGE-SOURCE
     class NullHostSurface : public graphics::nested::HostSurface
     {
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
         void set_event_handler(mir_surface_event_callback, void*) override {}
+<<<<<<< TREE
         void apply_spec(graphics::nested::SurfaceSpec&) override {}
+=======
+>>>>>>> MERGE-SOURCE
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     

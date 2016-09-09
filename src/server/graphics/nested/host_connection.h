@@ -45,8 +45,8 @@ namespace nested
 {
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
 
-class HostSurface;
 class HostStream;
+class HostSurface;
 class HostChain;
 class NativeBuffer;
 class HostConnection : public NestedContext

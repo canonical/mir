@@ -2,15 +2,27 @@
  * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
+<<<<<<< TREE
  * under the terms of the GNU Lesser General Public License version 3,
+=======
+ * under the terms of the GNU General Public License version 3,
+>>>>>>> MERGE-SOURCE
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<<<<<<< TREE
  * GNU Lesser General Public License for more details.
+=======
+ * GNU General Public License for more details.
+>>>>>>> MERGE-SOURCE
  *
+<<<<<<< TREE
  * You should have received a copy of the GNU Lesser General Public License
+=======
+ * You should have received a copy of the GNU General Public License
+>>>>>>> MERGE-SOURCE
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
