@@ -47,7 +47,8 @@ namespace
 {
 struct MockEglImageFactory : mgn::EglImageFactory
 {
-    MOCK_CONST_METHOD3(create_egl_image_from, mgn::EGLImageUPtr(mgn::NativeBuffer&, EGLDisplay, EGLint const*));
+    MOCK_CONST_METHOD3(create_egl_image_from,
+        std::unique_ptr<EGLImageKHR>(mgn::NativeBuffer&, EGLDisplay, EGLint const*));
 };
 
 struct MockNativeBuffer : mgn::NativeBuffer
@@ -58,6 +59,7 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(format, MirPixelFormat());
     MOCK_METHOD2(sync, void(MirBufferAccess, std::chrono::nanoseconds));
+    MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
 };
 
 struct MockHostConnection : mtd::StubHostConnection

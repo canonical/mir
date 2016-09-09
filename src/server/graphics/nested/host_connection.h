@@ -48,6 +48,7 @@ using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig
 class HostStream;
 class HostSurface;
 class HostChain;
+class HostSurfaceSpec;
 class NativeBuffer;
 class HostConnection : public NestedContext
 {
@@ -60,6 +61,7 @@ public:
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
     virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
     virtual std::unique_ptr<HostChain> create_chain() const = 0;
+    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
     virtual std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,

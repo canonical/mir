@@ -31,18 +31,30 @@ namespace nested
 {
 class HostChain;
 class HostStream;
-class SurfaceSpec
+class HostSurfaceSpec
 {
 public:
-    SurfaceSpec();
+    virtual ~HostSurfaceSpec() = default;
+    virtual void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size) = 0;
+    virtual void add_stream(HostStream&, geometry::Displacement disp) = 0;
+    virtual MirSurfaceSpec* handle() = 0;
+protected:
+    HostSurfaceSpec() = default;
+    HostSurfaceSpec(HostSurfaceSpec const&) = delete;
+    HostSurfaceSpec& operator=(HostSurfaceSpec const&) = delete;
+};
+class SurfaceSpec : public HostSurfaceSpec
+{
+public:
+    SurfaceSpec(MirConnection* con);
     ~SurfaceSpec();
-
     void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size);
     void add_stream(HostStream&, geometry::Displacement disp);
     MirSurfaceSpec* handle();
 private:
     MirSurfaceSpec* spec;
 };
+
 }
 }
 }

@@ -20,7 +20,7 @@
 
 #include "host_connection.h"
 #include "host_stream.h"
-#include "surface_spec.h"
+#include "host_surface_spec.h"
 #include "native_buffer.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/buffer.h"
@@ -68,12 +68,11 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     host_surface{create_host_surface(*host_connection, host_stream, best_output)},
     host_connection{host_connection},
     host_chain{nullptr},
-    current(nullptr),
     egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
-    egl_surface{egl_display, host_stream->egl_native_window(), egl_config},
-    content(BackingContent::stream)
+    egl_surface{egl_display, host_stream->egl_native_window(), egl_config}, 
+    content{BackingContent::stream}
 {
     host_surface->set_event_handler(event_thunk, this);
 }
@@ -96,13 +95,12 @@ void mgn::detail::DisplayBuffer::release_current()
 
 void mgn::detail::DisplayBuffer::swap_buffers()
 {
-    mgn::SurfaceSpec spec;
     if (content != BackingContent::stream)
     {
-        current = nullptr;
-        spec.add_stream(*host_stream, geom::Displacement{0,0});
-        host_surface->apply_spec(spec);
+        auto spec = host_connection->create_surface_spec();
+        spec->add_stream(*host_stream, geom::Displacement{0,0});
         content = BackingContent::stream;
+        host_surface->apply_spec(*spec);
     }
     eglSwapBuffers(egl_display, egl_surface);
 }
@@ -113,37 +111,33 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
 {
-    printf("slugg\n");
-    if (list.empty() || (list.back()->screen_position() != area) ||
-        (list.back()->alpha() != 1.0f) || (list.back()->shaped()))
+    if (list.empty() ||
+        (list.back()->screen_position() != area) ||
+        (list.back()->alpha() != 1.0f) ||
+        (list.back()->shaped()) ||
+        (list.back()->transformation() != identity))
+    {
         return false;
+    }
 
-    printf("BOOYAKACHA\n");
-    auto& passthrough_layer = list.back();
-    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(
-        passthrough_layer->buffer()->native_buffer_handle().get());
+    auto passthrough_buffer = list.back()->buffer();
+    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
     if (!nested_buffer)
         return false;
 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    if (current != list.back()->buffer())
-    {
-        auto cu = list.back()->buffer();
-        current = cu;
-        nested_buffer->tag_submitted();
-        nested_buffer->when_back([cu]{}); 
-        host_chain->submit_buffer(nested_buffer->client_handle());
-    }
+    nested_buffer->on_ownership_notification(
+        [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
+    host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)
     {
-        printf("SET THE CONTENT.\n");
-        mgn::SurfaceSpec spec;
-        spec.add_chain(*host_chain, geom::Displacement{0,0}, passthrough_layer->buffer()->size());
-        host_surface->apply_spec(spec);
+        auto spec = host_connection->create_surface_spec();
+        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
         content = BackingContent::chain;
+        host_surface->apply_spec(*spec);
     }
     return true;
 }

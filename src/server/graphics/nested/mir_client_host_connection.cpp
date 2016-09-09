@@ -20,8 +20,8 @@
 #include "host_surface.h"
 #include "host_stream.h"
 #include "host_chain.h"
+#include "host_surface_spec.h"
 #include "native_buffer.h"
-#include "surface_spec.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -118,7 +118,7 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void apply_spec(mgn::SurfaceSpec& spec) override
+    void apply_spec(mgn::HostSurfaceSpec& spec) override
     {
         mir_surface_apply_spec(mir_surface, spec.handle());
     }
@@ -489,13 +489,13 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void submit_buffer(MirBuffer* buffer)
+    void submit_buffer(mgn::NativeBuffer& buffer)
     {
-        if (buffer != current_buf)
+        if (buffer.client_handle() != current_buf)
         {
             printf("PUMP NEW IN\n");
-            current_buf = buffer;
-            mir_presentation_chain_submit_buffer(chain, buffer);
+            current_buf = buffer.client_handle();
+            mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
         }
     }
 
@@ -555,11 +555,6 @@ struct XNativeBuffer : mgn::NativeBuffer
         return mir_buffer_get_pixel_format(b);
     }
 
-    void tag_submitted()
-    {
-        mine = false;
-    }
-
     void avail()
     {
         mine = true;
@@ -571,7 +566,7 @@ struct XNativeBuffer : mgn::NativeBuffer
         }
     }
 
-    void when_back(std::function<void()> const& fn)
+    void on_ownership_notification(std::function<void()> const& fn)
     {
         f = fn;
     }
@@ -635,4 +630,9 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     }
 
     return ar;
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
+{
+    return std::make_unique<mgn::SurfaceSpec>(mir_connection);
 }

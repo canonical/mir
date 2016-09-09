@@ -65,6 +65,7 @@ public:
     std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
     std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
     std::unique_ptr<HostChain> create_chain() const override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
     std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,
