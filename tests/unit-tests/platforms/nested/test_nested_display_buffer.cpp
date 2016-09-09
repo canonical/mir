@@ -115,6 +115,7 @@ struct StubNestedBuffer :
     MirGraphicsRegion get_graphics_region() override { return MirGraphicsRegion{}; }
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
+    void on_ownership_notification(std::function<void()> const&) {}
 };
 
 struct MockNestedBuffer : StubNestedBuffer
