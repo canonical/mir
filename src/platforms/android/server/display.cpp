@@ -301,21 +301,25 @@ void mga::Display::on_hotplug()
 
 void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
 {
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
     /*
      * XXX It's presently useful but idealistically inefficient that we
      *     get a callback on every frame, even when the compositor is idle.
      *     (LP: #1374318)
      */
-    auto& f = last_frame[static_cast<int>(name)];
+    auto& f = last_frame[as_output_id(name).as_value()];
     f.increment_with_timestamp(timestamp);
     display_report->report_vsync(as_output_id(name).as_value(), f.load());
 }
 
 mg::Frame mga::Display::last_frame_on(unsigned output_id) const
 {
-    if (output_id >= sizeof(last_frame)/sizeof(last_frame[0]))
-         throw std::logic_error("last_frame_on(<invalid output_id>)");
-    return last_frame[output_id].load();
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    auto last = last_frame.find(output_id);
+    if (last == last_frame.end())
+         return {};  // Not an error. It might be a valid output_id pre-vsync
+    else
+         return last->second.load();
 }
 
 void mga::Display::register_configuration_change_handler(

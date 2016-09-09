@@ -31,10 +31,9 @@ namespace android
 
 enum class DisplayName
 {
-    primary  = HWC_DISPLAY_PRIMARY,  // = 0
-    external = HWC_DISPLAY_EXTERNAL, // = 1
-    virt     = HWC_DISPLAY_VIRTUAL,  // = 2
-    array_size
+    primary = HWC_DISPLAY_PRIMARY,
+    external = HWC_DISPLAY_EXTERNAL,
+    virt = HWC_DISPLAY_VIRTUAL
 };
 
 inline auto as_output_id(DisplayName name) -> DisplayConfigurationOutputId

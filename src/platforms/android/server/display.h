@@ -32,6 +32,7 @@
 #include <memory>
 #include <mutex>
 #include <array>
+#include <unordered_map>
 
 namespace mir
 {
@@ -113,7 +114,8 @@ private:
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 
-    AtomicFrame last_frame[static_cast<int>(DisplayName::array_size)];
+    std::mutex mutable vsync_mutex;
+    std::unordered_map<unsigned,AtomicFrame> last_frame;
 };
 
 }
