@@ -51,14 +51,16 @@ mgm::KMSPageFlipper::KMSPageFlipper(
 {
 }
 
-bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
+bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
+                                        uint32_t fb_id,
+                                        uint32_t connector_id)
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
     if (pending_page_flips.find(crtc_id) != pending_page_flips.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Page flip for crtc_id is already scheduled"));
 
-    pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, this};
+    pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, connector_id, this};
 
     auto ret = drmModePageFlip(drm_fd, crtc_id, fb_id,
                                DRM_MODE_PAGE_FLIP_EVENT,
@@ -159,6 +161,10 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 
 void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
 {
-    report->report_vsync(crtc_id);
-    pending_page_flips.erase(crtc_id);
+    auto pending = pending_page_flips.find(crtc_id);
+    if (pending != pending_page_flips.end())
+    {
+        report->report_vsync(crtc_id); //pending->second.connector_id);
+        pending_page_flips.erase(pending);
+    }
 }
