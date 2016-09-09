@@ -198,7 +198,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
 }
 
-TEST_F(NestedDisplayBuffer, extends_submission_lifetime)
+TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
 {
     auto nested_buffer = std::make_shared<StubNestedBuffer>();
     mg::RenderableList list =
