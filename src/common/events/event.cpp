@@ -64,6 +64,7 @@ MirEvent* MirEvent::clone() const
         return to_keymap()->clone();
     case mir_event_type_input_device_state:
         return to_input_device_state()->clone();
+    case mir_event_type_surface_placement: // TODO{ARG}
     case mir_event_type_input:
         break;
     }
@@ -105,6 +106,7 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
         return MirKeymapEvent::deserialize(bytes);
     case mir_event_type_input_device_state:
         return MirInputDeviceStateEvent::deserialize(bytes);
+    case mir_event_type_surface_placement: // TODO{ARG}
     case mir_event_type_input:
         break;
     }
@@ -138,6 +140,7 @@ std::string MirEvent::serialize(MirEvent const* event)
         return MirKeymapEvent::serialize(event);
     case mir_event_type_input_device_state:
         return MirInputDeviceStateEvent::serialize(event);
+    case mir_event_type_surface_placement: // TODO{ARG}
     case mir_event_type_input:
         break;
     }
