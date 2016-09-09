@@ -261,6 +261,22 @@ int mir_output_get_id(MirOutput const* output);
 MirOutputType mir_output_get_type(MirOutput const* output);
 
 /**
+ * Get the textual name of an output type.
+ *
+ * \param [in]  t  The MirDisplayOutputType to describe.
+ * \returns     The name of the output type.
+ */
+char const* mir_display_output_type_name(MirDisplayOutputType t);
+
+/**
+ * Get the textual name of an output type.
+ *
+ * \param [in]  t  The MirOutputType to describe.
+ * \returns     The name of the output type.
+ */
+char const* mir_output_type_name(MirOutputType t);
+
+/**
  * Get the x coordinate of the top-left point of the output in the virtual
  * display space.
  *

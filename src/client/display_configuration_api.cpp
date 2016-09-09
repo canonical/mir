@@ -18,7 +18,7 @@
 
 #include <mir_toolkit/mir_display_configuration.h>
 #include <mir/require.h>
-
+#include "mir/output_type_names.h"
 #include "display_configuration.h"
 
 namespace mcl = mir::client;
@@ -131,6 +131,16 @@ MirOutputType mir_output_get_type(MirOutput const* client_output)
     auto output = client_to_output(client_output);
 
     return static_cast<MirOutputType>(output->type());
+}
+
+char const* mir_display_output_type_name(MirDisplayOutputType t)
+{
+    return mir::output_type_name(t);
+}
+
+char const* mir_output_type_name(MirOutputType t)
+{
+    return mir::output_type_name(t);
 }
 
 int mir_output_get_physical_width_mm(MirOutput const *client_output)
