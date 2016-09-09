@@ -128,7 +128,8 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    nested_buffer->on_ownership_notification([]{});
+    nested_buffer->on_ownership_notification(
+        [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
     host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)

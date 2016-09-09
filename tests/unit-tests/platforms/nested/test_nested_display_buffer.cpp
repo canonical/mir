@@ -115,7 +115,12 @@ struct StubNestedBuffer :
     MirGraphicsRegion get_graphics_region() override { return MirGraphicsRegion{}; }
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
-    void on_ownership_notification(std::function<void()> const&) {}
+    void on_ownership_notification(std::function<void()> const& f) override { fn = f; }
+    void trigger()
+    {
+        if (fn) fn();
+    }
+    std::function<void()> fn;
 };
 
 struct MockNestedBuffer : StubNestedBuffer
@@ -168,12 +173,10 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
     t.join();
 }
 
-
 TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 {
     NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
-
     MockNestedBuffer nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
@@ -193,6 +196,21 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
     EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+}
+
+TEST_F(NestedDisplayBuffer, extends_submission_lifetime)
+{
+    auto nested_buffer = std::make_shared<StubNestedBuffer>();
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(nested_buffer, rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+
+    auto use_count = nested_buffer.use_count(); 
+    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_THAT(nested_buffer.use_count(), Eq(use_count + 1));
+    nested_buffer->trigger();
+    EXPECT_THAT(nested_buffer.use_count(), Eq(use_count));
 }
 
 TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
