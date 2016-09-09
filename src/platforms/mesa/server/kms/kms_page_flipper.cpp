@@ -164,7 +164,7 @@ void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
     auto pending = pending_page_flips.find(crtc_id);
     if (pending != pending_page_flips.end())
     {
-        report->report_vsync(crtc_id); //pending->second.connector_id);
+        report->report_vsync(pending->second.connector_id);
         pending_page_flips.erase(pending);
     }
 }
