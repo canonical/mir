@@ -29,6 +29,7 @@
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
+#include "mir_toolkit/events/surface_placement.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -338,6 +339,16 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pointer_buttons(index);
+}
+
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* /*event*/)
+{
+    return nullptr; // TODO{arg}
+}
+
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* /*event*/)
+{
+    return {0, 0, 0, 0}; // TODO{arg}
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

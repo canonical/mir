@@ -213,6 +213,16 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
  */
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* event);
 
+/**
+ * Retrieve the MirSurfacePlacementEvent associated with a MirEvent of
+ * type mir_event_type_surface_placement. The event signifies that the
+ * the server has fulfilled a request for relative surface placement.
+ *
+ * \param [in] event The event
+ * \return           The associated MirSurfacePlacementEvent
+ */
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
+
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * _________________________
