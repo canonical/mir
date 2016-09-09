@@ -57,12 +57,14 @@ mtd::FakeDisplay::FakeDisplay(std::vector<geometry::Rectangle> const& output_rec
 
 void mtd::FakeDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     for (auto& group : groups)
         f(*group);
 }
 
 std::unique_ptr<mir::graphics::DisplayConfiguration> mtd::FakeDisplay::configuration() const
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::unique_ptr<mir::graphics::DisplayConfiguration>(new StubDisplayConfig(*config));
 }
 
@@ -90,6 +92,7 @@ void mtd::FakeDisplay::register_configuration_change_handler(
 
 void mtd::FakeDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     decltype(config) new_configuration = std::make_shared<StubDisplayConfig>(new_config);
     decltype(groups) new_groups;
 
@@ -106,6 +109,7 @@ void mtd::FakeDisplay::emit_configuration_change_event(
     std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config)
 {
     handler_called = false;
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     config = std::make_shared<StubDisplayConfig>(*new_config);
     if (eventfd_write(wakeup_trigger, 1) == -1)
     {
