@@ -22,6 +22,7 @@
 #include <mir_toolkit/mir_native_buffer.h>
 #include "mir/graphics/native_buffer.h"
 
+#include <cstdlib>
 #include <gbm.h>
 
 namespace mir
