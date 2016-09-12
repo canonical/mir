@@ -562,7 +562,6 @@ struct XNativeBuffer : mgn::NativeBuffer
         {
             printf("FN!\n");
             f();
-            f = []{};
         }
     }
 
