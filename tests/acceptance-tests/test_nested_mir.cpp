@@ -468,6 +468,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
     mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
     mt::Signal condition;
+    mt::Signal test_processed_result;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
     NiceMock<MockDisplay> display{display_geometry};
@@ -951,7 +952,13 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(frames))
-        .WillRepeatedly(mt::WakeUp(&condition));
+        .WillRepeatedly(InvokeWithoutArgs(
+                    [&]
+                    {
+                        condition.raise();
+                        test_processed_result.wait_for(timeout);
+                        test_processed_result.reset();
+                    }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
     mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
@@ -959,6 +966,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
     EXPECT_TRUE(condition.wait_for(timeout));
     condition.reset();
+    test_processed_result.raise();
 
     for (int i = 0; i != frames; ++i)
     {
@@ -966,6 +974,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
         EXPECT_TRUE(condition.wait_for(timeout));
         condition.reset();
+        test_processed_result.raise();
     }
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
@@ -986,7 +995,13 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(cursor_names.size()))
-            .WillRepeatedly(mt::WakeUp(&condition));
+            .WillRepeatedly(InvokeWithoutArgs(
+                    [&]
+                    {
+                        condition.raise();
+                        test_processed_result.wait_for(timeout);
+                        test_processed_result.reset();
+                    }));
 
 
     for (auto const name : cursor_names)
@@ -997,6 +1012,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
         EXPECT_TRUE(condition.wait_for(timeout));
         condition.reset();
+        test_processed_result.raise();
     }
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
