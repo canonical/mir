@@ -224,6 +224,24 @@ TEST_F(PresentationChain, has_native_buffer)
     auto buffer = context.buffer();
     EXPECT_THAT(context.buffer(), Ne(nullptr));
 
+    //the native type for the stub platform is nullptr
+    EXPECT_THAT(mir_buffer_get_native_buffer(buffer, mir_none), Eq(nullptr));
+}
+
+TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
+{
+    SurfaceWithChainFromStart surface(connection, size, pf);
+
+    MirBufferSync context;
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+
+    EXPECT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    EXPECT_THAT(context.buffer(), Ne(nullptr));
+
     auto message = mir_buffer_create_platform_message(buffer);
     EXPECT_THAT(message, Ne(nullptr));
 
