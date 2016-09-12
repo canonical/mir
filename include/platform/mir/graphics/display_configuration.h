@@ -53,22 +53,22 @@ struct DisplayConfigurationCard
  */
 enum class DisplayConfigurationOutputType
 {
-    unknown,
-    vga,
-    dvii,
-    dvid,
-    dvia,
-    composite,
-    svideo,
-    lvds,
-    component,
-    ninepindin,
-    displayport,
-    hdmia,
-    hdmib,
-    tv,
-    edp,
-    virt,
+    unknown     = mir_output_type_unknown,
+    vga         = mir_output_type_vga,
+    dvii        = mir_output_type_dvii,
+    dvid        = mir_output_type_dvid,
+    dvia        = mir_output_type_dvia,
+    composite   = mir_output_type_composite,
+    svideo      = mir_output_type_svideo,
+    lvds        = mir_output_type_lvds,
+    component   = mir_output_type_component,
+    ninepindin  = mir_output_type_ninepindin,
+    displayport = mir_output_type_displayport,
+    hdmia       = mir_output_type_hdmia,
+    hdmib       = mir_output_type_hdmib,
+    tv          = mir_output_type_tv,
+    edp         = mir_output_type_edp,
+    virt        = mir_output_type_virtual
 };
 
 /**
