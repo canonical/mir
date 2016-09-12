@@ -102,6 +102,11 @@ void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
     }
 }
 
+void mcla::Buffer::fill_full_msg(MirPlatformMessage& message)
+{
+    (void)message;
+}
+
 MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
 {
     return native_buffer->anwb();

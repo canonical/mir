@@ -20,10 +20,12 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "presentation_chain.h"
 #include "mir_connection.h"
+#include "mir_platform_message.h"
 #include "buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include "mir/client_buffer.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -218,11 +220,14 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirPlatformMessage* mir_buffer_create_platform_message(MirBuffer* buffer)
+MirPlatformMessage* mir_buffer_create_platform_message(MirBuffer* b)
 try
 {
-    (void)buffer;
-    return nullptr;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    auto msg = new MirPlatformMessage{0};
+    buffer->client_buffer()->fill_full_msg(*msg);
+    return msg;
 }
 catch (std::exception const& ex)
 {

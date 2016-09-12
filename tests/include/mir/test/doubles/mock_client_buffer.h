@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_H_
 
 #include "mir/client_buffer.h"
+#include "src/client/mir_platform_message.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -42,6 +43,7 @@ struct MockClientBuffer : client::ClientBuffer
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD1(update_from, void(MirBufferPackage const&));
     MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
+    MOCK_METHOD1(fill_full_msg, void(MirPlatformMessage&));
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
     MOCK_CONST_METHOD0(as_mir_native_buffer, MirNativeBuffer*());
     MOCK_METHOD2(set_fence, void(MirNativeFence, MirBufferAccess));

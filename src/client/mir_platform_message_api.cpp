@@ -17,16 +17,8 @@
  */
 
 #include "mir_toolkit/mir_platform_message.h"
+#include "mir_platform_message.h"
 #include <vector>
-
-struct MirPlatformMessage
-{
-    MirPlatformMessage(unsigned int opcode) : opcode{opcode} {}
-
-    unsigned int const opcode;
-    std::vector<char> data;
-    std::vector<int> fds;
-};
 
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode)
 {

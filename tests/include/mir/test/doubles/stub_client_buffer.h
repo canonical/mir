@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_H_
 
 #include "src/include/client/mir/client_buffer.h"
+#include "src/client/mir_platform_message.h"
 #include <unistd.h>
 
 namespace mir
@@ -77,6 +78,15 @@ struct StubClientBuffer : client::ClientBuffer
     }
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
+    void fill_full_msg(MirPlatformMessage& message) override
+    {
+        for (auto i = 0; i < package->data_items; i++)
+            message.data.push_back(package->data[i]);
+        for (auto i = 0; i < package->fd_items; i++)
+            message.fds.push_back(package->data[i]);
+        (void)message;
+//        for (auto
+    }
 
     MirNativeBuffer* as_mir_native_buffer() const override { return nullptr; }
     void set_fence(MirNativeFence, MirBufferAccess) override {}

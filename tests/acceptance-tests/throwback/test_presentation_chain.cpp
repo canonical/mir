@@ -245,8 +245,8 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
     auto message = mir_buffer_create_platform_message(buffer);
     ASSERT_THAT(message, Ne(nullptr));
 
-    //should have the stub platform's data
-    EXPECT_THAT(mir_platform_message_get_data(message).size, Eq(1));
+    //test is ran against stub plaform, number of ints and fds is dependent on its definitions
+    EXPECT_THAT(mir_platform_message_get_data(message).size, Eq(2));
     EXPECT_THAT(mir_platform_message_get_fds(message).num_fds, Eq(1));
 
     mir_platform_message_release(message);
