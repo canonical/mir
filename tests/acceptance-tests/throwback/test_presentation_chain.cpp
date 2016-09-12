@@ -243,11 +243,11 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
     EXPECT_THAT(context.buffer(), Ne(nullptr));
 
     auto message = mir_buffer_create_platform_message(buffer);
-    EXPECT_THAT(message, Ne(nullptr));
+    ASSERT_THAT(message, Ne(nullptr));
 
     //should have the stub platform's data
     EXPECT_THAT(mir_platform_message_get_data(message).size, Eq(1));
-    EXPECT_THAT(mir_platform_message_get_fds(message).size, Eq(1));
+    EXPECT_THAT(mir_platform_message_get_fds(message).num_fds, Eq(1));
 
     mir_platform_message_release(message);
 }

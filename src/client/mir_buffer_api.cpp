@@ -217,3 +217,15 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
+
+MirPlatformMessage* mir_buffer_create_platform_message(MirBuffer* buffer)
+try
+{
+    (void)buffer;
+    return nullptr;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
