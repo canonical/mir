@@ -20,7 +20,8 @@
 
 namespace mir {
 
-char const* output_type_name(unsigned output_type) // XXX multiple enums use this
+// Three enums use this :(  TODO: Deduplicate them and add type safety later.
+char const* output_type_name(unsigned output_type)
 {
     static const char * const name[] =
     {
@@ -44,7 +45,7 @@ char const* output_type_name(unsigned output_type) // XXX multiple enums use thi
     if (output_type < sizeof(name)/sizeof(name[0]))
         return name[output_type];
     else
-        return "out of range";
+        return nullptr;
 }
 
 }
