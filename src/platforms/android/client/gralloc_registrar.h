@@ -35,11 +35,11 @@ class GrallocRegistrar : public BufferRegistrar
 public:
     GrallocRegistrar(std::shared_ptr<const gralloc_module_t> const& gralloc_dev);
 
-    std::shared_ptr<graphics::NativeBuffer> register_buffer(
+    std::shared_ptr<graphics::android::NativeBuffer> register_buffer(
         MirBufferPackage const& package,
         MirPixelFormat pf) const;
     std::shared_ptr<char> secure_for_cpu(
-        std::shared_ptr<graphics::NativeBuffer> const& handle,
+        std::shared_ptr<graphics::android::NativeBuffer> const& handle,
         geometry::Rectangle const);
 
 private:

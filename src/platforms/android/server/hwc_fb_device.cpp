@@ -86,7 +86,7 @@ void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
     }
 
     auto& buffer = *context.last_rendered_buffer();
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer.native_buffer_handle());
     native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {

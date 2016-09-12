@@ -32,7 +32,7 @@ namespace android
 {
 class Fence;
 
-struct AndroidNativeBuffer : public graphics::NativeBuffer
+struct AndroidNativeBuffer : public NativeBuffer
 {
     AndroidNativeBuffer(
         std::shared_ptr<ANativeWindowBuffer> const& handle,

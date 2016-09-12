@@ -20,6 +20,7 @@
 
 #include <cstring>
 
+#include "native_buffer.h"
 #include "mir/client_buffer.h"
 #include "mir/uncaught.h"
 
@@ -74,8 +75,11 @@ try
 
     auto buffer = surface.get_current_buffer();
 
-    auto buffer_to_driver = buffer->native_buffer_handle();
-    memcpy(buffer_package, buffer_to_driver.get(), sizeof(MirBufferPackage));
+    auto buffer_to_driver = std::dynamic_pointer_cast<mir::graphics::mesa::NativeBuffer>(
+        buffer->native_buffer_handle());
+    if (!buffer_to_driver)
+        return MIR_MESA_FALSE;
+    *buffer_package = *buffer_to_driver;
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)
