@@ -467,6 +467,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 {
     mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
+    mt::Signal condition;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
     NiceMock<MockDisplay> display{display_geometry};
@@ -945,13 +946,12 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
     nested_mir.wait_until_ready();
 
-    mt::Signal condition;
     // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
     // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(frames))
-        .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
+        .WillRepeatedly(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
     mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
@@ -972,7 +972,6 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 {
-    mt::Signal condition;
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurface client(nested_mir);
@@ -987,7 +986,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(cursor_names.size()))
-            .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
+            .WillRepeatedly(mt::WakeUp(&condition));
 
 
     for (auto const name : cursor_names)
@@ -1015,14 +1014,12 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     nested_mir.wait_until_ready();
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 
-    mt::Signal condition;
-
     // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
     // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
     // react to the frame_posted callback by setting the cursor buffer again via show(..)
     // The number of show calls depends solely on scheduling decisions
     EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(1))
-        .WillOnce(InvokeWithoutArgs([&]{ condition.raise(); }));
+        .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
     mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
