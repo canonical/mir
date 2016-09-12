@@ -23,6 +23,7 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
+#include "mir/events/surface_placement_event.h"
 
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/resize_event.h"
@@ -341,14 +342,14 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
     return ev->device_pointer_buttons(index);
 }
 
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* /*event*/)
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
 {
-    return nullptr; // TODO{arg}
+    return event->to_surface_placement();
 }
 
-MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* /*event*/)
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event)
 {
-    return {0, 0, 0, 0}; // TODO{arg}
+    return event->placement();
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

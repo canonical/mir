@@ -19,8 +19,18 @@
 #include "mir/events/surface_placement_event.h"
 
 MirSurfacePlacementEvent::MirSurfacePlacementEvent() :
-    MirEvent(mir_event_type_close_surface)
+    MirEvent(mir_event_type_surface_placement)
 {
+}
+
+int MirSurfacePlacementEvent::id() const
+{
+    return id_;
+}
+
+void MirSurfacePlacementEvent::set_id(int const id)
+{
+    id_ = id;
 }
 
 MirRectangle MirSurfacePlacementEvent::placement() const
@@ -32,3 +42,14 @@ void MirSurfacePlacementEvent::set_placement(MirRectangle const& placement)
 {
     placement_ = placement;
 }
+
+MirSurfacePlacementEvent* MirEvent::to_surface_placement()
+{
+    return static_cast<MirSurfacePlacementEvent*>(this);
+}
+
+MirSurfacePlacementEvent const* MirEvent::to_surface_placement() const
+{
+    return static_cast<MirSurfacePlacementEvent const*>(this);
+}
+
