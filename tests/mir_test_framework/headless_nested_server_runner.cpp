@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/executable_path.h"
-#include "headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 
 namespace mtf = mir_test_framework;
 
