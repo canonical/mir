@@ -218,7 +218,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirPlatformMessage* mir_buffer_create_platform_message(MirBuffer* buffer)
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* buffer)
 try
 {
     (void)buffer;
