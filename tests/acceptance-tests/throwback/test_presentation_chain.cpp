@@ -224,8 +224,14 @@ TEST_F(PresentationChain, has_native_buffer)
     auto buffer = context.buffer();
     EXPECT_THAT(context.buffer(), Ne(nullptr));
 
-    //the native type for the stub platform is nullptr
-    EXPECT_THAT(mir_buffer_get_native_buffer(buffer, mir_none), Eq(nullptr));
+    auto message = mir_buffer_create_platform_message(buffer);
+    EXPECT_THAT(message, Ne(nullptr));
+
+    //should have the stub platform's data
+    EXPECT_THAT(mir_platform_message_get_data(message).size, Eq(1));
+    EXPECT_THAT(mir_platform_message_get_fds(message).size, Eq(1));
+
+    mir_platform_message_release(message);
 }
 
 TEST_F(PresentationChain, has_native_fence)

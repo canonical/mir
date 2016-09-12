@@ -101,6 +101,17 @@ void mir_buffer_set_callback(
  **/
 MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access);
 
+/**
+ * Create a platform message representing a MirBuffer.
+ *
+ * Each call to mir_buffer_create_platform_message() should be matched by
+ * a call to mir_platform_message_release() to avoid memory leaks.
+ *
+ *   \param [in] buffer    The buffer to create the message from
+ *   \return               The created MirPlatformMessage
+ */
+MirPlatformMessage* mir_buffer_create_platform_message(MirBuffer* buffer);
+
 /** Access a CPU-mapped region associated with a given buffer for the given purpose.
  *  This will synchronize the buffer for the given purpose.
  *
