@@ -72,7 +72,9 @@ auto display_output(
                                               mir_orientation_normal,
                                               1.0f,
                                               mir_form_factor_phone,
-                                              mir_subpixel_arrangement_unknown
+                                              mir_subpixel_arrangement_unknown,
+                                              {},
+                                              mir_output_gamma_unsupported
         };
 }
 
@@ -245,8 +247,7 @@ TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_har
     mtd::StubDisplayConfig conf{2};
 
     changer->configure_for_hardware_change(
-        mt::fake_shared(conf),
-        mir::DisplayChanger::PauseResumeSystem);
+        mt::fake_shared(conf));
 
     auto const base_conf = changer->base_configuration();
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(conf));
@@ -264,24 +265,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausin
     EXPECT_CALL(mock_display, configure(Ref(conf)));
     EXPECT_CALL(mock_compositor, start());
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::PauseResumeSystem);
-}
-
-TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retaining_system_state)
-{
-    using namespace testing;
-    mtd::NullDisplayConfiguration conf;
-
-    EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_compositor, start()).Times(0);
-
-    InSequence s;
-    EXPECT_CALL(mock_conf_policy, apply_to(Ref(conf)));
-    EXPECT_CALL(mock_display, configure(Ref(conf)));
-
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::RetainSystemState);
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
@@ -304,8 +288,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
     EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
-    changer->configure_for_hardware_change(conf,
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
@@ -321,8 +304,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
     EXPECT_CALL(mock_session1, send_display_config(_));
     EXPECT_CALL(mock_session2, send_display_config(_));
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_attached_config_applies_config)
@@ -415,8 +397,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
     stub_session_container.insert_session(session1);
     changer->configure(session1, conf);
 
-    changer->configure_for_hardware_change(conf,
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(conf);
 
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
@@ -492,9 +473,7 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
-    display_changer.configure_for_hardware_change(
-        conf,
-        mir::DisplayChanger::PauseResumeSystem);
+    display_changer.configure_for_hardware_change(conf);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));

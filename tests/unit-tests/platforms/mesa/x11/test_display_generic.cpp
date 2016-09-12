@@ -26,7 +26,7 @@
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
-#include "src/server/report/null_report_factory.h"
+#include "src/server/report/null/display_report.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -102,7 +102,8 @@ public:
                 [](::Display* display)
                 {
                     XCloseDisplay(display);
-                }), mir::geometry::Size{1280,1024});
+                }), mir::geometry::Size{1280,1024},
+                std::make_shared<mir::report::null::DisplayReport>());
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());

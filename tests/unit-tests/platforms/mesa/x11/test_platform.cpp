@@ -21,6 +21,7 @@
 
 #include "mir/options/program_option.h"
 #include "src/platforms/mesa/server/x11/graphics/platform.h"
+#include "src/server/report/null/display_report.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -53,7 +54,8 @@ public:
                 [](::Display* display)
                 {
                     XCloseDisplay(display);
-                }), mir::geometry::Size{1280,1024});
+                }), mir::geometry::Size{1280,1024},
+                std::make_shared<mir::report::null::DisplayReport>());
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

@@ -20,16 +20,19 @@
 #define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
 
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/native_buffer.h"
 
 namespace mir
 {
 namespace graphics
 {
-
+namespace eglstream
+{
 //TODO: a class that allows access to a mgc::ShmFile seems like the appropriate internal type.
-struct NativeBuffer : MirBufferPackage
+struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
 {
 };
+}
 }
 }
 
