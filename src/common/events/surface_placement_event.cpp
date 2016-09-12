@@ -43,11 +43,6 @@ void MirSurfacePlacementEvent::set_placement(MirRectangle const& placement)
     placement_ = placement;
 }
 
-MirSurfacePlacementEvent* MirEvent::to_surface_placement()
-{
-    return static_cast<MirSurfacePlacementEvent*>(this);
-}
-
 MirSurfacePlacementEvent const* MirEvent::to_surface_placement() const
 {
     return static_cast<MirSurfacePlacementEvent const*>(this);
