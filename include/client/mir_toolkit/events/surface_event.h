@@ -32,18 +32,18 @@ extern "C" {
 /**
  * Retrieve the attribute index configured with a given MirSurfaceEvent
  *
- * \param [in] Event The event
+ * \param [in] event The event
  * \return           The associated attribute
  */
-MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev);
+MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event);
 
 /**
  * Retrieve the new value of the associated attribute for a given MirSurfaceEvent
  *
- * \param [in] Event The event
+ * \param [in] event The event
  * \return           The associated attribute value
  */
-int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev);
+int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event);
 
 #ifdef __cplusplus
 }

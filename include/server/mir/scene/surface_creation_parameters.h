@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -87,6 +87,11 @@ struct SurfaceCreationParameters
     mir::optional_value<frontend::BufferStreamId> content_id;
     mir::optional_value<geometry::Rectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+    optional_value<MirPlacementHints> placement_hints;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
 
     std::weak_ptr<Surface> parent;
 

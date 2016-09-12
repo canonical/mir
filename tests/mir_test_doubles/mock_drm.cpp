@@ -330,6 +330,18 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
                                        connectors, count, mode);
 }
 
+int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcGetGamma(fd, crtc_id, size, red, green, blue);
+}
+
+int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcSetGamma(fd, crtc_id, size, red, green, blue);
+}
+
 void drmModeFreeResources(drmModeResPtr ptr)
 {
     global_mock->drmModeFreeResources(ptr);

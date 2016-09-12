@@ -151,9 +151,7 @@ private:
 struct OrderTrackingDBC : mc::DisplayBufferCompositor
 {
     OrderTrackingDBC(
-        std::shared_ptr<mc::DisplayBufferCompositor> const& wrapped,
         std::shared_ptr<Ordering> const& ordering) :
-        wrapped(wrapped),
         ordering(ordering)
     {
     }
@@ -161,26 +159,22 @@ struct OrderTrackingDBC : mc::DisplayBufferCompositor
     void composite(mc::SceneElementSequence&& scene_sequence) override
     {
         ordering->note_scene_element_sequence(scene_sequence);
-        wrapped->composite(std::move(scene_sequence));
     }
 
-    std::shared_ptr<mc::DisplayBufferCompositor> const wrapped;
     std::shared_ptr<Ordering> const ordering;
 };
 
 struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
 {
     OrderTrackingDBCFactory(
-        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
         std::shared_ptr<Ordering> const& ordering) :
-        wrapped(wrapped),
         ordering(ordering)
     {
     }
 
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db) override
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&) override
     {
-        return std::make_unique<OrderTrackingDBC>(wrapped->create_compositor_for(db), ordering);
+        return std::make_unique<OrderTrackingDBC>(ordering);
     }
 
     std::shared_ptr<OrderTrackingDBC> last_dbc{nullptr};
@@ -193,10 +187,10 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
     void SetUp() override
     {
         ordering = std::make_shared<Ordering>();
-        server.wrap_display_buffer_compositor_factory(
-            [this](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
+        server.override_the_display_buffer_compositor_factory(
+            [this]()
             {
-                order_tracker = std::make_shared<OrderTrackingDBCFactory>(wrapped, ordering);
+                order_tracker = std::make_shared<OrderTrackingDBCFactory>(ordering);
                 return order_tracker;
             });
 

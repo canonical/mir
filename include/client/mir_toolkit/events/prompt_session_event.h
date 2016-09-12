@@ -35,7 +35,7 @@ extern "C" {
  * \param [in] event The prompt session event
  * \return           The new state
  */
-MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev);
+MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* event);
 
 #ifdef __cplusplus
 }

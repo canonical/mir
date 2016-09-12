@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -285,6 +285,11 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
 
     #undef COPY_IF_SET
 
@@ -621,6 +626,11 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(parent_id);
     // aux_rect is a special case (below)
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(edge_attachment);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -763,6 +773,21 @@ void mf::SessionMediator::confirm_base_display_configuration(
     auto const config = unpack_and_sanitize_display_configuration(request);
 
     display_changer->confirm_base_configuration(session, config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::cancel_base_display_configuration_preview(
+    mir::protobuf::Void const* /*request*/,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->cancel_base_configuration_preview(session);
 
     done->Run();
 }

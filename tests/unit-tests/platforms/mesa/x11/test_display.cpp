@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "src/platforms/mesa/server/x11/graphics/display.h"
+#include "src/server/report/null/display_report.h"
 
 #include "mir/graphics/display_configuration.h"
 
@@ -96,7 +97,8 @@ public:
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   mock_gl_config);
+                   mock_gl_config,
+                   std::make_shared<mir::report::null::DisplayReport>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

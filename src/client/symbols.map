@@ -141,6 +141,7 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_name;
     mir_surface_spec_set_parent;
     mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_placement;
     mir_surface_spec_set_preferred_orientation;
     mir_surface_spec_set_state;
     mir_surface_spec_set_streams;
@@ -363,7 +364,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
-    mir_buffer_wait_fence;
+    mir_buffer_wait_for_access;
     mir_buffer_get_native_buffer;
     mir_buffer_get_graphics_region;
     mir_buffer_set_callback;
@@ -422,5 +423,6 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_output_get_current_mode_index; 
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
+    mir_connection_cancel_base_display_configuration_preview;
 } MIR_CLIENT_0.24;
 

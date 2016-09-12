@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -122,6 +122,11 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(state);
     SERIALIZE_OPTION_IF_SET(pref_orientation);
     SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(placement_hints);
+    SERIALIZE_OPTION_IF_SET(surface_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_x);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_y);
     SERIALIZE_OPTION_IF_SET(min_width);
     SERIALIZE_OPTION_IF_SET(min_height);
     SERIALIZE_OPTION_IF_SET(max_width);
@@ -1041,6 +1046,26 @@ void MirConnection::preview_base_display_configuration(
     };
 
     server.preview_base_display_configuration(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::cancel_base_display_configuration_preview()
+{
+    mp::Void request;
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
+    server.cancel_base_display_configuration_preview(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
