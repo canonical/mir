@@ -47,7 +47,6 @@ public:
     void mark_as_submitted() {}
     void update_from(MirBufferPackage const&) {}
     void fill_update_msg(MirBufferPackage&) {}
-    void fill_full_msg(MirPlatformMessage&) {}
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
         return nullptr;

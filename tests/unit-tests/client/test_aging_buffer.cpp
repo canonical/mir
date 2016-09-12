@@ -64,10 +64,6 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
     }
 
-    void fill_full_msg(MirPlatformMessage&) override
-    {
-    }
-
     MirNativeBuffer* as_mir_native_buffer() const override
     {
         exit(1);

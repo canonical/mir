@@ -149,11 +149,6 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-void mclm::ClientBuffer::fill_full_msg(MirPlatformMessage& message)
-{
-    (void)message;
-}
-
 MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
 {
     if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
