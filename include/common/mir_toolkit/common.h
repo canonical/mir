@@ -106,6 +106,27 @@ typedef enum MirPowerMode
     mir_power_mode_off /* Powered down. */
 } MirPowerMode;
 
+typedef enum MirOutputType
+{
+    mir_output_type_unknown     = 0,  /* DRM_MODE_CONNECTOR_Unknown     */
+    mir_output_type_vga         = 1,  /* DRM_MODE_CONNECTOR_VGA         */
+    mir_output_type_dvii        = 2,  /* DRM_MODE_CONNECTOR_DVII        */
+    mir_output_type_dvid        = 3,  /* DRM_MODE_CONNECTOR_DVID        */
+    mir_output_type_dvia        = 4,  /* DRM_MODE_CONNECTOR_DVIA        */
+    mir_output_type_composite   = 5,  /* DRM_MODE_CONNECTOR_Composite   */
+    mir_output_type_svideo      = 6,  /* DRM_MODE_CONNECTOR_SVIDEO      */
+    mir_output_type_lvds        = 7,  /* DRM_MODE_CONNECTOR_LVDS        */
+    mir_output_type_component   = 8,  /* DRM_MODE_CONNECTOR_Component   */
+    mir_output_type_ninepindin  = 9,  /* DRM_MODE_CONNECTOR_9PinDIN     */
+    mir_output_type_displayport = 10, /* DRM_MODE_CONNECTOR_DisplayPort */
+    mir_output_type_hdmia       = 11, /* DRM_MODE_CONNECTOR_HDMIA       */
+    mir_output_type_hdmib       = 12, /* DRM_MODE_CONNECTOR_HDMIB       */
+    mir_output_type_tv          = 13, /* DRM_MODE_CONNECTOR_TV          */
+    mir_output_type_edp         = 14, /* DRM_MODE_CONNECTOR_eDP         */
+    mir_output_type_virtual     = 15  /* DRM_MODE_CONNECTOR_VIRTUAL     */
+/*  TODO                        = 16     DRM_MODE_CONNECTOR_DSI         */
+} MirOutputType;
+
 typedef enum MirPromptSessionState
 {
     mir_prompt_session_state_stopped = 0,
