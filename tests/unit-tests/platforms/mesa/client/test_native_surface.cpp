@@ -54,7 +54,7 @@ public:
 
     MirSurfaceParameters surf_params;
     const char* error_msg = "thrown as part of test";
-    mg::NativeBuffer native_buffer;
+    mg::mesa::NativeBuffer native_buffer;
     testing::NiceMock<mtd::MockClientBuffer> mock_buffer;
     testing::NiceMock<mtd::MockEGLNativeSurface> mock_surface;
     mclg::NativeSurface native_surface{mock_surface};
