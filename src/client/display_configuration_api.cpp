@@ -133,14 +133,14 @@ MirOutputType mir_output_get_type(MirOutput const* client_output)
     return static_cast<MirOutputType>(output->type());
 }
 
-char const* mir_display_output_type_name(MirDisplayOutputType t)
+char const* mir_display_output_type_name(MirDisplayOutputType type)
 {
-    return mir::output_type_name(t);
+    return mir::output_type_name(type);
 }
 
-char const* mir_output_type_name(MirOutputType t)
+char const* mir_output_type_name(MirOutputType type)
 {
-    return mir::output_type_name(t);
+    return mir::output_type_name(type);
 }
 
 int mir_output_get_physical_width_mm(MirOutput const *client_output)
