@@ -44,7 +44,7 @@ public:
 { \
     BOOST_THROW_EXCEPTION(std::logic_error("error: use_egl_native_window(...) has not yet been called"));\
 }
-    graphics::NativeBuffer* driver_requests_buffer() override THROW_EXCEPTION
+    graphics::android::NativeBuffer* driver_requests_buffer() override THROW_EXCEPTION
     void driver_returns_buffer(ANativeWindowBuffer*, int) override THROW_EXCEPTION
     void dispatch_driver_request_format(int) override THROW_EXCEPTION
     void dispatch_driver_request_buffer_count(unsigned int) override THROW_EXCEPTION
@@ -58,7 +58,7 @@ class EGLNativeSurfaceInterpreter : public graphics::android::AndroidDriverInter
 public:
     explicit EGLNativeSurfaceInterpreter(EGLNativeSurface& surface);
 
-    graphics::NativeBuffer* driver_requests_buffer() override;
+    graphics::android::NativeBuffer* driver_requests_buffer() override;
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) override;
     void dispatch_driver_request_format(int format) override;
     void dispatch_driver_request_buffer_count(unsigned int count) override;
