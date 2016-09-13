@@ -165,3 +165,8 @@ bool mcle::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
 {
     return true;
 }
+
+MirBufferPackage* mcle::ClientBuffer::package() const
+{
+    return creation_package.get();
+}

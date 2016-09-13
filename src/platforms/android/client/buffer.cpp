@@ -37,7 +37,8 @@ mcla::Buffer::Buffer(
     native_buffer{registrar->register_buffer(package, pf)},
     buffer_pf(pf),
     buffer_stride{package.stride},
-    buffer_size{package.width, package.height}
+    buffer_size{package.width, package.height},
+    creation_package(package)
 {
 }
 
@@ -139,4 +140,9 @@ bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds n
         return native_buffer->ensure_available_for(mga::BufferAccess::write, ms); 
 
     BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
+}
+
+MirBufferPackage* mcla::Buffer::package() const
+{
+    return const_cast<MirBufferPackage*>(&creation_package);
 }
