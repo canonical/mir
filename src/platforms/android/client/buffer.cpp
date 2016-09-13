@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform_ipc_operations.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -27,6 +28,7 @@
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mcla::Buffer::Buffer(
@@ -79,7 +81,7 @@ void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 {
     if ((update_package.data_items != 0) && 
         (update_package.fd_items != 0) && 
-        (update_package.data[0] == static_cast<int>(mga::BufferFlag::fenced)))
+        (update_package.data[0] == static_cast<int>(mg::FenceFlag::fenced)))
     {
         auto fence_fd = update_package.fd[0];
         native_buffer->update_usage(fence_fd, mga::BufferAccess::read);
@@ -92,13 +94,13 @@ void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
     auto fence = native_buffer->copy_fence();
     if (fence > 0)
     {
-        message.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+        message.data[0] = static_cast<int>(mg::FenceFlag::fenced);
         message.fd[0] = fence;
         message.fd_items = 1; 
     }
     else
     {
-        message.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+        message.data[0] = static_cast<int>(mg::FenceFlag::unfenced);
         message.fd_items = 0; 
     }
 }

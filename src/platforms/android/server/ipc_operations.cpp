@@ -40,12 +40,12 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
     mir::Fd fence_fd(native_buffer->copy_fence());
     if (fence_fd != mir::Fd::invalid)
     {
-        msg.pack_data(static_cast<int>(mga::BufferFlag::fenced));
+        msg.pack_data(static_cast<int>(mg::FenceFlag::fenced));
         msg.pack_fd(fence_fd);
     }
     else
     {
-        msg.pack_data(static_cast<int>(mga::BufferFlag::unfenced));
+        msg.pack_data(static_cast<int>(mg::FenceFlag::unfenced));
     }
 
     if (msg_type == mg::BufferIpcMsgType::full_msg)

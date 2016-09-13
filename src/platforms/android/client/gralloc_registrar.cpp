@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform_ipc_operations.h"
 #include "egl_sync_fence.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
@@ -91,7 +92,7 @@ std::shared_ptr<mga::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     MirBufferPackage const& package,
     MirPixelFormat pf) const
 {
-    bool const fence_present{package.data[0] == static_cast<int>(mga::BufferFlag::fenced)};
+    bool const fence_present{package.data[0] == static_cast<int>(mg::FenceFlag::fenced)};
     int const mir_flag_offset{1};
 
     int native_handle_header_size = sizeof(native_handle_t);

@@ -98,6 +98,8 @@ TEST_F(NestedIPCOperations, packs_buffer_itself_when_native)
     mgn::IpcOperations operations(mt::fake_shared(mock_ops));
 
     MirBufferPackage package;
+    package.data_items = 0;
+    package.fd_items = 0;
     EXPECT_CALL(*nested, package())
         .WillOnce(Return(&package));
     operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::full_msg);

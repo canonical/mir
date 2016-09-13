@@ -31,6 +31,13 @@ enum class BufferIpcMsgType
     full_msg, //pack the full ipc representation of the buffer
     update_msg //assume the client has a full representation, and pack only updates to the buffer 
 };
+
+enum class FenceFlag
+{
+    unfenced = 0,
+    fenced
+};
+
 class Buffer;
 class BufferIpcMessage;
 struct PlatformOperationMessage;
