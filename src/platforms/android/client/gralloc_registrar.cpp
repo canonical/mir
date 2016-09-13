@@ -93,7 +93,6 @@ std::shared_ptr<mga::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     MirPixelFormat pf) const
 {
     bool const fence_present{package.flags & mir_buffer_flag_fenced};
-    int const mir_flag_offset{1};
 
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
@@ -119,9 +118,9 @@ std::shared_ptr<mga::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
             handle->data[i] = package.fd[i];
     }
 
-    handle->numInts = package.data_items - mir_flag_offset;
+    handle->numInts = package.data_items;
     for (auto i = 0; i < handle->numInts; i++)
-        handle->data[handle->numFds+i] = package.data[i + mir_flag_offset];
+        handle->data[handle->numFds+i] = package.data[i];
 
     if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
