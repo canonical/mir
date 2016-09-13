@@ -153,6 +153,14 @@ TEST_F(NestedIPCOperations, packs_fenced_buffer_itself_when_native)
     operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
+TEST_F(NestedIPCOperations, unpacks_fenced_buffer_itself_when_foreign)
+{
+    mtd::MockBufferIpcMessage msg;
+    EXPECT_CALL(mock_ops, unpack_buffer(Ref(msg), Ref(foreign_buffer)));
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+    operations.unpack_buffer(msg, foreign_buffer);
+}
+
 TEST_F(NestedIPCOperations, unpacks_fenced_buffer_itself_when_native)
 {
     auto nested = std::make_shared<MockNestedBuffer>();
