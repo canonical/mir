@@ -42,6 +42,7 @@ public:
     virtual MirGraphicsRegion get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
+    virtual MirBufferPackage* package() const = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;

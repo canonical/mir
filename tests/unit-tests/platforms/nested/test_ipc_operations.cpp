@@ -19,6 +19,7 @@
 #include "src/server/graphics/nested/ipc_operations.h"
 #include "src/server/graphics/nested/native_buffer.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/fake_shared.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -44,15 +45,21 @@ struct ForeignBuffer : mg::NativeBuffer
 struct StubNestedBuffer : mgn::NativeBuffer
 {
 public:
-    void sync(MirBufferAccess, std::chrono::nanoseconds) {}
-    MirBuffer* client_handle() const { return nullptr; }
-    MirNativeBuffer* get_native_handle() { return nullptr; }
-    MirGraphicsRegion get_graphics_region()
+    void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
+    MirBuffer* client_handle() const override { return nullptr; }
+    MirNativeBuffer* get_native_handle() override { return nullptr; }
+    MirGraphicsRegion get_graphics_region() override
     {
         return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
     }
-    geom::Size size() const { return {}; }
-    MirPixelFormat format() const { return mir_pixel_format_invalid; }
+    geom::Size size() const override { return {}; }
+    MirPixelFormat format() const override { return mir_pixel_format_invalid; }
+    MirBufferPackage* package() const override { return nullptr; }
+};
+
+struct MockNestedBuffer : StubNestedBuffer
+{
+    MOCK_CONST_METHOD0(package, MirBufferPackage*());
 };
 
 struct MockIpcOperations : mg::PlatformIpcOperations
@@ -67,12 +74,45 @@ struct MockIpcOperations : mg::PlatformIpcOperations
 struct NestedIPCOperations : testing::Test
 {
     mtd::StubBuffer foreign_buffer{std::make_shared<ForeignBuffer>()};
-    mtd::StubBuffer nested_buffer{std::make_shared<StubNestedBuffer>()};
+    mtd::StubBuffer nested_buffer{std::make_shared<MockNestedBuffer>()};
     MockIpcOperations mock_ops;
 };
 }
 
 TEST_F(NestedIPCOperations, uses_guest_platform_on_guest_buffers)
 {
+    mtd::MockBufferIpcMessage msg;
+    EXPECT_CALL(mock_ops, pack_buffer(Ref(msg), Ref(foreign_buffer), _));
     mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+    operations.pack_buffer(msg, foreign_buffer, mg::BufferIpcMsgType::full_msg);
+}
+
+TEST_F(NestedIPCOperations, packs_buffer_itself_when_native)
+{
+    EXPECT_CALL(mock_ops, pack_buffer(_, _, _))
+        .Times(0);
+
+    auto nested = std::make_shared<MockNestedBuffer>();
+    mtd::StubBuffer nested_buffer{nested};
+    mtd::MockBufferIpcMessage msg;
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+
+    MirBufferPackage package;
+    EXPECT_CALL(*nested, package())
+        .WillOnce(Return(&package));
+    operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::full_msg);
+}
+
+TEST_F(NestedIPCOperations, uses_guest_platform_for_connection_package)
+{
+    EXPECT_CALL(mock_ops, connection_ipc_package());
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+    operations.connection_ipc_package();
+}
+
+TEST_F(NestedIPCOperations, uses_guest_platform_for_platform_ops)
+{
+    EXPECT_CALL(mock_ops, platform_operation(_,_));
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+    operations.platform_operation(0, mg::PlatformOperationMessage{});
 }
