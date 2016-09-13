@@ -244,8 +244,8 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 
     auto message = mir_buffer_get_buffer_package(buffer);
     ASSERT_THAT(message, Ne(nullptr));
-    EXPECT_THAT(message->data_items, Eq(2));
-    EXPECT_THAT(message->fd_items, Eq(1));
+    EXPECT_THAT(message->data_items, Ge(1));
+    EXPECT_THAT(message->fd_items, Ge(1));
     EXPECT_THAT(message->width, Eq(size.width.as_int()));
     EXPECT_THAT(message->height, Eq(size.height.as_int()));
 }
