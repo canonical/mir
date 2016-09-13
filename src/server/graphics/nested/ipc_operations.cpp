@@ -36,12 +36,7 @@ mgn::IpcOperations::IpcOperations(
 void mgn::IpcOperations::pack_buffer(
     mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const
 {
-    auto native = std::dynamic_pointer_cast<mgn::NativeBuffer>(buffer.native_buffer_handle());
-    if (!native)
-    {
-        ipc_operations->pack_buffer(message, buffer, msg_type);
-    }
-    else
+    if (auto native = std::dynamic_pointer_cast<mgn::NativeBuffer>(buffer.native_buffer_handle()))
     {
         auto package = native->package();
         auto fence = native->fence();
@@ -65,20 +60,23 @@ void mgn::IpcOperations::pack_buffer(
             message.pack_size(geom::Size{package->width, package->height});
         }
     }
+    else
+    {
+        ipc_operations->pack_buffer(message, buffer, msg_type);
+    }
 }
 
 void mgn::IpcOperations::unpack_buffer(mg::BufferIpcMessage& message, mg::Buffer const& buffer) const
 {
-    auto native = std::dynamic_pointer_cast<mgn::NativeBuffer>(buffer.native_buffer_handle());
-    if (!native)
-    {
-        ipc_operations->unpack_buffer(message, buffer);
-    }
-    else
+    if (auto native = std::dynamic_pointer_cast<mgn::NativeBuffer>(buffer.native_buffer_handle()))
     {
         auto fds = message.fds();
         if ( (message.flags() & mir_buffer_flag_fenced) && !fds.empty()) 
             native->set_fence(fds.front());
+    }
+    else
+    {
+        ipc_operations->unpack_buffer(message, buffer);
     }
 }
 
