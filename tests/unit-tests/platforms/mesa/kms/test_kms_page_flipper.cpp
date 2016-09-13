@@ -137,6 +137,8 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
     ON_CALL(mock_drm, drmHandleEvent(_, _))
         .WillByDefault(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
+    // Regression test for LP: #1621352
+    ASSERT_NE(crtc_id, connector_id);
     EXPECT_CALL(report, report_vsync(connector_id));
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
