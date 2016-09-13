@@ -33,6 +33,7 @@
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "native_window_report.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
@@ -120,7 +121,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
-    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mg::FenceFlag::fenced)));
+    EXPECT_CALL(mock_ipc_msg, pack_flags(mir_buffer_flag_fenced));
     EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(fake_fence)));
     for (auto i = 0u; i < num_fds; i++)
         EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])));
@@ -155,7 +156,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
-    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mg::FenceFlag::unfenced)));
+    EXPECT_CALL(mock_ipc_msg, pack_flags(0));
     EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(-1)))
         .Times(0);
 
@@ -203,7 +204,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
         EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
             .Times(1);
     }
-    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mg::FenceFlag::unfenced)));
+    EXPECT_CALL(mock_ipc_msg, pack_flags(0));
     for (auto i = 0u; i < num_ints; i++)
     {
         EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
@@ -238,11 +239,11 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     mtd::MockBufferIpcMessage mock_ipc_msg;
 
     Sequence seq;
-    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mg::FenceFlag::fenced)))
+    EXPECT_CALL(mock_ipc_msg, pack_flags(mir_buffer_flag_fenced))
         .InSequence(seq);
     EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(fake_fence)))
         .InSequence(seq);
-    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mg::FenceFlag::unfenced)))
+    EXPECT_CALL(mock_ipc_msg, pack_flags(0))
         .InSequence(seq);
 
     EXPECT_CALL(*native_buffer, copy_fence())

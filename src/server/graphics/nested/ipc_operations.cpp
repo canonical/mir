@@ -18,6 +18,7 @@
 
 #include "native_buffer.h"
 #include "ipc_operations.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
@@ -42,19 +43,26 @@ void mgn::IpcOperations::pack_buffer(
     }
     else
     {
-        if (msg_type == mg::BufferIpcMsgType::full_msg)
+        auto package = native->package();
+        auto fence = native->fence();
+        if (fence > mir::Fd::invalid)
         {
-            auto package = native->package();
-            for (auto i = 0; i < package->data_items; i++)
-                message.pack_data(package->data[i]);
-            for (auto i = 0; i < package->fd_items; i++)
-                message.pack_data(mir::Fd(IntOwnedFd{package->fd[i]}));
-            message.pack_stride(geom::Stride{package->stride});
-            message.pack_flags(package->flags);
-            message.pack_size(geom::Size{package->width, package->height});
+            message.pack_flags(mir_buffer_flag_fenced | package->flags);
+            message.pack_fd(fence);
         }
         else
         {
+            message.pack_flags(~mir_buffer_flag_fenced & package->flags);
+        }
+
+        if (msg_type == mg::BufferIpcMsgType::full_msg)
+        {
+            for (auto i = 0; i < package->data_items; i++)
+                message.pack_data(package->data[i]);
+            for (auto i = 0; i < package->fd_items; i++)
+                message.pack_fd(mir::Fd(IntOwnedFd{package->fd[i]}));
+            message.pack_stride(geom::Stride{package->stride});
+            message.pack_size(geom::Size{package->width, package->height});
         }
     }
 }

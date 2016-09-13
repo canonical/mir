@@ -60,6 +60,8 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(format, MirPixelFormat());
     MOCK_METHOD2(sync, void(MirBufferAccess, std::chrono::nanoseconds));
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
+    MOCK_CONST_METHOD0(fence, mir::Fd());
+    MOCK_METHOD1(set_fence, void(mir::Fd));
 };
 
 struct MockHostConnection : mtd::StubHostConnection

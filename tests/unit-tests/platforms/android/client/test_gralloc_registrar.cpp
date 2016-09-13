@@ -94,7 +94,7 @@ struct GrallocRegistrar : public ::testing::Test
         stub_package.data_items = 21;
         for (auto i = 0; i < stub_package.fd_items; i++)
             stub_package.fd[i] = (i*4);
-        stub_package.data[0] = static_cast<int>(mir::graphics::FenceFlag::unfenced);
+        stub_package.flags = 0;
         for (auto i = 1; i < stub_package.data_items; i++)
             stub_package.data[i] = (i*3);
     }
@@ -161,8 +161,8 @@ TEST_F(GrallocRegistrar, registrar_frees_fds)
     using namespace testing;
     MirBufferPackage stub_package;
     memset(&stub_package, 0, sizeof(MirBufferPackage));
-    stub_package.data_items = 1;
-    stub_package.data[0] = static_cast<int>(mir::graphics::FenceFlag::unfenced);
+    stub_package.data_items = 0;
+    stub_package.flags = 0;
     stub_package.fd_items = 2;
     EXPECT_EQ(0, pipe(static_cast<int*>(stub_package.fd)));
 

@@ -55,11 +55,15 @@ public:
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
     MirBufferPackage* package() const override { return nullptr; }
+    mir::Fd fence() const override { return mir::Fd(); }
+    void set_fence(mir::Fd) override {}
 };
 
 struct MockNestedBuffer : StubNestedBuffer
 {
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
+    MOCK_CONST_METHOD0(fence, mir::Fd());
+    MOCK_METHOD1(set_fence, void(mir::Fd));
 };
 
 struct MockIpcOperations : mg::PlatformIpcOperations
@@ -94,7 +98,39 @@ TEST_F(NestedIPCOperations, uses_guest_platform_on_guest_buffers)
     operations.pack_buffer(msg, foreign_buffer, mg::BufferIpcMsgType::full_msg);
 }
 
-TEST_F(NestedIPCOperations, packs_buffer_itself_when_native)
+TEST_F(NestedIPCOperations, packs_unfenced_buffer_itself_when_native)
+{
+    EXPECT_CALL(mock_ops, pack_buffer(_, _, _))
+        .Times(0);
+
+    auto nested = std::make_shared<MockNestedBuffer>();
+    mtd::StubBuffer nested_buffer{nested};
+    mtd::MockBufferIpcMessage msg;
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+
+    MirBufferPackage package;
+    package.data_items = 1;
+    package.data[0] = 11;
+    package.fd_items = 1;
+    package.fd[0] = 11222;
+    package.stride = 33;
+    package.width = 10;
+    package.height = 100;
+    package.flags = 0;
+
+    EXPECT_CALL(*nested, package())
+        .WillOnce(Return(&package));
+    EXPECT_CALL(*nested, fence())
+        .WillOnce(Return(mir::Fd(-1)));
+
+    EXPECT_CALL(msg, pack_data(package.data[0]));
+    EXPECT_CALL(msg, pack_fd(mir::Fd(mir::IntOwnedFd{package.fd[0]})));
+    EXPECT_CALL(msg, pack_flags(0));
+    EXPECT_CALL(msg, pack_stride(geom::Stride{package.stride}));
+    operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::full_msg);
+}
+
+TEST_F(NestedIPCOperations, packs_fenced_buffer_itself_when_native)
 {
     EXPECT_CALL(mock_ops, pack_buffer(_, _, _))
         .Times(0);
@@ -107,9 +143,29 @@ TEST_F(NestedIPCOperations, packs_buffer_itself_when_native)
     MirBufferPackage package;
     package.data_items = 0;
     package.fd_items = 0;
+
     EXPECT_CALL(*nested, package())
         .WillOnce(Return(&package));
-    operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::full_msg);
+    EXPECT_CALL(*nested, fence())
+        .WillOnce(Return(mir::Fd(mir::IntOwnedFd{111})));
+    EXPECT_CALL(msg, pack_fd(mir::Fd(mir::IntOwnedFd{111})));
+    EXPECT_CALL(msg, pack_flags(mir_buffer_flag_fenced));
+    operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::update_msg);
+}
+
+TEST_F(NestedIPCOperations, unpacks_fenced_buffer_itself_when_native)
+{
+    auto nested = std::make_shared<MockNestedBuffer>();
+    mtd::StubBuffer nested_buffer{nested};
+    mir::Fd fake(mir::IntOwnedFd{1111});
+    mtd::MockBufferIpcMessage msg;
+    EXPECT_CALL(msg, flags())
+        .WillOnce(Return(mir_buffer_flag_fenced));
+    EXPECT_CALL(msg, fds())
+        .WillOnce(Return( std::vector<mir::Fd>{fake} ));
+    EXPECT_CALL(*nested, set_fence(_));
+    mgn::IpcOperations operations(mt::fake_shared(mock_ops));
+    operations.unpack_buffer(msg, nested_buffer);
 }
 
 TEST_F(NestedIPCOperations, uses_guest_platform_for_connection_package)
