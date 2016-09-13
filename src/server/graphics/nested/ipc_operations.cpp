@@ -69,7 +69,17 @@ void mgn::IpcOperations::pack_buffer(
 
 void mgn::IpcOperations::unpack_buffer(mg::BufferIpcMessage& message, mg::Buffer const& buffer) const
 {
-    (void)message; (void)buffer;
+    auto native = std::dynamic_pointer_cast<mgn::NativeBuffer>(buffer.native_buffer_handle());
+    if (!native)
+    {
+        ipc_operations->unpack_buffer(message, buffer);
+    }
+    else
+    {
+        auto fds = message.fds();
+        if ( (message.flags() & mir_buffer_flag_fenced) && !fds.empty()) 
+            native->set_fence(fds.front());
+    }
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::IpcOperations::connection_ipc_package()
