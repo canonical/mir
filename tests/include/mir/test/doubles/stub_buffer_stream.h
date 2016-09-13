@@ -36,8 +36,8 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_compositor_buffer = std::make_shared<StubBuffer>(std::make_shared<graphics::NativeBuffer>(
-            graphics::BufferProperties{}));
+        stub_compositor_buffer = std::make_shared<StubBuffer>(
+            std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{}));
     }
 
 
@@ -85,7 +85,8 @@ public:
     void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
 
-    StubBuffer stub_client_buffer{std::make_shared<graphics::NativeBuffer>(graphics::BufferProperties{})};
+    StubBuffer stub_client_buffer{
+        std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{})};
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
     std::string thread_name;
