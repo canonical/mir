@@ -92,7 +92,7 @@ std::shared_ptr<mga::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     MirBufferPackage const& package,
     MirPixelFormat pf) const
 {
-    bool const fence_present{package.flags & mir_buffer_flag_fenced};
+    auto fence_present = package.flags & mir_buffer_flag_fenced;
 
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
