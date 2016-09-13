@@ -150,6 +150,7 @@ std::vector<geom::Rectangle> const display_geometry
 };
 
 std::chrono::seconds const timeout{5};
+std::chrono::seconds const long_timeout{10};
 
 // We can't rely on the test environment to have X cursors, so we provide some of our own
 auto const cursor_names = {
@@ -999,7 +1000,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
                     [&]
                     {
                         condition.raise();
-                        test_processed_result.wait_for(timeout);
+                        test_processed_result.wait_for(long_timeout);
                         test_processed_result.reset();
                     }));
 
@@ -1010,7 +1011,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
         mir_cursor_configuration_destroy(cursor);
 
-        EXPECT_TRUE(condition.wait_for(timeout));
+        EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();
         test_processed_result.raise();
     }
