@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/headless_test.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/geometry/rectangle.h"

@@ -36,7 +36,7 @@ mgm::SoftwareBuffer::SoftwareBuffer(
 
 std::shared_ptr<mg::NativeBuffer> mgm::SoftwareBuffer::create_native_buffer()
 {
-    auto buffer = std::make_shared<mg::NativeBuffer>();
+    auto buffer = std::make_shared<mgm::NativeBuffer>();
     *static_cast<MirBufferPackage*>(buffer.get()) = *to_mir_buffer_package();
     buffer->bo = nullptr;
     return buffer;

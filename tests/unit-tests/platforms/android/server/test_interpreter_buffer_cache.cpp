@@ -44,8 +44,8 @@ struct InterpreterResourceTest : public ::testing::Test
     std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     std::shared_ptr<mtd::StubBuffer> stub_buffer3;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer1;
-    std::shared_ptr<mg::NativeBuffer> native_buffer2;
-    std::shared_ptr<mg::NativeBuffer> native_buffer3;
+    std::shared_ptr<mga::NativeBuffer> native_buffer2;
+    std::shared_ptr<mga::NativeBuffer> native_buffer3;
 };
 
 TEST_F(InterpreterResourceTest, deposit_buffer)

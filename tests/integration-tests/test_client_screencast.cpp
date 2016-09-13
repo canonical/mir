@@ -69,7 +69,7 @@ private:
     static bool const connected;
     static bool const used;
     std::shared_ptr<mtd::StubBuffer> stub_buffer { std::make_shared<mtd::StubBuffer>(
-        std::make_shared<mg::NativeBuffer>(mg::BufferProperties{})
+        std::make_shared<mtf::NativeBuffer>(mg::BufferProperties{})
     )};
 };
 
@@ -99,7 +99,7 @@ struct Screencast : mtf::BasicClientServerFixture<StubServerConfig>
     MirScreencastParameters default_screencast_params {
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::StubBuffer> stub_buffer {
-        std::make_shared<mtd::StubBuffer>(std::make_shared<mg::NativeBuffer>(mg::BufferProperties{}))};
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mtf::NativeBuffer>(mg::BufferProperties{}))};
 };
 
 }
