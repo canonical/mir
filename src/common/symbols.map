@@ -3,7 +3,6 @@ MIR_COMMON_0.25 {
   __android_log_assert;
   __android_log_print;
   systemTime;
-  toMillisecondTimeoutDelay;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
