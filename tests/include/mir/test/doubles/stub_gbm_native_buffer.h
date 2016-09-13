@@ -33,7 +33,7 @@ namespace test
 namespace doubles
 {
 
-struct StubGBMNativeBuffer : public graphics::NativeBuffer
+struct StubGBMNativeBuffer : public graphics::mesa::NativeBuffer
 {
     StubGBMNativeBuffer(geometry::Size const& size, bool bypassable = true)
     {

@@ -125,7 +125,7 @@ TEST_F(GraphicBufferAllocator, test_buffer_reconstruction_from_MirNativeBuffer)
     auto buffer = allocator.reconstruct_from(anwb.get(), mir_pixel_format_abgr_8888);
     ASSERT_THAT(buffer, Ne(nullptr));
     EXPECT_THAT(buffer->size(), Eq(geom::Size{width, height}));
-    EXPECT_THAT(buffer->native_buffer_handle()->anwb(), Eq(anwb.get()));
+    EXPECT_THAT(mga::to_native_buffer_checked(buffer->native_buffer_handle())->anwb(), Eq(anwb.get()));
     EXPECT_THAT(inc_count, Eq(1));
     EXPECT_THAT(dec_count, Eq(0));
     buffer.reset();

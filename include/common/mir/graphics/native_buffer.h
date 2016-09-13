@@ -23,8 +23,14 @@ namespace mir
 {
 namespace graphics
 {
-//each platform defines its own native type
-class NativeBuffer;
+class NativeBuffer
+{
+protected:
+    NativeBuffer() = default;
+    virtual ~NativeBuffer() = default;
+    NativeBuffer(NativeBuffer const&) = delete;
+    NativeBuffer operator=(NativeBuffer const&) = delete;
+};
 }
 }
 

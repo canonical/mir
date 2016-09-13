@@ -268,43 +268,23 @@ typedef struct MirDisplayCard
 
 typedef enum MirDisplayOutputType
 {
-    mir_display_output_type_unknown,
-    mir_display_output_type_vga,
-    mir_display_output_type_dvii,
-    mir_display_output_type_dvid,
-    mir_display_output_type_dvia,
-    mir_display_output_type_composite,
-    mir_display_output_type_svideo,
-    mir_display_output_type_lvds,
-    mir_display_output_type_component,
-    mir_display_output_type_ninepindin,
-    mir_display_output_type_displayport,
-    mir_display_output_type_hdmia,
-    mir_display_output_type_hdmib,
-    mir_display_output_type_tv,
-    mir_display_output_type_edp,
-    mir_display_output_type_virtual
+    mir_display_output_type_unknown     = mir_output_type_unknown,
+    mir_display_output_type_vga         = mir_output_type_vga,
+    mir_display_output_type_dvii        = mir_output_type_dvii,
+    mir_display_output_type_dvid        = mir_output_type_dvid,
+    mir_display_output_type_dvia        = mir_output_type_dvia,
+    mir_display_output_type_composite   = mir_output_type_composite,
+    mir_display_output_type_svideo      = mir_output_type_svideo,
+    mir_display_output_type_lvds        = mir_output_type_lvds,
+    mir_display_output_type_component   = mir_output_type_component,
+    mir_display_output_type_ninepindin  = mir_output_type_ninepindin,
+    mir_display_output_type_displayport = mir_output_type_displayport,
+    mir_display_output_type_hdmia       = mir_output_type_hdmia,
+    mir_display_output_type_hdmib       = mir_output_type_hdmib,
+    mir_display_output_type_tv          = mir_output_type_tv,
+    mir_display_output_type_edp         = mir_output_type_edp,
+    mir_display_output_type_virtual     = mir_output_type_virtual
 } MirDisplayOutputType;
-
-typedef enum MirOutputType
-{
-    mir_output_type_unknown,
-    mir_output_type_vga,
-    mir_output_type_dvii,
-    mir_output_type_dvid,
-    mir_output_type_dvia,
-    mir_output_type_composite,
-    mir_output_type_svideo,
-    mir_output_type_lvds,
-    mir_output_type_component,
-    mir_output_type_ninepindin,
-    mir_output_type_displayport,
-    mir_output_type_hdmia,
-    mir_output_type_hdmib,
-    mir_output_type_tv,
-    mir_output_type_edp,
-    mir_output_type_virtual
-} MirOutputType;
 
 typedef enum MirOutputConnectionState
 {

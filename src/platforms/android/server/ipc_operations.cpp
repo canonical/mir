@@ -34,7 +34,7 @@ namespace mga = mir::graphics::android;
 
 void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer.native_buffer_handle());
 
     native_buffer->wait_for_unlock_by_gpu();
     mir::Fd fence_fd(native_buffer->copy_fence());
