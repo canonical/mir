@@ -19,7 +19,7 @@
 #ifndef MIR_TOOLKIT_SURFACE_PLACEMENT_H_
 #define MIR_TOOLKIT_SURFACE_PLACEMENT_H_
 
-#include <mir_toolkit/common.h>
+#include <mir_toolkit/client_types.h>
 
 #ifdef __cplusplus
 /**

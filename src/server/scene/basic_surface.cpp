@@ -134,6 +134,13 @@ void ms::SurfaceObservers::cursor_image_removed()
         { observer->cursor_image_removed(); });
 }
 
+void ms::SurfaceObservers::placed_relative(geometry::Rectangle const& placement)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->placed_relative(placement); });
+}
+
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -932,4 +939,9 @@ void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState stat
 MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 {
     return confine_pointer_state_;
+}
+
+void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
+{
+    observers.placed_relative(placement);
 }
