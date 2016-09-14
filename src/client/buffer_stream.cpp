@@ -428,15 +428,13 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name,
     geom::Size ideal_size,
-    size_t nbuffers,
-    std::shared_ptr<void> egl_native_window)
+    size_t nbuffers)
     : connection_(connection),
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       scale_(1.0f),
       perf_report(perf_report),
-      egl_native_window_(egl_native_window),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
@@ -483,9 +481,7 @@ mcl::BufferStream::BufferStream(
                 protobuf_bs->buffer_usage(), nbuffers);
         }
 
-
-        if (!egl_native_window_)
-            egl_native_window_ = client_platform->create_egl_native_window(this);
+        egl_native_window_ = client_platform->create_egl_native_window(this);
 
         // This might seem like something to provide during creation but
         // knowing the swap interval is not a precondition to creation. It's

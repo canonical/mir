@@ -187,7 +187,7 @@ void mcl::RenderSurface::stream_created(StreamCreationRequest* request_raw)
         auto stream = std::make_shared<mcl::BufferStream>(
             connection(), request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
-            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers, nullptr);
+            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         id = protobuf_bs->id().value();
         surface_map->insert(mf::BufferStreamId(id), stream);
 

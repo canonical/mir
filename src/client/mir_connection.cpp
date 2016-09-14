@@ -391,7 +391,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             default_stream = std::make_shared<mcl::BufferStream>(
                 this, request->wh, server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
-                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers, nullptr);
+                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
             surface_map->insert(default_stream->rpc_id(), default_stream);
         }
         catch (std::exception const& error)
@@ -828,7 +828,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
-            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers, nullptr);
+            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->callback)
