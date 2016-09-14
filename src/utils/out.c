@@ -20,31 +20,6 @@
 #include <stdio.h>
 #include <math.h>
 
-static const char *output_type_name(MirDisplayOutputType t)
-{
-    /* XXX it would be safer to define these strings in the client header */
-    static const char * const name[] =
-    {
-        "unknown",
-        "VGA",
-        "DVI-I",
-        "DVI-D",
-        "DVI-A",
-        "Composite",
-        "S-video",
-        "LVDS",
-        "Component",
-        "9-pin",
-        "DisplayPort",
-        "HDMI-A",
-        "HDMI-B",
-        "TV",
-        "eDP",
-        "Virtual"
-    };
-    return ((unsigned)t < sizeof(name)/sizeof(name[0])) ? name[t] : name[0];
-}
-
 static const char *power_mode_name(MirPowerMode m)
 {
     /* XXX it would be safer to define these strings in the client header */
@@ -130,7 +105,7 @@ int main(int argc, char *argv[])
             printf("Output %u: Card %u, %s, %s",
                    out->output_id,
                    out->card_id,
-                   output_type_name(out->type),
+                   mir_display_output_type_name(out->type),
                    out->connected ? "connected" : "disconnected");
 
             if (out->connected)
