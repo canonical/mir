@@ -425,5 +425,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
     mir_connection_cancel_base_display_configuration_preview;
+    mir_display_output_type_name;
+    mir_output_type_name;
 } MIR_CLIENT_0.24;
 
