@@ -354,6 +354,8 @@ MIR_COMMON_0.25 {
        android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
+
+# New functions in Mir 0.25
        mir::output_type_name*;
     };
   local: *;
