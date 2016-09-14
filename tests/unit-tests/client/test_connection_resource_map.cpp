@@ -19,6 +19,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_surface.h"
 #include "src/client/presentation_chain.h"
+#include "src/client/render_surface.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
@@ -43,10 +44,14 @@ struct ConnectionResourceMap : testing::Test
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };
+    std::shared_ptr<MirRenderSurface> render_surface { std::make_shared<mcl::RenderSurface>(
+        0, 0, mir_pixel_format_invalid, nullptr, mock_server,
+        nullptr, nullptr, 0, nullptr, nullptr, nullptr) };
 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
     int const buffer_id{43};
+    int void_ptr{0};
 };
 
 TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
@@ -127,4 +132,20 @@ TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)
         [this, &map](auto) {
             EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
         });
+}
+
+TEST_F(ConnectionResourceMap, can_insert_retrieve_erase_render_surface)
+{
+    using namespace testing;
+    mcl::ConnectionSurfaceMap map;
+
+    map.insert(&void_ptr, render_surface);
+    auto rs = map.render_surface(&void_ptr);
+    map.erase(&void_ptr);
+
+    Sequence seq;
+    EXPECT_THAT(rs.get(), Eq(render_surface.get()));
+    EXPECT_THROW({
+        map.render_surface(&void_ptr);
+    }, std::runtime_error);
 }
