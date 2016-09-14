@@ -370,7 +370,7 @@ try
     auto green_bytes = output->gamma_green();
     auto blue_bytes = output->gamma_blue();
 
-    // Check our number of bytes is eqaul to our uint16_t size
+    // Check our number of bytes is equal to our uint16_t size
     mir::require(red_bytes.size() / (sizeof(uint16_t) / sizeof(char)) == size);
 
     std::copy(std::begin(red_bytes), std::end(red_bytes),
