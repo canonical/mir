@@ -18,7 +18,7 @@
 
 #include "display_configuration_report.h"
 #include "mir/graphics/display_configuration.h"
-
+#include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
 
 #include <cmath>
@@ -58,11 +58,7 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
 {
     configuration.for_each_output([this](mg::DisplayConfigurationOutput const& out)
     {
-        static const char* const type_str[] =
-            {"Unknown", "VGA", "DVI-I", "DVI-D", "DVI-A", "Composite",
-             "S-Video", "LVDS", "Component", "9-pin-DIN", "DisplayPort",
-             "HDMI-A", "HDMI-B", "TV", "eDP"};
-        auto type = type_str[static_cast<int>(out.type)];
+        auto type = mir::output_type_name(static_cast<unsigned>(out.type));
         int out_id = out.id.as_value();
         int card_id = out.card_id.as_value();
         const char prefix[] = "  ";

@@ -395,5 +395,6 @@ MIR_COMMON_0.25 {
       MirSurfacePlacementEvent::set_id*;
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
+      mir::output_type_name*;
     };
 } MIR_COMMON_0.24;
