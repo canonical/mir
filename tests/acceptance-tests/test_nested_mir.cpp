@@ -55,6 +55,7 @@
 #include "mir/test/fake_shared.h"
 
 #include <future>
+#include <iostream>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -999,14 +1000,17 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
             .WillRepeatedly(InvokeWithoutArgs(
                     [&]
                     {
+                        std::cout << std::this_thread::get_id() << " BEGIN MockCursor::show\n";
                         condition.raise();
                         test_processed_result.wait_for(long_timeout);
                         test_processed_result.reset();
+                        std::cout << std::this_thread::get_id() << " END MockCursor::show\n";
                     }));
 
 
     for (auto const name : cursor_names)
     {
+        std::cout << std::this_thread::get_id() << " BEGIN for names : " << name << "\n";
         auto const cursor = mir_cursor_configuration_from_name(name);
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
         mir_cursor_configuration_destroy(cursor);
@@ -1014,6 +1018,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();
         test_processed_result.raise();
+        std::cout << std::this_thread::get_id() << " END for names : " << name << "\n";
     }
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }

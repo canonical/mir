@@ -37,6 +37,8 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
+#include <thread>
 
 #include <string.h> // memcpy
 
@@ -158,6 +160,7 @@ struct ms::CursorStreamImageAdapter
 
     void update(std::shared_ptr<mf::BufferStream> const& new_stream, geom::Displacement const& new_hotspot)
     {
+        std::cout << std::this_thread::get_id() << " BEGIN CursorStreamImageAdapter::update\n";
         if (new_stream == stream && new_hotspot == hotspot)
         {
             return;
@@ -172,6 +175,7 @@ struct ms::CursorStreamImageAdapter
 
         hotspot = new_hotspot;
         post_cursor_image_from_current_buffer();
+        std::cout << std::this_thread::get_id() << " END CursorStreamImageAdapter::update\n";
     }
 
 private:
@@ -184,7 +188,9 @@ private:
 
         void frame_posted(int /* available */, geometry::Size const& /* size */)
         {
+            std::cout << std::this_thread::get_id() << " BEGIN FramePostObserver::frame_posted\n";
             self->post_cursor_image_from_current_buffer();
+            std::cout << std::this_thread::get_id() << " END FramePostObserver::frame_posted\n";
         }
 
         CursorStreamImageAdapter const* const self;
@@ -192,7 +198,9 @@ private:
 
     void post_cursor_image_from_current_buffer() const
     {
+        std::cout << std::this_thread::get_id() << " BEGIN CursorStreamImageAdapter::post_cursor_image_from_current_buffer\n";
         surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+        std::cout << std::this_thread::get_id() << " END CursorStreamImageAdapter::post_cursor_image_from_current_buffer\n";
     }
 
     ms::BasicSurface& surface;
@@ -627,6 +635,7 @@ void ms::BasicSurface::show()
 
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
+    std::cout << std::this_thread::get_id() << " BEGIN BasicSurface::set_cursor_image \n";
     {
         std::unique_lock<std::mutex> lock(guard);
         cursor_stream_adapter->reset();
@@ -638,6 +647,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         observers.cursor_image_set_to(*image);
     else
         observers.cursor_image_removed();
+    std::cout << std::this_thread::get_id() << " END BasicSurface::set_cursor_image \n";
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
@@ -714,7 +724,9 @@ void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displace
 void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const& stream,
                                          geom::Displacement const& hotspot)
 {
+    std::cout << std::this_thread::get_id() << " BEGIN BasicSurface::set_cursor_stream\n";
     cursor_stream_adapter->update(stream, hotspot);
+    std::cout << std::this_thread::get_id() << " END BasicSurface::set_cursor_stream\n";
 }
 
 void ms::BasicSurface::request_client_surface_close()
