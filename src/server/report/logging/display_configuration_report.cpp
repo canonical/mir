@@ -64,21 +64,25 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
              "HDMI-A", "HDMI-B", "TV", "eDP"};
         auto type = type_str[static_cast<int>(out.type)];
         int out_id = out.id.as_value();
-        int card_id = out.card_id.as_value();
-        const char prefix[] = "  ";
+        char const indent[] = "      ";
 
+        logger->log(component, severity,
+                    "  Output %d: %s %s",
+                    out_id, type,
+                    !out.connected ? "disconnected" :
+                                     out.used ? "connected, used" :
+                                                "connected, unused"
+                    );
         if (out.connected)
         {
             int width_mm = out.physical_size_mm.width.as_int();
             int height_mm = out.physical_size_mm.height.as_int();
             float inches =
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
-            int indent = 0;
 
             logger->log(component, severity, 
-                        "%s%d.%d: %n%s %.1f\" %dx%dmm",
-                        prefix, card_id, out_id, &indent, type,
-                        inches, width_mm, height_mm);
+                        "%sPhysical size %.1f\" %dx%dmm",
+                        indent, inches, width_mm, height_mm);
             
             if (out.used)
             {
@@ -86,8 +90,8 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 {
                     auto const& mode = out.modes[out.current_mode_index];
                     logger->log(component, severity,
-                                "%*cCurrent mode %dx%d %.2fHz",
-                                indent, ' ',
+                                "%sCurrent mode %dx%d %.2fHz",
+                                indent,
                                 mode.size.width.as_int(),
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
@@ -97,29 +101,19 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
                     logger->log(component, severity,
-                                "%*cPreferred mode %dx%d %.2fHz",
-                                indent, ' ',
+                                "%sPreferred mode %dx%d %.2fHz",
+                                indent,
                                 mode.size.width.as_int(),
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
                 }
                 
                 logger->log(component, severity,
-                            "%*cLogical position %+d%+d",
-                            indent, ' ',
+                            "%sLogical position %+d%+d",
+                            indent,
                             out.top_left.x.as_int(),
                             out.top_left.y.as_int());
             }
-            else
-            {
-                logger->log(component, severity,
-                            "%*cDisabled", indent, ' ');
-            }
-        }
-        else
-        {
-            logger->log(component, severity,
-                        "%s%d.%d: unused %s", prefix, card_id, out_id, type);
         }
     });
 }
