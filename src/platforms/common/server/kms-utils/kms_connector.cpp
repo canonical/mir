@@ -17,6 +17,7 @@
  */
 
 #include "kms_connector.h"
+#include "mir/output_type_names.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -89,39 +90,11 @@ bool encoder_supports_crtc_index(drmModeEncoder const* encoder, uint32_t crtc_in
     return (encoder->possible_crtcs & (1 << crtc_index));
 }
 
-const char *connector_type_name(uint32_t type)
-{
-    static const int nnames = 15;
-    static const char * const names[nnames] =
-        {   // Ordered according to xf86drmMode.h
-            "Unknown",
-            "VGA",
-            "DVII",
-            "DVID",
-            "DVIA",
-            "Composite",
-            "SVIDEO",
-            "LVDS",
-            "Component",
-            "9PinDIN",
-            "DisplayPort",
-            "HDMIA",
-            "HDMIB",
-            "TV",
-            "eDP"
-        };
-
-    if (type >= nnames)
-        type = 0;
-
-    return names[type];
-}
-
 }
 
 std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
 {
-    std::string name = connector_type_name(connector->connector_type);
+    std::string name = mir::output_type_name(connector->connector_type);
     name += '-';
     name += std::to_string(connector->connector_type_id);
     return name;
