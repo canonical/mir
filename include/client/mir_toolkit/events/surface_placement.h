@@ -35,7 +35,7 @@ typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
  * Retrieve the relative position from a placement notification
  * 
  * \param [in] event  The placement event
- * \return            The reported position
+ * \return            The position relative to the parent surface
  */
 MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event);
 
