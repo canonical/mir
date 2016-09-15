@@ -18,6 +18,7 @@
 
 #include <condition_variable>
 #include <boost/throw_exception.hpp>
+#include <unordered_set>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -330,12 +331,41 @@ void ms::MediatingDisplayChanger::resume_display_config_processing()
     server_action_queue->resume_processing_for(this);
 }
 
+namespace
+{
+bool configuration_has_new_outputs_enabled(
+    mg::DisplayConfiguration const& existing,
+    mg::DisplayConfiguration const& updated)
+{
+    std::unordered_set<mg::DisplayConfigurationOutputId> currently_enabled_outputs;
+    existing.for_each_output(
+        [&currently_enabled_outputs](auto const& output)
+        {
+            if (output.used)
+            {
+                currently_enabled_outputs.insert(output.id);
+            }
+        });
+    bool has_new_output{false};
+    updated.for_each_output(
+        [&currently_enabled_outputs, &has_new_output](auto const& output)
+        {
+            if (output.used)
+            {
+                has_new_output |= (currently_enabled_outputs.count(output.id) == 0);
+            }
+        });
+    return has_new_output;
+}
+}
+
 void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     report->new_configuration(*conf);
 
-    if (!display->apply_if_configuration_preserves_display_buffers(*conf))
+    if (configuration_has_new_outputs_enabled(*display->configuration(), *conf) ||
+        !display->apply_if_configuration_preserves_display_buffers(*conf))
     {
         ApplyNowAndRevertOnScopeExit comp{
             [this] { compositor->stop(); },

@@ -492,7 +492,17 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_preserved)
 {
     using namespace testing;
-    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
+    conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.orientation =
+                    output.orientation == mir_orientation_normal ? mir_orientation_left : mir_orientation_normal;
+            }
+        });
+
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
 
