@@ -51,6 +51,8 @@ public:
     {
         return nullptr;
     }
+    MirBufferPackage* package() const { return nullptr; }
+
     geometry::Size sz;
 
     MirNativeBuffer* as_mir_native_buffer() const { return nullptr; }

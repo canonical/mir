@@ -570,6 +570,20 @@ struct XNativeBuffer : mgn::NativeBuffer
         f = fn;
     }
 
+    MirBufferPackage* package() const
+    {
+       return mir_buffer_get_buffer_package(b);
+    }
+
+    void set_fence(mir::Fd)
+    {
+    }
+
+    mir::Fd fence() const
+    {
+        return mir::Fd(mir::Fd::invalid);
+    }
+
     std::function<void()> f;
     MirBuffer*b;
     bool mine;

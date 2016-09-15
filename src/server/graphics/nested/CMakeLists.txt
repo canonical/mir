@@ -16,4 +16,5 @@ add_library(
   buffer.cpp
   platform_image_factory.cpp
   surface_spec.cpp
+  ipc_operations.cpp
 )

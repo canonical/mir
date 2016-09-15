@@ -22,6 +22,7 @@
 #include "platform_image_factory.h"
 #include "buffer.h"
 #include "native_buffer.h"
+#include "ipc_operations.h"
 #include "mir/shared_library.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
@@ -154,6 +155,7 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
-    return mir::make_module_ptr<mgn::PlatformIpcOperations>();
+    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+//    return mir::make_module_ptr<mgn::PlatformIpcOperations>();
     //return guest_platform->make_ipc_operations();
 }

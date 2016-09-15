@@ -169,3 +169,8 @@ bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
 {
     return true;
 }
+
+MirBufferPackage* mclm::ClientBuffer::package() const
+{
+    return as_mir_native_buffer();
+}
