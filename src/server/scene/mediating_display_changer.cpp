@@ -334,11 +334,14 @@ void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     report->new_configuration(*conf);
-    ApplyNowAndRevertOnScopeExit comp{
-        [this] { compositor->stop(); },
-        [this] { compositor->start(); }};
 
-    display->configure(*conf);
+    if (!display->apply_if_configuration_preserves_display_buffers(*conf))
+    {
+        ApplyNowAndRevertOnScopeExit comp{
+            [this] { compositor->stop(); },
+            [this] { compositor->start(); }};
+        display->configure(*conf);
+    }
     update_input_rectangles(*conf);
 
     base_configuration_applied = false;
