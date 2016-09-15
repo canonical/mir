@@ -313,6 +313,41 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved_but_new_outputs_are_enabled)
+{
+    using namespace testing;
+
+    auto conf = changer->base_configuration();
+
+    bool new_output_enabled{false};
+    conf->for_each_output(
+        [&new_output_enabled](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (!output.used)
+            {
+                new_output_enabled = true;
+                output.used = true;
+            }
+        });
+    ASSERT_TRUE(new_output_enabled);
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(true));
+
+    InSequence s;
+    EXPECT_CALL(mock_conf_policy, apply_to(Ref(*conf)));
+
+    /*
+     * Currently we have to tear down and recreate the compositor in order to add
+     * a new output. This is not an inherent limitation, and we might do better later.
+     */
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(Ref(*conf)));
+    EXPECT_CALL(mock_compositor, start()).Times(1);
+
+    changer->configure_for_hardware_change(conf);
+}
+
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
 {
     using namespace testing;
@@ -367,6 +402,43 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attach
     EXPECT_CALL(mock_compositor, stop()).Times(0);
     EXPECT_CALL(mock_display, configure(Ref(*conf)));
     EXPECT_CALL(mock_compositor, start()).Times(0);
+
+    session_event_sink.handle_focus_change(session1);
+}
+
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_but_output_adding_attached_config_applies_config)
+{
+    using namespace testing;
+    auto session1 = std::make_shared<mtd::StubSession>();
+
+    auto conf = changer->base_configuration();
+
+    bool new_output_enabled{false};
+    conf->for_each_output(
+        [&new_output_enabled](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (!output.used)
+            {
+                new_output_enabled = true;
+                output.used = true;
+            }
+        });
+    ASSERT_TRUE(new_output_enabled);
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(true));
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    /*
+     * Currently we have to tear down and recreate the compositor in order to add
+     * a new output. This is not an inherent limitation, and we might do better later.
+     */
+    InSequence s;
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(Ref(*conf)));
+    EXPECT_CALL(mock_compositor, start()).Times(1);
 
     session_event_sink.handle_focus_change(session1);
 }
