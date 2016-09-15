@@ -54,6 +54,7 @@ public:
     void set_fence(MirNativeFence, MirBufferAccess) override;
     MirNativeFence get_fence() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
+    void egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**) override;
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;

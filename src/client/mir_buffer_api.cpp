@@ -24,6 +24,7 @@
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include "mir/client_buffer.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -212,6 +213,18 @@ try
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->set_callback(available_callback, available_context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_buffer_get_egl_image(MirBuffer* b, char const* ext, EGLenum* type, EGLClientBuffer* bu, EGLint** attr)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->client_buffer()->egl_image(ext, type, bu, attr);
 }
 catch (std::exception const& ex)
 {

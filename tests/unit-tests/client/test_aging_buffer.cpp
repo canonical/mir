@@ -83,6 +83,11 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
         exit(1);
     }
+
+    void egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**) override
+    {
+        exit(1);
+    }
 };
 
 TEST(MirClientAgingBufferTest, buffer_age_starts_at_zero)

@@ -169,3 +169,7 @@ bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
 {
     return true;
 }
+
+void mclm::ClientBuffer::egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**)
+{
+}
