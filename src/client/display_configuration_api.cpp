@@ -401,6 +401,8 @@ try
         size * (sizeof(uint16_t) / sizeof(char)));
     output->set_gamma_blue(reinterpret_cast<char const*>(blue),
         size * (sizeof(uint16_t) / sizeof(char)));
+
+    mir::require(size == mir_output_get_gamma_size(client_output));
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
