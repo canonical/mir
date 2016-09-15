@@ -30,7 +30,18 @@
 extern "C" {
 #endif
 
-void mir_buffer_egl_image_parameters(MirBuffer*, EGLenum*, EGLClientBuffer*, EGLint**);
+/** Suggest parameters to use with EGLCreateImage for a given MirBuffer
+ *
+ *   \param [in] buffer         The buffer
+ *   \param [out] target        The target to use
+ *   \param [out] client_buffer The EGLClientBuffer to use 
+ *   \param [out] attrs         The attributes to use
+ **/
+void mir_buffer_egl_image_parameters(
+    MirBuffer* buffer,
+    EGLenum* target,
+    EGLClientBuffer* client_buffer,
+    EGLint** attrs);
 
 #ifdef __cplusplus
 }
