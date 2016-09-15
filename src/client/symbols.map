@@ -420,10 +420,12 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
 MIR_CLIENT_0.25 {  # New functions in Mir 0.25
   global:
     mir_connection_create_spec_for_tip;
-    mir_output_get_current_mode_index; 
+    mir_event_get_surface_placement_event;
+    mir_output_get_current_mode_index;
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
     mir_connection_cancel_base_display_configuration_preview;
+    mir_surface_placement_get_relative_position;
     mir_display_output_type_name;
     mir_output_type_name;
 } MIR_CLIENT_0.24;
