@@ -68,7 +68,6 @@
 #include <thread>
 #include <functional>
 #include <cstring>
-#include <iostream>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -961,10 +960,8 @@ void mf::SessionMediator::configure_cursor(
 
     if (cursor_request->has_name())
     {
-        std::cout << std::this_thread::get_id() << " BEGIN Session Mediator::configure - " << cursor_request->name() << "\n";
         auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
         surface->set_cursor_image(image);
-        std::cout << std::this_thread::get_id() << " END Session Mediator::configure - " << cursor_request->name() << "\n";
     }
     else if (cursor_request->has_buffer_stream())
     {

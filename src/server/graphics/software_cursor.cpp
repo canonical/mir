@@ -28,8 +28,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <mutex>
-#include <thread>
-#include <iostream>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -140,7 +138,6 @@ void mg::SoftwareCursor::show()
 
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
-    std::cout << std::this_thread::get_id() << " BEGIN SoftwareCursor::show\n";
     std::shared_ptr<detail::CursorRenderable> new_renderable;
     std::shared_ptr<detail::CursorRenderable> old_renderable;
     bool old_visibility = false;
@@ -170,7 +167,6 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 
     if (old_renderable && old_visibility)
         scene->remove_input_visualization(old_renderable);
-    std::cout << std::this_thread::get_id() << " END SoftwareCursor::show\n";
 }
 
 std::shared_ptr<mg::detail::CursorRenderable>
