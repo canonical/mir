@@ -122,9 +122,8 @@ public:
      * In either case this function guarantees that existing DisplayBuffer references will remain
      * valid.
      *
-     * \param conf [in] Configuration to check
-     * \return      \c true if and only if a subsequent call to Display::configure(\p conf) will not invalidate
-     *              existing DisplayBuffer references.
+     * \param conf [in] Configuration to possibly apply.
+     * \return      \c true if \p conf has been applied as the new output configuration.
      */
     virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const = 0;
 
