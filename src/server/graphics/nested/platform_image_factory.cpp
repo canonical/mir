@@ -18,6 +18,7 @@
 
 #include "platform_image_factory.h"
 #include "native_buffer.h"
+#include "mir_toolkit/mir_buffer.h"
 
 namespace mgn = mir::graphics::nested;
 
@@ -25,10 +26,17 @@ auto mgn::AndroidImageFactory::create_egl_image_from(
     mgn::NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const ->
     std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>>
 {
+    auto mb = buffer.client_handle();
+
+    printf("MAPIMAGE\n");
+    (void)attrs;
+    EGLenum t;
+    EGLClientBuffer b;
+    EGLint* attr;
+    mir_buffer_get_egl_image(mb, "", &t, &b, &attr);
     auto ext = egl_extensions;
     return EGLImageUPtr{
         new EGLImageKHR(
-            egl_extensions->eglCreateImageKHR(display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, buffer.get_native_handle(), attrs)),
+            egl_extensions->eglCreateImageKHR(display, EGL_NO_CONTEXT, t, b, attr)),
         [ext, display](EGLImageKHR* image) { ext->eglDestroyImageKHR(display, image); delete image; }};
-//        []);
 }

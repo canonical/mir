@@ -174,3 +174,7 @@ MirBufferPackage* mclm::ClientBuffer::package() const
 {
     return as_mir_native_buffer();
 }
+
+void mclm::ClientBuffer::egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**)
+{
+}

@@ -385,6 +385,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
+    mir_buffer_get_egl_image;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
@@ -425,5 +426,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
     mir_connection_cancel_base_display_configuration_preview;
+    mir_display_output_type_name;
+    mir_output_type_name;
 } MIR_CLIENT_0.24;
 

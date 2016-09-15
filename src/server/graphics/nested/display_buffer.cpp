@@ -111,6 +111,7 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
 {
+    return false;
     if (list.empty() ||
         (list.back()->screen_position() != area) ||
         (list.back()->alpha() != 1.0f) ||
