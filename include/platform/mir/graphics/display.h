@@ -112,7 +112,7 @@ public:
     /**
      * Applying a display configuration only if it will not invalidate existing DisplayBuffers
      *
-     * The Display guarantees that the references to the DisplayBuffer acquired via
+     * The Display must guarantee that the references to the DisplayBuffer acquired via
      * DisplaySyncGroup::for_each_display_buffer() remain valid until the Display is destroyed or
      * Display::configure() is called.
      *
@@ -123,7 +123,7 @@ public:
      * valid.
      *
      * \param conf [in] Configuration to check
-     * \return      true if and only if a subsequent call to configure(\p conf) will not invalidate
+     * \return      \c true if and only if a subsequent call to Display::configure(\p conf) will not invalidate
      *              existing DisplayBuffer references.
      */
     virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const = 0;

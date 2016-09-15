@@ -49,7 +49,7 @@ public:
     {
     }
 
-    bool configuration_will_preserve_display_buffers(graphics::DisplayConfiguration const&)
+    bool configuration_will_preserve_display_buffers(graphics::DisplayConfiguration const&) const
     {
         return false;
     }
