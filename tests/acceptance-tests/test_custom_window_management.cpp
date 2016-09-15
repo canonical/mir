@@ -589,8 +589,6 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     auto surface = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-//    auto const placement_event = mir::events::make_event(surface_id, placement_);
-
     scene_surface->placed_relative(placement_);
 
     mir_surface_release_sync(surface);
