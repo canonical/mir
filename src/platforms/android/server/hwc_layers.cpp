@@ -157,7 +157,7 @@ void mga::HWCLayer::release_buffer()
 {
     if ((hwc_layer->compositionType != HWC_FRAMEBUFFER) && associated_buffer)
     {
-        auto const& native_buffer = associated_buffer->native_buffer_handle();
+        auto native_buffer = mga::to_native_buffer_checked(associated_buffer->native_buffer_handle());
         native_buffer->update_usage(hwc_layer->releaseFenceFd, mga::BufferAccess::read);
         hwc_layer->releaseFenceFd = -1;
         hwc_layer->acquireFenceFd = -1;
@@ -224,7 +224,7 @@ bool mga::HWCLayer::setup_layer(
 
     visible_rect = hwc_layer->displayFrame;
 
-    auto const& native_buffer = buffer->native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer->native_buffer_handle());
     needs_commit |= (hwc_layer->handle != native_buffer->handle());
     hwc_layer->handle = native_buffer->handle();
 
@@ -239,7 +239,7 @@ void mga::HWCLayer::set_acquirefence()
     //we disregard fences that haven't changed, as the hwc will still own the buffer
     if (!needs_gl_render() && associated_buffer)
     {
-        auto const& native_buffer = associated_buffer->native_buffer_handle();
+        auto native_buffer = mga::to_native_buffer_checked(associated_buffer->native_buffer_handle());
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
     }
 }

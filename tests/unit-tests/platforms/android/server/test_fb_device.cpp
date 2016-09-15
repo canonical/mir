@@ -65,7 +65,7 @@ struct FBDevice : public ::testing::Test
     geom::Size display_size{413, 516};
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
+    std::shared_ptr<mir::graphics::android::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     mga::LayerList list{std::make_shared<mga::IntegerSourceCrop>(), {}, geom::Displacement{}};

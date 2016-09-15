@@ -26,7 +26,7 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
 void mga::InterpreterCache::store_buffer(std::shared_ptr<mg::Buffer>const& buffer,
-    std::shared_ptr<mg::NativeBuffer> const& key)
+    std::shared_ptr<mga::NativeBuffer> const& key)
 {
     native_buffers[key->anwb()] = key;
     buffers_in_driver[key->anwb()] = buffer;

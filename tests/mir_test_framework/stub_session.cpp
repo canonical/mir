@@ -154,7 +154,7 @@ void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
 std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
 {
     return std::make_shared<mtd::StubBuffer>(
-        std::make_shared<graphics::NativeBuffer>(graphics::BufferProperties{}));
+        std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{}));
 }
 
 namespace

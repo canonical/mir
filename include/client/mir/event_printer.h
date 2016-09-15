@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -48,6 +48,7 @@ std::ostream& operator<<(std::ostream& out, MirCloseSurfaceEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirKeymapEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirSurfaceEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputDeviceStateEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirSurfacePlacementEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirEvent const& event);
 
 }
