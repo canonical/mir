@@ -241,7 +241,7 @@ TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_conf
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
-    EXPECT_CALL(mock_display, configure(Ref(conf))).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
 
     session_event_sink.handle_focus_change(session);
     changer->configure(session,
@@ -255,7 +255,7 @@ TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
     mtd::NullDisplayConfiguration conf;
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(Ref(conf))).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     changer->configure(std::make_shared<mtd::StubSession>(),
@@ -307,7 +307,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     }
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(Ref(conf)));
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     changer->configure_for_hardware_change(mt::fake_shared(conf));
@@ -400,7 +400,7 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attach
         .WillOnce(Return(true));
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(Ref(*conf)));
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     session_event_sink.handle_focus_change(session1);
@@ -518,7 +518,7 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
         .WillOnce(Return(true));
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(base_config))));
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     session_event_sink.handle_focus_change(session2);
