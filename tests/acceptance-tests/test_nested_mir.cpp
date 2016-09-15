@@ -983,14 +983,18 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 {
+    auto const mock_cursor = the_mock_cursor();
+    ON_CALL(*mock_cursor, show(_)).WillByDefault(WakeUp(&condition));
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurface client(nested_mir);
-    auto const mock_cursor = the_mock_cursor();
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     nested_mir.wait_until_ready();
+    // wait for the initial cursor show call..
+    condition.wait_for(long_timeout);
+    condition.reset();
 
     // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
     // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
