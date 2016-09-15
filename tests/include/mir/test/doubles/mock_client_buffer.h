@@ -48,7 +48,7 @@ struct MockClientBuffer : client::ClientBuffer
     MOCK_CONST_METHOD0(get_fence, MirNativeFence());
     MOCK_METHOD2(wait_fence, bool(MirBufferAccess, std::chrono::nanoseconds));
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
-    MOCK_METHOD4(egl_image, void(char const*, EGLenum*, EGLClientBuffer*, EGLint**));
+    MOCK_METHOD3(egl_image_creation_parameters, void(EGLenum*, EGLClientBuffer*, EGLint**));
     int age_{0};
 };
 }

@@ -19,7 +19,6 @@
 #include "platform.h"
 #include "host_connection.h"
 #include "display.h"
-#include "platform_image_factory.h"
 #include "buffer.h"
 #include "native_buffer.h"
 #include "ipc_operations.h"
@@ -61,8 +60,7 @@ struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
         BufferProperties const& buffer_properties)
     {
         printf("ALLAC A BUFF\n");
-        auto factory = std::make_shared<mgn::AndroidImageFactory>();
-        return std::make_shared<mgn::Buffer>(connection, factory, buffer_properties);
+        return std::make_shared<mgn::Buffer>(connection, buffer_properties);
     }
 
     virtual std::vector<MirPixelFormat> supported_pixel_formats()

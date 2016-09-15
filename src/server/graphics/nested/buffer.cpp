@@ -68,8 +68,18 @@ public:
         auto it = egl_image_map.find(resources);
         if (it == egl_image_map.end())
         {
-            static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-            auto i = factory->create_egl_image_from(*native_buffer, resources.first, image_attrs);
+            auto ext = extensions;
+            auto display = resources.first;
+            auto hints = native_buffer->egl_image_creation_hints();
+            auto i = EGLImageUPtr{
+                new EGLImageKHR(ext.eglCreateImageKHR(
+                    display, EGL_NO_CONTEXT,
+                    std::get<0>(hints), std::get<1>(hints), std::get<2>(hints))),
+                [ext, display](EGLImageKHR* image)
+                {
+                    ext.eglDestroyImageKHR(display, image); delete image;
+                }
+            };
             image = *i;
             egl_image_map[resources] = std::move(i);
         }
@@ -78,7 +88,7 @@ public:
             image = *(it->second);
         }
 
-        egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     }
 
     void gl_bind_to_texture() override
@@ -95,9 +105,10 @@ protected:
     std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
 private:
-    mg::EGLExtensions egl_extensions;
+    mg::EGLExtensions extensions;
     typedef std::pair<EGLDisplay, EGLContext> ImageResources;
-    std::map<ImageResources, mgn::EGLImageUPtr> egl_image_map;
+    typedef std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> EGLImageUPtr;
+    std::map<ImageResources, EGLImageUPtr> egl_image_map;
 };
 
 class PixelAndTextureAccess :

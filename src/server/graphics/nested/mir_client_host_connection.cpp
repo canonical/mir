@@ -24,6 +24,7 @@
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -555,6 +556,14 @@ struct XNativeBuffer : mgn::NativeBuffer
         return mir_buffer_get_pixel_format(b);
     }
 
+    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
+    {
+        EGLenum type;
+        EGLClientBuffer client_buffer = nullptr;;
+        EGLint* attrs = nullptr;
+        mir_buffer_egl_image_parameters(b, &type, &client_buffer, &attrs);
+        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
+    }
     void avail()
     {
         mine = true;

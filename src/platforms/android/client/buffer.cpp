@@ -109,17 +109,14 @@ MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
     return native_buffer->anwb();
 }
 
-void mcla::Buffer::egl_image(
-    char const* ext, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
+void mcla::Buffer::egl_image_creation_parameters(
+    EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 {
-    printf("EXTENSION %s\n", ext);
-
     static EGLint image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         EGL_NONE
     };
-
     *type = EGL_NATIVE_BUFFER_ANDROID;
     *client_buffer = native_buffer->anwb();
     *attr = image_attrs;

@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
 #include "presentation_chain.h"
 #include "mir_connection.h"
 #include "buffer.h"
@@ -237,12 +238,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_buffer_get_egl_image(MirBuffer* b, char const* ext, EGLenum* type, EGLClientBuffer* bu, EGLint** attr)
+void mir_buffer_egl_image_parameters(
+    MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    buffer->client_buffer()->egl_image(ext, type, bu, attr);
+    buffer->client_buffer()->egl_image_creation_parameters(type, client_buffer, attr);
 }
 catch (std::exception const& ex)
 {
