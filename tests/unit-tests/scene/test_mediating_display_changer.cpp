@@ -514,8 +514,10 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
-    EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(*conf)))
-        .WillOnce(Return(true));
+    EXPECT_CALL(
+        mock_display,
+        apply_if_configuration_preserves_display_buffers(mt::DisplayConfigMatches(std::cref(base_config))))
+            .WillOnce(Return(true));
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
     EXPECT_CALL(mock_display, configure(_)).Times(0);
