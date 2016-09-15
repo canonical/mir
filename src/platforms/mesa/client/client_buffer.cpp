@@ -170,6 +170,7 @@ bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
     return true;
 }
 
-void mclm::ClientBuffer::egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**)
+void mclm::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**)
 {
+    BOOST_THROW_EXCEPTION(std::invalid_argument("not implemented yet"));
 }

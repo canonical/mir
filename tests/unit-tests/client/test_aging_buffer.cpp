@@ -84,7 +84,7 @@ struct MyAgingBuffer : public mcl::AgingBuffer
         exit(1);
     }
 
-    void egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**) override
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override
     {
         exit(1);
     }

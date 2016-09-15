@@ -63,7 +63,6 @@ struct StubClientBuffer : client::ClientBuffer
 
         return std::shared_ptr<client::MemoryRegion>(raw);
     }
-    void egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**) {}
 
     geometry::Size size() const override { return size_; }
     geometry::Stride stride() const override { return geometry::Stride{package->stride}; }
@@ -83,6 +82,7 @@ struct StubClientBuffer : client::ClientBuffer
     void set_fence(MirNativeFence, MirBufferAccess) override {}
     MirNativeFence get_fence() const override { return nullptr; }
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override { return true; }
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) {}
 
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;

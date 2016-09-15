@@ -184,19 +184,12 @@ MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
  **/
 MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
 
-
-
 /** @} */
 
 /** release a MirBuffer
  *   \param [in] buffer              The buffer to be released
  **/
 void mir_buffer_release(MirBuffer* buffer);
-
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-void mir_buffer_get_egl_image(MirBuffer*, char const*, EGLenum*, EGLClientBuffer*, EGLint**);
 
 #ifdef __cplusplus
 }
