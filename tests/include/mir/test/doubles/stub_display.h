@@ -49,11 +49,6 @@ public:
     {
     }
 
-    bool configuration_will_preserve_display_buffers(graphics::DisplayConfiguration const&) const
-    {
-        return false;
-    }
-
     void configure(graphics::DisplayConfiguration const& new_config)  override
     {
         auto current = begin(config.outputs);
