@@ -26,23 +26,23 @@ namespace mir
 class DefaultServerStatusListener : public virtual ServerStatusListener
 {
 public:
-    virtual void paused()
+    void paused() override
     {
     }
 
-    virtual void resumed()
+    void resumed() override
     {
     }
 
-    virtual void started()
+    void started() override
     {
     }
 
-    virtual void ready_for_user_input()
+    void ready_for_user_input() override
     {
     }
 
-    virtual void stop_receiving_input()
+    void stop_receiving_input() override
     {
     }
 };
