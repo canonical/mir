@@ -119,6 +119,8 @@ mtf::TestingServerConfiguration::the_server_status_listener()
             server_started_sync.try_signal_ready_for();
             on_start();
         }
+        void ready_for_user_input() {}
+        void stop_receiving_input() {}
 
         mt::CrossProcessSync server_started_sync;
         std::function<void(void)> const on_start;
