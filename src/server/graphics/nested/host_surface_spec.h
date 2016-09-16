@@ -43,18 +43,6 @@ protected:
     HostSurfaceSpec(HostSurfaceSpec const&) = delete;
     HostSurfaceSpec& operator=(HostSurfaceSpec const&) = delete;
 };
-class SurfaceSpec : public HostSurfaceSpec
-{
-public:
-    SurfaceSpec(MirConnection* con);
-    ~SurfaceSpec();
-    void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size);
-    void add_stream(HostStream&, geometry::Displacement disp);
-    MirSurfaceSpec* handle();
-private:
-    MirSurfaceSpec* spec;
-};
-
 }
 }
 }

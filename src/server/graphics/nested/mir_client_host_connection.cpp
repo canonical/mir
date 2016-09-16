@@ -620,6 +620,39 @@ private:
     std::mutex mut;
     std::condition_variable cv;
 };
+
+class SurfaceSpec : public mgn::HostSurfaceSpec
+{
+public:
+    SurfaceSpec(MirConnection* connection) :
+        spec(mir_connection_create_spec_for_changes(connection))
+    {
+    }
+
+    ~SurfaceSpec()
+    {
+        mir_surface_spec_release(spec);
+    }
+
+    void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
+    {
+        mir_surface_spec_add_presentation_chain(
+            spec, size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int(), chain.handle());
+    }
+
+    void add_stream(mgn::HostStream& stream, geom::Displacement disp) override
+    {
+        mir_surface_spec_add_buffer_stream(spec, disp.dx.as_int(), disp.dy.as_int(), stream.handle());
+    }
+
+    MirSurfaceSpec* handle() override
+    {
+        return spec;
+    }
+private:
+    MirSurfaceSpec* spec;
+};
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
@@ -630,5 +663,5 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
 {
-    return std::make_unique<mgn::SurfaceSpec>(mir_connection);
+    return std::make_unique<SurfaceSpec>(mir_connection);
 }
