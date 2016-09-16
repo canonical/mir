@@ -37,6 +37,7 @@
 namespace mir
 {
 class ServerActionQueue;
+class ServerStatusListener;
 namespace frontend
 {
 class EventSink;
@@ -67,7 +68,8 @@ public:
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<cookie::Authority> const& cookie_authority,
-                          std::shared_ptr<KeyMapper> const& key_mapper);
+                          std::shared_ptr<KeyMapper> const& key_mapper,
+                          std::shared_ptr<ServerStatusListener> const& server_status_listener);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -91,6 +93,7 @@ private:
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::shared_ptr<ServerStatusListener> const server_status_listener;
 
     struct RegisteredDevice : public InputSink
     {
@@ -124,6 +127,7 @@ private:
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
 
     MirInputDeviceId device_id_generator;
+    bool ready{false};
 };
 
 }
