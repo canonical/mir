@@ -64,17 +64,12 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
     }
 
-    MirNativeBuffer* as_mir_native_buffer() const override
+    void set_fence(Fd, MirBufferAccess) override
     {
         exit(1);
     }
 
-    void set_fence(MirNativeFence, MirBufferAccess) override
-    {
-        exit(1);
-    }
-
-    MirNativeFence get_fence() const override
+    Fd get_fence() const override
     {
         exit(1);
     }

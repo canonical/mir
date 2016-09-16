@@ -145,20 +145,13 @@ void mcle::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-MirNativeBuffer* mcle::ClientBuffer::as_mir_native_buffer() const
-{
-    if (auto native = dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(native_buffer_handle().get()))
-        return native;
-    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert to NativeBuffer"));
-}
-
-void mcle::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
+void mcle::ClientBuffer::set_fence(Fd, MirBufferAccess)
 {
 }
 
-MirNativeFence mcle::ClientBuffer::get_fence() const
+mir::Fd mcle::ClientBuffer::get_fence() const
 {
-    return nullptr;
+    return mir::Fd(mir::Fd::invalid);
 }
 
 bool mcle::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
