@@ -321,13 +321,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:
-                        printf("NEW BUFFER INBOUND. %i\n", buffer_id);
                         buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
                         map->insert(buffer_id, buffer); 
                         buffer->received();
                         break;
                     case mp::BufferOperation::update:
-                        printf("UPDATE BUF\n");
                         map->buffer(buffer_id)->received(
                             *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         break;

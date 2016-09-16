@@ -106,9 +106,6 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-
-    if (!buffer)
-        printf("BAD KABOOM\n");
     if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
         BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
     return buffer->as_mir_native_buffer();
@@ -124,9 +121,8 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    (void)access;
     if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffera"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
 
     return buffer->map_region();
 }
@@ -225,19 +221,6 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    return buffer->client_buffer()->package();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
 void mir_buffer_egl_image_parameters(
     MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 try
@@ -252,4 +235,17 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->client_buffer()->package();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }

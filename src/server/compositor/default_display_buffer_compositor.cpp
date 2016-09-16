@@ -46,7 +46,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
-    printf("COMPOSITE COMPOSITO\n");
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();

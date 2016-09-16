@@ -93,7 +93,6 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
                 drop_policy->swap_now_blocking();
         }
-        printf("BING!\n");
         observers.frame_posted(1, buffer->size());
     }
     fn(nullptr); //legacy support

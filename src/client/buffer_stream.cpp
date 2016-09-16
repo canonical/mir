@@ -276,7 +276,6 @@ public:
 
     void submit_buffer(mcl::MirBuffer& buffer) override
     {
-        printf("SUBMIT %i\n", buffer.rpc_id());
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
