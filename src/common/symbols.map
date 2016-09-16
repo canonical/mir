@@ -390,6 +390,11 @@ MIR_COMMON_0.24 {
 MIR_COMMON_0.25 {
   global:
     extern "C++" {
+      MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
+      MirSurfacePlacementEvent::id*;
+      MirSurfacePlacementEvent::set_id*;
+      MirSurfacePlacementEvent::placement*;
+      MirSurfacePlacementEvent::set_placement*;
       mir::output_type_name*;
     };
 } MIR_COMMON_0.24;

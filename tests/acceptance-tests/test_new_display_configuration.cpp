@@ -813,6 +813,143 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
+{
+    uint32_t const size = 4;
+    std::vector<uint16_t> const a{0, 1, 2, 3};
+    std::vector<uint16_t> const b{1, 2, 3, 4};
+    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    std::vector<mg::GammaCurves> const gammas = {
+        {a, b, c},
+        {b, c, a},
+        {c, a, b}
+    };
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&gammas, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+            {
+                output.gamma = gammas[output_num];
+                ++output_num;
+            });
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        ASSERT_THAT(mir_output_get_gamma_size(output), size);
+
+        uint16_t red[size];
+        uint16_t green[size];
+        uint16_t blue[size];
+
+        mir_output_get_gamma(output, red, green, blue, size);
+
+        for (size_t r = 0; r < size; r++)
+        {
+            EXPECT_THAT(gammas[i].red[r], red[r]);
+        }
+
+        for (size_t g = 0; g < size; g++)
+        {
+            EXPECT_THAT(gammas[i].green[g], green[g]);
+        }
+
+        for (size_t b = 0; b < size; b++)
+        {
+            EXPECT_THAT(gammas[i].blue[b], blue[b]);
+        }
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_can_set_gamma)
+{
+    std::vector<uint16_t> const a{0, 1, 2, 3};
+    std::vector<uint16_t> const b{1, 2, 3, 4};
+    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    std::vector<mg::GammaCurves> const gammas = {
+        {a, b, c},
+        {b, c, a},
+        {c, a, b}
+    };
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(client_config.get(), i);
+
+        mir_output_set_gamma(output,
+                             gammas[i].red.data(),
+                             gammas[i].green.data(),
+                             gammas[i].blue.data(),
+                             gammas[i].red.size());
+    }
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [c = client_config.get()](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(c));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&gammas, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+            {
+                for (size_t r = 0; r < output.gamma.red.size(); r++)
+                {
+                    EXPECT_THAT(output.gamma.red[r], gammas[output_num].red[r]);
+                }
+
+                for (size_t g = 0; g < output.gamma.green.size(); g++)
+                {
+                    EXPECT_THAT(output.gamma.green[g], gammas[output_num].green[g]);
+                }
+
+                for (size_t b = 0; b < output.gamma.green.size(); b++)
+                {
+                    EXPECT_THAT(output.gamma.blue[b], gammas[output_num].blue[b]);
+                }
+
+                ++output_num;
+            });
+
+    client.disconnect();
+}
+
 namespace
 {
 MATCHER_P(IsSameModeAs, mode, "")

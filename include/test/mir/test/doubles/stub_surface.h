@@ -72,6 +72,7 @@ struct StubSurface : scene::Surface
     void rename(std::string const& title) override;
     void set_confine_pointer_state(MirPointerConfinementState state) override;
     MirPointerConfinementState confine_pointer_state() const override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 };
 }
 }
