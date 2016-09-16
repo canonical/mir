@@ -126,7 +126,10 @@ TEST_F(NestedIPCOperations, packs_unfenced_buffer_itself_when_native)
     EXPECT_CALL(msg, pack_data(package.data[0]));
     EXPECT_CALL(msg, pack_fd(mir::Fd(mir::IntOwnedFd{package.fd[0]})));
     EXPECT_CALL(msg, pack_flags(0));
+#ifndef __clang__
+    //(LP: #1609612)
     EXPECT_CALL(msg, pack_stride(geom::Stride{package.stride}));
+#endif
     operations.pack_buffer(msg, nested_buffer, mg::BufferIpcMsgType::full_msg);
 }
 
