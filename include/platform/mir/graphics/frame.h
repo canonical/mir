@@ -32,6 +32,7 @@ namespace mir { namespace graphics {
  *   GLX: https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
  *   WGL: https://www.opengl.org/registry/specs/OML/wgl_sync_control.txt
  *   EGL: https://bugs.chromium.org/p/chromium/issues/attachmentText?aid=178027
+ *   Mesa: "get_sync_values" functions
  */
 struct Frame
 {
