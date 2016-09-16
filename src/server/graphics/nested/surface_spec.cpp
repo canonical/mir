@@ -36,9 +36,9 @@ mgn::SurfaceSpec::~SurfaceSpec()
 
 void mgn::SurfaceSpec::add_chain(HostChain& chain, geometry::Displacement disp, geometry::Size size)
 {
-    mir_surface_spec_add_presentation_chain(spec, size.width.as_int(), size.height.as_int(),
+    mir_surface_spec_add_presentation_chain(
+        spec, size.width.as_int(), size.height.as_int(),
         disp.dx.as_int(), disp.dy.as_int(), chain.handle());
-    (void)disp; (void)size;
 }
 
 void mgn::SurfaceSpec::add_stream(HostStream& stream, geometry::Displacement disp)

@@ -127,7 +127,7 @@ struct StubNestedBuffer :
     MirBufferPackage* package() const override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd{mir::Fd::invalid}; }
     void set_fence(mir::Fd) override {}
- 
+
     void trigger()
     {
         if (fn) fn();

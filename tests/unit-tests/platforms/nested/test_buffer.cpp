@@ -52,10 +52,10 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(format, MirPixelFormat());
     MOCK_METHOD2(sync, void(MirBufferAccess, std::chrono::nanoseconds));
+    MOCK_CONST_METHOD0(egl_image_creation_hints, std::tuple<EGLenum, EGLClientBuffer, EGLint*>());
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
     MOCK_CONST_METHOD0(fence, mir::Fd());
     MOCK_METHOD1(set_fence, void(mir::Fd));
-    MOCK_CONST_METHOD0(egl_image_creation_hints, std::tuple<EGLenum, EGLClientBuffer, EGLint*>());
     MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
 };
 
