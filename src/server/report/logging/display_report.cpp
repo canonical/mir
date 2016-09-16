@@ -162,14 +162,13 @@ void mrl::DisplayReport::report_vsync(unsigned int output_id,
                                     / (1000*(frame.msc - prev->second.msc)),
                         hz100 = 100000000LL / interval_us;
 
-        static const char usec_utf8[] = "\xce\xbcs";
-
         logger->log(component(), ml::Severity::informational,
-            "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%02lldHz)",
+            "vsync on %u: #%lld, %lld.%03lldms %s, interval %lld.%03lldms (%lld.%02lldHz)",
             output_id,
             msc,
-            llabs(age_us), usec_utf8, age_us>=0 ? "ago" : "from now",
-            interval_us, usec_utf8,
+            llabs(age_us/1000), llabs(age_us%1000),
+            age_us>=0 ? "ago" : "from now",
+            interval_us/1000, interval_us%1000,
             hz100/100, hz100%100);
     }
     prev_frame[output_id] = frame;
