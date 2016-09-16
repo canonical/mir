@@ -53,6 +53,7 @@ public:
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const;
     void update_from(MirBufferPackage const&);
     void fill_update_msg(MirBufferPackage&);
+    MirBufferPackage* package() const;
     MirNativeBuffer* as_mir_native_buffer() const;
     void set_fence(MirNativeFence, MirBufferAccess);
     MirNativeFence get_fence() const;

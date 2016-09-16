@@ -35,7 +35,7 @@ struct StubClientBuffer : client::ClientBuffer
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size, MirPixelFormat pf,
         std::shared_ptr<graphics::NativeBuffer> const& buffer) :
-        package{package}, size_{size}, pf_{pf}, buffer{buffer}
+        package_{package}, size_{size}, pf_{pf}, buffer{buffer}
     {
     }
 
@@ -48,8 +48,8 @@ struct StubClientBuffer : client::ClientBuffer
 
     ~StubClientBuffer()
     {
-        for (int i = 0; i < package->fd_items; i++)
-            ::close(package->fd[i]);
+        for (int i = 0; i < package_->fd_items; i++)
+            ::close(package_->fd[i]);
     }
 
     std::shared_ptr<client::MemoryRegion> secure_for_cpu_write() override
@@ -65,7 +65,7 @@ struct StubClientBuffer : client::ClientBuffer
     }
 
     geometry::Size size() const override { return size_; }
-    geometry::Stride stride() const override { return geometry::Stride{package->stride}; }
+    geometry::Stride stride() const override { return geometry::Stride{package_->stride}; }
     MirPixelFormat pixel_format() const override { return pf_; }
     uint32_t age() const override { return 0; }
     void increment_age() override {}
@@ -74,6 +74,10 @@ struct StubClientBuffer : client::ClientBuffer
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
     {
         return buffer;
+    }
+    MirBufferPackage* package() const
+    {
+        return package_.get();
     }
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
@@ -84,7 +88,7 @@ struct StubClientBuffer : client::ClientBuffer
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override { return true; }
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) {}
 
-    std::shared_ptr<MirBufferPackage> const package;
+    std::shared_ptr<MirBufferPackage> const package_;
     geometry::Size size_;
     MirPixelFormat pf_;
     std::shared_ptr<graphics::NativeBuffer> buffer;

@@ -56,6 +56,7 @@ public:
     MirNativeFence get_fence() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout);
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override;
+    MirBufferPackage* package() const;
 
 private:
     std::shared_ptr<graphics::eglstream::NativeBuffer> const creation_package;

@@ -101,6 +101,14 @@ void mir_buffer_set_callback(
  **/
 MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access);
 
+/**
+ * Access the MirBufferPackage
+ *
+ *   \param [in] buffer    The buffer
+ *   \return               The MirBufferPackage representing buffer 
+ */
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* buffer);
+
 /** Access a CPU-mapped region associated with a given buffer for the given purpose.
  *  This will synchronize the buffer for the given purpose.
  *

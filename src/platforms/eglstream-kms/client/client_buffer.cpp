@@ -170,3 +170,8 @@ void mcle::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer
 {
     BOOST_THROW_EXCEPTION(std::invalid_argument("not implemented yet"));
 }
+
+MirBufferPackage* mcle::ClientBuffer::package() const
+{
+    return creation_package.get();
+}
