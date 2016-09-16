@@ -63,7 +63,6 @@ struct StubClientBuffer : client::ClientBuffer
 
         return std::shared_ptr<client::MemoryRegion>(raw);
     }
-    void egl_image(char const*, EGLenum*, EGLClientBuffer*, EGLint**) {}
 
     geometry::Size size() const override { return size_; }
     geometry::Stride stride() const override { return geometry::Stride{package_->stride}; }

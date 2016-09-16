@@ -121,6 +121,7 @@ public:
         struct NullHostChain : graphics::nested::HostChain
         {
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
+            MirPresentationChain* handle() override { return nullptr; }
         };
         return std::make_unique<NullHostChain>();
     }
@@ -155,6 +156,7 @@ public:
         {
             void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
             void add_stream(graphics::nested::HostStream&, geometry::Displacement) override {}
+            MirSurfaceSpec* handle() { return nullptr; }
         }; 
         return std::make_unique<NullSpec>();
     }

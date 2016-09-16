@@ -19,7 +19,6 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/fake_shared.h"
-#include "src/server/graphics/nested/platform_image_factory.h"
 #include "src/server/graphics/nested/native_buffer.h"
 
 #include <gtest/gtest.h>

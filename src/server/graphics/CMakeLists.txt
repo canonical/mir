@@ -13,5 +13,4 @@ add_library(
   software_cursor.cpp
 )
 
-message("NESTED")
 add_subdirectory(nested/)
