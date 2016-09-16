@@ -880,3 +880,16 @@ TEST_F(MirConnectionTest, can_release_buffer_from_connection)
 
     connection->release_buffer(&mock_buffer);
 }
+
+TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
+{
+    using namespace testing;
+
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
+    EXPECT_CALL(*mock_platform, create_egl_native_window(nullptr));
+
+    // We must release here to prevent resource leak as ref to render surface is held in surface_map
+    connection->release_render_surface(
+        connection->create_render_surface(2, 2, mir_pixel_format_abgr_8888), nullptr, nullptr);
+}
