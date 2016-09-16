@@ -46,6 +46,8 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<graphics::DisplayConfiguration> clone() const override;
 
+    static DisplayConfigurationOutputId const the_output_id;
+
 private:
     DisplayConfigurationOutput configuration;
     DisplayConfigurationCard card;
