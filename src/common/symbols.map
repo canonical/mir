@@ -356,7 +356,12 @@ MIR_COMMON_0.25 {
        mir::dispatch::fd_event_to_epoll*;
 
 # New functions in Mir 0.25
-       mir::output_type_name*;
+      MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
+      MirSurfacePlacementEvent::id*;
+      MirSurfacePlacementEvent::set_id*;
+      MirSurfacePlacementEvent::placement*;
+      MirSurfacePlacementEvent::set_placement*;
+      mir::output_type_name*;
     };
   local: *;
 };
