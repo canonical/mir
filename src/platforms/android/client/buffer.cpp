@@ -127,9 +127,9 @@ void mcla::Buffer::set_fence(MirNativeFence fence, MirBufferAccess access)
     if (!fence)
         native_buffer->reset_fence();
     else if (access == mir_read)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::read); 
+        native_buffer->update_usage(fence, mga::BufferAccess::read); 
     else if (access == mir_read_write)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::write); 
+        native_buffer->update_usage(fence, mga::BufferAccess::write); 
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
 }
@@ -138,7 +138,7 @@ MirNativeFence mcla::Buffer::get_fence() const
 {
     api_user_fence = mir::Fd(native_buffer->copy_fence());
     fd = api_user_fence;
-    return &fd; 
+    return fd; 
 }
 
 bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ns)

@@ -72,7 +72,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
+    return -1;
 }
 
 void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence fence, MirBufferAccess access)

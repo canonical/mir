@@ -1505,3 +1505,10 @@ TEST_F(NestedServer,
     EXPECT_TRUE(host_config_change.raised());
     Mock::VerifyAndClearExpectations(&display);
 }
+
+TEST_F(NestedServer, passthrough_works)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    nested_mir.wait_until_ready();
+    ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
+}

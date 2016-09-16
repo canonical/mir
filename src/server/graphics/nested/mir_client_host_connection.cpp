@@ -605,13 +605,14 @@ public:
        return mir_buffer_get_buffer_package(b);
     }
 
-    void set_fence(mir::Fd)
+    void set_fence(mir::Fd fd)
     {
+        mir_buffer_associate_fence(b, fd, mir_read_write);
     }
 
     mir::Fd fence() const
     {
-        return mir::Fd(mir::Fd::invalid);
+        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(b)}};
     }
 
 private:

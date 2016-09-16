@@ -162,7 +162,7 @@ void mclm::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
 
 MirNativeFence mclm::ClientBuffer::get_fence() const
 {
-    return nullptr;
+    return -1;
 }
 
 bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
