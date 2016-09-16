@@ -87,20 +87,7 @@ public:
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
 
-    struct BufferCreation
-    {
-        BufferCreation(MirClientHostConnection* c, int co) : connection(c), count(co) {}
-
-        MirClientHostConnection* connection;
-        int count;
-        std::mutex mut;
-        std::condition_variable cv;
-        MirBuffer* b = nullptr;
-    };
-    void buffer_created(MirBuffer*, BufferCreation*);
 private:
-    int count = 0;
-    std::vector<std::shared_ptr<BufferCreation>> c;
 
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;

@@ -494,7 +494,6 @@ struct Chain : mgn::HostChain
     {
         if (buffer.client_handle() != current_buf)
         {
-            printf("PUMP NEW IN\n");
             current_buf = buffer.client_handle();
             mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
         }
@@ -512,24 +511,32 @@ private:
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
     return std::make_unique<Chain>(mir_connection);
-
-
-
-
 }
 
 namespace
 {
-void bbuffer_created(MirBuffer* buffer, void* context);
-struct XNativeBuffer : mgn::NativeBuffer
+class HostBufferBuffer : public mgn::NativeBuffer
 {
-    XNativeBuffer(MirBuffer* b) :
-        b(b),
-        mine(true)
+public:
+    HostBufferBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
     {
-        mir_buffer_set_callback(b, bbuffer_created, this);
+        mir_connection_allocate_buffer(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return b; });
+        if (!mir_buffer_is_valid(b))
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        printf("YEP.\n");
     }
-    ~XNativeBuffer() { printf("DESTROY BE\n"); mir_buffer_release(b); }
+    ~HostBufferBuffer()
+    {
+        mir_buffer_release(b);
+    }
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {
@@ -564,14 +571,27 @@ struct XNativeBuffer : mgn::NativeBuffer
         mir_buffer_egl_image_parameters(b, &type, &client_buffer, &attrs);
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }
-    void avail()
+
+    static void buffer_available(MirBuffer* buffer, void* context)
     {
-        mine = true;
-        if (f)
+        auto host_buffer = static_cast<HostBufferBuffer*>(context);
+        host_buffer->avail(buffer);
+    }
+
+    void avail(MirBuffer* buffer)
+    {
+        printf("BUFFER\n");
         {
-            printf("FN!\n");
-            f();
+            std::unique_lock<std::mutex> lk(mut);
+            if (!b)
+            {
+                b = buffer;
+                cv.notify_all();
+            }
         }
+
+        if (f)
+            f();
     }
 
     void on_ownership_notification(std::function<void()> const& fn)
@@ -593,65 +613,18 @@ struct XNativeBuffer : mgn::NativeBuffer
         return mir::Fd(mir::Fd::invalid);
     }
 
+private:
     std::function<void()> f;
-    MirBuffer*b;
-    bool mine;
+    MirBuffer*b = nullptr;
+    std::mutex mut;
+    std::condition_variable cv;
 };
-void bbuffer_created(MirBuffer*, void* context)
-{
-    auto xn = static_cast<XNativeBuffer*>(context);
-    xn->avail();
-}
-}
-
-namespace
-{
-void abuffer_created(MirBuffer* buffer, void* context)
-{
-    printf("INCOMING\n");
-    auto connection = static_cast<mgn::MirClientHostConnection::BufferCreation*>(context);
-    connection->connection->buffer_created(buffer, connection);
-}
-}
-
-void mgn::MirClientHostConnection::buffer_created(MirBuffer* b, BufferCreation* c)
-{
-    printf("INCOMING BUFFER\n");
-    std::unique_lock<std::mutex> lk(c->mut);
-    c->b = b;
-    c->cv.notify_all();
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const& properties)
 {
-    c.push_back(std::make_shared<BufferCreation>(this, count++));
-    auto r = c.back().get(); 
-
-    mir_connection_allocate_buffer(
-        mir_connection,
-        properties.size.width.as_int(),
-        properties.size.height.as_int(),
-        properties.format,
-        mir_buffer_usage_hardware,
-        abuffer_created, r);
-
-    std::unique_lock<std::mutex> lk(r->mut);
-    r->cv.wait(lk, [&]{ return r->b; });
-    if (!mir_buffer_is_valid(r->b))
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-
-    printf("MAKE BE %X\n", (int)(long) r->b);
-    auto ar = std::make_shared<XNativeBuffer>(r->b);
-    for(auto it = c.begin(); it != c.end();)
-    {
-        if (r->count == (*it)->count)
-            it = c.erase(it);
-        else
-            it++;
-    }
-
-    return ar;
+    return std::make_shared<HostBufferBuffer>(mir_connection, properties);
 }
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
