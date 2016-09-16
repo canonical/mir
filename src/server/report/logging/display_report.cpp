@@ -145,11 +145,11 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     }
 }
 
-void mrl::DisplayReport::report_vsync(unsigned int display_id,
+void mrl::DisplayReport::report_vsync(unsigned int output_id,
                                       graphics::Frame const& frame)
 {
     std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
-    auto prev = prev_frame.find(display_id);
+    auto prev = prev_frame.find(output_id);
     if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {
         auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
@@ -166,11 +166,11 @@ void mrl::DisplayReport::report_vsync(unsigned int display_id,
 
         logger->log(component(), ml::Severity::informational,
             "vsync on %u: #%lld, %lld%s %s, interval %lld%s (%lld.%02lldHz)",
-            display_id,
+            output_id,
             msc,
             llabs(age_us), usec_utf8, age_us>=0 ? "ago" : "from now",
             interval_us, usec_utf8,
             hz100/100, hz100%100);
     }
-    prev_frame[display_id] = frame;
+    prev_frame[output_id] = frame;
 }

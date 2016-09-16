@@ -840,5 +840,7 @@ MIR_SERVER_0.25 {
  global:
   extern "C++" {
     mir::Server::override_the_seat_report*;
+    mir::scene::NullSurfaceObserver::placed_relative*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::placed_relative*;
   };
 } MIR_SERVER_0.24;

@@ -20,6 +20,7 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/atomic_frame.h"
 #include "display_buffer.h"
+#include "display_configuration.h"
 #include <cstring>
 #include <boost/throw_exception.hpp>
 
@@ -135,7 +136,8 @@ void mgx::DisplayBuffer::swap_buffers()
      * but this is best-effort. And besides, we don't want Mir reporting all
      * real vsyncs because that would mean the compositor never sleeps.
      */
-    report->report_vsync(0, last_frame->load());
+    report->report_vsync(mgx::DisplayConfiguration::the_output_id.as_value(),
+                         last_frame->load());
 }
 
 void mgx::DisplayBuffer::bind()

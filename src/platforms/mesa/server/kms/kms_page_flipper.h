@@ -43,6 +43,7 @@ class KMSPageFlipper;
 struct PageFlipEventData
 {
     uint32_t crtc_id;
+    uint32_t connector_id;
     KMSPageFlipper* flipper;
 };
 
@@ -51,7 +52,7 @@ class KMSPageFlipper : public PageFlipper
 public:
     KMSPageFlipper(int drm_fd, std::shared_ptr<DisplayReport> const& report);
 
-    bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) override;
+    bool schedule_flip(uint32_t crtc_id, uint32_t fb_id, uint32_t connector_id) override;
     Frame wait_for_flip(uint32_t crtc_id) override;
 
     std::thread::id debug_get_worker_tid();

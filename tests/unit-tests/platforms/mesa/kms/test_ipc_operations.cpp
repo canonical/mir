@@ -70,7 +70,7 @@ struct IpcOperations : public ::testing::Test
 
     MockDRMOperations mock_drm_ops;
     mgm::IpcOperations ipc_ops{mt::fake_shared(mock_drm_ops)};
-    mg::NativeBuffer native_handle;
+    mgm::NativeBuffer native_handle;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
     geom::Stride dummy_stride{4390};
     geom::Size dummy_size{123, 345};

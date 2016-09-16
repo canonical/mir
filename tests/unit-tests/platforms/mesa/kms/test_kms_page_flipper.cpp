@@ -71,12 +71,13 @@ TEST_F(KMSPageFlipperTest, schedule_flip_calls_drm_page_flip)
 
     uint32_t const crtc_id{10};
     uint32_t const fb_id{101};
+    uint32_t const connector_id{345};
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                           crtc_id, fb_id, _, _))
         .Times(1);
 
-    page_flipper.schedule_flip(crtc_id, fb_id);
+    page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 }
 
 TEST_F(KMSPageFlipperTest, double_schedule_flip_throws)
@@ -85,15 +86,16 @@ TEST_F(KMSPageFlipperTest, double_schedule_flip_throws)
 
     uint32_t const crtc_id{10};
     uint32_t const fb_id{101};
+    uint32_t const connector_id{345};
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                           crtc_id, fb_id, _, _))
         .Times(1);
 
-    page_flipper.schedule_flip(crtc_id, fb_id);
+    page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 
     EXPECT_THROW({
-        page_flipper.schedule_flip(crtc_id, fb_id);
+        page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
     }, std::logic_error);
 }
 
@@ -103,6 +105,7 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_handles_drm_event)
 
     uint32_t const crtc_id{10};
     uint32_t const fb_id{101};
+    uint32_t const connector_id{345};
     void* user_data{nullptr};
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
@@ -114,7 +117,7 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_handles_drm_event)
         .Times(1)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
-    page_flipper.schedule_flip(crtc_id, fb_id);
+    page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 
     /* Fake a DRM event */
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
@@ -127,15 +130,18 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
     using namespace testing;
     uint32_t const crtc_id{10};
     uint32_t const fb_id{101};
+    uint32_t const connector_id{345};
     void* user_data{nullptr};
     ON_CALL(mock_drm, drmModePageFlip(_, _, _, _, _))
         .WillByDefault(DoAll(SaveArg<4>(&user_data), Return(0)));
     ON_CALL(mock_drm, drmHandleEvent(_, _))
         .WillByDefault(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
-    EXPECT_CALL(report, report_vsync(crtc_id, _));
+    // Regression test for LP: #1621352
+    ASSERT_NE(crtc_id, connector_id);
+    EXPECT_CALL(report, report_vsync(connector_id, _));
 
-    page_flipper.schedule_flip(crtc_id, fb_id);
+    page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
     page_flipper.wait_for_flip(crtc_id);
 }
@@ -161,6 +167,7 @@ TEST_F(KMSPageFlipperTest, failure_in_wait_for_flip_throws)
 
     uint32_t const crtc_id{10};
     uint32_t const fb_id{101};
+    uint32_t const connector_id{345};
     void* user_data{nullptr};
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
@@ -171,7 +178,7 @@ TEST_F(KMSPageFlipperTest, failure_in_wait_for_flip_throws)
     EXPECT_CALL(mock_drm, drmHandleEvent(_, _))
         .Times(0);
 
-    page_flipper.schedule_flip(crtc_id, fb_id);
+    page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 
     /* Cause a failure in wait_for_flip */
     close(mock_drm.fake_drm.fd());
@@ -186,8 +193,10 @@ TEST_F(KMSPageFlipperTest, wait_for_flips_interleaved)
     using namespace testing;
 
     uint32_t const fb_id{101};
-    std::vector<uint32_t> const crtc_ids{10, 11, 12};
-    std::vector<void*> user_data{nullptr, nullptr, nullptr};
+    int const flips = 3;
+    uint32_t const crtc_ids[flips] = {10, 11, 12};
+    uint32_t const connector_ids[flips] = {23, 45, 67};
+    void* user_data[flips] = {nullptr, nullptr, nullptr};
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                           _, fb_id, _, _))
@@ -202,11 +211,11 @@ TEST_F(KMSPageFlipperTest, wait_for_flips_interleaved)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)));
 
-    for (auto crtc_id : crtc_ids)
-        page_flipper.schedule_flip(crtc_id, fb_id);
+    for (int i = 0; i < flips; ++i)
+        page_flipper.schedule_flip(crtc_ids[i], fb_id, connector_ids[i]);
 
     /* Fake 3 DRM events */
-    EXPECT_EQ(3, write(mock_drm.fake_drm.write_fd(), "abc", 3));
+    EXPECT_EQ(flips, write(mock_drm.fake_drm.write_fd(), "abc", 3));
 
     for (auto crtc_id : crtc_ids)
         page_flipper.wait_for_flip(crtc_id);
@@ -229,7 +238,7 @@ public:
     {
         while (!done)
         {
-            page_flipper.schedule_flip(crtc_id, 0);
+            page_flipper.schedule_flip(crtc_id, 0, 987);
             num_page_flips++;
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
             page_flipper.wait_for_flip(crtc_id);

@@ -65,7 +65,7 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
                 usage = mir::graphics::BufferUsage::hardware;
             mir::graphics::BufferProperties properties {size, pf, usage }; 
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
-                std::make_shared<mir::graphics::NativeBuffer>(properties));
+                std::make_shared<mtf::NativeBuffer>(properties));
         }
     };
     return std::make_shared<StubPlatformBufferFactory>();
@@ -82,8 +82,11 @@ std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native
     return std::make_shared<EGLNativeDisplayType>(fake_display);
 }
 
-MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* buf) const
+MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* b) const
 {
+    auto buf = dynamic_cast<mtf::NativeBuffer*>(b);
+    if (!buf)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
     native_buffer.data_items = 1;
     native_buffer.data[0] = buf->data;
     native_buffer.fd_items = 1;
