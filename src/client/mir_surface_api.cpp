@@ -649,8 +649,8 @@ try
     {
         auto wh = rs->create_client_buffer_stream(
             mir_buffer_usage_hardware,
-            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
             true,
+            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
             &stream);
         wh->wait_for_all();
     }

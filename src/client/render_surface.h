@@ -59,8 +59,8 @@ public:
     MirConnection* connection() const override;
     MirWaitHandle* create_client_buffer_stream(
         MirBufferUsage buffer_usage,
-        mir_buffer_stream_callback callback,
         bool autorelease,
+        mir_buffer_stream_callback callback,
         void *context) override;
     int stream_id() override;
     bool autorelease_content() const override;

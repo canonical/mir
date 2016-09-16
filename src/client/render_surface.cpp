@@ -99,8 +99,8 @@ MirConnection* mcl::RenderSurface::connection() const
 
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
     bool autorelease,
+    mir_buffer_stream_callback callback,
     void* context)
 {
     mp::BufferStreamParameters params;

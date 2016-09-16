@@ -136,8 +136,8 @@ try
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     return rs->create_client_buffer_stream(
         mir_buffer_usage_software,
-        callback,
         false,
+        callback,
         context);
 }
 catch (std::exception const& ex)
