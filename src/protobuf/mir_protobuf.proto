@@ -230,6 +230,10 @@ message DisplayOutput {
   optional float scale_factor = 17;
   optional uint32 form_factor = 18;
   optional uint32 subpixel_arrangement = 19;
+  optional bytes  gamma_red = 20;
+  optional bytes  gamma_green = 21;
+  optional bytes  gamma_blue = 22;
+  optional uint32 gamma_supported = 23;
 }
 
 message Connection {
