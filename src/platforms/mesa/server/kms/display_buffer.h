@@ -66,7 +66,7 @@ public:
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool try_to_composite(RenderableList const& renderlist) override;
     void bind() override;
 
     void for_each_display_buffer(

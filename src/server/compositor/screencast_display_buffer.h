@@ -108,7 +108,7 @@ public:
 
     void release_current() override;
 
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) override;
+    bool try_to_composite(graphics::RenderableList const&) override;
 
     void swap_buffers() override;
 

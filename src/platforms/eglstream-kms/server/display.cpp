@@ -195,7 +195,7 @@ public:
         return view_area_;
     }
 
-    bool post_renderables_if_optimizable(const mir::graphics::RenderableList& /*renderlist*/) override
+    bool try_to_composite(const mir::graphics::RenderableList& /*renderlist*/) override
     {
         return false;
     }

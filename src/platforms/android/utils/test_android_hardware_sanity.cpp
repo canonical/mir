@@ -281,7 +281,7 @@ TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
                 std::make_shared<BasicRenderable>(buffer)
             };
 
-            db.post_renderables_if_optimizable(list);
+            db.try_to_composite(list);
         });
         group.post();
     });

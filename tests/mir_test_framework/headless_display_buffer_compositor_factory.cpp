@@ -72,7 +72,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         void composite(mir::compositor::SceneElementSequence&& seq) override
         {
             auto renderlist = filter(seq, db.view_area());
-            if (db.post_renderables_if_optimizable(renderlist))
+            if (db.try_to_composite(renderlist))
                 return;
 
             // Invoke GL renderer specific functions if the DisplayBuffer supports them
