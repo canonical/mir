@@ -57,6 +57,11 @@ public:
     MirBufferPackage* package() const override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd(); }
     void set_fence(mir::Fd) override {}
+    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const
+    {
+        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{};
+    };
+    void on_ownership_notification(std::function<void()> const&) override {}
 };
 
 struct MockNestedBuffer : StubNestedBuffer

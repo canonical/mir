@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -47,6 +47,7 @@ typedef enum
     mir_event_type_input_configuration,
     mir_event_type_surface_output,
     mir_event_type_input_device_state,
+    mir_event_type_surface_placement,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -59,6 +60,7 @@ typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
 
 typedef struct MirCookie MirCookie;
 
@@ -210,6 +212,16 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
  * \return           The associated MirInputConfigurationEvent
  */
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* event);
+
+/**
+ * Retrieve the MirSurfacePlacementEvent associated with a MirEvent of
+ * type mir_event_type_surface_placement. The event signifies that the
+ * the server has fulfilled a request for relative surface placement.
+ *
+ * \param [in] event The event
+ * \return           The associated MirSurfacePlacementEvent
+ */
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
 
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

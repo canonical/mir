@@ -229,6 +229,8 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         virtual void paused() override {}
         virtual void resumed() override {}
         virtual void started() override {callback(); callback = []{}; }
+        virtual void ready_for_user_input() override {}
+        virtual void stop_receiving_input() override {}
 
         std::function<void()> callback;
     };

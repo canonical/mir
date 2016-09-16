@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
-#define MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
+#ifndef MIR_TOOLKIT_SURFACE_PLACEMENT_H_
+#define MIR_TOOLKIT_SURFACE_PLACEMENT_H_
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 
 #ifdef __cplusplus
 /**
@@ -30,22 +29,19 @@
 extern "C" {
 #endif
 
-/** Suggest parameters to use with EGLCreateImage for a given MirBuffer
- *
- *   \param [in] buffer         The buffer
- *   \param [out] target        The target to use
- *   \param [out] client_buffer The EGLClientBuffer to use 
- *   \param [out] attrs         The attributes to use
- **/
-void mir_buffer_egl_image_parameters(
-    MirBuffer* buffer,
-    EGLenum* target,
-    EGLClientBuffer* client_buffer,
-    EGLint** attrs);
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
+
+/**
+ * Retrieve the relative position from a placement notification
+ * 
+ * \param [in] event  The placement event
+ * \return            The position relative to the parent surface
+ */
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event);
 
 #ifdef __cplusplus
 }
 /**@}*/
 #endif
 
-#endif // MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
+#endif //MIR_TOOLKIT_SURFACE_PLACEMENT_H_

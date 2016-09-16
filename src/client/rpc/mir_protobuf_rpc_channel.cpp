@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -34,6 +34,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 #include "mir/events/serialization.h"
+#include "mir/events/surface_placement_event.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -400,6 +401,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         if (auto map = surface_map.lock())
                             map->with_surface_do(mf::SurfaceId(e->to_surface_output()->surface_id()), send_e);
                         break;
+                    case mir_event_type_surface_placement:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->to_surface_placement()->id()), send_e);
+                        break;
+
                     default:
                         event_sink->handle_event(*e);
                     }

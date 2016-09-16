@@ -243,6 +243,9 @@ void mir_buffer_egl_image_parameters(
 try
 {
     mir::require(b);
+    mir::require(type);
+    mir::require(client_buffer);
+    mir::require(attr);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->client_buffer()->egl_image_creation_parameters(type, client_buffer, attr);
 }

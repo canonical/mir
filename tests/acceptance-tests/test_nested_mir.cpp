@@ -24,10 +24,12 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/input/input_device_info.h"
 #include "mir/shell/shell.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
+#include "mir/server_status_listener.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -37,8 +39,10 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir_test_framework/fake_input_device.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/display_config_matchers.h"
@@ -50,12 +54,14 @@
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/fake_shared.h"
 
+#include <future>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -67,6 +73,23 @@ using namespace std::chrono_literals;
 
 namespace
 {
+struct InputReadyServerStatusListener : mir::ServerStatusListener
+{
+    std::shared_ptr<std::promise<void>> const input_ready;
+    InputReadyServerStatusListener(std::shared_ptr<std::promise<void>> const& promise)
+        : input_ready(promise)
+    {}
+
+    void paused() override {}
+    void resumed() override {}
+    void started() override {}
+    void ready_for_user_input() override
+    {
+        input_ready->set_value();
+    }
+    void stop_receiving_input() override {}
+};
+
 struct MockSessionMediatorReport : mf::SessionMediatorReport
 {
     MockSessionMediatorReport()
@@ -127,6 +150,7 @@ std::vector<geom::Rectangle> const display_geometry
 };
 
 std::chrono::seconds const timeout{5};
+std::chrono::seconds const long_timeout{10};
 
 // We can't rely on the test environment to have X cursors, so we provide some of our own
 auto const cursor_names = {
@@ -403,10 +427,21 @@ public:
             { return std::make_shared<NiceMock<MockDisplayConfigurationPolicy>>(); });
     }
 
+    void wait_until_ready()
+    {
+        auto future_status = ready_for_input->get_future().wait_for(10s);
+
+        if (future_status != std::future_status::ready)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Nested Server never started"));
+    }
+
 protected:
     NestedMirRunner(std::string const& connection_string, bool)
         : mtf::HeadlessNestedServerRunner(connection_string)
     {
+        server.override_the_server_status_listener([this]
+            { return std::make_shared<InputReadyServerStatusListener>(ready_for_input); });
+
         server.override_the_host_lifecycle_event_listener([this]
             { return the_mock_host_lifecycle_event_listener(); });
 
@@ -422,14 +457,19 @@ protected:
 
 private:
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
-    
     mir::CachedPtr<MockDisplayConfigurationPolicy> mock_display_configuration_policy_;
+    std::shared_ptr<std::promise<void>> ready_for_input = std::make_shared<std::promise<void>>();
+    mir::UniqueModulePtr<mtf::FakeInputDevice> fake_device{mtf::add_fake_input_device(mi::InputDeviceInfo{
+        "test-devce", "test-device",
+        mi::DeviceCapability::pointer | mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer
 {
     mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
+    mt::Signal condition;
+    mt::Signal test_processed_result;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
     NiceMock<MockDisplay> display{display_geometry};
@@ -906,64 +946,80 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
-    // TODO workaround for lp:1523621
-    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(10ms);
+    nested_mir.wait_until_ready();
 
-    {
-        mt::Signal condition;
-        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
-            .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
+    // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
+    // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
+    // react to the frame_posted callback by setting the cursor buffer again via show(..)
+    // The number of show calls depends solely on scheduling decisions
+    EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(frames))
+        .WillRepeatedly(InvokeWithoutArgs(
+                    [&]
+                    {
+                        condition.raise();
+                        test_processed_result.wait_for(timeout);
+                        test_processed_result.reset();
+                    }));
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-        mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
-        mir_cursor_configuration_destroy(conf);
+    auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
+    mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
+    mir_cursor_configuration_destroy(conf);
 
-        condition.wait_for(timeout);
-        Mock::VerifyAndClearExpectations(mock_cursor.get());
-    }
+    EXPECT_TRUE(condition.wait_for(timeout));
+    condition.reset();
+    test_processed_result.raise();
 
     for (int i = 0; i != frames; ++i)
     {
-        mt::Signal condition;
-        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
-            .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
-
         mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
 
-        condition.wait_for(timeout);
-        Mock::VerifyAndClearExpectations(mock_cursor.get());
+        EXPECT_TRUE(condition.wait_for(timeout));
+        condition.reset();
+        test_processed_result.raise();
     }
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 {
+    auto const mock_cursor = the_mock_cursor();
+    ON_CALL(*mock_cursor, show(_)).WillByDefault(WakeUp(&condition));
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurface client(nested_mir);
-    auto const mock_cursor = the_mock_cursor();
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
-    // TODO workaround for lp:1523621
-    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(1s);
-    Mock::VerifyAndClearExpectations(mock_cursor.get());
+    nested_mir.wait_until_ready();
+    // wait for the initial cursor show call..
+    condition.wait_for(long_timeout);
+    condition.reset();
+
+    // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
+    // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
+    // react to the frame_posted callback by setting the cursor buffer again via show(..)
+    // The number of show calls depends solely on scheduling decisions
+    EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(cursor_names.size()))
+            .WillRepeatedly(InvokeWithoutArgs(
+                    [&]
+                    {
+                        condition.raise();
+                        test_processed_result.wait_for(long_timeout);
+                        test_processed_result.reset();
+                    }));
+
 
     for (auto const name : cursor_names)
     {
-        mt::Signal condition;
-
-        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
-            .WillOnce(InvokeWithoutArgs([&] { condition.raise(); }));
-
         auto const cursor = mir_cursor_configuration_from_name(name);
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
         mir_cursor_configuration_destroy(cursor);
 
-        condition.wait_for(timeout);
-        Mock::VerifyAndClearExpectations(mock_cursor.get());
+        EXPECT_TRUE(condition.wait_for(long_timeout));
+        condition.reset();
+        test_processed_result.raise();
     }
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
 
 TEST_F(NestedServer, can_hide_the_host_cursor)
@@ -976,22 +1032,23 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
-    // TODO workaround for lp:1523621
-    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(10ms);
+    nested_mir.wait_until_ready();
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 
-    {
-        mt::Signal condition;
-        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
-            .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
+    // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
+    // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
+    // react to the frame_posted callback by setting the cursor buffer again via show(..)
+    // The number of show calls depends solely on scheduling decisions
+    EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(1))
+        .WillOnce(mt::WakeUp(&condition));
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-        mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
-        mir_cursor_configuration_destroy(conf);
+    auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
+    mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
+    mir_cursor_configuration_destroy(conf);
 
-        condition.wait_for(timeout);
-        Mock::VerifyAndClearExpectations(mock_cursor.get());
-    }
+    std::this_thread::sleep_for(500ms);
+    condition.wait_for(timeout);
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 
     nested_mir.cursor_wrapper->set_hidden(true);
 
