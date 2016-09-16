@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <condition_variable>
 
 #include <cstring>
 

@@ -29,7 +29,6 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <condition_variable>
 
 struct MirConnection;
 
@@ -88,7 +87,6 @@ public:
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
 
 private:
-
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;
 

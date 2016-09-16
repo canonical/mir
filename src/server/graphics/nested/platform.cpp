@@ -45,21 +45,20 @@ mgn::Platform::Platform(
 {
 }
 
-namespace mir {
-namespace graphics {
-namespace nested {
-struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
+namespace
 {
-    GraphicBufferAllocator(
-        std::shared_ptr<HostConnection> const& connection,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& guest_allocator) :
+class BufferAllocator : public mg::GraphicBufferAllocator
+{
+public:
+    BufferAllocator(
+        std::shared_ptr<mgn::HostConnection> const& connection,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& guest_allocator) :
         connection(connection),
         guest_allocator(guest_allocator)
     {
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(
-        BufferProperties const& buffer_properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties) override
     {
         if ((buffer_properties.size.width > mir::geometry::Width{480}) &&
             (buffer_properties.size.height > mir::geometry::Height{480}))
@@ -72,20 +71,20 @@ struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
         }
     }
 
-    virtual std::vector<MirPixelFormat> supported_pixel_formats()
+    std::vector<MirPixelFormat> supported_pixel_formats() override
     {
         return guest_allocator->supported_pixel_formats();
     }
 
-    std::shared_ptr<HostConnection> const connection;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const guest_allocator;
+private:
+    std::shared_ptr<mgn::HostConnection> const connection;
+    std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
 };
-}}}
+}
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    return mir::make_module_ptr<GraphicBufferAllocator>(
-        connection, guest_platform->create_buffer_allocator());
+    return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
 }
 
 mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
