@@ -61,6 +61,7 @@ public:
     {
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{};
     };
+    void on_ownership_notification(std::function<void()> const&) override {}
 };
 
 struct MockNestedBuffer : StubNestedBuffer

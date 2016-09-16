@@ -56,6 +56,7 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
     MOCK_CONST_METHOD0(fence, mir::Fd());
     MOCK_METHOD1(set_fence, void(mir::Fd));
+    MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
 };
 
 struct MockHostConnection : mtd::StubHostConnection

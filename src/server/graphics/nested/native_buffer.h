@@ -29,6 +29,7 @@
 #include <EGL/eglext.h>
 #include <tuple>
 #include <chrono>
+#include <functional>
 
 namespace mir
 {
@@ -50,6 +51,7 @@ public:
     virtual MirBufferPackage* package() const = 0;
     virtual Fd fence() const = 0;
     virtual void set_fence(Fd) = 0;
+    virtual void on_ownership_notification(std::function<void()> const& fn) = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;

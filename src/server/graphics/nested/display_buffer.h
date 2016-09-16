@@ -23,7 +23,9 @@
 #include "mir/renderer/gl/render_target.h"
 #include "display.h"
 #include "host_surface.h"
+#include "host_chain.h"
 
+#include <glm/glm.hpp>
 #include <EGL/egl.h>
 
 namespace mir
@@ -69,6 +71,7 @@ private:
     std::shared_ptr<HostStream> const host_stream;
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
+    std::unique_ptr<HostChain> host_chain;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
@@ -76,6 +79,13 @@ private:
 
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
+
+    enum class BackingContent
+    {
+        stream,
+        chain
+    } content;
+    glm::mat4 const identity;
 };
 }
 }
