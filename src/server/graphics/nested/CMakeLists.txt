@@ -2,7 +2,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 add_library(
   mirnestedgraphics OBJECT
 

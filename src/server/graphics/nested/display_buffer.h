@@ -72,7 +72,6 @@ private:
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
     std::unique_ptr<HostChain> host_chain;
-    std::shared_ptr<Buffer> current;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;

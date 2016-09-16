@@ -29,7 +29,6 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
-#include <system/window.h>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -51,29 +50,42 @@ namespace graphics {
 namespace nested {
 struct GraphicBufferAllocator : graphics::GraphicBufferAllocator
 {
-    GraphicBufferAllocator(std::shared_ptr<HostConnection> const& connection) :
-        connection(connection)
+    GraphicBufferAllocator(
+        std::shared_ptr<HostConnection> const& connection,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& guest_allocator) :
+        connection(connection),
+        guest_allocator(guest_allocator)
     {
     }
 
     std::shared_ptr<mg::Buffer> alloc_buffer(
         BufferProperties const& buffer_properties)
     {
-        return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+        if ((buffer_properties.size.width > mir::geometry::Width{480}) &&
+            (buffer_properties.size.height > mir::geometry::Height{480}))
+        {
+            return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+        }
+        else
+        {
+            return guest_allocator->alloc_buffer(buffer_properties);
+        }
     }
 
     virtual std::vector<MirPixelFormat> supported_pixel_formats()
     {
-        return {mir_pixel_format_abgr_8888};
+        return guest_allocator->supported_pixel_formats();
     }
 
     std::shared_ptr<HostConnection> const connection;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const guest_allocator;
 };
 }}}
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    return mir::make_module_ptr<GraphicBufferAllocator>(connection);
+    return mir::make_module_ptr<GraphicBufferAllocator>(
+        connection, guest_platform->create_buffer_allocator());
 }
 
 mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
