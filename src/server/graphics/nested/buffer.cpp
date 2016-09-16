@@ -22,7 +22,7 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "host_connection.h"
 #include "buffer.h"
-#include "egl_image_factory.h"
+#include "native_buffer.h"
 
 #include <map>
 #include <chrono>
@@ -45,22 +45,18 @@ class TextureAccess :
 public:
     TextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<MirBuffer> const& native_buffer,
-        std::shared_ptr<mgn::HostConnection> const& connection,
-        std::shared_ptr<mgn::EglImageFactory> const& factory) :
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
+        std::shared_ptr<mgn::HostConnection> const& connection) :
         buffer(buffer),
         native_buffer(native_buffer),
-        connection(connection),
-        factory(factory)
+        connection(connection)
     {
     }
 
     void bind() override
     {
-        mir_buffer_wait_for_access(
-            native_buffer.get(),
-            mir_read,
-            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
+        using namespace std::chrono;
+        native_buffer->sync(mir_read, duration_cast<nanoseconds>(seconds(1)));
 
         ImageResources resources
         {
@@ -72,8 +68,18 @@ public:
         auto it = egl_image_map.find(resources);
         if (it == egl_image_map.end())
         {
-            static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-            auto i = factory->create_egl_image_from(native_buffer.get(), resources.first, image_attrs);
+            auto ext = extensions;
+            auto display = resources.first;
+            auto hints = native_buffer->egl_image_creation_hints();
+            auto i = EGLImageUPtr{
+                new EGLImageKHR(ext.eglCreateImageKHR(
+                    display, EGL_NO_CONTEXT,
+                    std::get<0>(hints), std::get<1>(hints), std::get<2>(hints))),
+                [ext, display](EGLImageKHR* image)
+                {
+                    ext.eglDestroyImageKHR(display, image); delete image;
+                }
+            };
             image = *i;
             egl_image_map[resources] = std::move(i);
         }
@@ -82,7 +88,7 @@ public:
             image = *(it->second);
         }
 
-        egl_extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     }
 
     void gl_bind_to_texture() override
@@ -96,13 +102,13 @@ public:
 
 protected:
     mgn::Buffer& buffer;
-    std::shared_ptr<MirBuffer> const native_buffer;
+    std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
 private:
-    std::shared_ptr<mgn::EglImageFactory> const factory;
-    mg::EGLExtensions egl_extensions;
+    mg::EGLExtensions extensions;
     typedef std::pair<EGLDisplay, EGLContext> ImageResources;
-    std::map<ImageResources, std::unique_ptr<EGLImageKHR>> egl_image_map;
+    typedef std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> EGLImageUPtr;
+    std::map<ImageResources, EGLImageUPtr> egl_image_map;
 };
 
 class PixelAndTextureAccess :
@@ -112,11 +118,10 @@ class PixelAndTextureAccess :
 public:
     PixelAndTextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<MirBuffer> const& native_buffer,
-        std::shared_ptr<mgn::HostConnection> const& connection,
-        std::shared_ptr<mgn::EglImageFactory> const& factory) :
-        TextureAccess(buffer, native_buffer, connection, factory),
-        stride_(geom::Stride{connection->get_graphics_region(native_buffer.get()).stride})
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
+        std::shared_ptr<mgn::HostConnection> const& connection) :
+        TextureAccess(buffer, native_buffer, connection),
+        stride_(geom::Stride{native_buffer->get_graphics_region().stride})
     {
     }
 
@@ -127,7 +132,7 @@ public:
         if (buffer_size_bytes != pixel_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         if (!region.vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
@@ -141,7 +146,7 @@ public:
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         do_with_pixels(reinterpret_cast<unsigned char*>(region.vaddr));
     }
 
@@ -158,19 +163,17 @@ private:
 std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
 {
     if (usage == mg::BufferUsage::software)
-        return std::make_shared<PixelAndTextureAccess>(*this, buffer, connection, factory);
+        return std::make_shared<PixelAndTextureAccess>(*this, buffer, connection);
     else if (usage == mg::BufferUsage::hardware)
-        return std::make_shared<TextureAccess>(*this, buffer, connection, factory);
+        return std::make_shared<TextureAccess>(*this, buffer, connection);
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
 }
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<EglImageFactory> const& factory,
     mg::BufferProperties const& properties) :
     connection(connection),
-    factory(factory),
     buffer(connection->create_buffer(properties)),
     native_base(create_native_base(properties.usage))
 {
@@ -183,12 +186,12 @@ std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 
 geom::Size mgn::Buffer::size() const
 {
-    return geom::Size{ mir_buffer_get_width(buffer.get()), mir_buffer_get_height(buffer.get()) };
+    return buffer->size();
 }
 
 MirPixelFormat mgn::Buffer::pixel_format() const
 {
-    return mir_buffer_get_pixel_format(buffer.get());
+    return buffer->format();
 }
 
 mg::NativeBufferBase* mgn::Buffer::native_buffer_base()
