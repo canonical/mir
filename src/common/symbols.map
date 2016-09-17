@@ -361,9 +361,6 @@ MIR_COMMON_0.24 {
        android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
-       MirInputDeviceStateEvent::add_device*;
-       MirInputDeviceStateEvent::clone*;
-       MirInputDeviceStateEvent::deserialize*;
        MirInputDeviceStateEvent::device_count*;
        MirInputDeviceStateEvent::device_id*;
        MirInputDeviceStateEvent::device_pointer_buttons*;
@@ -372,7 +369,6 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::modifiers*;
        MirInputDeviceStateEvent::pointer_axis*;
        MirInputDeviceStateEvent::pointer_buttons*;
-       MirInputDeviceStateEvent::serialize*;
        MirInputDeviceStateEvent::set_modifiers*;
        MirInputDeviceStateEvent::set_pointer_axis*;
        MirInputDeviceStateEvent::set_pointer_buttons*;
@@ -387,3 +383,14 @@ MIR_COMMON_0.24 {
        vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;
+
+MIR_COMMON_0.25 {
+  global:
+    extern "C++" {
+       MirEvent::operator*;
+       MirInputEvent::operator*;
+       MirInputDeviceStateEvent::set_device_states*;
+       MirInputDeviceStateEvent::device_pressed_keys_for_index*;
+       mir::event::store_data_for_lifetime_of_event*;
+    };
+} MIR_COMMON_0.24;

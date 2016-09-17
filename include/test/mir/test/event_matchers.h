@@ -527,8 +527,13 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         if (num_required_keys != key_count)
             continue;
 
-        auto pressed_keys = mir_input_device_state_event_device_pressed_keys(device_state, index);
-        if (!std::equal(it_keys, end_keys, pressed_keys))
+        std::vector<uint32_t> pressed_keys;
+        for (uint32_t i = 0; i < key_count; i++)
+        {
+            pressed_keys.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+        }
+
+        if (!std::equal(it_keys, end_keys, std::begin(pressed_keys)))
             continue;
         return true;
     }

@@ -186,6 +186,23 @@ struct SurfaceOutputEvent
     }
 }
 
+struct InputDeviceStateEvent
+{
+    when @0 :NanoSeconds;
+    buttons @1 :UInt32;
+    modifiers @2 :UInt32;
+    pointerX @3 :Float32;
+    pointerY @4 :Float32;
+    devices @5 :List(DeviceState);
+
+    struct DeviceState
+    {
+        deviceId @0 :InputDeviceId;
+        pressedKeys @1 :List(UInt32);
+        buttons @2 :UInt32;
+    }
+}
+
 struct Event
 {
     union
@@ -200,5 +217,6 @@ struct Event
         keymap @7 :KeymapEvent;
         inputConfiguration @8 :InputConfigurationEvent;
         surfaceOutput @9 :SurfaceOutputEvent;
+        inputDevice @10 :InputDeviceStateEvent;
     }
 }

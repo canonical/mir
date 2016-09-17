@@ -210,11 +210,15 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
     abort();
 }
 
-MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev)
+MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
 
     return ev->to_input_device_state();
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
 /* Surface event accessors */
@@ -386,62 +390,119 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
     abort();
 }
 
-MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev)
+MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->pointer_buttons();
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis)
+float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->pointer_axis(axis);
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev)
+int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->when().count();
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev)
+MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->modifiers();
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev)
+uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->device_count();
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index)
+MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_id(index);
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index)
+uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
-    return ev->device_pressed_keys(index);
+
+    auto pressed_keys_vec = const_cast<MirInputDeviceStateEvent*>(ev)->device_pressed_keys(index);
+    auto stored_pointer   = std::shared_ptr<uint32_t>(
+        new uint32_t[pressed_keys_vec.size()],
+        [](uint32_t const* p)
+            { delete[] p; });
+
+    std::copy(std::begin(pressed_keys_vec), std::end(pressed_keys_vec), stored_pointer.get());
+
+    return static_cast<uint32_t*>(mir::event::store_data_for_lifetime_of_event(ev, stored_pointer));
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index)
+uint32_t mir_input_device_state_event_device_pressed_keys_for_index(
+    MirInputDeviceStateEvent const* ev, uint32_t index, uint32_t pressed_index) try
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_pressed_keys_for_index(index, pressed_index);
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
+}
+
+uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pressed_keys_count(index);
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
-MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDeviceStateEvent const* ev, uint32_t index)
+MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDeviceStateEvent const* ev, uint32_t index) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pointer_buttons(index);
+} catch (std::exception const& e)
+{
+    mir::log_critical(e.what());
+    abort();
 }
 
 // TODO: Until we opaquify the MirEvent structure and add
