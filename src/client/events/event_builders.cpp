@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,12 +16,13 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "event-builders"
+#include "mir/events/event_builders.h"
 
+#define MIR_LOG_COMPONENT "event-builders"
 #include "mir/log.h"
 
-#include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/events/surface_placement_event.h"
 #include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/input/keymap.h"
@@ -119,6 +120,20 @@ mir::EventUPtr mev::make_event(
     e->set_scale(scale);
     e->set_form_factor(form_factor);
     e->set_output_id(output_id);
+
+    return make_uptr_event(e);
+}
+
+mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement)
+{
+    auto e = new_event<MirSurfacePlacementEvent>();
+
+    e->set_id(surface_id.as_value());
+    e->set_placement({
+        placement.left().as_int(),
+        placement.top().as_int(),
+        placement.size.width.as_uint32_t(),
+        placement.size.height.as_uint32_t()});
 
     return make_uptr_event(e);
 }

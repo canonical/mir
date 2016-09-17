@@ -182,7 +182,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
             {EGL_VENDOR,      "EGL vendor"},
             {EGL_VERSION,     "EGL version"},
             {EGL_CLIENT_APIS, "EGL client APIs"},
-            {EGL_EXTENSIONS,  "EGL extensions"},
         };
         for (auto& s : eglstrings)
         {
@@ -197,7 +196,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
         {GL_RENDERER, "GL renderer"},
         {GL_VERSION,  "GL version"},
         {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
-        {GL_EXTENSIONS, "GL extensions"},
     };
 
     for (auto& s : glstrings)

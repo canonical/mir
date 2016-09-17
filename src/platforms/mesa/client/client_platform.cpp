@@ -27,6 +27,8 @@
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <cstring>
 
 namespace mcl=mir::client;
@@ -137,8 +139,9 @@ MirPlatformMessage* mclm::ClientPlatform::platform_operation(
 
 MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    //MirNativeBuffer is type-compatible with the MirNativeBuffer
-    return buf;
+    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(buf))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
 
 

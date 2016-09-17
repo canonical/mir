@@ -90,7 +90,7 @@ extern "C" {
  * \param [in] event The input event
  * \return           The id of the generating device
  */
-MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
+MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* event);
 
 /**
  * Retrieve the time at which an input event occurred.
@@ -98,7 +98,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
  * \param [in] event The input event
  * \return           A timestamp in nanoseconds-since-epoch
  */
-int64_t mir_input_event_get_event_time(MirInputEvent const* ev);
+int64_t mir_input_event_get_event_time(MirInputEvent const* event);
 
 /**
  * Retrieve the type of an input event. E.g. key, touch...
@@ -106,7 +106,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev);
  * \param [in] event The input event
  * \return           The input event type
  */
-MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
+MirInputEventType mir_input_event_get_type(MirInputEvent const* event);
 
 /**
  * Retrieve the MirKeyboardEvent associated with a given input event.
@@ -115,7 +115,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
  * \return          The MirKeyboardEvent or NULL if event type is not 
  *                  mir_input_event_type_key
  */
-MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev);
+MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* event);
 
 /**
  * Retrieve the MirTouchEvent associated with a given input event.
@@ -124,7 +124,7 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
  * \return          The MirTouchEvent or NULL if event type is not 
  *                  mir_input_event_type_touch
  */
-MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
+MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event);
 
 /**
  * Retrieve the MirPointerEvent associated with a given input event.
@@ -133,12 +133,12 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  * \return          The MirPointerEvent or NULL if event type is not 
  *                  mir_input_event_type_pointer
  */
-MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
+MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* event);
 
 /**
  * Query if an input event contains a cookie
  *
- * \params[in] ev The input event
+ * \param [in] ev The input event
  * \return        True if the input event contains a cookie
  */
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
@@ -147,7 +147,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev);
  * Returns the cookie associated with an input event.
  *
  * \pre The input event must have a MirCookie
- * \params[in] ev An input event
+ * \param [in] ev An input event
  * \return        The cookie associated with the given input event
  *                The cookie must be released by calling mir_cookie_release
  */

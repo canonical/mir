@@ -104,7 +104,8 @@ class Display : public graphics::Display,
 public:
     explicit Display(::Display* x_dpy,
                      geometry::Size const size,
-                     GLConfig const& gl_config);
+                     GLConfig const& gl_config,
+                     std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -141,6 +142,7 @@ private:
     X11EGLSurface egl_surface;
     MirPixelFormat pf;
     std::unique_ptr<DisplayGroup> display_group;
+    std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation; //TODO: keep entire current display configuration
 };
 

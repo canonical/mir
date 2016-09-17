@@ -35,7 +35,6 @@ namespace graphics
 
 class Renderable;
 class Buffer;
-class NativeBuffer;
 
 namespace android
 {

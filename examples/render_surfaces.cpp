@@ -229,6 +229,8 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         virtual void paused() override {}
         virtual void resumed() override {}
         virtual void started() override {callback(); callback = []{}; }
+        virtual void ready_for_user_input() override {}
+        virtual void stop_receiving_input() override {}
 
         std::function<void()> callback;
     };
@@ -239,6 +241,7 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         });
 }
 
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
 {
 public:
@@ -276,6 +279,7 @@ private:
     std::vector<Moveable>& moveables;
     uint32_t frames;
 };
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
 class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -460,6 +464,7 @@ try
     render_surfaces.run();
 
     return render_surfaces.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    ///\internal [main_tag]
 }
 catch (...)
 {

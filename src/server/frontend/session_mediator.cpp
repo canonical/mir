@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -76,6 +76,16 @@ namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+
+namespace
+{
+std::vector<uint16_t> convert_string_to_uint16_vector(std::string const& str_bytes)
+{
+    std::vector<uint16_t> out(str_bytes.size() / (sizeof(uint16_t) / sizeof(char)));
+    std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
+    return out;
+}
+}
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
@@ -285,6 +295,11 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
 
     #undef COPY_IF_SET
 
@@ -621,6 +636,11 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(parent_id);
     // aux_rect is a special case (below)
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(edge_attachment);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -1210,6 +1230,10 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+
+        dest.gamma = {convert_string_to_uint16_vector(src.gamma_red()),
+                      convert_string_to_uint16_vector(src.gamma_green()),
+                      convert_string_to_uint16_vector(src.gamma_blue())};
     });
 
     return config;

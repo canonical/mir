@@ -19,6 +19,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "display_buffer.h"
+#include "display_configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -30,11 +31,13 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                   EGLDisplay const d,
                                   EGLSurface const s,
                                   EGLContext const c,
+                                  std::shared_ptr<DisplayReport> const& r,
                                   MirOrientation const o)
                                   : size{sz},
                                     egl_dpy{d},
                                     egl_surf{s},
                                     egl_ctx{c},
+                                    report{r},
                                     orientation_{o}
 {
 }
@@ -72,6 +75,13 @@ void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+
+    /*
+     * Admittedly we are not a real display and will miss some real vsyncs
+     * but this is best-effort. And besides, we don't want Mir reporting all
+     * real vsyncs because that would mean the compositor never sleeps.
+     */
+    report->report_vsync(mgx::DisplayConfiguration::the_output_id.as_value());
 }
 
 void mgx::DisplayBuffer::bind()

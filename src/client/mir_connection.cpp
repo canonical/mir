@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -122,6 +122,11 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(state);
     SERIALIZE_OPTION_IF_SET(pref_orientation);
     SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(placement_hints);
+    SERIALIZE_OPTION_IF_SET(surface_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_x);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_y);
     SERIALIZE_OPTION_IF_SET(min_width);
     SERIALIZE_OPTION_IF_SET(min_height);
     SERIALIZE_OPTION_IF_SET(max_width);

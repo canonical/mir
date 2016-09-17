@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/display_configuration.h"
+#include "mir/output_type_names.h"
 
 #include <ostream>
 #include <algorithm>
@@ -47,34 +48,6 @@ private:
     std::ios_base::fmtflags const flags;
     std::streamsize const precision;
 };
-
-char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
-{
-    static char const* type_names[] =
-    {
-        "unknown",
-        "vga",
-        "dvii",
-        "dvid",
-        "dvia",
-        "composite",
-        "lvds",
-        "component",
-        "9pindin",
-        "displayport",
-        "hdmia",
-        "hdmib",
-        "tv",
-        "edp"
-    };
-
-    auto index = static_cast<ssize_t>(type);
-    static auto const size = std::distance(std::begin(type_names), std::end(type_names));
-    if (index >= size || index < 0)
-        return "invalid";
-
-    return type_names[index];
-}
 
 }
 
@@ -120,7 +93,7 @@ char const* as_string(MirFormFactor form_factor)
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
     out << "{\n\tid: " << val.id << "\n\tcard_id: " << val.card_id
-        << "\n\ttype: " << output_type_to_string(val.type)
+        << "\n\ttype: " << mir::output_type_name(static_cast<unsigned>(val.type))
         << "\n\tmodes: [ ";
 
     for (size_t i = 0; i < val.modes.size(); ++i)
@@ -321,7 +294,9 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         orientation(master.orientation),
         scale(master.scale),
         form_factor(master.form_factor),
-        subpixel_arrangement(master.subpixel_arrangement)
+        subpixel_arrangement(master.subpixel_arrangement),
+        gamma(master.gamma),
+        gamma_supported(master.gamma_supported)
 {
 }
 

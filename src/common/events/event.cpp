@@ -32,6 +32,7 @@
 #include "mir/events/surface_event.h"
 #include "mir/events/surface_output_event.h"
 #include "mir/events/input_device_state_event.h"
+#include "mir/events/surface_placement_event.h"
 
 #include <capnp/serialize.h>
 
@@ -112,6 +113,8 @@ MirEventType MirEvent::type() const
         return mir_event_type_surface_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:
         return mir_event_type_input_device_state;
+    case mir::capnp::Event::Which::SURFACE_PLACEMENT:
+        return mir_event_type_surface_placement;
     default:
         mir::log_critical("unknown event type.");
         abort();

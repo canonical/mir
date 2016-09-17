@@ -23,12 +23,14 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
+#include "mir/events/surface_placement_event.h"
 
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
+#include "mir_toolkit/events/surface_placement.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -503,6 +505,16 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
 {
     mir::log_critical(e.what());
     abort();
+}
+
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
+{
+    return event->to_surface_placement();
+}
+
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event)
+{
+    return event->placement();
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

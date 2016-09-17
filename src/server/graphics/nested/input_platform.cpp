@@ -217,6 +217,7 @@ void mgn::InputPlatform::start()
 
             if (event_type == mir_event_type_input)
             {
+                std::lock_guard<std::mutex> lock(devices_guard);
                 auto const* input_ev = mir_event_get_input_event(&event);
                 auto const id = mir_input_event_get_device_id(input_ev);
                 auto it = devices.find(id);
@@ -234,6 +235,7 @@ void mgn::InputPlatform::start()
             }
             else if (event_type == mir_event_type_input_device_state)
             {
+                std::lock_guard<std::mutex> lock(devices_guard);
                 if (!devices.empty())
                 {
                     auto const* device_state = mir_event_get_input_device_state_event(&event);
@@ -274,6 +276,7 @@ void mgn::InputPlatform::stop()
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> empty_event_callback;
     connection->set_input_event_callback(empty_event_callback);
 
+    std::lock_guard<std::mutex> lock(devices_guard);
     for(auto const& device : devices)
         input_device_registry->remove_device(device.second);
 

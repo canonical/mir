@@ -32,6 +32,14 @@ struct InputDeviceId
     id @0 :UInt64;
 }
 
+struct Rectangle
+{
+    left @0 :Int32;
+    top @1 :Int32;
+    width @2 :UInt32;
+    height @3 :UInt32;
+}
+
 struct KeyboardEvent
 {
     id @0 :Int32;
@@ -203,6 +211,12 @@ struct InputDeviceStateEvent
     }
 }
 
+struct SurfacePlacementEvent
+{
+    id @0 :Int32;
+    rectangle @1 :Rectangle;
+}
+
 struct Event
 {
     union
@@ -218,5 +232,6 @@ struct Event
         inputConfiguration @8 :InputConfigurationEvent;
         surfaceOutput @9 :SurfaceOutputEvent;
         inputDevice @10 :InputDeviceStateEvent;
+        surfacePlacement @11 :SurfacePlacementEvent;
     }
 }
