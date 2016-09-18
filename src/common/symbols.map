@@ -233,7 +233,6 @@ MIR_COMMON_0.22 {
        MirEvent::deserialize*;
        MirEvent::clone*;
        MirEvent::type*;
-       MirEvent::MirEvent*;
        MirCloseSurfaceEvent::MirCloseSurfaceEvent*;
        MirCloseSurfaceEvent::surface_id*;
        MirCloseSurfaceEvent::set_surface_id*;
@@ -387,16 +386,17 @@ MIR_COMMON_0.24 {
 MIR_COMMON_0.25 {
   global:
     extern "C++" {
-       MirEvent::operator*;
-       MirInputEvent::operator*;
-       MirInputDeviceStateEvent::set_device_states*;
-       MirInputDeviceStateEvent::device_pressed_keys_for_index*;
-       mir::event::store_data_for_lifetime_of_event*;
-       MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
-       MirSurfacePlacementEvent::id*;
-       MirSurfacePlacementEvent::set_id*;
-       MirSurfacePlacementEvent::placement*;
-       MirSurfacePlacementEvent::set_placement*;
-       mir::output_type_name*;
+      MirEvent::MirEvent*;
+      MirEvent::operator*;
+      MirInputEvent::operator*;
+      MirInputDeviceStateEvent::set_device_states*;
+      MirInputDeviceStateEvent::device_pressed_keys_for_index*;
+      mir::event::store_data_for_lifetime_of_event*;
+      MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
+      MirSurfacePlacementEvent::id*;
+      MirSurfacePlacementEvent::set_id*;
+      MirSurfacePlacementEvent::placement*;
+      MirSurfacePlacementEvent::set_placement*;
+      mir::output_type_name*;
     };
 } MIR_COMMON_0.24;
