@@ -42,14 +42,14 @@ namespace
 class NullPageFlipper : public mgm::PageFlipper
 {
 public:
-    bool schedule_flip(uint32_t,uint32_t) override { return true; }
+    bool schedule_flip(uint32_t,uint32_t,uint32_t) override { return true; }
     void wait_for_flip(uint32_t) override { }
 };
 
 class MockPageFlipper : public mgm::PageFlipper
 {
 public:
-    MOCK_METHOD2(schedule_flip, bool(uint32_t,uint32_t));
+    MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
     MOCK_METHOD1(wait_for_flip, void(uint32_t));
 };
 
@@ -146,7 +146,8 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
                                              Pointee(connector_ids[0]), _, _))
             .Times(1);
 
-        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[0], fb_id))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[0], fb_id,
+                                                     connector_ids[0]))
             .Times(1)
             .WillOnce(Return(true));
 
@@ -181,7 +182,8 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
                                              Pointee(connector_ids[0]), _, _))
             .Times(1);
 
-        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[1], fb_id))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[1], fb_id,
+                                                     connector_ids[0]))
             .Times(1)
             .WillOnce(Return(true));
 
@@ -217,7 +219,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
             .Times(1)
             .WillOnce(Return(1));
 
-        EXPECT_CALL(mock_page_flipper, schedule_flip(_, _))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(_, _, _))
             .Times(0);
 
         EXPECT_CALL(mock_page_flipper, wait_for_flip(_))
