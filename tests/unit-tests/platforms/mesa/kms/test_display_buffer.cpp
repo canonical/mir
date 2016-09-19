@@ -164,7 +164,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 
     auto original_count = mock_bypassable_buffer.use_count();
 
-    EXPECT_TRUE(db.try_to_composite(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
     EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
 
     // Switch back to normal compositing
@@ -192,7 +192,7 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
 
     for (int frame = 0; frame < 5; ++frame)
     {
-        ASSERT_TRUE(db.try_to_composite(bypassable_list));
+        ASSERT_TRUE(db.overlay(bypassable_list));
         db.post();
 
         // Cast to a simple int type so that test failures are readable
@@ -222,7 +222,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 
     for (int frame = 0; frame < 5; ++frame)
     {
-        ASSERT_FALSE(db.try_to_composite(non_bypassable_list));
+        ASSERT_FALSE(db.overlay(non_bypassable_list));
         db.post();
 
         // Cast to a simple int type so that test failures are readable
@@ -246,7 +246,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 
     auto original_count = mock_bypassable_buffer.use_count();
 
-    EXPECT_TRUE(db.try_to_composite(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
     EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
 
     db.post();
@@ -269,7 +269,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_TRUE(db.try_to_composite(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
@@ -291,9 +291,9 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(bypassable_list));
+    EXPECT_FALSE(db.overlay(bypassable_list));
     // And then we recover. DRM finds enough resources to AddFB ...
-    EXPECT_TRUE(db.try_to_composite(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
@@ -320,7 +320,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
@@ -337,7 +337,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(bypassable_list));
+    EXPECT_FALSE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
@@ -359,7 +359,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
@@ -384,7 +384,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
     // If you find yourself using gbm_ functions on a Shm buffer then you're
     // asking for a crash (LP: #1493721) ...
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_)).Times(0);
-    db.try_to_composite(list);
+    db.overlay(list);
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
@@ -585,7 +585,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer)
@@ -614,6 +614,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.try_to_composite(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 

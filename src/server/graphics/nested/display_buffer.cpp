@@ -97,7 +97,7 @@ void mgn::detail::DisplayBuffer::bind()
 {
 }
 
-bool mgn::detail::DisplayBuffer::try_to_composite(RenderableList const&)
+bool mgn::detail::DisplayBuffer::overlay(RenderableList const&)
 {
     return false;
 }

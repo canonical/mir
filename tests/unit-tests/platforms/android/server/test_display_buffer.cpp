@@ -105,8 +105,8 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
         .WillOnce(Return(true))
         .WillOnce(Return(false));
 
-    EXPECT_TRUE(db.try_to_composite(renderlist)); 
-    EXPECT_FALSE(db.try_to_composite(renderlist)); 
+    EXPECT_TRUE(db.overlay(renderlist)); 
+    EXPECT_FALSE(db.overlay(renderlist)); 
 }
 
 TEST_F(DisplayBuffer, defaults_to_normal_orientation)
@@ -287,7 +287,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         top_left,
         mga::OverlayOptimization::disabled);
 
-    EXPECT_FALSE(db.try_to_composite(renderlist)); 
+    EXPECT_FALSE(db.overlay(renderlist)); 
 }
 
 TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
@@ -313,19 +313,19 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
     };
 
     mg::RenderableList renderlist{buffer1, buffer2};
-    EXPECT_TRUE(db.try_to_composite(renderlist));
+    EXPECT_TRUE(db.overlay(renderlist));
     set_to_overlays(db.contents().list);
-    EXPECT_FALSE(db.try_to_composite(renderlist)); 
+    EXPECT_FALSE(db.overlay(renderlist)); 
 
     renderlist = mg::RenderableList{buffer2, buffer1}; //ordering changed
-    EXPECT_TRUE(db.try_to_composite(renderlist)); 
+    EXPECT_TRUE(db.overlay(renderlist)); 
     set_to_overlays(db.contents().list);
-    EXPECT_FALSE(db.try_to_composite(renderlist)); 
+    EXPECT_FALSE(db.overlay(renderlist)); 
 
     renderlist = mg::RenderableList{buffer3, buffer1}; //buffer changed
-    EXPECT_TRUE(db.try_to_composite(renderlist)); 
+    EXPECT_TRUE(db.overlay(renderlist)); 
     set_to_overlays(db.contents().list);
-    EXPECT_FALSE(db.try_to_composite(renderlist)); 
+    EXPECT_FALSE(db.overlay(renderlist)); 
 }
 
 TEST_F(DisplayBuffer, reports_position_correctly)
@@ -351,7 +351,7 @@ TEST_F(DisplayBuffer, rejects_lists_if_db_is_rotated)
             std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()))};
 
     db.configure(mir_power_mode_on, mir_orientation_inverted, geom::Displacement{0,0});
-    EXPECT_FALSE(db.try_to_composite(renderlist));
+    EXPECT_FALSE(db.overlay(renderlist));
     db.configure(mir_power_mode_on, mir_orientation_normal, geom::Displacement{0,0});
-    EXPECT_TRUE(db.try_to_composite(renderlist));
+    EXPECT_TRUE(db.overlay(renderlist));
 }

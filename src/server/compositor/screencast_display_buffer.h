@@ -108,7 +108,7 @@ public:
 
     void release_current() override;
 
-    bool try_to_composite(graphics::RenderableList const&) override;
+    bool overlay(graphics::RenderableList const&) override;
 
     void swap_buffers() override;
 

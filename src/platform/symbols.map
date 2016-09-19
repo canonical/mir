@@ -26,7 +26,7 @@ MIRPLATFORM_0.25 {
     mir::graphics::DisplayBuffer::native_display_buffer*;
     mir::graphics::DisplayBuffer::operator*;
     mir::graphics::DisplayBuffer::orientation*;
-    mir::graphics::DisplayBuffer::try_to_composite*;
+    mir::graphics::DisplayBuffer::overlay*;
     mir::graphics::DisplayBuffer::view_area*;
     mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;

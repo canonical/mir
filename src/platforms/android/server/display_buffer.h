@@ -63,7 +63,7 @@ public:
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
-    bool try_to_composite(RenderableList const& renderlist) override;
+    bool overlay(RenderableList const& renderlist) override;
     void bind() override;
 
     MirOrientation orientation() const override;

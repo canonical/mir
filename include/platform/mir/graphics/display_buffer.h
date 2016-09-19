@@ -65,7 +65,7 @@ public:
      *      caller should then render the list another way using a graphics
      *      library such as OpenGL.
     **/
-    virtual bool try_to_composite(RenderableList const& renderlist) = 0;
+    virtual bool overlay(RenderableList const& renderlist) = 0;
 
     /** Returns the orientation of the display buffer relative to how the
      *  user should see it (the orientation of the output).

@@ -72,7 +72,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
-    if (display_buffer.try_to_composite(renderable_list))
+    if (display_buffer.overlay(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();

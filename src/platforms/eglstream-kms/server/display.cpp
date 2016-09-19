@@ -195,7 +195,7 @@ public:
         return view_area_;
     }
 
-    bool try_to_composite(const mir::graphics::RenderableList& /*renderlist*/) override
+    bool overlay(const mir::graphics::RenderableList& /*renderlist*/) override
     {
         return false;
     }

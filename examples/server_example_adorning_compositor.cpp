@@ -183,7 +183,7 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
     remove_occlusions_from(scene_sequence, db.view_area());
 
     //note: If what should be drawn is expressible as a SceneElementSequence,
-    //      mg::DisplayBuffer::try_to_composite() should be used,
+    //      mg::DisplayBuffer::overlay() should be used,
     //      to give the the display hardware a chance at an optimized render of
     //      the scene. In this example though, we want some custom elements, so
     //      we'll always use GLES.

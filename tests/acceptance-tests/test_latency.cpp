@@ -129,7 +129,7 @@ public:
         return {{0,0}, {1920, 1080}};
     }
 
-    bool try_to_composite(mg::RenderableList const& renderables) override
+    bool overlay(mg::RenderableList const& renderables) override
     {
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())

@@ -153,7 +153,7 @@ void mc::ScreencastDisplayBuffer::release_current()
     gl_context->release_current();
 }
 
-bool mc::ScreencastDisplayBuffer::try_to_composite(mg::RenderableList const&)
+bool mc::ScreencastDisplayBuffer::overlay(mg::RenderableList const&)
 {
     return false;
 }

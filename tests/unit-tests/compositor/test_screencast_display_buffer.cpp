@@ -169,7 +169,7 @@ TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
                                    default_mirror_mode, free_queue,
                                    ready_queue, stub_display};
 
-    EXPECT_FALSE(db.try_to_composite(renderables));
+    EXPECT_FALSE(db.overlay(renderables));
 }
 
 TEST_F(ScreencastDisplayBufferTest, does_not_throw_on_multiple_make_current_calls)

@@ -198,7 +198,7 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
     area = a;
 }
 
-bool mgm::DisplayBuffer::try_to_composite(RenderableList const& renderable_list)
+bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
        (bypass_option == mgm::BypassOption::allowed))

@@ -118,7 +118,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 
     if (!nonrenderlist_elements &&
         viewport == display_buffer.view_area() &&  // no bypass while zoomed
-        display_buffer.try_to_composite(renderable_list))
+        display_buffer.overlay(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer.suspend();
