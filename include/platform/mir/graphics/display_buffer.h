@@ -60,12 +60,10 @@ public:
      *      displayed on the screen cannot be represented by a RenderableList,
      *      then you should render using a graphics library like OpenGL.
      *  \returns
-     *      true if the hardware can optimize the rendering of the list.
-     *      When this call completes, the renderlist will have been posted
-     *      to the screen.
-     *      false if the hardware platform cannot optimize the list. The screen
-     *      will not be updated. The caller should render the list another way
-     *      using a graphics library such as OpenGL.
+     *      True if the hardware can (and has) fully composite/overlay the list;
+     *      False if the hardware platform cannot composite the list, and the
+     *      caller should then render the list another way using a graphics
+     *      library such as OpenGL.
     **/
     virtual bool try_to_composite(RenderableList const& renderlist) = 0;
 
