@@ -24,22 +24,15 @@
 
 #include "mir/client_platform.h"
 #include "mir_toolkit/mir_buffer_stream.h"
-//#include "mir/dispatch/dispatchable.h"
 
-//#include "mir/test/doubles/mock_protobuf_server.h"
 #include "mir_test_framework/stub_client_platform_factory.h"
-
-//#include <sys/eventfd.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-//namespace md = mir::dispatch;
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 namespace mclr = mcl::rpc;
-//namespace mt = mir::test;
-//namespace mtd = mt::doubles;
 
 using namespace testing;
 
@@ -55,15 +48,8 @@ struct BufferStreamCallback
     MirBufferStream* resulting_stream = nullptr;
 };
 
-struct MockRpcChannel : public mclr::MirBasicRpcChannel/*,
-                        public mir::dispatch::Dispatchable*/
+struct MockRpcChannel : public mclr::MirBasicRpcChannel
 {
-/*    MockRpcChannel()
-        : pollable_fd{eventfd(0, EFD_CLOEXEC)}
-    {
-        ON_CALL(*this, watch_fd()).WillByDefault(Return(pollable_fd));
-    }
-*/
     virtual void call_method(std::string const& name,
                     google::protobuf::MessageLite const* /* parameters */,
                     google::protobuf::MessageLite* response,
@@ -78,14 +64,7 @@ struct MockRpcChannel : public mclr::MirBasicRpcChannel/*,
     }
 
     MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
-/*
-    MOCK_CONST_METHOD0(watch_fd, mir::Fd());
-    MOCK_METHOD1(dispatch, bool(md::FdEvents));
-    MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
-
-private:
-    mir::Fd pollable_fd;
-*/};
+};
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
 {
