@@ -130,7 +130,9 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
 
     nested_buffer->on_ownership_notification(
         [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
+
     host_chain->submit_buffer(*nested_buffer);
+ #if 0
 
 
     if (content != BackingContent::chain)
@@ -140,6 +142,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
+#endif
     return true;
 }
 

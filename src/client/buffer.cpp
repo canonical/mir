@@ -35,6 +35,7 @@ mcl::Buffer::Buffer(
     connection(connection),
     usage(usage)
 {
+    printf("BID %i\n", (int)(long)buffer_id);
 }
 
 int mcl::Buffer::rpc_id() const

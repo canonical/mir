@@ -26,18 +26,18 @@ namespace mir_test_framework
 {
 struct PassthroughTracker
 {
-    size_t num_passthrough_frames();
+    bool wait_for_passthrough_frames(size_t num_frames, std::chrono::milliseconds ms);
     void note_passthrough();
 private:
-    std::atomic<size_t> num_optimized{0u};
+    std::mutex mutex;
+    std::condition_variable cv;
+    size_t num_passthrough;
 };
 
 class HeadlessNestedServerRunner : public AsyncServerRunner
 {
 public:
     HeadlessNestedServerRunner(std::string const& connect_string);
-    size_t num_passthrough_frames() const;
-private:
     std::shared_ptr<PassthroughTracker> const passthrough_tracker;
 };
 }

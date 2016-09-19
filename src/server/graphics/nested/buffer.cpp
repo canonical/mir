@@ -179,6 +179,11 @@ mgn::Buffer::Buffer(
 {
 }
 
+mgn::Buffer::~Buffer()
+{
+    printf("DESTROYING.\n");
+}
+
 std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 {
     return buffer;

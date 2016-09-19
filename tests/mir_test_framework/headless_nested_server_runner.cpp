@@ -33,17 +33,15 @@ mtf::HeadlessNestedServerRunner::HeadlessNestedServerRunner(std::string const& c
     });
 }
 
-size_t mtf::HeadlessNestedServerRunner::num_passthrough_frames() const
-{
-    return passthrough_tracker->num_passthrough_frames();
-}
-
-size_t mtf::PassthroughTracker::num_passthrough_frames()
-{
-    return num_optimized;
-}
-
 void mtf::PassthroughTracker::note_passthrough()
 {
-    num_optimized++;
+    std::unique_lock<std::mutex> lk(mutex);
+    num_passthrough++;
+    cv.notify_all();
+}
+
+bool mtf::PassthroughTracker::wait_for_passthrough_frames(size_t nframes, std::chrono::milliseconds ms)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    return cv.wait_for(lk, ms, [&] { return num_passthrough >= nframes; } );
 }

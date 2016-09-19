@@ -488,6 +488,8 @@ struct Chain : mgn::HostChain
     }
     ~Chain()
     {
+        printf("RELEASE...\n");
+        if (nn) nn->on_ownership_notification([]{});
         mir_presentation_chain_release(chain);
     }
 
@@ -495,6 +497,7 @@ struct Chain : mgn::HostChain
     {
         if (buffer.client_handle() != current_buf)
         {
+            nn = &buffer;
             current_buf = buffer.client_handle();
             mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
         }
@@ -506,6 +509,7 @@ struct Chain : mgn::HostChain
     }
 private:
     MirBuffer* current_buf = nullptr;
+    mgn::NativeBuffer* nn = nullptr;
     MirPresentationChain* chain;
 };
 
@@ -531,10 +535,16 @@ public:
         std::unique_lock<std::mutex> lk(mut);
         cv.wait(lk, [&]{ return b; });
         if (!mir_buffer_is_valid(b))
+        {
+            printf("BADD\n");
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+        printf("MAKE A Bns\n");
     }
     ~HostBufferBuffer()
     {
+        f = []{};
+        printf("BLOW UP BUFFER\n");
         mir_buffer_release(b);
     }
 

@@ -149,6 +149,7 @@ void invoke(
     }
     catch (std::exception const& x)
     {
+        printf("ERRORORORORO\n");
         using namespace std::literals;
         result_message->set_error("Error processing request: "s +
             x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
