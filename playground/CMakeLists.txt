@@ -37,3 +37,22 @@ mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
 target_link_libraries(mir_demo_client_chain_jumping_buffers
     mirclient
 )
+
+mir_add_wrapped_executable(mir_demo_client_render_surface
+  render_surface.cpp
+)
+
+target_link_libraries(mir_demo_client_render_surface
+    mirclient
+    eglapp
+)
+
+mir_add_wrapped_executable(mir_demo_client_eglflash_render_surface
+    eglflash_render_surface.c
+)
+
+target_link_libraries(mir_demo_client_eglflash_render_surface
+    mirclient
+    ${EGL_LIBRARIES}
+    ${GLESv2_LIBRARIES}
+)
