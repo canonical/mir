@@ -25,6 +25,7 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <chrono>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -37,9 +38,9 @@ void page_flip_handler(int /*fd*/, unsigned int seq,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    int64_t nanosec = sec*1000000000LL + usec*1000LL;
+    std::chrono::nanoseconds ns{sec*1000000000LL + usec*1000LL};
     page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id,
-                                              seq, nanosec);
+                                              seq, ns);
 }
 
 }
@@ -169,7 +170,7 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 }
 
 void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, int64_t msc,
-                                           int64_t ust)
+                                           std::chrono::nanoseconds ust)
 {
     auto pending = pending_page_flips.find(crtc_id);
     if (pending != pending_page_flips.end())

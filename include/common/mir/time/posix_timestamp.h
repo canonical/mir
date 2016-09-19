@@ -19,7 +19,7 @@
 #ifndef MIR_TIME_POSIX_TIMESTAMP_H_
 #define MIR_TIME_POSIX_TIMESTAMP_H_
 
-#include <cstdint>
+#include <chrono>
 #include <ctime>
 
 namespace mir { namespace time {
@@ -32,18 +32,16 @@ namespace mir { namespace time {
  *  - mir::time::Timestamp is relative to the (wrong) epoch of steady_clock,
  *    so converting to/from mir::time::Timestamp would be dangerously
  *    inaccurate at best.
- *  - We need full 64-bit timestamps to pass over IPC and perfectly match
- *    what clients get from clock_gettime (e.g. existing GLX apps).
  */
 
 struct PosixTimestamp
 {
     clockid_t clock_id;
-    int64_t nanoseconds;
+    std::chrono::nanoseconds nanoseconds;
 
     PosixTimestamp()
         : clock_id{CLOCK_MONOTONIC}, nanoseconds{0} {}
-    PosixTimestamp(clockid_t clk, int64_t ns)
+    PosixTimestamp(clockid_t clk, std::chrono::nanoseconds ns)
         : clock_id{clk}, nanoseconds{ns} {}
     PosixTimestamp(clockid_t clk, struct timespec const& ts)
         : clock_id{clk}, nanoseconds{ts.tv_sec*1000000000LL + ts.tv_nsec} {}

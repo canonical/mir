@@ -117,13 +117,12 @@ void mgx::DisplayBuffer::swap_buffers()
      * would wake up and catch up with the display. So it's what we want
      * anyway.
      */
-    int64_t ust_usec, msc, sbc;
+    int64_t ust_us, msc, sbc;
     if (eglGetSyncValues &&
-        eglGetSyncValues(egl_dpy, egl_surf, &ust_usec, &msc, &sbc))
+        eglGetSyncValues(egl_dpy, egl_surf, &ust_us, &msc, &sbc))
     {
-        // EGL_CHROMIUM_get_sync_values says to use CLOCK_MONOTONIC and
-        // measurements confirm that's what Mesa is using...
-        last_frame->store({msc, {CLOCK_MONOTONIC, ust_usec*1000}});
+        std::chrono::nanoseconds ust_ns{ust_us * 1000};
+        last_frame->store({msc, {CLOCK_MONOTONIC, ust_ns}});
         (void)sbc; // unused
     }
     else  // Extension not available? Fall back to a reasonable estimate:

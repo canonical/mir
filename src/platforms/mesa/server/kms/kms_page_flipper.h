@@ -57,7 +57,7 @@ public:
 
     std::thread::id debug_get_worker_tid();
 
-    void notify_page_flip(uint32_t crtc_id, int64_t msc, int64_t ust);
+    void notify_page_flip(uint32_t crtc_id, int64_t msc, std::chrono::nanoseconds ust);
 private:
     bool page_flip_is_done(uint32_t crtc_id);
 

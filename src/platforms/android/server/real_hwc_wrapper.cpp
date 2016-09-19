@@ -67,11 +67,14 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
 {
     mga::HwcCallbacks const* callbacks{nullptr};
     std::unique_lock<std::mutex> lk(callback_lock);
-    // hwcomposer.h says the clock used is CLOCK_MONOTONIC, and testing
-    // on various devices confirms this is the case...
     if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
-        callbacks->self->vsync(display_name(display),
-                               mg::Frame::Timestamp{CLOCK_MONOTONIC, timestamp});
+    {
+        // hwcomposer.h says the clock used is CLOCK_MONOTONIC, and testing
+        // on various devices confirms this is the case...
+        mg::Frame::Timestamp hwc_time{CLOCK_MONOTONIC,
+                                      std::chrono::nanoseconds(timestamp)};
+        callbacks->self->vsync(display_name(display), hwc_time);
+    }
 }
 
 static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)

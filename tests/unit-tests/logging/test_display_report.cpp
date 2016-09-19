@@ -122,7 +122,7 @@ TEST_F(DisplayReport, eglconfig)
 TEST_F(DisplayReport, reports_vsync)
 {
     using namespace testing;
-    long long const nanos_per_frame = 16666666LL;
+    std::chrono::nanoseconds const nanos_per_frame{16666666};
     std::string const interval_str{"interval 16.666ms"};
     unsigned int display1_id {1223};
     unsigned int display2_id {4492};
@@ -173,7 +173,7 @@ TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
     mrl::DisplayReport report(logger);
     mir::graphics::Frame frame;
 
-    long long const nanos_per_frame = 1000000000LL/hz;
+    std::chrono::nanoseconds const nanos_per_frame{1000000000LL/hz};
 
     report.report_vsync(id, frame);
     frame.msc += d1;

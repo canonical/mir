@@ -284,7 +284,8 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
         [&]{ hotplug_call_count++; }, [&](mga::DisplayName, mg::Frame::Timestamp){ vsync_call_count++; });
     hotplug_fn(mga::DisplayName::primary, true);
     hotplug_fn(mga::DisplayName::primary, true);
-    vsync_fn(mga::DisplayName::primary, mg::Frame::Timestamp{CLOCK_MONOTONIC,33});
+    using namespace std::literals::chrono_literals;
+    vsync_fn(mga::DisplayName::primary, mg::Frame::Timestamp{CLOCK_MONOTONIC,123ns});
     EXPECT_THAT(hotplug_call_count, Eq(2));
     EXPECT_THAT(vsync_call_count, Eq(1));
 }

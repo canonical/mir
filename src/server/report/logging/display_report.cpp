@@ -153,13 +153,15 @@ void mrl::DisplayReport::report_vsync(unsigned int output_id,
     if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {
         auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
+        auto const age_ns = now.nanoseconds - frame.ust.nanoseconds;
+        auto const delta_ns = frame.ust.nanoseconds -
+                              prev->second.ust.nanoseconds;
 
         // long long to match printf format on all architectures
         const long long msc = frame.msc,
-                        age_us = (now.nanoseconds - frame.ust.nanoseconds)/1000,
-                        interval_us = (frame.ust.nanoseconds -
-                                       prev->second.ust.nanoseconds)
-                                    / (1000*(frame.msc - prev->second.msc)),
+                        age_us = age_ns.count() / 1000,
+                        interval_us = delta_ns.count() /
+                                      (1000*(frame.msc - prev->second.msc)),
                         hz100 = 100000000LL / interval_us;
 
         logger->log(component(), ml::Severity::informational,
