@@ -547,10 +547,6 @@ public:
     {
         return b;
     }
-    MirNativeBuffer* get_native_handle() override
-    {
-        return mir_buffer_get_native_buffer(b, mir_read_write);
-    }
     MirGraphicsRegion get_graphics_region() override
     {
         return mir_buffer_get_graphics_region(b, mir_read_write);

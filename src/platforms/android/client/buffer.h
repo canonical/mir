@@ -51,9 +51,8 @@ public:
     void update_from(MirBufferPackage const& update_package) override;
     void fill_update_msg(MirBufferPackage& message) override;
     MirBufferPackage* package() const override;
-    MirNativeBuffer* as_mir_native_buffer() const override;
-    void set_fence(MirNativeFence, MirBufferAccess) override;
-    MirNativeFence get_fence() const override;
+    void set_fence(Fd, MirBufferAccess) override;
+    Fd get_fence() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override;
 
@@ -63,7 +62,6 @@ private:
     void pack_native_window_buffer();
 
     mir::Fd mutable api_user_fence;
-    int mutable fd;
  
     std::shared_ptr<BufferRegistrar> const buffer_registrar;
     std::shared_ptr<graphics::android::NativeBuffer> const native_buffer;

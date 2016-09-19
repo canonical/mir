@@ -62,7 +62,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirNativeFence mir_buffer_get_fence(MirBuffer* b)
+int mir_buffer_get_fence(MirBuffer* b)
 try
 {
     mir::require(b);
@@ -72,15 +72,15 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return -1;
+    return mir::Fd::invalid;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence fence, MirBufferAccess access)
+void mir_buffer_associate_fence(MirBuffer* b, int fence, MirBufferAccess access)
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    buffer->set_fence(fence, access);
+    buffer->set_fence(mir::Fd(fence), access);
 }
 catch (std::exception const& ex)
 {
@@ -99,21 +99,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return -1;
-}
-
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer* b, MirBufferAccess access) 
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-    return buffer->as_mir_native_buffer();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
 }
 
 MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)

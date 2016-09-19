@@ -149,20 +149,13 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
-{
-    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
-        return native;
-    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
-}
-
-void mclm::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
+void mclm::ClientBuffer::set_fence(mir::Fd, MirBufferAccess)
 {
 }
 
-MirNativeFence mclm::ClientBuffer::get_fence() const
+mir::Fd mclm::ClientBuffer::get_fence() const
 {
-    return -1;
+    return mir::Fd(mir::Fd::invalid);
 }
 
 bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
@@ -177,5 +170,7 @@ void mclm::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer
 
 MirBufferPackage* mclm::ClientBuffer::package() const
 {
-    return as_mir_native_buffer();
+    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
