@@ -23,6 +23,7 @@
 #include "host_connection.h"
 #include "buffer.h"
 #include "egl_image_factory.h"
+#include "native_buffer.h"
 
 #include <map>
 #include <chrono>
@@ -45,7 +46,7 @@ class TextureAccess :
 public:
     TextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<MirBuffer> const& native_buffer,
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
         std::shared_ptr<mgn::HostConnection> const& connection,
         std::shared_ptr<mgn::EglImageFactory> const& factory) :
         buffer(buffer),
@@ -57,10 +58,8 @@ public:
 
     void bind() override
     {
-        mir_buffer_wait_for_access(
-            native_buffer.get(),
-            mir_read,
-            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count());
+        using namespace std::chrono;
+        native_buffer->sync(mir_read, duration_cast<nanoseconds>(seconds(1)));
 
         ImageResources resources
         {
@@ -73,7 +72,7 @@ public:
         if (it == egl_image_map.end())
         {
             static const EGLint image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-            auto i = factory->create_egl_image_from(native_buffer.get(), resources.first, image_attrs);
+            auto i = factory->create_egl_image_from(*native_buffer, resources.first, image_attrs);
             image = *i;
             egl_image_map[resources] = std::move(i);
         }
@@ -96,7 +95,7 @@ public:
 
 protected:
     mgn::Buffer& buffer;
-    std::shared_ptr<MirBuffer> const native_buffer;
+    std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
 private:
     std::shared_ptr<mgn::EglImageFactory> const factory;
@@ -112,11 +111,11 @@ class PixelAndTextureAccess :
 public:
     PixelAndTextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<MirBuffer> const& native_buffer,
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
         std::shared_ptr<mgn::HostConnection> const& connection,
         std::shared_ptr<mgn::EglImageFactory> const& factory) :
         TextureAccess(buffer, native_buffer, connection, factory),
-        stride_(geom::Stride{connection->get_graphics_region(native_buffer.get()).stride})
+        stride_(geom::Stride{native_buffer->get_graphics_region().stride})
     {
     }
 
@@ -127,7 +126,7 @@ public:
         if (buffer_size_bytes != pixel_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         if (!region.vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
@@ -141,7 +140,7 @@ public:
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
-        auto region = connection->get_graphics_region(native_buffer.get());
+        auto region = native_buffer->get_graphics_region();
         do_with_pixels(reinterpret_cast<unsigned char*>(region.vaddr));
     }
 
@@ -183,12 +182,12 @@ std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 
 geom::Size mgn::Buffer::size() const
 {
-    return geom::Size{ mir_buffer_get_width(buffer.get()), mir_buffer_get_height(buffer.get()) };
+    return buffer->size();
 }
 
 MirPixelFormat mgn::Buffer::pixel_format() const
 {
-    return mir_buffer_get_pixel_format(buffer.get());
+    return buffer->format();
 }
 
 mg::NativeBufferBase* mgn::Buffer::native_buffer_base()

@@ -82,9 +82,7 @@ public:
     void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) override;
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
-    std::shared_ptr<MirBuffer> create_buffer(graphics::BufferProperties const&) override;
-    MirNativeBuffer* get_native_handle(MirBuffer*) override;
-    MirGraphicsRegion get_graphics_region(MirBuffer*) override;
+    std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
 
 private:
     void update_input_config(UniqueInputConfig input_config);
