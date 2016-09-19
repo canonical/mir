@@ -28,7 +28,7 @@ namespace mir { namespace time {
  * We need absolute precision here so sadly can't use high-level C++ clocks...
  *  - Graphics frame timing needs support for at least the kernel clocks
  *    CLOCK_REALTIME and CLOCK_MONOTONIC, to be selected at runtime, whereas
- *    std::chrono does not support CLOCK_REALTIME, or easly switching clocks.
+ *    std::chrono does not support CLOCK_REALTIME or easily switching clocks.
  *  - mir::time::Timestamp is relative to the (wrong) epoch of steady_clock,
  *    so converting to/from mir::time::Timestamp would be dangerously
  *    inaccurate at best.

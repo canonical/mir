@@ -72,7 +72,7 @@ static void vsync_hook(const struct hwc_procs* procs, int display, int64_t times
         // hwcomposer.h says the clock used is CLOCK_MONOTONIC, and testing
         // on various devices confirms this is the case...
         mg::Frame::Timestamp hwc_time{CLOCK_MONOTONIC,
-                                      std::chrono::nanoseconds(timestamp)};
+                                      std::chrono::nanoseconds{timestamp}};
         callbacks->self->vsync(display_name(display), hwc_time);
     }
 }
