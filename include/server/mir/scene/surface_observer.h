@@ -60,6 +60,7 @@ public:
                                 std::string const& variant, std::string const& options) = 0;
     virtual void renamed(char const* name) = 0;
     virtual void cursor_image_removed() = 0;
+    virtual void placed_relative(geometry::Rectangle const& placement) = 0;
 
 protected:
     SurfaceObserver() = default;

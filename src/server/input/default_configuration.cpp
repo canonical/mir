@@ -361,7 +361,8 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_input_reading_multiplexer(),
                the_main_loop(),
                the_cookie_authority(),
-               the_key_mapper());
+               the_key_mapper(),
+               the_server_status_listener());
 
            if (key_repeater && !the_options()->is_set(options::host_socket_opt))
                key_repeater->set_input_device_hub(hub);
