@@ -23,10 +23,20 @@
 
 namespace mir_test_framework
 {
+struct PassthroughReport
+{
+    size_t num_optimized_frames();
+    void note_passthrough();
+    void note_render();
+private:
+    size_t num_optimized = 0u;
+};
+
 class HeadlessNestedServerRunner : public AsyncServerRunner
 {
 public:
     HeadlessNestedServerRunner(std::string const& connect_string);
+    std::shared_ptr<PassthroughReport> const passthrough_report;
 };
 }
 

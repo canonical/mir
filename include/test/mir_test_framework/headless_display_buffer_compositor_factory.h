@@ -22,10 +22,15 @@
 
 namespace mir_test_framework
 {
+class PassthroughReport;
 struct HeadlessDisplayBufferCompositorFactory : mir::compositor::DisplayBufferCompositorFactory
 {
+    HeadlessDisplayBufferCompositorFactory();
+    HeadlessDisplayBufferCompositorFactory(std::shared_ptr<PassthroughReport> const& report);
     std::unique_ptr<mir::compositor::DisplayBufferCompositor> create_compositor_for(
         mir::graphics::DisplayBuffer& display_buffer) override;
+private:
+    std::shared_ptr<PassthroughReport> const report;
 };
 }
 #endif /* MIR_TEST_FRAMEWORK_HEADLESS_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_ */

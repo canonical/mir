@@ -111,19 +111,40 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
 {
+    printf("NESTED EVAL\n");
     if (list.empty() ||
         (list.back()->screen_position() != area) ||
         (list.back()->alpha() != 1.0f) ||
         (list.back()->shaped()) ||
         (list.back()->transformation() != identity))
     {
+        if (!list.empty())
+        {
+            printf("display %i %i, surface size %i %i spos %i %i\n",
+                area.size.width.as_int(), area.size.height.as_int(),
+                list.back()->screen_position().size.width.as_int(),
+                list.back()->screen_position().size.height.as_int(),
+                list.back()->screen_position().top_left.x.as_int(),
+                list.back()->screen_position().top_left.y.as_int());
+
+            printf("MMMM %X %X %X %X\n",
+            (list.back()->screen_position() != area),
+            (list.back()->alpha() != 1.0f),
+            (list.back()->shaped()),
+            (list.back()->transformation() != identity));
+        }
+        else
+            printf("EMPTY LIST.\n");
         return false;
     }
 
     auto passthrough_buffer = list.back()->buffer();
     auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
     if (!nested_buffer)
+    {
+        printf("NOT A NESTD\n");
         return false;
+    }
 
     if (!host_chain)
         host_chain = host_connection->create_chain();
@@ -132,6 +153,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
     host_chain->submit_buffer(*nested_buffer);
 
+
     if (content != BackingContent::chain)
     {
         auto spec = host_connection->create_surface_spec();
@@ -139,6 +161,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
+    printf("PASS RIGHT THROUGH\n");
     return true;
 }
 

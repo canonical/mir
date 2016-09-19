@@ -17,10 +17,12 @@
  */
 
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/compositor/compositor_report.h"
 #include "mir/geometry/rectangle.h"
 #include <algorithm>
 
@@ -30,13 +32,27 @@ namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory() :
+    report(nullptr)
+{
+}
+
+mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory(
+    std::shared_ptr<PassthroughReport> const& report) :
+    report(report)
+{
+}
+
 std::unique_ptr<mir::compositor::DisplayBufferCompositor>
 mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBuffer& db)
 {
     struct HeadlessDBC : mir::compositor::DisplayBufferCompositor
     {
-        HeadlessDBC(mg::DisplayBuffer& db) :
+        HeadlessDBC(
+            mg::DisplayBuffer& db,
+            std::shared_ptr<mtf::PassthroughReport> const& report) :
             db(db),
+            report(report),
             render_target(dynamic_cast<mrg::RenderTarget*>(
                 db.native_display_buffer()))
         {
@@ -73,7 +89,16 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         {
             auto renderlist = filter(seq, db.view_area());
             if (db.post_renderables_if_optimizable(renderlist))
+            {
+                if (report)
+                    report->note_passthrough();
                 return;
+            }
+            else
+            {
+                if (report)
+                    report->note_render();
+            }
 
             // Invoke GL renderer specific functions if the DisplayBuffer supports them
             if (render_target)
@@ -87,7 +112,8 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
                 render_target->swap_buffers();
         }
         mg::DisplayBuffer& db;
+        std::shared_ptr<PassthroughReport> const report;
         mrg::RenderTarget* const render_target;
     };
-    return std::make_unique<HeadlessDBC>(db);
+    return std::make_unique<HeadlessDBC>(db, report);
 }

@@ -641,6 +641,13 @@ struct ClientWithADisplayChangeCallback : virtual Client
 
 struct ClientWithAPaintedSurface : virtual Client
 {
+    ClientWithAPaintedSurface(NestedMirRunner& nested_mir, geom::Size size, MirPixelFormat format) :
+        Client(nested_mir),
+        surface(mtf::make_surface(connection, size, format))
+    {
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    }
+
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
         Client(nested_mir),
         surface(mtf::make_any_surface(connection))
@@ -1510,5 +1517,11 @@ TEST_F(NestedServer, passthrough_works)
 {
     NestedMirRunner nested_mir{new_connection()};
     nested_mir.wait_until_ready();
-    ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
+
+    ClientWithAPaintedSurface client(
+        nested_mir, display_geometry.front().size, mir_pixel_format_xbgr_8888);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    printf("END---------%X\n", (unsigned int) nested_mir.passthrough_report->num_optimized_frames());
+    EXPECT_THAT(nested_mir.passthrough_report->num_optimized_frames(), Gt(0));
 }

@@ -72,6 +72,9 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
+
+    printf("RENDERLRIST %i\n", (int)(long)renderable_list.size());
+
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);

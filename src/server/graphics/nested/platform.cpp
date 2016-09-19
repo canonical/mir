@@ -60,8 +60,8 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties) override
     {
-        if ((buffer_properties.size.width > mir::geometry::Width{480}) &&
-            (buffer_properties.size.height > mir::geometry::Height{480}))
+        if ((buffer_properties.size.width >= mir::geometry::Width{480}) &&
+            (buffer_properties.size.height >= mir::geometry::Height{480}))
         {
             return std::make_shared<mgn::Buffer>(connection, buffer_properties);
         }
