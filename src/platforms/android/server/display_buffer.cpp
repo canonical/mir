@@ -79,7 +79,7 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
+bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
 {
     if (!overlay_enabled ||
         !display_device->compatible_renderlist(renderlist) ||

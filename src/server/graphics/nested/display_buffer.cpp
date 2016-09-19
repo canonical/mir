@@ -97,7 +97,7 @@ void mgn::detail::DisplayBuffer::bind()
 {
 }
 
-bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
+bool mgn::detail::DisplayBuffer::overlay(RenderableList const&)
 {
     return false;
 }
