@@ -20,23 +20,25 @@
 #define MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_
 
 #include "mir_test_framework/async_server_runner.h"
+#include <atomic>
 
 namespace mir_test_framework
 {
-struct PassthroughReport
+struct PassthroughTracker
 {
-    size_t num_optimized_frames();
+    size_t num_passthrough_frames();
     void note_passthrough();
-    void note_render();
 private:
-    size_t num_optimized = 0u;
+    std::atomic<size_t> num_optimized{0u};
 };
 
 class HeadlessNestedServerRunner : public AsyncServerRunner
 {
 public:
     HeadlessNestedServerRunner(std::string const& connect_string);
-    std::shared_ptr<PassthroughReport> const passthrough_report;
+    size_t num_passthrough_frames() const;
+private:
+    std::shared_ptr<PassthroughTracker> const passthrough_tracker;
 };
 }
 

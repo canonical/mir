@@ -1522,6 +1522,6 @@ TEST_F(NestedServer, passthrough_works)
         nested_mir, display_geometry.front().size, mir_pixel_format_xbgr_8888);
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    printf("END---------%X\n", (unsigned int) nested_mir.passthrough_report->num_optimized_frames());
-    EXPECT_THAT(nested_mir.passthrough_report->num_optimized_frames(), Gt(0));
+
+    EXPECT_THAT(nested_mir.num_passthrough_frames(), Gt(0));
 }

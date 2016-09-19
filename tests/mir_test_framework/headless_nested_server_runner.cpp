@@ -23,28 +23,27 @@
 namespace mtf = mir_test_framework;
 
 mtf::HeadlessNestedServerRunner::HeadlessNestedServerRunner(std::string const& connect_string) :
-    passthrough_report(std::make_shared<mtf::PassthroughReport>())
+    passthrough_tracker(std::make_shared<mtf::PassthroughTracker>())
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_HOST_SOCKET", connect_string.c_str());
     server.override_the_display_buffer_compositor_factory([this]
     {
-        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(passthrough_report);
+        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(passthrough_tracker);
     });
 }
 
-size_t mtf::PassthroughReport::num_optimized_frames()
+size_t mtf::HeadlessNestedServerRunner::num_passthrough_frames() const
+{
+    return passthrough_tracker->num_passthrough_frames();
+}
+
+size_t mtf::PassthroughTracker::num_passthrough_frames()
 {
     return num_optimized;
 }
 
-void mtf::PassthroughReport::note_passthrough()
+void mtf::PassthroughTracker::note_passthrough()
 {
-    printf("---->PASSTHROUGH!\n");
     num_optimized++;
-}
-
-void mtf::PassthroughReport::note_render()
-{
-    printf("---->RENDER!\n");
 }

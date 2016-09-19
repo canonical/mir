@@ -22,7 +22,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/compositor_report.h"
 #include "mir/geometry/rectangle.h"
 #include <algorithm>
 
@@ -33,13 +32,13 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory() :
-    report(nullptr)
+    tracker(nullptr)
 {
 }
 
 mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory(
-    std::shared_ptr<PassthroughReport> const& report) :
-    report(report)
+    std::shared_ptr<PassthroughTracker> const& tracker) :
+    tracker(tracker)
 {
 }
 
@@ -50,9 +49,9 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
     {
         HeadlessDBC(
             mg::DisplayBuffer& db,
-            std::shared_ptr<mtf::PassthroughReport> const& report) :
+            std::shared_ptr<mtf::PassthroughTracker> const& tracker) :
             db(db),
-            report(report),
+            tracker(tracker),
             render_target(dynamic_cast<mrg::RenderTarget*>(
                 db.native_display_buffer()))
         {
@@ -90,14 +89,9 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             auto renderlist = filter(seq, db.view_area());
             if (db.post_renderables_if_optimizable(renderlist))
             {
-                if (report)
-                    report->note_passthrough();
+                if (tracker)
+                    tracker->note_passthrough();
                 return;
-            }
-            else
-            {
-                if (report)
-                    report->note_render();
             }
 
             // Invoke GL renderer specific functions if the DisplayBuffer supports them
@@ -112,8 +106,8 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
                 render_target->swap_buffers();
         }
         mg::DisplayBuffer& db;
-        std::shared_ptr<PassthroughReport> const report;
+        std::shared_ptr<PassthroughTracker> const tracker;
         mrg::RenderTarget* const render_target;
     };
-    return std::make_unique<HeadlessDBC>(db, report);
+    return std::make_unique<HeadlessDBC>(db, tracker);
 }

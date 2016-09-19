@@ -532,7 +532,6 @@ public:
         cv.wait(lk, [&]{ return b; });
         if (!mir_buffer_is_valid(b))
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        printf("YEP.\n");
     }
     ~HostBufferBuffer()
     {
@@ -577,7 +576,6 @@ public:
 
     void avail(MirBuffer* buffer)
     {
-        printf("BUFFER\n");
         {
             std::unique_lock<std::mutex> lk(mut);
             if (!b)
