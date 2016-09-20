@@ -120,7 +120,7 @@ public:
     {
         struct NullHostChain : graphics::nested::HostChain
         {
-            void submit_buffer(graphics::nested::NativeBuffer&) override {}
+            void submit_buffer(std::shared_ptr<graphics::Buffer> const&) override {}
             MirPresentationChain* handle() override { return nullptr; }
         };
         return std::make_unique<NullHostChain>();

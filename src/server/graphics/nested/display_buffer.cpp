@@ -128,12 +128,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    nested_buffer->on_ownership_notification(
-        [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
-
-    host_chain->submit_buffer(*nested_buffer);
- #if 0
-
+    host_chain->submit_buffer(passthrough_buffer);
 
     if (content != BackingContent::chain)
     {
@@ -142,7 +137,7 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
-#endif
+
     return true;
 }
 
@@ -162,6 +157,7 @@ MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
+    printf("AAAA\n");
     host_surface->set_event_handler(nullptr, nullptr);
 }
 
