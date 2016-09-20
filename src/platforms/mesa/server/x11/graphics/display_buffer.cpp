@@ -94,7 +94,7 @@ void mgx::DisplayBuffer::release_current()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make uncurrent"));
 }
 
-bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)
+bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
 {
     return false;
 }

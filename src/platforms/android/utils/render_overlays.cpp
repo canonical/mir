@@ -214,7 +214,7 @@ void render_loop(mir::graphics::Display& display, mir::graphics::GraphicBufferAl
             {
                 // TODO: Is make_current() really needed here?
                 me::as_render_target(buffer)->make_current();
-                buffer.post_renderables_if_optimizable(renderlist);
+                buffer.overlay(renderlist);
             });
             group.post();
         });

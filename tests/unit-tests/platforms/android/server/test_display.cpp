@@ -1033,7 +1033,7 @@ TEST_F(Display, display_buffers_respect_overlay_option)
 
     display.for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db) {
-            EXPECT_FALSE(db.post_renderables_if_optimizable({std::make_shared<mtd::StubRenderable>()}));
+            EXPECT_FALSE(db.overlay({std::make_shared<mtd::StubRenderable>()}));
         });
     });
 }
