@@ -82,7 +82,6 @@ private:
     std::shared_ptr<AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::logging::Logger> const logger;
     std::unique_ptr<mir::protobuf::Void> void_response;
-    MirSurface* container_;
     bool autorelease_;
     ClientBufferStream* stream_;
 

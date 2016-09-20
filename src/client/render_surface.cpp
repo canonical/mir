@@ -86,7 +86,6 @@ mcl::RenderSurface::RenderSurface(
         buffer_factory(async_buffer_factory),
         logger(mir_logger),
         void_response(mcl::make_protobuf_object<mp::Void>()),
-        container_(nullptr),
         autorelease_(false),
         stream_(nullptr)
 {
