@@ -34,6 +34,7 @@ namespace nested
 {
 class HostConnection;
 class EglImageFactory;
+class NativeBuffer;
 class Buffer : public BufferBasic
 {
 public:
@@ -42,7 +43,7 @@ public:
         std::shared_ptr<EglImageFactory> const& factory,
         BufferProperties const& properties);
 
-    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
     geometry::Size size() const override;
     MirPixelFormat pixel_format() const override;
     NativeBufferBase* native_buffer_base() override;
@@ -52,7 +53,7 @@ private:
 
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<EglImageFactory> const factory;
-    std::shared_ptr<MirBuffer> buffer;
+    std::shared_ptr<NativeBuffer> buffer;
     std::shared_ptr<NativeBufferBase> const native_base;
 };
 }
