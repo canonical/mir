@@ -186,8 +186,8 @@ struct mir_egl_app_arg
     char const* syntax;
     char const* scanf_description;
     char const* scanf_format;  /* or "" bool flag, or "=" for argv copy */
-    char const* description;
     void* variable;
+    char const* description;
 };
 
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
@@ -212,18 +212,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const struct mir_egl_app_arg default_args[] =
     {
-        {"-a", "<name>", "=", "Set application name", &appname},
-        {"-b", "<0.0..0.1>", "%f", "Background opacity", &mir_eglapp_background_opacity},
-        {"-e", "<nbits>", "%u", "EGL colour channel size", &rgb_bits},
-        {"-h", "", "", "Show this help text", &help},
-        {"-f", "", "", "Force full screen", &fullscreen},
-        {"-o", "<id>", "%u", "Force placement on output monitor ID", &output_id},
-        {"-n", "", "", "Don't sync to vblank", &no_vsync},
-        {"-m", "<socket>", "=", "Mir server socket", &mir_socket},
-        {"-s", "<width>x<height>", "=", "Force surface size", &dims},
-        {"-c", "<name>", "=", "Request cursor image by name", &cursor_name},
-        {"-q", "", "", "Quiet mode (no messages output)", &quiet},
-        {"--", "", "", "Ignore all arguments that follow", NULL},
+        {"-a", "<name>", "=", &appname, "Set application name"},
+        {"-b", "<0.0..0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
+        {"-e", "<nbits>", "%u", &rgb_bits, "EGL colour channel size"},
+        {"-h", "", "", &help, "Show this help text"},
+        {"-f", "", "", &fullscreen, "Force full screen"},
+        {"-o", "<id>", "%u", &output_id, "Force placement on output monitor ID"},
+        {"-n", "", "", &no_vsync, "Don't sync to vblank"},
+        {"-m", "<socket>", "=", &mir_socket, "Mir server socket"},
+        {"-s", "<width>x<height>", "=", &dims, "Force surface size"},
+        {"-c", "<name>", "=", &cursor_name, "Request cursor image by name"},
+        {"-q", "", "", &quiet, "Quiet mode (no messages output)"},
+        {"--", "", "", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL, NULL}
     };
 
