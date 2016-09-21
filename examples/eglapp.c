@@ -181,6 +181,15 @@ static const MirDisplayOutput *find_active_output(
     return output;
 }
 
+struct mir_egl_app_arg
+{
+    char const* syntax;
+    char const* scanf_description;
+    char const* scanf_format;  /* or "" bool flag, or "=" for argv copy */
+    char const* description;
+    void* variable;
+};
+
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height)
 {
@@ -195,16 +204,37 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLBoolean ok;
     EGLint swapinterval = 1;
     unsigned int output_id = mir_display_output_id_invalid;
-    char *mir_socket = NULL;
+    char const* mir_socket = NULL;
+    char const* dims = NULL;
     char const* cursor_name = mir_default_cursor_name;
     unsigned int rgb_bits = 8;
+    mir_eglapp_bool help = 0, fullscreen = 0, no_vsync = 0, quiet = 0;
+
+    const struct mir_egl_app_arg default_args[] =
+    {
+        {"-a", "<name>", "=", "Set application name", &appname},
+        {"-b", "<0.0..0.1>", "%f", "Background opacity", &mir_eglapp_background_opacity},
+        {"-e", "<nbits>", "%u", "EGL colour channel size", &rgb_bits},
+        {"-h", "", "", "Show this help text", &help},
+        {"-f", "", "", "Force full screen", &fullscreen},
+        {"-o", "<id>", "%u", "Force placement on output monitor ID", &output_id},
+        {"-n", "", "", "Don't sync to vblank", &no_vsync},
+        {"-m", "<socket>", "=", "Mir server socket", &mir_socket},
+        {"-s", "<width>x<height>", "=", "Force surface size", &dims},
+        {"-c", "<name>", "=", "Request cursor image by name", &cursor_name},
+        {"-q", "", "", "Quiet mode (no messages output)", &quiet},
+        {"--", "", "", "Ignore all arguments that follow", NULL},
+        {NULL, NULL, NULL, NULL, NULL}
+    };
+
+    (void)default_args;
+    // TODO: Use default_args
 
     if (argc > 1)
     {
         int i;
         for (i = 1; i < argc; i++)
         {
-            mir_eglapp_bool help = 0;
             const char *arg = argv[i];
 
             if (arg[0] == '-')
@@ -318,10 +348,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     break;
                 }
             }
-            else
-            {
-                help = 1;
-            }
+            /* else leave unused args (those not starting with -) for the app */
 
             if (help)
             {
