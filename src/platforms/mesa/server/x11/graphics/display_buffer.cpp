@@ -118,7 +118,8 @@ void mgx::DisplayBuffer::swap_buffers()
         eglGetSyncValues(egl_dpy, egl_surf, &ust_us, &msc, &sbc))
     {
         std::chrono::nanoseconds ust_ns{ust_us * 1000};
-        last_frame->store(mg::Frame{msc, {CLOCK_MONOTONIC, ust_ns}});
+        mg::Frame const frame{msc, {CLOCK_MONOTONIC, ust_ns}};
+        last_frame->store(frame);
         (void)sbc; // unused
     }
     else  // Extension not available? Fall back to a reasonable estimate:
