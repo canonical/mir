@@ -117,8 +117,11 @@ void mgx::DisplayBuffer::swap_buffers()
     if (eglGetSyncValues &&
         eglGetSyncValues(egl_dpy, egl_surf, &ust_us, &msc, &sbc))
     {
-        std::chrono::nanoseconds ust_ns{ust_us * 1000};
-        mg::Frame const frame{msc, {CLOCK_MONOTONIC, ust_ns}};
+        // Why is gcc-4.9/vivid specifically pedantic about this syntax on i386?
+        // Maybe the int types are less distinct there. So in three statements:
+        std::chrono::nanoseconds const ust_ns{ust_us * 1000};
+        mg::Frame::Timestamp const ust{CLOCK_MONOTONIC, ust_ns};
+        mg::Frame const frame{msc, ust};
         last_frame->store(frame);
         (void)sbc; // unused
     }
