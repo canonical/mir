@@ -73,10 +73,11 @@ mir::EventUPtr copy_event(MirTouchEvent const* ev)
 mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
 {
     auto ret = copy_event(ev);
+    auto as_touch = ret->to_input()->to_touch();
 
-    for (size_t i = 0; i < ev->pointer_count(); i++)
+    for (size_t i = 0; i < ev->contact_count(); i++)
     {
-        ret->to_input()->to_motion()->set_action(i, mir_touch_action_change);
+        as_touch->set_action(i, mir_touch_action_change);
     }
     return ret;
 }
@@ -85,7 +86,7 @@ mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
 // TODO: Existence of this probably suggests a problem with TouchEvent API...
 int index_for_id(MirTouchEvent const* touch_ev, MirTouchId id)
 {
-    for (size_t i = 0; i < touch_ev->pointer_count(); i++)
+    for (size_t i = 0; i < touch_ev->contact_count(); i++)
     {
         if (touch_ev->id(i) == id)
             return i;
@@ -96,8 +97,8 @@ int index_for_id(MirTouchEvent const* touch_ev, MirTouchId id)
 // Return an event which is a valid successor of valid_ev but contains a mir_touch_action_down for missing_id
 mir::EventUPtr add_missing_down(MirEvent const* valid_ev, MirTouchEvent const* ev, MirTouchId missing_id)
 {
-    auto valid_tev = valid_ev->to_input()->to_motion()->to_touch();//reinterpret_cast<MirTouchEvent const*>(valid_ev);
-    
+    auto valid_tev = valid_ev->to_input()->to_touch();
+
     // So as not to repeat already occurred actions, we copy the last valid (Delivered) event and replace all the actions
     // with change, then we will add a missing down for touch "missing_id"
     auto ret = convert_touch_actions_to_change(valid_tev);
@@ -105,9 +106,9 @@ mir::EventUPtr add_missing_down(MirEvent const* valid_ev, MirTouchEvent const* e
 
     // In the case where a touch ID goes up and then reappears without a down we don't want to
     // add a new touch but merely replace the action in the last event.
-    if (auto existing_index = index_for_id(ret->to_input()->to_motion()->to_touch(), missing_id) >= 0)
+    if (auto existing_index = index_for_id(ret->to_input()->to_touch(), missing_id) >= 0)
     {
-        ret->to_input()->to_motion()->set_action(existing_index, mir_touch_action_down);
+        ret->to_input()->to_touch()->set_action(existing_index, mir_touch_action_down);
     }
     else
     {
@@ -134,7 +135,7 @@ mir::EventUPtr add_missing_up(MirEvent const* valid_ev, MirTouchId missing_an_up
     auto ret = convert_touch_actions_to_change(tev);
     auto index = index_for_id(tev, missing_an_up_id);
 
-    ret->to_input()->to_motion()->set_action(index, mir_touch_action_up);
+    ret->to_input()->to_touch()->set_action(index, mir_touch_action_up);
 
     return ret;
 }
@@ -143,9 +144,9 @@ mir::EventUPtr add_missing_up(MirEvent const* valid_ev, MirTouchId missing_an_up
 // ev
 mir::EventUPtr remove_old_releases_from(MirEvent const* ev)
 {
-    auto tev = ev->to_input()->to_motion()->to_touch();
+    auto tev = ev->to_input()->to_touch();
     auto ret = copy_event(tev);
-    ret->to_input()->to_motion()->set_pointer_count(0);
+    ret->to_input()->to_touch()->set_contact_count(0);
     
     for (size_t i = 0; i < mir_touch_event_point_count(tev); i++)
     {

@@ -56,7 +56,7 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
 {
     if (action == mir_touch_action_up || action == mir_touch_action_down)
     {
-        auto mev = event.to_input()->to_motion();
+        auto mev = event.to_input()->to_touch();
         auto const cookie = cookie_authority->make_cookie(mev->event_time().count());
         auto const serialized_cookie = cookie->serialize();
 

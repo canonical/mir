@@ -25,7 +25,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/keymap_event.h"
-#include "mir/events/motion_event.h"
+#include "mir/events/touch_event.h"
 #include "mir/events/orientation_event.h"
 #include "mir/events/prompt_session_event.h"
 #include "mir/events/resize_event.h"
@@ -91,10 +91,8 @@ MirEventType MirEvent::type() const
 {
     switch (event.asReader().which())
     {
-    case mir::capnp::Event::Which::KEY:
-        return mir_event_type_key;
-    case mir::capnp::Event::Which::MOTION_SET:
-        return mir_event_type_motion;
+    case mir::capnp::Event::Which::INPUT:
+        return mir_event_type_input;
     case mir::capnp::Event::Which::SURFACE:
         return mir_event_type_surface;
     case mir::capnp::Event::Which::RESIZE:
@@ -107,8 +105,6 @@ MirEventType MirEvent::type() const
         return mir_event_type_close_surface;
     case mir::capnp::Event::Which::KEYMAP:
         return mir_event_type_keymap;
-    case mir::capnp::Event::Which::INPUT_CONFIGURATION:
-        return mir_event_type_input_configuration;
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
         return mir_event_type_surface_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:

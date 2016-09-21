@@ -75,13 +75,14 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
 {
     T to_deliver = *ev;
 
-    if (to_deliver.type() == mir_event_type_motion)
+    if (to_deliver.type() == mir_event_type_input &&
+        to_deliver.input_type() == mir_input_event_type_touch)
     {
         auto sx = surface->input_bounds().top_left.x.as_int();
         auto sy = surface->input_bounds().top_left.y.as_int();
 
-        auto mev = to_deliver.to_input()->to_motion();
-        for (unsigned i = 0; i < mev->pointer_count(); i++)
+        auto mev = to_deliver.to_input()->to_po();
+        for (unsigned i = 0; i < mev->contact_count(); i++)
         {
             auto x = mev->x(i);
             auto y = mev->y(i);
@@ -224,7 +225,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
 
-    deliver(surface, event->to_input()->to_motion());;
+    deliver(surface, event->to_input()->to_touch());;
 }
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)

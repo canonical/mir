@@ -42,15 +42,9 @@ struct Rectangle
 
 struct KeyboardEvent
 {
-    id @0 :Int32;
-    deviceId @1 :InputDeviceId;
-    sourceId @2 :Int32;
-    action @3 :Action;
-    modifiers @4 :UInt32;
-    keyCode @5 :Int32;
-    scanCode @6 :Int32;
-    eventTime @7 :NanoSeconds;
-    cookie @8 :Data;
+    action @0 :Action;
+    keyCode @1 :Int32;
+    scanCode @2 :Int32;
 
     enum Action
     {
@@ -60,28 +54,27 @@ struct KeyboardEvent
     }
 }
 
-struct MotionSetEvent
+struct TouchScreenEvent
 {
-    struct Motion
+    struct Contact
     {
         id @0 :Int32;
         x @1 :Float32;
         y @2 :Float32;
-        dx @3 :Float32;
-        dy @4 :Float32;
-        touchMajor @5 :Float32;
-        touchMinor @6 :Float32;
-        size @7 :Float32;
-        pressure @8 :Float32;
-        orientation @9 :Float32;
-        vscroll @10 :Float32;
-        hscroll @11 :Float32;
+        touchMajor @3 :Float32;
+        touchMinor @4 :Float32;
+        pressure @5 :Float32;
+        orientation @6 :Float32;
 
-        toolType @12 :ToolType;
+        toolType @7 :ToolType;
+        action @8 :TouchAction;
 
-        # TODO: We would like to store this as a TouchAction but we still encode pointer actions
-        # here as well.
-        action @13 :Int32;
+        enum TouchAction
+        {
+            up @0;
+            down @1;
+            change @2;
+        }
 
         enum ToolType
         {
@@ -91,28 +84,48 @@ struct MotionSetEvent
         }
     }
 
-    deviceId @0 :InputDeviceId;
-    sourceId @1 :Int32;
-    modifiers @2 :UInt32;
-    buttons @3 :UInt32;
-    eventTime @4 :NanoSeconds;
-    cookie @5 :Data;
+    buttons @0 :UInt32;
 
-    count @6 :UInt32;
-    motions @7 :List(Motion);
+    count @1 :UInt32;
+    contacts @2 :List(Contact);
     const maxCount :UInt32 = 16;
 }
 
-struct InputConfigurationEvent
+struct PointerEvent
 {
-    action @0 :Action;
-    when @1 :NanoSeconds;
-    id @2 :InputDeviceId;
+    x @0 :Float32;
+    y @1 :Float32;
+    dx @2 :Float32;
+    dy @3 :Float32;
+    vscroll @4 :Float32;
+    hscroll @5 :Float32;
 
-    enum Action 
+    action @6 :PointerAction;
+
+    buttons @7 :UInt32;
+
+    enum PointerAction
     {
-        configurationChanged @0;
-        deviceReset @1;
+       up @0;
+       down @1;
+       enter @2;
+       leave @3;
+       motion @4;
+    }
+}
+
+struct InputEvent
+{
+    deviceId @0 :InputDeviceId;
+    cookie @1 :Data;
+    eventTime @2 :NanoSeconds;
+    modifiers @3 :UInt32;
+
+    union
+    {
+       key @4 : KeyboardEvent;
+       touch @5 : TouchScreenEvent;
+       pointer @6 : PointerEvent;
     }
 }
 
@@ -221,17 +234,15 @@ struct Event
 {
     union
     {
-        key @0 :KeyboardEvent;
-        motionSet @1 :MotionSetEvent;
-        surface @2 :SurfaceEvent;
-        resize @3 :ResizeEvent;
-        promptSession @4 :PromptSessionEvent;
-        orientation @5 :OrientationEvent;
-        closeSurface @6 :CloseSurfaceEvent;
-        keymap @7 :KeymapEvent;
-        inputConfiguration @8 :InputConfigurationEvent;
-        surfaceOutput @9 :SurfaceOutputEvent;
-        inputDevice @10 :InputDeviceStateEvent;
-        surfacePlacement @11 :SurfacePlacementEvent;
+        input @0 :InputEvent;
+        surface @1 :SurfaceEvent;
+        resize @2 :ResizeEvent;
+        promptSession @3 :PromptSessionEvent;
+        orientation @4 :OrientationEvent;
+        closeSurface @5 :CloseSurfaceEvent;
+        keymap @6 :KeymapEvent;
+        surfaceOutput @7 :SurfaceOutputEvent;
+        inputDevice @8 :InputDeviceStateEvent;
+        surfacePlacement @9 :SurfacePlacementEvent;
     }
 }

@@ -138,37 +138,6 @@ mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::
     return make_uptr_event(e);
 }
 
-namespace
-{
-// Never exposed in old event, so lets avoid leaking it in to a header now.
-enum 
-{
-    AINPUT_SOURCE_CLASS_MASK = 0x000000ff,
-
-    AINPUT_SOURCE_CLASS_BUTTON = 0x00000001,
-    AINPUT_SOURCE_CLASS_POINTER = 0x00000002,
-    AINPUT_SOURCE_CLASS_NAVIGATION = 0x00000004,
-    AINPUT_SOURCE_CLASS_POSITION = 0x00000008,
-    AINPUT_SOURCE_CLASS_JOYSTICK = 0x00000010
-};
-enum 
-{
-    AINPUT_SOURCE_UNKNOWN = 0x00000000,
-
-    AINPUT_SOURCE_KEYBOARD = 0x00000100 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_DPAD = 0x00000200 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_GAMEPAD = 0x00000400 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_TOUCHSCREEN = 0x00001000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_MOUSE = 0x00002000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_STYLUS = 0x00004000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_TRACKBALL = 0x00010000 | AINPUT_SOURCE_CLASS_NAVIGATION,
-    AINPUT_SOURCE_TOUCHPAD = 0x00100000 | AINPUT_SOURCE_CLASS_POSITION,
-    AINPUT_SOURCE_JOYSTICK = 0x01000000 | AINPUT_SOURCE_CLASS_JOYSTICK,
-
-    AINPUT_SOURCE_ANY = 0xffffff00
-};
-}
-
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
@@ -176,7 +145,6 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto e = new_event<MirKeyboardEvent>();
 
     e->set_device_id(device_id);
-    e->set_source_id(AINPUT_SOURCE_KEYBOARD);
     e->set_event_time(timestamp);
     e->set_cookie(cookie);
     e->set_action(action);
@@ -189,44 +157,29 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
 void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 {
-    switch(event.type())
-    {
-    case mir_event_type_key:
-        {
-            auto& kev = *event.to_input()->to_keyboard();
-            kev.set_modifiers(modifiers);
-            break;
-        }
-    case mir_event_type_motion:
-        {
-            auto& mev = *event.to_input()->to_motion();
-            mev.set_modifiers(modifiers);
-            break;
-        }
-    default:
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Input event modifiers are only valid for pointer, key and touch events."));
-    }
+    if (event.type() != mir_event_type_input)
+        event.to_input()->set_modifiers(modifiers);
+    else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Input event modifiers are only valid for input events."));
 }
 
 void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
 {
-    if (event.type() != mir_event_type_motion &&
-        event.to_input()->to_motion()->source_id() != AINPUT_SOURCE_MOUSE &&
-        event.to_input()->to_motion()->pointer_count() == 1)
+    if (event.type() != mir_event_type_input &&
+        event.to_input()->input_type() == mir_input_event_type_pointer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_motion()->set_x(0, pos.x.as_int());
-    event.to_input()->to_motion()->set_y(0, pos.y.as_int());
+    event.to_input()->to_pointer()->set_x(pos.x.as_int());
+    event.to_input()->to_pointer()->set_y(pos.y.as_int());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
 {
-    if (event.type() != mir_event_type_motion &&
-        event.to_input()->to_motion()->source_id() != AINPUT_SOURCE_MOUSE &&
-        event.to_input()->to_motion()->pointer_count() == 1)
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
+    if (event.type() != mir_event_type_input &&
+        event.to_input()->input_type() == mir_input_event_type_pointer)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Updating button state is only valid for pointer events."));
 
-    event.to_input()->to_motion()->set_buttons(button_state);
+    event.to_input()->to_pointer()->set_buttons(button_state);
 }
 
 // Deprecated version with uint64_t mac
@@ -248,13 +201,12 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers)
 {
-    auto e = new_event<MirMotionEvent>();
+    auto e = new_event<MirTouchEvent>();
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
     e->set_cookie(cookie);
     e->set_modifiers(modifiers);
-    e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
 
     return make_uptr_event(e);
 }
@@ -277,19 +229,18 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value)
 {
-    auto mev = event.to_input()->to_motion();
-    auto current_index = mev->pointer_count();
-    mev->set_pointer_count(current_index + 1);
+    auto tev = event.to_input()->to_touch();
+    auto current_index = tev->contact_count();
+    tev->set_contact_count(current_index + 1);
 
-    mev->set_id(current_index, touch_id);
-    mev->set_tool_type(current_index, tooltype);
-    mev->set_x(current_index, x_axis_value);
-    mev->set_y(current_index, y_axis_value);
-    mev->set_pressure(current_index, pressure_value);
-    mev->set_touch_major(current_index, touch_major_value);
-    mev->set_touch_minor(current_index, touch_minor_value);
-    mev->set_size(current_index, size_value);
-    mev->set_action(current_index, action);
+    tev->set_id(current_index, touch_id);
+    tev->set_tool_type(current_index, tooltype);
+    tev->set_x(current_index, x_axis_value);
+    tev->set_y(current_index, y_axis_value);
+    tev->set_pressure(current_index, pressure_value);
+    tev->set_touch_major(current_index, touch_major_value);
+    tev->set_touch_minor(current_index, touch_minor_value);
+    tev->set_action(current_index, action);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -299,24 +250,22 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    auto e = new_event<MirMotionEvent>();
+    auto e = new_event<MirPointerEvent>();
 
-    auto& mev = *e->to_input()->to_motion();
-    mev.set_device_id(device_id);
-    mev.set_event_time(timestamp);
-    mev.set_cookie(cookie);
-    mev.set_modifiers(modifiers);
-    mev.set_source_id(AINPUT_SOURCE_MOUSE);
-    mev.set_buttons(buttons_pressed);
+    auto& pev = *e->to_input()->to_pointer();
+    pev.set_device_id(device_id);
+    pev.set_event_time(timestamp);
+    pev.set_cookie(cookie);
+    pev.set_modifiers(modifiers);
+    pev.set_buttons(buttons_pressed);
 
-    mev.set_pointer_count(1);
-    mev.set_action(0, action);
-    mev.set_x(0, x_axis_value);
-    mev.set_y(0, y_axis_value);
-    mev.set_dx(0, relative_x_value);
-    mev.set_dy(0, relative_y_value);
-    mev.set_hscroll(0, hscroll_value);
-    mev.set_vscroll(0, vscroll_value);
+    pev.set_action(action);
+    pev.set_x(x_axis_value);
+    pev.set_y(y_axis_value);
+    pev.set_dx(relative_x_value);
+    pev.set_dy(relative_y_value);
+    pev.set_hscroll(hscroll_value);
+    pev.set_vscroll(vscroll_value);
 
     return make_uptr_event(e);
 }

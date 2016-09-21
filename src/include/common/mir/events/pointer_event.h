@@ -13,36 +13,41 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_COMMON_KEYBOARD_EVENT_H_
-#define MIR_COMMON_KEYBOARD_EVENT_H_
+#ifndef MIR_COMMON_POINTER_EVENT_H_
+#define MIR_COMMON_POINTER_EVENT_H_
 
-#include <chrono>
-#include <cstdint>
-#include <vector>
-
-#include "mir/events/input_event.h"
-
-struct MirKeyboardEvent : MirInputEvent
+struct MirPointerEvent : MirInputEvent
 {
-    MirKeyboardEvent();
+    float x() const;
+    void set_x(float x);
 
-    int32_t device_id() const;
-    void set_device_id(int32_t id);
+    float y() const;
+    void set_y(float y);
 
-    MirKeyboardAction action() const;
-    void set_action(MirKeyboardAction action);
+    float dx() const;
+    void set_dx(float x);
+
+    float dy() const;
+    void set_dy(float y);
+
+    float vscroll() const;
+    void set_vscroll(float v);
+
+    float hscroll() const;
+    void set_hscroll(float h);
+
+    MirPointerAction action() const;
+    void set_action(MirPointerAction action);
 
     MirInputEventModifiers modifiers() const;
     void set_modifiers(MirInputEventModifiers modifiers);
 
-    int32_t key_code() const;
-    void set_key_code(int32_t key_code);
-
-    int32_t scan_code() const;
-    void set_scan_code(int32_t scan_code);
+    MirPointerButtons buttons() const;
+    void set_buttons(MirPointerButtons buttons);
+private:
 };
 
-#endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */
+#endif

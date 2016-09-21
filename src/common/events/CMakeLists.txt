@@ -17,7 +17,6 @@
 set(EVENT_SOURCES
   close_surface_event.cpp
   event.cpp
-  input_configuration_event.cpp
   keyboard_event.cpp
   motion_event.cpp
   prompt_session_event.cpp

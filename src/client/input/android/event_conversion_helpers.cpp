@@ -201,9 +201,9 @@ bool mia::android_source_id_is_pointer_device(int32_t source_id)
 int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
 {
     int index_with_action = -1;
-    auto const& mev = *ev.to_input()->to_motion();
+    auto const& mev = *ev.to_input()->to_touch();
 
-    for (unsigned i = 0; i < mev.pointer_count(); i++)
+    for (unsigned i = 0; i < mev.contact_count(); i++)
     {
         if (mev.action(i) == mir_touch_action_change)
             continue;
@@ -216,19 +216,21 @@ int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
     switch (mev.action(index_with_action))
     {
     case mir_touch_action_up:
-        if (mev.pointer_count() != 1)
+        if (mev.contact_count() != 1)
             masked_action &= AMOTION_EVENT_ACTION_POINTER_UP;
         else
             masked_action &= AMOTION_EVENT_ACTION_UP;
         break;
     case mir_touch_action_down:
-        if (mev.pointer_count() != 1)
+        if (mev.contact_count() != 1)
             masked_action &= AMOTION_EVENT_ACTION_POINTER_DOWN;
         else
             masked_action &= AMOTION_EVENT_ACTION_DOWN;
         break;
     case mir_touch_action_change:
         masked_action &= AMOTION_EVENT_ACTION_MOVE;
+    default:
+        break;
     }
     if (index_with_action > 0)
         return masked_action | (index_with_action << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
@@ -275,14 +277,5 @@ int32_t mia::android_pointer_action_from_mir(MirPointerAction action, MirPointer
 
 int32_t mia::extract_android_action_from(MirEvent const& event)
 {
-    auto& mev = *event.to_input()->to_motion();
-    if (mia::android_source_id_is_pointer_device(mev.source_id()))
-    {
-        return mia::android_pointer_action_from_mir(
-            static_cast<MirPointerAction>(mev.action(0)), mev.buttons());
-    }
-    else
-    {
-        return mia::extract_masked_android_action_from(event);
-    }
+    return mia::extract_masked_android_action_from(event);
 }
