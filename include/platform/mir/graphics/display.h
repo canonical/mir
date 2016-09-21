@@ -111,6 +111,24 @@ public:
     virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
 
     /**
+     * Applying a display configuration only if it will not invalidate existing DisplayBuffers
+     *
+     * The Display must guarantee that the references to the DisplayBuffer acquired via
+     * DisplaySyncGroup::for_each_display_buffer() remain valid until the Display is destroyed or
+     * Display::configure() is called.
+     *
+     * If this function returns \c true then the new display configuration has been applied.
+     * If this function returns \c false then the new display configuration has not been applied.
+     *
+     * In either case this function guarantees that existing DisplayBuffer references will remain
+     * valid.
+     *
+     * \param conf [in] Configuration to possibly apply.
+     * \return      \c true if \p conf has been applied as the new output configuration.
+     */
+    virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const = 0;
+
+    /**
      * Sets a new output configuration.
      */
     virtual void configure(DisplayConfiguration const& conf) = 0;

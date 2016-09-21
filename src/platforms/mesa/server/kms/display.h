@@ -78,6 +78,7 @@ public:
         std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
+    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const override;
     void configure(DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(

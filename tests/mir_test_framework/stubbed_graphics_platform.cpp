@@ -62,6 +62,10 @@ struct WrappingDisplay : mg::Display
     {
         return display->configuration();
     }
+    bool apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const& /*conf*/) const override
+    {
+        return false;
+    }
     void configure(mg::DisplayConfiguration const& conf) override
     {
         display->configure(conf);

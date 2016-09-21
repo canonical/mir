@@ -379,3 +379,9 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 {
     return std::make_unique<mga::PbufferGLContext>(gl_context);
 }
+
+bool mga::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
+}
