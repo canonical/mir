@@ -105,24 +105,20 @@ void mgx::DisplayBuffer::swap_buffers()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
     /*
-     * If we wanted more current data (when the compositor is idle and missed
-     * the last frame) then we could do this on demand. However that would
-     * require the caller (Display::last_frame_on) to set the EGL context
-     * first each time, which is less efficient and more complicated than
-     * just getting the sync values here.
-     *   It actually doesn't matter in the end if we only have the sync values
-     * of the last frame used being older than the last physical frame. Because
-     * in that case the client would just end up underestimating the next
-     * frame deadline, render immediately without blocking, and the compositor
-     * would wake up and catch up with the display. So it's what we want
-     * anyway.
+     * It would be nice to call this on demand as required. However the
+     * implementation requires an EGL context. So for simplicity we call it here
+     * on every frame.
+     *   This does mean the current last_frame will be a bit out of date if
+     * the compositor missed a frame. But that doesn't actually matter because
+     * the consequence of that would be the client scheduling the next frame
+     * immediately without waiting, which is probably ideal anyway.
      */
     int64_t ust_us, msc, sbc;
     if (eglGetSyncValues &&
         eglGetSyncValues(egl_dpy, egl_surf, &ust_us, &msc, &sbc))
     {
         std::chrono::nanoseconds ust_ns{ust_us * 1000};
-        last_frame->store({msc, {CLOCK_MONOTONIC, ust_ns}});
+        last_frame->store(mg::Frame{msc, {CLOCK_MONOTONIC, ust_ns}});
         (void)sbc; // unused
     }
     else  // Extension not available? Fall back to a reasonable estimate:
