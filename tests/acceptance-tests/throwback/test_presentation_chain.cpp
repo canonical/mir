@@ -340,11 +340,17 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
 {
     auto chain = mir_connection_create_presentation_chain_sync(connection);
     auto stream = mir_connection_create_buffer_stream_sync(connection, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
+    ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
+
     auto spec = mir_connection_create_spec_for_normal_surface(
         connection, size.width.as_int(), size.height.as_int(), pf);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    spec = mir_connection_create_spec_for_changes(connection);
     mir_surface_spec_add_presentation_chain(
         spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-    auto surface = mir_surface_create_sync(spec);
+    mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
     MirBufferSync context;
@@ -355,13 +361,13 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     ASSERT_TRUE(context.wait_for_buffer(10s));
     context.unavailable();
     mir_presentation_chain_submit_buffer(chain, context.buffer());
+
+    spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_add_buffer_stream(spec, 0, 0, stream);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
     mir_presentation_chain_release(chain);
-
-
-    auto spec2 = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_buffer_stream(spec2, 0, 0, stream);
-    mir_surface_apply_spec(surface, spec2);
-    mir_surface_spec_release(spec2);
+    mir_buffer_stream_swap_buffers_sync(stream);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
 

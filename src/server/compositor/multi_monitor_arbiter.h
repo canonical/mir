@@ -41,6 +41,8 @@ public:
         MultiMonitorMode mode,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
+    ~MultiMonitorArbiter();
+
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
