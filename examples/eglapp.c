@@ -206,7 +206,27 @@ static void show_help(struct mir_eglapp_arg const* const* arg_lists)
             int len = 0, remainder = 0;
             printf("%*c%s%n", indent, ' ', arg->syntax, &len);
             remainder = desc_offset + max_len - len;
-            printf("%*c%s\n", remainder, ' ', arg->description);
+            printf("%*c%s", remainder, ' ', arg->description);
+            switch (arg->format[0])
+            {
+            case '=':
+                {
+                    char const* str = *(char const**)arg->variable;
+                    if (str)
+                        printf(" [%s]", str);
+                }
+                break;
+            case '%':
+                switch (arg->format[1])
+                {
+                case 'u': printf(" [%u]", *(unsigned*)arg->variable); break;
+                case 'f': printf(" [%.1f]", *(float*)arg->variable); break;
+                default: break;
+                }
+            default:
+                break;
+            }
+            printf("\n");
         }
     }
 }
