@@ -75,7 +75,7 @@ mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
     auto ret = copy_event(ev);
     auto as_touch = ret->to_input()->to_touch();
 
-    for (size_t i = 0; i < ev->contact_count(); i++)
+    for (size_t i = 0; i < ev->pointer_count(); i++)
     {
         as_touch->set_action(i, mir_touch_action_change);
     }
@@ -86,7 +86,7 @@ mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
 // TODO: Existence of this probably suggests a problem with TouchEvent API...
 int index_for_id(MirTouchEvent const* touch_ev, MirTouchId id)
 {
-    for (size_t i = 0; i < touch_ev->contact_count(); i++)
+    for (size_t i = 0; i < touch_ev->pointer_count(); i++)
     {
         if (touch_ev->id(i) == id)
             return i;
@@ -146,7 +146,7 @@ mir::EventUPtr remove_old_releases_from(MirEvent const* ev)
 {
     auto tev = ev->to_input()->to_touch();
     auto ret = copy_event(tev);
-    ret->to_input()->to_touch()->set_contact_count(0);
+    ret->to_input()->to_touch()->set_pointer_count(0);
     
     for (size_t i = 0; i < mir_touch_event_point_count(tev); i++)
     {

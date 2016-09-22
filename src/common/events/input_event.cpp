@@ -19,6 +19,8 @@
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
+#include "mir/events/pointer_event.h"
+#include "mir/events/touch_event.h"
 
 MirInputEventType MirInputEvent::input_type() const
 {
@@ -53,6 +55,26 @@ MirKeyboardEvent* MirInputEvent::to_keyboard()
 MirKeyboardEvent const* MirInputEvent::to_keyboard() const
 {
     return static_cast<MirKeyboardEvent const*>(this);
+}
+
+MirPointerEvent* MirInputEvent::to_pointer()
+{
+    return static_cast<MirPointerEvent*>(this);
+}
+
+MirPointerEvent const* MirInputEvent::to_pointer() const
+{
+    return static_cast<MirPointerEvent const*>(this);
+}
+
+MirTouchEvent* MirInputEvent::to_touch()
+{
+    return static_cast<MirTouchEvent*>(this);
+}
+
+MirTouchEvent const* MirInputEvent::to_touch() const
+{
+    return static_cast<MirTouchEvent const*>(this);
 }
 
 std::chrono::nanoseconds MirInputEvent::event_time() const

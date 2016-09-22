@@ -194,7 +194,7 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) tr
 
 unsigned int mir_touch_event_point_count(MirTouchEvent const* event) try
 {
-    return event->contact_count();
+    return event->pointer_count();
 } catch (std::exception const& e)
 {
     mir::log_critical(e.what());
@@ -203,7 +203,7 @@ unsigned int mir_touch_event_point_count(MirTouchEvent const* event) try
 
 MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) try
 {
-    if (touch_index >= event->contact_count())
+    if (touch_index >= event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
@@ -218,7 +218,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) tr
 
 MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) try
 {
-    if(touch_index > event->contact_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
@@ -234,7 +234,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     size_t touch_index) try
 {
-    if(touch_index > event->contact_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
@@ -250,7 +250,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
 float mir_touch_event_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis) try
 {
-    if(touch_index > event->contact_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();

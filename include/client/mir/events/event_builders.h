@@ -24,6 +24,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/events/input_device_state.h"
 
@@ -69,6 +70,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
 void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
+void set_cursor_position(MirEvent& event, float x, float y);
 void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
 // Deprecated version with uint64_t mac
@@ -145,6 +147,9 @@ EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      float x_axis_value,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);
+
+void move_origin(MirPointerEvent &ev, mir::geometry::Displacement const& origin);
+void move_origin(MirTouchEvent &ev, mir::geometry::Displacement const& origin);
 }
 }
 

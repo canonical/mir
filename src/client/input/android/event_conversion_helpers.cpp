@@ -203,7 +203,7 @@ int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
     int index_with_action = -1;
     auto const& mev = *ev.to_input()->to_touch();
 
-    for (unsigned i = 0; i < mev.contact_count(); i++)
+    for (unsigned i = 0; i < mev.pointer_count(); i++)
     {
         if (mev.action(i) == mir_touch_action_change)
             continue;
@@ -216,13 +216,13 @@ int32_t mia::extract_masked_android_action_from(MirEvent const& ev)
     switch (mev.action(index_with_action))
     {
     case mir_touch_action_up:
-        if (mev.contact_count() != 1)
+        if (mev.pointer_count() != 1)
             masked_action &= AMOTION_EVENT_ACTION_POINTER_UP;
         else
             masked_action &= AMOTION_EVENT_ACTION_UP;
         break;
     case mir_touch_action_down:
-        if (mev.contact_count() != 1)
+        if (mev.pointer_count() != 1)
             masked_action &= AMOTION_EVENT_ACTION_POINTER_DOWN;
         else
             masked_action &= AMOTION_EVENT_ACTION_DOWN;

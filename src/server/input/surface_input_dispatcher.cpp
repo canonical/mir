@@ -76,19 +76,11 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
     T to_deliver = *ev;
 
     if (to_deliver.type() == mir_event_type_input &&
-        to_deliver.input_type() == mir_input_event_type_touch)
+        to_deliver.input_type() != mir_input_event_type_key)
     {
         auto sx = surface->input_bounds().top_left.x.as_int();
         auto sy = surface->input_bounds().top_left.y.as_int();
-
-        auto mev = to_deliver.to_input()->to_po();
-        for (unsigned i = 0; i < mev->contact_count(); i++)
-        {
-            auto x = mev->x(i);
-            auto y = mev->y(i);
-            mev->set_x(i, x - sx);
-            mev->set_y(i, y - sy);
-        }
+        mev::move_origin(to_deliver, geom::Displacement{sx, sy});
     }
     surface->consume(&to_deliver);
 }
@@ -170,8 +162,7 @@ bool mi::SurfaceInputDispatcher::dispatch_key(MirKeyboardEvent const* kev)
     if (!strong_focus)
         return false;
 
-
-    deliver(strong_focus, kev);
+    strong_focus->consume(kev);
 
     return true;
 }
@@ -225,7 +216,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
 
-    deliver(surface, event->to_input()->to_touch());;
+    deliver(surface, event->to_input()->to_pointer());;
 }
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)

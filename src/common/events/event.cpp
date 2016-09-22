@@ -105,6 +105,8 @@ MirEventType MirEvent::type() const
         return mir_event_type_close_surface;
     case mir::capnp::Event::Which::KEYMAP:
         return mir_event_type_keymap;
+    case mir::capnp::Event::Which::INPUT_CONFIGURATION:
+        return mir_event_type_input_configuration;
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
         return mir_event_type_surface_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:

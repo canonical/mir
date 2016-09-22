@@ -33,7 +33,7 @@ MirPointerButtons MirPointerEvent::buttons() const
 
 void MirPointerEvent::set_buttons(MirPointerButtons buttons)
 {
-    event.getInput().setButtons(buttons);
+    event.getInput().getPointer().setButtons(buttons);
 }
 
 float MirPointerEvent::x() const
@@ -78,32 +78,30 @@ void MirPointerEvent::set_dy(float dy)
 
 float MirPointerEvent::vscroll() const
 {
-    return event.asReader().getInput().getPointer().getTouchMajor();
+    return event.asReader().getInput().getPointer().getVscroll();
 }
 
-void MirPointerEvent::set_vscroll(float major)
+void MirPointerEvent::set_vscroll(float vs)
 {
-    event.getInput().getPointer().setTouchMajor(major);
+    event.getInput().getPointer().setVscroll(vs);
 }
 
 float MirPointerEvent::hscroll() const
 {
-    return event.asReader().getInput().getPointer().getTouchMinor();
+    return event.asReader().getInput().getPointer().getHscroll();
 }
 
-void MirPointerEvent::set_hscroll(float minor)
+void MirPointerEvent::set_hscroll(float hs)
 {
-    event.getInput().getPointer().setTouchMinor(minor);
+    event.getInput().getPointer().setHscroll(hs);
 }
 
-MirTouchAction MirPointerEvent::action() const
+MirPointerAction MirPointerEvent::action() const
 {
-    throw_if_out_of_bounds(index);
-
-    return event.asReader().getInput().getPointer().getAction();
+    return static_cast<MirPointerAction>(event.asReader().getInput().getPointer().getAction());
 }
 
-void MirPointerEvent::set_action(MirTouchAtion action)
+void MirPointerEvent::set_action(MirPointerAction action)
 {
-    event.getInput().getPointer().setAction(action);
+    event.getInput().getPointer().setAction(static_cast<mir::capnp::PointerEvent::PointerAction>(action));
 }

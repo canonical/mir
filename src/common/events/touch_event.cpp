@@ -27,12 +27,12 @@ MirTouchEvent::MirTouchEvent()
     event.getInput().getTouch().initContacts(mir::capnp::TouchScreenEvent::MAX_COUNT);
 }
 
-size_t MirTouchEvent::contact_count() const
+size_t MirTouchEvent::pointer_count() const
 {
     return event.asReader().getInput().getTouch().getCount();
 }
 
-void MirTouchEvent::set_contact_count(size_t count)
+void MirTouchEvent::set_pointer_count(size_t count)
 {
     return event.getInput().getTouch().setCount(count);
 }

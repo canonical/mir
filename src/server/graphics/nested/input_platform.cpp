@@ -132,8 +132,7 @@ public:
 
                 auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
                 auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-                new_event->to_input()->to_motion()->set_x(0, x + frame.top_left.x.as_int());
-                new_event->to_input()->to_motion()->set_y(0, y + frame.top_left.y.as_int());
+                mir::events::set_cursor_position(*new_event, x + frame.top_left.x.as_int(), y + frame.top_left.y.as_int());
                 destination->handle_input(*new_event);
                 break;
             }

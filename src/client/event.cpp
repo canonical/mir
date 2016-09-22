@@ -94,14 +94,7 @@ std::string mir::event_type_to_string(MirEventType t)
 
 MirEventType mir_event_get_type(MirEvent const* ev) try
 {
-    switch (ev->type())
-    {
-    case mir_event_type_key:
-    case mir_event_type_motion:
-        return mir_event_type_input;
-    default:
-        return ev->type();
-    }
+    return ev->type();
 } catch (std::exception const& e)
 {
     mir::log_critical(e.what());
@@ -110,7 +103,7 @@ MirEventType mir_event_get_type(MirEvent const* ev) try
 
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) try
 {
-    if (ev->type() != mir_event_type_key && ev->type() != mir_event_type_motion)
+    if (ev->type() != mir_event_type_input)
     {
         mir::log_critical("Expected input event but event is of type " +
             mir::event_type_to_string(ev->type()));

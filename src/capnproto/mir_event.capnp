@@ -129,6 +129,19 @@ struct InputEvent
     }
 }
 
+struct InputConfigurationEvent
+{
+    action @0 :Action;
+    when @1 :NanoSeconds;
+    id @2 :InputDeviceId;
+
+    enum Action 
+    {
+        configurationChanged @0;
+        deviceReset @1;
+    }
+}
+
 struct SurfaceEvent
 {
     id @0 :Int32;
@@ -241,8 +254,9 @@ struct Event
         orientation @4 :OrientationEvent;
         closeSurface @5 :CloseSurfaceEvent;
         keymap @6 :KeymapEvent;
-        surfaceOutput @7 :SurfaceOutputEvent;
-        inputDevice @8 :InputDeviceStateEvent;
-        surfacePlacement @9 :SurfacePlacementEvent;
+        inputConfiguration @7 :InputConfigurationEvent;
+        surfaceOutput @8 :SurfaceOutputEvent;
+        inputDevice @9 :InputDeviceStateEvent;
+        surfacePlacement @10 :SurfacePlacementEvent;
     }
 }

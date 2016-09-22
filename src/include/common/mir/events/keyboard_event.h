@@ -29,14 +29,8 @@ struct MirKeyboardEvent : MirInputEvent
 {
     MirKeyboardEvent();
 
-    int32_t device_id() const;
-    void set_device_id(int32_t id);
-
     MirKeyboardAction action() const;
     void set_action(MirKeyboardAction action);
-
-    MirInputEventModifiers modifiers() const;
-    void set_modifiers(MirInputEventModifiers modifiers);
 
     int32_t key_code() const;
     void set_key_code(int32_t key_code);

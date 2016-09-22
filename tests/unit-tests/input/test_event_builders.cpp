@@ -69,7 +69,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float pressure_values[] = {3, 9, 14.6};
     float touch_major_values[] = {11, 9, 14};
     float touch_minor_values[] = {13, 3, 9.13};
-    float size_values[] = {4, 9, 6};
+    float size_values[] = {13, 9, 14};
 
    auto ev = mev::make_event(device_id, timestamp,
        cookie, modifiers);

@@ -157,7 +157,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
 void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 {
-    if (event.type() != mir_event_type_input)
+    if (event.type() == mir_event_type_input)
         event.to_input()->set_modifiers(modifiers);
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("Input event modifiers are only valid for input events."));
@@ -165,18 +165,23 @@ void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 
 void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
 {
-    if (event.type() != mir_event_type_input &&
-        event.to_input()->input_type() == mir_input_event_type_pointer)
+    set_cursor_position(event, pos.x.as_int(), pos.y.as_int());
+}
+
+void mev::set_cursor_position(MirEvent& event, float x, float y)
+{
+    if (event.type() != mir_event_type_input ||
+        event.to_input()->input_type() != mir_input_event_type_pointer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_pointer()->set_x(pos.x.as_int());
-    event.to_input()->to_pointer()->set_y(pos.y.as_int());
+    event.to_input()->to_pointer()->set_x(x);
+    event.to_input()->to_pointer()->set_y(y);
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
 {
-    if (event.type() != mir_event_type_input &&
-        event.to_input()->input_type() == mir_input_event_type_pointer)
+    if (event.type() != mir_event_type_input ||
+        event.to_input()->input_type() != mir_input_event_type_pointer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Updating button state is only valid for pointer events."));
 
     event.to_input()->to_pointer()->set_buttons(button_state);
@@ -227,11 +232,11 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
 void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
-    float pressure_value, float touch_major_value, float touch_minor_value, float size_value)
+    float pressure_value, float touch_major_value, float touch_minor_value, float)
 {
     auto tev = event.to_input()->to_touch();
-    auto current_index = tev->contact_count();
-    tev->set_contact_count(current_index + 1);
+    auto current_index = tev->pointer_count();
+    tev->set_pointer_count(current_index + 1);
 
     tev->set_id(current_index, touch_id);
     tev->set_tool_type(current_index, tooltype);
@@ -367,4 +372,19 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
     e->set_device_states(device_states);
 
     return make_uptr_event(e);
+}
+
+void mev::move_origin(MirPointerEvent& ptr, geom::Displacement const& origin)
+{
+    ptr.set_x(ptr.x() - origin.dx.as_int());
+    ptr.set_y(ptr.y() - origin.dy.as_int());
+}
+
+void mev::move_origin(MirTouchEvent& ptr, geom::Displacement const& origin)
+{
+    for (size_t i = 0, end = ptr.pointer_count();i != end; ++i)
+    {
+        ptr.set_x(i, ptr.x(i) - origin.dx.as_int());
+        ptr.set_y(i, ptr.y(i) - origin.dy.as_int());
+    }
 }

@@ -19,8 +19,11 @@
 #ifndef MIR_COMMON_POINTER_EVENT_H_
 #define MIR_COMMON_POINTER_EVENT_H_
 
+#include "mir/events/input_event.h"
+
 struct MirPointerEvent : MirInputEvent
 {
+    MirPointerEvent();
     float x() const;
     void set_x(float x);
 
@@ -41,9 +44,6 @@ struct MirPointerEvent : MirInputEvent
 
     MirPointerAction action() const;
     void set_action(MirPointerAction action);
-
-    MirInputEventModifiers modifiers() const;
-    void set_modifiers(MirInputEventModifiers modifiers);
 
     MirPointerButtons buttons() const;
     void set_buttons(MirPointerButtons buttons);

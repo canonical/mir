@@ -28,11 +28,8 @@ struct MirTouchEvent : MirInputEvent
 {
     MirTouchEvent();
 
-    MirInputEventModifiers modifiers() const;
-    void set_modifiers(MirInputEventModifiers modifiers);
-
-    size_t contact_count() const;
-    void set_contact_count(size_t count);
+    size_t pointer_count() const;
+    void set_pointer_count(size_t count);
 
     int id(size_t index) const;
     void set_id(size_t index, int id);
