@@ -33,7 +33,7 @@ class PageFlipper
 public:
     virtual ~PageFlipper() {}
 
-    virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
+    virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id, uint32_t connector_id) = 0;
     virtual void wait_for_flip(uint32_t crtc_id) = 0;
 
 protected:

@@ -198,7 +198,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
@@ -210,7 +210,7 @@ TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
     auto display_buffer = create_display_buffer(host_connection);
 
     auto use_count = nested_buffer.use_count(); 
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
     EXPECT_THAT(nested_buffer.use_count(), Eq(use_count + 1));
     nested_buffer->trigger();
     EXPECT_THAT(nested_buffer.use_count(), Eq(use_count));
@@ -229,7 +229,7 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
         .Times(2);
 
     auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
     display_buffer->swap_buffers();
 }
 
@@ -246,8 +246,8 @@ TEST_F(NestedDisplayBuffer, only_applies_spec_once_per_mode_toggle)
 
     EXPECT_CALL(mock_host_surface, apply_spec(_))
         .Times(2);
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
     display_buffer->swap_buffers();
     display_buffer->swap_buffers();
 }
@@ -260,7 +260,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(foreign_buffer), rectangle) };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_FALSE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, rejects_list_containing_rotated_buffers)
@@ -270,7 +270,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_rotated_buffers)
         { std::make_shared<mtd::StubTransformedRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_FALSE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, accepts_list_with_unshown_unknown_buffers)
@@ -282,14 +282,14 @@ TEST_F(NestedDisplayBuffer, accepts_list_with_unshown_unknown_buffers)
           std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, rejects_empty_list)
 {
     mg::RenderableList list;
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_FALSE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_from_output)
@@ -303,7 +303,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_
     };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_FALSE(display_buffer->overlay(list));
 }
 
 /* Once we have synchronous MirSurface scene updates, we can probably
@@ -318,7 +318,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_multiple_onscreen_renderable
         std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), small_rect) };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_FALSE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_FALSE(display_buffer->overlay(list));
 }
 
 TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fullscreen_on_top)
@@ -330,5 +330,5 @@ TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fu
         std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
     auto display_buffer = create_display_buffer(host_connection);
-    EXPECT_TRUE(display_buffer->post_renderables_if_optimizable(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
 }

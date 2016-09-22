@@ -195,7 +195,7 @@ public:
         return view_area_;
     }
 
-    bool post_renderables_if_optimizable(const mir::graphics::RenderableList& /*renderlist*/) override
+    bool overlay(const mir::graphics::RenderableList& /*renderlist*/) override
     {
         return false;
     }
@@ -365,5 +365,11 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
         EGLContext context;
     };
     return std::make_unique<GLContext>(display, context);
+}
+
+bool mge::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
 }
 

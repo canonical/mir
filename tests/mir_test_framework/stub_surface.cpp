@@ -209,6 +209,9 @@ MirPointerConfinementState mtd::StubSurface::confine_pointer_state() const
     return {};
 }
 
+void mtd::StubSurface::placed_relative(geometry::Rectangle const& /*placement*/)
+{
+}
 
 namespace
 {

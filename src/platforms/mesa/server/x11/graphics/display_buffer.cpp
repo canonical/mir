@@ -19,6 +19,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "display_buffer.h"
+#include "display_configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -65,7 +66,7 @@ void mgx::DisplayBuffer::release_current()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make uncurrent"));
 }
 
-bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /*renderlist*/)
+bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
 {
     return false;
 }
@@ -80,7 +81,7 @@ void mgx::DisplayBuffer::swap_buffers()
      * but this is best-effort. And besides, we don't want Mir reporting all
      * real vsyncs because that would mean the compositor never sleeps.
      */
-    report->report_vsync(0);
+    report->report_vsync(mgx::DisplayConfiguration::the_output_id.as_value());
 }
 
 void mgx::DisplayBuffer::bind()
