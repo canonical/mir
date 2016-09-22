@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
     char const* dev_video = "/dev/video0";
     struct mir_eglapp_arg custom_args[] =
     {
-        {"-d <path>", "=", &dev_video, "Path to video device"},
+        {"-d <path>", "=", &dev_video, "Path to camera device"},
         {NULL, NULL, NULL, NULL},
     };
     if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
