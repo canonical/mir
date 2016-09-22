@@ -22,7 +22,6 @@
 #include <chrono>
 #include <limits>
 #include <unordered_map>
-
 #include "mir/events/event.h"
 #include "mir/events/input_device_state.h"
 
