@@ -41,12 +41,12 @@ namespace geom = mir::geometry;
 
 namespace
 {
-template <class T>
-T* new_event()
-{
-    T* t = new T;
 
-    return t;
+template<typename Type, typename... Args>
+inline auto new_event(Args&&... args)
+-> Type*
+{
+    return new Type(std::forward<Args>(args)...);
 }
 
 template <class T>
@@ -250,35 +250,20 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers, MirPointerAction action,
-    MirPointerButtons buttons_pressed,                               
+    MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    auto e = new_event<MirPointerEvent>();
-
-    auto& pev = *e->to_input()->to_pointer();
-    pev.set_device_id(device_id);
-    pev.set_event_time(timestamp);
-    pev.set_cookie(cookie);
-    pev.set_modifiers(modifiers);
-    pev.set_buttons(buttons_pressed);
-
-    pev.set_action(action);
-    pev.set_x(x_axis_value);
-    pev.set_y(y_axis_value);
-    pev.set_dx(relative_x_value);
-    pev.set_dy(relative_y_value);
-    pev.set_hscroll(hscroll_value);
-    pev.set_vscroll(vscroll_value);
-
+    auto e = new_event<MirPointerEvent>(device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
+                                        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
     return make_uptr_event(e);
 }
 
 // Deprecated version with uint64_t mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     uint64_t /*mac*/, MirInputEventModifiers modifiers, MirPointerAction action,
-    MirPointerButtons buttons_pressed,                               
+    MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)

@@ -22,6 +22,21 @@
 #include "mir/events/pointer_event.h"
 #include "mir/events/touch_event.h"
 
+MirInputEvent::MirInputEvent(MirInputDeviceId dev,
+                             std::chrono::nanoseconds et,
+                             MirInputEventModifiers mods,
+                             std::vector<uint8_t> const& cookie)
+{
+    event.initInput();
+    auto input = event.getInput();
+    input.getDeviceId().setId(dev);
+    input.getEventTime().setCount(et.count());
+    input.setModifiers(mods);
+
+    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
+    input.setCookie(cookie_data);
+}
+
 MirInputEventType MirInputEvent::input_type() const
 {
     switch (event.asReader().getInput().which())

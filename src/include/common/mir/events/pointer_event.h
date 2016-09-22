@@ -24,6 +24,19 @@
 struct MirPointerEvent : MirInputEvent
 {
     MirPointerEvent();
+    MirPointerEvent(MirInputDeviceId dev,
+                    std::chrono::nanoseconds et,
+                    MirInputEventModifiers mods,
+                    std::vector<uint8_t> const& cookie,
+                    MirPointerAction action,
+                    MirPointerButtons buttons,
+                    float x,
+                    float y,
+                    float dx,
+                    float dy,
+                    float vscroll,
+                    float hscroll);
+
     float x() const;
     void set_x(float x);
 

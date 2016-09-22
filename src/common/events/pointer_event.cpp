@@ -26,6 +26,33 @@ MirPointerEvent::MirPointerEvent()
     event.getInput().initPointer();
 }
 
+MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
+                    std::chrono::nanoseconds et,
+                    MirInputEventModifiers mods,
+                    std::vector<uint8_t> const& cookie,
+                    MirPointerAction action,
+                    MirPointerButtons buttons,
+                    float x,
+                    float y,
+                    float dx,
+                    float dy,
+                    float vscroll,
+                    float hscroll)
+    : MirInputEvent(dev, et, mods, cookie)
+{
+    auto input = event.getInput();
+    input.initPointer();
+    auto ptr = event.getInput().getPointer();
+    ptr.setX(x);
+    ptr.setY(y);
+    ptr.setDx(dx);
+    ptr.setDy(dy);
+    ptr.setVscroll(vscroll);
+    ptr.setHscroll(hscroll);
+    ptr.setButtons(buttons);
+    ptr.setAction(static_cast<mir::capnp::PointerEvent::PointerAction>(action));
+}
+
 MirPointerButtons MirPointerEvent::buttons() const
 {
     return event.asReader().getInput().getPointer().getButtons();
