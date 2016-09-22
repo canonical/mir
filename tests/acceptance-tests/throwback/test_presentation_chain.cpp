@@ -296,6 +296,9 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
     }
+
+    for (auto& context : contexts)
+        mir_buffer_set_callback(context.buffer(), ignore_callback, nullptr);
 }
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
@@ -322,6 +325,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
     }
+    for (auto& context : contexts)
+        mir_buffer_set_callback(context.buffer(), ignore_callback, nullptr);
 }
 
 TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
