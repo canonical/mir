@@ -97,6 +97,7 @@ void mgn::detail::DisplayBuffer::release_current()
 
 void mgn::detail::DisplayBuffer::swap_buffers()
 {
+    eglSwapBuffers(egl_display, egl_surface);
     if (content != BackingContent::stream)
     {
         auto spec = host_connection->create_surface_spec();
@@ -112,7 +113,6 @@ void mgn::detail::DisplayBuffer::swap_buffers()
             host_chain->set(false);
         }
     }
-    eglSwapBuffers(egl_display, egl_surface);
 }
 
 void mgn::detail::DisplayBuffer::bind()
