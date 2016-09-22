@@ -23,6 +23,7 @@
 #include <limits>
 
 #include "mir/events/event.h"
+#include "mir/events/input_device_state_event.h"
 
 struct MirInputDeviceStateEvent : MirEvent
 {
@@ -50,7 +51,7 @@ struct MirInputDeviceStateEvent : MirEvent
     static std::string serialize(MirEvent const* event);
     MirEvent* clone() const;
 
-    void add_device(MirInputDeviceId id, std::vector<uint32_t> && pressed_keys, MirPointerButtons pointer_buttons);
+    void set_device_states(std::vector<mir::events::InputDeviceState> const& device_states);
 
 private:
     std::chrono::nanoseconds when_{0};
@@ -60,16 +61,7 @@ private:
     float pointer_x{0.0f};
     float pointer_y{0.0f};
 
-    struct DeviceState
-    {
-        DeviceState(MirInputDeviceId id, std::vector<uint32_t> && pressed_keys, MirPointerButtons buttons)
-            : id{id}, pressed_keys{std::move(pressed_keys)}, pointer_buttons{buttons}
-        {}
-        MirInputDeviceId id;
-        std::vector<uint32_t> pressed_keys;
-        MirPointerButtons pointer_buttons;
-    };
-    std::vector<DeviceState> devices;
+    std::vector<mir::events::InputDeviceState> devices;
 };
 
 #endif /* MIR_COMMON_INPUT_DEVICE_STATE_EVENT_H_*/
