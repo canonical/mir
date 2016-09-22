@@ -396,6 +396,7 @@ MIR_COMMON_0.25 {
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
       MirInputDeviceStateEvent::device_pressed_keys_for_index*;
+      MirInputDeviceStateEvent::set_device_states*;
       mir::output_type_name*;
     };
 } MIR_COMMON_0.24;
