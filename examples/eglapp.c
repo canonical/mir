@@ -233,9 +233,9 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
             const struct mir_eglapp_arg* arg;
             for (arg = *list; arg->arg != NULL; ++arg)
             {
-                int matched = 1;
                 if (!strncmp(argv[i], arg->arg, strlen(arg->arg)))
                 {
+                    int matched = 1;
                     if (arg->scanf_format[0] && i+1 >= argc)
                     {
                         fprintf(stderr, "Missing argument for %s\n", argv[i]);
