@@ -188,6 +188,10 @@ private:
     unsigned int callback_count = 0;
 };
 
+void ignore_callback(MirBuffer*, void*)
+{
+}
+
 void buffer_callback(MirBuffer* buffer, void* context)
 {
     auto sync = reinterpret_cast<MirBufferSync*>(context);
@@ -456,4 +460,7 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 
     ASSERT_TRUE(another_context.wait_for_buffer(10s));
     ASSERT_THAT(another_context.buffer(), Ne(nullptr));
+
+    mir_buffer_set_callback(context.buffer(), ignore_callback, nullptr);
+    mir_buffer_set_callback(second_buffer_context.buffer(), ignore_callback, nullptr);
 }
