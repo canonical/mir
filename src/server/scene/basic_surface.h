@@ -150,6 +150,7 @@ public:
 
     void set_confine_pointer_state(MirPointerConfinementState state) override;
     MirPointerConfinementState confine_pointer_state() const override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;

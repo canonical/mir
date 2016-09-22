@@ -1,4 +1,4 @@
-MIR_SERVER_0.24 {
+MIR_SERVER_0.25 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -112,6 +112,7 @@ MIR_SERVER_0.24 {
     mir::scene::NullSurfaceObserver::NullSurfaceObserver*;
     mir::scene::NullSurfaceObserver::operator*;
     mir::scene::NullSurfaceObserver::orientation_set_to*;
+    mir::scene::NullSurfaceObserver::placed_relative*;
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::renamed*;
     mir::scene::NullSurfaceObserver::resized_to*;
@@ -176,6 +177,7 @@ MIR_SERVER_0.24 {
     mir::Server::override_the_logger*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
+    mir::Server::override_the_seat_report*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
@@ -369,6 +371,7 @@ MIR_SERVER_0.24 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::orientation_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::placed_relative*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::renamed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::resized_to*;
@@ -835,10 +838,3 @@ MIR_SERVER_0.24 {
   };
  local: *;
 };
-
-MIR_SERVER_0.25 {
- global:
-  extern "C++" {
-    mir::Server::override_the_seat_report*;
-  };
-} MIR_SERVER_0.24;

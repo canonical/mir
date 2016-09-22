@@ -24,9 +24,11 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
+mg::DisplayConfigurationOutputId const mgx::DisplayConfiguration::the_output_id{1};
+
 mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const pixels, geom::Size const size, MirOrientation orientation) :
     configuration{
-            mg::DisplayConfigurationOutputId{1},
+            the_output_id,
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},

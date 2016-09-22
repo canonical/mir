@@ -366,3 +366,9 @@ std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 {
     return egl_display.create_gl_context();
 }
+
+bool mgn::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
+}

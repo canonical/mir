@@ -27,6 +27,7 @@
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_seat_report.h"
+#include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -82,6 +83,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     NiceMock<mtd::MockSeatReport> mock_seat_report;
+    NiceMock<mtd::MockServerStatusListener> mock_status_listener;
     mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
@@ -90,7 +92,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
         mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock), mt::fake_shared(mock_seat_report)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
-        cookie_authority, mt::fake_shared(key_mapper)};
+        cookie_authority, mt::fake_shared(key_mapper), mt::fake_shared(mock_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
 
     mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;

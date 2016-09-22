@@ -77,6 +77,16 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+namespace
+{
+std::vector<uint16_t> convert_string_to_uint16_vector(std::string const& str_bytes)
+{
+    std::vector<uint16_t> out(str_bytes.size() / (sizeof(uint16_t) / sizeof(char)));
+    std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
+    return out;
+}
+}
+
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mg::PlatformIpcOperations> const& ipc_operations,
@@ -1220,6 +1230,10 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+
+        dest.gamma = {convert_string_to_uint16_vector(src.gamma_red()),
+                      convert_string_to_uint16_vector(src.gamma_green()),
+                      convert_string_to_uint16_vector(src.gamma_blue())};
     });
 
     return config;
