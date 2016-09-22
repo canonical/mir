@@ -324,7 +324,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         {"-q", "!", &quiet, "Quiet mode (no messages output)"},
         {"-s <width>x<height>", "=", &dims, "Force surface size"},
         {"--", "$", NULL, "Ignore all arguments that follow"},
-        {NULL, NULL, NULL, NULL, NULL}
+        {NULL, NULL, NULL, NULL}
     };
 
     struct mir_eglapp_arg const* const arg_lists[] =
