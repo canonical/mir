@@ -188,6 +188,10 @@ private:
     unsigned int callback_count = 0;
 };
 
+void ignore_callback(MirBuffer*, void*)
+{
+}
+
 void buffer_callback(MirBuffer* buffer, void* context)
 {
     auto sync = reinterpret_cast<MirBufferSync*>(context);
@@ -358,6 +362,45 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     mir_buffer_release(context.buffer());
 }
 
+TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
+{
+    auto chain = mir_connection_create_presentation_chain_sync(connection);
+    auto stream = mir_connection_create_buffer_stream_sync(connection, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
+    ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection, size.width.as_int(), size.height.as_int(), pf);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_add_presentation_chain(
+        spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    MirBufferSync context;
+    mir_connection_allocate_buffer(
+        connection,
+        size.width.as_int(), size.height.as_int(), pf, usage,
+        buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    context.unavailable();
+    mir_presentation_chain_submit_buffer(chain, context.buffer());
+
+    spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_add_buffer_stream(spec, 0, 0, stream);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+    mir_presentation_chain_release(chain);
+    mir_buffer_stream_swap_buffers_sync(stream);
+
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+
+    mir_buffer_stream_release_sync(stream);
+    mir_surface_release_sync(surface);
+}
+
 TEST_F(PresentationChain, can_access_basic_buffer_properties)
 {
     MirBufferSync context;
@@ -439,4 +482,7 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 
     ASSERT_TRUE(another_context.wait_for_buffer(10s));
     ASSERT_THAT(another_context.buffer(), Ne(nullptr));
+
+    mir_buffer_set_callback(context.buffer(), ignore_callback, nullptr);
+    mir_buffer_set_callback(second_buffer_context.buffer(), ignore_callback, nullptr);
 }

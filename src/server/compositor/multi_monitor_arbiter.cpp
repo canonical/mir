@@ -39,6 +39,17 @@ mc::MultiMonitorArbiter::MultiMonitorArbiter(
 {
 }
 
+mc::MultiMonitorArbiter::~MultiMonitorArbiter()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end(); it++)
+    {
+        if ((it->use_count == 0))
+            map->send_buffer(it->buffer->id());
+    }
+
+}
+
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
