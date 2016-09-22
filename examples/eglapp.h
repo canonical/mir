@@ -23,9 +23,10 @@
 extern "C" {
 #endif
 
-typedef int mir_eglapp_bool;
 struct MirConnection;
 struct MirSurface;
+
+typedef int mir_eglapp_bool;
 
 struct mir_eglapp_arg
 {
@@ -34,7 +35,6 @@ struct mir_eglapp_arg
     void* variable;
     char const* description;
 };
-
 
 extern float mir_eglapp_background_opacity;
 
