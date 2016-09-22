@@ -43,7 +43,6 @@ public:
         std::shared_ptr<Schedule> const& schedule);
     ~MultiMonitorArbiter();
 
-
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
