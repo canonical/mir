@@ -36,7 +36,7 @@ namespace nested
 {
 class HostSurface;
 class HostStream;
-
+class Buffer;
 namespace detail
 {
 
@@ -77,6 +77,9 @@ private:
     geometry::Rectangle const area;
     EGLSurfaceHandle const egl_surface;
 
+
+
+
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
 
@@ -86,6 +89,7 @@ private:
         chain
     } content;
     glm::mat4 const identity;
+    std::shared_ptr<nested::Buffer> spare;
 };
 }
 }

@@ -484,18 +484,26 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
 
 struct Chain : mgn::HostChain
 {
-    Chain(MirConnection* con) :
+    MirConnection* con;
+    Chain(MirConnection* con) : con(con),
         chain(mir_connection_create_presentation_chain_sync(con))
     {
     }
     ~Chain()
     {
+        mir_presentation_chain_release(chain);
         for(auto& b : buffers)
         {
             auto n = dynamic_cast<mgn::NativeBuffer*>(b->native_buffer_handle().get());
             n->on_ownership_notification([]{});
         }
+    }
+
+    void set(bool)
+    {
+        printf("RECYCLUE\n");
         mir_presentation_chain_release(chain);
+        chain = mir_connection_create_presentation_chain_sync(con);
     }
 
     void release_buffer(MirBuffer* b)

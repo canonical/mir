@@ -26,6 +26,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/events/event_private.h"
+#include "buffer.h"
 
 #include <sstream>
 #include <boost/throw_exception.hpp>
@@ -72,7 +73,8 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
     egl_surface{egl_display, host_stream->egl_native_window(), egl_config}, 
-    content{BackingContent::stream}
+    content{BackingContent::stream},
+    spare{std::make_shared<mgn::Buffer>(host_connection, mg::BufferProperties{geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software})}
 {
     host_surface->set_event_handler(event_thunk, this);
 }
@@ -101,6 +103,14 @@ void mgn::detail::DisplayBuffer::swap_buffers()
         spec->add_stream(*host_stream, geom::Displacement{0,0});
         content = BackingContent::stream;
         host_surface->apply_spec(*spec);
+        //if the host_chain is not released, a buffer of the passthrough surface might get caught
+        //up in the host server, resulting a drop in nbuffers available to the client
+        if (host_chain)
+        {
+            printf("---------------->FLUSH WITH SPARE BUFFER\n");
+//            host_chain->submit_buffer(spare);
+            host_chain->set(false);
+        }
     }
     eglSwapBuffers(egl_display, egl_surface);
 }
@@ -126,7 +136,10 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         return false;
 
     if (!host_chain)
+    {
+        printf("CREATE CHAIN!\n");
         host_chain = host_connection->create_chain();
+    }
 
     host_chain->submit_buffer(passthrough_buffer);
 

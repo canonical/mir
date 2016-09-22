@@ -73,6 +73,7 @@ typedef struct SubmissionInfo
 
 static void available_callback(MirBuffer* buffer, void* client_context)
 {
+    printf("AVAILABLE\n");
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;
@@ -202,7 +203,7 @@ int main(int argc, char** argv)
 
     int i = 0;
     int inc = -1;
-    while (rendering)
+//    while (rendering)
     {
         MirBuffer* b;
         pthread_mutex_lock(&buffer_available[i].lock);
@@ -219,10 +220,15 @@ int main(int argc, char** argv)
         i = i + inc;
     }
 
-    for (i = 0u; i < num_prerendered_frames; i++)
-        mir_buffer_release(buffer_available[i].buffer);
+    printf("RELEASE CHAIN----------->\n");
+//    for (i = 0u; i < num_prerendered_frames; i++)
+//        mir_buffer_release(buffer_available[i].buffer);
     mir_presentation_chain_release(chain);
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
+
+
+    while (rendering) {}
+//    mir_surface_release_sync(surface);
+
+//    mir_connection_release(connection);
     return 0;
 }
