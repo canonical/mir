@@ -184,39 +184,35 @@ static const MirDisplayOutput *find_active_output(
 
 struct mir_eglapp_arg
 {
-    char const* operator;
-    char const* operand_hint;
-    char const* operand_format; /* scanf format or "" for flag, "=" for copy */
+    char const* syntax;
+    char const* format; /* "%" scanf format or "!"=flag, "$"=--, "="=copy */
     void* variable;
     char const* description;
 };
 
 static void show_help(const struct mir_eglapp_arg* const* arg_lists)
 {
-    const struct mir_eglapp_arg* const* list = NULL;
+    int const indent = 2, desc_offset = 2;
+    const struct mir_eglapp_arg* const* list;
     int max_len = 0;
-    int const indent = 2;
-    int const desc_offset = 2;
 
     for (list = arg_lists; *list != NULL; ++list)
     {
-        const struct mir_eglapp_arg* arg = *list;
-        for (; arg->operator != NULL; ++arg)
+        const struct mir_eglapp_arg* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
         {
-            int len = indent + strlen(arg->operator) + 1 +
-                      strlen(arg->operand_hint);
+            int len = indent + strlen(arg->syntax);
             if (len > max_len)
                 max_len = len;
         }
     }
     for (list = arg_lists; *list != NULL; ++list)
     {
-        const struct mir_eglapp_arg* arg = *list;
-        for (; arg->operator != NULL; ++arg)
+        const struct mir_eglapp_arg* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
         {
             int len = 0, remainder = 0;
-            printf("%*c%s %s%n", indent, ' ', arg->operator, arg->operand_hint,
-                                 &len);
+            printf("%*c%s%n", indent, ' ', arg->syntax, &len);
             remainder = desc_offset + max_len - len;
             printf("%*c%s\n", remainder, ' ', arg->description);
         }
@@ -233,56 +229,48 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
         for (list = arg_lists; *list != NULL; ++list)
         {
             const struct mir_eglapp_arg* arg;
-            for (arg = *list; arg->operator != NULL; ++arg)
+            for (arg = *list; arg->syntax != NULL; ++arg)
             {
-                int operator_len = strlen(arg->operator);
-                if (!strncmp(operator, arg->operator, operator_len))
+                char const* space = strchr(arg->syntax, ' ');
+                int operator_len = space != NULL ? space - arg->syntax
+                                                 : (int)strlen(arg->syntax);
+                if (!strncmp(operator, arg->syntax, operator_len))
                 {
                     char const* operand = operator + operator_len;
-                    if (!operand[0] && arg->operand_format[0])
+                    if (!operand[0] && strchr("=%", arg->format[0]))
                     {
-                        if (i+1 >= argc)
+                        if (i+1 < argc)
+                            operand = argv[++i];
+                        else
                         {
                             fprintf(stderr, "Missing argument for %s\n",
                                     operator);
                             return 0;
                         }
-                        else
-                        {
-                            operand = argv[++i];
-                        }
                     }
-                    switch (arg->operand_format[0])
+                    switch (arg->format[0])
                     {
-                    case '\0':
-                        if (arg->variable == NULL)  /* "--" */ 
-                            return 1;
-                        *(mir_eglapp_bool*)arg->variable = 1;
-                        break;
-                    case '=':
-                        *(char const**)arg->variable = operand;
-                        break;
+                    case '$': return 1;  /* -- is special */
+                    case '!': *(mir_eglapp_bool*)arg->variable = 1; break;
+                    case '=': *(char const**)arg->variable = operand; break;
                     case '%':
-                        if (!sscanf(operand, arg->operand_format,
-                                    arg->variable))
+                        if (!sscanf(operand, arg->format, arg->variable))
                         {
                             fprintf(stderr,
-                                    "Invalid option: %s %s  (expected %s)\n",
-                                    arg->operator, operand, arg->operand_hint);
+                                    "Invalid option: %s  (expected %s)\n",
+                                    operand, arg->syntax);
                             return 0;
                         }
                         break;
-                    default:
-                        abort();
-                        break;
+                    default: abort(); break;
                     }
-                    goto parsed;
+                    goto next;
                 }
             }
         }
         fprintf(stderr, "Unknown option: %s\n", operator);
         return 0;
-        parsed:
+        next:
         (void)0; /* Stop compiler warnings about label at the end */
     }
     return 1;
@@ -310,18 +298,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const struct mir_eglapp_arg default_args[] =
     {
-        {"-a", "<name>", "=", &appname, "Set application name"},
-        {"-b", "<0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
-        {"-c", "<name>", "=", &cursor_name, "Request cursor image by name"},
-        {"-e", "<nbits>", "%u", &rgb_bits, "EGL colour channel size"},
-        {"-f", "", "", &fullscreen, "Force full screen"},
-        {"-h", "", "", &help, "Show this help text"},
-        {"-m", "<socket>", "=", &mir_socket, "Mir server socket"},
-        {"-n", "", "", &no_vsync, "Don't sync to vblank"},
-        {"-o", "<id>", "%u", &output_id, "Force placement on output monitor ID"},
-        {"-q", "", "", &quiet, "Quiet mode (no messages output)"},
-        {"-s", "<width>x<height>", "=", &dims, "Force surface size"},
-        {"--", "", "", NULL, "Ignore all arguments that follow"},
+        {"-a <name>", "=", &appname, "Set application name"},
+        {"-b <0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
+        {"-c <name>", "=", &cursor_name, "Request cursor image by name"},
+        {"-e <nbits>", "%u", &rgb_bits, "EGL colour channel size"},
+        {"-f", "!", &fullscreen, "Force full screen"},
+        {"-h", "!", &help, "Show this help text"},
+        {"-m <socket>", "=", &mir_socket, "Mir server socket"},
+        {"-n", "!", &no_vsync, "Don't sync to vblank"},
+        {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
+        {"-q", "!", &quiet, "Quiet mode (no messages output)"},
+        {"-s <width>x<height>", "=", &dims, "Force surface size"},
+        {"--", "$", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL, NULL}
     };
 
