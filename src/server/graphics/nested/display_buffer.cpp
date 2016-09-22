@@ -109,7 +109,7 @@ void mgn::detail::DisplayBuffer::bind()
 {
 }
 
-bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& list)
+bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 {
     if (list.empty() ||
         (list.back()->screen_position() != area) ||
@@ -137,7 +137,6 @@ bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList 
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
-
     return true;
 }
 

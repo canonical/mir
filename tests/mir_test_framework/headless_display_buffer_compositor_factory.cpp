@@ -87,7 +87,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         void composite(mir::compositor::SceneElementSequence&& seq) override
         {
             auto renderlist = filter(seq, db.view_area());
-            if (db.post_renderables_if_optimizable(renderlist))
+            if (db.overlay(renderlist))
             {
                 if (tracker)
                     tracker->note_passthrough();

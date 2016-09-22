@@ -60,7 +60,7 @@ public:
     MirOrientation orientation() const override;
     MirMirrorMode mirror_mode() const override;
 
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool overlay(RenderableList const& renderlist) override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 
