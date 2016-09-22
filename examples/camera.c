@@ -369,8 +369,8 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    unsigned int win_width = 100;
-    unsigned int win_height = 100;
+    unsigned int win_width = 1;
+    unsigned int win_height = 1;
 
     char const* dev_video = "/dev/video0";
     struct mir_eglapp_arg custom_args[] =
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
     }
 
     MirSurface* surface = mir_eglapp_native_surface();
-    if (win_width == 100)  /* Fullscreen was not chosen */
+    if (win_width == 1)  /* Fullscreen was not chosen */
     {
         /* Chicken or egg? init before open_camera, before size is known */
         MirConnection* connection = mir_eglapp_native_connection();
