@@ -44,6 +44,7 @@ public:
     Stream(
         FrameDroppingPolicyFactory const& policy_factory,
         std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+    ~Stream();
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
