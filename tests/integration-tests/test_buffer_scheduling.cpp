@@ -453,6 +453,10 @@ struct ScheduledProducer : ProducerSystem
             vault.set_size(sz);
         });
     }
+    ~ScheduledProducer()
+    {
+        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
+    }
 
     bool can_produce()
     {
