@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <string.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -183,12 +184,43 @@ static const MirDisplayOutput *find_active_output(
 
 struct mir_egl_app_arg
 {
-    char const* syntax;
-    char const* scanf_description;
+    char const* arg;
+    char const* scanf_desc;
     char const* scanf_format;  /* or "" bool flag, or "=" for argv copy */
     void* variable;
-    char const* description;
+    char const* desc;
 };
+
+static void show_help(const struct mir_egl_app_arg* const* arg_lists)
+{
+    const struct mir_egl_app_arg* const* list = NULL;
+    int max_len = 0;
+    int const indent = 2;
+    int const desc_offset = 2;
+
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        const struct mir_egl_app_arg* arg = *list;
+        for (; arg->arg != NULL; ++arg)
+        {
+            int len = indent + strlen(arg->arg) + 1 + strlen(arg->scanf_desc);
+            if (len > max_len)
+                max_len = len;
+        }
+    }
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        const struct mir_egl_app_arg* arg = *list;
+        for (; arg->arg != NULL; ++arg)
+        {
+            int len = 0, remainder = 0;
+            printf("%*c%s %s%n", indent, ' ', arg->arg, arg->scanf_desc, &len);
+            remainder = desc_offset + max_len - len;
+            /* TODO: wrap desc to screen width? */
+            printf("%*c%s\n", remainder, ' ', arg->desc);
+        }
+    }
+}
 
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height)
@@ -227,8 +259,14 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         {NULL, NULL, NULL, NULL, NULL}
     };
 
-    (void)default_args;
-    // TODO: Use default_args
+    const struct mir_egl_app_arg* const arg_lists[] =
+    {
+        default_args,
+        /* TODO: custom args */
+        NULL
+    };
+
+    show_help(arg_lists);
 
     if (argc > 1)
     {
