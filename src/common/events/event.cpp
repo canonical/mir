@@ -36,20 +36,8 @@
 
 #include <capnp/serialize.h>
 
-#include <unordered_map>
 
 namespace ml = mir::logging;
-
-namespace
-{
-std::unordered_map<MirEvent const*, std::shared_ptr<void>> event_lifetime_storage;
-}
-
-void* mir::event::store_data_for_lifetime_of_event(MirEvent const* ev, std::shared_ptr<void> const& data)
-{
-    event_lifetime_storage[ev] = data;
-    return data.get();
-}
 
 MirEvent::MirEvent(MirEvent const& e)
 {
@@ -69,7 +57,7 @@ MirEvent& MirEvent::operator=(MirEvent const& e)
 // TODO Look at replacing the surface event serializer with a capnproto layer
 mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 {
-    auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { event_lifetime_storage.erase(ev); delete ev; });
+    auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });
     kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
         bytes.data()), bytes.size() / sizeof(::capnp::word));
 

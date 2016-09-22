@@ -110,18 +110,6 @@ MirInputDeviceId MirInputDeviceStateEvent::device_id(size_t index) const
     return event.asReader().getInputDevice().getDevices()[index].getDeviceId().getId();
 }
 
-std::vector<uint32_t> MirInputDeviceStateEvent::device_pressed_keys(size_t index)
-{
-    auto pressed_keys = event.asReader().getInputDevice().getDevices()[index].getPressedKeys();
-    std::vector<uint32_t> pressed_keys_vector;
-    for (auto const& pk : pressed_keys)
-    {
-        pressed_keys_vector.push_back(pk);
-    }
-
-    return pressed_keys_vector;
-}
-
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_for_index(size_t index, size_t pressed_index) const
 {
     return event.asReader().getInputDevice().getDevices()[index].getPressedKeys()[pressed_index];

@@ -100,14 +100,26 @@ MirInputDeviceId mir_input_device_state_event_device_id(
  * Retrieve an array of pressed keys on the device identified by the \a index.
  * The keys are encoded as scan codes.
  *
- * \deprecated  Use mir_input_device_state_event_device_pressed_keys_for_index() instead
+ * \deprecated Use mir_input_device_state_event_device_pressed_keys_for_index() instead
  * \param[in] ev The input device state event
  * \param[in] index The index of the input device
- * \return    An array of pressed keys
+ * \return    a NULL pointer
  */
 __attribute__ ((deprecated))
 uint32_t const* mir_input_device_state_event_device_pressed_keys(
     MirInputDeviceStateEvent const* ev, uint32_t index);
+
+/*
+ * Retrieve a pressed key on the device identified by the \a index.
+ * The key is encoded as a scan code.
+ *
+ * \param[in] ev            The input device state event
+ * \param[in] index         The index of the input device
+ * \param[in] pressed_index The index of the pressed key
+ * \return    The pressed key at index pressed_index
+ */
+uint32_t mir_input_device_state_event_device_pressed_keys_for_index(
+    MirInputDeviceStateEvent const* ev, uint32_t index, uint32_t pressed_index);
 
 /**
  * Retrieve a pressed key on the device identified by the \a index.

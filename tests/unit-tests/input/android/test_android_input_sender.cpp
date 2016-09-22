@@ -521,11 +521,9 @@ TEST_F(AndroidInputSender, encodes_input_device_state_event_as_raw_buffer_event)
     EXPECT_THAT(mir_input_device_state_event_time(input_device_state), Eq(timestamp.count()));
     EXPECT_THAT(mir_input_device_state_event_modifiers(input_device_state), Eq(mir_input_event_modifier_caps_lock));
     EXPECT_THAT(mir_input_device_state_event_device_count(input_device_state), Eq(2));
-
     EXPECT_THAT(mir_input_device_state_event_device_id(input_device_state, 0), Eq(MirInputDeviceId{23}));
     auto keys_count = mir_input_device_state_event_device_pressed_keys_count(input_device_state, 0);
     EXPECT_THAT(keys_count, Eq(3));
-
     for (uint32_t i = 0; i < keys_count; i++)
     {
         EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(input_device_state, 0, i), Eq(pressed_keys[i]));

@@ -453,28 +453,15 @@ MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent
     abort();
 }
 
-uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index) try
+// Function is deprecated, and no one is currently using it.
+uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* /*ev*/, uint32_t /*index*/)
 {
-    expect_event_type(ev, mir_event_type_input_device_state);
-    expect_index_in_range(ev->device_count(), index);
-
-    auto pressed_keys_vec = const_cast<MirInputDeviceStateEvent*>(ev)->device_pressed_keys(index);
-    auto stored_pointer   = std::shared_ptr<uint32_t>(
-        new uint32_t[pressed_keys_vec.size()],
-        [](uint32_t const* p)
-            { delete[] p; });
-
-    std::copy(std::begin(pressed_keys_vec), std::end(pressed_keys_vec), stored_pointer.get());
-
-    return static_cast<uint32_t*>(mir::event::store_data_for_lifetime_of_event(ev, stored_pointer));
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
+    return nullptr;
 }
 
-uint32_t mir_input_device_state_event_device_pressed_keys_for_index(
-    MirInputDeviceStateEvent const* ev, uint32_t index, uint32_t pressed_index) try
+uint32_t mir_input_device_state_event_device_pressed_keys_for_index(MirInputDeviceStateEvent const* ev,
+                                                                    uint32_t index,
+                                                                    uint32_t pressed_index) try
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
