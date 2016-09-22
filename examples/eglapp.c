@@ -216,10 +216,65 @@ static void show_help(const struct mir_egl_app_arg* const* arg_lists)
             int len = 0, remainder = 0;
             printf("%*c%s %s%n", indent, ' ', arg->arg, arg->scanf_desc, &len);
             remainder = desc_offset + max_len - len;
-            /* TODO: wrap desc to screen width? */
+            /* TODO: Implement line wrapping for long descriptions? */
             printf("%*c%s\n", remainder, ' ', arg->desc);
         }
     }
+}
+
+static mir_eglapp_bool parse_args(int argc, char *argv[],
+                             const struct mir_egl_app_arg* const* arg_lists)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        const struct mir_egl_app_arg* const* list;
+        for (list = arg_lists; *list != NULL; ++list)
+        {
+            const struct mir_egl_app_arg* arg;
+            for (arg = *list; arg->arg != NULL; ++arg)
+            {
+                int matched = 1;
+                if (!strncmp(argv[i], arg->arg, strlen(arg->arg)))
+                {
+                    if (arg->scanf_format[0] && i+1 >= argc)
+                    {
+                        fprintf(stderr, "Missing argument for %s\n", argv[i]);
+                        return 0;
+                    }
+                    switch (arg->scanf_format[0])
+                    {
+                    case '\0':
+                        if (arg->variable == NULL)  /* "--" */ 
+                            return 1;
+                        *(mir_eglapp_bool*)arg->variable = 1;
+                        break;
+                    case '=':
+                        *(char const**)arg->variable = argv[++i];
+                        break;
+                    case '%':
+                        matched = sscanf(argv[++i], arg->scanf_format,
+                                         arg->variable);
+                        break;
+                    default:
+                        matched = 0;
+                        break;
+                    }
+                    if (!matched)
+                    {
+                        fprintf(stderr, "Invalid option: %s %s  (expected %s)\n",
+                                arg->arg, argv[i], arg->scanf_desc);
+                        return 0;
+                    }
+                    goto parsed;
+                }
+            }
+        }
+        fprintf(stderr, "Unknown option: %s\n", argv[i]);
+        return 0;
+        parsed:
+        (void)0; /* Stop compiler warnings about label at the end */
+    }
+    return 1;
 }
 
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
@@ -246,15 +301,15 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     {
         {"-a", "<name>", "=", &appname, "Set application name"},
         {"-b", "<0.0..0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
-        {"-e", "<nbits>", "%u", &rgb_bits, "EGL colour channel size"},
-        {"-h", "", "", &help, "Show this help text"},
-        {"-f", "", "", &fullscreen, "Force full screen"},
-        {"-o", "<id>", "%u", &output_id, "Force placement on output monitor ID"},
-        {"-n", "", "", &no_vsync, "Don't sync to vblank"},
-        {"-m", "<socket>", "=", &mir_socket, "Mir server socket"},
-        {"-s", "<width>x<height>", "=", &dims, "Force surface size"},
         {"-c", "<name>", "=", &cursor_name, "Request cursor image by name"},
+        {"-e", "<nbits>", "%u", &rgb_bits, "EGL colour channel size"},
+        {"-f", "", "", &fullscreen, "Force full screen"},
+        {"-h", "", "", &help, "Show this help text"},
+        {"-m", "<socket>", "=", &mir_socket, "Mir server socket"},
+        {"-n", "", "", &no_vsync, "Don't sync to vblank"},
+        {"-o", "<id>", "%u", &output_id, "Force placement on output monitor ID"},
         {"-q", "", "", &quiet, "Quiet mode (no messages output)"},
+        {"-s", "<width>x<height>", "=", &dims, "Force surface size"},
         {"--", "", "", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL, NULL}
     };
@@ -266,147 +321,32 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         NULL
     };
 
-    show_help(arg_lists);
+    if (!parse_args(argc, argv, arg_lists))
+        return 0;
 
-    if (argc > 1)
+    if (help)
     {
-        int i;
-        for (i = 1; i < argc; i++)
-        {
-            const char *arg = argv[i];
+        printf("Usage: %s [<options>]\n", argv[0]);
+        show_help(arg_lists);
+        return 0;
+    }
 
-            if (arg[0] == '-')
-            {
-                if (arg[1] == '-' && arg[2] == '\0')
-                    break;
+    if (no_vsync)
+        swapinterval = 0;
 
-                switch (arg[1])
-                {
-                case 'a':
-                    appname = argv[++i];
-                    break;
-                case 'b':
-                    {
-                        float alpha = 1.0f;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%f", &alpha) == 1)
-                        {
-                            mir_eglapp_background_opacity = alpha;
-                        }
-                        else
-                        {
-                            printf("Invalid opacity value: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'e':
-                    {
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            ++i;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &rgb_bits) != 1)
-                        {
-                            printf("Invalid colour channel depth: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'n':
-                    swapinterval = 0;
-                    break;
-                case 'o':
-                    {
-                        unsigned int the_id = 0;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &the_id) == 1)
-                        {
-                            output_id = the_id;
-                        }
-                        else
-                        {
-                            printf("Invalid output ID: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'f':
-                    *width = 0;
-                    *height = 0;
-                    break;
-                case 's':
-                    {
-                        unsigned int w, h;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%ux%u", &w, &h) == 2)
-                        {
-                            *width = w;
-                            *height = h;
-                        }
-                        else
-                        {
-                            printf("Invalid size: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'm':
-                    mir_socket = argv[++i];
-                    break;
-                case 'c':
-                    cursor_name = argv[++i];
-                    break;
-                case 'q':
-                    {
-                        FILE *unused = freopen("/dev/null", "a", stdout);
-                        (void)unused;
-                        break;
-                    }
-                case 'h':
-                default:
-                    help = 1;
-                    break;
-                }
-            }
-            /* else leave unused args (those not starting with -) for the app */
+    if (fullscreen)
+        *width = *height = 0;
 
-            if (help)
-            {
-                printf("Usage: %s [<options>]\n"
-                       "  -a name          Set application name\n"
-                       "  -b               Background opacity (0.0 - 1.0)\n"
-                       "  -e               EGL colour channel size in bits\n"
-                       "  -h               Show this help text\n"
-                       "  -f               Force full screen\n"
-                       "  -o ID            Force placement on output monitor ID\n"
-                       "  -n               Don't sync to vblank\n"
-                       "  -m socket        Mir server socket\n"
-                       "  -s WIDTHxHEIGHT  Force surface size\n"
-                       "  -c name          Request cursor image by name\n"
-                       "  -q               Quiet mode (no messages output)\n"
-                       "  --               Ignore all arguments that follow\n"
-                       , argv[0]);
-                return 0;
-            }
-        }
+    if (dims && (2 != sscanf(dims, "%ux%u", width, height)))
+    {
+        fprintf(stderr, "Invalid dimensions: %s\n", dims);
+        return 0;
+    }
+
+    if (quiet)
+    {
+        FILE *unused = freopen("/dev/null", "a", stdout);
+        (void)unused;
     }
 
     connection = mir_connect_sync(mir_socket, appname);
