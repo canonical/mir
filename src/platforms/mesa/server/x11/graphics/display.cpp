@@ -380,3 +380,9 @@ std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
     return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
 }
+
+bool mgx::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
+}

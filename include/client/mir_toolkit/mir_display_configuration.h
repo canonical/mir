@@ -474,6 +474,52 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* outp
  */
 MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 
+/** Gets if the platform supports gamma correction
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The MirOutputGammaSupported mir_display_gamma_supported otherwise,
+ *               mir_display_gamma_unsupported
+ */
+MirOutputGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output);
+
+/** Gets the gamma size
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The size of the gamma ramp LUT
+ *
+ */
+uint32_t mir_output_get_gamma_size(MirOutput const* client_output);
+
+/** Get the gamma ramp of a display
+ *
+ * Copies the gammas into user created buffers up to the size provided
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [out] red     The red gamma ramp
+ * \param [out] green   The green gamma ramp
+ * \param [out] blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_get_gamma(MirOutput const* client_output,
+                          uint16_t* red,
+                          uint16_t* green,
+                          uint16_t* blue,
+                          uint32_t  size);
+
+/** Set the gamma ramp of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [in]  red     The red gamma ramp
+ * \param [in]  green   The green gamma ramp
+ * \param [in]  blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_set_gamma(MirOutput* client_output,
+                          uint16_t const* red,
+                          uint16_t const* green,
+                          uint16_t const* blue,
+                          uint32_t  size);
+
 /**
  * Get the width, in pixels, of a MirOutputMode
  *

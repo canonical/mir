@@ -36,6 +36,8 @@ public:
     MOCK_METHOD0(paused, void());
     MOCK_METHOD0(resumed, void());
     MOCK_METHOD0(started, void());
+    MOCK_METHOD0(ready_for_user_input, void());
+    MOCK_METHOD0(stop_receiving_input, void());
 };
 
 }

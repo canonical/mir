@@ -48,6 +48,10 @@ class NullDisplay : public graphics::Display,
             new NullDisplayConfiguration
         );
     }
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) const override
+    {
+        return false;
+    }
     void configure(graphics::DisplayConfiguration const&)  override{}
     void register_configuration_change_handler(
         graphics::EventHandlerRegister&,

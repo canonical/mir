@@ -118,6 +118,8 @@ public:
 
     virtual void set_confine_pointer_state(MirPointerConfinementState state) = 0;
     virtual MirPointerConfinementState confine_pointer_state() const = 0;
+
+    virtual void placed_relative(geometry::Rectangle const& placement) = 0;
 };
 }
 }

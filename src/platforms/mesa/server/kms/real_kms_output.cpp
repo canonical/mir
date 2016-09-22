@@ -168,7 +168,7 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
         fatal_error("Output %s has no associated CRTC to schedule page flips on",
                    mgk::connector_name(connector).c_str());
     }
-    return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
+    return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id, connector_id);
 }
 
 void mgm::RealKMSOutput::wait_for_page_flip()

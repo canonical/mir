@@ -147,13 +147,13 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     }
 }
 
-void mrl::DisplayReport::report_vsync(unsigned int display_id)
+void mrl::DisplayReport::report_vsync(unsigned int output_id)
 {
     using namespace std::chrono;
     seconds const static report_interval{1};
     std::unique_lock<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
     auto now = clock->now();
-    event_map[display_id]++;
+    event_map[output_id]++;
     if (now > last_report + report_interval)
     {
         for(auto const& event : event_map)

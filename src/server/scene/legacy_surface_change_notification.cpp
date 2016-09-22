@@ -80,6 +80,10 @@ void ms::LegacySurfaceChangeNotification::cursor_image_removed()
 {
 }
 
+void ms::LegacySurfaceChangeNotification::placed_relative(geometry::Rectangle const& /*placement*/)
+{
+}
+
 void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
 {
     notify_scene_change();
