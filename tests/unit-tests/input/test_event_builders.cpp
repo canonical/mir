@@ -215,7 +215,6 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     {
         EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(ids_event, 0, i), Eq(pressed_keys[i]));
     }
-
     EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(ids_event, 0), Eq(0));
 
     EXPECT_THAT(mir_input_device_state_event_device_id(ids_event, 1), Eq(MirInputDeviceId{2}));
