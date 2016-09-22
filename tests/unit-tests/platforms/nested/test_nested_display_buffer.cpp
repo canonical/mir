@@ -93,6 +93,7 @@ struct MockNestedChain : mgn::HostChain
 {
     MOCK_METHOD1(submit_buffer, void(std::shared_ptr<mg::Buffer> const&));
     MOCK_METHOD0(handle, MirPresentationChain*());
+    MOCK_METHOD1(set, void(bool));
 };
 
 struct MockNestedStream : mgn::HostStream
