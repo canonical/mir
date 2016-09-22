@@ -184,11 +184,11 @@ static const MirDisplayOutput *find_active_output(
 
 struct mir_eglapp_arg
 {
-    char const* arg;
-    char const* hint;
-    char const* scanf_format;  /* or "" bool flag, or "=" for argv copy */
+    char const* operator;
+    char const* operand_hint;
+    char const* operand_format; /* scanf format or "" for flag, "=" for copy */
     void* variable;
-    char const* desc;
+    char const* description;
 };
 
 static void show_help(const struct mir_eglapp_arg* const* arg_lists)
@@ -201,9 +201,10 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
     for (list = arg_lists; *list != NULL; ++list)
     {
         const struct mir_eglapp_arg* arg = *list;
-        for (; arg->arg != NULL; ++arg)
+        for (; arg->operator != NULL; ++arg)
         {
-            int len = indent + strlen(arg->arg) + 1 + strlen(arg->hint);
+            int len = indent + strlen(arg->operator) + 1 +
+                      strlen(arg->operand_hint);
             if (len > max_len)
                 max_len = len;
         }
@@ -211,13 +212,13 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
     for (list = arg_lists; *list != NULL; ++list)
     {
         const struct mir_eglapp_arg* arg = *list;
-        for (; arg->arg != NULL; ++arg)
+        for (; arg->operator != NULL; ++arg)
         {
             int len = 0, remainder = 0;
-            printf("%*c%s %s%n", indent, ' ', arg->arg, arg->hint, &len);
+            printf("%*c%s %s%n", indent, ' ', arg->operator, arg->operand_hint,
+                                 &len);
             remainder = desc_offset + max_len - len;
-            /* TODO: Implement line wrapping for long descriptions? */
-            printf("%*c%s\n", remainder, ' ', arg->desc);
+            printf("%*c%s\n", remainder, ' ', arg->description);
         }
     }
 }
@@ -227,30 +228,31 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
 {
     for (int i = 1; i < argc; ++i)
     {
+        char const* operator = argv[i];
         const struct mir_eglapp_arg* const* list;
         for (list = arg_lists; *list != NULL; ++list)
         {
             const struct mir_eglapp_arg* arg;
-            for (arg = *list; arg->arg != NULL; ++arg)
+            for (arg = *list; arg->operator != NULL; ++arg)
             {
-                int arg_len = strlen(arg->arg);
-                if (!strncmp(argv[i], arg->arg, arg_len))
+                int operator_len = strlen(arg->operator);
+                if (!strncmp(operator, arg->operator, operator_len))
                 {
-                    char const* value = argv[i] + arg_len;
-                    if (!value[0] && arg->scanf_format[0])
+                    char const* operand = operator + operator_len;
+                    if (!operand[0] && arg->operand_format[0])
                     {
                         if (i+1 >= argc)
                         {
                             fprintf(stderr, "Missing argument for %s\n",
-                                    argv[i]);
+                                    operator);
                             return 0;
                         }
                         else
                         {
-                            value = argv[++i];
+                            operand = argv[++i];
                         }
                     }
-                    switch (arg->scanf_format[0])
+                    switch (arg->operand_format[0])
                     {
                     case '\0':
                         if (arg->variable == NULL)  /* "--" */ 
@@ -258,14 +260,15 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
                         *(mir_eglapp_bool*)arg->variable = 1;
                         break;
                     case '=':
-                        *(char const**)arg->variable = value;
+                        *(char const**)arg->variable = operand;
                         break;
                     case '%':
-                        if (!sscanf(value, arg->scanf_format, arg->variable))
+                        if (!sscanf(operand, arg->operand_format,
+                                    arg->variable))
                         {
                             fprintf(stderr,
                                     "Invalid option: %s %s  (expected %s)\n",
-                                    arg->arg, value, arg->hint);
+                                    arg->operator, operand, arg->operand_hint);
                             return 0;
                         }
                         break;
@@ -277,7 +280,7 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
                 }
             }
         }
-        fprintf(stderr, "Unknown option: %s\n", argv[i]);
+        fprintf(stderr, "Unknown option: %s\n", operator);
         return 0;
         parsed:
         (void)0; /* Stop compiler warnings about label at the end */
