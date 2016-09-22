@@ -185,7 +185,7 @@ static const MirDisplayOutput *find_active_output(
 struct mir_eglapp_arg
 {
     char const* arg;
-    char const* scanf_desc;
+    char const* hint;
     char const* scanf_format;  /* or "" bool flag, or "=" for argv copy */
     void* variable;
     char const* desc;
@@ -203,7 +203,7 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
         const struct mir_eglapp_arg* arg = *list;
         for (; arg->arg != NULL; ++arg)
         {
-            int len = indent + strlen(arg->arg) + 1 + strlen(arg->scanf_desc);
+            int len = indent + strlen(arg->arg) + 1 + strlen(arg->hint);
             if (len > max_len)
                 max_len = len;
         }
@@ -214,7 +214,7 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
         for (; arg->arg != NULL; ++arg)
         {
             int len = 0, remainder = 0;
-            printf("%*c%s %s%n", indent, ' ', arg->arg, arg->scanf_desc, &len);
+            printf("%*c%s %s%n", indent, ' ', arg->arg, arg->hint, &len);
             remainder = desc_offset + max_len - len;
             /* TODO: Implement line wrapping for long descriptions? */
             printf("%*c%s\n", remainder, ' ', arg->desc);
@@ -233,13 +233,22 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
             const struct mir_eglapp_arg* arg;
             for (arg = *list; arg->arg != NULL; ++arg)
             {
-                if (!strncmp(argv[i], arg->arg, strlen(arg->arg)))
+                int arg_len = strlen(arg->arg);
+                if (!strncmp(argv[i], arg->arg, arg_len))
                 {
-                    int matched = 1;
-                    if (arg->scanf_format[0] && i+1 >= argc)
+                    char const* value = argv[i] + arg_len;
+                    if (!value[0] && arg->scanf_format[0])
                     {
-                        fprintf(stderr, "Missing argument for %s\n", argv[i]);
-                        return 0;
+                        if (i+1 >= argc)
+                        {
+                            fprintf(stderr, "Missing argument for %s\n",
+                                    argv[i]);
+                            return 0;
+                        }
+                        else
+                        {
+                            value = argv[++i];
+                        }
                     }
                     switch (arg->scanf_format[0])
                     {
@@ -249,21 +258,20 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
                         *(mir_eglapp_bool*)arg->variable = 1;
                         break;
                     case '=':
-                        *(char const**)arg->variable = argv[++i];
+                        *(char const**)arg->variable = value;
                         break;
                     case '%':
-                        matched = sscanf(argv[++i], arg->scanf_format,
-                                         arg->variable);
+                        if (!sscanf(value, arg->scanf_format, arg->variable))
+                        {
+                            fprintf(stderr,
+                                    "Invalid option: %s %s  (expected %s)\n",
+                                    arg->arg, value, arg->hint);
+                            return 0;
+                        }
                         break;
                     default:
-                        matched = 0;
+                        abort();
                         break;
-                    }
-                    if (!matched)
-                    {
-                        fprintf(stderr, "Invalid option: %s %s  (expected %s)\n",
-                                arg->arg, argv[i], arg->scanf_desc);
-                        return 0;
                     }
                     goto parsed;
                 }
