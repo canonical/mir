@@ -390,7 +390,6 @@ MIR_COMMON_0.25 {
       MirInputEvent::operator*;
       MirInputDeviceStateEvent::set_device_states*;
       MirInputDeviceStateEvent::device_pressed_keys_for_index*;
-      mir::event::store_data_for_lifetime_of_event*;
       MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
       MirSurfacePlacementEvent::id*;
       MirSurfacePlacementEvent::set_id*;
