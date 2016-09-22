@@ -300,7 +300,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     const struct mir_eglapp_arg default_args[] =
     {
         {"-a", "<name>", "=", &appname, "Set application name"},
-        {"-b", "<0.0..0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
+        {"-b", "<0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
         {"-c", "<name>", "=", &cursor_name, "Request cursor image by name"},
         {"-e", "<nbits>", "%u", &rgb_bits, "EGL colour channel size"},
         {"-f", "", "", &fullscreen, "Force full screen"},
@@ -316,8 +316,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const struct mir_eglapp_arg* const arg_lists[] =
     {
-        default_args,
         /* TODO: custom args */
+        default_args,
         NULL
     };
 
@@ -333,9 +333,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     if (no_vsync)
         swapinterval = 0;
-
-    if (fullscreen)
-        *width = *height = 0;
 
     if (dims && (2 != sscanf(dims, "%ux%u", width, height)))
     {
@@ -414,10 +411,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
 
-    if (*width == 0)
+    if (fullscreen)  /* TODO: Use surface states for this */
+    {
         *width = mode->horizontal_resolution;
-    if (*height == 0)
         *height = mode->vertical_resolution;
+    }
 
     mir_display_config_destroy(display_config);
 
