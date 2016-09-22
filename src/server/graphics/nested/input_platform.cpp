@@ -247,9 +247,13 @@ void mgn::InputPlatform::start()
                         {
                             auto dest = it->second->destination;
                             auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
-                            auto const* scan_codes = mir_input_device_state_event_device_pressed_keys(device_state, index);
+                            std::vector<uint32_t> scan_codes;
+                            for (uint32_t i = 0; i < key_count; i++)
+                            {
+                                scan_codes.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+                            }
 
-                            dest->key_state({scan_codes, scan_codes + key_count});
+                            dest->key_state(scan_codes);
                             dest->pointer_state(
                                 mir_input_device_state_event_device_pointer_buttons(device_state, index));
                         }

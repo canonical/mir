@@ -366,7 +366,6 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::device_count*;
        MirInputDeviceStateEvent::device_id*;
        MirInputDeviceStateEvent::device_pointer_buttons*;
-       MirInputDeviceStateEvent::device_pressed_keys*;
        MirInputDeviceStateEvent::device_pressed_keys_count*;
        MirInputDeviceStateEvent::modifiers*;
        MirInputDeviceStateEvent::pointer_axis*;
@@ -395,6 +394,7 @@ MIR_COMMON_0.25 {
       MirSurfacePlacementEvent::set_id*;
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
+      MirInputDeviceStateEvent::device_pressed_keys_for_index*;
       mir::output_type_name*;
     };
 } MIR_COMMON_0.24;

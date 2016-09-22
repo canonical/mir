@@ -503,7 +503,8 @@ TEST_F(AndroidInputSender, encodes_input_device_state_event_as_raw_buffer_event)
     const auto timestamp = std::chrono::nanoseconds(10);
     register_surface();
     std::vector<mir::events::InputDeviceState> states;
-    states.push_back({MirInputDeviceId{23}, {50, 60, 80}, 0});
+    std::vector<uint32_t> const pressed_keys = {50, 60, 80};
+    states.push_back({MirInputDeviceId{23}, pressed_keys, 0});
     states.push_back({MirInputDeviceId{21}, {}, mir_pointer_button_primary});
 
     auto device_state = mir::events::make_event(timestamp, mir_pointer_button_primary, mir_input_event_modifier_caps_lock,
@@ -520,12 +521,14 @@ TEST_F(AndroidInputSender, encodes_input_device_state_event_as_raw_buffer_event)
     EXPECT_THAT(mir_input_device_state_event_time(input_device_state), Eq(timestamp.count()));
     EXPECT_THAT(mir_input_device_state_event_modifiers(input_device_state), Eq(mir_input_event_modifier_caps_lock));
     EXPECT_THAT(mir_input_device_state_event_device_count(input_device_state), Eq(2));
-
     EXPECT_THAT(mir_input_device_state_event_device_id(input_device_state, 0), Eq(MirInputDeviceId{23}));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(input_device_state, 0), Eq(3));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(input_device_state, 0)[0], Eq(50));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(input_device_state, 0)[1], Eq(60));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(input_device_state, 0)[2], Eq(80));
+	auto keys_count = mir_input_device_state_event_device_pressed_keys_count(input_device_state, 0);
+	EXPECT_THAT(keys_count, Eq(3));
+	for (uint32_t i = 0; i < keys_count; i++)
+	{
+		EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(input_device_state, 0, i), Eq(pressed_keys[i]));
+	}
+
     EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(input_device_state, 0), 0);
 
     EXPECT_THAT(mir_input_device_state_event_device_id(input_device_state, 1), Eq(MirInputDeviceId{21}));
