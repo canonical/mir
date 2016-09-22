@@ -182,23 +182,15 @@ static const MirDisplayOutput *find_active_output(
     return output;
 }
 
-struct mir_eglapp_arg
-{
-    char const* syntax;
-    char const* format; /* "%" scanf format or "!"=flag, "$"=--, "="=copy */
-    void* variable;
-    char const* description;
-};
-
-static void show_help(const struct mir_eglapp_arg* const* arg_lists)
+static void show_help(struct mir_eglapp_arg const* const* arg_lists)
 {
     int const indent = 2, desc_offset = 2;
-    const struct mir_eglapp_arg* const* list;
+    struct mir_eglapp_arg const* const* list;
     int max_len = 0;
 
     for (list = arg_lists; *list != NULL; ++list)
     {
-        const struct mir_eglapp_arg* arg;
+        struct mir_eglapp_arg const* arg;
         for (arg = *list; arg->syntax != NULL; ++arg)
         {
             int len = indent + strlen(arg->syntax);
@@ -208,7 +200,7 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
     }
     for (list = arg_lists; *list != NULL; ++list)
     {
-        const struct mir_eglapp_arg* arg;
+        struct mir_eglapp_arg const* arg;
         for (arg = *list; arg->syntax != NULL; ++arg)
         {
             int len = 0, remainder = 0;
@@ -220,15 +212,15 @@ static void show_help(const struct mir_eglapp_arg* const* arg_lists)
 }
 
 static mir_eglapp_bool parse_args(int argc, char *argv[],
-                             const struct mir_eglapp_arg* const* arg_lists)
+                             struct mir_eglapp_arg const* const* arg_lists)
 {
     for (int i = 1; i < argc; ++i)
     {
         char const* operator = argv[i];
-        const struct mir_eglapp_arg* const* list;
+        struct mir_eglapp_arg const* const* list;
         for (list = arg_lists; *list != NULL; ++list)
         {
-            const struct mir_eglapp_arg* arg;
+            struct mir_eglapp_arg const* arg;
             for (arg = *list; arg->syntax != NULL; ++arg)
             {
                 char const* space = strchr(arg->syntax, ' ');
@@ -276,8 +268,9 @@ static mir_eglapp_bool parse_args(int argc, char *argv[],
     return 1;
 }
 
-mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
-                                unsigned int *width, unsigned int *height)
+mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
+                                unsigned int* width, unsigned int* height,
+                                struct mir_eglapp_arg const* custom_args)
 {
     EGLint ctxattribs[] =
     {
@@ -294,9 +287,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     char const* dims = NULL;
     char const* cursor_name = mir_default_cursor_name;
     unsigned int rgb_bits = 8;
-    mir_eglapp_bool help = 0, fullscreen = 0, no_vsync = 0, quiet = 0;
+    mir_eglapp_bool help = 0, no_vsync = 0, quiet = 0;
+    mir_eglapp_bool fullscreen = !*width || !*height;
 
-    const struct mir_eglapp_arg default_args[] =
+    struct mir_eglapp_arg const default_args[] =
     {
         {"-a <name>", "=", &appname, "Set application name"},
         {"-b <0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
@@ -313,10 +307,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         {NULL, NULL, NULL, NULL, NULL}
     };
 
-    const struct mir_eglapp_arg* const arg_lists[] =
+    struct mir_eglapp_arg const* const arg_lists[] =
     {
-        /* TODO: custom args */
         default_args,
+        custom_args,
         NULL
     };
 

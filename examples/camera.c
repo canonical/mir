@@ -369,17 +369,38 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_resolution, 1);
+    unsigned int win_width = 100;
+    unsigned int win_height = 100;
+
+    char const* dev_video = "/dev/video0";
+    struct mir_eglapp_arg custom_args[] =
+    {
+        {"-d <path>", "=", &dev_video,
+            "Path to video device (default /dev/video0)"},
+        {NULL, NULL, NULL, NULL},
+    };
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
+        return 1;
+
+    Camera *cam = open_camera(dev_video, camera_pref_resolution, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return 0;
     }
 
-    unsigned int win_width = cam->pix.width;
-    unsigned int win_height = cam->pix.height;
-    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
-        return 1;
+    MirSurface* surface = mir_eglapp_native_surface();
+    if (win_width == 100)  /* Fullscreen was not chosen */
+    {
+        /* Chicken or egg? init before open_camera, before size is known */
+        MirConnection* connection = mir_eglapp_native_connection();
+        MirSurfaceSpec* changes =
+            mir_connection_create_spec_for_changes(connection);
+        mir_surface_spec_set_width(changes, cam->pix.width);
+        mir_surface_spec_set_height(changes, cam->pix.height);
+        mir_surface_apply_spec(surface, changes);
+        mir_surface_spec_release(changes);
+    }
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
@@ -439,7 +460,6 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         true
     };
-    MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
     bool first_frame = true;

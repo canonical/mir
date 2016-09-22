@@ -605,18 +605,26 @@ int main(int argc, char* argv[])
 
     char const* const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera* cam = open_camera("/dev/video0", camera_pref_speed, 3);
+    // Default to fullscreen to get minimal latency (predictive bypass)
+    unsigned int win_width = 0;
+    unsigned int win_height = 0;
+
+    char const* dev_video = "/dev/video0";
+    struct mir_eglapp_arg custom_args[] =
+    {
+        {"-d <path>", "=", &dev_video,
+            "Path to video device (default /dev/video0)"},
+        {NULL, NULL, NULL, NULL},
+    };
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
+        return 1;
+
+    Camera* cam = open_camera(dev_video, camera_pref_speed, 3);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return 0;  // Alan needs this to be success
     }
-
-    // Default to fullscreen to get minimal latency (predictive bypass)
-    unsigned int win_width = 0;
-    unsigned int win_height = 0;
-    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
-        return 1;
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);

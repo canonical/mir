@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 {
     unsigned int width = 128, height = 128;
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     glClearColor(0.5, 0.5, 0.5, mir_eglapp_background_opacity);

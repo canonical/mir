@@ -27,10 +27,20 @@ typedef int mir_eglapp_bool;
 struct MirConnection;
 struct MirSurface;
 
+struct mir_eglapp_arg
+{
+    char const* syntax;
+    char const* format; /* "%" scanf format or "!"=flag, "$"=--, "="=copy */
+    void* variable;
+    char const* description;
+};
+
+
 extern float mir_eglapp_background_opacity;
 
-mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
-                                unsigned int *width, unsigned int *height);
+mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
+                                unsigned int* width, unsigned int* height,
+                                struct mir_eglapp_arg const* custom_args);
 void            mir_eglapp_swap_buffers(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_shutdown(void);
