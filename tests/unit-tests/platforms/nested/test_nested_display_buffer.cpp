@@ -187,7 +187,7 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
     t.join();
 }
 
-TEST_F(NestedDisplayBuffer, DISABLED_respects_passthrough_option)
+TEST_F(NestedDisplayBuffer, respects_passthrough_option)
 {
     StubNestedBuffer nested_buffer; 
     mg::RenderableList optimizable_list =
