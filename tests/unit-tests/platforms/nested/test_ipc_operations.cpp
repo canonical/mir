@@ -146,6 +146,7 @@ TEST_F(NestedIPCOperations, packs_fenced_buffer_itself_when_native)
     MirBufferPackage package;
     package.data_items = 0;
     package.fd_items = 0;
+    package.flags = 0;
 
     EXPECT_CALL(*nested, package())
         .WillOnce(Return(&package));

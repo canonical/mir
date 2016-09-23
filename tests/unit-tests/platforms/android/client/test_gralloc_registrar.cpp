@@ -95,7 +95,7 @@ struct GrallocRegistrar : public ::testing::Test
         for (auto i = 0; i < stub_package.fd_items; i++)
             stub_package.fd[i] = (i*4);
         stub_package.flags = 0;
-        for (auto i = 1; i < stub_package.data_items; i++)
+        for (auto i = 0; i < stub_package.data_items; i++)
             stub_package.data[i] = (i*3);
     }
 
