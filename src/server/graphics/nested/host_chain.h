@@ -33,7 +33,7 @@ class HostChain
 {
 public:
     virtual ~HostChain() = default;
-    virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const&) = 0;
+    virtual void submit_buffer(NativeBuffer&) = 0;
     virtual MirPresentationChain* handle() = 0;
 protected:
     HostChain() = default;

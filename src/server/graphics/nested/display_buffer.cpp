@@ -131,12 +131,14 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 
     if (!host_chain)
     {
-        printf("CREATE CHAIN!\n");
         host_chain = host_connection->create_chain();
     }
 
     auto sub_id = nested_buffer->client_handle();
-    if (current_buf == sub_id) return true;
+    if (current_buf == sub_id)
+    {
+        return true;
+    }
     current_buf = sub_id;
     {
         std::unique_lock<std::mutex> lk(mutex);
@@ -146,7 +148,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     nested_buffer->on_ownership_notification(
         std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, sub_id));
 
-    host_chain->submit_buffer(passthrough_buffer);
+    host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)
     {

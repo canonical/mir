@@ -494,13 +494,9 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
+    void submit_buffer(mgn::NativeBuffer& buffer)
     {
-        auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(buffer->native_buffer_handle().get());
-        if (!nested_buffer) return;
-
-
-        mir_presentation_chain_submit_buffer(chain, nested_buffer->client_handle());
+        mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
 
     MirPresentationChain* handle()

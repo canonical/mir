@@ -29,6 +29,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_host_connection.h"
 #include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -91,9 +92,8 @@ struct MockHostSurface : mgn::HostSurface
 
 struct MockNestedChain : mgn::HostChain
 {
-    MOCK_METHOD1(submit_buffer, void(std::shared_ptr<mg::Buffer> const&));
+    MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_METHOD0(handle, MirPresentationChain*());
-    MOCK_METHOD1(set, void(bool));
 };
 
 struct MockNestedStream : mgn::HostStream
@@ -111,7 +111,9 @@ struct StubNestedBuffer :
     {
         return std::const_pointer_cast<StubNestedBuffer>(shared_from_this());
     }
-    MirBuffer* client_handle() const override { return nullptr; }
+
+    mtd::NullClientBuffer mutable null_buffer;
+    MirBuffer* client_handle() const override { return reinterpret_cast<::MirBuffer*>(&null_buffer); }
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
     MirGraphicsRegion get_graphics_region() override
     {
@@ -208,6 +210,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
     EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
 }
 
 TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
