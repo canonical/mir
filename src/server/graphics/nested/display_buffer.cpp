@@ -26,6 +26,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/events/event_private.h"
+#include "buffer.h"
 
 #include <sstream>
 #include <boost/throw_exception.hpp>
@@ -95,14 +96,17 @@ void mgn::detail::DisplayBuffer::release_current()
 
 void mgn::detail::DisplayBuffer::swap_buffers()
 {
+    eglSwapBuffers(egl_display, egl_surface);
     if (content != BackingContent::stream)
     {
         auto spec = host_connection->create_surface_spec();
         spec->add_stream(*host_stream, geom::Displacement{0,0});
         content = BackingContent::stream;
         host_surface->apply_spec(*spec);
+        //if the host_chain is not released, a buffer of the passthrough surface might get caught
+        //up in the host server, resulting a drop in nbuffers available to the client
+        host_chain = nullptr;
     }
-    eglSwapBuffers(egl_display, egl_surface);
 }
 
 void mgn::detail::DisplayBuffer::bind()
@@ -117,20 +121,35 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         (list.back()->shaped()) ||
         (list.back()->transformation() != identity))
     {
+        //could not represent scene with subsurfaces
         return false;
     }
 
     auto passthrough_buffer = list.back()->buffer();
-    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
-    if (!nested_buffer)
+    auto native = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
+    if (!native)
         return false;
 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    nested_buffer->on_ownership_notification(
-        [passthrough_buffer]() mutable { passthrough_buffer.reset(); });
-    host_chain->submit_buffer(*nested_buffer);
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        SubmissionInfo submission_info{native->client_handle(), host_chain->handle()};
+        auto submitted = submitted_buffers.find(submission_info);
+        if ((submission_info != last_submitted) && (submitted != submitted_buffers.end()))
+            BOOST_THROW_EXCEPTION(std::logic_error("cannot resubmit buffer that has not been returned by host server"));
+        if ((submission_info == last_submitted) && (submitted != submitted_buffers.end()))
+            return true;
+
+        submitted_buffers[submission_info] = passthrough_buffer;
+        last_submitted = submission_info;
+    }
+
+    native->on_ownership_notification(
+        std::bind(&mgn::detail::DisplayBuffer::release_buffer, this,
+        native->client_handle(), host_chain->handle()));
+    host_chain->submit_buffer(*native);
 
     if (content != BackingContent::chain)
     {
@@ -140,6 +159,14 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         host_surface->apply_spec(*spec);
     }
     return true;
+}
+
+void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationChain *c)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    auto buf = submitted_buffers.find(SubmissionInfo{b, c});
+    if (buf != submitted_buffers.end())
+        submitted_buffers.erase(buf);
 }
 
 MirOrientation mgn::detail::DisplayBuffer::orientation() const
@@ -158,6 +185,11 @@ MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
+    for(auto& b : submitted_buffers)
+    {
+        auto n = dynamic_cast<mgn::NativeBuffer*>(b.second->native_buffer_handle().get());
+        n->on_ownership_notification([]{});
+    }
     host_surface->set_event_handler(nullptr, nullptr);
 }
 

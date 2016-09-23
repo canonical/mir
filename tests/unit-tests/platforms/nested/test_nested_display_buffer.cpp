@@ -29,6 +29,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_host_connection.h"
 #include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -92,6 +93,7 @@ struct MockHostSurface : mgn::HostSurface
 struct MockNestedChain : mgn::HostChain
 {
     MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
+    MOCK_METHOD0(handle, MirPresentationChain*());
 };
 
 struct MockNestedStream : mgn::HostStream
@@ -109,9 +111,10 @@ struct StubNestedBuffer :
     {
         return std::const_pointer_cast<StubNestedBuffer>(shared_from_this());
     }
-    MirBuffer* client_handle() const override { return nullptr; }
+
+    mtd::NullClientBuffer mutable null_buffer;
+    MirBuffer* client_handle() const override { return reinterpret_cast<::MirBuffer*>(&null_buffer); }
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
-    MirNativeBuffer* get_native_handle() override { return nullptr; }
     MirGraphicsRegion get_graphics_region() override
     {
         return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr };
@@ -119,6 +122,7 @@ struct StubNestedBuffer :
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
     void on_ownership_notification(std::function<void()> const& f) override { fn = f; }
+    MirNativeBuffer* get_native_handle() override { return nullptr; }
     void trigger()
     {
         if (fn) fn();
@@ -180,7 +184,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 {
     NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
-    MockNestedBuffer nested_buffer; 
+    NiceMock<MockNestedBuffer> nested_buffer; 
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
@@ -199,6 +203,40 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
     EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
+}
+
+TEST_F(NestedDisplayBuffer, accepts_double_submissions_of_same_buffer_after_buffer_triggered)
+{
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    nested_buffer1.trigger();
+    EXPECT_TRUE(display_buffer->overlay(list1));
+}
+
+TEST_F(NestedDisplayBuffer, throws_on_interleaving_without_trigger)
+{
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    EXPECT_THROW({
+        EXPECT_TRUE(display_buffer->overlay(list1));
+    }, std::logic_error);
 }
 
 TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
@@ -225,12 +263,53 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
-    EXPECT_CALL(mock_host_surface, apply_spec(_))
-        .Times(2);
+    InSequence seq;
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
     EXPECT_TRUE(display_buffer->overlay(list));
     display_buffer->swap_buffers();
+}
+
+//If we don't release the HostChain, then one of the client's buffers will get
+//reserved in the host, but not shown onscreen. This will degrade the client's
+//available buffers by one. Releasing the chain will result in that buffer
+//getting returned to the client.
+TEST_F(NestedDisplayBuffer, recreates_chain)
+{
+    int fake_chain_handle = 4;
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    NiceMock<MockNestedBuffer> nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_chain2 = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_))
+        .Times(2);
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
+    ON_CALL(*mock_chain, handle())
+        .WillByDefault(Return(reinterpret_cast<MirPresentationChain*>(&fake_chain_handle)));
+    EXPECT_CALL(*mock_chain2, submit_buffer(Ref(nested_buffer)));
+
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .Times(2)
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain2); }));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    display_buffer->swap_buffers();
+    EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
 }
 
 TEST_F(NestedDisplayBuffer, only_applies_spec_once_per_mode_toggle)
