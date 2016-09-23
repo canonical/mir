@@ -386,3 +386,15 @@ MIR_COMMON_0.24 {
        vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;
+
+MIR_COMMON_0.25 {
+  global:
+    extern "C++" {
+      MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
+      MirSurfacePlacementEvent::id*;
+      MirSurfacePlacementEvent::set_id*;
+      MirSurfacePlacementEvent::placement*;
+      MirSurfacePlacementEvent::set_placement*;
+      mir::output_type_name*;
+    };
+} MIR_COMMON_0.24;

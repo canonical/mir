@@ -74,7 +74,9 @@ void mgm::IpcOperations::pack_buffer(
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        auto native_handle = buffer.native_buffer_handle();
+        auto native_handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
+        if (!native_handle)
+            BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
         for(auto i=0; i<native_handle->data_items; i++)
         {
             packer.pack_data(native_handle->data[i]);
@@ -84,7 +86,7 @@ void mgm::IpcOperations::pack_buffer(
             packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        packer.pack_stride(buffer.stride());
+        packer.pack_stride(mir::geometry::Stride{native_handle->stride});
         packer.pack_flags(native_handle->flags);
         packer.pack_size(buffer.size());
     }

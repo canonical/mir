@@ -19,10 +19,12 @@
 #include "display_buffer.h"
 
 #include "host_connection.h"
+#include "host_stream.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/events/event_private.h"
 
+#include <sstream>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -30,20 +32,43 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
+namespace
+{
+std::shared_ptr<mgn::HostStream> create_host_stream(
+    mgn::HostConnection& connection,
+    mg::DisplayConfigurationOutput const& output)
+{
+    mg::BufferProperties properties(output.extents().size, output.current_format, mg::BufferUsage::hardware);
+    return connection.create_stream(properties);
+}
+
+std::shared_ptr<mgn::HostSurface> create_host_surface(
+    mgn::HostConnection& connection,
+    std::shared_ptr<mgn::HostStream> const& host_stream,
+    mg::DisplayConfigurationOutput const& output)
+{
+    std::ostringstream surface_title;
+    surface_title << "Mir nested display for output #" << output.id.as_value();
+    mg::BufferProperties properties(output.extents().size, output.current_format, mg::BufferUsage::hardware);
+    return connection.create_surface(
+        host_stream, mir::geometry::Displacement{0, 0}, properties,
+        surface_title.str().c_str(), static_cast<uint32_t>(output.id.as_value()));
+}
+}
+
 mgn::detail::DisplayBuffer::DisplayBuffer(
     EGLDisplayHandle const& egl_display,
-    std::shared_ptr<HostSurface> const& host_surface,
-    geometry::Rectangle const& area,
-    MirPixelFormat preferred_format,
+    mg::DisplayConfigurationOutput best_output,
     std::shared_ptr<HostConnection> const& host_connection,
     mgn::PassthroughOption const option) :
     egl_display(egl_display),
-    host_surface{host_surface},
+    host_stream{create_host_stream(*host_connection, best_output)},
+    host_surface{create_host_surface(*host_connection, host_stream, best_output)},
     host_connection{host_connection},
-    egl_config{egl_display.choose_windowed_config(preferred_format)},
+    egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
-    area{area.top_left, area.size},
-    egl_surface{egl_display, host_surface->egl_native_window(), egl_config},
+    area{best_output.extents()},
+    egl_surface{egl_display, host_stream->egl_native_window(), egl_config},
     passthrough_option(option)
 {
     host_surface->set_event_handler(event_thunk, this);
@@ -74,7 +99,7 @@ void mgn::detail::DisplayBuffer::bind()
 {
 }
 
-bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
+bool mgn::detail::DisplayBuffer::overlay(RenderableList const&)
 {
     return false;
 }

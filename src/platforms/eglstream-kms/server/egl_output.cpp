@@ -194,8 +194,6 @@ geom::Size mgek::EGLOutput::size() const
 
 int mgek::EGLOutput::max_refresh_rate() const
 {
-    // TODO: In future when DRM exposes FreeSync/Adaptive Sync/G-Sync info
-    //       this value may be calculated differently.
     drmModeModeInfo const& current_mode = connector->modes[mode_index];
     return current_mode.vrefresh;
 }

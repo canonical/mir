@@ -136,10 +136,10 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
     ASSERT_THAT(pixel_source, testing::Ne(nullptr));
 
-    pixel_source->read([&valid_content, &buffer](unsigned char const* data){
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = draw_pattern.check(region);
     });
@@ -196,10 +196,10 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     auto valid_content = false;
     auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
     ASSERT_THAT(pixel_source, testing::Ne(nullptr));
-    pixel_source->read([&valid_content, &buffer](unsigned char const* data){
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         mt::DrawPatternSolid green_pattern(0xFF00FF00);
         valid_content = green_pattern.check(region);
@@ -281,7 +281,7 @@ TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
                 std::make_shared<BasicRenderable>(buffer)
             };
 
-            db.post_renderables_if_optimizable(list);
+            db.overlay(list);
         });
         group.post();
     });
@@ -310,7 +310,7 @@ TEST_F(AndroidMirDiagnostics, can_allocate_sw_buffer)
     pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = green_pattern.check(region);
     });

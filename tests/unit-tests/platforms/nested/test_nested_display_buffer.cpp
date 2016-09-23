@@ -35,6 +35,7 @@ namespace mgnd = mgn::detail;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -70,18 +71,20 @@ private:
     void* event_context;
 };
 
-struct NestedDisplayBuffer : testing::Test
+struct NestedDisplayBuffer : Test
 {
+    NestedDisplayBuffer()
+    {
+        output.top_left = { 0, 0 };
+        output.current_mode_index = 0;
+        output.orientation = mir_orientation_normal;
+        output.current_format = mir_pixel_format_abgr_8888;
+        output.modes = { { { 10, 11 }, 55.0f } };
+    }
+
     auto create_display_buffer(mgn::PassthroughOption option)
     {
-        return std::make_shared<mgnd::DisplayBuffer>(
-            egl_display,
-            mt::fake_shared(host_surface),
-            rect,
-            MirPixelFormat{},
-            std::make_shared<mtd::StubHostConnection>(),
-            option
-            );
+        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, host_connection, option);
     }
 
     auto create_display_buffer()
@@ -92,9 +95,12 @@ struct NestedDisplayBuffer : testing::Test
 
     geom::Size const size { 1024, 768 }; 
     geom::Rectangle const rect {{0,0}, size};
-    testing::NiceMock<mtd::MockEGL> mock_egl;
+    NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
     EventHostSurface host_surface;
+    std::shared_ptr<mtd::StubHostConnection> host_connection =
+        std::make_shared<mtd::StubHostConnection>(mt::fake_shared(host_surface));
+    mg::DisplayConfigurationOutput output;
 };
 
 }
@@ -123,6 +129,6 @@ TEST_F(NestedDisplayBuffer, DISABLED_respects_passthrough_option)
     auto enabled_display_buffer = create_display_buffer(mgn::PassthroughOption::enabled);
     auto disabled_display_buffer = create_display_buffer(mgn::PassthroughOption::disabled);
 
-    EXPECT_TRUE(enabled_display_buffer->post_renderables_if_optimizable(optimizable_list));
-    EXPECT_FALSE(disabled_display_buffer->post_renderables_if_optimizable(optimizable_list));
+    EXPECT_TRUE(enabled_display_buffer->overlay(optimizable_list));
+    EXPECT_FALSE(disabled_display_buffer->overlay(optimizable_list));
 }

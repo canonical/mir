@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,9 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/session.h"
+#include "mir_toolkit/events/surface_placement.h"
+#include "mir/events/event_builders.h"
+#include "mir/scene/surface.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -356,6 +359,237 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
     mir_surface_spec_release(surface_spec);
 
     EXPECT_TRUE(received.wait_for(400ms));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_reaches_the_window_manager)
+{
+    int const width{800};
+    int const height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    MirRectangle dummy_rect{13, 17, 19, 23};
+    MirRectangle const aux_rect{20, 20, 50, 50};
+    auto const rect_gravity = mir_placement_gravity_northeast;
+    auto const surface_gravity = mir_placement_gravity_northwest;
+    auto const placement_hints = mir_placement_hints_flip_x;
+    auto const offset_dx = 2;
+    auto const offset_dy = 3;
+
+    start_server();
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    auto parent = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    surface_spec = mir_connection_create_spec_for_tip(
+        connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
+
+    mir_surface_spec_set_placement(
+        surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
+
+    mt::Signal received;
+
+    auto const check_placement = [&](
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params,
+        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+        {
+            EXPECT_TRUE(params.aux_rect.is_set());
+            if (params.aux_rect.is_set())
+            {
+                auto const actual_rect = params.aux_rect.value();
+                EXPECT_THAT(actual_rect.top_left.x, Eq(geom::X{aux_rect.left}));
+                EXPECT_THAT(actual_rect.top_left.y, Eq(geom::Y{aux_rect.top}));
+                EXPECT_THAT(actual_rect.size.width, Eq(geom::Width{aux_rect.width}));
+                EXPECT_THAT(actual_rect.size.height, Eq(geom::Height{aux_rect.height}));
+            }
+
+            EXPECT_TRUE(params.placement_hints.is_set());
+            if (params.placement_hints.is_set())
+                EXPECT_THAT(params.placement_hints.value(), Eq(placement_hints));
+
+            EXPECT_TRUE(params.surface_placement_gravity.is_set());
+            if (params.surface_placement_gravity.is_set())
+                EXPECT_THAT(params.surface_placement_gravity.value(), Eq(surface_gravity));
+
+            EXPECT_TRUE(params.aux_rect_placement_gravity.is_set());
+            if (params.aux_rect_placement_gravity.is_set())
+                EXPECT_THAT(params.aux_rect_placement_gravity.value(), Eq(rect_gravity));
+
+            EXPECT_TRUE(params.aux_rect_placement_offset_x.is_set());
+            if (params.aux_rect_placement_offset_x.is_set())
+                EXPECT_THAT(params.aux_rect_placement_offset_x.value(), Eq(offset_dx));
+
+            EXPECT_TRUE(params.aux_rect_placement_offset_y.is_set());
+            if (params.aux_rect_placement_offset_y.is_set())
+                EXPECT_THAT(params.aux_rect_placement_offset_y.value(), Eq(offset_dy));
+
+            received.raise();
+            return build(session, params);
+        };
+
+    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(check_placement));
+
+    auto child = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    EXPECT_TRUE(received.wait_for(400ms));
+
+    mir_surface_release_sync(child);
+    mir_surface_release_sync(parent);
+    mir_connection_release(connection);
+}
+
+TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_request_reaches_the_window_manager)
+{
+    int const width{800};
+    int const height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    MirRectangle dummy_rect{13, 17, 19, 23};
+    MirRectangle const aux_rect{42, 15, 24, 7};
+    auto const rect_gravity = mir_placement_gravity_north;
+    auto const surface_gravity = mir_placement_gravity_south;
+    auto const placement_hints = MirPlacementHints(mir_placement_hints_flip_y|mir_placement_hints_antipodes);
+    auto const offset_dx = 5;
+    auto const offset_dy = 7;
+
+    start_server();
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    auto parent = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    surface_spec = mir_connection_create_spec_for_menu(
+        connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
+    auto child = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    surface_spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_placement(
+        surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
+
+    mt::Signal received;
+
+    auto const check_placement = [&](
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<ms::Surface> const&,
+        msh::SurfaceSpecification const& spec)
+        {
+            EXPECT_TRUE(spec.aux_rect.is_set());
+            if (spec.aux_rect.is_set())
+            {
+                auto const actual_rect = spec.aux_rect.value();
+                EXPECT_THAT(actual_rect.top_left.x, Eq(geom::X{aux_rect.left}));
+                EXPECT_THAT(actual_rect.top_left.y, Eq(geom::Y{aux_rect.top}));
+                EXPECT_THAT(actual_rect.size.width, Eq(geom::Width{aux_rect.width}));
+                EXPECT_THAT(actual_rect.size.height, Eq(geom::Height{aux_rect.height}));
+            }
+
+            EXPECT_TRUE(spec.placement_hints.is_set());
+            if (spec.placement_hints.is_set())
+                EXPECT_THAT(spec.placement_hints.value(), Eq(placement_hints));
+
+            EXPECT_TRUE(spec.surface_placement_gravity.is_set());
+            if (spec.surface_placement_gravity.is_set())
+                EXPECT_THAT(spec.surface_placement_gravity.value(), Eq(surface_gravity));
+
+            EXPECT_TRUE(spec.aux_rect_placement_gravity.is_set());
+            if (spec.aux_rect_placement_gravity.is_set())
+                EXPECT_THAT(spec.aux_rect_placement_gravity.value(), Eq(rect_gravity));
+
+            EXPECT_TRUE(spec.aux_rect_placement_offset_x.is_set());
+            if (spec.aux_rect_placement_offset_x.is_set())
+                EXPECT_THAT(spec.aux_rect_placement_offset_x.value(), Eq(offset_dx));
+
+            EXPECT_TRUE(spec.aux_rect_placement_offset_y.is_set());
+            if (spec.aux_rect_placement_offset_y.is_set())
+                EXPECT_THAT(spec.aux_rect_placement_offset_y.value(), Eq(offset_dy));
+
+            received.raise();
+        };
+
+    EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_placement));
+    mir_surface_apply_spec(child, surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    EXPECT_TRUE(received.wait_for(400ms));
+
+    mir_surface_release_sync(child);
+    mir_surface_release_sync(parent);
+    mir_connection_release(connection);
+}
+
+namespace
+{
+struct PlacementCheck
+{
+    PlacementCheck(MirRectangle const& placement) : expected_rect{placement} {}
+
+    void check(MirSurfacePlacementEvent const* placement_event)
+    {
+        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).top, Eq(expected_rect.top));
+        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).left, Eq(expected_rect.left));
+        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).height, Eq(expected_rect.height));
+        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).width, Eq(expected_rect.width));
+
+        received.raise();
+    }
+
+    ~PlacementCheck()
+    {
+        EXPECT_TRUE(received.wait_for(400ms));
+    }
+
+private:
+    MirRectangle const& expected_rect;
+    mt::Signal received;
+};
+
+void surface_placement_event_callback(MirSurface* /*surface*/, MirEvent const* event, void* context)
+{
+    if (mir_event_get_type(event) == mir_event_type_surface_placement)
+    {
+        auto const placement_event = mir_event_get_surface_placement_event(event);
+        static_cast<PlacementCheck*>(context)->check(placement_event);
+    }
+}
+}
+
+TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_notification_reaches_the_client)
+{
+    int const width{800};
+    int const height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    MirRectangle placement{42, 15, 24, 7};
+    geom::Rectangle placement_{{42, 15}, {24, 7}};
+
+    std::shared_ptr<ms::Surface> scene_surface;
+
+    auto capture_scene_surface = [&](
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params,
+        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+        ->  mf::SurfaceId
+        {
+            auto const result = build(session, params);
+            scene_surface = session->surface(result);
+            return result;
+        };
+
+    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(capture_scene_surface));
+
+    start_server();
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    PlacementCheck placement_check{placement};
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    mir_surface_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    scene_surface->placed_relative(placement_);
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

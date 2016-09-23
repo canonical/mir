@@ -24,6 +24,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
+#include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
@@ -60,6 +61,10 @@ struct WrappingDisplay : mg::Display
     std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
         return display->configuration();
+    }
+    bool apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const& /*conf*/) const override
+    {
+        return false;
     }
     void configure(mg::DisplayConfiguration const& conf) override
     {
@@ -118,7 +123,7 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
         }
 
         return std::make_shared<mtd::StubBuffer>(
-            std::make_shared<mg::NativeBuffer>(properties), properties,
+            std::make_shared<mtf::NativeBuffer>(properties), properties,
             mir::geometry::Stride{ properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)});
     }
 };
@@ -132,11 +137,14 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
         if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
-            auto native_handle = buffer.native_buffer_handle();
+            auto native_handle = std::dynamic_pointer_cast<mtf::NativeBuffer>(buffer.native_buffer_handle());
+            if (!native_handle)
+                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             message.pack_data(static_cast<int>(native_handle->properties.usage));
             message.pack_data(native_handle->data);
             message.pack_fd(native_handle->fd);
-            message.pack_stride(buffer.stride());
+            message.pack_stride(
+                geom::Stride{buffer.size().width.as_int() * MIR_BYTES_PER_PIXEL(buffer.pixel_format())});
             message.pack_size(buffer.size());
         }
     }
@@ -287,10 +295,19 @@ std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,

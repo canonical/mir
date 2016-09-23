@@ -20,6 +20,7 @@
 #include "nested_display_configuration.h"
 #include "display_buffer.h"
 #include "host_connection.h"
+#include "host_stream.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -29,12 +30,12 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <sstream>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -299,25 +300,11 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
             {
                 complete_display_initialization(egl_config_format);
 
-                std::ostringstream surface_title;
-
-                surface_title << "Mir nested display for output #" << best_output.id.as_value();
-
-                auto const host_surface = connection->create_surface(
-                    extents.size.width.as_int(),
-                    extents.size.height.as_int(),
-                    egl_config_format,
-                    surface_title.str().c_str(),
-                    mir_buffer_usage_hardware,
-                    static_cast<uint32_t>(best_output.id.as_value()));
-
                 eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,
-                        host_surface,
-                        extents,
-                        best_output.current_format,
+                        best_output,
                         connection,
                         passthrough_option));
             }
@@ -381,4 +368,10 @@ mg::NativeDisplay* mgn::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 {
     return egl_display.create_gl_context();
+}
+
+bool mgn::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
 }

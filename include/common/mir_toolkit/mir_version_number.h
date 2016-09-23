@@ -26,7 +26,7 @@
  *
  * Returns the combined version information as a single 32-bit value for
  * logical comparisons. For example:
- *     #if MIR_CLIENT_VERSION >= MIR_VERSION_NUMBER(2,3,4)
+ *     \#if MIR_CLIENT_VERSION >= MIR_VERSION_NUMBER(2,3,4)
  *
  * This can be useful to conditionally build code depending on new features or
  * specific bugfixes in the Mir client library.

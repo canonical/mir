@@ -19,6 +19,10 @@
 #ifndef MIR_RENDERER_SW_PIXEL_SOURCE_H_
 #define MIR_RENDERER_SW_PIXEL_SOURCE_H_
 
+#include <stddef.h>
+#include <functional>
+#include "mir/geometry/dimensions.h"
+
 namespace mir
 {
 namespace renderer
@@ -38,6 +42,7 @@ public:
     virtual void write(unsigned char const* pixels, size_t size) = 0;
     //FIXME: correct read, it doesn't give size or format information about the pixels.
     virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
+    virtual geometry::Stride stride() const = 0;
 
 protected:
     PixelSource() = default;

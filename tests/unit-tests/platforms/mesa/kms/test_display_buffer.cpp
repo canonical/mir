@@ -62,7 +62,7 @@ public:
         , stub_gbm_native_buffer{
              std::make_shared<StubGBMNativeBuffer>(display_area.size)}
         , stub_shm_native_buffer{
-             std::make_shared<NativeBuffer>()}
+             std::make_shared<mir::graphics::mesa::NativeBuffer>()}
         , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -98,7 +98,6 @@ public:
             .WillByDefault(Return(stub_gbm_native_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
 
-        memset(stub_shm_native_buffer.get(), 0, sizeof(MirNativeBuffer));
         stub_shm_native_buffer->flags = 0;  // Is not a hardware/GBM buffer
 
         ON_CALL(*mock_software_buffer, size())
@@ -120,8 +119,8 @@ protected:
     std::shared_ptr<MockBuffer> mock_software_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
     std::shared_ptr<FakeRenderable> fake_software_renderable;
-    std::shared_ptr<NativeBuffer> stub_gbm_native_buffer;
-    std::shared_ptr<NativeBuffer> stub_shm_native_buffer;
+    std::shared_ptr<mir::graphics::mesa::NativeBuffer> stub_gbm_native_buffer;
+    std::shared_ptr<mir::graphics::mesa::NativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
@@ -165,7 +164,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 
     auto original_count = mock_bypassable_buffer.use_count();
 
-    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
     EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
 
     // Switch back to normal compositing
@@ -193,7 +192,7 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
 
     for (int frame = 0; frame < 5; ++frame)
     {
-        ASSERT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+        ASSERT_TRUE(db.overlay(bypassable_list));
         db.post();
 
         // Cast to a simple int type so that test failures are readable
@@ -223,7 +222,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 
     for (int frame = 0; frame < 5; ++frame)
     {
-        ASSERT_FALSE(db.post_renderables_if_optimizable(non_bypassable_list));
+        ASSERT_FALSE(db.overlay(non_bypassable_list));
         db.post();
 
         // Cast to a simple int type so that test failures are readable
@@ -247,7 +246,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 
     auto original_count = mock_bypassable_buffer.use_count();
 
-    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
     EXPECT_EQ(original_count+1, mock_bypassable_buffer.use_count());
 
     db.post();
@@ -270,7 +269,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
@@ -292,9 +291,9 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_FALSE(db.overlay(bypassable_list));
     // And then we recover. DRM finds enough resources to AddFB ...
-    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
@@ -321,7 +320,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
@@ -338,7 +337,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+    EXPECT_FALSE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
@@ -360,7 +359,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
@@ -385,7 +384,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
     // If you find yourself using gbm_ functions on a Shm buffer then you're
     // asking for a crash (LP: #1493721) ...
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_)).Times(0);
-    db.post_renderables_if_optimizable(list);
+    db.overlay(list);
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
@@ -586,7 +585,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer)
@@ -615,6 +614,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+    EXPECT_FALSE(db.overlay(list));
 }
 

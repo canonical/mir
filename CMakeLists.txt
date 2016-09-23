@@ -66,15 +66,18 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
+
+if(HAS_W_MISMATCHED_TAGS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
+endif()
+
 option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
 if(MIR_USE_LD_GOLD)
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
-endif()
-
-if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
@@ -316,3 +319,9 @@ mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirprotobuf release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
+
+if (TARGET doc)
+  add_custom_target(doc-show
+          xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
+          DEPENDS doc)
+endif()

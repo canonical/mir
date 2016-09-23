@@ -64,7 +64,7 @@ private:
     int mutable fd;
  
     std::shared_ptr<BufferRegistrar> const buffer_registrar;
-    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
+    std::shared_ptr<graphics::android::NativeBuffer> const native_buffer;
     MirPixelFormat const buffer_pf;
     geometry::Stride const buffer_stride;
     geometry::Size const buffer_size;

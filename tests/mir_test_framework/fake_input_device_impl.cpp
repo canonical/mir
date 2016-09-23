@@ -39,6 +39,7 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
+namespace synthesis = mir::input::synthesis;
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     : queue{std::make_shared<md::ActionQueue>()}, device{std::make_shared<InputDevice>(info, queue)}

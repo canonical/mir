@@ -3,6 +3,7 @@
 #define MIR_TEST_FRAMEWORK_STUB_PLATFORM_NATIVE_BUFFER_H_
 
 #include <mir/graphics/buffer_properties.h>
+#include <mir/graphics/native_buffer.h>
 #include <mir/fd.h>
 
 #include <sys/types.h>
@@ -13,15 +14,12 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-namespace mir
-{
-namespace graphics
+namespace mir_test_framework
 {
 //just a simple FD and int, helps to check for leaks/memory issues.
-class NativeBuffer
+struct NativeBuffer : mir::graphics::NativeBuffer
 {
-public:
-    NativeBuffer(graphics::BufferProperties const& properties) : 
+    NativeBuffer(mir::graphics::BufferProperties const& properties) : 
         properties(properties)
     {
         if (fd < 0)
@@ -33,8 +31,7 @@ public:
     }
     int const data {0x328};
     mir::Fd const fd{open("/dev/zero", O_RDONLY)};
-    graphics::BufferProperties const properties;
+    mir::graphics::BufferProperties const properties;
 };
-}
 }
 #endif /* MIR_TEST_FRAMEWORK_STUB_PLATFORM_NATIVE_BUFFER_H_ */

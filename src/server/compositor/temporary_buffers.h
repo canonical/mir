@@ -36,7 +36,6 @@ class TemporaryBuffer : public mg::Buffer
 {
 public:
     geometry::Size size() const override;
-    geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
     mg::BufferID id() const override;
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override;

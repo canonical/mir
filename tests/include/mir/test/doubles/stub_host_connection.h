@@ -21,6 +21,7 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/server/graphics/nested/host_stream.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
@@ -36,6 +37,16 @@ namespace doubles
 class StubHostConnection : public graphics::nested::HostConnection
 {
 public:
+    StubHostConnection(std::shared_ptr<graphics::nested::HostSurface> const& surf) :
+        surface(surf)
+    {
+    }
+
+    StubHostConnection() :
+        StubHostConnection(std::make_shared<NullHostSurface>())
+    {
+    }
+
     std::vector<int> platform_fd_items() override { return {}; }
 
     EGLNativeDisplayType egl_native_display() override { return {}; }
@@ -54,17 +65,10 @@ public:
 
     std::shared_ptr<graphics::nested::HostSurface>
         create_surface(
-            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
-            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
+            std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+            graphics::BufferProperties, char const*, uint32_t) override
     {
-        class NullHostSurface : public graphics::nested::HostSurface
-        {
-        public:
-            EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(mir_surface_event_callback, void*) override {}
-        };
-
-        return std::make_shared<NullHostSurface>();
+        return surface;
     }
 
     graphics::PlatformOperationMessage platform_operation(
@@ -96,6 +100,38 @@ public:
     }
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
+    }
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&)
+    {
+        struct NullStream : graphics::nested::HostStream
+        {
+            MirBufferStream* handle() const override { return nullptr; }
+            EGLNativeWindowType egl_native_window() const override { return 0; }
+        };
+        return std::make_unique<NullStream>();
+    }
+
+    class NullHostSurface : public graphics::nested::HostSurface
+    {
+    public:
+        EGLNativeWindowType egl_native_window() override { return {}; }
+        void set_event_handler(mir_surface_event_callback, void*) override {}
+    };
+    std::shared_ptr<graphics::nested::HostSurface> const surface;
+    
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+
+    MirNativeBuffer* get_native_handle(MirBuffer*)
+    {
+        return nullptr;
+    }
+
+    MirGraphicsRegion get_graphics_region(MirBuffer*)
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
     }
 };
 

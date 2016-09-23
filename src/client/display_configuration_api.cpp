@@ -18,8 +18,9 @@
 
 #include <mir_toolkit/mir_display_configuration.h>
 #include <mir/require.h>
-
+#include "mir/output_type_names.h"
 #include "display_configuration.h"
+#include "mir/uncaught.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -131,6 +132,16 @@ MirOutputType mir_output_get_type(MirOutput const* client_output)
     auto output = client_to_output(client_output);
 
     return static_cast<MirOutputType>(output->type());
+}
+
+char const* mir_display_output_type_name(MirDisplayOutputType type)
+{
+    return mir::output_type_name(type);
+}
+
+char const* mir_output_type_name(MirOutputType type)
+{
+    return mir::output_type_name(type);
 }
 
 int mir_output_get_physical_width_mm(MirOutput const *client_output)
@@ -340,6 +351,71 @@ MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* clie
     auto output = client_to_output(client_output);
 
     return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
+}
+
+uint32_t mir_output_get_gamma_size(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    return (output->gamma_red().size() / (sizeof(uint16_t) / sizeof(char)));
+}
+
+MirOutputGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output)
+{
+    auto output = client_to_output(client_output);
+
+    return static_cast<MirOutputGammaSupported>(output->gamma_supported());
+}
+
+void mir_output_get_gamma(MirOutput const* client_output,
+                          uint16_t* red,
+                          uint16_t* green,
+                          uint16_t* blue,
+                          uint32_t  size)
+try
+{
+    auto output = client_to_output(client_output);
+
+    auto red_bytes = output->gamma_red();
+    auto green_bytes = output->gamma_green();
+    auto blue_bytes = output->gamma_blue();
+
+    // Check our number of bytes is equal to our uint16_t size
+    mir::require(red_bytes.size() / (sizeof(uint16_t) / sizeof(char)) == size);
+
+    std::copy(std::begin(red_bytes), std::end(red_bytes),
+        reinterpret_cast<char*>(red));
+    std::copy(std::begin(green_bytes), std::end(green_bytes),
+        reinterpret_cast<char*>(green));
+    std::copy(std::begin(blue_bytes), std::end(blue_bytes),
+        reinterpret_cast<char*>(blue));
+
+} catch (std::exception const& e) {
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
+}
+
+void mir_output_set_gamma(MirOutput* client_output,
+                          uint16_t const* red,
+                          uint16_t const* green,
+                          uint16_t const* blue,
+                          uint32_t  size)
+try
+{
+    auto output = client_to_output(client_output);
+
+    // Since we are going from a uint16_t to a char (int8_t) we are doubling the size
+    output->set_gamma_red(reinterpret_cast<char const*>(red),
+        size * (sizeof(uint16_t) / sizeof(char)));
+    output->set_gamma_green(reinterpret_cast<char const*>(green),
+        size * (sizeof(uint16_t) / sizeof(char)));
+    output->set_gamma_blue(reinterpret_cast<char const*>(blue),
+        size * (sizeof(uint16_t) / sizeof(char)));
+
+    mir::require(size == mir_output_get_gamma_size(client_output));
+} catch (std::exception const& e) {
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
 }
 
 MirFormFactor mir_output_get_form_factor(MirOutput const* client_output)

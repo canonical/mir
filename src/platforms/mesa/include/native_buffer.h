@@ -20,16 +20,22 @@
 #define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
 
 #include <mir_toolkit/mir_native_buffer.h>
+#include "mir/graphics/native_buffer.h"
+
+#include <cstdlib>
 #include <gbm.h>
 
 namespace mir
 {
 namespace graphics
 {
-struct NativeBuffer : MirBufferPackage
+namespace mesa
+{
+struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
 {
     struct gbm_bo *bo;
 };
+}
 }
 }
 

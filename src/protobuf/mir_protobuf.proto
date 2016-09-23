@@ -1,3 +1,4 @@
+syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 
 package mir.protobuf;
@@ -46,6 +47,12 @@ message SurfaceParameters {
   optional int32 shell_chrome = 24;
   repeated StreamConfiguration stream = 25; 
   optional int32 confine_pointer = 26;
+
+  optional int32 placement_hints = 27;
+  optional int32 surface_placement_gravity = 28;
+  optional int32 aux_rect_placement_gravity = 29;
+  optional int32 aux_rect_placement_offset_x = 30;
+  optional int32 aux_rect_placement_offset_y = 31;
 }
 
 message SurfaceAspectRatio
@@ -86,6 +93,13 @@ message SurfaceSpecification {
   repeated Rectangle input_shape = 23;
   optional int32 shell_chrome = 24;
   optional int32 confine_pointer = 25;
+
+  // Intentionally missing 26 to get any further additions in line with SurfaceParameters
+  optional int32 placement_hints = 27;
+  optional int32 surface_placement_gravity = 28;
+  optional int32 aux_rect_placement_gravity = 29;
+  optional int32 aux_rect_placement_offset_x = 30;
+  optional int32 aux_rect_placement_offset_y = 31;
 }
 
 message StreamConfiguration {
@@ -217,6 +231,10 @@ message DisplayOutput {
   optional float scale_factor = 17;
   optional uint32 form_factor = 18;
   optional uint32 subpixel_arrangement = 19;
+  optional bytes  gamma_red = 20;
+  optional bytes  gamma_green = 21;
+  optional bytes  gamma_blue = 22;
+  optional uint32 gamma_supported = 23;
 }
 
 message Connection {
