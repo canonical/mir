@@ -492,11 +492,6 @@ struct Chain : mgn::HostChain
     ~Chain()
     {
         mir_presentation_chain_release(chain);
-        for(auto& b : buffers)
-        {
-            auto n = dynamic_cast<mgn::NativeBuffer*>(b->native_buffer_handle().get());
-            n->on_ownership_notification([]{});
-        }
     }
 
     void set(bool)
@@ -506,37 +501,13 @@ struct Chain : mgn::HostChain
         chain = mir_connection_create_presentation_chain_sync(con);
     }
 
-    void release_buffer(MirBuffer* b)
-    {
-        std::unique_lock<std::mutex> lk(mutex);
-        for (auto it = buffers.begin(); it != buffers.end();)
-        {
-            auto n = dynamic_cast<mgn::NativeBuffer*>((*it)->native_buffer_handle().get());
-            if (n->client_handle() == b)
-                it = buffers.erase(it);
-            else
-                it++;
-        }
-    }
-
     void submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     {
         auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(buffer->native_buffer_handle().get());
         if (!nested_buffer) return;
 
-        auto sub_id = nested_buffer->client_handle();
-        if (current_buf == sub_id) return;
 
-        current_buf = sub_id;
-        {
-            std::unique_lock<std::mutex> lk(mutex);
-            buffers.push_back(buffer);
-        }
-
-        nested_buffer->on_ownership_notification(
-            std::bind(&Chain::release_buffer, this, sub_id));
-
-        mir_presentation_chain_submit_buffer(chain, sub_id);
+        mir_presentation_chain_submit_buffer(chain, nested_buffer->client_handle());
     }
 
     MirPresentationChain* handle()
@@ -544,11 +515,6 @@ struct Chain : mgn::HostChain
         return chain;
     }
 private:
-
-    std::mutex mutex;
-    std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    MirBuffer* current_buf = nullptr;
-    mgn::NativeBuffer* nn = nullptr;
     MirPresentationChain* chain;
 };
 
@@ -580,15 +546,11 @@ public:
         }
         printf("MAKE A Bns\n");
     }
-//    static void nully(MirBuffer*, void*) {}
     ~HostBufferBuffer()
     {
         f = []{};
-        printf("BLOW UP BUFFER\n");
-//        mir_buffer_set_callback(b, nully, nullptr);
         mir_buffer_release(b);
     }
-
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {

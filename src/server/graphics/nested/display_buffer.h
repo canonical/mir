@@ -89,6 +89,11 @@ private:
         chain
     } content;
     glm::mat4 const identity;
+
+    std::mutex mutex;
+    std::vector<std::shared_ptr<graphics::Buffer>> submitted_buffers;
+    MirBuffer* current_buf = nullptr;
+    void release_buffer(MirBuffer* b);
 };
 }
 }

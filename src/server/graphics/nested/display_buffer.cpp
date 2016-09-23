@@ -140,6 +140,17 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         host_chain = host_connection->create_chain();
     }
 
+    auto sub_id = nested_buffer->client_handle();
+    if (current_buf == sub_id) return true;
+    current_buf = sub_id;
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        submitted_buffers.push_back(passthrough_buffer);
+    }
+
+    nested_buffer->on_ownership_notification(
+        std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, sub_id));
+
     host_chain->submit_buffer(passthrough_buffer);
 
     if (content != BackingContent::chain)
@@ -169,6 +180,11 @@ MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
     printf("AAAA\n");
+    for(auto& b : submitted_buffers)
+    {
+        auto n = dynamic_cast<mgn::NativeBuffer*>(b->native_buffer_handle().get());
+        n->on_ownership_notification([]{});
+    }
     host_surface->set_event_handler(nullptr, nullptr);
 }
 
@@ -195,4 +211,17 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
 {
     return this;
+}
+
+void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    for (auto it = submitted_buffers.begin(); it != submitted_buffers.end();)
+    {
+        auto n = dynamic_cast<mgn::NativeBuffer*>((*it)->native_buffer_handle().get());
+        if (n->client_handle() == b)
+            it = submitted_buffers.erase(it);
+        else
+            it++;
+    }
 }
