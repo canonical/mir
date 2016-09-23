@@ -16,6 +16,9 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#ifndef MIR_GRAPHICS_GAMMA_CURVES_H_
+#define MIR_GRAPHICS_GAMMA_CURVES_H_
+
 #include <cstdint>
 #include <vector>
 
@@ -40,3 +43,5 @@ public:
 
 }
 }
+
+#endif
