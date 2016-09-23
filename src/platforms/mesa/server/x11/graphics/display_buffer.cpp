@@ -58,6 +58,7 @@ void mgx::DisplayBuffer::make_current()
 {
     if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make current"));
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 }
 
 void mgx::DisplayBuffer::release_current()

@@ -269,16 +269,18 @@ mgx::X11EGLSurface::operator EGLSurface() const
 
 mgx::Display::Display(::Display* x_dpy,
                       geom::Size const size,
-                      GLConfig const& gl_config,
+                      std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : egl_display{X11EGLDisplay(x_dpy)},
+    : x_dpy{x_dpy},
+      egl_display{X11EGLDisplay(x_dpy)},
       size{size},
+      gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
       win{X11Window(x_dpy,
                     egl_display,
                     size,
-                    gl_config)},
+                    *gl_config)},
       egl_context{X11EGLContext(egl_display,
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
@@ -378,7 +380,7 @@ mg::NativeDisplay* mgx::Display::native_display()
 
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
-    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
+    return std::make_unique<mgx::XGLContext>(x_dpy, gl_config, egl_context);
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(

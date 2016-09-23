@@ -27,11 +27,13 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_gl_config.h"
+#include "mir/test/fake_shared.h"
 
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
-namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
+namespace mtd=mt::doubles;
 namespace geom=mir::geometry;
 using namespace testing;
 
@@ -97,7 +99,7 @@ public:
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   mock_gl_config,
+                   mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 

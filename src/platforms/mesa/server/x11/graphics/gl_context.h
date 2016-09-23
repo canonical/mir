@@ -22,27 +22,32 @@
 
 #include "mir/renderer/gl/context.h"
 
+#include <X11/Xlib.h>
 #include <EGL/egl.h>
+
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class GLConfig;
+
 namespace X
 {
 
 class XGLContext : public renderer::gl::Context
 {
 public:
-    XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c);
+    XGLContext(::Display* const x_dpy, std::shared_ptr<GLConfig> const& gl_config, EGLContext const shared_ctx);
     ~XGLContext() = default;
     void make_current() const override;
     void release_current() const override;
 
 private:
-    EGLDisplay const egl_dpy;
-    EGLSurface const egl_surf;
-    EGLContext const egl_ctx;
+    EGLDisplay egl_dpy;
+    EGLContext egl_context;
 };
 
 }

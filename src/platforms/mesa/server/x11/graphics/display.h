@@ -104,7 +104,7 @@ class Display : public graphics::Display,
 public:
     explicit Display(::Display* x_dpy,
                      geometry::Size const size,
-                     GLConfig const& gl_config,
+                     std::shared_ptr<GLConfig> const& gl_config,
                      std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
 
@@ -136,8 +136,10 @@ public:
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
+    ::Display* const x_dpy;
     X11EGLDisplay const egl_display;
     mir::geometry::Size const size;
+    std::shared_ptr<GLConfig> const gl_config;
     float pixel_width;
     float pixel_height;
     X11Window const win;
