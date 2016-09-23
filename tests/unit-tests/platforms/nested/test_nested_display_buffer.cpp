@@ -213,20 +213,19 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     Mock::VerifyAndClearExpectations(&nested_buffer);
 }
 
-TEST_F(NestedDisplayBuffer, handles_double_submissions)
+TEST_F(NestedDisplayBuffer, handles_double_submissions_of_same_buffer_after_buffer_triggered)
 {
     NiceMock<MockHostSurface> mock_host_surface;
     mtd::MockHostConnection mock_host_connection;
-    MockNestedBuffer nested_buffer; 
-    mg::RenderableList list =
-        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
 
     auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
     auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
-    EXPECT_CALL(nested_buffer, on_ownership_notification(_))
-        .Times(1);
-    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)))
-        .Times(1);
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
         .WillOnce(Return(mt::fake_shared(mock_host_surface)));
@@ -237,9 +236,39 @@ TEST_F(NestedDisplayBuffer, handles_double_submissions)
     EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
-    EXPECT_TRUE(display_buffer->overlay(list));
-    EXPECT_TRUE(display_buffer->overlay(list));
-    Mock::VerifyAndClearExpectations(&nested_buffer);
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    nested_buffer1.trigger();
+    EXPECT_TRUE(display_buffer->overlay(list1));
+}
+
+TEST_F(NestedDisplayBuffer, throws_on_interleaving_without_trigger)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    EXPECT_THROW({
+        EXPECT_TRUE(display_buffer->overlay(list1));
+    }, std::logic_error);
 }
 
 TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
@@ -272,6 +301,45 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
     auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
     EXPECT_TRUE(display_buffer->overlay(list));
     display_buffer->swap_buffers();
+}
+
+//If we don't release the HostChain, then one of the client's buffers will get
+//reserved in the host, but not shown onscreen. This will degrade the client's
+//available buffers by one. Releasing the chain will result in that buffer
+//getting returned to the client.
+TEST_F(NestedDisplayBuffer, recreates_chain)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    MockNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_chain2 = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_))
+        .Times(2);
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
+    int b = 4;
+    ON_CALL(*mock_chain, handle())
+        .WillByDefault(Return(reinterpret_cast<MirPresentationChain*>(&b)));
+    EXPECT_CALL(*mock_chain2, submit_buffer(Ref(nested_buffer)));
+
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .Times(2)
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain2); }));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    display_buffer->swap_buffers();
+    EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
 }
 
 TEST_F(NestedDisplayBuffer, only_applies_spec_once_per_mode_toggle)

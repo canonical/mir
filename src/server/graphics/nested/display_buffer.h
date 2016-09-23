@@ -92,9 +92,12 @@ private:
     glm::mat4 const identity;
 
     std::mutex mutex;
-    std::map<MirBuffer*, std::shared_ptr<graphics::Buffer>> submitted_buffers;
-    MirBuffer* current_buf = nullptr;
-    void release_buffer(MirBuffer* b);
+    typedef std::tuple<MirBuffer*, MirPresentationChain*> SubmissionInfo;
+    std::map<SubmissionInfo, std::shared_ptr<graphics::Buffer>> submitted_buffers;
+    SubmissionInfo last_submitted { nullptr, nullptr };
+
+    bool track_submission(std::shared_ptr<graphics::Buffer> const&, nested::NativeBuffer*, HostChain&);
+    void release_buffer(MirBuffer* b, MirPresentationChain* c);
 };
 }
 }

@@ -121,6 +121,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         (list.back()->shaped()) ||
         (list.back()->transformation() != identity))
     {
+        //could not represent scene with subsurfaces
         return false;
     }
 
@@ -129,26 +130,18 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     if (!nested_buffer)
         return false;
 
-    auto sub_id = nested_buffer->client_handle();
-
-    std::unique_lock<std::mutex> lk(mutex);
-    auto submitted = submitted_buffers.find(sub_id);
-    if (submitted != submitted_buffers.end())
+    if (!host_chain)
     {
-        //note: should this actually throw?
+        printf("CREATE A CHAI\n");
+        host_chain = host_connection->create_chain();
+    }
+
+    if (track_submission(passthrough_buffer, nested_buffer, *host_chain))
+    {
+        printf("BBB\n");
         return true;
     }
-    else
-    {
-        submitted_buffers[sub_id] = passthrough_buffer;
-    }
-    lk.unlock();
 
-    nested_buffer->on_ownership_notification(
-        std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, sub_id));
-
-    if (!host_chain)
-        host_chain = host_connection->create_chain();
     host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)
@@ -161,10 +154,40 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     return true;
 }
 
-void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b)
+bool mgn::detail::DisplayBuffer::track_submission(
+    std::shared_ptr<mg::Buffer> const& buffer,
+    mgn::NativeBuffer* nested_buffer,
+    mgn::HostChain& chain)
 {
     std::unique_lock<std::mutex> lk(mutex);
-    auto buf = submitted_buffers.find(b);
+
+    auto sub_id = SubmissionInfo{nested_buffer->client_handle(), chain.handle()};
+    auto submitted = submitted_buffers.find(sub_id);
+    if (submitted == submitted_buffers.end())
+    {
+        submitted_buffers[sub_id] = buffer;
+        last_submitted = sub_id;
+//        last_submitted = std::tuple<MirBuffer*, MirPresentationChain*> { sub_id, chain.handle() };
+        lk.unlock();
+        nested_buffer->on_ownership_notification(
+            std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, nested_buffer->client_handle(), chain.handle()));
+        return false;
+    }
+    else if (sub_id == last_submitted)
+    {
+        printf("RETURN TRUE\n");
+        return true;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot submit buffer that has not been returned by host server"));
+    }
+}
+
+void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationChain *c)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    auto buf = submitted_buffers.find(SubmissionInfo{b, c});
     if (buf != submitted_buffers.end())
         submitted_buffers.erase(buf);
 }
