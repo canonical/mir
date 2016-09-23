@@ -131,16 +131,10 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         return false;
 
     if (!host_chain)
-    {
-        printf("CREATE A CHAI\n");
         host_chain = host_connection->create_chain();
-    }
 
     if (track_submission(passthrough_buffer, nested_buffer, *host_chain))
-    {
-        printf("BBB\n");
         return true;
-    }
 
     host_chain->submit_buffer(*nested_buffer);
 
@@ -167,20 +161,19 @@ bool mgn::detail::DisplayBuffer::track_submission(
     {
         submitted_buffers[sub_id] = buffer;
         last_submitted = sub_id;
-//        last_submitted = std::tuple<MirBuffer*, MirPresentationChain*> { sub_id, chain.handle() };
         lk.unlock();
         nested_buffer->on_ownership_notification(
-            std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, nested_buffer->client_handle(), chain.handle()));
+            std::bind(&mgn::detail::DisplayBuffer::release_buffer, this,
+                nested_buffer->client_handle(), chain.handle()));
         return false;
     }
     else if (sub_id == last_submitted)
     {
-        printf("RETURN TRUE\n");
         return true;
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("cannot submit buffer that has not been returned by host server"));
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot resubmit buffer that has not been returned by host server"));
     }
 }
 
