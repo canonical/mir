@@ -122,7 +122,6 @@ public:
         {
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
-            void set(bool) {}
         };
         return std::make_unique<NullHostChain>();
     }

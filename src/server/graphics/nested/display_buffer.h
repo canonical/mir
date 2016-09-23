@@ -24,6 +24,7 @@
 #include "display.h"
 #include "host_surface.h"
 #include "host_chain.h"
+#include "mir_toolkit/client_types_nbs.h"
 
 #include <map>
 #include <glm/glm.hpp>
