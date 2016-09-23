@@ -20,8 +20,8 @@ add_library(
   display.cpp
   display_configuration.cpp
   gl_context.cpp
-  display_group.cpp
   display_buffer.cpp
+  egl_helper.cpp
 )
 
 add_library(

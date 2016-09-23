@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_X_GL_CONTEXT_H_
 
 #include "mir/renderer/gl/context.h"
-
+#include "egl_helper.h"
 #include <X11/Xlib.h>
 #include <EGL/egl.h>
 
@@ -40,14 +40,15 @@ namespace X
 class XGLContext : public renderer::gl::Context
 {
 public:
-    XGLContext(::Display* const x_dpy, std::shared_ptr<GLConfig> const& gl_config, EGLContext const shared_ctx);
+    XGLContext(::Display* const x_dpy,
+               std::shared_ptr<GLConfig> const& gl_config,
+               EGLContext const shared_ctx);
     ~XGLContext() = default;
     void make_current() const override;
     void release_current() const override;
 
 private:
-    EGLDisplay egl_dpy;
-    EGLContext egl_context;
+    helpers::EGLHelper egl;
 };
 
 }

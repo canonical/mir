@@ -20,10 +20,10 @@
 #ifndef MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
-#include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
-#include "gl_context.h"
+#include "egl_helper.h"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -32,21 +32,27 @@ namespace mir
 {
 namespace graphics
 {
+
+class GLConfig;
+class DisplayReport;
+
 namespace X
 {
 
 class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
                       public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(
+            ::Display* const x_dpy,
+            Window const win,
             geometry::Size const sz,
-            EGLDisplay const d,
-            EGLSurface const s,
-            EGLContext const c,
+            EGLContext const shared_context,
             std::shared_ptr<DisplayReport> const& r,
-            MirOrientation const o);
+            MirOrientation const o,
+            GLConfig const& gl_config);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
@@ -56,17 +62,22 @@ public:
     bool overlay(RenderableList const& renderlist) override;
     void set_orientation(MirOrientation const new_orientation);
 
+    void for_each_display_buffer(
+        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
+
     MirOrientation orientation() const override;
     MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
+    ::Display* const x_dpy;
+    Window const win;
     geometry::Size const size;
-    EGLDisplay const egl_dpy;
-    EGLSurface const egl_surf;
-    EGLContext const egl_ctx;
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;
+    helpers::EGLHelper egl;
 };
 
 }

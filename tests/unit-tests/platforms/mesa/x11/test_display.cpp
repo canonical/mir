@@ -114,16 +114,7 @@ TEST_F(X11DisplayTest, creates_display_successfully)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglGetDisplay(mock_x11.fake_x11.display))
-        .Times(Exactly(1));
-
     EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, size.width.as_int(), size.height.as_int(),_,_,_,_,_,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display,_, EGL_NO_CONTEXT,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_, reinterpret_cast<mtd::MockEGL::AnyNativeType>(mock_x11.fake_x11.window), nullptr))
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
