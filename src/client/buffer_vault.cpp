@@ -237,7 +237,7 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 {
     std::unique_lock<std::mutex> lk(mutex);
-    printf("INBOUND %i\n", buffer_id);
+//    printf("INBOUND %i\n", buffer_id);
     last_received_id = buffer_id;
     auto buffer = checked_buffer_from_map(buffer_id);
     auto inbound_size = buffer->size();

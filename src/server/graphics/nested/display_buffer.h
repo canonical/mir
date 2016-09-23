@@ -89,7 +89,6 @@ private:
         chain
     } content;
     glm::mat4 const identity;
-    std::shared_ptr<nested::Buffer> spare;
 };
 }
 }

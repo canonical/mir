@@ -73,8 +73,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
     egl_surface{egl_display, host_stream->egl_native_window(), egl_config}, 
-    content{BackingContent::stream},
-    spare{std::make_shared<mgn::Buffer>(host_connection, mg::BufferProperties{geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software})}
+    content{BackingContent::stream}
 {
     host_surface->set_event_handler(event_thunk, this);
 }
