@@ -513,10 +513,10 @@ std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() con
 
 namespace
 {
-class HostBufferBuffer : public mgn::NativeBuffer
+class HostBuffer : public mgn::NativeBuffer
 {
 public:
-    HostBufferBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
     {
         mir_connection_allocate_buffer(
             mir_connection,
@@ -526,37 +526,42 @@ public:
             (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
             buffer_available, this);
         std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return b; });
-        if (!mir_buffer_is_valid(b))
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
         {
+            mir_buffer_release(handle);
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
         }
     }
-    ~HostBufferBuffer()
+    ~HostBuffer()
     {
         f = []{};
-        mir_buffer_release(b);
+        mir_buffer_release(handle);
     }
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {
-        mir_buffer_wait_for_access(b, access, ns.count());
+        mir_buffer_wait_for_access(handle, access, ns.count());
     }
+
     MirBuffer* client_handle() const override
     {
-        return b;
+        return handle;
     }
+
     MirGraphicsRegion get_graphics_region() override
     {
-        return mir_buffer_get_graphics_region(b, mir_read_write);
+        return mir_buffer_get_graphics_region(handle, mir_read_write);
     }
+
     geom::Size size() const override
     {
-        return {mir_buffer_get_width(b), mir_buffer_get_height(b) };
+        return { mir_buffer_get_width(handle), mir_buffer_get_height(handle) };
     }
+
     MirPixelFormat format() const override
     {
-        return mir_buffer_get_pixel_format(b);
+        return mir_buffer_get_pixel_format(handle);
     }
 
     std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
@@ -564,13 +569,13 @@ public:
         EGLenum type;
         EGLClientBuffer client_buffer = nullptr;;
         EGLint* attrs = nullptr;
-        mir_buffer_egl_image_parameters(b, &type, &client_buffer, &attrs);
+        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }
 
     static void buffer_available(MirBuffer* buffer, void* context)
     {
-        auto host_buffer = static_cast<HostBufferBuffer*>(context);
+        auto host_buffer = static_cast<HostBuffer*>(context);
         host_buffer->avail(buffer);
     }
 
@@ -578,9 +583,9 @@ public:
     {
         {
             std::unique_lock<std::mutex> lk(mut);
-            if (!b)
+            if (!handle)
             {
-                b = buffer;
+                handle = buffer;
                 cv.notify_all();
             }
         }
@@ -596,22 +601,22 @@ public:
 
     MirBufferPackage* package() const
     {
-       return mir_buffer_get_buffer_package(b);
+       return mir_buffer_get_buffer_package(handle);
     }
 
     void set_fence(mir::Fd fd)
     {
-        mir_buffer_associate_fence(b, fd, mir_read_write);
+        mir_buffer_associate_fence(handle, fd, mir_read_write);
     }
 
     mir::Fd fence() const
     {
-        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(b)}};
+        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
     }
 
 private:
     std::function<void()> f;
-    MirBuffer*b = nullptr;
+    MirBuffer* handle = nullptr;
     std::mutex mut;
     std::condition_variable cv;
 };
@@ -653,7 +658,7 @@ private:
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const& properties)
 {
-    return std::make_shared<HostBufferBuffer>(mir_connection, properties);
+    return std::make_shared<HostBuffer>(mir_connection, properties);
 }
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
