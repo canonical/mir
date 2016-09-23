@@ -155,7 +155,7 @@ struct NestedDisplayBuffer : Test
 
     auto create_display_buffer(std::shared_ptr<mgn::HostConnection> const& connection)
     {
-        return create_display_buffer(connection, mgn::PassthroughOption::disabled);
+        return create_display_buffer(connection, mgn::PassthroughOption::enabled);
     }
     
 

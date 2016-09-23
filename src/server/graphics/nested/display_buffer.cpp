@@ -117,7 +117,8 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 {
-    if (list.empty() ||
+    if ((passthrough_option == mgn::PassthroughOption::disabled) ||
+        list.empty() ||
         (list.back()->screen_position() != area) ||
         (list.back()->alpha() != 1.0f) ||
         (list.back()->shaped()) ||
