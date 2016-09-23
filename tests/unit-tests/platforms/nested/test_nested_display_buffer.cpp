@@ -295,8 +295,10 @@ TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
     mg::RenderableList list =
         { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
 
-    EXPECT_CALL(mock_host_surface, apply_spec(_))
-        .Times(2);
+    InSequence seq;
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
     EXPECT_TRUE(display_buffer->overlay(list));
