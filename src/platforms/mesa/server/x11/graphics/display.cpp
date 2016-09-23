@@ -20,11 +20,11 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
-#include "gl_context.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -32,6 +32,10 @@
 
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
+
+namespace mg=mir::graphics;
+namespace mgx=mg::X;
+namespace geom=mir::geometry;
 
 namespace
 {
@@ -47,11 +51,34 @@ auto get_pixel_height(Display *dpy)
 
     return float(screen->mheight) / screen->height;
 }
-}
 
-namespace mg=mir::graphics;
-namespace mgx=mg::X;
-namespace geom=mir::geometry;
+class XGLContext : public mir::renderer::gl::Context
+{
+public:
+    XGLContext(::Display* const x_dpy,
+               std::shared_ptr<mg::GLConfig> const& gl_config,
+               EGLContext const shared_ctx)
+        : egl{*gl_config}
+    {
+        egl.setup(x_dpy, shared_ctx);
+    }
+
+    ~XGLContext() = default;
+
+    void make_current() const override
+    {
+        egl.make_current();
+    }
+
+    void release_current() const override
+    {
+        egl.release_current();
+    }
+
+private:
+    mgx::helpers::EGLHelper egl;
+};
+}
 
 mgx::X11Window::X11Window(::Display* x_dpy,
                           EGLDisplay egl_dpy,
@@ -284,7 +311,7 @@ mg::NativeDisplay* mgx::Display::native_display()
 
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
-    return std::make_unique<mgx::XGLContext>(x_dpy, gl_config, shared_egl.context());
+    return std::make_unique<XGLContext>(x_dpy, gl_config, shared_egl.context());
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(

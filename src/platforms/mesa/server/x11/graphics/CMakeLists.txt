@@ -19,7 +19,6 @@ add_library(
   guest_platform.cpp
   display.cpp
   display_configuration.cpp
-  gl_context.cpp
   display_buffer.cpp
   egl_helper.cpp
 )
