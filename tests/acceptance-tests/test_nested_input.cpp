@@ -19,6 +19,8 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/device.h"
+#include "mir/input/keymap.h"
+#include "mir/input/keyboard_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -300,4 +302,39 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
 
     client_to_nested_event_received.wait_for(2s);
     client_to_host_event_received.wait_for(2s);
+}
+
+TEST_F(NestedInput, nested_server_can_switch_keymap_when_device_is_added)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    ExposedSurface client(nested_mir.new_connection());
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    EXPECT_CALL(*mock_observer, device_added(_))
+        .WillOnce(Invoke([](std::shared_ptr<mi::Device> const&dev)
+                         {
+                             if (contains(dev->capabilities(), mi::DeviceCapability::keyboard))
+                             {
+                                 mi::Keymap map{"pc105", "de", "", ""};
+                                 dev->apply_keyboard_configuration(std::move(map));
+                             }
+                         }));
+    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+
+    nested_hub->add_observer(mock_observer);
+    input_device_changes_complete.wait_for(10s);
+
+    EXPECT_THAT(input_device_changes_complete.raised(), Eq(true));
+
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTALT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_Q));
+
+    EXPECT_CALL(*nested_mir.mock_event_filter,handle(mt::KeyOfSymbol(XKB_KEY_ISO_Level3_Shift)))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*nested_mir.mock_event_filter,handle(mt::KeyOfSymbol(XKB_KEY_at)))
+        .WillOnce(DoAll(mt::WakeUp(&all_events_received), Return(false)));
+
+    all_events_received.wait_for(std::chrono::seconds{10});
 }
