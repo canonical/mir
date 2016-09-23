@@ -25,7 +25,6 @@ namespace mir
 {
 namespace graphics
 {
-class Buffer;
 namespace nested
 {
 class NativeBuffer;

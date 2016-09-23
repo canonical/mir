@@ -176,7 +176,6 @@ MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
-    printf("AAAA\n");
     for(auto& b : submitted_buffers)
     {
         auto n = dynamic_cast<mgn::NativeBuffer*>(b->native_buffer_handle().get());

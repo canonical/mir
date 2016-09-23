@@ -117,7 +117,6 @@ public:
 
     ~MirClientHostSurface()
     {
-        printf("RELEASE SURFACE\n");
         if (cursor) mir_buffer_stream_release_sync(cursor);
         mir_surface_release_sync(mir_surface);
     }
@@ -530,10 +529,8 @@ public:
         cv.wait(lk, [&]{ return b; });
         if (!mir_buffer_is_valid(b))
         {
-            printf("BADD\n");
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
         }
-        printf("MAKE A Bns\n");
     }
     ~HostBufferBuffer()
     {
