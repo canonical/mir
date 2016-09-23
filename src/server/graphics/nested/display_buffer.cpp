@@ -126,17 +126,30 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     }
 
     auto passthrough_buffer = list.back()->buffer();
-    auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
-    if (!nested_buffer)
+    auto native = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
+    if (!native)
         return false;
 
     if (!host_chain)
         host_chain = host_connection->create_chain();
 
-    if (track_submission(passthrough_buffer, nested_buffer, *host_chain))
-        return true;
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        SubmissionInfo submission_info{native->client_handle(), host_chain->handle()};
+        auto submitted = submitted_buffers.find(submission_info);
+        if ((submission_info != last_submitted) && (submitted != submitted_buffers.end()))
+            BOOST_THROW_EXCEPTION(std::logic_error("cannot resubmit buffer that has not been returned by host server"));
+        if ((submission_info == last_submitted) && (submitted != submitted_buffers.end()))
+            return true;
 
-    host_chain->submit_buffer(*nested_buffer);
+        submitted_buffers[submission_info] = passthrough_buffer;
+        last_submitted = submission_info;
+    }
+
+    native->on_ownership_notification(
+        std::bind(&mgn::detail::DisplayBuffer::release_buffer, this,
+        native->client_handle(), host_chain->handle()));
+    host_chain->submit_buffer(*native);
 
     if (content != BackingContent::chain)
     {
@@ -146,35 +159,6 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         host_surface->apply_spec(*spec);
     }
     return true;
-}
-
-bool mgn::detail::DisplayBuffer::track_submission(
-    std::shared_ptr<mg::Buffer> const& buffer,
-    mgn::NativeBuffer* nested_buffer,
-    mgn::HostChain& chain)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-
-    auto sub_id = SubmissionInfo{nested_buffer->client_handle(), chain.handle()};
-    auto submitted = submitted_buffers.find(sub_id);
-    if (submitted == submitted_buffers.end())
-    {
-        submitted_buffers[sub_id] = buffer;
-        last_submitted = sub_id;
-        lk.unlock();
-        nested_buffer->on_ownership_notification(
-            std::bind(&mgn::detail::DisplayBuffer::release_buffer, this,
-                nested_buffer->client_handle(), chain.handle()));
-        return false;
-    }
-    else if (sub_id == last_submitted)
-    {
-        return true;
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("cannot resubmit buffer that has not been returned by host server"));
-    }
 }
 
 void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationChain *c)

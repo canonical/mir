@@ -78,9 +78,6 @@ private:
     geometry::Rectangle const area;
     EGLSurfaceHandle const egl_surface;
 
-
-
-
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
 
@@ -96,7 +93,6 @@ private:
     std::map<SubmissionInfo, std::shared_ptr<graphics::Buffer>> submitted_buffers;
     SubmissionInfo last_submitted { nullptr, nullptr };
 
-    bool track_submission(std::shared_ptr<graphics::Buffer> const&, nested::NativeBuffer*, HostChain&);
     void release_buffer(MirBuffer* b, MirPresentationChain* c);
 };
 }
