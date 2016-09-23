@@ -184,9 +184,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
-        (nested_passthrough_opt, po::value<bool>()->default_value(false),
-            "When nested, attempt to optimize composition by passing a client's graphical content directly to the host"
-            " server in certain situations")
+        (nested_passthrough_opt, po::value<bool>()->default_value(true),
+            "When nested, attempt to pass a client's graphics content directly to the host"
+            " to avoid a composition pass")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),

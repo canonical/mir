@@ -157,7 +157,6 @@ struct NestedDisplayBuffer : Test
     {
         return create_display_buffer(connection, mgn::PassthroughOption::enabled);
     }
-    
 
     mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
     NiceMock<mtd::MockEGL> mock_egl;

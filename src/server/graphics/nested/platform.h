@@ -35,7 +35,6 @@ class DisplayReport;
 namespace nested
 {
 class HostConnection;
-
 class Platform : public graphics::Platform
 {
 public:
