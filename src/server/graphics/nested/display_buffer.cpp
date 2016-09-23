@@ -105,12 +105,7 @@ void mgn::detail::DisplayBuffer::swap_buffers()
         host_surface->apply_spec(*spec);
         //if the host_chain is not released, a buffer of the passthrough surface might get caught
         //up in the host server, resulting a drop in nbuffers available to the client
-        if (host_chain)
-        {
-            printf("---------------->FLUSH WITH SPARE BUFFER\n");
-//            host_chain->submit_buffer(spare);
-            host_chain->set(false);
-        }
+        host_chain = nullptr;
     }
 }
 

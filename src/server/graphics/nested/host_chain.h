@@ -35,7 +35,6 @@ public:
     virtual ~HostChain() = default;
     virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const&) = 0;
     virtual MirPresentationChain* handle() = 0;
-    virtual void set(bool) = 0;
 protected:
     HostChain() = default;
     HostChain(HostChain const&) = delete;

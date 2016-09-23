@@ -494,13 +494,6 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void set(bool)
-    {
-        printf("RECYCLUE\n");
-        mir_presentation_chain_release(chain);
-        chain = mir_connection_create_presentation_chain_sync(con);
-    }
-
     void submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     {
         auto nested_buffer = dynamic_cast<mgn::NativeBuffer*>(buffer->native_buffer_handle().get());
