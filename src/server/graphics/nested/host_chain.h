@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 #define MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 
+#include "mir_toolkit/client_types_nbs.h"
+
 namespace mir
 {
 namespace graphics
@@ -31,6 +33,7 @@ class HostChain
 public:
     virtual ~HostChain() = default;
     virtual void submit_buffer(NativeBuffer&) = 0;
+    virtual MirPresentationChain* handle() = 0;
 protected:
     HostChain() = default;
     HostChain(HostChain const&) = delete;
