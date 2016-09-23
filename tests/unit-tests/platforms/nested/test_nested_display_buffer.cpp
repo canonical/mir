@@ -198,7 +198,7 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
     auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
     EXPECT_CALL(nested_buffer, on_ownership_notification(_));
-    EXPECT_CALL(*mock_chain, submit_buffer(_));//Ref(nested_buffer)));
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
 
     EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
         .WillOnce(Return(mt::fake_shared(mock_host_surface)));
@@ -209,6 +209,35 @@ TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
     EXPECT_CALL(mock_host_surface, apply_spec(_));
 
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
+}
+
+TEST_F(NestedDisplayBuffer, handles_double_submissions)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    MockNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_))
+        .Times(1);
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)))
+        .Times(1);
+
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
     EXPECT_TRUE(display_buffer->overlay(list));
     Mock::VerifyAndClearExpectations(&nested_buffer);
 }

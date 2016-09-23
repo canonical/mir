@@ -25,6 +25,7 @@
 #include "host_surface.h"
 #include "host_chain.h"
 
+#include <map>
 #include <glm/glm.hpp>
 #include <EGL/egl.h>
 
@@ -91,7 +92,7 @@ private:
     glm::mat4 const identity;
 
     std::mutex mutex;
-    std::vector<std::shared_ptr<graphics::Buffer>> submitted_buffers;
+    std::map<MirBuffer*, std::shared_ptr<graphics::Buffer>> submitted_buffers;
     MirBuffer* current_buf = nullptr;
     void release_buffer(MirBuffer* b);
 };

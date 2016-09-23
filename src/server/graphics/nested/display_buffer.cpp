@@ -129,25 +129,26 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     if (!nested_buffer)
         return false;
 
-    if (!host_chain)
-    {
-        host_chain = host_connection->create_chain();
-    }
-
     auto sub_id = nested_buffer->client_handle();
-    if (current_buf == sub_id)
+
+    std::unique_lock<std::mutex> lk(mutex);
+    auto submitted = submitted_buffers.find(sub_id);
+    if (submitted != submitted_buffers.end())
     {
+        //note: should this actually throw?
         return true;
     }
-    current_buf = sub_id;
+    else
     {
-        std::unique_lock<std::mutex> lk(mutex);
-        submitted_buffers.push_back(passthrough_buffer);
+        submitted_buffers[sub_id] = passthrough_buffer;
     }
+    lk.unlock();
 
     nested_buffer->on_ownership_notification(
         std::bind(&mgn::detail::DisplayBuffer::release_buffer, this, sub_id));
 
+    if (!host_chain)
+        host_chain = host_connection->create_chain();
     host_chain->submit_buffer(*nested_buffer);
 
     if (content != BackingContent::chain)
@@ -158,6 +159,14 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         host_surface->apply_spec(*spec);
     }
     return true;
+}
+
+void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    auto buf = submitted_buffers.find(b);
+    if (buf != submitted_buffers.end())
+        submitted_buffers.erase(buf);
 }
 
 MirOrientation mgn::detail::DisplayBuffer::orientation() const
@@ -178,7 +187,7 @@ mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
     for(auto& b : submitted_buffers)
     {
-        auto n = dynamic_cast<mgn::NativeBuffer*>(b->native_buffer_handle().get());
+        auto n = dynamic_cast<mgn::NativeBuffer*>(b.second->native_buffer_handle().get());
         n->on_ownership_notification([]{});
     }
     host_surface->set_event_handler(nullptr, nullptr);
@@ -207,17 +216,4 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
 {
     return this;
-}
-
-void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    for (auto it = submitted_buffers.begin(); it != submitted_buffers.end();)
-    {
-        auto n = dynamic_cast<mgn::NativeBuffer*>((*it)->native_buffer_handle().get());
-        if (n->client_handle() == b)
-            it = submitted_buffers.erase(it);
-        else
-            it++;
-    }
 }
