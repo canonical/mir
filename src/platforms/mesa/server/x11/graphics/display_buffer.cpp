@@ -33,9 +33,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   std::shared_ptr<DisplayReport> const& r,
                                   MirOrientation const o,
                                   GLConfig const& gl_config)
-                                  : x_dpy{x_dpy},
-                                    win{win},
-                                    size{sz},
+                                  : size{sz},
                                     report{r},
                                     orientation_{o},
                                     egl{gl_config}

@@ -72,8 +72,6 @@ public:
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
-    ::Display* const x_dpy;
-    Window const win;
     geometry::Size const size;
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;

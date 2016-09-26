@@ -57,7 +57,6 @@ public:
 private:
     ::Display* const x_dpy;
     Window win;
-    EGLConfig config;
     unsigned long r_mask;
 };
 
