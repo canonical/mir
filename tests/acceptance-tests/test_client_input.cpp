@@ -587,8 +587,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     first_client.all_events_received.wait_for(2s);
 }
 
-// Enable once lp:1570698 is fixed
-TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
+TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 {
     positions[first] = screen_geometry;
     Client first_client(new_connection(), first);
