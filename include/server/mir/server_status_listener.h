@@ -29,6 +29,8 @@ public:
     virtual void resumed() = 0;
     virtual void started() = 0;
 
+    virtual void ready_for_user_input() = 0;
+    virtual void stop_receiving_input() = 0;
 protected:
     ServerStatusListener() = default;
     virtual ~ServerStatusListener() = default;

@@ -22,6 +22,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/geometry/point.h"
+#include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/frontend/event_sink.h"
@@ -44,7 +45,8 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mi::KeyMapper> const& key_mapper)
+    std::shared_ptr<mi::KeyMapper> const& key_mapper,
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
       sink{sink},
       input_dispatchable{input_multiplexer},
@@ -52,6 +54,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       cookie_authority(cookie_authority),
       key_mapper(key_mapper),
+      server_status_listener(server_status_listener),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -264,6 +267,12 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
         observer->device_added(handles.back());
         observer->changes_complete();
     }
+
+    if (!ready && handles.size())
+    {
+        server_status_listener->ready_for_user_input();
+        ready = true;
+    }
 }
 
 void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
@@ -289,4 +298,10 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 
     handles.erase(handle_it, end(handles));
     sink->handle_input_device_change(handles);
+
+    if (ready && 0 == handles.size())
+    {
+        ready = false;
+        server_status_listener->stop_receiving_input();
+    }
 }

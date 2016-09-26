@@ -33,6 +33,7 @@ namespace graphics
 namespace nested
 {
 class HostSurface;
+class HostStream;
 
 namespace detail
 {
@@ -44,11 +45,8 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 public:
     DisplayBuffer(
         EGLDisplayHandle const& egl_display,
-        std::shared_ptr<HostSurface> const& host_surface,
-        geometry::Rectangle const& area,
-        MirPixelFormat preferred_format,
-        std::shared_ptr<HostConnection> const& host_connection
-        );
+        DisplayConfigurationOutput best_output,
+        std::shared_ptr<HostConnection> const& host_connection);
 
     ~DisplayBuffer() noexcept;
 
@@ -60,7 +58,7 @@ public:
     MirOrientation orientation() const override;
     MirMirrorMode mirror_mode() const override;
 
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool overlay(RenderableList const& renderlist) override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 
@@ -68,6 +66,7 @@ public:
     DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
     EGLDisplayHandle const& egl_display;
+    std::shared_ptr<HostStream> const host_stream;
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
     EGLConfig const egl_config;

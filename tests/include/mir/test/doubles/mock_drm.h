@@ -149,6 +149,11 @@ public:
     MOCK_METHOD1(drmFreeBusid, void (const char*));
     MOCK_METHOD1(drmGetDeviceNameFromFd, char*(int fd));
 
+    MOCK_METHOD6(drmModeCrtcGetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
+                                          uint16_t* red, uint16_t* green, uint16_t* blue));
+    MOCK_METHOD6(drmModeCrtcSetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
+                                          uint16_t* red, uint16_t* green, uint16_t* blue));
+
     FakeDRMResources fake_drm;
 };
 

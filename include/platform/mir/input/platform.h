@@ -75,9 +75,6 @@ public:
 
     /*!
      * Request the platform to start monitoring for devices.
-     *
-     * \param input_device_registry should be informed about available input devices
-     * \param trigger_registry should be used to register event sources that may indicate a changes of the available devices
      */
     virtual void start() = 0;
     /*!
@@ -123,7 +120,6 @@ extern "C"
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
  * \param [in] input_device_registry object to register input devices handled by this platform
  * \param [in] report the object to use to report interesting events from the input subsystem
- * \param [in] platform_policy object to use to obtain input related configuration and input event filtering interfaces
  *
  * This factory function needs to be implemented by each platform.
  *

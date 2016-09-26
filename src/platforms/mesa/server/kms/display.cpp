@@ -207,6 +207,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 if (!comp)
                 {
                     kms_output->set_power_mode(conf_output.power_mode);
+                    kms_output->set_gamma(conf_output.gamma);
                     kms_outputs.push_back(kms_output);
                 }
 
@@ -395,6 +396,7 @@ void mgm::Display::clear_connected_unused_outputs()
 
             kms_output->clear_crtc();
             kms_output->set_power_mode(conf_output.power_mode);
+            kms_output->set_gamma(conf_output.gamma);
         }
     });
 }
@@ -412,4 +414,10 @@ mg::NativeDisplay* mgm::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
 {
     return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
+}
+
+bool mgm::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
 }

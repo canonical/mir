@@ -269,7 +269,8 @@ mgx::X11EGLSurface::operator EGLSurface() const
 
 mgx::Display::Display(::Display* x_dpy,
                       geom::Size const size,
-                      GLConfig const& gl_config)
+                      GLConfig const& gl_config,
+                      std::shared_ptr<DisplayReport> const& report)
     : egl_display{X11EGLDisplay(x_dpy)},
       size{size},
       pixel_width{get_pixel_width(x_dpy)},
@@ -283,7 +284,8 @@ mgx::Display::Display(::Display* x_dpy,
       egl_surface{X11EGLSurface(egl_display,
                                 win.egl_config(),
                                 win)},
-                                orientation{mir_orientation_normal}
+      report{report},
+      orientation{mir_orientation_normal}
 {
     auto red_mask = win.red_mask();
     pf = (red_mask == 0xFF0000 ? mir_pixel_format_argb_8888
@@ -294,7 +296,11 @@ mgx::Display::Display(::Display* x_dpy,
                                              egl_display,
                                              egl_surface,
                                              egl_context,
+                                             report,
                                              orientation));
+
+    report->report_egl_configuration(egl_display, win.egl_config());
+    report->report_successful_display_construction();
 }
 
 mgx::Display::~Display() noexcept
@@ -373,4 +379,10 @@ mg::NativeDisplay* mgx::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
     return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
+}
+
+bool mgx::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
 }

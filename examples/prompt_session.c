@@ -43,10 +43,10 @@
 /// Opens a mir connection and creates a surface
 /// before releasing the surface and closing the connection.
 ///\example prompt_session.c A mir client demonstrating prompt sessions.
-///\section MirDemoState MirDemoState
+///\section PsMirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
 ///\snippet prompt_session.c MirDemoState_tag
-///\section Callbacks Callbacks
+///\section PsCallbacks Callbacks
 ///\snippet prompt_session.c Callback_tag
 /// This program creates two processes, both opening a mir connection, one starting
 /// a prompt session with the other process.

@@ -87,3 +87,8 @@ void ms::SurfaceEventSource::keymap_changed(MirInputDeviceId device_id,
 {
     event_sink->handle_event(*mev::make_event(id, device_id, model, layout, variant, options));
 }
+
+void ms::SurfaceEventSource::placed_relative(geometry::Rectangle const& placement)
+{
+    event_sink->handle_event(*mev::make_event(id, placement));
+}

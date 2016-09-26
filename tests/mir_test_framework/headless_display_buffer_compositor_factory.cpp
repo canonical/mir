@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -72,7 +72,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         void composite(mir::compositor::SceneElementSequence&& seq) override
         {
             auto renderlist = filter(seq, db.view_area());
-            if (db.post_renderables_if_optimizable(renderlist))
+            if (db.overlay(renderlist))
                 return;
 
             // Invoke GL renderer specific functions if the DisplayBuffer supports them

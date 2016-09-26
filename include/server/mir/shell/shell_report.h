@@ -33,7 +33,9 @@ namespace scene { class PromptSession; class Session; class Surface; struct Surf
 namespace shell
 {
 struct SurfaceSpecification;
+/// @cond
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+/// @endcond
 
 class ShellReport
 {
