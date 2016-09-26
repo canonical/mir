@@ -127,7 +127,6 @@ struct StubNestedBuffer :
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{};
     }
     MirBufferPackage* package() const override { return nullptr; }
-    MirNativeBuffer* get_native_handle() override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd{mir::Fd::invalid}; }
     void set_fence(mir::Fd) override {}
 
