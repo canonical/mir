@@ -311,16 +311,16 @@ TEST_F(NestedInput, nested_server_can_switch_keymap_when_device_is_added)
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
     EXPECT_CALL(*mock_observer, device_added(_))
-        .WillOnce(Invoke([](std::shared_ptr<mi::Device> const&dev)
-                         {
-                             if (contains(dev->capabilities(), mi::DeviceCapability::keyboard))
-                             {
-                                 mi::Keymap map{"pc105", "de", "", ""};
-                                 dev->apply_keyboard_configuration(std::move(map));
-                             }
-                         }));
-    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
-        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+        .WillRepeatedly(
+            Invoke([&](std::shared_ptr<mi::Device> const&dev)
+                   {
+                       if (contains(dev->capabilities(), mi::DeviceCapability::keyboard))
+                       {
+                           mi::Keymap map{"pc105", "de", "", ""};
+                           dev->apply_keyboard_configuration(std::move(map));
+                           input_device_changes_complete.raise();
+                       }
+                   }));
 
     nested_hub->add_observer(mock_observer);
     input_device_changes_complete.wait_for(10s);
