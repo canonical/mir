@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *
+ * TODO: Remove this file at the next mircommon ABI break.
  */
 
 #define ReadableFd LegacyReadableFd
