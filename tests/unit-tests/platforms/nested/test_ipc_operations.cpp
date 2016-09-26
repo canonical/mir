@@ -82,7 +82,7 @@ struct NestedIPCOperations : testing::Test
         ON_CALL(mock_ops, connection_ipc_package())
             .WillByDefault(Return(nullptr));
         ON_CALL(mock_ops, platform_operation(_,_))
-            .WillByDefault(Return(mg::PlatformOperationMessage{}));
+            .WillByDefault(Return(mg::PlatformOperationMessage{ {}, {} }));
     }
     mtd::StubBuffer foreign_buffer{std::make_shared<ForeignBuffer>()};
     mtd::StubBuffer nested_buffer{std::make_shared<MockNestedBuffer>()};
@@ -191,5 +191,5 @@ TEST_F(NestedIPCOperations, uses_guest_platform_for_platform_ops)
 {
     EXPECT_CALL(mock_ops, platform_operation(_,_));
     mgn::IpcOperations operations(mt::fake_shared(mock_ops));
-    operations.platform_operation(0, mg::PlatformOperationMessage{});
+    operations.platform_operation(0, mg::PlatformOperationMessage{ {}, {} });
 }
