@@ -239,7 +239,6 @@ void msh::AbstractShell::focus_next_session()
     auto const sentinal = successor;
 
     while (successor != nullptr &&
-           successor != focused_session &&
            successor->default_surface() == nullptr)
     {
         successor = session_coordinator->successor_of(successor);
