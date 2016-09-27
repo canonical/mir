@@ -39,6 +39,30 @@ namespace geom=mir::geometry;
 
 namespace
 {
+geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
+{
+    unsigned int screen_width, screen_height, uint_dummy;
+    int int_dummy;
+    Window window_dummy;
+    int const border = 150;
+
+    XGetGeometry(dpy, XDefaultRootWindow(dpy), &window_dummy, &int_dummy, &int_dummy,
+        &screen_width, &screen_height, &uint_dummy, &uint_dummy);
+
+    mir::log_info("Screen resolution = %dx%d", screen_width, screen_height);
+
+    if ((screen_width < requested_size.width.as_uint32_t()+border) ||
+        (screen_height < requested_size.height.as_uint32_t()+border))
+    {
+        mir::log_info(" ... is smaller than the requested size (%dx%d) plus border (%d). Clipping to (%dx%d).",
+            requested_size.width.as_uint32_t(), requested_size.height.as_uint32_t(), border,
+            screen_width-border, screen_height-border);
+        return std::move(geom::Size{screen_width-border, screen_height-border});
+    }
+
+    return std::move(requested_size);
+}
+
 auto get_pixel_width(Display *dpy)
 {
     auto screen = XDefaultScreenOfDisplay(dpy);
@@ -200,12 +224,12 @@ unsigned long mgx::X11Window::red_mask() const
 }
 
 mgx::Display::Display(::Display* x_dpy,
-                      geom::Size const size,
+                      geom::Size const requested_size,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
     : shared_egl{*gl_config},
       x_dpy{x_dpy},
-      size{size},
+      actual_size{clip_to_display(x_dpy, requested_size)},
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
@@ -216,7 +240,7 @@ mgx::Display::Display(::Display* x_dpy,
 
     win = std::make_unique<X11Window>(x_dpy,
                                       shared_egl.display(),
-                                      size,
+                                      actual_size,
                                       shared_egl.config());
 
     auto red_mask = win->red_mask();
@@ -226,7 +250,7 @@ mgx::Display::Display(::Display* x_dpy,
     display_buffer = std::make_unique<mgx::DisplayBuffer>(
                          x_dpy,
                          *win,
-                         size,
+                         actual_size,
                          shared_egl.context(),
                          report,
                          orientation,
@@ -249,7 +273,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
     return std::make_unique<mgx::DisplayConfiguration>(
-        pf, size, geom::Size{size.width * pixel_width, size.height * pixel_height}, orientation);
+        pf, actual_size, geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)

@@ -93,6 +93,12 @@ public:
         mock_x11.fake_x11.screen.mwidth = mm.width.as_int();
         mock_x11.fake_x11.screen.mheight = mm.height.as_int();
         size = window;
+
+        ON_CALL(mock_x11, XGetGeometry(mock_x11.fake_x11.display,_,_,_,_,_,_,_,_))
+        .WillByDefault(DoAll(SetArgPointee<5>(mock_x11.fake_x11.screen.width),
+                             SetArgPointee<6>(mock_x11.fake_x11.screen.height),
+                             SetArgPointee<7>(0),
+                             Return(1)));
     }
     std::shared_ptr<mgx::Display> create_display()
     {
@@ -151,7 +157,7 @@ TEST_F(X11DisplayTest, respects_gl_config)
 
 TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_screen)
 {
-    auto const pixel = geom::Size{2560, 1080};
+    auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
     auto const window = geom::Size{1280, 1024};
     auto const pixel_width = float(mm.width.as_int()) / float(pixel.width.as_int());
@@ -175,7 +181,7 @@ TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_scre
 
 TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
 {
-    auto const pixel = geom::Size{2560, 1080};
+    auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
     auto const window = geom::Size{1280, 1024};
 
@@ -192,4 +198,25 @@ TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
         );
 
     EXPECT_THAT(reported_resolution, Eq(window));
+}
+
+TEST_F(X11DisplayTest, adjusts_resolution_with_respect_to_screen_size)
+{
+    auto const pixel = geom::Size{1000, 1000};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+    auto const border = 150; //must match the border value in clip_to_display()
+
+    setup_x11_screen(pixel, mm, window);
+
+    auto display = create_display();
+    auto config = display->configuration();
+    geom::Size reported_resolution;
+    config->for_each_output(
+        [&reported_resolution](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_resolution = output.modes[0].size;
+        });
+
+    EXPECT_THAT(reported_resolution, Eq(geom::Size{pixel.width.as_uint32_t()-border, pixel.height.as_uint32_t()-border}));
 }
