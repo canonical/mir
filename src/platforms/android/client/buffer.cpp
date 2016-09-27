@@ -102,6 +102,19 @@ void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
     }
 }
 
+void mcla::Buffer::egl_image_creation_parameters(
+    EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
+{
+    static EGLint image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_NONE
+    };
+    *type = EGL_NATIVE_BUFFER_ANDROID;
+    *client_buffer = native_buffer->anwb();
+    *attr = image_attrs;
+}
+
 void mcla::Buffer::set_fence(mir::Fd fence, MirBufferAccess access)
 {
     mga::NativeFence f = fence;

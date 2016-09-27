@@ -81,6 +81,7 @@ struct StubClientBuffer : client::ClientBuffer
     void set_fence(Fd, MirBufferAccess) override {}
     Fd get_fence() const override { return mir::Fd(mir::Fd::invalid); }
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override { return true; }
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) {}
 
     std::shared_ptr<MirBufferPackage> const package;
     geometry::Size size_;
