@@ -39,7 +39,7 @@ namespace geom=mir::geometry;
 
 namespace
 {
-geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
+geom::Size&& clip_to_display(Display *dpy, geom::Size requested_size)
 {
     unsigned int screen_width, screen_height, uint_dummy;
     int int_dummy;
