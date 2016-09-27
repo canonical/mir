@@ -59,6 +59,7 @@ public:
     void set_fence(MirNativeFence, MirBufferAccess) {}
     MirNativeFence get_fence() const { return nullptr; }
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) { return true; }
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) {}
 };
 
 }
