@@ -1,11 +1,14 @@
 mir (0.24.1) UNRELEASED; urgency=medium
 
-  * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
+  * New upstream release 0.24.1 (https://launchpad.net/mir/+milestone/0.24.1)
     - ABI summary:
-      . No ABI changes in any libraries.
+      . All ABI numbers remain unchanged.
+      . mircommon ABI at 6, but now including a symbol misplaced in 0.24.0
     - Bugs fixed:
       . mirserver ignored further keymap configuration changes after a keyboard 
-        is configured (LP: #1599866)
+        is configured (LP: #1626435)
+      . fix for libmircommon.so.6 ABI break: version stanza of
+        mir::dispatch::ReadableFd* moved to newer version (LP: #1617865)
 
  -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 27 Sep 2016 09:50:08 +0200
 
