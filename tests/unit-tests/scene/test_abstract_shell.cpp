@@ -544,9 +544,9 @@ TEST_F(AbstractShell,
     session->destroy_surface(surface_id);
 
     EXPECT_CALL(session_container, successor_of(session)).
-        WillOnce(Return(session1));
+        WillRepeatedly(Return(session1));
     EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session));
+        WillRepeatedly(Return(session));
 
     EXPECT_CALL(session_event_sink, handle_no_focus());
 
