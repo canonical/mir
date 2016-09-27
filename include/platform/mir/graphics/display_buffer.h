@@ -58,16 +58,14 @@ public:
      *      The renderables that should appear on the screen if the hardware
      *      is capable of optmizing that list somehow. If what you want
      *      displayed on the screen cannot be represented by a RenderableList,
-     *      then you should draw using OpenGL and use post_update()
+     *      then you should render using a graphics library like OpenGL.
      *  \returns
-     *      true if the hardware can optimize the rendering of the list.
-     *      When this call completes, the renderlist will have been posted
-     *      to the screen.
-     *      false if the hardware platform cannot optimize the list. The screen
-     *      will not be updated. The caller should render the list another way,
-     *      and post using post_update()
+     *      True if the hardware can (and has) fully composite/overlay the list;
+     *      False if the hardware platform cannot composite the list, and the
+     *      caller should then render the list another way using a graphics
+     *      library such as OpenGL.
     **/
-    virtual bool post_renderables_if_optimizable(RenderableList const& renderlist) = 0;
+    virtual bool overlay(RenderableList const& renderlist) = 0;
 
     /** Returns the orientation of the display buffer relative to how the
      *  user should see it (the orientation of the output).

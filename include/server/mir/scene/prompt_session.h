@@ -32,25 +32,25 @@ class PromptSession : public frontend::PromptSession
 public:
     /**
      * Start a prompt session
-     *   \param [in] helper  The prompt session helper session
+     *   \param [in] helper_session  The prompt session helper session
      */
     virtual void start(std::shared_ptr<Session> const& helper_session) = 0;
 
     /**
      * Stop a prompt session
-     *   \param [in] helper  The prompt session helper session
+     *   \param [in] helper_session  The prompt session helper session
      */
     virtual void stop(std::shared_ptr<Session> const& helper_session) = 0;
 
     /**
      * Suspend a prompt session
-     *   \param [in] helper  The prompt session helper session
+     *   \param [in] helper_session  The prompt session helper session
      */
     virtual void suspend(std::shared_ptr<Session> const& helper_session) = 0;
 
     /**
      * Resume a prompt session
-     *   \param [in] helper  The prompt session helper session
+     *   \param [in] helper_session  The prompt session helper session
      */
     virtual void resume(std::shared_ptr<Session> const& helper_session) = 0;
 };

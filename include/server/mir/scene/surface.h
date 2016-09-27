@@ -84,7 +84,7 @@ public:
      * By default the input region is the whole surface. To unset a custom input region
      * and revert to the default set an empty input region, i.e., set_input_region({}).
      * To disable input set a non-empty region containing an empty rectangle, i.e.,
-     * set_input_region({geom::Rectangle{}}).
+     * set_input_region({Rectangle{}}).
      */
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
     virtual void resize(geometry::Size const& size) = 0;
@@ -115,6 +115,11 @@ public:
                             std::string const& variant, std::string const& options) = 0;
     virtual void rename(std::string const& title) = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
+
+    virtual void set_confine_pointer_state(MirPointerConfinementState state) = 0;
+    virtual MirPointerConfinementState confine_pointer_state() const = 0;
+
+    virtual void placed_relative(geometry::Rectangle const& placement) = 0;
 };
 }
 }

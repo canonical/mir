@@ -23,6 +23,7 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
+#include "software_buffer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -31,8 +32,8 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 #include <algorithm>
 #include <stdexcept>
@@ -97,6 +98,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
@@ -131,6 +133,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
@@ -285,11 +288,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     auto shm_file =
         std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
-    auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
-                                    buffer_properties.format);
-
-    return buffer;
+    return std::make_shared<mgm::SoftwareBuffer>(
+        std::move(shm_file),
+        buffer_properties.size,
+        buffer_properties.format);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()

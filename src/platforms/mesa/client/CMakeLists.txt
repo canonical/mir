@@ -16,10 +16,7 @@ add_library(mirclientplatformmesaobjects OBJECT
   native_surface.cpp
 )
 
-mir_add_library_with_symbols(
-  mirclientplatformmesa MODULE
-
-  ${symbol_map}
+add_library(mirclientplatformmesa MODULE
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
 )
 
@@ -30,6 +27,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_CLIENT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 target_link_libraries(mirclientplatformmesa

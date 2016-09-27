@@ -18,7 +18,10 @@
 
 #include "command_stream_sync.h"
 #include "android_native_buffer.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidNativeBuffer::AndroidNativeBuffer(
@@ -41,10 +44,23 @@ void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
     fence->wait();
 }
 
+bool mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent, std::chrono::milliseconds ms)
+{
+    if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
+        return true;
+
+    return fence->wait_for(ms);
+}
+
 void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
 {
     fence->merge_with(merge_fd);
     access = updated_access;
+}
+
+void mga::AndroidNativeBuffer::reset_fence()
+{
+    fence->reset_fence();
 }
 
 ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const
@@ -71,4 +87,18 @@ void mga::AndroidNativeBuffer::wait_for_unlock_by_gpu()
 {
     using namespace std::chrono;
     cmdstream_sync->wait_for(duration_cast<nanoseconds>(seconds(2)));
+}
+
+mga::NativeBuffer* mga::to_native_buffer_checked(mg::NativeBuffer* buffer)
+{
+    if (auto native = dynamic_cast<mga::NativeBuffer*>(buffer))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
+}
+
+std::shared_ptr<mga::NativeBuffer> mga::to_native_buffer_checked(std::shared_ptr<mg::NativeBuffer> const& buffer)
+{
+    if (auto native = std::dynamic_pointer_cast<mga::NativeBuffer>(buffer))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("cannot downcast mg::NativeBuffer to android::NativeBuffer"));
 }

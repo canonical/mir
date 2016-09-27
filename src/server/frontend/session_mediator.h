@@ -45,7 +45,6 @@ class Authority;
 namespace graphics
 {
 class Buffer;
-class Display;
 class DisplayConfiguration;
 class GraphicBufferAllocator;
 }
@@ -156,6 +155,10 @@ public:
         google::protobuf::Closure* done) override;
     void confirm_base_display_configuration(
         mir::protobuf::DisplayConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void cancel_base_display_configuration_preview(
+        mir::protobuf::Void const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
     void create_screencast(

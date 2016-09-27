@@ -77,7 +77,7 @@ private:
     geometry::Size old_size;
     float old_pinch_diam;
     int max_fingers;  // Maximum number of fingers touched during gesture
-    int zoom_exponent = 0;
+    float zoom_exponent = 0.0f;
     ColourEffect colour_effect = none;
 
     void toggle(ColourEffect);

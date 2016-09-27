@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
@@ -58,7 +59,9 @@ class VirtualTerminal;
 class KMSOutput;
 class Cursor;
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
     Display(std::shared_ptr<helpers::DRMHelper> const& drm,
@@ -75,6 +78,7 @@ public:
         std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
+    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const override;
     void configure(DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(
@@ -90,8 +94,10 @@ public:
     void resume() override;
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     void clear_connected_unused_outputs();

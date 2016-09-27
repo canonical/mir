@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -103,9 +103,10 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
  *                          return a surface of this height.
  * \param [in] format       Pixel format for the surface.
  * \param [in] parent       A valid parent surface for this tooltip.
- * \param [in] rect         A target zone relative to parent.
+ * \param [in] zone         A target zone relative to parent.
  * \return                  A handle that can be passed to mir_surface_create()
  *                          to complete construction.
+ *\deprecated use mir_connection_create_spec_for_tip() instead
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_tooltip(MirConnection* connection,
@@ -113,7 +114,42 @@ mir_connection_create_spec_for_tooltip(MirConnection* connection,
                                        int height,
                                        MirPixelFormat format,
                                        MirSurface* parent,
-                                       MirRectangle* zone);
+                                       MirRectangle* zone)
+    __attribute__((deprecated));
+
+/**
+ * Create a surface specification for a tip surface.
+ *
+ * Positioning of the surface is specified with respect to the parent surface
+ * via an adjacency rectangle. The server will attempt to choose an edge of the
+ * adjacency rectangle on which to place the surface taking in to account
+ * screen-edge proximity or similar constraints. In addition, the server can use
+ * the edge affinity hint to consider only horizontal or only vertical adjacency
+ * edges in the given rectangle.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \param [in] parent       A valid parent surface for this tip.
+ * \param [in] rect         The adjacency rectangle. The server is not
+ *                          guaranteed to create a surface at the requested
+ *                          location.
+ * \param [in] edge         The preferred edge direction to attach to. Use
+ *                          mir_edge_attachment_any for no preference.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirSurfaceSpec*
+mir_connection_create_spec_for_tip(MirConnection* connection,
+                                   int width,
+                                   int height,
+                                   MirPixelFormat format,
+                                   MirSurface* parent,
+                                   MirRectangle* rect,
+                                   MirEdgeAttachment edge);
 
 /**
  * Create a surface specification for a modal dialog surface.
@@ -307,8 +343,8 @@ void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height
 /**
  * Set the minimum width, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] width    Minimum width.
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_width  Minimum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -318,8 +354,8 @@ void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
 /**
  * Set the minimum height, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] height   Minimum height.
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_height Minimum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -328,8 +364,8 @@ void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
 /**
  * Set the maximum width, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] width    Maximum width.
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_width  Maximum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -339,8 +375,8 @@ void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
 /**
  * Set the maximum height, in pixels
  *
- * \param [in] spec     Specification to mutate
- * \param [in] height   Maximum height.
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_height Maximum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
@@ -442,7 +478,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
 /**
  * Set the requested state.
  * \param [in] spec    Specification to mutate
- * \param [in] mode    Requested state
+ * \param [in] state   Requested state
  *
  * \note    If the server is unable to create a surface with the requested state at
  *          the point mir_surface_create() is called it will instead return an invalid surface.
@@ -488,7 +524,7 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
  *
  * \param [in] spec The spec to accumulate the request in.
  * \param [in] rectangles An array of MirRectangles specifying the input shape.
- * \param [in] num_streams The number of elements in the rectangles array.
+ * \param [in] n_rects The number of elements in the rectangles array.
  */
 void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,
@@ -521,6 +557,48 @@ void mir_surface_spec_set_event_handler(
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
 
 /**
+ * Attempts to set the pointer confinement spec for this surface
+ *
+ * This will request the window manager to confine the pointer to the surfaces region.
+ *
+ * \param [in] spec  The spec to accumulate the request in.
+ * \param [in] state The state you would like the pointer confinement to be in.
+ */
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+
+/**
+ * Set the surface placement on the spec.
+ *
+ * \param [in] spec             the spec to update
+ * \param [in] rect             the destination rectangle to align with
+ * \param [in] rect_gravity     the point on \p rect to align with
+ * \param [in] surface_gravity  the point on the surface to align with
+ * \param [in] placement_hints  positioning hints to use when limited on space
+ * \param [in] offset_dx        horizontal offset to shift w.r.t. \p rect
+ * \param [in] offset_dy        vertical offset to shift w.r.t. \p rect
+ *
+ * Moves a surface to \p rect, aligning their reference points.
+ *
+ * \p rect is relative to the top-left corner of the parent surface.
+ * \p rect_gravity and \p surface_gravity determine the points on \p rect and
+ * the surface to pin together. \p rect's alignment point can be offset by
+ * \p offset_dx and \p offset_dy, which is equivalent to offsetting the
+ * position of the surface.
+ *
+ * \p placement_hints determine how the window should be positioned in the case
+ * that the surface would fall off-screen if placed in its ideal position.
+ * See \ref MirPlacementHints for details.
+ */
+void mir_surface_spec_set_placement(
+    MirSurfaceSpec*     spec,
+    const MirRectangle* rect,
+    MirPlacementGravity rect_gravity,
+    MirPlacementGravity surface_gravity,
+    MirPlacementHints   placement_hints,
+    int                 offset_dx,
+    int                 offset_dy);
+
+/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
@@ -538,7 +616,14 @@ void mir_surface_set_event_handler(MirSurface *surface,
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
- * 
+ *
+ *   \deprecated Users should use mir_surface_spec_set_streams() to arrange
+ *               the content of a surface, instead of relying on a stream
+ *               being created by default.
+ *   \warning If the surface was created with, or modified to have a
+ *            MirSurfaceSpec containing streams added through
+ *            mir_surface_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
  *   \param[in] surface The surface
  */
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
@@ -618,9 +703,13 @@ MirWaitHandle* mir_surface_set_state(MirSurface *surface,
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
 
 /**
- * Set the swapinterval for mir_surface_swap_buffers. EGL users should use
- * eglSwapInterval directly.
- * At the time being, only swapinterval of 0 or 1 is supported.
+ * Set the swapinterval for the default stream.
+ *   \warning EGL users should use eglSwapInterval directly.
+ *   \warning Only swapinterval of 0 or 1 is supported.
+ *   \warning If the surface was created with, or modified to have a
+ *            MirSurfaceSpec containing streams added through
+ *            mir_surface_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that
  *                        mir_surface_swap_buffers will wait for
@@ -634,7 +723,8 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  * The default interval is 1.
  *   \param [in] surface  The surface to operate on
  *   \return              The swapinterval value that the client is operating with.
- *                        Returns -1 if surface is invalid.
+ *                        Returns -1 if surface is invalid, or if the default stream
+ *                        was removed by use of mir_surface_spec_set_streams().
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
 

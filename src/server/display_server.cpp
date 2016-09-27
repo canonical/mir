@@ -54,7 +54,8 @@ struct mir::DisplayServer::Private
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
-          display_changer{config.the_display_changer()}
+          display_changer{config.the_display_changer()},
+          stop_callback{config.the_stop_callback()}
     {
         display->register_configuration_change_handler(
             *main_loop,
@@ -165,8 +166,7 @@ struct mir::DisplayServer::Private
         std::shared_ptr<graphics::DisplayConfiguration> conf =
             display->configuration();
 
-        display_changer->configure_for_hardware_change(
-            conf, DisplayChanger::PauseResumeSystem);
+        display_changer->configure_for_hardware_change(conf);
     }
 
     std::shared_ptr<EmergencyCleanup> const emergency_cleanup; // Hold this so it does not get freed prematurely
@@ -180,6 +180,8 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
+    std::function<void()> const stop_callback;
+
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
@@ -222,5 +224,6 @@ void mir::DisplayServer::run()
 
 void mir::DisplayServer::stop()
 {
+    p.load()->stop_callback();
     p.load()->main_loop->stop();
 }

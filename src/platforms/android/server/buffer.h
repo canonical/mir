@@ -22,6 +22,7 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <hardware/gralloc.h>
 
@@ -29,7 +30,9 @@
 #include <condition_variable>
 #include <map>
 
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -42,12 +45,14 @@ struct EGLExtensions;
 namespace android
 {
 
+class NativeBuffer;
 class Buffer: public BufferBasic, public NativeBufferBase,
-              public renderer::gl::TextureSource
+              public renderer::gl::TextureSource,
+              public renderer::software::PixelSource
 {
 public:
     Buffer(gralloc_module_t const* hw_module,
-           std::shared_ptr<NativeBuffer> const& buffer_handle,
+           std::shared_ptr<android::NativeBuffer> const& buffer_handle,
            std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
@@ -58,10 +63,9 @@ public:
     void bind() override;
     void secure_for_render() override;
 
-
     //note, you will get the native representation of an android buffer, including
     //the fences associated with the buffer. You must close these fences
-    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
 
     void write(unsigned char const* pixels, size_t size) override;
     void read(std::function<void(unsigned char const*)> const&) override;
@@ -77,7 +81,7 @@ private:
     std::map<DispContextPair,EGLImageKHR> egl_image_map;
 
     std::mutex mutable content_lock;
-    std::shared_ptr<NativeBuffer> native_buffer;
+    std::shared_ptr<android::NativeBuffer> native_buffer;
     std::shared_ptr<EGLExtensions> egl_extensions;
 };
 

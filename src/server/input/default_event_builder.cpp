@@ -18,6 +18,7 @@
  */
 
 #include "default_event_builder.h"
+#include "mir/input/seat.h"
 #include "mir/events/event_builders.h"
 #include "mir/cookie/authority.h"
 #include "mir/events/event_private.h"
@@ -28,9 +29,11 @@ namespace me = mir::events;
 namespace mi = mir::input;
 
 mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
-                                             std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
+                                             std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+                                             std::shared_ptr<mi::Seat> const& seat)
     : device_id(device_id),
-      cookie_authority(cookie_authority)
+      cookie_authority(cookie_authority),
+      seat(seat)
 {
 }
 
@@ -85,4 +88,10 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
 mir::EventUPtr mi::DefaultEventBuilder::configuration_event(Timestamp timestamp, MirInputConfigurationAction action)
 {
     return me::make_event(action, device_id, timestamp);
+}
+
+mir::EventUPtr mi::DefaultEventBuilder::device_state_event(float cursor_x, float cursor_y)
+{
+    seat->set_cursor_position(cursor_x, cursor_y);
+    return seat->create_device_state();
 }

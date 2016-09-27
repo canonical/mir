@@ -19,7 +19,7 @@
 #ifndef MIR_RENDERER_GL_RENDERER_FACTORY_H_
 #define MIR_RENDERER_GL_RENDERER_FACTORY_H_
 
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer_factory.h"
 
 namespace mir
 {
@@ -28,10 +28,10 @@ namespace renderer
 namespace gl
 {
 
-class RendererFactory : public compositor::RendererFactory
+class RendererFactory : public renderer::RendererFactory
 {
 public:
-    std::unique_ptr<compositor::Renderer> create_renderer_for(
+    std::unique_ptr<renderer::Renderer> create_renderer_for(
         graphics::DisplayBuffer& display_buffer) override;
 };
 

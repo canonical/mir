@@ -235,7 +235,8 @@ MirWaitHandle* mir_connection_set_base_display_config(
  *
  * The display configuration will automatically revert to the previous
  * settings after timeout_seconds unless confirmed by a call to
- * mir_connection_confirm_base_display_configuration().
+ * mir_connection_confirm_base_display_configuration(), or is reverted
+ * immediately after a call to mir_connection_cancel_display_configuration_preview().
  *
  * If this request succeeds a configuration change event is sent to the
  * client. Clients should register a callback with
@@ -280,6 +281,22 @@ void mir_connection_confirm_base_display_configuration(
     MirDisplayConfig const* configuration);
 
 /**
+ * Cancel a pending base display configuration preview.
+ *
+ * If this request succeeds a configuration change event is sent to the client,
+ * with the now-current base display configuration.
+ *
+ * This call will fail if there is no display configuration preview current.
+ * A client can detect this by registering a callback with
+ * mir_connection_set_error_callback() and checking for
+ * mir_display_configuration_error_no_preview_in_progress.
+ *
+ * \param [in] connection   The connection
+ */
+void mir_connection_cancel_base_display_configuration_preview(
+    MirConnection* connection);
+
+/**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use
@@ -314,7 +331,7 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
-    unsigned const int format_size, unsigned int *num_valid_formats);
+    unsigned const int formats_size, unsigned int *num_valid_formats);
 
 /**
  * Perform a platform specific operation.
@@ -346,7 +363,7 @@ MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
  * Release this snapshot of the input configuration.
  * This invalidates any pointers retrieved from this structure.
  *
- * \param [in] devices  The input configuration
+ * \param [in] config  The input configuration
  */
 void mir_input_config_destroy(MirInputConfig const* config);
 

@@ -27,9 +27,10 @@
 #include "mir/log.h"
 
 #include <X11/Xutil.h>
-#include <linux/input.h>
 #include <X11/Xlib.h>
+#include <linux/input.h>
 #include <inttypes.h>
+#include <signal.h>
 #include <stdio.h>
 
 #include <chrono>
@@ -269,6 +270,11 @@ void mix::XInputPlatform::process_input_event()
                 mir::log_info("Keyboard mapping changed at server. Refreshing the cache.");
 #endif
                 XRefreshKeyboardMapping(&(xev.xmapping));
+                break;
+
+            case ClientMessage:
+                mir::log_info("Exiting");
+                kill(getpid(), SIGTERM);
                 break;
 
             default:

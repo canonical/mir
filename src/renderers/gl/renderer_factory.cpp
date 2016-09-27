@@ -21,10 +21,8 @@
 #include "mir/graphics/display_buffer.h"
 
 namespace mrg = mir::renderer::gl;
-namespace mc = mir::compositor;
-namespace geom = mir::geometry;
 
-std::unique_ptr<mc::Renderer>
+std::unique_ptr<mir::renderer::Renderer>
 mrg::RendererFactory::create_renderer_for(
     graphics::DisplayBuffer& display_buffer)
 {

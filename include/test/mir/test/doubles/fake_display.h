@@ -20,11 +20,12 @@
 #define MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
 
 #include "mir/test/doubles/null_display.h"
-#include "mir/test/pipe.h"
+#include "mir/fd.h"
 
 #include "mir/geometry/rectangle.h"
 
 #include <atomic>
+#include <mutex>
 #include <vector>
 
 namespace mir
@@ -58,8 +59,9 @@ public:
 private:
     std::shared_ptr<mir::graphics::DisplayConfiguration> config;
     std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
-    Pipe p;
+    Fd const wakeup_trigger;
     std::atomic<bool> handler_called;
+    std::mutex mutable configuration_mutex;
 };
 }
 }

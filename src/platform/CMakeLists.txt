@@ -18,7 +18,7 @@ set(MIR_PLATFORM_OBJECTS
 
 set(MIR_PLATFORM_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
 )
 
 add_subdirectory(graphics/)
@@ -28,8 +28,7 @@ add_subdirectory(udev)
 set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
-mir_add_library_with_symbols(mirplatform SHARED
-  symbols.map
+add_library(mirplatform SHARED
   ${MIR_PLATFORM_OBJECTS}
 )
 
@@ -45,6 +44,7 @@ set_target_properties(
   PROPERTIES
   SOVERSION ${MIRPLATFORM_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

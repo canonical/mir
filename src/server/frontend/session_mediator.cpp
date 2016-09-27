@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -76,6 +76,16 @@ namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+
+namespace
+{
+std::vector<uint16_t> convert_string_to_uint16_vector(std::string const& str_bytes)
+{
+    std::vector<uint16_t> out(str_bytes.size() / (sizeof(uint16_t) / sizeof(char)));
+    std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
+    return out;
+}
+}
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
@@ -284,6 +294,12 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
 
     #undef COPY_IF_SET
 
@@ -492,19 +508,30 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_release_buffers_called(session->name());
+    if (request->has_id())
+    {
+        auto stream_id = mf::BufferStreamId{request->id().value()};
+        try
+        {
+            auto stream = session->get_buffer_stream(stream_id);
+            for (auto i = 0; i < request->buffers().size(); i++)
+            {
+                mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
+                stream->disassociate_buffer(buffer_id);
+            }
+        }
+        catch(...)
+        {
+        }
+    }
     for (auto i = 0; i < request->buffers().size(); i++)
     {
         mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-        if (request->has_id())
-        {
-            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-            stream->disassociate_buffer(buffer_id);
-        }
         session->destroy_buffer(buffer_id);
     }
    done->Run();
 }
- 
+
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -538,15 +565,17 @@ void mf::SessionMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    auto session = weak_session.lock();
+    {
+        auto session = weak_session.lock();
 
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_disconnect_called(session->name());
+        report->session_disconnect_called(session->name());
 
-    shell->close_session(session);
-    destroy_screencast_sessions();
+        shell->close_session(session);
+        destroy_screencast_sessions();
+    }
     weak_session.reset();
 
     done->Run();
@@ -607,6 +636,11 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(parent_id);
     // aux_rect is a special case (below)
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(edge_attachment);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -615,6 +649,7 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(confine_pointer);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -748,6 +783,21 @@ void mf::SessionMediator::confirm_base_display_configuration(
     auto const config = unpack_and_sanitize_display_configuration(request);
 
     display_changer->confirm_base_configuration(session, config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::cancel_base_display_configuration_preview(
+    mir::protobuf::Void const* /*request*/,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->cancel_base_configuration_preview(session);
 
     done->Run();
 }
@@ -1180,6 +1230,10 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+
+        dest.gamma = {convert_string_to_uint16_vector(src.gamma_red()),
+                      convert_string_to_uint16_vector(src.gamma_green()),
+                      convert_string_to_uint16_vector(src.gamma_blue())};
     });
 
     return config;

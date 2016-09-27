@@ -22,16 +22,25 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mir
 {
 namespace graphics
 {
 class Display;
-class GLContext;
 }
-namespace renderer { namespace gl { class TextureSource; }}
+
+namespace renderer
+{
+namespace gl
+{
+class Context;
+class TextureSource;
+}
+}
+
 namespace compositor
 {
 
@@ -99,7 +108,7 @@ public:
 
     void release_current() override;
 
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) override;
+    bool overlay(graphics::RenderableList const&) override;
 
     void swap_buffers() override;
 
@@ -110,7 +119,7 @@ public:
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
-    std::unique_ptr<graphics::GLContext> gl_context;
+    std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
     MirMirrorMode const mirror_mode_;
 

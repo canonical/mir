@@ -26,11 +26,9 @@ namespace mir
 {
 namespace graphics
 {
-
-class NativeBuffer;
 namespace android
 {
-
+class NativeBuffer;
 class Gralloc
 {
 public:

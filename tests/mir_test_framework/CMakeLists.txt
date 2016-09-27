@@ -4,11 +4,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${Boost_INCLUDE_DIRS}
   ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
   ${UMOCKDEV_INCLUDE_DIRS}
-  ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
 add_definitions(
@@ -21,6 +21,10 @@ add_definitions(
     -DMIR_BUILD_PREFIX="${CMAKE_BINARY_DIR}"
     )
 
+# We don't want LTO objects in a published archive (libmir-test-assist.a)
+string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 add_library(mir-public-test-framework OBJECT
   any_surface.cpp
   async_server_runner.cpp
@@ -31,15 +35,14 @@ add_library(mir-public-test-framework OBJECT
   executable_path.cpp
   headless_in_process_server.cpp
   headless_nested_server_runner.cpp
+  headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp
-  libinput_environment.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
-  stub_input_platform.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp
@@ -110,14 +113,17 @@ set_target_properties(
 )
 
 add_library(
-  mirplatforminputstub MODULE
+  mir-test-input-framework OBJECT
   
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
-  $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
+add_library(
+  mirplatforminputstub MODULE
+  $<TARGET_OBJECTS:mir-test-input-framework>
+  $<TARGET_OBJECTS:mirevdevutilsobjects>)
 target_link_libraries(mirplatforminputstub mircommon)
 
 set_target_properties(

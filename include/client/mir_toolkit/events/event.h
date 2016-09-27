@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -46,6 +46,8 @@ typedef enum
     mir_event_type_keymap,
     mir_event_type_input_configuration,
     mir_event_type_surface_output,
+    mir_event_type_input_device_state,
+    mir_event_type_surface_placement,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -57,6 +59,8 @@ typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
+typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
 
 typedef struct MirCookie MirCookie;
 
@@ -75,6 +79,7 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/input_configuration_event.h"
 #include "mir_toolkit/events/surface_output_event.h"
+#include "mir_toolkit/events/input_device_state_event.h"
 
 #ifdef __cplusplus
 /**
@@ -92,7 +97,7 @@ extern "C" {
  * \param [in] event The event
  * \return           The event type
  */
-MirEventType mir_event_get_type(MirEvent const* ev);
+MirEventType mir_event_get_type(MirEvent const* event);
 
 /**
  * Retrieve the MirInputEvent associated with a MirEvent of 
@@ -102,7 +107,7 @@ MirEventType mir_event_get_type(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirInputEvent
  */
-MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
+MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
 
 /**
  * Retrieve the MirSurfaceEvent associated with a MirEvent of
@@ -112,7 +117,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirSurfaceEvent
  */
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev);
+MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event);
 
 /**
  * Retrieve the MirResizeEvent associated with a MirEvent of
@@ -122,7 +127,7 @@ MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirResizeEvent
  */
-MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev);
+MirResizeEvent const* mir_event_get_resize_event(MirEvent const* event);
 
 /**
  * Retrieve the MirPromptSessionEvent associated with a MirEvent of
@@ -132,7 +137,7 @@ MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirPromptSessionEvent
  */
-MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev);
+MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* event);
 
 /**
  * Retrieve the MirOrientationEvent associated with a MirEvent of
@@ -142,7 +147,7 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  * \param [in] event The event
  * \return           The associated MirOrientationEvent
  */
-MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
+MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event);
 
 /**
  * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
@@ -157,8 +162,10 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirCloseSurfaceEvent
  */
+/// @cond
 __attribute__ ((deprecated))
-MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev);
+/// @endcond
+MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
 
 /**
  * Retrieve the MirKeymapEvent associated with a MirEvent of
@@ -168,7 +175,7 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  * \param [in] event The event
  * \return           The associated MirKeymapEvent
  */
-MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
+MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
 /**
  * Retrieve the MirInputConfiguration associated with a MirEvent of
@@ -178,7 +185,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
  * \param [in] event The event
  * \return           The associated MirInputConfigurationEvent
  */
-MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev);
+MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
 
 /**
  * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type
@@ -193,41 +200,60 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \param [in] event The event
  * \return           The associated MirSurfaceOutputEvent
  */
-MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev);
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event);
+
+/**
+ * Retrieve the MirInputDeviceStateEvent associated with a MirEvent of
+ * type mir_event_type_input_device_state. The event signifies that the
+ * client has not received the most recent input events, and thus receives
+ * a state update for all attached devices.
+ *
+ * \param [in] event The event
+ * \return           The associated MirInputConfigurationEvent
+ */
+MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* event);
+
+/**
+ * Retrieve the MirSurfacePlacementEvent associated with a MirEvent of
+ * type mir_event_type_surface_placement. The event signifies that the
+ * the server has fulfilled a request for relative surface placement.
+ *
+ * \param [in] event The event
+ * \return           The associated MirSurfacePlacementEvent
+ */
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
 
 /*
- * 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * _________________________
  *< Don't use mir_event_ref >
- *-------------------------
+ * -------------------------
  *       \   ^__^
  *        \  (oo)\_______
-*            (__)\       )\/\
+ *           (__)\       )\/\
  *                ||----w |
  *                ||     || 
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy until 
- * such point whereas direct MirEvent access as deprecated. This means you must
- * use the return value as your new reference 
- *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy
+ * until such time that direct MirEvent access is deprecated. This means you
+ * must use the return value as your new reference.
  */
 
 /**
  * Reference this MirEvent and return a pointer to the
  * newly referenced instance
  *
- * \param[in] The event to reference
- * \return    The event pointer to now use
+ * \param[in] event The event to reference
+ * \return          The event pointer to now use
  */
-MirEvent const* mir_event_ref(MirEvent const* ev) __attribute__((warn_unused_result));
+MirEvent const* mir_event_ref(MirEvent const* event) __attribute__((warn_unused_result));
 
 /**
  * Release a reference to a MirEvent.
  *
- * \param[in] The event to un-reference
+ * \param[in] event The event to un-reference
  */
-void mir_event_unref(MirEvent const* ev);
+void mir_event_unref(MirEvent const* event);
 
 #ifdef __cplusplus
 }

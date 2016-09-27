@@ -23,10 +23,12 @@ set(EVENT_SOURCES
   prompt_session_event.cpp
   surface_event.cpp
   input_event.cpp
+  input_device_state_event.cpp
   keymap_event.cpp
   orientation_event.cpp
   resize_event.cpp
   surface_output_event.cpp
+  surface_placement_event.cpp       ${PROJECT_SOURCE_DIR}/src/include/common/mir/events/surface_placement_event.h
 )
 
 add_library(

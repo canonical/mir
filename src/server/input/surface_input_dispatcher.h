@@ -57,7 +57,7 @@ public:
     
 private:
     void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
-    bool dispatch_key(MirInputDeviceId id, MirKeyboardEvent const* kev);
+    bool dispatch_key(MirKeyboardEvent const* kev);
     bool dispatch_pointer(MirInputDeviceId id, MirPointerEvent const* pev);
     bool dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev);
 
@@ -69,19 +69,6 @@ private:
     void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
 
     void surface_removed(scene::Surface* surface);
-
-    struct KeyInputState
-    {
-        bool handle_event(MirInputDeviceId id, MirKeyboardEvent const* kev);
-        
-        bool press_key(MirInputDeviceId id, int scan_code);
-        bool repeat_key(MirInputDeviceId id, int scan_code);
-        bool release_key(MirInputDeviceId id, int scan_code);
-
-        void clear();
-
-        std::unordered_map<MirInputDeviceId, std::unordered_set<int>> depressed_scancodes;
-    } focus_surface_key_state;
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
     struct PointerInputState

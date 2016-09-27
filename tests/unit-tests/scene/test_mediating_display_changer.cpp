@@ -71,7 +71,10 @@ auto display_output(
                                               mode,
                                               mir_orientation_normal,
                                               1.0f,
-                                              mir_form_factor_phone
+                                              mir_form_factor_phone,
+                                              mir_subpixel_arrangement_unknown,
+                                              {},
+                                              mir_output_gamma_unsupported
         };
 }
 
@@ -206,11 +209,14 @@ TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_s
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.conf_ptr)));
 }
 
-TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session)
+TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)
 {
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
     auto session = std::make_shared<mtd::StubSession>();
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(false));
 
     InSequence s;
     EXPECT_CALL(mock_compositor, stop());
@@ -224,13 +230,32 @@ TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuratio
                        mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_configuration_for_focused_session_would_preserve_display_buffers)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+    auto session = std::make_shared<mtd::StubSession>();
+
+    EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(conf)))
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(mock_compositor, stop()).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+
 TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 {
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(Ref(conf))).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     changer->configure(std::make_shared<mtd::StubSession>(),
@@ -244,17 +269,19 @@ TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_har
     mtd::StubDisplayConfig conf{2};
 
     changer->configure_for_hardware_change(
-        mt::fake_shared(conf),
-        mir::DisplayChanger::PauseResumeSystem);
+        mt::fake_shared(conf));
 
     auto const base_conf = changer->base_configuration();
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(conf));
 }
 
-TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausing_system)
+TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_invalidated)
 {
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(false));
 
     InSequence s;
     EXPECT_CALL(mock_conf_policy, apply_to(Ref(conf)));
@@ -263,24 +290,62 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausin
     EXPECT_CALL(mock_display, configure(Ref(conf)));
     EXPECT_CALL(mock_compositor, start());
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
-TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retaining_system_state)
+TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved)
 {
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
+    {
+        InSequence s;
+        EXPECT_CALL(mock_conf_policy, apply_to(Ref(conf)));
+
+        EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(conf)))
+            .WillOnce(Return(true));
+    }
+
     EXPECT_CALL(mock_compositor, stop()).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
-    InSequence s;
-    EXPECT_CALL(mock_conf_policy, apply_to(Ref(conf)));
-    EXPECT_CALL(mock_display, configure(Ref(conf)));
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
+}
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::RetainSystemState);
+TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved_but_new_outputs_are_enabled)
+{
+    using namespace testing;
+
+    auto conf = changer->base_configuration();
+
+    bool new_output_enabled{false};
+    conf->for_each_output(
+        [&new_output_enabled](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (!output.used)
+            {
+                new_output_enabled = true;
+                output.used = true;
+            }
+        });
+    ASSERT_TRUE(new_output_enabled);
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(true));
+
+    InSequence s;
+    EXPECT_CALL(mock_conf_policy, apply_to(Ref(*conf)));
+
+    /*
+     * Currently we have to tear down and recreate the compositor in order to add
+     * a new output. This is not an inherent limitation, and we might do better later.
+     */
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(Ref(*conf)));
+    EXPECT_CALL(mock_compositor, start()).Times(1);
+
+    changer->configure_for_hardware_change(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
@@ -303,8 +368,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
     EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
-    changer->configure_for_hardware_change(conf,
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
@@ -320,15 +384,73 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
     EXPECT_CALL(mock_session1, send_display_config(_));
     EXPECT_CALL(mock_session2, send_display_config(_));
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf),
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
-TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_attached_config_applies_config)
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attached_config_applies_config)
 {
     using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(*conf)))
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(mock_compositor, stop()).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(0);
+
+    session_event_sink.handle_focus_change(session1);
+}
+
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_but_output_adding_attached_config_applies_config)
+{
+    using namespace testing;
+    auto session1 = std::make_shared<mtd::StubSession>();
+
+    auto conf = changer->base_configuration();
+
+    bool new_output_enabled{false};
+    conf->for_each_output(
+        [&new_output_enabled](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (!output.used)
+            {
+                new_output_enabled = true;
+                output.used = true;
+            }
+        });
+    ASSERT_TRUE(new_output_enabled);
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(true));
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    /*
+     * Currently we have to tear down and recreate the compositor in order to add
+     * a new output. This is not an inherent limitation, and we might do better later.
+     */
+    InSequence s;
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(Ref(*conf)));
+    EXPECT_CALL(mock_compositor, start()).Times(1);
+
+    session_event_sink.handle_focus_change(session1);
+}
+
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_invalidating_attached_config_applies_config)
+{
+    using namespace testing;
+    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto session1 = std::make_shared<mtd::StubSession>();
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(false));
 
     stub_session_container.insert_session(session1);
     changer->configure(session1, conf);
@@ -341,12 +463,15 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_attached_config_appl
     session_event_sink.handle_focus_change(session1);
 }
 
-TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config)
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_pausing_if_db_invalidated)
 {
     using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
+
+    ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
+        .WillByDefault(Return(false));
 
     stub_session_container.insert_session(session1);
     changer->configure(session1, conf);
@@ -360,6 +485,43 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
     EXPECT_CALL(mock_compositor, stop());
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(base_config))));
     EXPECT_CALL(mock_compositor, start());
+
+    session_event_sink.handle_focus_change(session2);
+}
+
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_preserved)
+{
+    using namespace testing;
+    std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
+    conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.orientation =
+                    output.orientation == mir_orientation_normal ? mir_orientation_left : mir_orientation_normal;
+            }
+        });
+
+    auto session1 = std::make_shared<mtd::StubSession>();
+    auto session2 = std::make_shared<mtd::StubSession>();
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    session_event_sink.handle_focus_change(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(
+        mock_display,
+        apply_if_configuration_preserves_display_buffers(mt::DisplayConfigMatches(std::cref(base_config))))
+            .WillOnce(Return(true));
+
+    EXPECT_CALL(mock_compositor, stop()).Times(0);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(0);
 
     session_event_sink.handle_focus_change(session2);
 }
@@ -414,8 +576,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
     stub_session_container.insert_session(session1);
     changer->configure(session1, conf);
 
-    changer->configure_for_hardware_change(conf,
-                                           mir::DisplayChanger::PauseResumeSystem);
+    changer->configure_for_hardware_change(conf);
 
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
@@ -491,9 +652,7 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
-    display_changer.configure_for_hardware_change(
-        conf,
-        mir::DisplayChanger::PauseResumeSystem);
+    display_changer.configure_for_hardware_change(conf);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));

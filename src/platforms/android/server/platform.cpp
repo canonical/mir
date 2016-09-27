@@ -27,6 +27,7 @@
 #include "ipc_operations.h"
 #include "sync_fence.h"
 #include "native_buffer.h"
+#include "native_window_report.h"
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
@@ -38,6 +39,7 @@
 #include "mir/abnormal_exit.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -50,49 +52,60 @@ namespace mo = mir::options;
 
 namespace
 {
+char const* const hwc_log_opt = "hwc-report";
+char const* const hwc_overlay_opt = "disable-overlays";
+char const* const fb_native_window_report_opt = "report-fb-native-window";
 
-    char const* const hwc_log_opt = "hwc-report";
-    char const* const hwc_overlay_opt = "disable-overlays";
+std::shared_ptr<mga::HwcReport> make_hwc_report(mo::Option const& options)
+{
+    if (!options.is_set(hwc_log_opt))
+        return std::make_shared<mga::NullHwcReport>();
 
-    std::shared_ptr<mga::HwcReport> make_hwc_report(mo::Option const& options)
-    {
-        if (!options.is_set(hwc_log_opt))
-            return std::make_shared<mga::NullHwcReport>();
+    auto opt = options.get<std::string>(hwc_log_opt);
+    if (opt == mo::log_opt_value)
+        return std::make_shared<mga::HwcFormattedLogger>();
+    else if (opt == mo::off_opt_value)
+        return std::make_shared<mga::NullHwcReport>();
+    else
+        throw mir::AbnormalExit(
+                std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
+                    mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
+}
 
-        auto opt = options.get<std::string>(hwc_log_opt);
-        if (opt == mo::log_opt_value)
-            return std::make_shared<mga::HwcFormattedLogger>();
-        else if (opt == mo::off_opt_value)
-            return std::make_shared<mga::NullHwcReport>();
-        else
-            throw mir::AbnormalExit(
-                    std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
-                        mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
-    }
+std::shared_ptr<mga::NativeWindowReport> make_native_window_report(mo::Option const& options)
+{
+    if (options.is_set(fb_native_window_report_opt) &&
+        options.get<std::string>(fb_native_window_report_opt) == mo::log_opt_value)
+        return std::make_shared<mga::ConsoleNativeWindowReport>(
+            std::make_shared<mir::logging::DumbConsoleLogger>());
+    else 
+        return std::make_shared<mga::NullNativeWindowReport>();
+}
 
-    mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
-    {
-        if (!options.is_set(hwc_overlay_opt))
-            return mga::OverlayOptimization::enabled;
+mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
+{
+    if (!options.is_set(hwc_overlay_opt))
+        return mga::OverlayOptimization::enabled;
 
-        if (options.get<bool>(hwc_overlay_opt))
-            return mga::OverlayOptimization::disabled;
-        else
-            return mga::OverlayOptimization::enabled;
-    }
-
+    if (options.get<bool>(hwc_overlay_opt))
+        return mga::OverlayOptimization::disabled;
+    else
+        return mga::OverlayOptimization::enabled;
+}
 }
 
 mga::Platform::Platform(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mga::NativeWindowReport> const& native_window_report,
     mga::OverlayOptimization overlay_option,
     std::shared_ptr<mga::DeviceQuirks> const& quirks) :
     buffer_allocator(buffer_allocator),
     display_buffer_builder(display_buffer_builder),
     display_report(display_report),
     quirks(quirks),
+    native_window_report(native_window_report),
     overlay_option(overlay_option)
 {
 }
@@ -130,17 +143,12 @@ mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
 {
     auto const program_factory = std::make_shared<mir::gl::DefaultProgramFactory>();
     return mir::make_module_ptr<mga::Display>(
-            display_buffer_builder, program_factory, gl_config, display_report, overlay_option);
+            display_buffer_builder, program_factory, gl_config, display_report, native_window_report, overlay_option);
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mga::IpcOperations>();
-}
-
-EGLNativeDisplayType mga::Platform::egl_native_display() const
-{
-    return EGL_DEFAULT_DISPLAY;
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -160,7 +168,9 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
     return mir::make_module_ptr<mga::Platform>(
         component_factory->the_buffer_allocator(),
-        component_factory, display_report, overlay_option, quirks);
+        component_factory, display_report,
+        make_native_window_report(*options),
+        overlay_option, quirks);
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
@@ -180,7 +190,10 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
-    return mir::make_module_ptr<mga::Platform>(buffer_allocator, nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
+    return mir::make_module_ptr<mga::Platform>(
+        buffer_allocator, nullptr, display_report,
+        std::make_shared<mga::NullNativeWindowReport>(), 
+        mga::OverlayOptimization::disabled, quirks);
 }
 
 void add_graphics_platform_options(
@@ -191,6 +204,9 @@ void add_graphics_platform_options(
         (hwc_log_opt,
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
          "[platform-specific] How to handle the HWC logging report. [{log,off}]")
+        (fb_native_window_report_opt,
+         boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
+         "[platform-specific] whether to log the EGLNativeWindowType backed by the framebuffer [{log,off}]")
         (hwc_overlay_opt,
          boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");

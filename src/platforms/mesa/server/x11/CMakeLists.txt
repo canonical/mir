@@ -10,9 +10,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-mir_add_library_with_symbols(mirplatformservermesax11 MODULE
-  ${symbol_map}
-
+add_library(mirplatformservermesax11 MODULE
   $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects-symbols>
@@ -25,8 +23,8 @@ target_link_libraries(
   mirplatformservermesax11
   PRIVATE
   mirplatform
-  EGL
-  GLESv2
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
   X11
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
@@ -41,6 +39,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 install(TARGETS mirplatformservermesax11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

@@ -155,7 +155,8 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
                                           uint32_t encoder_id,
                                           std::vector<drmModeModeInfo>& modes,
                                           std::vector<uint32_t>& possible_encoder_ids,
-                                          geom::Size const& physical_size)
+                                          geom::Size const& physical_size,
+                                          drmModeSubPixel subpixel_arrangement)
 {
     drmModeConnector connector = drmModeConnector();
 
@@ -169,6 +170,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
     connector.count_encoders = possible_encoder_ids.size();
     connector.mmWidth = physical_size.width.as_uint32_t();
     connector.mmHeight = physical_size.height.as_uint32_t();
+    connector.subpixel = subpixel_arrangement;
 
     connectors.push_back(connector);
 }
@@ -300,6 +302,21 @@ drmModeEncoderPtr drmModeGetEncoder(int fd, uint32_t encoder_id)
     return global_mock->drmModeGetEncoder(fd, encoder_id);
 }
 
+drmModePlaneResPtr drmModeGetPlaneResources(int fd)
+{
+    return global_mock->drmModeGetPlaneResources(fd);
+}
+
+drmModePlanePtr drmModeGetPlane(int fd, uint32_t plane_id)
+{
+    return global_mock->drmModeGetPlane(fd, plane_id);
+}
+
+drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t id, uint32_t type)
+{
+    return global_mock->drmModeObjectGetProperties(fd, id, type);
+}
+
 drmModeCrtcPtr drmModeGetCrtc(int fd, uint32_t crtcId)
 {
     return global_mock->drmModeGetCrtc(fd, crtcId);
@@ -311,6 +328,18 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 {
     return global_mock->drmModeSetCrtc(fd, crtcId, bufferId, x, y,
                                        connectors, count, mode);
+}
+
+int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcGetGamma(fd, crtc_id, size, red, green, blue);
+}
+
+int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcSetGamma(fd, crtc_id, size, red, green, blue);
 }
 
 void drmModeFreeResources(drmModeResPtr ptr)
@@ -326,6 +355,11 @@ void drmModeFreeProperty(drmModePropertyPtr ptr)
 int drmGetCap(int fd, uint64_t capability, uint64_t *value)
 {
     return global_mock->drmGetCap(fd, capability, value);
+}
+
+int drmSetClientCap(int fd, uint64_t capability, uint64_t value)
+{
+    return global_mock->drmSetClientCap(fd, capability, value);
 }
 
 drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
@@ -351,6 +385,21 @@ void drmModeFreeEncoder(drmModeEncoderPtr ptr)
 void drmModeFreeCrtc(drmModeCrtcPtr ptr)
 {
     global_mock->drmModeFreeCrtc(ptr);
+}
+
+void drmModeFreePlaneResources(drmModePlaneResPtr ptr)
+{
+    global_mock->drmModeFreePlaneResources(ptr);
+}
+
+void drmModeFreePlane(drmModePlanePtr ptr)
+{
+    global_mock->drmModeFreePlane(ptr);
+}
+
+void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr)
+{
+    global_mock->drmModeFreeObjectProperties(ptr);
 }
 
 int drmModeAddFB(int fd, uint32_t width, uint32_t height,
@@ -443,6 +492,11 @@ char* drmGetBusid(int fd)
 void drmFreeBusid(const char* busid)
 {
     return global_mock->drmFreeBusid(busid);
+}
+
+char* drmGetDeviceNameFromFd(int fd)
+{
+    return global_mock->drmGetDeviceNameFromFd(fd);
 }
 
 // We need to wrap open as we sometimes open() the DRM device

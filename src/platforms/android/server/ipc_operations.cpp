@@ -34,7 +34,7 @@ namespace mga = mir::graphics::android;
 
 void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer.native_buffer_handle());
 
     native_buffer->wait_for_unlock_by_gpu();
     mir::Fd fence_fd(native_buffer->copy_fence());
@@ -62,7 +62,9 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
             msg.pack_data(buffer_handle->data[offset++]);
         }
 
-        msg.pack_stride(buffer.stride());
+        mir::geometry::Stride byte_stride{
+            native_buffer->anwb()->stride * MIR_BYTES_PER_PIXEL(buffer.pixel_format())};
+        msg.pack_stride(byte_stride);
         msg.pack_size(buffer.size());
     }
 }

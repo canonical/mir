@@ -23,6 +23,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
@@ -56,6 +57,9 @@ EventUPtr make_event(
     float scale,
     MirFormFactor form_factor,
     uint32_t id);
+
+/// Surface placement event
+EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -133,6 +137,20 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
     MirInputDeviceId id, std::chrono::nanoseconds time);
+
+struct InputDeviceState
+{
+    MirInputDeviceId id;
+    std::vector<uint32_t> pressed_keys;
+    MirPointerButtons buttons;
+};
+
+EventUPtr make_event(std::chrono::nanoseconds timestamp,
+                     MirPointerButtons pointer_buttons,
+                     MirInputEventModifiers modifiers,
+                     float x_axis_value,
+                     float y_axis_value,
+                     std::vector<InputDeviceState>&& device_states);
 }
 }
 

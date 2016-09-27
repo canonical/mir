@@ -48,7 +48,7 @@ public:
      *
      * \param [in] message   the message that will be sent
      * \param [in] buffer    the buffer to be put in the message
-     * \param [in] ipc_type  what sort of ipc message is needed
+     * \param [in] msg_type  what sort of ipc message is needed
      */
     virtual void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const = 0;
 
@@ -74,7 +74,7 @@ public:
      * Arranges a platform specific operation triggered by an IPC call
      * \returns              the response that will be sent to the client
      * \param [in]  opcode   the opcode that indicates the action to be performed 
-     * \param [in]  request  the message that was sent to the server
+     * \param [in]  message  the message that was sent to the server
      */
     virtual PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) = 0; 

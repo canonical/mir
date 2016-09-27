@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
 #include "hwc_configuration.h"
@@ -46,8 +47,11 @@ class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 class DisplayChangePipe;
 class DisplayDevice;
+class NativeWindowReport;
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
     explicit Display(
@@ -55,12 +59,14 @@ public:
         std::shared_ptr<gl::ProgramFactory> const& gl_program_factory,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<NativeWindowReport> const& native_window_report,
         OverlayOptimization overlay_option);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) const override;
     void configure(graphics::DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
@@ -76,8 +82,11 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     void on_hotplug();
@@ -85,6 +94,7 @@ private:
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<NativeWindowReport> const native_window_report;
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::mutex mutable configuration_mutex;
     bool mutable configuration_dirty{false};

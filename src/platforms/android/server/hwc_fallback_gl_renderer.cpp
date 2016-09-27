@@ -19,7 +19,7 @@
 #include "mir/gl/program_factory.h"
 #include "mir/gl/texture.h"
 #include "mir/gl/tessellation_helpers.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "swapping_gl_context.h"
 #include "buffer.h"
@@ -29,6 +29,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <GLES2/gl2.h>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -66,8 +68,8 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
     disp_transform = glm::translate(disp_transform, glm::vec3{-1.0, 1.0, 0.0});
     disp_transform = glm::scale(
                         disp_transform,
-                        glm::vec3{2.0/rect.size.width.as_float(),
-                                  -2.0/rect.size.height.as_float(),
+                        glm::vec3{2.0/rect.size.width.as_int(),
+                                  -2.0/rect.size.height.as_int(),
                                   1.0});
     glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, glm::value_ptr(disp_transform));
 }
@@ -75,7 +77,7 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
 
 mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     gl::ProgramFactory const& factory,
-    mg::GLContext const& context,
+    renderer::gl::Context const& context,
     geom::Rectangle const& screen_pos)
 {
     context.make_current();

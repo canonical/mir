@@ -39,6 +39,7 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
+namespace synthesis = mir::input::synthesis;
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     : queue{std::make_shared<md::ActionQueue>()}, device{std::make_shared<InputDevice>(info, queue)}
@@ -125,8 +126,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     auto button_event = builder->pointer_event(event_time,
                                                action,
                                                buttons,
-                                               scroll.x.as_float(),
-                                               scroll.y.as_float(),
+                                               scroll.x.as_int(),
+                                               scroll.y.as_int(),
                                                0.0f,
                                                0.0f);
 
@@ -166,8 +167,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     auto pointer_event = builder->pointer_event(event_time,
                                                 mir_pointer_action_motion,
                                                 buttons,
-                                                scroll.x.as_float(),
-                                                scroll.y.as_float(),
+                                                scroll.x.as_int(),
+                                                scroll.y.as_int(),
                                                 rel_x,
                                                 rel_y);
 
@@ -252,10 +253,10 @@ void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, floa
     // TODO take orientation of input sink into account?
     auto area = sink->bounding_rectangle();
     auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
-    auto x_scale = area.size.width.as_float() / float(touch_range);
-    auto y_scale = area.size.height.as_float() / float(touch_range);
-    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale + area.top_left.x.as_float();
-    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale + area.top_left.y.as_float();
+    auto x_scale = area.size.width.as_int() / float(touch_range);
+    auto y_scale = area.size.height.as_int() / float(touch_range);
+    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale + area.top_left.x.as_int();
+    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale + area.top_left.y.as_int();
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink* destination, mi::EventBuilder* event_builder)

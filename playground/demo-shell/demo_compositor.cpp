@@ -118,7 +118,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 
     if (!nonrenderlist_elements &&
         viewport == display_buffer.view_area() &&  // no bypass while zoomed
-        display_buffer.post_renderables_if_optimizable(renderable_list))
+        display_buffer.overlay(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer.suspend();
@@ -186,8 +186,8 @@ void me::DemoCompositor::update_viewport()
         // Note the 0.5f. This is because cursors (and all input in general)
         // measures coordinates at the centre of a pixel. But GL measures to
         // the top-left corner of a pixel.
-        float screen_x = cursor_pos.x.as_float() + 0.5f - db_x;
-        float screen_y = cursor_pos.y.as_float() + 0.5f - db_y;
+        float screen_x = cursor_pos.x.as_int() + 0.5f - db_x;
+        float screen_y = cursor_pos.y.as_int() + 0.5f - db_y;
 
         float normal_x = screen_x / db_width;
         float normal_y = screen_y / db_height;

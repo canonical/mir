@@ -23,12 +23,14 @@
 #include "mir/scene/session.h"
 
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <atomic>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace mrs = mir::renderer::software;
 using namespace mir::geometry;
 
 me::SurfaceInfo::SurfaceInfo(
@@ -195,7 +197,8 @@ struct mir::examples::SurfaceInfo::SwappingPainter
             auto const sz = buf->size().height.as_int() *
                             buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
             std::vector<unsigned char> pixels(sz, intensity);
-            buf->write(pixels.data(), sz);
+            if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buf->native_buffer_base()))
+                pixel_source->write(pixels.data(), sz);
             swap_buffers(buf);
         }
     }
@@ -231,7 +234,8 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
         auto const sz = buffer->size().height.as_int() *
                         buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
         std::vector<unsigned char> pixels(sz, intensity);
-        buffer->write(pixels.data(), sz);
+        if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base()))
+            pixel_source->write(pixels.data(), sz);
         buffer_stream->swap_buffers(buffer.get(), [](mg::Buffer*){});
 
         std::swap(front_buffer, back_buffer);

@@ -20,8 +20,8 @@
 #include "shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_texture_binder.h"
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 #include <boost/throw_exception.hpp>
 
@@ -144,7 +144,7 @@ void mgc::ShmBuffer::gl_bind_to_texture()
     }
 }
 
-std::shared_ptr<MirNativeBuffer> mgc::ShmBuffer::native_buffer_handle() const
+std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
 

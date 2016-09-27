@@ -351,6 +351,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     COPY_IF_SET(min_aspect);
     COPY_IF_SET(max_aspect);
     COPY_IF_SET(output_id);
+    COPY_IF_SET(confine_pointer);
 
     #undef COPY_IF_SET
 
@@ -406,6 +407,11 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     {
         auto const state = handle_set_state(surface, modifications.state.value());
         surface->configure(mir_surface_attrib_state, state);
+    }
+
+    if (modifications.confine_pointer.is_set())
+    {
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
     }
 }
 
@@ -679,6 +685,10 @@ bool msh::CanonicalWindowManagerPolicy::handle_touch_event(MirTouchEvent const* 
 
         case mir_touch_action_change:
             continue;
+
+        case mir_touch_actions:
+            abort();
+            return false;
         }
     }
 
@@ -756,6 +766,8 @@ void msh::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
 
 void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Surface> const& surface)
 {
+    std::lock_guard<std::recursive_mutex> lock{active_surface_mutex};
+
     if (!surface)
     {
         if (active_surface_.lock())

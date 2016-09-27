@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include "mir/test/doubles/null_display_changer.h"
 #include "mir/test/doubles/stub_display_configuration.h"
@@ -67,6 +68,9 @@ public:
 private:
     static bool const connected;
     static bool const used;
+    std::shared_ptr<mtd::StubBuffer> stub_buffer { std::make_shared<mtd::StubBuffer>(
+        std::make_shared<mtf::NativeBuffer>(mg::BufferProperties{})
+    )};
 };
 
 bool const StubChanger::connected{true};
@@ -94,6 +98,8 @@ struct Screencast : mtf::BasicClientServerFixture<StubServerConfig>
 
     MirScreencastParameters default_screencast_params {
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
+    std::shared_ptr<mtd::StubBuffer> stub_buffer {
+        std::make_shared<mtd::StubBuffer>(std::make_shared<mtf::NativeBuffer>(mg::BufferProperties{}))};
 };
 
 }
@@ -111,7 +117,7 @@ TEST_F(Screencast, contacts_server_screencast_for_create_and_release)
         .WillOnce(Return(screencast_session_id));
 
     EXPECT_CALL(mock_screencast(), capture(screencast_session_id))
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+        .WillOnce(Return(stub_buffer));
 
     EXPECT_CALL(mock_screencast(), destroy_session(screencast_session_id));
 
@@ -141,7 +147,7 @@ TEST_F(Screencast, contacts_server_screencast_with_provided_params)
         .WillOnce(Return(screencast_session_id));
 
     EXPECT_CALL(mock_screencast(), capture(_))
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+        .WillOnce(Return(stub_buffer));
 
     EXPECT_CALL(mock_screencast(), destroy_session(_));
 
@@ -162,7 +168,7 @@ TEST_F(Screencast, gets_valid_egl_native_window)
     EXPECT_CALL(mock_screencast(), create_session(_, _, _, _, _))
         .WillOnce(Return(screencast_session_id));
     EXPECT_CALL(mock_screencast(), capture(_))
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+        .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_screencast(), destroy_session(_));
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
@@ -212,7 +218,7 @@ TEST_F(Screencast, uses_provided_spec_parameters)
         .WillOnce(Return(screencast_session_id));
 
     EXPECT_CALL(mock_screencast(), capture(_))
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+        .WillOnce(Return(stub_buffer));
 
     EXPECT_CALL(mock_screencast(), destroy_session(_));
 

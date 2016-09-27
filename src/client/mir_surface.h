@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2015 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -111,6 +111,11 @@ struct MirSurfaceSpec
     std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+    mir::optional_value<MirPlacementHints> placement_hints;
+    mir::optional_value<MirPlacementGravity> surface_placement_gravity;
+    mir::optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    mir::optional_value<int> aux_rect_placement_offset_x;
+    mir::optional_value<int> aux_rect_placement_offset_y;
 
     mir::optional_value<int> min_width;
     mir::optional_value<int> min_height;
@@ -122,6 +127,7 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
     mir::optional_value<std::vector<ContentInfo>> streams;
     mir::optional_value<std::vector<MirRectangle>> input_shape;
+    mir::optional_value<bool> confine_pointer;
 
     struct EventHandler
     {
@@ -227,7 +233,8 @@ private:
     MirWaitHandle configure_cursor_wait_handle;
     MirWaitHandle persistent_id_wait_handle;
 
-    std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
+    //Deprecated functions can cause MirSurfaces to be created with a default stream
+    std::shared_ptr<mir::client::ClientBufferStream> default_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
@@ -239,11 +246,15 @@ private:
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
-    bool auto_resize_stream{true};
 
     //a bit batty, but the creation handle has to exist for as long as the MirSurface does,
     //as we don't really manage the lifetime of MirWaitHandle sensibly.
     std::shared_ptr<MirWaitHandle> const creation_handle;
+    mir::geometry::Size size;
+    MirPixelFormat format;
+    MirBufferUsage usage;
+    uint32_t output_id;
+
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

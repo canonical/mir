@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -63,6 +63,11 @@ struct SurfaceSpecification
     optional_value<frontend::SurfaceId> parent_id;
     optional_value<geometry::Rectangle> aux_rect;
     optional_value<MirEdgeAttachment> edge_attachment;
+    optional_value<MirPlacementHints> placement_hints;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;
@@ -83,6 +88,7 @@ struct SurfaceSpecification
     //    it also has size instead of width + height
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
     mir::optional_value<MirShellChrome> shell_chrome;
+    optional_value<MirPointerConfinementState> confine_pointer;
 };
 }
 }

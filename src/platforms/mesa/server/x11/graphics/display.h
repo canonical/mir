@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "display_group.h"
 #include "mir/geometry/size.h"
@@ -32,6 +33,9 @@ namespace mir
 {
 namespace graphics
 {
+
+class GLConfig;
+
 namespace X
 {
 
@@ -50,7 +54,10 @@ private:
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, mir::geometry::Size const size);
+    X11Window(::Display* const x_dpy,
+              EGLDisplay egl_dpy,
+              geometry::Size const size,
+              GLConfig const& gl_config);
     ~X11Window();
 
     operator Window() const;
@@ -90,15 +97,23 @@ private:
     EGLSurface const egl_surf;
 };
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
-    explicit Display(::Display* x_dpy, mir::geometry::Size const size);
+    explicit Display(::Display* x_dpy,
+                     geometry::Size const size,
+                     GLConfig const& gl_config,
+                     std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
+
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) const override;
+
     void configure(graphics::DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
@@ -114,21 +129,28 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
+
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
 private:
     X11EGLDisplay const egl_display;
     mir::geometry::Size const size;
+    float pixel_width;
+    float pixel_height;
     X11Window const win;
     X11EGLContext egl_context;
     X11EGLSurface egl_surface;
     MirPixelFormat pf;
     std::unique_ptr<DisplayGroup> display_group;
+    std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation; //TODO: keep entire current display configuration
 };
 
 }
+
 }
 }
 #endif /* MIR_GRAPHICS_X_DISPLAY_H_ */
