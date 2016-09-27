@@ -816,9 +816,9 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 {
     uint32_t const size = 4;
-    std::vector<uint16_t> const a{0, 1, 2, 3};
-    std::vector<uint16_t> const b{1, 2, 3, 4};
-    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    mg::GammaCurve const a{0, 1, 2, 3};
+    mg::GammaCurve const b{1, 2, 3, 4};
+    mg::GammaCurve const c{65532, 65533, 65534, 65535};
     std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
@@ -882,9 +882,9 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
 TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 {
-    std::vector<uint16_t> const a{0, 1, 2, 3};
-    std::vector<uint16_t> const b{1, 2, 3, 4};
-    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    mg::GammaCurve const a{0, 1, 2, 3};
+    mg::GammaCurve const b{1, 2, 3, 4};
+    mg::GammaCurve const c{65532, 65533, 65534, 65535};
     std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
