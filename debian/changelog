@@ -2,14 +2,7 @@ mir (0.24.1) UNRELEASED; urgency=medium
 
   * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
     - ABI summary:
-      . mirclient ABI unchanged at 9
-      . mirserver ABI unchanged at 41
-      . mircommon ABI unchanged at 6
-      . mirplatform ABI unchanged at 12
-      . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI unchanged at 10
-      . mirclientplatform ABI unchanged at 5
-      . mirinputplatform ABI unchanged at 5
+      . No ABI changes in any libraries.
     - Bugs fixed:
       . mirserver ignored further keymap configuration changes after a keyboard 
         is configured (LP: #1599866)
