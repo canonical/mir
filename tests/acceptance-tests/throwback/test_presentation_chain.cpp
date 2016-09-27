@@ -145,12 +145,6 @@ struct PresentationChain : mtf::ConnectedClientHeadlessServer
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
     MirBufferUsage const usage = mir_buffer_usage_software;
-    void SetUp() override
-    {
-        //test suite has to be run with the new semantics activated
-        add_to_environment("MIR_SERVER_NBUFFERS", "0");
-        ConnectedClientHeadlessServer::SetUp();
-    }
 };
 
 struct MirBufferSync
