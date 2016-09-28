@@ -227,8 +227,7 @@ TEST_F(PublishedSocketConnector, double_disconnection_does_not_break)
     client->wait_for_disconnect_done();
 }
 
-#if 0
-TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
+TEST_F(PublishedSocketConnector, getting_and_submitting_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
     EXPECT_CALL(*client, disconnect_done()).Times(testing::AtLeast(0));
@@ -237,19 +236,18 @@ TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_buffer());
-    EXPECT_CALL(*client, exchange_buffer_done()).Times(8);
+    EXPECT_CALL(*client, submit_buffer_done()).Times(8);
 
     for (int i = 0; i != 8; ++i)
     {
-        client->exchange_buffer();
-        client->wait_for_exchange_buffer();
+        client->submit_buffer();
+        client->wait_for_submit_buffer();
         EXPECT_TRUE(client->surface.has_buffer());
     }
 
     client->disconnect();
     client->wait_for_disconnect_done();
 }
-#endif
 
 TEST_F(PublishedSocketConnector,
        connect_create_surface_then_disconnect_a_session)
@@ -292,10 +290,9 @@ TEST_F(PublishedSocketConnector, configure_display)
     client->wait_for_configure_display_done();
 }
 
-#if 0
 TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 {
-    int const exchange_buffer_calls{8};
+    int const submit_buffer_calls{8};
     char buffer[128] = {0};
     sprintf(buffer, "fd://%d", stub_server->comm->client_socket_fd());
     auto client = std::make_shared<mt::TestProtobufClient>(buffer, timeout_ms);
@@ -312,12 +309,12 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_buffer());
-    EXPECT_CALL(*client, exchange_buffer_done()).Times(exchange_buffer_calls);
+    EXPECT_CALL(*client, submit_buffer_done()).Times(submit_buffer_calls);
 
-    for (int i = 0; i != exchange_buffer_calls; ++i)
+    for (int i = 0; i != submit_buffer_calls; ++i)
     {
-        client->exchange_buffer();
-        client->wait_for_exchange_buffer();
+        client->submit_buffer();
+        client->wait_for_submit_buffer();
         EXPECT_TRUE(client->surface.has_buffer());
     }
 
@@ -326,4 +323,3 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
-#endif

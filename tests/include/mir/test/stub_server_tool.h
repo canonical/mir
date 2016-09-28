@@ -51,6 +51,15 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
+    virtual void submit_buffer(
+        mir::protobuf::BufferRequest const* /*request*/,
+        mir::protobuf::Void*,
+        google::protobuf::Closure* done) override
+    {
+        done->Run();
+    }
+
+
     virtual void release_surface(
         mir::protobuf::SurfaceId const* /*request*/,
         mir::protobuf::Void* /*response*/,
