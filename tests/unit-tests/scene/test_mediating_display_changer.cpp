@@ -420,6 +420,27 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
     changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_change_fails)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+    mtd::MockSceneSession mock_session1;
+    mtd::MockSceneSession mock_session2;
+
+    auto const previous_base_config = changer->base_configuration();
+    ASSERT_THAT(conf, Not(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    stub_session_container.insert_session(mt::fake_shared(mock_session1));
+    stub_session_container.insert_session(mt::fake_shared(mock_session2));
+
+    EXPECT_CALL(mock_display, configure(Ref(conf)))
+        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+    EXPECT_CALL(mock_session1, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+    EXPECT_CALL(mock_session2, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
+}
+
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attached_config_applies_config)
 {
     using namespace testing;

@@ -364,7 +364,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
             config_map.clear();
 
             /* Send the new configuration to all the sessions */
-            send_config_to_all_sessions(conf);
+            send_config_to_all_sessions(base_configuration_);
         });
 }
 
