@@ -1491,7 +1491,7 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
     interfering_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest, error_in_configure_propagates_to_client)
+TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_to_client)
 {
     using namespace std::chrono_literals;
     DisplayClient client{new_connection()};
