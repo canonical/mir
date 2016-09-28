@@ -29,6 +29,8 @@
 
 namespace mir
 {
+class ClientVisibleError;
+
 namespace graphics
 {
 class DisplayConfiguration;
@@ -59,6 +61,7 @@ public:
     virtual std::string name() const = 0;
 
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
+    virtual void send_error(ClientVisibleError const&) = 0;
 
 protected:
     Session() = default;
