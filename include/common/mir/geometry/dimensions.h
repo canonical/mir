@@ -55,11 +55,6 @@ public:
         return value;
     }
 
-    constexpr float as_float() const
-    {
-        return value;
-    }
-
 private:
     ValueType value;
 };

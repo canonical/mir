@@ -21,6 +21,8 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "mir/client_context.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -30,8 +32,8 @@ namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context)
-        : context{context}
+mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
+    context{context}
 {
 }
 
@@ -52,7 +54,21 @@ MirPlatformMessage* mtf::StubClientPlatform::platform_operation(MirPlatformMessa
 
 std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::create_buffer_factory()
 {
-    return std::make_shared<mtd::StubClientBufferFactory>();
+    struct StubPlatformBufferFactory : mcl::ClientBufferFactory
+    {
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const& package,
+            geom::Size size, MirPixelFormat pf) override
+        {
+            mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::software;
+            if (package->data[0] == static_cast<int>(mir::graphics::BufferUsage::hardware))
+                usage = mir::graphics::BufferUsage::hardware;
+            mir::graphics::BufferProperties properties {size, pf, usage }; 
+            return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
+                std::make_shared<mtf::NativeBuffer>(properties));
+        }
+    };
+    return std::make_shared<StubPlatformBufferFactory>();
 }
 
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
@@ -66,14 +82,29 @@ std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native
     return std::make_shared<EGLNativeDisplayType>(fake_display);
 }
 
-MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* buf) const
+MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* b) const
 {
-    static_cast<void>(buf);
-#if defined(MESA_KMS) || defined(MESA_X11)
-    return buf;
-#else
-    return nullptr;
-#endif
+    auto buf = dynamic_cast<mtf::NativeBuffer*>(b);
+    if (!buf)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
+    native_buffer.data_items = 1;
+    native_buffer.data[0] = buf->data;
+    native_buffer.fd_items = 1;
+    native_buffer.fd[0] = buf->fd;
+    native_buffer.width = buf->properties.size.width.as_int();
+    native_buffer.height = buf->properties.size.height.as_int();
+    //bit of mesa specific leakage into the client api here.
+    if (native_buffer.width >= 800 && native_buffer.height >= 600 &&
+        buf->properties.usage == mir::graphics::BufferUsage::hardware)
+    {
+        native_buffer.flags |= mir_buffer_flag_can_scanout;
+    }
+    else
+    {
+        native_buffer.flags &= ~mir_buffer_flag_can_scanout;
+    }
+
+    return &native_buffer;
 }
 
 MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConfig) const

@@ -83,7 +83,7 @@ struct SessionManagerSetup : public testing::Test
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
-        false,
+        mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<mi::InputSender>(),

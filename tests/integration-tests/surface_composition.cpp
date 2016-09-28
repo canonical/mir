@@ -48,7 +48,7 @@ struct SurfaceComposition : Test
         return std::make_shared<ms::BasicSurface>(
             std::string("SurfaceComposition"),
             geom::Rectangle{{},{}},
-            false,
+            mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stream, {0,0}, {} } },
             create_input_channel(),
             create_input_sender(),

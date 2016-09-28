@@ -33,13 +33,21 @@ class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
 class CursorImage;
-class GLContext;
 class EventHandlerRegister;
 class VirtualOutput;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
 typedef std::function<void()> DisplayConfigurationChangeHandler;
+
+class NativeDisplay
+{
+protected:
+    NativeDisplay() = default;
+    virtual ~NativeDisplay() = default;
+    NativeDisplay(NativeDisplay const&) = delete;
+    NativeDisplay operator=(NativeDisplay const&) = delete;
+};
 
 /**
  * DisplaySyncGroup represents a group of displays that need to be output
@@ -72,6 +80,9 @@ public:
      * scene too early results in up to one whole frame of extra lag if
      * rendering is fast or skipped altogether (bypass/overlays). But sampling
      * too late and we might miss the deadline. If unsure just return zero.
+     *
+     * This is equivalent to:
+     * https://www.opengl.org/registry/specs/NV/glx_delay_before_swap.txt
      */
     virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
@@ -97,6 +108,24 @@ public:
      * Gets a copy of the current output configuration.
      */
     virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
+
+    /**
+     * Applying a display configuration only if it will not invalidate existing DisplayBuffers
+     *
+     * The Display must guarantee that the references to the DisplayBuffer acquired via
+     * DisplaySyncGroup::for_each_display_buffer() remain valid until the Display is destroyed or
+     * Display::configure() is called.
+     *
+     * If this function returns \c true then the new display configuration has been applied.
+     * If this function returns \c false then the new display configuration has not been applied.
+     *
+     * In either case this function guarantees that existing DisplayBuffer references will remain
+     * valid.
+     *
+     * \param conf [in] Configuration to possibly apply.
+     * \return      \c true if \p conf has been applied as the new output configuration.
+     */
+    virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const = 0;
 
     /**
      * Sets a new output configuration.
@@ -146,18 +175,18 @@ public:
     virtual std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) = 0;
 
     /**
-     * Creates a GLContext object that shares resources with the Display's GL context.
-     *
-     * This is usually implemented as a shared EGL context. This object can be used
-     * to access graphics resources from an arbitrary thread.
-     */
-    virtual std::unique_ptr<GLContext> create_gl_context() = 0;
-
-    /**
      * Creates a virtual output
      *  \returns null if the implementation does not support virtual outputs
      */
     virtual std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) = 0;
+
+    /** Returns a pointer to the native display object backing this
+     *  display.
+     *
+     *  The pointer to the native display remains valid as long as the
+     *  display object is valid.
+     */
+    virtual NativeDisplay* native_display() = 0;
 
     Display() = default;
     virtual ~Display() = default;

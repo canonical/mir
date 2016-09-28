@@ -22,9 +22,10 @@
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
+#include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 
 #include <stdexcept>
 #include <chrono>
@@ -197,7 +198,7 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
     area = a;
 }
 
-bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
+bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
        (bypass_option == mgm::BypassOption::allowed))
@@ -207,13 +208,13 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buffer = (*bypass_it)->buffer();
-            auto native = bypass_buffer->native_buffer_handle();
+            auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(bypass_buffer->native_buffer_handle());
+            if (!native)
+                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                auto gbm_native =
-                    static_cast<mgm::GBMNativeBuffer*>(native.get());
-                if (auto bufobj = get_buffer_object(gbm_native->bo))
+                if (auto bufobj = get_buffer_object(native->bo))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;

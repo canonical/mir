@@ -77,7 +77,7 @@ public:
     /**
      * \brief Add a simple callback to the adaptor
      * \param [in] fd       File descriptor to monitor for readability
-     * \param [in] callback Callback to fire when \ref fd becomes readable.
+     * \param [in] callback Callback to fire when \p fd becomes readable.
      *                      This callback is not called reentrantly.
      */
     void add_watch(Fd const& fd, std::function<void()> const& callback);

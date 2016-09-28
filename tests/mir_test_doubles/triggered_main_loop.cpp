@@ -67,8 +67,10 @@ void mtd::TriggeredMainLoop::trigger_pending_fds()
     {
         for (auto const& item : fd_callbacks)
         {
-            FD_ISSET(item.fd, &read_fds);
-            item.callback(item.fd);
+            if (FD_ISSET(item.fd, &read_fds))
+            {
+                item.callback(item.fd);
+            }
         }
     }
 }

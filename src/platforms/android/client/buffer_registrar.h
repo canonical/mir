@@ -22,7 +22,7 @@
 
 #include "mir_toolkit/common.h"
 #include <mir_toolkit/mir_native_buffer.h>
-#include "mir/graphics/native_buffer.h"
+#include "native_buffer.h"
 #include "mir/geometry/rectangle.h"
 #include <cutils/native_handle.h>
 #include <memory>
@@ -39,11 +39,11 @@ class BufferRegistrar
 {
 public:
     virtual ~BufferRegistrar() = default;
-    virtual std::shared_ptr<graphics::NativeBuffer> register_buffer(
+    virtual std::shared_ptr<graphics::android::NativeBuffer> register_buffer(
         MirBufferPackage const& package,
         MirPixelFormat pf) const = 0;
     virtual std::shared_ptr<char> secure_for_cpu(
-        std::shared_ptr<graphics::NativeBuffer> const& handle,
+        std::shared_ptr<graphics::android::NativeBuffer> const& handle,
         geometry::Rectangle const) = 0;
 protected:
     BufferRegistrar() = default;

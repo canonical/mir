@@ -48,7 +48,9 @@ typedef enum {
     /* This touch point is going down */
     mir_touch_action_down = 1,
     /* Axis values have changed on this touch point */
-    mir_touch_action_change = 2
+    mir_touch_action_change = 2,
+
+    mir_touch_actions
 } MirTouchAction;
 
 /**
@@ -69,7 +71,9 @@ typedef enum {
     mir_touch_axis_touch_minor = 4,
 /* Axis representing the diameter of a circle centered on the touch
    point */
-    mir_touch_axis_size = 5
+    mir_touch_axis_size = 5,
+
+    mir_touch_axes
 } MirTouchAxis;
 
 /**
@@ -81,7 +85,9 @@ typedef enum {
 // Touch is made with a finger
     mir_touch_tooltype_finger = 1,
 // Touch is made with a stylus
-    mir_touch_tooltype_stylus = 2
+    mir_touch_tooltype_stylus = 2,
+
+    mir_touch_tooltypes
 } MirTouchTooltype;
 
 /**

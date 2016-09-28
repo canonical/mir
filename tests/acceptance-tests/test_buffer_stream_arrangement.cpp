@@ -151,9 +151,7 @@ private:
 struct OrderTrackingDBC : mc::DisplayBufferCompositor
 {
     OrderTrackingDBC(
-        std::shared_ptr<mc::DisplayBufferCompositor> const& wrapped,
         std::shared_ptr<Ordering> const& ordering) :
-        wrapped(wrapped),
         ordering(ordering)
     {
     }
@@ -161,26 +159,22 @@ struct OrderTrackingDBC : mc::DisplayBufferCompositor
     void composite(mc::SceneElementSequence&& scene_sequence) override
     {
         ordering->note_scene_element_sequence(scene_sequence);
-        wrapped->composite(std::move(scene_sequence));
     }
 
-    std::shared_ptr<mc::DisplayBufferCompositor> const wrapped;
     std::shared_ptr<Ordering> const ordering;
 };
 
 struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
 {
     OrderTrackingDBCFactory(
-        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
         std::shared_ptr<Ordering> const& ordering) :
-        wrapped(wrapped),
         ordering(ordering)
     {
     }
 
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db) override
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&) override
     {
-        return std::make_unique<OrderTrackingDBC>(wrapped->create_compositor_for(db), ordering);
+        return std::make_unique<OrderTrackingDBC>(ordering);
     }
 
     std::shared_ptr<OrderTrackingDBC> last_dbc{nullptr};
@@ -193,10 +187,10 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
     void SetUp() override
     {
         ordering = std::make_shared<Ordering>();
-        server.wrap_display_buffer_compositor_factory(
-            [this](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
+        server.override_the_display_buffer_compositor_factory(
+            [this]()
             {
-                order_tracker = std::make_shared<OrderTrackingDBCFactory>(wrapped, ordering);
+                order_tracker = std::make_shared<OrderTrackingDBCFactory>(ordering);
                 return order_tracker;
             });
 
@@ -282,4 +276,49 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
+}
+
+//LP: #1577967
+TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
+{
+    using namespace testing;
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection, 100, 100, mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    EXPECT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
+}
+
+TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_stream_gives_null)
+{
+    using namespace testing;
+    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_surface_get_buffer_stream(surface)));
+
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+    auto change_spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_surface_apply_spec(surface, change_spec);
+    mir_surface_spec_release(change_spec);
+
+    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
 }

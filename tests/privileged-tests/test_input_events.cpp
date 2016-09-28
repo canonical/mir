@@ -258,7 +258,7 @@ TEST_F(InputEvents, reach_host_client)
     all_events_received.wait_for(std::chrono::seconds{5});
 }
 
-TEST_F(InputEvents, reach_nested_client)
+TEST_F(InputEvents, DISABLED_reach_nested_client)
 {
     using namespace testing;
 

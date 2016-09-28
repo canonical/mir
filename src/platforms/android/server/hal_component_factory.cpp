@@ -31,6 +31,7 @@
 #include "hwc_fb_device.h"
 #include "graphic_buffer_allocator.h"
 #include "cmdstream_sync_factory.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -117,6 +118,7 @@ std::unique_ptr<mga::LayerList> mga::HalComponentFactory::create_layer_list()
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, offset));
         case mga::HwcVersion::hwc13:
         case mga::HwcVersion::hwc14:
+        case mga::HwcVersion::hwc15:
             return std::unique_ptr<mga::LayerList>(
                 new mga::LayerList(std::make_shared<mga::FloatSourceCrop>(), {}, offset));
         case mga::HwcVersion::unknown:
@@ -145,6 +147,7 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
             case mga::HwcVersion::hwc12:
             case mga::HwcVersion::hwc13:
             case mga::HwcVersion::hwc14:
+            case mga::HwcVersion::hwc15:
                return std::unique_ptr<mga::DisplayDevice>(
                     new mga::HwcDevice(hwc_wrapper));
 
@@ -157,8 +160,10 @@ std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_dev
 
 std::unique_ptr<mga::HwcConfiguration> mga::HalComponentFactory::create_hwc_configuration()
 {
-    if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
+    if (force_backup_display)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
+    else if (hwc_version == mga::HwcVersion::hwc10)
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper, mga::to_mir_format(fb_native->format)));
     else if (hwc_version < mga::HwcVersion::hwc14)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
     else

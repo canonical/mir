@@ -105,17 +105,6 @@ TEST_F(TemporaryBuffersTest, base_test_size)
     EXPECT_EQ(buffer_size, size);
 }
 
-TEST_F(TemporaryBuffersTest, base_test_stride)
-{
-    TemporaryTestBuffer proxy_buffer(mock_buffer);
-    EXPECT_CALL(*mock_buffer, stride())
-        .Times(1);
-
-    geom::Stride stride;
-    stride = proxy_buffer.stride();
-    EXPECT_EQ(buffer_stride, stride);
-}
-
 TEST_F(TemporaryBuffersTest, base_test_pixel_format)
 {
     TemporaryTestBuffer proxy_buffer(mock_buffer);

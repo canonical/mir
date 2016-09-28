@@ -134,9 +134,6 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
         });
 }
 
-///\example server_example_input_device_config.cpp
-/// Demonstrate how to implement an InputDeviceObserver that identifies and configures input devices.
-
 me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          MirPointerAcceleration mouse_profile,
                                          double mouse_cursor_acceleration_bias,

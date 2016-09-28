@@ -22,6 +22,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/geometry/point.h"
+#include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/frontend/event_sink.h"
@@ -43,13 +44,17 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+    std::shared_ptr<mi::KeyMapper> const& key_mapper,
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
       sink{sink},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       cookie_authority(cookie_authority),
+      key_mapper(key_mapper),
+      server_status_listener(server_status_listener),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -70,7 +75,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device);
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
             device, id, input_dispatchable, cookie_authority, handle));
@@ -140,7 +145,11 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::DefaultDevice> const& handle)
-    : handle(handle), device_id(device_id), builder(device_id, cookie_authority), device(dev), multiplexer(multiplexer)
+    : handle(handle),
+      device_id(device_id),
+      cookie_authority(cookie_authority),
+      device(dev),
+      multiplexer(multiplexer)
 {
 }
 
@@ -158,7 +167,8 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 {
     auto type = mir_event_get_type(&event);
 
-    if (type != mir_event_type_input)
+    if (type != mir_event_type_input &&
+        type != mir_event_type_input_device_state)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event received from device"));
 
     if (!seat)
@@ -175,13 +185,15 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> const& seat)
 {
     this->seat = seat;
-    device->start(this, &builder);
+    builder = std::make_unique<DefaultEventBuilder>(device_id, cookie_authority, seat);
+    device->start(this, builder.get());
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
     device->stop();
     seat = nullptr;
+    builder.reset();
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
@@ -190,6 +202,22 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
 
     return seat->get_rectangle_for(*handle);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::key_state(std::vector<uint32_t> const& scan_codes)
+{
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    seat->set_key_state(*handle, scan_codes);
+}
+
+void mi::DefaultInputDeviceHub::RegisteredDevice::pointer_state(MirPointerButtons buttons)
+{
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    seat->set_pointer_state(*handle, buttons);
 }
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)
@@ -239,6 +267,12 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
         observer->device_added(handles.back());
         observer->changes_complete();
     }
+
+    if (!ready && handles.size())
+    {
+        server_status_listener->ready_for_user_input();
+        ready = true;
+    }
 }
 
 void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
@@ -264,4 +298,10 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 
     handles.erase(handle_it, end(handles));
     sink->handle_input_device_change(handles);
+
+    if (ready && 0 == handles.size())
+    {
+        ready = false;
+        server_status_listener->stop_receiving_input();
+    }
 }

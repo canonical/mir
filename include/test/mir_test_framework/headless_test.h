@@ -26,7 +26,7 @@
 
 namespace mir { class SharedLibrary; }
 namespace mir { namespace graphics { class Display; }}
-namespace mir { namespace geometry { class Rectangle; }}
+namespace mir { namespace geometry { struct Rectangle; }}
 
 namespace mir_test_framework
 {

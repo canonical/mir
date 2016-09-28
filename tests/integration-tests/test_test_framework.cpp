@@ -21,6 +21,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/signal.h"
+#include "mir/test/spin_wait.h"
 #include "mir/test/auto_unblock_thread.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -78,7 +79,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 {
     mir::test::Signal connection_released;
 
-    int fd_count_after_one_surface_lifetime = 0;
+    unsigned fd_count_after_one_surface_lifetime = 0;
                
     mir::test::AutoJoinThread t{
         [&]
@@ -106,14 +107,20 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
         }};
     
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{480}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{10}))
         << "Client hung" << std::endl;
 
-    // Investigation revealed we leak a differing number of fds (3, 0) on Mesa/Android over the
-    // entire lifetime of the client library. So we verify here only that we don't leak any FDs beyond
-    // those created up to the lifetime of the first surface.
-    auto new_fd_count = count_fds();
-
-    EXPECT_LE(new_fd_count, fd_count_after_one_surface_lifetime);
-
+    // Investigation revealed we leak a differing number of fds (3, 0) on
+    // Mesa/Android over the entire lifetime of the client library. So we
+    // verify here only that we don't leak any FDs beyond those created up to
+    // the lifetime of the first surface.
+    //
+    // Note that when using NBS, not all FDs are guaranteed to have been closed
+    // when mir_connection_release() returns, due to the asynchronous nature
+    // of buffer releases. For this reason, in order to avoid false negatives,
+    // we need to allow some time for the FDs to be closed.
+    EXPECT_TRUE(
+        mir::test::spin_wait_for_condition_or_timeout(
+            [&] { return count_fds() <= fd_count_after_one_surface_lifetime; },
+            std::chrono::seconds{3}));
 }

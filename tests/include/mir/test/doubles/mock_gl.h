@@ -43,6 +43,7 @@ public:
     MOCK_METHOD2(glBindFramebuffer, void(GLenum, GLuint));
     MOCK_METHOD2(glBindRenderbuffer, void(GLenum, GLuint));
     MOCK_METHOD2(glBindTexture, void(GLenum, GLuint));
+    MOCK_METHOD4(glBlendColor, void(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha));
     MOCK_METHOD2(glBlendFunc, void(GLenum, GLenum));
     MOCK_METHOD4(glBlendFuncSeparate, void(GLenum, GLenum, GLenum, GLenum));
     MOCK_METHOD4(glBufferData,

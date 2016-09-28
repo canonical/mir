@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/headless_test.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/geometry/rectangle.h"
@@ -33,6 +34,10 @@ mtf::HeadlessTest::HeadlessTest()
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
+    server.override_the_display_buffer_compositor_factory([]
+    {
+        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
+    });
 }
 
 mtf::HeadlessTest::~HeadlessTest() noexcept = default;

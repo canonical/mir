@@ -65,8 +65,8 @@ struct MockSurfaceMap : mcl::SurfaceMap
         void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(mcl::ClientBufferStream*)> const&));
-    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
-    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
+    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
     MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
     MOCK_METHOD1(erase, void(int));
 }; 
@@ -88,14 +88,14 @@ public:
     void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
     {
     }
-    std::shared_ptr<mcl::Buffer> buffer(int) const
+    std::shared_ptr<mcl::MirBuffer> buffer(int) const override
     {
         return nullptr;
     }
-    void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    void insert(int, std::shared_ptr<mcl::MirBuffer> const&) override
     {
     }
-    void erase(int)
+    void erase(int) override
     {
     }
 };
@@ -246,6 +246,7 @@ public:
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()}}
     {
     }
@@ -400,6 +401,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_disconnected();
 }
@@ -684,7 +686,7 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
 struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
-    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mir::protobuf::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirConnection*,
@@ -747,6 +749,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
 
     channel.on_data_available();
@@ -781,6 +784,7 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_data_available();
 }
@@ -813,6 +817,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_data_available();
 }

@@ -32,6 +32,7 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
 #include "display_configuration.h"
+#include "error_handler.h"
 
 #include <atomic>
 #include <memory>
@@ -60,11 +61,11 @@ namespace client
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 class ClientBufferStream;
-class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
 class AsyncBufferFactory;
+class MirBuffer;
 
 namespace rpc
 {
@@ -138,7 +139,7 @@ public:
     void register_error_callback(mir_error_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate_graphics_module(MirModuleProperties& properties);
+    void populate_graphics_module(MirModuleProperties& properties) override;
     MirDisplayConfiguration* create_copy_of_display_config();
     std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
@@ -181,6 +182,7 @@ public:
         std::chrono::seconds timeout);
     void confirm_base_display_configuration(
         mir::protobuf::DisplayConfiguration const& configuration);
+    void cancel_base_display_configuration_preview();
     void done_set_base_display_configuration();
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel() const
@@ -198,7 +200,7 @@ public:
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
-    void release_buffer(int buffer_id);
+    void release_buffer(mir::client::MirBuffer* buffer);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -260,6 +262,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
@@ -280,7 +283,6 @@ private:
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
-    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
@@ -304,6 +306,7 @@ private:
 
     std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
+    std::shared_ptr<mir::client::ErrorHandler> error_handler;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
@@ -311,9 +314,6 @@ private:
 
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
-
-    mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
     struct StreamRelease;

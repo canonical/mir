@@ -68,17 +68,19 @@ void add_launcher_option_to(mir::Server& server)
         const auto options = server.get_options();
         if (options->is_set(launch_child_opt))
         {
+            unsetenv("DISPLAY");                                // Discourage toolkits from using X11
+            setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
+            setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
+            unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
+            setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
+
             auto const value = options->get<std::string>(launch_child_opt);
 
             for (auto i = begin(value); i != end(value); )
             {
                 auto const j = find(i, end(value), '&');
 
-                auto const cmd ="DISPLAY= "             // Discourage toolkits from using X11
-                    "GDK_BACKEND=mir "                  // configure GTK to use Mir
-                    "QT_QPA_PLATFORM=ubuntumirclient "  // configure Qt to use Mir
-                    "SDL_VIDEODRIVER=mir "              // configure SDL to use Mir
-                    "MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
+                auto const cmd ="MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
                     std::string{i, j} + "&";
 
                 auto ignore = std::system(cmd.c_str());

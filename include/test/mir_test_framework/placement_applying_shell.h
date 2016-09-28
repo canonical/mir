@@ -56,6 +56,9 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
         mir::shell::SurfaceSpecification const& modifications) override;
 
     bool wait_for_modify_surface(std::chrono::seconds timeout);
+
+    std::weak_ptr <mir::scene::Surface> latest_surface;
+
 private:
     ClientInputRegions const& client_input_regions;
     ClientPositions const& client_positions;

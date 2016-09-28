@@ -47,8 +47,8 @@ Using Mir
 Getting involved
 ----------------
 
-The best place to ask questions and discuss about the Mir project is the
-#ubuntu-mir IRC channel on freenode.
+The best place to ask questions and discuss about the Mir project is
+the \#ubuntu-mir IRC channel on freenode.
 
 The Mir project is hosted on Launchpad: https://launchpad.net/mir
 
@@ -98,8 +98,6 @@ for bespoke applications.
    "server_example_window_management.cpp: simple window management examples"
  - \subpage server_example_canonical_window_manager.cpp 
    "server_example_canonical_window_manager.cpp: canonical window management policy"
- - \subpage server_example_tiling_window_manager.cpp 
-   "server_example_tiling_window_manager.cpp: an alternative window management policy"
  - \subpage server_example_custom_compositor.cpp 
    "server_example_custom_compositor.cpp: demonstrate writing an alternative GL rendering code"
 
@@ -112,5 +110,5 @@ Working on Mir code
  - \ref component_reports
  - \ref dso_versioning_guide
  - \ref abi_compatibility_tools
- - \ref mir_performance_framework
+ - \ref performance_framework
  - \ref latency "Measuring visual latency"

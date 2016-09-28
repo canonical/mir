@@ -84,13 +84,13 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
 
 void mie::Platform::start()
 {
-
     lib = make_libinput(udev_context->ctx());
     libinput_dispatchable =
         std::make_shared<md::ReadableFd>(
             Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
         );
     platform_dispatchable->add_watch(libinput_dispatchable);
+    process_input_events();
 }
 
 void mie::Platform::process_input_events()

@@ -25,7 +25,10 @@
 #include "mir/client_context.h"
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "native_buffer.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <cstring>
 
 namespace mcl=mir::client;
@@ -73,29 +76,9 @@ std::shared_ptr<mcl::ClientBufferFactory> mclm::ClientPlatform::create_buffer_fa
     return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
 }
 
-namespace
-{
-struct NativeWindowDeleter
-{
-    NativeWindowDeleter(mclm::NativeSurface* window)
-     : window(window) {}
-
-    void operator()(void*)
-    {
-        delete window;
-    }
-
-private:
-    mclm::NativeSurface* window;
-};
-}
-
 std::shared_ptr<void> mclm::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)
 {
-    //TODO: this is awkward on both android and gbm...
-    auto native_window = new NativeSurface(*client_surface);
-    NativeWindowDeleter deleter(native_window);
-    return std::shared_ptr<void>(native_window, deleter);
+    return std::make_shared<NativeSurface>(*client_surface);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()
@@ -156,8 +139,9 @@ MirPlatformMessage* mclm::ClientPlatform::platform_operation(
 
 MirNativeBuffer* mclm::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    //MirNativeBuffer is type-compatible with the MirNativeBuffer
-    return buf;
+    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(buf))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
 
 

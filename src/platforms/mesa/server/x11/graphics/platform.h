@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_X_PLATFORM_H_
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
+#include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "mir/geometry/size.h"
@@ -36,7 +37,9 @@ namespace X
 class Platform : public graphics::Platform
 {
 public:
-    explicit Platform(std::shared_ptr<::Display> const& conn, mir::geometry::Size const size);
+    explicit Platform(std::shared_ptr<::Display> const& conn,
+                      mir::geometry::Size const size,
+                      std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
     /* From Platform */
@@ -48,11 +51,11 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
+    std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
     mir::geometry::Size const size;
 };

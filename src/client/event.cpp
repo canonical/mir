@@ -23,11 +23,14 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
+#include "mir/events/surface_placement_event.h"
 
 #include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/orientation_event.h"
+#include "mir_toolkit/events/input_device_state_event.h"
+#include "mir_toolkit/events/surface_placement.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -43,6 +46,15 @@ void expect_event_type(EventType const* ev, MirEventType t)
     {
         mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
             mir::event_type_to_string(ev->type()));
+        abort();
+    }
+}
+
+void expect_index_in_range(size_t size, size_t index)
+{
+    if (index >= size)
+    {
+        mir::log_critical("Index out of range in event data access");
         abort();
     }
 }
@@ -68,6 +80,8 @@ std::string mir::event_type_to_string(MirEventType t)
         return "mir_event_type_close_surface";
     case mir_event_type_input:
         return "mir_event_type_input";
+    case mir_event_type_input_device_state:
+        return "mir_event_type_input_device_state";
     default:
         abort();
     }
@@ -152,6 +166,13 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
     expect_event_type(ev, mir_event_type_surface_output);
 
     return ev->to_surface_output();
+}
+
+MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+
+    return ev->to_input_device_state();
 }
 
 /* Surface event accessors */
@@ -261,6 +282,74 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->output_id();
+}
+
+MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->pointer_buttons();
+}
+
+float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->pointer_axis(axis);
+}
+
+int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->when().count();
+}
+
+MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->modifiers();
+}
+
+uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    return ev->device_count();
+}
+
+MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_id(index);
+}
+
+uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_pressed_keys(index);
+}
+
+uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_pressed_keys_count(index);
+}
+
+MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDeviceStateEvent const* ev, uint32_t index)
+{
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_pointer_buttons(index);
+}
+
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
+{
+    return event->to_surface_placement();
+}
+
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event)
+{
+    return event->placement();
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

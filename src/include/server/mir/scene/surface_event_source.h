@@ -49,6 +49,7 @@ public:
     void client_surface_close_requested() override;
     void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
                         std::string const& variant, std::string const& options) override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 
 private:
     frontend::SurfaceId const id;

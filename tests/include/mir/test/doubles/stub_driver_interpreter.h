@@ -42,7 +42,7 @@ public:
     {
     }
 
-    mir::graphics::NativeBuffer* driver_requests_buffer() override
+    mir::graphics::android::NativeBuffer* driver_requests_buffer() override
     {
         return nullptr;
     }

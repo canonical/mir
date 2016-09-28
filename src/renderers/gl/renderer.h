@@ -21,14 +21,14 @@
 
 #include "program_family.h"
 
-#include <mir/compositor/renderer.h>
+#include <mir/renderer/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/gl/primitive.h>
 #include "mir/renderer/gl/render_target.h"
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -56,7 +56,7 @@ private:
     renderer::gl::RenderTarget* const render_target;
 };
 
-class Renderer : public compositor::Renderer
+class Renderer : public renderer::Renderer
 {
 public:
     Renderer(graphics::DisplayBuffer& display_buffer);

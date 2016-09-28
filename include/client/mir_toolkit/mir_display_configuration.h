@@ -151,6 +151,21 @@ MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index);
 MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
 
 /**
+ * Get the index of the output's preferred mode.
+ *
+ * This is provided by the output itself. For modern displays (LCD, OLED, etc)
+ * it is typically a mode with the native resolution.
+ *
+ * An output may not have a preferred mode, in which case this call will return
+ * (size_t)-1.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The index of the output's preferred mode, if it has one, or
+ *              (size_t)-1 if output does not have a preferred mode.
+ */
+size_t mir_output_get_preferred_mode_index(MirOutput const* output);
+
+/**
  * Get a handle to the output's current mode.
  *
  * An output may not have a current mode (for example, if it is disabled), in
@@ -164,6 +179,18 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
  *              current mode, it returns NULL.
  */
 MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
+
+/**
+ * Get the index of to the output's current mode.
+ *
+ * An output may not have a current mode (for example, if it is disabled), in
+ * which case this call will return (size_t)-1.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The index of the output's current mode, if it has one, or
+ *              (size_t)-1 if output does not have a current mode.
+ */
+size_t mir_output_get_current_mode_index(MirOutput const* output);
 
 /**
  * Set the current mode of an output.
@@ -232,6 +259,22 @@ int mir_output_get_id(MirOutput const* output);
  *              if it cannot be determined.
  */
 MirOutputType mir_output_get_type(MirOutput const* output);
+
+/**
+ * Get the textual name of an output type.
+ *
+ * \param [in]  type  The MirDisplayOutputType to describe.
+ * \returns           The name of the output type.
+ */
+char const* mir_display_output_type_name(MirDisplayOutputType type);
+
+/**
+ * Get the textual name of an output type.
+ *
+ * \param [in]  type  The MirOutputType to describe.
+ * \returns           The name of the output type.
+ */
+char const* mir_output_type_name(MirOutputType type);
 
 /**
  * Get the x coordinate of the top-left point of the output in the virtual
@@ -413,6 +456,15 @@ void mir_output_set_orientation(MirOutput* output, MirOrientation orientation);
 float mir_output_get_scale_factor(MirOutput const* output);
 
 /**
+ * Get the subpixel arrangement of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The MirSubpixelArrangement corresponding to the physical arrangement of subpixels
+ *              on this display, or mir_subpixel_arrangement_unknown if this cannot be determined.
+ */
+MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* output);
+
+/**
  * Get the form-factor of a connected output.
  *
  * This call succeeds even if the output is not connected, but may return nonsense values.
@@ -421,6 +473,52 @@ float mir_output_get_scale_factor(MirOutput const* output);
  * \returns     The form factor of this output
  */
 MirFormFactor mir_output_get_form_factor(MirOutput const* output);
+
+/** Gets if the platform supports gamma correction
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The MirOutputGammaSupported mir_display_gamma_supported otherwise,
+ *               mir_display_gamma_unsupported
+ */
+MirOutputGammaSupported mir_output_is_gamma_supported(MirOutput const* client_output);
+
+/** Gets the gamma size
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The size of the gamma ramp LUT
+ *
+ */
+uint32_t mir_output_get_gamma_size(MirOutput const* client_output);
+
+/** Get the gamma ramp of a display
+ *
+ * Copies the gammas into user created buffers up to the size provided
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [out] red     The red gamma ramp
+ * \param [out] green   The green gamma ramp
+ * \param [out] blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_get_gamma(MirOutput const* client_output,
+                          uint16_t* red,
+                          uint16_t* green,
+                          uint16_t* blue,
+                          uint32_t  size);
+
+/** Set the gamma ramp of a display
+ *
+ * \param [in]  output  The MirOutput to query
+ * \param [in]  red     The red gamma ramp
+ * \param [in]  green   The green gamma ramp
+ * \param [in]  blue    The blue gamma ramp
+ * \param [in]  size    The size of the gamma ramp
+ */
+void mir_output_set_gamma(MirOutput* client_output,
+                          uint16_t const* red,
+                          uint16_t const* green,
+                          uint16_t const* blue,
+                          uint32_t  size);
 
 /**
  * Get the width, in pixels, of a MirOutputMode

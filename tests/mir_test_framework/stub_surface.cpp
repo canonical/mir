@@ -200,6 +200,19 @@ void mtd::StubSurface::rename(std::string const& /*title*/)
 {
 }
 
+void mtd::StubSurface::set_confine_pointer_state(MirPointerConfinementState /*state*/)
+{
+}
+
+MirPointerConfinementState mtd::StubSurface::confine_pointer_state() const
+{
+    return {};
+}
+
+void mtd::StubSurface::placed_relative(geometry::Rectangle const& /*placement*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

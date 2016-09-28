@@ -19,6 +19,7 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
@@ -43,6 +44,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mrs = mir::renderer::software;
 using namespace testing;
 
 namespace
@@ -99,6 +101,123 @@ struct ConsumerSystem
     ConsumerSystem(ConsumerSystem const&) = delete;
     ConsumerSystem& operator=(ConsumerSystem const&) = delete;
 };
+
+//buffer queue testing
+struct BufferQueueProducer : ProducerSystem
+{
+    BufferQueueProducer(mc::BufferStream& stream) :
+        stream(stream)
+    {
+        stream.swap_buffers(buffer,
+            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
+    }
+
+    bool can_produce() override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        return buffer;
+    }
+
+    mg::BufferID current_id() override
+    {
+        if (buffer)
+            return buffer->id();
+        else
+            return mg::BufferID{INT_MAX};
+    }
+
+    void produce() override
+    {
+        mg::Buffer* b = nullptr;
+        if (can_produce())
+        {
+            {
+                std::unique_lock<decltype(mutex)> lk(mutex);
+                b = buffer;
+                buffer = nullptr;
+                age++;
+                entries.emplace_back(BufferEntry{b->id(), age, Access::unblocked});
+                if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(b->native_buffer_base()))
+                    pixel_source->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
+            }
+            stream.swap_buffers(b,
+                std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
+        }
+        else
+        {
+            entries.emplace_back(BufferEntry{mg::BufferID{INT_MAX}, 0u, Access::blocked});
+        }
+    }
+
+    std::vector<BufferEntry> production_log() override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        return entries;
+    }
+
+    geom::Size last_size() override
+    {
+        if (buffer)
+            return buffer->size();
+        return geom::Size{};
+    }
+
+    void reset_log() override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        return entries.clear();
+    }
+private:
+    mc::BufferStream& stream;
+    void buffer_ready(mg::Buffer* b)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        buffer = b;
+    }
+    std::mutex mutex;
+    unsigned int age {0};
+    std::vector<BufferEntry> entries;
+    mg::Buffer* buffer {nullptr};
+};
+
+struct BufferQueueConsumer : ConsumerSystem
+{
+    BufferQueueConsumer(mc::BufferStream& stream) :
+        stream(stream)
+    {
+    }
+
+    std::shared_ptr<mg::Buffer> consume_resource() override
+    {
+        auto b = stream.lock_compositor_buffer(this);
+        last_size_ = b->size();
+        if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(b->native_buffer_base()))
+            pixel_source->read([this, b](unsigned char const* p) {
+                entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
+        });
+        return b;
+    }
+
+    std::vector<BufferEntry> consumption_log() override
+    {
+        return entries;
+    }
+
+    geom::Size last_size() override
+    {
+        return last_size_;
+    }
+    
+    void set_framedropping(bool allow) override
+    {
+        stream.allow_framedropping(allow);
+    }
+
+    mc::BufferStream& stream;
+    std::vector<BufferEntry> entries;
+    geom::Size last_size_;
+};
+
 
 struct StubIpcSystem
 {
@@ -212,9 +331,11 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
+    void error_buffer(mg::BufferProperties const&, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
+    void handle_error(mir::ClientVisibleError const&) {}
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
     void send_ping(int32_t) {}
 
@@ -274,7 +395,7 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(mcl::Buffer& buffer)
+    void submit_buffer(mcl::MirBuffer& buffer)
     {
         mp::Buffer buffer_req;
         buffer_req.set_buffer_id(buffer.rpc_id());
@@ -314,7 +435,7 @@ struct ScheduledProducer : ProducerSystem
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
                 auto& ipc_buffer = request.buffer();
-                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                std::shared_ptr<mcl::MirBuffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }
@@ -330,6 +451,10 @@ struct ScheduledProducer : ProducerSystem
         {
             vault.set_size(sz);
         });
+    }
+    ~ScheduledProducer()
+    {
+        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
     }
 
     bool can_produce()
@@ -348,7 +473,7 @@ struct ScheduledProducer : ProducerSystem
         {
             auto buffer = vault.withdraw().get();
             vault.deposit(buffer);
-            vault.wire_transfer_outbound(buffer);
+            vault.wire_transfer_outbound(buffer, []{});
             last_size_ = buffer->size();
             entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
             available--;

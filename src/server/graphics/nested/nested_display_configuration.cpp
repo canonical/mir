@@ -110,7 +110,10 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 mir_output.power_mode,
                 mir_output.orientation,
                 local_config.scale,
-                local_config.form_factor
+                local_config.form_factor,
+                local_config.subpixel_arrangement,
+                local_config.gamma,
+                local_config.gamma_supported
             };
 
             f(output);
@@ -168,13 +171,17 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 mir_output.power_mode,
                 mir_output.orientation,
                 local_config.scale,
-                local_config.form_factor
+                local_config.form_factor,
+                local_config.subpixel_arrangement,
+                local_config.gamma,
+                local_config.gamma_supported
             };
             UserDisplayConfigurationOutput user(output);
 
             f(user);
 
-            set_local_config_for(mir_output.output_id, {user.scale, user.form_factor });
+            set_local_config_for(mir_output.output_id, {user.scale, user.form_factor, user.subpixel_arrangement,
+                                                        user.gamma, user.gamma_supported});
 
             mir_output.current_mode = output.current_mode_index;
             mir_output.current_format = output.current_format;
@@ -196,7 +203,9 @@ mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
 {
     std::lock_guard<std::mutex> lock{local_config_mutex};
 
-    constexpr LocalOutputConfig default_values {1.0f, mir_form_factor_monitor };
+    LocalOutputConfig const default_values {1.0f, mir_form_factor_monitor,
+                                            mir_subpixel_arrangement_unknown,
+                                            {}, mir_output_gamma_unsupported};
 
     bool inserted;
     decltype(local_config)::iterator keypair;

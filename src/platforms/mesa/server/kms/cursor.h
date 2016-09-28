@@ -97,6 +97,7 @@ private:
     geometry::Displacement hotspot;
 
     bool visible;
+    bool last_set_failed;
 
     struct GBMBOWrapper
     {

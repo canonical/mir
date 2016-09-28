@@ -1,5 +1,6 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 ADD_LIBRARY(
@@ -32,4 +33,5 @@ ADD_LIBRARY(
   timeout_application_not_responding_detector.cpp
   output_properties_cache.cpp
   output_properties_cache.h
+  application_not_responding_detector_wrapper.cpp
 )

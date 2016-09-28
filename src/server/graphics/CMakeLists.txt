@@ -1,4 +1,7 @@
-include_directories(${GLESv2_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
+include_directories(
+  ${GL_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
+)
 
 add_library(
   mirgraphics OBJECT
@@ -11,4 +14,3 @@ add_library(
 )
 
 add_subdirectory(nested/)
-add_subdirectory(offscreen/)

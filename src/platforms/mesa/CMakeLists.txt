@@ -8,6 +8,7 @@ configure_file(
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/include/platforms/mesa
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include/
 )
 
 add_subdirectory(server/)

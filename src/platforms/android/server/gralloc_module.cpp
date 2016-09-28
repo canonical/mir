@@ -60,19 +60,19 @@ mga::GrallocModule::GrallocModule(
 {
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_buffer(
+std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
     geometry::Size size, MirPixelFormat pf, BufferUsage usage)
 {
     return alloc_buffer(size, pf, convert_to_android_usage(usage));
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_framebuffer(
+std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_framebuffer(
     geometry::Size size, MirPixelFormat pf)
 {
     return alloc_buffer(size, pf, quirks->fb_gralloc_bits());
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_buffer(
+std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
     geometry::Size size, MirPixelFormat pf, unsigned int usage_flag)
 {
     buffer_handle_t buf_handle = NULL;

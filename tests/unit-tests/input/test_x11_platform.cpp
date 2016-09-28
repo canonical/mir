@@ -28,6 +28,7 @@
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir/test/doubles/mock_input_sink.h"
+#include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/fake_shared.h"
@@ -48,9 +49,10 @@ struct X11PlatformTest : ::testing::Test
 {
     NiceMock<mtd::MockInputSink> mock_pointer_sink;
     NiceMock<mtd::MockInputSink> mock_keyboard_sink;
+    NiceMock<mtd::MockInputSeat> mock_seat;
     NiceMock<mtd::MockX11> mock_x11;
     NiceMock<mtd::MockInputDeviceRegistry> mock_registry;
-    mir::input::DefaultEventBuilder builder{0, mir::cookie::Authority::create()};
+    mir::input::DefaultEventBuilder builder{0, mir::cookie::Authority::create(), mt::fake_shared(mock_seat)};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),
