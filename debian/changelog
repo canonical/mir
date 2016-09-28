@@ -13,6 +13,8 @@ mir (0.24.1-0ubuntu1) UNRELEASED; urgency=medium
       . Valgrind errors in NesterServer.* cause subsequent tests
         (ServerDisconnect, ServerStartup, UnresponsiveClient) to fail
         (LP: #1612012)
+      . Break potentially infinite loop in search for next session to focus
+        (LP: #1625401)
 
  -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 27 Sep 2016 09:50:08 +0200
 
