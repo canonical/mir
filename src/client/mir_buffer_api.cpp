@@ -18,12 +18,15 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
 #include "presentation_chain.h"
 #include "mir_connection.h"
 #include "buffer.h"
+#include "mir/client_buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include "mir/client_buffer.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -212,6 +215,35 @@ try
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->set_callback(available_callback, available_context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->client_buffer()->package();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+void mir_buffer_egl_image_parameters(
+    MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
+try
+{
+    mir::require(b);
+    mir::require(type);
+    mir::require(client_buffer);
+    mir::require(attr);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->client_buffer()->egl_image_creation_parameters(type, client_buffer, attr);
 }
 catch (std::exception const& ex)
 {

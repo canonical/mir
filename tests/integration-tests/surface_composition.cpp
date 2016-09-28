@@ -19,11 +19,11 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
-#include "src/server/compositor/buffer_queue.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -68,11 +68,7 @@ struct SurfaceComposition : Test
     auto create_buffer_bundle() const
     -> std::shared_ptr<mc::BufferBundle>
     {
-        return std::make_shared<mc::BufferQueue>(
-            number_of_buffers,
-            allocator,
-            basic_properties,
-            policy_factory);
+        return std::make_shared<NiceMock<mtd::MockBufferBundle>>();
     }
 
     auto create_input_channel() const

@@ -141,3 +141,8 @@ std::vector<int> mfd::ProtobufBufferPacker::data()
 {
     return {buffer_response->data().begin(), buffer_response->data().end()};
 }
+
+unsigned int mfd::ProtobufBufferPacker::flags()
+{
+    return buffer_response->flags();
+}

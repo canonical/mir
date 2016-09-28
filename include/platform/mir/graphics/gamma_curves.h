@@ -16,6 +16,9 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+#ifndef MIR_GRAPHICS_GAMMA_CURVES_H_
+#define MIR_GRAPHICS_GAMMA_CURVES_H_
+
 #include <cstdint>
 #include <vector>
 
@@ -24,19 +27,23 @@ namespace mir
 namespace graphics
 {
 
+typedef std::vector<uint16_t> GammaCurve;
+
 class GammaCurves
 {
 public:
     GammaCurves() = default;
 
-    GammaCurves(std::vector<uint16_t> const& red,
-                std::vector<uint16_t> const& green,
-                std::vector<uint16_t> const& blue);
+    GammaCurves(GammaCurve const& red,
+                GammaCurve const& green,
+                GammaCurve const& blue);
 
-    std::vector<uint16_t> red;
-    std::vector<uint16_t> green;
-    std::vector<uint16_t> blue;
+    GammaCurve red;
+    GammaCurve green;
+    GammaCurve blue;
 };
 
 }
 }
+
+#endif
