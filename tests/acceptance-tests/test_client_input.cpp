@@ -636,6 +636,10 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
         fake_touch_screen->emit_event(mis::a_touch_event()
                                       .with_action(mis::TouchParameters::Action::Move)
                                       .at_position({x,y}));
+
+        // Valgrind is apparently quite bad at concurrency so give it a
+        // fighting chance:
+        std::this_thread::yield();
     }
 
     // Wait for the expected minimum number of events (should be quick but
