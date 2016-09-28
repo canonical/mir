@@ -65,25 +65,21 @@ struct TestProtobufClient
 
     MOCK_METHOD0(connect_done, void());
     MOCK_METHOD0(create_surface_done, void());
-    MOCK_METHOD0(exchange_buffer_done, void());
     MOCK_METHOD0(disconnect_done, void());
     MOCK_METHOD0(display_configure_done, void());
 
     void on_connect_done();
     void on_create_surface_done();
-    void on_exchange_buffer_done();
     void on_disconnect_done();
     void on_configure_display_done();
 
     void connect();
     void disconnect();
     void create_surface();
-    void exchange_buffer();
     void configure_display();
 
     void wait_for_connect_done();
     void wait_for_create_surface();
-    void wait_for_exchange_buffer();
     void wait_for_disconnect_done();
     void wait_for_configure_display_done();
     void wait_for_surface_count(int count);
@@ -95,7 +91,6 @@ struct TestProtobufClient
     int const maxwait;
     bool connect_done_called;
     bool create_surface_called;
-    bool exchange_buffer_called;
     bool disconnect_done_called;
     bool configure_display_done_called;
     int create_surface_done_count;

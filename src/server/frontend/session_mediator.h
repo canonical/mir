@@ -197,10 +197,6 @@ public:
         mir::protobuf::Void const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void exchange_buffer(
-        mir::protobuf::BufferRequest const* request,
-        mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done) override;
     void submit_buffer(
         mir::protobuf::BufferRequest const* request,
         mir::protobuf::Void* response,

@@ -227,6 +227,7 @@ TEST_F(PublishedSocketConnector, double_disconnection_does_not_break)
     client->wait_for_disconnect_done();
 }
 
+#if 0
 TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
@@ -248,6 +249,7 @@ TEST_F(PublishedSocketConnector, getting_and_advancing_buffers)
     client->disconnect();
     client->wait_for_disconnect_done();
 }
+#endif
 
 TEST_F(PublishedSocketConnector,
        connect_create_surface_then_disconnect_a_session)
@@ -290,6 +292,7 @@ TEST_F(PublishedSocketConnector, configure_display)
     client->wait_for_configure_display_done();
 }
 
+#if 0
 TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 {
     int const exchange_buffer_calls{8};
@@ -323,4 +326,4 @@ TEST_F(PublishedSocketConnector, connection_using_socket_fd)
 
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
-
+#endif

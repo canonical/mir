@@ -51,20 +51,6 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
-    virtual void exchange_buffer(
-        mir::protobuf::BufferRequest const* /*request*/,
-        mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done) override
-    {
-        response->set_buffer_id(22);
-
-        std::lock_guard<std::mutex> lock(guard);
-        //FIXME: huh? What's the condition here?
-        signal.notify_one();
-        done->Run();
-    }
-
-
     virtual void release_surface(
         mir::protobuf::SurfaceId const* /*request*/,
         mir::protobuf::Void* /*response*/,

@@ -401,38 +401,6 @@ void mf::SessionMediator::create_surface(
     }
 }
 
-void mf::SessionMediator::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    mf::BufferStreamId const stream_id{request->id().value()};
-
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    auto buffer = buffer_stream_tracker.last_buffer(stream_id);
-    if (!buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error("No buffer found for given stream id"));
-
-    ipc_operations->unpack_buffer(request_msg, *buffer);
-
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_exchange_buffer_called(session->name());
-
-    auto const& surface = session->get_buffer_stream(stream_id);
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
-        [this, response, done]
-        (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, new_buffer, msg_type);
-            done->Run();
-        });
-}
-
 void mf::SessionMediator::submit_buffer(
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Void*,

@@ -273,6 +273,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         cv.notify_all();
     }
 
+#if 0
     bool exchange_buffer(mclr::DisplayServer& server)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
@@ -290,7 +291,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         *buffer_request.mutable_buffer() = next;
         return completed;
     }
-
+#endif
     bool submit_buffer(mclr::DisplayServer& server, mp::BufferRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
@@ -331,6 +332,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 };
 }
 
+#if 0
 //tests for the exchange_buffer rpc call
 TEST_F(ExchangeBufferTest, exchanges_happen)
 {
@@ -389,6 +391,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
     EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
 }
+#endif
 
 //tests for the submit buffer protocol.
 TEST_F(ExchangeBufferTest, submissions_happen)

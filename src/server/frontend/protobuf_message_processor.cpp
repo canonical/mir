@@ -68,8 +68,6 @@ template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::pro
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 template<> struct result_ptr_t<mir::protobuf::PlatformOperationMessage> { typedef ::mir::protobuf::PlatformOperationMessage* type; };
 
-//The exchange_buffer and next_buffer calls can complete on a different thread than the
-//one the invocation was called on. Make sure to preserve the result resource. 
 template<class ParameterMessage>
 ParameterMessage parse_parameter(Invocation const& invocation)
 {
@@ -216,14 +214,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("create_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::create_surface, invocation);
-        }
-        else if ("exchange_buffer" == invocation.method_name())
-        {
-            auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
-            request.mutable_buffer()->clear_fd();
-            for (auto& fd : side_channel_fds)
-                request.mutable_buffer()->add_fd(fd);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
         else if ("submit_buffer" == invocation.method_name())
         {
