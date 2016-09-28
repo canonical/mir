@@ -34,6 +34,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 namespace mir
 {
@@ -273,6 +274,8 @@ private:
 
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;
+
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> legacy_default_stream_map;
 };
 
 }

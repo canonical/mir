@@ -341,6 +341,7 @@ void mf::SessionMediator::create_surface(
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         response->mutable_buffer_stream()->set_pixel_format(legacy_stream->pixel_format());
         response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
+        legacy_default_stream_map[surf_id] = buffer_stream_id;
     }
     done->Run();
     // ...then uncork the message sender, sending all buffered surface events.
@@ -350,31 +351,11 @@ void mf::SessionMediator::create_surface(
 //TODO: deprecate this function soon.
 void mf::SessionMediator::exchange_buffer(
     mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
+    mir::protobuf::Buffer*,
     google::protobuf::Closure* done)
 {
-    mf::BufferStreamId const stream_id{request->id().value()};
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-    report->session_exchange_buffer_called(session->name());
-
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    auto buffer = session->get_buffer(buffer_id);
-    ipc_operations->unpack_buffer(request_msg, *buffer);
-
-    auto stream = session->get_buffer_stream(stream_id);
-    stream->swap_buffers(
-        buffer.get(),
-        [this, response, done](mg::Buffer* new_buffer)
-        {
-            if (!new_buffer)
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
-            done->Run();
-        });
+    mir::protobuf::Void v;
+    submit_buffer(request, &v, done);
 }
 
 void mf::SessionMediator::submit_buffer(
@@ -465,14 +446,14 @@ void mf::SessionMediator::release_surface(
     auto const id = SurfaceId(request->value());
 
     shell->destroy_surface(session, id);
-/*
-    if (default_stream.is_set())
+
+    auto it = legacy_default_stream_map.find(id);
+    if (it != legacy_default_stream_map.end())
     {
-        session->destroy_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_default_stream(id);
+        session->destroy_buffer_stream(it->second);
+        legacy_default_stream_map.erase(it);
     }
-*/
+
     // TODO: We rely on this sending responses synchronously.
     done->Run();
 }
