@@ -95,7 +95,6 @@ mtd::MockX11::MockX11()
     ON_CALL(*this, XGetGeometry(fake_x11.display,_,_,_,_,_,_,_,_))
     .WillByDefault(DoAll(SetArgPointee<5>(fake_x11.screen.width),
                          SetArgPointee<6>(fake_x11.screen.height),
-                         SetArgPointee<7>(0),
                          Return(1)));
 }
 

@@ -97,7 +97,6 @@ public:
         ON_CALL(mock_x11, XGetGeometry(mock_x11.fake_x11.display,_,_,_,_,_,_,_,_))
         .WillByDefault(DoAll(SetArgPointee<5>(mock_x11.fake_x11.screen.width),
                              SetArgPointee<6>(mock_x11.fake_x11.screen.height),
-                             SetArgPointee<7>(0),
                              Return(1)));
     }
     std::shared_ptr<mgx::Display> create_display()

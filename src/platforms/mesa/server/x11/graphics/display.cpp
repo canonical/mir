@@ -39,7 +39,7 @@ namespace geom=mir::geometry;
 
 namespace
 {
-geom::Size&& clip_to_display(Display *dpy, geom::Size requested_size)
+geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
 {
     unsigned int screen_width, screen_height, uint_dummy;
     int int_dummy;
@@ -57,10 +57,10 @@ geom::Size&& clip_to_display(Display *dpy, geom::Size requested_size)
         mir::log_info(" ... is smaller than the requested size (%dx%d) plus border (%d). Clipping to (%dx%d).",
             requested_size.width.as_uint32_t(), requested_size.height.as_uint32_t(), border,
             screen_width-border, screen_height-border);
-        return std::move(geom::Size{screen_width-border, screen_height-border});
+        return geom::Size{screen_width-border, screen_height-border};
     }
 
-    return std::move(requested_size);
+    return requested_size;
 }
 
 auto get_pixel_width(Display *dpy)
@@ -138,6 +138,7 @@ mgx::X11Window::X11Window(::Display* x_dpy,
     r_mask = visInfo->red_mask;
 
     XSetWindowAttributes attr;
+    std::memset(&attr, 0, sizeof(attr));
     attr.background_pixel = 0;
     attr.border_pixel = 0;
     attr.colormap = XCreateColormap(x_dpy, root, visInfo->visual, AllocNone);
