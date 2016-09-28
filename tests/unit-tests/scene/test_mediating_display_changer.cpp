@@ -131,13 +131,19 @@ private:
 
 struct MockDisplay : public mtd::MockDisplay
 {
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    MockDisplay()
+        : config{std::make_unique<mtd::StubDisplayConfig>()}
     {
-        conf_ptr = new mtd::StubDisplayConfig{};
-        return std::unique_ptr<mg::DisplayConfiguration>(conf_ptr);
+        ON_CALL(*this, configure(_))
+            .WillByDefault(Invoke([this](auto& conf) { config = conf.clone(); }));
     }
 
-    mutable mg::DisplayConfiguration* conf_ptr;
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        return config->clone();
+    }
+
+    std::unique_ptr<mg::DisplayConfiguration> config;
 };
 
 struct StubServerActionQueue : mir::ServerActionQueue
@@ -207,7 +213,7 @@ TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_s
     using namespace testing;
 
     auto const base_conf = changer->base_configuration();
-    EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.conf_ptr)));
+    EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.configuration())));
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)
