@@ -131,11 +131,8 @@ struct StubStreamFactory : public msc::BufferStreamFactory
                 };
 
                 auto id = buffer_id_seq.back();
-                printf("ADD A BUFFER %i\n", id.as_value());
                 buffer_id_seq.pop_back();
-            printf("PROPS %i %i\n", props.size.width.as_int(), props.size.height.as_int());
                 b = std::make_shared<BufferIdWrapper>(alloc->alloc_buffer(props), id);
-            printf("PROPS %i %i\n", b->size().width.as_int(), b->size().height.as_int());
                 sink->add_buffer(*b);
                 return id; 
             }
@@ -181,7 +178,6 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
 
     void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
     {
-        printf("UNPAK\n");
         auto fds = msg.fds();
         if (!fds.empty())
         {
@@ -230,47 +226,6 @@ struct StubPlatform : public mtd::NullPlatform
     std::shared_ptr<mir::Fd> const last_fd;
 };
 
-class SinkSkimmingCoordinator : public msc::SessionCoordinator
-{
-public:
-    SinkSkimmingCoordinator(std::shared_ptr<msc::SessionCoordinator> const& wrapped) :
-        wrapped(wrapped)
-    {
-    }
-
-    void set_focus_to(std::shared_ptr<msc::Session> const& focus) override
-    {
-        wrapped->set_focus_to(focus);
-    }
-
-    void unset_focus() override
-    {
-        wrapped->unset_focus();
-    }
-
-    std::shared_ptr<msc::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        last_sink = sink;
-        return wrapped->open_session(client_pid, name, sink);
-    }
-
-    void close_session(std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->close_session(session);
-    }
-
-    std::shared_ptr<msc::Session> successor_of(std::shared_ptr<msc::Session> const& session) const override
-    {
-        return wrapped->successor_of(session);
-    }
-
-    std::shared_ptr<msc::SessionCoordinator> const wrapped;
-    std::weak_ptr<mf::EventSink> last_sink;
-};
-
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
 {
     ExchangeServerConfiguration(
@@ -281,14 +236,6 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
     {
     }
 
-    std::shared_ptr<msc::SessionCoordinator> the_session_coordinator() override
-    {
-        return session_coordinator([this]{
-            coordinator = std::make_shared<SinkSkimmingCoordinator>(
-                DefaultServerConfiguration::the_session_coordinator());
-            return coordinator;
-        });
-    }
     std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
         return platform;
@@ -301,7 +248,6 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
 
     std::shared_ptr<StubStreamFactory> const stream_factory;
     std::shared_ptr<mg::Platform> const platform;
-    std::shared_ptr<SinkSkimmingCoordinator> coordinator;
 };
 
 struct SubmitBuffer : mir_test_framework::InProcessServer
@@ -323,7 +269,6 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
 
     bool submit_buffer(mclr::DisplayServer& server, mp::BufferRequest& request)
     {
-        printf("SUBMIT!\n");
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.submit_buffer(&request, &v,
@@ -335,7 +280,6 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
 
     bool allocate_buffers(mclr::DisplayServer& server, mp::BufferAllocation& request)
     {
-        printf("allocoa!\n");
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.allocate_buffers(&request, &v,
@@ -438,26 +382,11 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
     using namespace std::literals::chrono_literals;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
-    auto sink = server_configuration.coordinator->last_sink.lock();
 
-    printf("ZEE for %i\n", buffer_id_exchange_seq.back().as_value());
-    //first wait for the last id in the exchange sequence to be seen. Avoids lp: #1487967, where
-    //the stub sink could send before the server sends its sequence.
     auto timeout = std::chrono::steady_clock::now() + 5s;
     EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), surface, timeout))
         << "failed to see the last scheduled buffer become the current one";
 
-    printf("Zoa\n");
-    //spin-wait for the id to become the current one.
-    //The notification doesn't generate a client-facing callback on the stream yet
-    //(although probably should, seems like something a media decoder would need)
-    mtd::StubBuffer stub_buffer;
-    timeout = std::chrono::steady_clock::now() + 5s;
-    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
-    EXPECT_TRUE(spin_wait_for_id(stub_buffer.id(), surface, timeout))
-        << "failed to see the sent buffer become the current one";
-
-    printf("Zaoa\n");
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
