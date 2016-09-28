@@ -492,6 +492,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     }
     else if (!base_configuration_applied)
     {
+        // TODO: What happens if this fails?
         apply_base_config();
     }
 }
