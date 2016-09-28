@@ -1517,7 +1517,9 @@ TEST_F(DisplayConfigurationTest, error_in_configure_propagates_to_client)
     auto config = client.get_base_config();
     mir_output_set_position(mir_display_config_get_mutable_output(config.get(), 0), 88, 42);
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 10);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 100);
 
     EXPECT_TRUE(error_received.wait_for(10s));
+
+    client.disconnect();
 }
