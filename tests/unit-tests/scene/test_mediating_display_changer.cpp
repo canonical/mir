@@ -309,6 +309,23 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+
+
+    EXPECT_CALL(mock_display, configure(Ref(conf)))
+        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+
+    auto const previous_base_config = changer->base_configuration();
+    ASSERT_THAT(conf, Not(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    changer->configure_for_hardware_change(mt::fake_shared(conf));
+
+    EXPECT_THAT(*changer->base_configuration(), mt::DisplayConfigMatches(std::cref(*previous_base_config)));
+}
+
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved)
 {
     using namespace testing;

@@ -340,10 +340,22 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
+            auto existing_configuration = base_configuration_;
+
             display_configuration_policy->apply_to(*conf);
             base_configuration_ = conf;
             if (base_configuration_applied)
-                apply_base_config();
+            {
+                try
+                {
+                    apply_base_config();
+                }
+                catch (std::exception const&)
+                {
+                    // TODO: Notify someone.
+                    base_configuration_ = existing_configuration;
+                }
+            }
 
             /*
              * Clear all the per-session configurations, since they may have become
