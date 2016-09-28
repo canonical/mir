@@ -115,6 +115,20 @@ struct EventSender : public testing::Test
     mtd::MockPlatformIpcOperations mock_buffer_packer;
     mfd::EventSender event_sender;
 };
+
+std::function<void(char const*, size_t, mir::frontend::FdSets)>
+make_validator(std::function<void(mir::protobuf::EventSequence const&)> const& sequence_validator)
+{
+    return [sequence_validator](char const* data, size_t len, mir::frontend::FdSets)
+        {
+            mir::protobuf::wire::Result wire;
+            wire.ParseFromArray(data, len);
+            std::string str = wire.events(0);
+            mir::protobuf::EventSequence seq;
+            seq.ParseFromString(str);
+            sequence_validator(seq);
+        };
+}
 }
 
 TEST_F(EventSender, display_send)
@@ -123,18 +137,15 @@ TEST_F(EventSender, display_send)
 
     mtd::StubDisplayConfig config;
 
-    auto msg_validator = [&config](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
-    };
+    auto msg_validator = make_validator(
+        [&config](auto const& seq)
+        {
+            EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_display_config_change(config);
 }
@@ -187,18 +198,15 @@ TEST_F(EventSender, sends_input_devices)
         std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
                                      "keybaord", "7853")};
 
-    auto msg_validator = [&devices](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
-    };
+    auto msg_validator = make_validator(
+        [&devices](auto const& seq)
+        {
+            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_input_device_change(devices);
 }
@@ -209,18 +217,15 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
 
     std::vector<std::shared_ptr<mi::Device>> devices;
 
-    auto msg_validator = [&devices](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
-    };
+    auto msg_validator = make_validator(
+        [&devices](auto const& seq)
+        {
+            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_input_device_change(devices);
 }
