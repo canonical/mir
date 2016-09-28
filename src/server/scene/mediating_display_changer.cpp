@@ -411,17 +411,43 @@ void ms::MediatingDisplayChanger::apply_config(
 {
     report->new_configuration(*conf);
 
-    if (configuration_has_new_outputs_enabled(*display->configuration(), *conf) ||
-        !display->apply_if_configuration_preserves_display_buffers(*conf))
+    auto existing_configuration = display->configuration();
+    try
     {
-        ApplyNowAndRevertOnScopeExit comp{
-            [this] { compositor->stop(); },
-            [this] { compositor->start(); }};
-        display->configure(*conf);
-    }
-    update_input_rectangles(*conf);
+        if (configuration_has_new_outputs_enabled(*display->configuration(), *conf) ||
+            !display->apply_if_configuration_preserves_display_buffers(*conf))
+        {
+            ApplyNowAndRevertOnScopeExit comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+            display->configure(*conf);
+        }
 
-    base_configuration_applied = false;
+        update_input_rectangles(*conf);
+        base_configuration_applied = false;
+    }
+    catch (...)
+    {
+        try
+        {
+            /*
+             * Reapply the previous configuration.
+             *
+             * We know that the previous configuration worked at some point - either it
+             * was one that has been successfully display->configure()d, or it was the
+             * configuration that existed at Mir startup. Which presumably worked!
+             */
+            ApplyNowAndRevertOnScopeExit comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+            display->configure(*existing_configuration);
+        }
+        catch (...)
+        {
+            // OMG WHY HAS EVERYTHING EXPLODED?
+        }
+        throw;
+    }
 }
 
 void ms::MediatingDisplayChanger::apply_base_config()

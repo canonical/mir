@@ -270,6 +270,22 @@ TEST_F(MediatingDisplayChangerTest, sends_error_when_applying_new_configuration_
                        mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, reapplies_old_config_when_applying_new_configuration_fails)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+    auto session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto existing_configuration = changer->base_configuration();
+
+    InSequence s;
+    EXPECT_CALL(mock_display, configure(Ref(conf)))
+        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"}); }));
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*existing_configuration))));
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session, mt::fake_shared(conf));
+}
+
 
 TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 {
@@ -323,6 +339,8 @@ TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
 
     EXPECT_CALL(mock_display, configure(Ref(conf)))
         .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+    EXPECT_CALL(mock_display, configure(Not(Ref(conf))))
+        .Times(AnyNumber());
 
     auto const previous_base_config = changer->base_configuration();
     ASSERT_THAT(conf, Not(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
@@ -441,6 +459,8 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_c
 
     EXPECT_CALL(mock_display, configure(Ref(conf)))
         .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+    EXPECT_CALL(mock_display, configure(Not(Ref(conf))))
+        .Times(AnyNumber());
     EXPECT_CALL(mock_session1, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
     EXPECT_CALL(mock_session2, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
 
@@ -536,6 +556,10 @@ TEST_F(MediatingDisplayChangerTest, failure_to_apply_session_config_on_focus_sen
         mock_display,
         configure(mt::DisplayConfigMatches(std::cref(*conf))))
             .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Banana"}); }));
+    EXPECT_CALL(
+        mock_display,
+        configure(Not(mt::DisplayConfigMatches(std::cref(*conf)))))
+            .Times(AnyNumber());
     EXPECT_CALL(*session1, send_error(_));
 
     session_event_sink.handle_focus_change(session1);
