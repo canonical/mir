@@ -1,4 +1,4 @@
-mir (0.24.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.24.1+16.10.20160928-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.24.1 (https://launchpad.net/mir/+milestone/0.24.1)
     - ABI summary:
@@ -16,7 +16,7 @@ mir (0.24.1-0ubuntu1) UNRELEASED; urgency=medium
       . Break potentially infinite loop in search for next session to focus
         (LP: #1625401)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 27 Sep 2016 09:50:08 +0200
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Wed, 28 Sep 2016 12:09:49 +0000
 
 mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
 
