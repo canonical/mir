@@ -24,7 +24,8 @@ enum { mir_buffer_package_max = 30 };
 
 typedef enum
 {
-    mir_buffer_flag_can_scanout = 1
+    mir_buffer_flag_can_scanout = 1,
+    mir_buffer_flag_fenced = 1 << 1
 } MirBufferFlag;
 
 typedef struct MirBufferPackage

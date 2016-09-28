@@ -384,6 +384,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_buffer_usage;
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
+    mir_buffer_get_buffer_package;
     mir_buffer_egl_image_parameters;
   local:
     *;
