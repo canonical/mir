@@ -1490,3 +1490,34 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
     configuring_client.disconnect();
     interfering_client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, error_in_configure_propagates_to_client)
+{
+    using namespace std::chrono_literals;
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() { BOOST_THROW_EXCEPTION(std::runtime_error("Ducks!")); } ));
+
+    mt::Signal error_received;
+    mir_connection_set_error_callback(
+        client.connection,
+        [](MirConnection*, MirError const* error, void* ctx)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_display_configuration)
+            {
+                reinterpret_cast<mt::Signal*>(ctx)->raise();
+            }
+        },
+        &error_received);
+
+    auto config = client.get_base_config();
+    mir_output_set_position(mir_display_config_get_mutable_output(config.get(), 0), 88, 42);
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 10);
+
+    EXPECT_TRUE(error_received.wait_for(10s));
+}
