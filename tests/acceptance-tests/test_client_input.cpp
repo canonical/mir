@@ -652,7 +652,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
     EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
-    EXPECT_THAT(client_input_events_per_frame, Lt(1.5f));
+    EXPECT_THAT(client_input_events_per_frame, Lt(2.0f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
