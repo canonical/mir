@@ -186,3 +186,8 @@ void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buf
     request->mutable_buffer()->set_fds_on_side_channel(set.size());
     send_event_sequence(seq, {set});
 }
+
+void mfd::EventSender::handle_error(mir::ClientVisibleError const& /*error*/)
+{
+
+}
