@@ -9,6 +9,7 @@ mir (0.24.1-0ubuntu1) UNRELEASED; urgency=medium
         is configured (LP: #1626435)
       . fix for libmircommon.so.6 ABI break: version stanza of
         mir::dispatch::ReadableFd* moved to newer version (LP: #1617865)
+      . clang builds fail (again) (LP: #1609612)
 
  -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 27 Sep 2016 09:50:08 +0200
 
