@@ -455,7 +455,14 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     auto const it = config_map.find(session);
     if (it != config_map.end())
     {
-        apply_config(it->second);
+        try
+        {
+            apply_config(it->second);
+        }
+        catch (std::exception const&)
+        {
+            session->send_error(DisplayConfigurationFailedError{});
+        }
     }
     else if (!base_configuration_applied)
     {

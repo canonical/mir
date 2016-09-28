@@ -517,6 +517,24 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_invalidating_atta
     session_event_sink.handle_focus_change(session1);
 }
 
+TEST_F(MediatingDisplayChangerTest, failure_to_apply_session_config_on_focus_sends_error)
+{
+    using namespace testing;
+    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto session1 = std::make_shared<mtd::MockSceneSession>();
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    EXPECT_CALL(
+        mock_display,
+        configure(mt::DisplayConfigMatches(std::cref(*conf))))
+            .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Banana"}); }));
+    EXPECT_CALL(*session1, send_error(_));
+
+    session_event_sink.handle_focus_change(session1);
+}
+
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_pausing_if_db_invalidated)
 {
     using namespace testing;
