@@ -123,6 +123,7 @@ TEST_F(Stream, transitions_from_queuing_to_framedropping)
         cbuffers.push_back(stream.lock_compositor_buffer(this));
     ASSERT_THAT(cbuffers, SizeIs(1));
     EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, transitions_from_framedropping_to_queuing)
@@ -325,6 +326,7 @@ TEST_F(Stream, triggering_policy_gives_a_buffer_back)
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,_,_));
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_only_frame_when_arbiter_has_none)
@@ -334,6 +336,7 @@ TEST_F(Stream, doesnt_drop_the_only_frame_when_arbiter_has_none)
     EXPECT_CALL(mock_sink, send_buffer(_,_,_))
         .Times(0);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_longer_queue)
@@ -347,6 +350,7 @@ TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_longer_queue)
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
         .Times(1);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_2_buffer_queue)
@@ -359,6 +363,7 @@ TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_2_buffer_queue)
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
         .Times(0);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, returns_buffers_to_client_when_told_to_bring_queue_up_to_date)
@@ -371,4 +376,5 @@ TEST_F(Stream, returns_buffers_to_client_when_told_to_bring_queue_up_to_date)
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[0]),_));
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_));
     stream.drop_old_buffers();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }

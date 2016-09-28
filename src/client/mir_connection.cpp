@@ -1223,7 +1223,7 @@ void MirConnection::chain_error(
 void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 {
     auto id = chain->rpc_id();
-    if (id > 0)
+    if (id >= 0)
     {
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
         mp::BufferStreamId buffer_stream_id;
