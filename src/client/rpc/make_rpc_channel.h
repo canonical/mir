@@ -20,6 +20,7 @@
 
 #include "../lifecycle_control.h"
 #include "../ping_handler.h"
+#include "../error_handler.h"
 
 #include <memory>
 
@@ -51,6 +52,7 @@ make_rpc_channel(
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
     std::shared_ptr<PingHandler> const& ping_handler,
+    std::shared_ptr<ErrorHandler> const& error_handler,
     std::shared_ptr<EventSink> const& event_distributor);
 }
 }

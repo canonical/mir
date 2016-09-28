@@ -17,6 +17,7 @@
  */
 
 #include "native_buffer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "src/platforms/android/client/gralloc_registrar.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include <stdexcept>
@@ -93,8 +94,8 @@ struct GrallocRegistrar : public ::testing::Test
         stub_package.data_items = 21;
         for (auto i = 0; i < stub_package.fd_items; i++)
             stub_package.fd[i] = (i*4);
-        stub_package.data[0] = static_cast<int>(mir::graphics::android::BufferFlag::unfenced);
-        for (auto i = 1; i < stub_package.data_items; i++)
+        stub_package.flags = 0;
+        for (auto i = 0; i < stub_package.data_items; i++)
             stub_package.data[i] = (i*3);
     }
 
@@ -113,18 +114,17 @@ struct GrallocRegistrar : public ::testing::Test
 
 TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 {
-    int const flag_offset{1};
     mcla::GrallocRegistrar registrar(mock_module);
     auto buffer = registrar.register_buffer(stub_package, pf);
 
     auto handle = buffer->handle();
     ASSERT_NE(nullptr, handle);
     ASSERT_EQ(stub_package.fd_items, handle->numFds);
-    ASSERT_EQ(stub_package.data_items - 1, handle->numInts);
+    ASSERT_EQ(stub_package.data_items, handle->numInts);
     for (auto i = 0; i < stub_package.fd_items; i++)
         EXPECT_EQ(stub_package.fd[i], handle->data[i]);
-    for (auto i = 0; i < stub_package.data_items - 1; i++)
-        EXPECT_EQ(stub_package.data[i + flag_offset], handle->data[i + stub_package.fd_items]);
+    for (auto i = 0; i < stub_package.data_items; i++)
+        EXPECT_EQ(stub_package.data[i], handle->data[i + stub_package.fd_items]);
 }
 
 TEST_F(GrallocRegistrar, client_sets_correct_version)
@@ -160,8 +160,8 @@ TEST_F(GrallocRegistrar, registrar_frees_fds)
     using namespace testing;
     MirBufferPackage stub_package;
     memset(&stub_package, 0, sizeof(MirBufferPackage));
-    stub_package.data_items = 1;
-    stub_package.data[0] = static_cast<int>(mir::graphics::android::BufferFlag::unfenced);
+    stub_package.data_items = 0;
+    stub_package.flags = 0;
     stub_package.fd_items = 2;
     EXPECT_EQ(0, pipe(static_cast<int*>(stub_package.fd)));
 
