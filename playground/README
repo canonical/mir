@@ -1,6 +1,6 @@
 The Playground
 
 These are mir demos that exercise private, in-flux mir functionality.
-As such functionality matures, related headers become public and the relevant playground
-code may be moved to 'examples/'.
+As such functionality matures, related headers become public and the relevant
+playground code may be moved to 'examples/'.
 
