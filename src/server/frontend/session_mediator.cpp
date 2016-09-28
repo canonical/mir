@@ -365,16 +365,6 @@ void mf::SessionMediator::create_surface(
     buffering_sender->uncork();
 }
 
-//TODO: deprecate this function soon.
-void mf::SessionMediator::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer*,
-    google::protobuf::Closure* done)
-{
-    mir::protobuf::Void v;
-    submit_buffer(request, &v, done);
-}
-
 void mf::SessionMediator::submit_buffer(
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Void*,

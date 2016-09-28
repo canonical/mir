@@ -32,7 +32,7 @@ set(
   test_stale_frames.cpp
   test_test_framework.cpp
   test_error_reporting.cpp
-  test_exchange_buffer.cpp
+  test_submit_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_macros.cpp
