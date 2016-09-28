@@ -193,12 +193,14 @@ void msh::AbstractShell::focus_next_session()
     std::unique_lock<std::mutex> lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto successor = session_coordinator->successor_of(focused_session);
+    auto const sentinel = successor;
 
     while (successor != nullptr &&
-           successor != focused_session &&
            successor->default_surface() == nullptr)
     {
         successor = session_coordinator->successor_of(successor);
+        if (successor == sentinel)
+            break;
     }
 
     auto const surface = successor ? successor->default_surface() : nullptr;

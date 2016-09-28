@@ -382,7 +382,16 @@ MIR_COMMON_0.24 {
        android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
+
+       #
+       # This entry is a bug LP: #1617865 which now overrides the other entries
+       # for ReadableFd in MIR_COMMON_5.1 above. But rather than remove it and
+       # break the ABI again we have re-exported the old MIR_COMMON_5.1
+       # symbols using assembler directives in:
+       #   src/common/dispatch/legacy_readable_fd.cpp
+       # 
        mir::dispatch::ReadableFd*;
+
        vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;

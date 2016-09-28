@@ -29,8 +29,7 @@ namespace mcl=mir::client;
 namespace mcle=mir::client::eglstream;
 namespace geom=mir::geometry;
 
-mcle::ClientPlatform::ClientPlatform(ClientContext* const context)
-    : context{context}
+mcle::ClientPlatform::ClientPlatform(ClientContext* const)
 {
 }
 

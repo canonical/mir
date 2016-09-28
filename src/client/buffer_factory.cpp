@@ -86,7 +86,7 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobu
     }
 
     allocation_requests.erase(request_it);
-    return std::move(b);
+    return b;
 }
 
 void mcl::BufferFactory::cancel_requests_with_context(void* cancelled_context)

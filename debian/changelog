@@ -1,3 +1,23 @@
+mir (0.24.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.24.1 (https://launchpad.net/mir/+milestone/0.24.1)
+    - ABI summary:
+      . All ABI numbers remain unchanged.
+      . mircommon ABI at 6, but now including a symbol misplaced in 0.24.0
+    - Bugs fixed:
+      . mirserver ignored further keymap configuration changes after a keyboard 
+        is configured (LP: #1626435)
+      . fix for libmircommon.so.6 ABI break: version stanza of
+        mir::dispatch::ReadableFd* moved to newer version (LP: #1617865)
+      . clang builds fail (again) (LP: #1609612)
+      . Valgrind errors in NesterServer.* cause subsequent tests
+        (ServerDisconnect, ServerStartup, UnresponsiveClient) to fail
+        (LP: #1612012)
+      . Break potentially infinite loop in search for next session to focus
+        (LP: #1625401)
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 27 Sep 2016 09:50:08 +0200
+
 mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
