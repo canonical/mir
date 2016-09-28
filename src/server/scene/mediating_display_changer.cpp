@@ -208,7 +208,16 @@ void ms::MediatingDisplayChanger::configure(
 
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
-                    apply_config(conf);
+                {
+                    try
+                    {
+                        apply_config(conf);
+                    }
+                    catch (std::exception const&)
+                    {
+                        session->send_error(DisplayConfigurationFailedError{});
+                    }
+                }
             }
         });
 }

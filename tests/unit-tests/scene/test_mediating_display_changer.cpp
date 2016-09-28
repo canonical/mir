@@ -36,6 +36,7 @@
 #include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <mutex>
+#include <boost/throw_exception.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -248,6 +249,21 @@ TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_conf
                        mt::fake_shared(conf));
 }
 
+TEST_F(MediatingDisplayChangerTest, sends_error_when_applying_new_configuration_for_focused_session_fails)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+    auto session = std::make_shared<mtd::MockSceneSession>();
+
+    ON_CALL(mock_display, configure(Ref(conf)))
+        .WillByDefault(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"}); }));
+    EXPECT_CALL(*session, send_error(_));
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
 
 TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 {
@@ -255,7 +271,7 @@ TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
     mtd::NullDisplayConfiguration conf;
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
-    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_display, configure(Ref(conf))).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     changer->configure(std::make_shared<mtd::StubSession>(),
