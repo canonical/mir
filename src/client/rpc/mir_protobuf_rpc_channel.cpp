@@ -291,6 +291,15 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         (*ping_handler)(seq.ping_event().serial());
     }
 
+    if (seq.has_structured_error())
+    {
+        auto const error = MirError{
+            static_cast<MirErrorDomain>(seq.structured_error().domain()),
+            seq.structured_error().code()
+        };
+        (*error_handler)(&error);
+    }
+
     if (seq.has_buffer_request())
     {
         std::array<char, 1> dummy;
