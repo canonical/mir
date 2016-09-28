@@ -25,9 +25,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
+#include <pthread.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
-#include <pthread.h>
+
+static volatile sig_atomic_t running = 0;
+
+static void shutdown(int signum)
+{
+    if (running)
+    {
+        running = 0;
+        printf("Signal %d received. Good night.\n", signum);
+    }
+}
 
 typedef struct Color
 {
@@ -45,7 +57,6 @@ int main(int argc, char *argv[])
 {
     (void) argc;
     (void) argv;
-    unsigned int num_frames = 0;
     const char* appname = "EGL Render Surface Demo";
     int width = 100;
     int height = 100;
@@ -63,6 +74,10 @@ int main(int argc, char *argv[])
     MirConnection* connection = NULL;
     MirSurface* surface = NULL;
     MirRenderSurface* render_surface = NULL;
+
+    signal(SIGINT, shutdown);
+    signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
@@ -124,7 +139,8 @@ int main(int argc, char *argv[])
     Color green = {0.0f, 1.0f, 0.0f, 1.0f};
     Color blue = {0.0f, 0.0f, 1.0f, 1.0f};
 
-    do
+    running = 1;
+    while (running)
     {
         glClearColor(red.r, red.g, red.b, red.a);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -140,7 +156,7 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
         eglSwapBuffers(egldisplay, eglsurface);
         sleep(1);
-    } while (num_frames++ < 3);
+    }
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
