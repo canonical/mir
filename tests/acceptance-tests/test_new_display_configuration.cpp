@@ -1509,6 +1509,7 @@ TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_t
         {
             if (mir_error_get_domain(error) == mir_error_domain_display_configuration)
             {
+                EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_rejected_by_hardware));
                 reinterpret_cast<mt::Signal*>(ctx)->raise();
             }
         },

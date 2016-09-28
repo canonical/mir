@@ -97,7 +97,7 @@ public:
 
     uint32_t code() const noexcept override
     {
-        return 42;
+        return mir_display_configuration_error_rejected_by_hardware;
     }
 };
 
