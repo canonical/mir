@@ -18,6 +18,7 @@
 
 #include "mir/test/doubles/mock_buffer_registrar.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "src/platforms/android/client/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
@@ -95,20 +96,19 @@ TEST_F(AndroidClientBuffer, update_from_package_merges_fence_when_present)
         .Times(1);
     mcla::Buffer buffer(mock_registrar, package, pf);
 
-    package.data_items = 1;
+    package.data_items = 0;
     package.fd_items = 1;
-    package.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+    package.flags = mir_buffer_flag_fenced;
     package.fd[0] = fake_fence;
     buffer.update_from(package);
  
-    package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+    package.flags = 0;
     buffer.update_from(package);
 }
 
 TEST_F(AndroidClientBuffer, fills_update_msg)
 {
     using namespace testing;
-    using mir::graphics::android::BufferFlag;
     int stub_fence{44};
     int invalid_fence{-1};
 
@@ -122,15 +122,15 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
 
     buffer.fill_update_msg(msg);
 
-    EXPECT_THAT(msg.data_items, Eq(1));
-    EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::fenced)));
+    EXPECT_THAT(msg.data_items, Eq(0));
+    EXPECT_THAT(msg.flags, Eq(mir_buffer_flag_fenced));
     EXPECT_THAT(msg.fd_items, Eq(1));
     EXPECT_THAT(msg.fd[0], Eq(stub_fence));
 
     buffer.fill_update_msg(msg);
 
-    EXPECT_THAT(msg.data_items, Eq(1));
-    EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::unfenced)));
+    EXPECT_THAT(msg.data_items, Eq(0));
+    EXPECT_THAT(msg.flags, Eq(0));
     EXPECT_THAT(msg.fd_items, Eq(0));
 }
 

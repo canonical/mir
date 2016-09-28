@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class ClientVisibleError;
 namespace input
 {
 class Device;
@@ -47,6 +48,7 @@ public:
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
     virtual void send_ping(int32_t serial) = 0;
     virtual void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) = 0;
+    virtual void handle_error(ClientVisibleError const& error) = 0;
 
 protected:
     EventSink() = default;

@@ -32,6 +32,7 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
 #include "display_configuration.h"
+#include "error_handler.h"
 
 #include <atomic>
 #include <memory>
@@ -318,6 +319,7 @@ private:
 
     std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
+    std::shared_ptr<mir::client::ErrorHandler> error_handler;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
@@ -325,7 +327,6 @@ private:
 
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
-    mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
     struct StreamRelease;

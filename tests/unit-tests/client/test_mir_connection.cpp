@@ -821,7 +821,7 @@ TEST_F(MirConnectionTest, release_chain_calls_server)
         static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
 
     EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
-        .Times(0);
+        .Times(1);
 
     connection->release_presentation_chain(callback.resulting_chain);
 }
