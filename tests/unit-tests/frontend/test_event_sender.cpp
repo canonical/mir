@@ -23,6 +23,7 @@
 #include "src/server/frontend/event_sender.h"
 
 #include "mir/events/event_builders.h"
+#include "mir/client_visible_error.h"
 
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/input_devices_matcher.h"
@@ -39,6 +40,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <mir_protobuf.pb.h>
 
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -261,4 +263,42 @@ TEST_F(EventSender, can_send_error_buffer)
     event_sender.error_buffer(properties, error_msg);
     ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
     EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
+}
+
+TEST_F(EventSender, sends_errors)
+{
+    using namespace testing;
+
+    class TestError : public mir::ClientVisibleError
+    {
+    public:
+        TestError()
+            : ClientVisibleError("An explosion of delight")
+        {
+        }
+
+        MirErrorDomain domain() const noexcept override
+        {
+            return static_cast<MirErrorDomain>(32);
+        }
+
+        uint32_t code() const noexcept override
+        {
+            return 0xDEADBEEF;
+        }
+    } error;
+
+    auto msg_validator = make_validator(
+        [&error](auto const& seq)
+        {
+            EXPECT_TRUE(seq.has_structured_error());
+            EXPECT_THAT(seq.structured_error().domain(), Eq(error.domain()));
+            EXPECT_THAT(seq.structured_error().code(), Eq(error.code()));
+        });
+
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
+        .Times(1)
+        .WillOnce(Invoke(msg_validator));
+
+    event_sender.handle_error(error);
 }
