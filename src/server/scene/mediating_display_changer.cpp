@@ -82,6 +82,25 @@ public:
     }
 };
 
+class DisplayConfigurationFailedError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationFailedError()
+        : ClientVisibleError("Display configuration falied")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return 42;
+    }
+};
+
 class ApplyNowAndRevertOnScopeExit
 {
 public:
@@ -228,8 +247,15 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         {
             if (auto live_session = session.lock())
             {
-                apply_config(conf);
-                live_session->send_display_config(*conf);
+                try
+                {
+                    apply_config(conf);
+                    live_session->send_display_config(*conf);
+                }
+                catch (std::runtime_error const&)
+                {
+                    live_session->send_error(DisplayConfigurationFailedError{});
+                }
             }
         });
 }
