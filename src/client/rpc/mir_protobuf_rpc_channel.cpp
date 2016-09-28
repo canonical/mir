@@ -29,6 +29,7 @@
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
 #include "../protobuf_to_native_buffer.h"
+#include "../mir_error.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
@@ -62,6 +63,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
     std::shared_ptr<PingHandler> const& ping_handler,
+    std::shared_ptr<ErrorHandler> const& error_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
@@ -71,6 +73,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     input_devices(input_devices),
     lifecycle_control(lifecycle_control),
     ping_handler{ping_handler},
+    error_handler{error_handler},
     event_sink(event_sink),
     disconnected(false),
     transport{std::move(transport)},
