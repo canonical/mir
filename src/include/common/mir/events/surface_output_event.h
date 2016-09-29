@@ -24,6 +24,7 @@
 
 #include "mir/events/event.h"
 
+// XXX This is a private structure so why are its members kept private?
 struct MirSurfaceOutputEvent : MirEvent
 {
     MirSurfaceOutputEvent();
@@ -37,6 +38,9 @@ struct MirSurfaceOutputEvent : MirEvent
     float scale() const;
     void set_scale(float scale);
 
+    float refresh_rate() const;
+    void set_refresh_rate(float);
+
     MirFormFactor form_factor() const;
     void set_form_factor(MirFormFactor factor);
 
@@ -47,6 +51,7 @@ private:
     int surface_id_{-1};
     int dpi_{0};
     float scale_{0.0f};
+    float refresh_rate_{0.0f};
     MirFormFactor form_factor_;
     uint32_t output_id_{std::numeric_limits<uint32_t>::max()};
 };

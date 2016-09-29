@@ -278,6 +278,12 @@ float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
     return ev->scale();
 }
 
+float mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->refresh_rate();
+}
+
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
