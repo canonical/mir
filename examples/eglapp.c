@@ -129,11 +129,12 @@ static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
     unsigned ff = mir_surface_output_event_get_form_factor(out);
     char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
 
-    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor\n",
+    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
            mir_surface_output_event_get_output_id(out),
            mir_surface_output_event_get_dpi(out),
            mir_surface_output_event_get_scale(out),
-           form_factor);
+           form_factor,
+           mir_surface_output_event_get_refresh_rate(out));
 }
 
 static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
