@@ -483,9 +483,8 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
 
 struct Chain : mgn::HostChain
 {
-    MirConnection* con;
-    Chain(MirConnection* con) : con(con),
-        chain(mir_connection_create_presentation_chain_sync(con))
+    Chain(MirConnection* connection) :
+        chain(mir_connection_create_presentation_chain_sync(connection))
     {
     }
     ~Chain()
@@ -576,10 +575,10 @@ public:
     static void buffer_available(MirBuffer* buffer, void* context)
     {
         auto host_buffer = static_cast<HostBuffer*>(context);
-        host_buffer->avail(buffer);
+        host_buffer->available(buffer);
     }
 
-    void avail(MirBuffer* buffer)
+    void available(MirBuffer* buffer)
     {
         {
             std::unique_lock<std::mutex> lk(mut);
