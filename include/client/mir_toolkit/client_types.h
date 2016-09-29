@@ -460,6 +460,10 @@ typedef enum MirDisplayConfigurationError {
      * A cancel request was received, but no global display configuration preview is in progress
      */
     mir_display_configuration_error_no_preview_in_progress,
+    /**
+     * Display configuration was attempted but was rejected by the hardware
+     */
+     mir_display_configuration_error_rejected_by_hardware
 } MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(

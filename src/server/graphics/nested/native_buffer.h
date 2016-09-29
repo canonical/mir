@@ -46,11 +46,11 @@ public:
     virtual MirGraphicsRegion get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
-    virtual std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const = 0;
     virtual MirBufferPackage* package() const = 0;
     virtual Fd fence() const = 0;
     virtual void set_fence(Fd) = 0;
     virtual void on_ownership_notification(std::function<void()> const& fn) = 0;
+    virtual std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;

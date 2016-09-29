@@ -51,6 +51,7 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
+        std::make_shared<mir::client::AtomicCallback<MirError const*>>(),
         std::make_shared<mtd::NullClientEventSink>())),
     eventloop{std::make_shared<md::ThreadedDispatcher>("Mir/TestIPC", std::dynamic_pointer_cast<md::Dispatchable>(channel))},
     display_server(channel),

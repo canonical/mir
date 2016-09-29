@@ -23,9 +23,9 @@
 
 namespace mg = mir::graphics;
 
-mg::GammaCurves::GammaCurves(std::vector<uint16_t> const& red,
-                             std::vector<uint16_t> const& green,
-                             std::vector<uint16_t> const& blue) :
+mg::GammaCurves::GammaCurves(GammaCurve const& red,
+                             GammaCurve const& green,
+                             GammaCurve const& blue) :
     red(red),
     green(green),
     blue(blue)
