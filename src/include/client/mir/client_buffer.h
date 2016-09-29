@@ -69,6 +69,7 @@ public:
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const = 0;
     virtual void update_from(MirBufferPackage const& update_package) = 0;
     virtual void fill_update_msg(MirBufferPackage& message) = 0;
+    virtual MirBufferPackage* package() const = 0;
 
     virtual MirNativeBuffer* as_mir_native_buffer() const = 0;
     virtual void set_fence(MirNativeFence, MirBufferAccess) = 0;

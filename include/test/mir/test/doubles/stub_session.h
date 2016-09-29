@@ -49,6 +49,8 @@ struct StubSession : scene::Session
 
     void send_display_config(graphics::DisplayConfiguration const&) override;
 
+    void send_error(ClientVisibleError const&) override;
+
     void hide() override;
 
     void show() override;

@@ -22,6 +22,7 @@
 #include "presentation_chain.h"
 #include "mir_connection.h"
 #include "buffer.h"
+#include "mir/client_buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
@@ -218,6 +219,19 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->client_buffer()->package();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void mir_buffer_egl_image_parameters(

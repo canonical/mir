@@ -23,6 +23,7 @@
 #include "src/server/frontend/event_sender.h"
 
 #include "mir/events/event_builders.h"
+#include "mir/client_visible_error.h"
 
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/input_devices_matcher.h"
@@ -39,6 +40,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <mir_protobuf.pb.h>
 
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -115,6 +117,20 @@ struct EventSender : public testing::Test
     mtd::MockPlatformIpcOperations mock_buffer_packer;
     mfd::EventSender event_sender;
 };
+
+std::function<void(char const*, size_t, mir::frontend::FdSets)>
+make_validator(std::function<void(mir::protobuf::EventSequence const&)> const& sequence_validator)
+{
+    return [sequence_validator](char const* data, size_t len, mir::frontend::FdSets)
+        {
+            mir::protobuf::wire::Result wire;
+            wire.ParseFromArray(data, len);
+            std::string str = wire.events(0);
+            mir::protobuf::EventSequence seq;
+            seq.ParseFromString(str);
+            sequence_validator(seq);
+        };
+}
 }
 
 TEST_F(EventSender, display_send)
@@ -123,18 +139,15 @@ TEST_F(EventSender, display_send)
 
     mtd::StubDisplayConfig config;
 
-    auto msg_validator = [&config](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
-    };
+    auto msg_validator = make_validator(
+        [&config](auto const& seq)
+        {
+            EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_display_config_change(config);
 }
@@ -187,18 +200,15 @@ TEST_F(EventSender, sends_input_devices)
         std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
                                      "keybaord", "7853")};
 
-    auto msg_validator = [&devices](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
-    };
+    auto msg_validator = make_validator(
+        [&devices](auto const& seq)
+        {
+            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_input_device_change(devices);
 }
@@ -209,18 +219,15 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
 
     std::vector<std::shared_ptr<mi::Device>> devices;
 
-    auto msg_validator = [&devices](char const* data, size_t len){
-        mir::protobuf::wire::Result wire;
-        wire.ParseFromArray(data, len);
-        std::string str = wire.events(0);
-        mir::protobuf::EventSequence seq;
-        seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
-    };
+    auto msg_validator = make_validator(
+        [&devices](auto const& seq)
+        {
+            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+        });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
-        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+        .WillOnce(Invoke(msg_validator));
 
     event_sender.handle_input_device_change(devices);
 }
@@ -256,4 +263,42 @@ TEST_F(EventSender, can_send_error_buffer)
     event_sender.error_buffer(properties, error_msg);
     ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
     EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
+}
+
+TEST_F(EventSender, sends_errors)
+{
+    using namespace testing;
+
+    class TestError : public mir::ClientVisibleError
+    {
+    public:
+        TestError()
+            : ClientVisibleError("An explosion of delight")
+        {
+        }
+
+        MirErrorDomain domain() const noexcept override
+        {
+            return static_cast<MirErrorDomain>(32);
+        }
+
+        uint32_t code() const noexcept override
+        {
+            return 0xDEADBEEF;
+        }
+    } error;
+
+    auto msg_validator = make_validator(
+        [&error](auto const& seq)
+        {
+            EXPECT_TRUE(seq.has_structured_error());
+            EXPECT_THAT(seq.structured_error().domain(), Eq(error.domain()));
+            EXPECT_THAT(seq.structured_error().code(), Eq(error.code()));
+        });
+
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
+        .Times(1)
+        .WillOnce(Invoke(msg_validator));
+
+    event_sender.handle_error(error);
 }
