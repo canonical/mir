@@ -20,7 +20,9 @@
 #define MIR_CLIENT_MIR_BUFFER_H
 
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir/geometry/size.h"
+#include "mir/fd.h"
 #include <memory>
 #include <chrono>
 
@@ -39,12 +41,11 @@ public:
     virtual void submitted() = 0;
     virtual void received() = 0;
     virtual void received(MirBufferPackage const& update_message) = 0;
-    virtual MirNativeBuffer* as_mir_native_buffer() const = 0;
     virtual std::shared_ptr<ClientBuffer> client_buffer() const = 0;
     virtual MirGraphicsRegion map_region() = 0;
 
-    virtual void set_fence(MirNativeFence, MirBufferAccess) = 0;
-    virtual MirNativeFence get_fence() const = 0;
+    virtual void set_fence(Fd, MirBufferAccess) = 0;
+    virtual Fd get_fence() const = 0;
     virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) = 0;
 
     virtual MirBufferUsage buffer_usage() const = 0;

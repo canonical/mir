@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform_ipc_operations.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -27,6 +28,7 @@
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mcla::Buffer::Buffer(
@@ -37,7 +39,8 @@ mcla::Buffer::Buffer(
     native_buffer{registrar->register_buffer(package, pf)},
     buffer_pf(pf),
     buffer_stride{package.stride},
-    buffer_size{package.width, package.height}
+    buffer_size{package.width, package.height},
+    creation_package(package)
 {
 }
 
@@ -76,9 +79,8 @@ std::shared_ptr<mir::graphics::NativeBuffer> mcla::Buffer::native_buffer_handle(
 
 void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 {
-    if ((update_package.data_items != 0) && 
-        (update_package.fd_items != 0) && 
-        (update_package.data[0] == static_cast<int>(mga::BufferFlag::fenced)))
+    if ((update_package.flags & mir_buffer_flag_fenced) && 
+        (update_package.fd_items != 0))
     {
         auto fence_fd = update_package.fd[0];
         native_buffer->update_usage(fence_fd, mga::BufferAccess::read);
@@ -87,43 +89,51 @@ void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 
 void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
 {
-    message.data_items = 1;
+    message.data_items = 0;
     auto fence = native_buffer->copy_fence();
     if (fence > 0)
     {
-        message.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+        message.flags = mir_buffer_flag_fenced;
         message.fd[0] = fence;
         message.fd_items = 1; 
     }
     else
     {
-        message.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+        message.flags = 0;
         message.fd_items = 0; 
     }
 }
 
-MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
+void mcla::Buffer::egl_image_creation_parameters(
+    EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 {
-    return native_buffer->anwb();
+    static EGLint image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_NONE
+    };
+    *type = EGL_NATIVE_BUFFER_ANDROID;
+    *client_buffer = native_buffer->anwb();
+    *attr = image_attrs;
 }
 
-void mcla::Buffer::set_fence(MirNativeFence fence, MirBufferAccess access)
+void mcla::Buffer::set_fence(mir::Fd fence, MirBufferAccess access)
 {
-    if (!fence)
+    mga::NativeFence f = fence;
+    if (fence <= mir::Fd::invalid)
         native_buffer->reset_fence();
     else if (access == mir_read)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::read); 
+        native_buffer->update_usage(f, mga::BufferAccess::read); 
     else if (access == mir_read_write)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::write); 
+        native_buffer->update_usage(f, mga::BufferAccess::write); 
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
 }
 
-MirNativeFence mcla::Buffer::get_fence() const
+mir::Fd mcla::Buffer::get_fence() const
 {
     api_user_fence = mir::Fd(native_buffer->copy_fence());
-    fd = api_user_fence;
-    return &fd; 
+    return api_user_fence;
 }
 
 bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ns)
@@ -139,4 +149,9 @@ bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds n
         return native_buffer->ensure_available_for(mga::BufferAccess::write, ms); 
 
     BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
+}
+
+MirBufferPackage* mcla::Buffer::package() const
+{
+    return const_cast<MirBufferPackage*>(&creation_package);
 }

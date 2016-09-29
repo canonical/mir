@@ -61,6 +61,11 @@ def get_attribs(node):
     prot =  node.attributes['prot'].value
     return (kind, static, prot)
 
+def is_file_publishable(file_location):
+    return file_location.startswith('include/') \
+           or 'build/src' in file_location \
+           or 'src/common/input/android/' in file_location
+
 # Special cases for publishing anyway:
 publish_special_cases = {
     # Although private this is called by a template wrapper function that instantiates
@@ -128,9 +133,7 @@ def parse_member_def(context_name, node, is_class):
     else: symbol = name
 
     file_location = get_file_location(node)
-    publish = '/include/' in file_location \
-              or 'build/src' in file_location \
-              or 'src/common/input/android/' in file_location
+    publish = is_file_publishable(file_location)
 
     is_function = kind == 'function'
     if publish: publish = kind != 'define'
@@ -177,9 +180,7 @@ def parse_compound_defs(xmldoc):
         symbol = concat_text_from_tags(node, ['compoundname'])
         
         file_location = get_file_location(node)
-        publish = '/include/' in file_location \
-                  or 'build/src' in file_location \
-                  or 'src/common/input/android/' in file_location
+        publish = is_file_publishable(file_location)
 
         if publish: 
             if kind in ['class', 'struct']:

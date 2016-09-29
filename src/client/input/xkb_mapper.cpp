@@ -148,10 +148,10 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
         auto input_event = mir_event_get_input_event(&ev);
         auto input_type = mir_input_event_get_type(input_event);
         auto device_id = mir_input_event_get_device_id(input_event);
-        auto mapping_state = get_keymapping_state(device_id);
 
         if (input_type == mir_input_event_type_key)
         {
+            auto mapping_state = get_keymapping_state(device_id);
             if (mapping_state && mapping_state->update_and_map(ev))
                 update_modifier();
         }
@@ -211,6 +211,7 @@ void mircv::XKBMapper::set_keymap(MirInputDeviceId id, XKBKeymapPtr new_keymap)
 {
     std::lock_guard<std::mutex> lg(guard);
 
+    device_mapping.erase(id);
     device_mapping.emplace(std::piecewise_construct,
                            std::forward_as_tuple(id),
                            std::forward_as_tuple(std::move(new_keymap)));

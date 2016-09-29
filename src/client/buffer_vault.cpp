@@ -45,6 +45,9 @@ enum class mcl::BufferVault::Owner
 
 namespace
 {
+void ignore_buffer(MirBuffer*, void*)
+{
+}
 void incoming_buffer(MirBuffer* buffer, void* context)
 {
     auto vault = static_cast<mcl::BufferVault*>(context);
@@ -80,9 +83,15 @@ mcl::BufferVault::~BufferVault()
         return;
 
     buffer_factory->cancel_requests_with_context(this);
+    std::unique_lock<std::mutex> lk(mutex);
     for (auto& it : buffers)
     try
     {
+        if (auto map = surface_map.lock())
+        {
+            auto buffer = map->buffer(it.first);
+            buffer->set_callback(ignore_buffer, nullptr);
+        } 
         free_buffer(it.first);
     }
     catch (...)
