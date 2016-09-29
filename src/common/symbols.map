@@ -366,6 +366,7 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::device_count*;
        MirInputDeviceStateEvent::device_id*;
        MirInputDeviceStateEvent::device_pointer_buttons*;
+       MirInputDeviceStateEvent::device_pressed_keys*;
        MirInputDeviceStateEvent::device_pressed_keys_count*;
        MirInputDeviceStateEvent::modifiers*;
        MirInputDeviceStateEvent::pointer_axis*;

@@ -103,7 +103,7 @@ MirInputDeviceId mir_input_device_state_event_device_id(
  * \deprecated Use mir_input_device_state_event_device_pressed_keys_for_index() instead
  * \param[in] ev The input device state event
  * \param[in] index The index of the input device
- * \return    a NULL pointer
+ * \return The pressed key at index pressed_index
  */
 __attribute__ ((deprecated))
 uint32_t const* mir_input_device_state_event_device_pressed_keys(

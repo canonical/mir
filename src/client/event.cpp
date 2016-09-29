@@ -321,10 +321,11 @@ MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent
     return ev->device_id(index);
 }
 
-// Function is deprecated, and no one is currently using it.
-uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* /*ev*/, uint32_t /*index*/)
+uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index)
 {
-    return nullptr;
+    expect_event_type(ev, mir_event_type_input_device_state);
+    expect_index_in_range(ev->device_count(), index);
+    return ev->device_pressed_keys(index);
 }
 
 uint32_t mir_input_device_state_event_device_pressed_keys_for_index(MirInputDeviceStateEvent const* ev,
