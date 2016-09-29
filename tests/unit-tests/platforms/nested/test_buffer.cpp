@@ -44,6 +44,7 @@ namespace mrg = mir::renderer::gl;
 using namespace testing;
 namespace
 {
+
 struct MockNativeBuffer : mgn::NativeBuffer
 {
     MOCK_CONST_METHOD0(client_handle, MirBuffer*());
@@ -52,6 +53,9 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(format, MirPixelFormat());
     MOCK_METHOD2(sync, void(MirBufferAccess, std::chrono::nanoseconds));
+    MOCK_CONST_METHOD0(package, MirBufferPackage*());
+    MOCK_CONST_METHOD0(fence, mir::Fd());
+    MOCK_METHOD1(set_fence, void(mir::Fd));
     MOCK_CONST_METHOD0(egl_image_creation_hints, std::tuple<EGLenum, EGLClientBuffer, EGLint*>());
 };
 
@@ -203,7 +207,6 @@ TEST_F(NestedBuffer, binds_to_texture)
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay());
     EXPECT_CALL(mock_egl, eglGetCurrentContext());
-    EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_));
     EXPECT_CALL(*client_buffer, sync(mir_read, _));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _));
 

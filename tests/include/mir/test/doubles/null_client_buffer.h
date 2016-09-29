@@ -51,6 +51,8 @@ public:
     {
         return nullptr;
     }
+    MirBufferPackage* package() const { return nullptr; }
+
     geometry::Size sz;
 
     void set_fence(Fd, MirBufferAccess) {}

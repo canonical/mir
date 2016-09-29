@@ -163,6 +163,13 @@ bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
     return true;
 }
 
+MirBufferPackage* mclm::ClientBuffer::package() const
+{
+    if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
+}
+
 void mclm::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**)
 {
     BOOST_THROW_EXCEPTION(std::invalid_argument("not implemented yet"));

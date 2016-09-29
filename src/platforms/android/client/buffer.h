@@ -52,6 +52,7 @@ public:
     void fill_update_msg(MirBufferPackage& message) override;
     void set_fence(Fd, MirBufferAccess) override;
     Fd get_fence() const override;
+    MirBufferPackage* package() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override;
 
@@ -67,6 +68,7 @@ private:
     MirPixelFormat const buffer_pf;
     geometry::Stride const buffer_stride;
     geometry::Size const buffer_size;
+    MirBufferPackage const creation_package;
 };
 
 }

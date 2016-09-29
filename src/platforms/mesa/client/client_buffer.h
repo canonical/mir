@@ -55,6 +55,7 @@ public:
     void fill_update_msg(MirBufferPackage&);
     void set_fence(Fd, MirBufferAccess);
     Fd get_fence() const;
+    MirBufferPackage* package() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout);
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**);
 
