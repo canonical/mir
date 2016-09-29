@@ -664,3 +664,17 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
 {
     return std::make_unique<SurfaceSpec>(mir_connection);
 }
+
+bool mgn::MirClientHostConnection::supports_passthrough()
+{
+    auto buffer = create_buffer(mg::BufferProperties(geom::Size{1, 1} , mir_pixel_format_abgr_8888, mg::BufferUsage::software));
+    try
+    {
+        buffer->egl_image_creation_hints();
+    }
+    catch (...)
+    {
+        return false;
+    }
+    return true;
+}

@@ -160,6 +160,10 @@ public:
         }; 
         return std::make_unique<NullSpec>();
     }
+    bool supports_passthrough()
+    {
+        return true;
+    }
 };
 
 struct MockHostConnection : StubHostConnection
