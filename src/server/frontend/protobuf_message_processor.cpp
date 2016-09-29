@@ -217,7 +217,11 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("submit_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::submit_buffer, invocation);
+            auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
+            request.mutable_buffer()->clear_fd();
+            for (auto& fd : side_channel_fds)
+                request.mutable_buffer()->add_fd(fd);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::submit_buffer, invocation.id(), &request);
         }
         else if ("allocate_buffers" == invocation.method_name())
         {
@@ -372,7 +376,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     sender->send_response(id, response, {extract_fds_from(response)});
 }
 
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Void> response)
 {
     send_response(id, response.get());
 }
