@@ -25,9 +25,9 @@ namespace mg = mir::graphics;
 
 namespace
 {
-std::vector<uint16_t> const r{1};
-std::vector<uint16_t> const g{2};
-std::vector<uint16_t> const b{3};
+mg::GammaCurve const r{1};
+mg::GammaCurve const g{2};
+mg::GammaCurve const b{3};
 }
 
 class MockGammaCurves : public testing::Test

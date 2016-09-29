@@ -27,6 +27,7 @@
 
 #include "../lifecycle_control.h"
 #include "../ping_handler.h"
+#include "../error_handler.h"
 
 #include <thread>
 #include <atomic>
@@ -64,6 +65,7 @@ public:
                           std::shared_ptr<RpcReport> const& rpc_report,
                           std::shared_ptr<LifecycleControl> const& lifecycle_control,
                           std::shared_ptr<PingHandler> const& ping_handler,
+                          std::shared_ptr<ErrorHandler> const& error_handler,
                           std::shared_ptr<EventSink> const& event_sink);
 
     ~MirProtobufRpcChannel() = default;
@@ -123,6 +125,7 @@ private:
     std::shared_ptr<input::InputDevices> input_devices;
     std::shared_ptr<LifecycleControl> lifecycle_control;
     std::shared_ptr<PingHandler> const ping_handler;
+    std::shared_ptr<ErrorHandler> const error_handler;
     std::shared_ptr<EventSink> event_sink;
     std::atomic<bool> disconnected;
     std::mutex read_mutex;

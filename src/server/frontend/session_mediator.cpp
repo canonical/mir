@@ -41,6 +41,7 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -79,9 +80,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-std::vector<uint16_t> convert_string_to_uint16_vector(std::string const& str_bytes)
+mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
-    std::vector<uint16_t> out(str_bytes.size() / (sizeof(uint16_t) / sizeof(char)));
+    mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
     std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
     return out;
 }
@@ -1231,9 +1232,9 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
 
-        dest.gamma = {convert_string_to_uint16_vector(src.gamma_red()),
-                      convert_string_to_uint16_vector(src.gamma_green()),
-                      convert_string_to_uint16_vector(src.gamma_blue())};
+        dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
+                      convert_string_to_gamma_curve(src.gamma_green()),
+                      convert_string_to_gamma_curve(src.gamma_blue())};
     });
 
     return config;

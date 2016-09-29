@@ -44,6 +44,7 @@ namespace mrg = mir::renderer::gl;
 using namespace testing;
 namespace
 {
+
 struct MockNativeBuffer : mgn::NativeBuffer
 {
     MOCK_CONST_METHOD0(client_handle, MirBuffer*());

@@ -617,19 +617,25 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 
     ASSERT_THAT(input_rate, Ge(2 * frame_rate));
     ASSERT_THAT(ninputs, Gt(2 * nframes));
+
+    auto start_time = std::chrono::steady_clock::now();
+
     for (int i = 0; i < ninputs; ++i)
     {
+        /*
+         * Sleep until the correct time for the frame. We use sleep_until
+         * so that even on a very slow system it will catch up to the
+         * correct real time for the frame and not drift out causing
+         * test failures.
+         */
+        int frame_no = i / inputs_per_frame;
+        std::this_thread::sleep_until(start_time + frame_no*frame_time);
+
         int const x = i;
         int const y = 2 * i;
         fake_touch_screen->emit_event(mis::a_touch_event()
                                       .with_action(mis::TouchParameters::Action::Move)
                                       .at_position({x,y}));
-
-        // I would like to:
-        //std::this_thread::sleep_for(1000ms/input_rate);
-        // but this is more robust under Valgrind:
-        if (!((i+1) % inputs_per_frame))
-            std::this_thread::sleep_for(frame_time);
     }
 
     // Wait for the expected minimum number of events (should be quick)
