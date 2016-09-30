@@ -127,7 +127,7 @@ mir::EventUPtr mev::make_event(
     mf::SurfaceId const& surface_id,
     int dpi,
     float scale,
-    float refresh_rate,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t output_id)
 {

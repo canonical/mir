@@ -38,8 +38,8 @@ struct MirSurfaceOutputEvent : MirEvent
     float scale() const;
     void set_scale(float scale);
 
-    float refresh_rate() const;
-    void set_refresh_rate(float);
+    double refresh_rate() const;
+    void set_refresh_rate(double);
 
     MirFormFactor form_factor() const;
     void set_form_factor(MirFormFactor factor);
@@ -51,7 +51,7 @@ private:
     int surface_id_{-1};
     int dpi_{0};
     float scale_{0.0f};
-    float refresh_rate_{0.0f};
+    double refresh_rate_{0.0};
     MirFormFactor form_factor_;
     uint32_t output_id_{std::numeric_limits<uint32_t>::max()};
 };

@@ -53,12 +53,12 @@ void MirSurfaceOutputEvent::set_scale(float scale)
     scale_ = scale;
 }
 
-float MirSurfaceOutputEvent::refresh_rate() const
+double MirSurfaceOutputEvent::refresh_rate() const
 {
     return refresh_rate_;
 }
 
-void MirSurfaceOutputEvent::set_refresh_rate(float rate)
+void MirSurfaceOutputEvent::set_refresh_rate(double rate)
 {
     refresh_rate_ = rate;
 }
