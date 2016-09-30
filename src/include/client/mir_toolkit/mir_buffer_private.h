@@ -15,35 +15,37 @@
  *
  */
 
-#ifndef MIR_TOOLKIT_CLIENT_TYPES_NBS_H_
-#define MIR_TOOLKIT_CLIENT_TYPES_NBS_H_
+#ifndef MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
+#define MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
 
-#include <mir_toolkit/client_types.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <mir_toolkit/client_types_nbs.h>
 
 #ifdef __cplusplus
 /**
- * \defgroup mir_toolkit MIR graphics tools API
+ * \addtogroup mir_toolkit
  * @{
  */
 extern "C" {
 #endif
 
-/* NOTE: this file will be rolled into mir_toolkit/client_types.h when made public. */
-typedef struct MirPresentationChain MirPresentationChain;
-typedef struct MirBuffer MirBuffer;
-
-typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
-typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
-typedef enum MirBufferAccess
-{
-    mir_none,
-    mir_read,
-    mir_read_write,
-} MirBufferAccess;
+/** Suggest parameters to use with EGLCreateImage for a given MirBuffer
+ *
+ *   \param [in] buffer         The buffer
+ *   \param [out] target        The target to use
+ *   \param [out] client_buffer The EGLClientBuffer to use 
+ *   \param [out] attrs         The attributes to use
+ **/
+void mir_buffer_egl_image_parameters(
+    MirBuffer* buffer,
+    EGLenum* target,
+    EGLClientBuffer* client_buffer,
+    EGLint** attrs);
 
 #ifdef __cplusplus
 }
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_CLIENT_TYPES_NBS_H_ */
+#endif // MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_

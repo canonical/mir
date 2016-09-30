@@ -21,9 +21,13 @@
 
 #include "mir/geometry/size.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/fd.h"
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <tuple>
 #include <chrono>
 
 namespace mir
@@ -42,6 +46,10 @@ public:
     virtual MirGraphicsRegion get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
+    virtual MirBufferPackage* package() const = 0;
+    virtual Fd fence() const = 0;
+    virtual void set_fence(Fd) = 0;
+    virtual std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;

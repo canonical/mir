@@ -173,6 +173,7 @@ StubProtobufClient::StubProtobufClient(
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::PingHandler>(),
+        std::make_shared<mir::client::ErrorHandler>(),
         std::make_shared<mtd::NullClientEventSink>())),
     display_server(channel),
     maxwait(timeout_ms),

@@ -191,9 +191,9 @@ mg::GammaCurves mgm::RealKMSDisplayConfiguration::get_drm_gamma(
             std::system_error(errno, std::system_category(), "drmModeCrtcGetGamma Failed"));
     }
 
-    return {std::vector<uint16_t>(red, red + gamma_size),
-            std::vector<uint16_t>(green, green + gamma_size),
-            std::vector<uint16_t>(blue, blue + gamma_size)};
+    return {GammaCurve(red, red + gamma_size),
+            GammaCurve(green, green + gamma_size),
+            GammaCurve(blue, blue + gamma_size)};
 }
 
 void mgm::RealKMSDisplayConfiguration::update()

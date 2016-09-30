@@ -335,6 +335,7 @@ struct StubEventSink : public mf::EventSink
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
+    void handle_error(mir::ClientVisibleError const&) {}
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
     void send_ping(int32_t) {}
 
@@ -450,6 +451,10 @@ struct ScheduledProducer : ProducerSystem
         {
             vault.set_size(sz);
         });
+    }
+    ~ScheduledProducer()
+    {
+        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
     }
 
     bool can_produce()

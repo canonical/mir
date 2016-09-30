@@ -41,7 +41,7 @@ public:
 
     virtual std::vector<Fd> fds() = 0;
     virtual std::vector<int> data() = 0;
-
+    virtual unsigned int flags() = 0;
 protected:
     BufferIpcMessage() = default;
     BufferIpcMessage(BufferIpcMessage const&) = delete;
