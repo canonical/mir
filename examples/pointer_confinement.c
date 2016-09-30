@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 
     int sqaure_size = 10;
     unsigned int width = 0, height = 0;
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     width  /= 2;

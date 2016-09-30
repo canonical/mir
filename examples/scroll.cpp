@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 try
 {
     unsigned int width = 640, height = 480;
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     mir::draw::glAnimationBasic gl_animation;
