@@ -70,6 +70,40 @@ public:
         mir_render_surface_callback callback,
         void* context) override;
 
+    friend void render_surface_buffer_stream_create_callback(MirBufferStream* stream, void* context);
+    friend void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context);
+
+    struct StreamCreationRequest
+    {
+        StreamCreationRequest(
+                mir_buffer_stream_callback cb, void* context, RenderSurface* rs) :
+                    callback(cb),
+                    context(context),
+                    rs(rs)
+        {
+        }
+        mir_buffer_stream_callback callback;
+        void* context;
+        RenderSurface* rs;
+    };
+
+    struct StreamReleaseRequest
+    {
+        StreamReleaseRequest(
+                mir_render_surface_callback cb, void* context, RenderSurface* rs, void* native_surface) :
+                    callback(cb),
+                    context(context),
+                    rs(rs),
+                    native_surface(native_surface)
+
+        {
+        }
+        mir_render_surface_callback callback;
+        void* context;
+        RenderSurface* rs;
+        void* native_surface;
+    };
+
 private:
     int const width_, height_;
     MirPixelFormat const format_;
@@ -84,35 +118,12 @@ private:
     std::unique_ptr<mir::protobuf::Void> void_response;
     bool autorelease_;
     ClientBufferStream* stream_;
-
-    struct StreamCreationRequest
-    {
-        StreamCreationRequest(
-            mir_buffer_stream_callback cb, void* context, protobuf::BufferStreamParameters const& params) :
-                callback(cb),
-                context(context),
-                parameters(params),
-                response(std::make_shared<protobuf::BufferStream>()),
-                wh(std::make_shared<MirWaitHandle>())
-        {
-        }
-        mir_buffer_stream_callback callback;
-        void* context;
-        protobuf::BufferStreamParameters const parameters;
-        std::shared_ptr<protobuf::BufferStream> response;
-        std::shared_ptr<MirWaitHandle> const wh;
-    };
-    std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
-    void stream_created(StreamCreationRequest* request_raw);
-    void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
-    struct StreamRelease;
-    void released(StreamRelease);
+    MirBufferUsage buffer_usage;
+    std::shared_ptr<StreamCreationRequest> stream_creation_request;
+    std::shared_ptr<StreamReleaseRequest> stream_release_request;
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
-    int id{-1};
-    frontend::SurfaceId next_error_id(std::unique_lock<std::mutex> const&);
-    int stream_error_id{-1};
     std::mutex mutex;
 };
 }

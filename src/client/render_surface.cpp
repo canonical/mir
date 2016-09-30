@@ -29,6 +29,7 @@
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_surface.h"
 #include "mir/client_platform.h"
+#include "mir_connection.h"
 
 #include <algorithm>
 #include <unistd.h>
@@ -40,28 +41,6 @@ namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace ml = mir::logging;
-
-namespace
-{
-std::shared_ptr<mcl::PerfReport>
-make_perf_report(std::shared_ptr<ml::Logger> const& logger)
-{
-    // TODO: It seems strange that this directly uses getenv
-    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strcmp(report_target, "log"))
-    {
-        return std::make_shared<mcl::logging::PerfReport>(logger);
-    }
-    else if (report_target && !strcmp(report_target, "lttng"))
-    {
-        return std::make_shared<mcl::lttng::PerfReport>();
-    }
-    else
-    {
-        return std::make_shared<mcl::NullPerfReport>();
-    }
-}
-}
 
 mcl::RenderSurface::RenderSurface(
     int const width, int const height,
@@ -87,7 +66,10 @@ mcl::RenderSurface::RenderSurface(
         logger(mir_logger),
         void_response(mcl::make_protobuf_object<mp::Void>()),
         autorelease_(false),
-        stream_(nullptr)
+        stream_(nullptr),
+        buffer_usage(mir_buffer_usage_hardware),
+        stream_creation_request(nullptr),
+        stream_release_request(nullptr)
 {
 }
 
@@ -96,121 +78,71 @@ MirConnection* mcl::RenderSurface::connection() const
     return connection_;
 }
 
+namespace mir
+{
+namespace client
+{
+void render_surface_buffer_stream_create_callback(MirBufferStream* stream, void* context)
+{
+    std::shared_ptr<mcl::RenderSurface::StreamCreationRequest> request{reinterpret_cast<mcl::RenderSurface::StreamCreationRequest*>(context)};
+    mcl::RenderSurface* rs = request->rs;
+
+    if (rs->stream_creation_request == request)
+    {
+        printf("request matches\n");
+        rs->stream_creation_request.reset();
+    }
+    else
+        //TODO: throw?
+        printf("request does not match\n");
+
+    rs->stream_ = reinterpret_cast<ClientBufferStream*>(stream);
+    if (rs->buffer_usage == mir_buffer_usage_hardware)
+        rs->platform->use_egl_native_window(
+            rs->wrapped_native_window, reinterpret_cast<EGLNativeSurface*>(stream));
+
+    if (request->callback)
+        request->callback(stream, request->context);
+}
+
+void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, void* context)
+{
+    std::shared_ptr<mcl::RenderSurface::StreamReleaseRequest> request{reinterpret_cast<mcl::RenderSurface::StreamReleaseRequest*>(context)};
+    mcl::RenderSurface* rs = request->rs;
+
+    if (rs->stream_release_request == request)
+    {
+        printf("request matches\n");
+        rs->stream_release_request.reset();
+    }
+    else
+        //TODO: throw?
+        printf("request does not match\n");
+
+    rs->stream_ = nullptr;
+    rs->surface_map->erase(request->native_surface);
+
+    if (request->callback)
+        request->callback(rs, request->context);
+}
+}
+}
+
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
     MirBufferUsage buffer_usage,
     bool autorelease,
     mir_buffer_stream_callback callback,
     void* context)
 {
-    mp::BufferStreamParameters params;
-    params.set_width(width_);
-    params.set_height(height_);
-    params.set_pixel_format(format_);
-    params.set_buffer_usage(buffer_usage);
-
     autorelease_ = autorelease;
+    buffer_usage = buffer_usage;
 
-    auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
-    request->wh->expect_result();
+    // TODO: check if there is an outstanding stream request
+    stream_creation_request = std::make_shared<StreamCreationRequest>(callback, context, this);
 
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        stream_requests.push_back(request);
-    }
-
-    try
-    {
-        server.create_buffer_stream(&params, request->response.get(),
-            gp::NewCallback(this, &mcl::RenderSurface::stream_created, request.get()));
-    } catch (std::exception& e)
-    {
-        //if this throws, our socket code will run the closure, which will make an error object.
-        //its nicer to return a stream with an error message, so just ignore the exception.
-    }
-
-    return request->wh.get();
-}
-
-mf::SurfaceId mcl::RenderSurface::next_error_id(std::unique_lock<std::mutex> const&)
-{
-    return mf::SurfaceId{stream_error_id--};
-}
-
-void mcl::RenderSurface::stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
-    surface_map->insert(id, stream);
-
-    if (request->callback)
-    {
-        request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
-    }
-    request->wh->result_received();
-}
-
-void mcl::RenderSurface::stream_created(StreamCreationRequest* request_raw)
-{
-    std::shared_ptr<StreamCreationRequest> request {nullptr};
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
-            [&request_raw] (std::shared_ptr<StreamCreationRequest> const& req)
-            { return req.get() == request_raw; });
-        if (stream_it == stream_requests.end())
-            return;
-        request = *stream_it;
-        stream_requests.erase(stream_it);
-    }
-
-    auto& protobuf_bs = request->response;
-    if (!protobuf_bs->has_id())
-    {
-        if (!protobuf_bs->has_error())
-            protobuf_bs->set_error("no ID in response (disconnected?)");
-    }
-
-    if (protobuf_bs->has_error())
-    {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-        stream_error(
-            std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
-            request);
-        return;
-    }
-
-    try
-    {
-        auto stream = std::make_shared<mcl::BufferStream>(
-            connection(), request->wh, server, platform, surface_map, buffer_factory,
-            *protobuf_bs, make_perf_report(logger), std::string{},
-            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
-        id = protobuf_bs->id().value();
-        surface_map->insert(mf::BufferStreamId(id), stream);
-
-        stream_ = stream.get();
-        if (request->parameters.buffer_usage() == mir_buffer_usage_hardware)
-            platform->use_egl_native_window(wrapped_native_window, stream.get());
-        if (request->callback)
-            request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
-        request->wh->result_received();
-    }
-    catch (std::exception const& error)
-    {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
-        stream_error(
-            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
-            request);
-    }
-}
-
-int mcl::RenderSurface::stream_id()
-{
-    return id;
+    return connection_->create_client_buffer_stream(
+        width_, height_, format_, buffer_usage,
+        render_surface_buffer_stream_create_callback, stream_creation_request.get());
 }
 
 bool mcl::RenderSurface::autorelease_content() const
@@ -218,47 +150,20 @@ bool mcl::RenderSurface::autorelease_content() const
     return autorelease_;
 }
 
-struct mcl::RenderSurface::StreamRelease
+int mcl::RenderSurface::stream_id()
 {
-    ClientBufferStream* stream;
-    MirWaitHandle* handle;
-    mir_render_surface_callback callback;
-    void* context;
-    int rpc_id;
-    void* native_surface;
-};
+    return stream_->rpc_id().as_value();
+}
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     void* native_surface,
     mir_render_surface_callback callback,
     void* context)
 {
-    auto new_wait_handle = new MirWaitHandle;
+    // TODO: check if there is an outstanding stream request
+    stream_release_request = std::make_shared<StreamReleaseRequest>(callback, context, this, native_surface);
 
-    StreamRelease stream_release{stream_, new_wait_handle, callback, context, stream_->rpc_id().as_value(), native_surface };
-
-    mp::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(stream_->rpc_id().as_value());
-
-    {
-        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
-    }
-
-    new_wait_handle->expect_result();
-    server.release_buffer_stream(
-        &buffer_stream_id, void_response.get(),
-        google::protobuf::NewCallback(this, &RenderSurface::released, stream_release));
-    return new_wait_handle;
-}
-
-void mcl::RenderSurface::released(StreamRelease data)
-{
-    if (data.callback)
-        data.callback(reinterpret_cast<MirRenderSurface*>(data.native_surface), data.context);
-    if (data.handle)
-        data.handle->result_received();
-    stream_ = nullptr;
-    surface_map->erase(mf::BufferStreamId(data.rpc_id));
-    surface_map->erase(data.native_surface);
+    return connection_->release_buffer_stream(
+        stream_, render_surface_buffer_stream_release_callback,
+        stream_release_request.get());
 }
