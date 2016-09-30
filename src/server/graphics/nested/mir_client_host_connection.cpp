@@ -480,7 +480,6 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
-
 struct Chain : mgn::HostChain
 {
     Chain(MirConnection* connection) :
