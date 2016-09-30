@@ -436,9 +436,9 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_surface_output_event_get_refresh_rate;
 } MIR_CLIENT_0.24;
 
-MIR_CLIENT_DETAIL_0.26 {
+MIR_CLIENT_DETAIL_0.25 {
   global:
     extern "C++" {
       mir::client::DefaultConnectionConfiguration::the_error_handler*;
     };
-} MIR_CLIENT_DETAIL_0.21;
+} MIR_CLIENT_DETAIL_0.24;
