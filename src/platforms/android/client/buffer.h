@@ -50,9 +50,9 @@ public:
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
     void update_from(MirBufferPackage const& update_package) override;
     void fill_update_msg(MirBufferPackage& message) override;
-    MirBufferPackage* package() const override;
     void set_fence(Fd, MirBufferAccess) override;
     Fd get_fence() const override;
+    MirBufferPackage* package() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override;
 

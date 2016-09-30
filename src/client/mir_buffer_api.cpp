@@ -206,6 +206,19 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->client_buffer()->package();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
 void mir_buffer_egl_image_parameters(
     MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 try
@@ -220,17 +233,4 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    return buffer->client_buffer()->package();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
 }
