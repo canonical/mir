@@ -569,6 +569,7 @@ public:
         EGLClientBuffer client_buffer = nullptr;;
         EGLint* attrs = nullptr;
         mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }
 
@@ -668,13 +669,9 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
 bool mgn::MirClientHostConnection::supports_passthrough()
 {
     auto buffer = create_buffer(mg::BufferProperties(geom::Size{1, 1} , mir_pixel_format_abgr_8888, mg::BufferUsage::software));
-    try
-    {
-        buffer->egl_image_creation_hints();
-    }
-    catch (...)
-    {
+
+    auto hints = buffer->egl_image_creation_hints();
+    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
         return false;
-    }
     return true;
 }
