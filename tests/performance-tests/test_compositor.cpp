@@ -28,7 +28,7 @@ struct CompositorPerformance : SystemPerformanceTest
     void SetUp() override
     {
         compositor_fps = compositor_render_time = -1.0f;
-        SystemPerformanceTest::SetUp("--compositor-report=log");
+        SystemPerformanceTest::set_up_with("--compositor-report=log");
     }
 
     void read_compositor_report()
