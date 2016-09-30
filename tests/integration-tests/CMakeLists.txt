@@ -23,7 +23,7 @@ set(
   INTEGRATION_TESTS_SRCS
   test_focus_selection.cpp
   test_touchspot_visualization.cpp
-  test_surface_stack_with_compositor.cpp
+#  test_surface_stack_with_compositor.cpp
   test_buffer_scheduling.cpp
   test_client_screencast.cpp
   test_large_messages.cpp
@@ -32,7 +32,7 @@ set(
   test_stale_frames.cpp
   test_test_framework.cpp
   test_error_reporting.cpp
-  test_submit_buffer.cpp
+#  test_submit_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_macros.cpp
@@ -42,7 +42,7 @@ set(
   test_server_shutdown.cpp
   test_session.cpp
   session_management.cpp
-  surface_composition.cpp
+#  surface_composition.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

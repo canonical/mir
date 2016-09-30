@@ -23,7 +23,6 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/stub_input_sender.h"
-#include "mir/test/doubles/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -63,12 +62,6 @@ struct SurfaceComposition : Test
     ->std::shared_ptr<mc::BufferStream>
     {
         return std::make_shared<mc::BufferStreamSurfaces>(create_buffer_bundle());
-    }
-
-    auto create_buffer_bundle() const
-    -> std::shared_ptr<mc::BufferBundle>
-    {
-        return std::make_shared<NiceMock<mtd::MockBufferBundle>>();
     }
 
     auto create_input_channel() const
