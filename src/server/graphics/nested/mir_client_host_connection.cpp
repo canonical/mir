@@ -593,22 +593,22 @@ public:
             f();
     }
 
-    void on_ownership_notification(std::function<void()> const& fn)
+    void on_ownership_notification(std::function<void()> const& fn) override
     {
         f = fn;
     }
 
-    MirBufferPackage* package() const
+    MirBufferPackage* package() const override
     {
        return mir_buffer_get_buffer_package(handle);
     }
 
-    void set_fence(mir::Fd fd)
+    void set_fence(mir::Fd fd) override
     {
         mir_buffer_associate_fence(handle, fd, mir_read_write);
     }
 
-    mir::Fd fence() const
+    mir::Fd fence() const override
     {
         return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
     }
