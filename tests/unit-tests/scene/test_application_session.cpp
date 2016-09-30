@@ -903,6 +903,9 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
 
     auto const event = mir_event_get_surface_output_event(arg);
 
+    if (output.output.current_mode_index >= output.output.modes.size())
+        return false;
+
     auto const& mode = output.output.modes[output.output.current_mode_index];
 
     return
