@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     unsigned int width = 300, height = 200;
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     glClearColor(orange.r, orange.g, orange.b, orange.a);

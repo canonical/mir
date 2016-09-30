@@ -104,11 +104,6 @@ void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
     }
 }
 
-MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
-{
-    return native_buffer->anwb();
-}
-
 void mcla::Buffer::egl_image_creation_parameters(
     EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 {
@@ -122,23 +117,23 @@ void mcla::Buffer::egl_image_creation_parameters(
     *attr = image_attrs;
 }
 
-void mcla::Buffer::set_fence(MirNativeFence fence, MirBufferAccess access)
+void mcla::Buffer::set_fence(mir::Fd fence, MirBufferAccess access)
 {
-    if (!fence)
+    mga::NativeFence f = fence;
+    if (fence <= mir::Fd::invalid)
         native_buffer->reset_fence();
     else if (access == mir_read)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::read); 
+        native_buffer->update_usage(f, mga::BufferAccess::read); 
     else if (access == mir_read_write)
-        native_buffer->update_usage(*static_cast<mga::NativeFence*>(fence), mga::BufferAccess::write); 
+        native_buffer->update_usage(f, mga::BufferAccess::write); 
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
 }
 
-MirNativeFence mcla::Buffer::get_fence() const
+mir::Fd mcla::Buffer::get_fence() const
 {
     api_user_fence = mir::Fd(native_buffer->copy_fence());
-    fd = api_user_fence;
-    return &fd; 
+    return api_user_fence;
 }
 
 bool mcla::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ns)

@@ -113,51 +113,38 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
 }
 
-TEST_F(MirBufferTest, returns_correct_native_buffer)
-{
-    int fake { 4321 };
-    EXPECT_CALL(*mock_client_buffer, as_mir_native_buffer())
-        .WillOnce(Return(reinterpret_cast<MirNativeBuffer*>(&fake)));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-
-    EXPECT_THAT(buffer.as_mir_native_buffer(), Eq(reinterpret_cast<MirNativeBuffer*>(&fake)));
-}
-
 TEST_F(MirBufferTest, sets_client_buffers_fence)
 {
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+    mir::Fd fakefence { mir::IntOwnedFd{19} };
     auto access = MirBufferAccess::mir_read_write;
 
-    EXPECT_CALL(*mock_client_buffer, set_fence(fence, access));
+    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, access));
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fence, access);
+    buffer.set_fence(fakefence, access);
 }
 
 TEST_F(MirBufferTest, gets_fence_from_client_buffer)
 {
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+    mir::Fd fakefence { mir::IntOwnedFd{19} };
 
     EXPECT_CALL(*mock_client_buffer, get_fence())
-        .WillOnce(Return(fence));
+        .WillOnce(Return(fakefence));
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    EXPECT_THAT(fence, Eq(buffer.get_fence()));
+    EXPECT_THAT(fakefence, Eq(buffer.get_fence()));
 }
 
 TEST_F(MirBufferTest, waits_for_proper_access)
 {
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+    mir::Fd fakefence { mir::IntOwnedFd{19} };
     auto current_access = MirBufferAccess::mir_read;
     auto needed_access = MirBufferAccess::mir_read_write;
 
-    EXPECT_CALL(*mock_client_buffer, set_fence(fence, current_access));
+    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, current_access));
     EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout))
         .WillOnce(Return(true));
 
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fence, current_access);
+    buffer.set_fence(fakefence, current_access);
     EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
 }
 
