@@ -836,8 +836,8 @@ int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 struct ApplicationSessionSurfaceOutput : public ApplicationSession
 {
     ApplicationSessionSurfaceOutput() :
-        high_dpi(static_cast<mg::DisplayConfigurationOutputId>(5), {3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
-        projector(static_cast<mg::DisplayConfigurationOutputId>(2), {1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
+        high_dpi(static_cast<mg::DisplayConfigurationOutputId>(5), {3840, 2160}, {509, 286}, 2.5f, 60.0, mir_form_factor_monitor),
+        projector(static_cast<mg::DisplayConfigurationOutputId>(2), {1280, 1024}, {800, 600}, 0.5f, 50.0, mir_form_factor_projector),
         stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
         app_session(
@@ -860,8 +860,9 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             geom::Size const& resolution,
             geom::Size const& physical_size,
             float scale,
+            double hz,
             MirFormFactor form_factor) :
-            output{id, resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
+            output{id, resolution, physical_size, mir_pixel_format_argb_8888, hz, true},
             form_factor{form_factor},
             scale{scale},
             dpi{calculate_dpi(resolution, physical_size)},
@@ -902,6 +903,8 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
 
     auto const event = mir_event_get_surface_output_event(arg);
 
+    auto const& mode = output.output.modes[output.output.current_mode_index];
+
     return
         ExplainMatchResult(
             Eq(output.dpi),
@@ -914,6 +917,10 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
         ExplainMatchResult(
             Eq(output.scale),
             mir_surface_output_event_get_scale(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(mode.vrefresh_hz),
+            mir_surface_output_event_get_refresh_rate(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.id),
