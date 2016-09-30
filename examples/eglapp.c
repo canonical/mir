@@ -106,19 +106,34 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
 {
     MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
-    if (attrib != mir_surface_attrib_visibility)
-        return;
-    switch (mir_surface_event_get_attribute_value(sev))
+    int value = mir_surface_event_get_attribute_value(sev);
+
+    switch (attrib)
     {
-    case mir_surface_visibility_exposed:
-        printf("Surface exposed\n");
+    case mir_surface_attrib_visibility:
+        printf("Surface %s\n", value == mir_surface_visibility_exposed ?
+                               "exposed" : "occluded");
         break;
-    case mir_surface_visibility_occluded:
-        printf("Surface occluded\n");
+    case mir_surface_attrib_dpi:
+        // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:
         break;
     }
+}
+
+static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
+{
+    static char const* const form_factor_name[6] =
+        {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
+    unsigned ff = mir_surface_output_event_get_form_factor(out);
+    char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
+
+    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor\n",
+           mir_surface_output_event_get_output_id(out),
+           mir_surface_output_event_get_dpi(out),
+           mir_surface_output_event_get_scale(out),
+           form_factor);
 }
 
 static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
@@ -133,6 +148,9 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
         break;
     case mir_event_type_surface:
         mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        break;
+    case mir_event_type_surface_output:
+        handle_surface_output_event(mir_event_get_surface_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
@@ -459,7 +477,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
