@@ -85,9 +85,15 @@ private:
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
     if (connection->supports_passthrough())
+    {
+        printf("SUPPORTS\n");
         return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
+    }
     else
+    {
+        printf("NO SUPPRTO\n");
         return guest_platform->create_buffer_allocator();
+    }
 }
 
 mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
