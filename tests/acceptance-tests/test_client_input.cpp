@@ -595,7 +595,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     int const frame_rate = 60;
     int const input_rate = 500;
     int const nframes = 100;
-    int const nframes_error = 50;
+    int const nframes_error = 80;
     int const inputs_per_frame = input_rate / frame_rate;
     int const ninputs = nframes * inputs_per_frame;
     auto const frame_time = 1000ms / frame_rate;
@@ -617,23 +617,34 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 
     ASSERT_THAT(input_rate, Ge(2 * frame_rate));
     ASSERT_THAT(ninputs, Gt(2 * nframes));
+
+    auto start_time = std::chrono::steady_clock::now();
+
     for (int i = 0; i < ninputs; ++i)
     {
+        /*
+         * Sleep until the correct time for the frame. We use sleep_until
+         * so that even on a very slow system it will catch up to the
+         * correct real time for the frame and not drift out causing
+         * test failures.
+         */
+        int frame_no = i / inputs_per_frame;
+        std::this_thread::sleep_until(start_time + frame_no*frame_time);
+
         int const x = i;
         int const y = 2 * i;
         fake_touch_screen->emit_event(mis::a_touch_event()
                                       .with_action(mis::TouchParameters::Action::Move)
                                       .at_position({x,y}));
 
-        // I would like to:
-        //std::this_thread::sleep_for(1000ms/input_rate);
-        // but this is more robust under Valgrind:
-        if (!((i+1) % inputs_per_frame))
-            std::this_thread::sleep_for(frame_time);
+        // Valgrind is apparently quite bad at concurrency so give it a
+        // fighting chance:
+        std::this_thread::yield();
     }
 
-    // Wait for the expected minimum number of events (should be quick)
-    ASSERT_TRUE(first_client.all_events_received.wait_for(20s));
+    // Wait for the expected minimum number of events (should be quick but
+    // some CI runs are actually incredibly slow to finish)
+    ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
 
     // The main thing we're testing for is that too many events don't arrive
     // so we wait a little to check the cooked event stream has stopped:
@@ -645,7 +656,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
     EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
-    EXPECT_THAT(client_input_events_per_frame, Lt(1.5f));
+    EXPECT_THAT(client_input_events_per_frame, Lt(2.0f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)

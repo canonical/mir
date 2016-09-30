@@ -50,6 +50,7 @@ mclr::make_rpc_channel(
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
     std::shared_ptr<mcl::PingHandler> const& ping_handler,
+    std::shared_ptr<mcl::ErrorHandler> const& error_handler,
     std::shared_ptr<mcl::EventSink> const& event_sink)
 {
     std::unique_ptr<mclr::StreamTransport> transport;
@@ -64,5 +65,6 @@ mclr::make_rpc_channel(
     }
     return std::make_shared<MirProtobufRpcChannel>(
         std::move(transport), map, buffer_factory, disp_conf,
-        input_devices, rpc_report, lifecycle_control, ping_handler, event_sink);
+        input_devices, rpc_report, lifecycle_control, ping_handler,
+        error_handler, event_sink);
 }

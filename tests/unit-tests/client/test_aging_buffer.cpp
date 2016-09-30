@@ -64,22 +64,27 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
     }
 
-    MirNativeBuffer* as_mir_native_buffer() const override
+    void set_fence(Fd, MirBufferAccess) override
     {
         exit(1);
     }
 
-    void set_fence(MirNativeFence, MirBufferAccess) override
-    {
-        exit(1);
-    }
-
-    MirNativeFence get_fence() const override
+    Fd get_fence() const override
     {
         exit(1);
     }
 
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override
+    {
+        exit(1);
+    }
+
+    MirBufferPackage* package() const override
+    {
+        exit(1);
+    }
+
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override
     {
         exit(1);
     }
