@@ -23,106 +23,8 @@
 
 #include <vector>
 #include <algorithm>
-#include <atomic>
-#include <thread>
-#include <unordered_map>
-#include <condition_variable>
 #include <mutex>
 #include <shared_mutex>
-
-namespace
-{
-template<typename T>
-class AtomicWeakPtr
-{
-public:
-    AtomicWeakPtr(std::weak_ptr<T> const& target)
-        : state{std::make_shared<SharedState>(target)}
-    {
-    }
-
-    static thread_local bool thread_owns;
-
-    std::shared_ptr<T> lock()
-    {
-        if (!state)
-        {
-            return nullptr;
-        }
-        ++state->refcnt;
-        auto locked_target = state->target.load()->lock();
-        state->holder = locked_target;
-
-        if (!locked_target)
-        {
-            --state->refcnt;
-            return locked_target;
-        }
-
-        return std::shared_ptr<T>{
-            state->holder.get(),
-            [shared_state = state](T*)
-            {
-                auto previous_count = shared_state->refcnt--;
-                if (previous_count == 2)
-                {
-                    // We were holding the last live reference, so unref the target shared_ptr.
-                    shared_state->holder.reset();
-                }
-                if (previous_count == 1)
-                {
-                    // We were waiting to die; signal the waiting thread
-                    shared_state->deleted.notify_all();
-                }
-            }};
-    }
-
-    void kill()
-    {
-        auto previous_target = state->target.exchange(new std::weak_ptr<T>{});
-        delete previous_target;
-
-        int new_count = --state->refcnt;
-        if (new_count == 0 || ((new_count == 1 && thread_owns)))
-        {
-            // No one else holds us, we're done.
-            return;
-        }
-        else
-        {
-            std::unique_lock<std::mutex> lock{state->deleted_mutex};
-            state->deleted.wait(lock, [this]() { return state->refcnt == 0; });
-        }
-    }
-private:
-    struct SharedState
-    {
-        SharedState(std::weak_ptr<T> const& target)
-            : target{new std::weak_ptr<T>{target}},
-              refcnt{1}
-        {
-        }
-        ~SharedState()
-        {
-            delete target;
-        }
-
-        std::atomic<std::weak_ptr<T>*> target;
-        std::shared_ptr<T> holder;
-
-        std::atomic<int> refcnt;
-
-        std::mutex deleted_mutex;
-        std::condition_variable deleted;
-    };
-
-    std::shared_ptr<SharedState> state;
-};
-
-template<typename T>
-thread_local bool AtomicWeakPtr<T>::thread_owns = false;
-
-}
 
 namespace mir
 {
@@ -145,99 +47,138 @@ protected:
     template<typename Callable>
     void for_each_observer(Callable&& f);
 private:
+    struct Observable
+    {
+        Observable(std::weak_ptr<Observer> const& target)
+            : target{target}
+        {
+        }
+
+        Observable(Observable&& from)
+            : target{std::move(from.target)}
+        {
+        }
+        Observable& operator=(Observable&& from)
+        {
+            target = std::move(from.target);
+            return *this;
+        }
+
+        std::recursive_mutex target_mutex;
+        std::weak_ptr<Observer> target;
+    };
+
     std::shared_timed_mutex observer_mutex;
-    std::vector<AtomicWeakPtr<Observer>> observers;
+    std::vector<Observable> observers;
 
     std::mutex addition_list_mutex;
     std::vector<std::weak_ptr<Observer>> addition_list;
-
-    void process_addition_list();
-    void process_removals();
 };
 
 template<class Observer>
 void ObserverMultiplexer<Observer>::register_interest(std::weak_ptr<Observer> const& observer)
 {
-    std::lock_guard<std::mutex> lock{addition_list_mutex};
-    addition_list.push_back(observer);
+    if (auto observer_lock = std::unique_lock<decltype(observer_mutex)>(observer_mutex, std::try_to_lock))
+    {
+        observers.push_back(observer);
+    }
+    else
+    {
+        std::lock_guard<std::mutex> lock{addition_list_mutex};
+        addition_list.push_back(observer);
+    }
 }
 
 template<class Observer>
 void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer)
 {
     {
+        // First remove all matches from the pending additions list
         std::lock_guard<std::mutex> lock{addition_list_mutex};
         addition_list.erase(
             std::remove_if(
                 addition_list.begin(),
                 addition_list.end(),
-                [&observer](auto candidate)
+                [&observer](auto const& candidate)
                 {
-                    // Remove any deleted
-                    if (candidate.lock().get() == &observer)
-                        std::cout << "Hello" <<std::endl;
-
                     return candidate.lock().get() == &observer;
                 }),
             addition_list.end());
     }
-    std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
-    for (auto& candidate_observer : observers)
     {
-        std::cout << "Hello!" << std::endl;
-        if (candidate_observer.lock().get() == &observer)
+        std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
+        for (auto& candidate_observer : observers)
         {
-            std::cout<< "Imma kill you " << std::endl;
-            candidate_observer.kill();
+            std::lock_guard<decltype(candidate_observer.target_mutex)> lock{candidate_observer.target_mutex};
+            if (candidate_observer.target.lock().get() == &observer)
+            {
+                candidate_observer.target = std::weak_ptr<Observer>{};
+            }
         }
     }
-}
-
-template<class Observer>
-void ObserverMultiplexer<Observer>::process_addition_list()
-{
-    std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
-    std::unique_lock<std::shared_timed_mutex> observer_lock{observer_mutex};
-    for (auto const& addition : addition_list)
-    {
-        observers.push_back(addition);
-    }
-    addition_list.clear();
-}
-
-template<class Observer>
-void ObserverMultiplexer<Observer>::process_removals()
-{
-    std::unique_lock<std::shared_timed_mutex> observer_lock{observer_mutex};
-    observers.erase(
-        std::remove_if(
-            observers.begin(),
-            observers.end(),
-            [](auto candidate)
-            {
-                // Remove any deleted
-                return candidate.lock() == nullptr;
-            }),
-        observers.end());
 }
 
 template<class Observer>
 template<typename Callable>
 void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
 {
-    process_addition_list();
-    process_removals();
+    if (auto lock = std::unique_lock<std::shared_timed_mutex>{observer_mutex, std::try_to_lock})
+    {
+        // First remove dead elements
+        observers.erase(
+            std::remove_if(
+                observers.begin(),
+                observers.end(),
+                [](auto& candidate)
+                {
+                    return candidate.target.lock() == nullptr;
+                }),
+            observers.end());
+
+        {
+            // Then add new pending elements
+            std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
+            for (auto const& addition : addition_list)
+            {
+                observers.push_back(addition);
+            }
+            addition_list.clear();
+        }
+    }
 
     {
         std::shared_lock<std::shared_timed_mutex> lock{observer_mutex};
         for (auto& maybe_observer: observers)
         {
-            if (auto observer = maybe_observer.lock())
+            std::lock_guard<decltype(maybe_observer.target_mutex)> lock{maybe_observer.target_mutex};
+            if (auto observer = maybe_observer.target.lock())
             {
-                maybe_observer.thread_owns = true;
                 f(*observer);
-                maybe_observer.thread_owns = false;
             }
+        }
+    }
+
+    if (auto lock = std::unique_lock<std::shared_timed_mutex>{observer_mutex, std::try_to_lock})
+    {
+        // First remove dead elements
+        observers.erase(
+            std::remove_if(
+                observers.begin(),
+                observers.end(),
+                [](auto& candidate)
+                {
+                    return candidate.target.lock() == nullptr;
+                }),
+            observers.end());
+
+        {
+            // Then add new pending elements
+            std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
+            for (auto const& addition : addition_list)
+            {
+                observers.push_back(addition);
+            }
+            addition_list.clear();
         }
     }
 }

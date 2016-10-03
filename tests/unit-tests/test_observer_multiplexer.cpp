@@ -24,6 +24,7 @@
 #include <memory>
 #include <array>
 #include <thread>
+#include <atomic>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -313,6 +314,11 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
     using namespace testing;
 
     std::array<bool, 10> observer_notified;
+    for (auto& notified : observer_notified)
+    {
+        notified = false;
+    }
+
     std::array<std::shared_ptr<NiceMock<MockObserver>>, observer_notified.size()> observers;
 
     for (auto i = 0u; i < observers.size(); ++i)
@@ -331,13 +337,6 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
         multiplexer.register_interest(observer);
     }
 
-/*    multiplexer.observation_made("Hello");
-
-    for (auto& notified : observer_notified)
-    {
-        notified = false;
-    }
-*/
     for (auto i = 0u; i < threads.size(); ++i)
     {
         threads[i] = mt::AutoJoinThread(
@@ -408,4 +407,22 @@ TEST(ObserverMultiplexer, unregister_interest_guarantees_no_further_calls)
     threads_done.ready();
 
     EXPECT_TRUE(unregister_called);
+}
+
+TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Elementary, my dear Watson";
+    constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
+
+    TestObserverMultiplexer multiplexer;
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
+        .WillOnce(InvokeWithoutArgs([&multiplexer]() { multiplexer.observation_made(second_observation); }));
+    EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
+
+    multiplexer.register_interest(observer);
+
+    multiplexer.observation_made(first_observation);
 }
