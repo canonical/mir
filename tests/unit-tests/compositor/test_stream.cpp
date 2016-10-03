@@ -222,17 +222,15 @@ TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
     EXPECT_THAT(a->id(), Ne(c->id())); 
 }
 
-TEST_F(Stream, throws_on_nullptr_submissions) //legacy behavior
+TEST_F(Stream, throws_on_nullptr_submissions)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(_,_)).Times(0);
     stream.add_observer(observer);
-    bool was_called = false;
     EXPECT_THROW({
         stream.submit_buffer(nullptr);
     }, std::invalid_argument);
     EXPECT_FALSE(stream.has_submitted_buffer());
-    EXPECT_TRUE(was_called);
 }
 
 //it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers
