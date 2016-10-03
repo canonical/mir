@@ -103,83 +103,6 @@ struct ConsumerSystem
 };
 
 //buffer queue testing
-struct BufferQueueProducer : ProducerSystem
-{
-    BufferQueueProducer(mc::BufferStream& stream) :
-        stream(stream)
-    {
-        stream.swap_buffers(buffer,
-            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
-    }
-
-    bool can_produce() override
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return buffer;
-    }
-
-    mg::BufferID current_id() override
-    {
-        if (buffer)
-            return buffer->id();
-        else
-            return mg::BufferID{INT_MAX};
-    }
-
-    void produce() override
-    {
-        mg::Buffer* b = nullptr;
-        if (can_produce())
-        {
-            {
-                std::unique_lock<decltype(mutex)> lk(mutex);
-                b = buffer;
-                buffer = nullptr;
-                age++;
-                entries.emplace_back(BufferEntry{b->id(), age, Access::unblocked});
-                if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(b->native_buffer_base()))
-                    pixel_source->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
-            }
-            stream.swap_buffers(b,
-                std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
-        }
-        else
-        {
-            entries.emplace_back(BufferEntry{mg::BufferID{INT_MAX}, 0u, Access::blocked});
-        }
-    }
-
-    std::vector<BufferEntry> production_log() override
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return entries;
-    }
-
-    geom::Size last_size() override
-    {
-        if (buffer)
-            return buffer->size();
-        return geom::Size{};
-    }
-
-    void reset_log() override
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return entries.clear();
-    }
-private:
-    mc::BufferStream& stream;
-    void buffer_ready(mg::Buffer* b)
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        buffer = b;
-    }
-    std::mutex mutex;
-    unsigned int age {0};
-    std::vector<BufferEntry> entries;
-    mg::Buffer* buffer {nullptr};
-};
-
 struct BufferQueueConsumer : ConsumerSystem
 {
     BufferQueueConsumer(mc::BufferStream& stream) :
@@ -598,13 +521,13 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
         ipc->on_server_bound_transfer(
-            [weak_stream](mp::Buffer& buffer)
+            [weak_stream, this](mp::Buffer& buffer)
             {
                 auto submit_stream = weak_stream.lock();
                 if (!submit_stream)
                     return;
-                mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
-                submit_stream->swap_buffers(&b, [](mg::Buffer*){});
+                mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
+                submit_stream->submit_buffer((*map)[id]);
             });
         ipc->on_allocate(
             [this](geom::Size sz)

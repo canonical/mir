@@ -59,8 +59,7 @@ namespace
 
 void post_a_frame(mc::BufferStream& s)
 {
-    mtd::StubBuffer old_buffer;
-    s.swap_buffers(&old_buffer, [](mg::Buffer*){});
+    s.submit_buffer(std::make_shared<mtd::StubBuffer>());
 }
 
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")

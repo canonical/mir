@@ -67,10 +67,9 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
-    void swap_buffers(graphics::Buffer* b, std::function<void(graphics::Buffer*)> complete) override
+    void submit_buffer(std::shared_ptr<graphics::Buffer> const& b) override
     {
         if (b) ++nready;
-        complete(&stub_client_buffer);
     }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn) override
     {
@@ -85,8 +84,6 @@ public:
     void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
 
-    StubBuffer stub_client_buffer{
-        std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{})};
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
     std::string thread_name;

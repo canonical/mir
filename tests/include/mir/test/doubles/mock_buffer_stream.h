@@ -47,8 +47,6 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::InvokeArgument<0>(testing::ByRef(*buffer)));
         ON_CALL(*this, acquire_client_buffer(testing::_))
             .WillByDefault(testing::InvokeArgument<0>(nullptr));
-        ON_CALL(*this, swap_buffers(testing::_, testing::_))
-            .WillByDefault(testing::InvokeArgument<1>(nullptr));
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, pixel_format())
@@ -75,7 +73,7 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD0(drop_old_buffers, void());
     MOCK_METHOD0(drop_client_requests, void());
 
-    MOCK_METHOD2(swap_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)>));
+    MOCK_METHOD1(submit_buffer, void(std::shared_ptr<graphics::Buffer> const&));
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(has_submitted_buffer, bool());

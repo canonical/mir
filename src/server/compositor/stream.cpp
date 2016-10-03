@@ -87,7 +87,7 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
     return associated_buffers.size() - server_count;
 }
 
-void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
+void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     if (buffer)
     {
@@ -101,7 +101,6 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
         }
         observers.frame_posted(1, buffer->size());
     }
-    fn(nullptr); //legacy support
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
