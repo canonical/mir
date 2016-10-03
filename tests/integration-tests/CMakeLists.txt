@@ -42,7 +42,6 @@ set(
   test_server_shutdown.cpp
   test_session.cpp
   session_management.cpp
-#  surface_composition.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
