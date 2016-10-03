@@ -79,6 +79,7 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  test_observer_multiplexer.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
