@@ -108,7 +108,11 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback)
     TestObserverMultiplexer multiplexer;
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
-        .WillOnce(Invoke([observer_one, &multiplexer](auto) { multiplexer.unregister_interest(*observer_one); }));
+        .WillOnce(Invoke(
+            [observer_one = observer_one.get(), &multiplexer](auto)
+            {
+                multiplexer.unregister_interest(*observer_one);
+            }));
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(2);
 
@@ -368,7 +372,7 @@ TEST(ObserverMultiplexer, unregister_interest_guarantees_no_further_calls)
         .WillByDefault(
             Invoke(
                 [&multiplexer,
-                 observer,
+                 observer = observer.get(),
                  &unregistering,
                  &unregister_called](auto const& value) mutable
                 {
