@@ -359,60 +359,6 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
         ContainerEq(std::vector<bool>(observer_notified.size(), false)));
 }
 
-TEST(ObserverMultiplexer, unregister_interest_guarantees_no_further_calls)
-{
-    using namespace testing;
-
-    TestObserverMultiplexer multiplexer;
-
-    auto observer = std::make_shared<NiceMock<MockObserver>>();
-    std::atomic<bool> unregister_called{false};
-    std::atomic<bool> unregistering{false};
-    ON_CALL(*observer, observation_made(_))
-        .WillByDefault(
-            Invoke(
-                [&multiplexer,
-                 observer = observer.get(),
-                 &unregistering,
-                 &unregister_called](auto const& value) mutable
-                {
-                    if (unregister_called)
-                    {
-                        FAIL() << "Observer called after unregistering";
-                    }
-                    if (!value.compare("5"))
-                    {
-                        bool expected{false};
-                        if (std::atomic_compare_exchange_strong(&unregistering, &expected, true))
-                        {
-                            multiplexer.unregister_interest(*observer);
-                            unregister_called = true;
-                        }
-                    }
-                }));
-
-    multiplexer.register_interest(observer);
-
-    std::array<mt::AutoJoinThread, 50> threads;
-    mt::Barrier threads_done(threads.size() + 1);
-
-    for (auto i = 0u; i < threads.size(); ++i)
-    {
-        threads[i] = mt::AutoJoinThread(
-            [&threads_done, &multiplexer]()
-            {
-                for (auto i = 0; i < 10; ++i)
-                {
-                    multiplexer.observation_made(std::to_string(i));
-                }
-                threads_done.ready();
-            });
-    }
-    threads_done.ready();
-
-    EXPECT_TRUE(unregister_called);
-}
-
 TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
 {
     using namespace testing;
