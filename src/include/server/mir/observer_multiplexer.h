@@ -62,7 +62,8 @@ private:
      * To ensure deadlock-freedom we never wait on a write-lock for the observers.
      * Instead:
      *  - Additions are handled by appending to a separate addition_list vector,
-     *    protected by its own mutex.
+     *    protected by its own mutex. for_each_observer makes a copy of this list,
+     *    then traverses the copy in addition to the observers vector.
      *  - Removals are handled by atomically replacing the relevant observer
      *    with an expired std::weak_ptr. During traversals, expired observers
      *    are skipped. Removal also removes from the addition_list.
@@ -194,7 +195,19 @@ void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
 
     {
         std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
+        decltype(addition_list) addition_copy;
+        {
+            std::lock_guard<decltype(addition_list_mutex)> l{addition_list_mutex};
+            addition_copy = addition_list;
+        }
         for (auto& maybe_observer: observers)
+        {
+            if (auto observer = maybe_observer.lock())
+            {
+                f(*observer);
+            }
+        }
+        for (auto& maybe_observer : addition_copy)
         {
             if (auto observer = maybe_observer.lock())
             {

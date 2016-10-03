@@ -376,3 +376,31 @@ TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
 
     multiplexer.observation_made(first_observation);
 }
+
+TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Rhythm & Blues Alibi";
+    constexpr char const* second_observation = "Blue Moon Rising";
+
+    TestObserverMultiplexer multiplexer;
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    EXPECT_CALL(*observer_one, observation_made(StrEq(first_observation)))
+        .WillOnce(
+            InvokeWithoutArgs(
+                [&multiplexer, observer_two]()
+                {
+                    multiplexer.register_interest(observer_two);
+                    multiplexer.observation_made(second_observation);
+                }));
+    EXPECT_CALL(*observer_one, observation_made(Not(StrEq(first_observation))))
+        .Times(AnyNumber());
+    EXPECT_CALL(*observer_two, observation_made(StrEq(second_observation)));
+
+    multiplexer.register_interest(observer_one);
+
+    multiplexer.observation_made(first_observation);
+}
