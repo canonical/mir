@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     GLint linked, col;
     unsigned int width = 512, height = 256;
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
