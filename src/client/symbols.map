@@ -365,7 +365,6 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
     mir_buffer_wait_for_access;
-    mir_buffer_get_native_buffer;
     mir_buffer_get_graphics_region;
     mir_buffer_set_callback;
     mir_buffer_release;
@@ -384,6 +383,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_buffer_usage;
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
+    mir_buffer_get_buffer_package;
+    mir_buffer_egl_image_parameters;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
@@ -435,3 +436,9 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_input_device_state_event_device_pressed_keys_for_index;
 } MIR_CLIENT_0.24;
 
+MIR_CLIENT_DETAIL_0.26 {
+  global:
+    extern "C++" {
+      mir::client::DefaultConnectionConfiguration::the_error_handler*;
+    };
+} MIR_CLIENT_DETAIL_0.21;

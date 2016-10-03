@@ -447,3 +447,8 @@ std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
 {
     return (*buffers)[id];
 }
+
+void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)
+{
+    event_sink->handle_error(error);
+}

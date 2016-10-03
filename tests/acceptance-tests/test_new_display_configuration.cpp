@@ -816,9 +816,9 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 {
     uint32_t const size = 4;
-    std::vector<uint16_t> const a{0, 1, 2, 3};
-    std::vector<uint16_t> const b{1, 2, 3, 4};
-    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    mg::GammaCurve const a{0, 1, 2, 3};
+    mg::GammaCurve const b{1, 2, 3, 4};
+    mg::GammaCurve const c{65532, 65533, 65534, 65535};
     std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
@@ -882,9 +882,9 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
 TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 {
-    std::vector<uint16_t> const a{0, 1, 2, 3};
-    std::vector<uint16_t> const b{1, 2, 3, 4};
-    std::vector<uint16_t> const c{65532, 65533, 65534, 65535};
+    mg::GammaCurve const a{0, 1, 2, 3};
+    mg::GammaCurve const b{1, 2, 3, 4};
+    mg::GammaCurve const c{65532, 65533, 65534, 65535};
     std::vector<mg::GammaCurves> const gammas = {
         {a, b, c},
         {b, c, a},
@@ -1489,4 +1489,38 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
 
     configuring_client.disconnect();
     interfering_client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_to_client)
+{
+    using namespace std::chrono_literals;
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() { BOOST_THROW_EXCEPTION(std::runtime_error("Ducks!")); } ));
+
+    mt::Signal error_received;
+    mir_connection_set_error_callback(
+        client.connection,
+        [](MirConnection*, MirError const* error, void* ctx)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_display_configuration)
+            {
+                EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_rejected_by_hardware));
+                reinterpret_cast<mt::Signal*>(ctx)->raise();
+            }
+        },
+        &error_received);
+
+    auto config = client.get_base_config();
+    mir_output_set_position(mir_display_config_get_mutable_output(config.get(), 0), 88, 42);
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 100);
+
+    EXPECT_TRUE(error_received.wait_for(10s));
+
+    client.disconnect();
 }

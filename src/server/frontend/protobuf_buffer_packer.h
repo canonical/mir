@@ -55,6 +55,7 @@ public:
 
     std::vector<Fd> fds();
     std::vector<int> data();
+    unsigned int flags();
 private:
     std::vector<mir::Fd> fds_;
     protobuf::Buffer* buffer_response;

@@ -31,11 +31,6 @@ namespace graphics
 
 namespace android
 {
-enum class BufferFlag
-{
-    unfenced = 0,
-    fenced
-};
 enum class BufferAccess
 {
     read,

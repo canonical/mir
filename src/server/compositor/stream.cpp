@@ -73,6 +73,12 @@ mc::Stream::Stream(
 {
 }
 
+mc::Stream::~Stream()
+{
+    while(schedule->num_scheduled())
+        buffers->send_buffer(schedule->next_buffer()->id());
+}
+
 unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
 {
     auto server_count = schedule->num_scheduled();
