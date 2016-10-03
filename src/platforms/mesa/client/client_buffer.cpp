@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "client_buffer.h"
 #include "buffer_file_ops.h"
+#include "gbm_format_conversions.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -170,7 +171,21 @@ MirBufferPackage* mclm::ClientBuffer::package() const
     BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
 
-void mclm::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**)
+void mclm::ClientBuffer::egl_image_creation_parameters(
+    EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attrs)
 {
-    BOOST_THROW_EXCEPTION(std::invalid_argument("not implemented yet"));
+    static EGLint image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_WIDTH, static_cast<const EGLint>(creation_package->width),
+        EGL_HEIGHT, static_cast<const EGLint>(creation_package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(mir::graphics::mesa::mir_format_to_gbm_format(buffer_pf)),
+        EGL_DMA_BUF_PLANE0_FD_EXT, creation_package->fd[0],
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
+        EGL_NONE
+    };
+    *attrs = image_attrs;
+    *type = EGL_LINUX_DMA_BUF_EXT;
+    *client_buffer = nullptr;
 }
