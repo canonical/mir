@@ -73,8 +73,9 @@ private:
      * collection if successful.
      */
 
-    struct Observable
+    class Observable
     {
+    public:
         Observable(std::weak_ptr<Observer> const& target)
             : target{new std::weak_ptr<Observer>{target}}
         {
@@ -109,7 +110,7 @@ private:
         {
             return target.load()->lock();
         }
-
+    private:
         std::atomic<std::weak_ptr<Observer>*> target;
     };
 
