@@ -54,55 +54,56 @@ private:
     struct Observable
     {
         Observable(std::weak_ptr<Observer> const& target)
-            : target{target}
+            : target{new std::weak_ptr<Observer>{target}}
         {
+        }
+        ~Observable()
+        {
+            delete target.load();
         }
 
         Observable(Observable&& from)
-            : target{std::move(from.target)}
+            : target{from.target.exchange(nullptr)}
         {
         }
+
         Observable& operator=(Observable&& from)
         {
-            target = std::move(from.target);
+            delete target.exchange(from.target.exchange(new std::weak_ptr<Observer>{}));
             return *this;
         }
 
-        std::recursive_mutex target_mutex;
-        std::weak_ptr<Observer> target;
+        void reset()
+        {
+            delete target.exchange(new std::weak_ptr<Observer>{});
+        }
+
+        std::shared_ptr<Observer> lock()
+        {
+            return target.load()->lock();
+        }
+
+        std::atomic<std::weak_ptr<Observer>*> target;
     };
 
-    PosixRWMutex observer_mutex{PosixRWMutex::Type::PreferWriterNonRecursive};
+    PosixRWMutex observer_mutex;
     std::vector<Observable> observers;
-
-    std::mutex recurse_mutex;
-    std::unordered_map<std::thread::id, int> recursing_threads;
-    bool is_recursive_call();
 
     std::mutex addition_list_mutex;
     std::vector<std::weak_ptr<Observer>> addition_list;
 };
 
 template<class Observer>
-bool ObserverMultiplexer<Observer>::is_recursive_call()
-{
-    std::lock_guard<decltype(recurse_mutex)> lock{recurse_mutex};
-    return recursing_threads.count(std::this_thread::get_id()) > 0;
-}
-
-
-template<class Observer>
 void ObserverMultiplexer<Observer>::register_interest(std::weak_ptr<Observer> const& observer)
 {
-    if (is_recursive_call())
+    if (auto l = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
-        std::lock_guard<std::mutex> lock{addition_list_mutex};
-        addition_list.push_back(observer);
+        observers.push_back(observer);
     }
     else
     {
-        std::unique_lock<decltype(observer_mutex)> lock{observer_mutex};
-        observers.push_back(observer);
+        std::lock_guard<std::mutex> lock{addition_list_mutex};
+        addition_list.push_back(observer);
     }
 }
 
@@ -123,32 +124,29 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
             addition_list.end());
     }
 
-    if (is_recursive_call())
+    if (auto l = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
-        // We know that the observers vector is already locked.
-        for (auto& candidate_observer : observers)
-        {
-            std::lock_guard<decltype(candidate_observer.target_mutex)> lock{candidate_observer.target_mutex};
-            if (candidate_observer.target.lock().get() == &observer)
-            {
-                candidate_observer.target = std::weak_ptr<Observer>{};
-            }
-        }
-    }
-    else
-    {
-        std::unique_lock<decltype(observer_mutex)> lock{observer_mutex};
         observers.erase(
             std::remove_if(
                 observers.begin(),
                 observers.end(),
                 [&observer](auto& candidate)
                 {
-                    std::lock_guard<decltype(candidate.target_mutex)> lock{candidate.target_mutex};
-                    auto resolved_candidate = candidate.target.lock().get();
+                    auto resolved_candidate = candidate.lock().get();
                     return (resolved_candidate == nullptr) || (resolved_candidate == &observer);
                 }),
             observers.end());
+    }
+    else
+    {
+        std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
+        for (auto& candidate_observer : observers)
+        {
+            if (candidate_observer.lock().get() == &observer)
+            {
+                candidate_observer.reset();
+            }
+        }
     }
 }
 
@@ -156,9 +154,8 @@ template<class Observer>
 template<typename Callable>
 void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
 {
-    if (!is_recursive_call())
+    if (auto observer_lock = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
-        std::unique_lock<decltype(observer_mutex)> lock{observer_mutex};
         std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
         for (auto const& addition : addition_list)
         {
@@ -168,27 +165,10 @@ void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
     }
 
     {
-        auto recurse_guard = mir::raii::paired_calls(
-            [this]()
-            {
-                std::lock_guard<decltype(recurse_mutex)> lock{recurse_mutex};
-                // If this thread is not already in the map, operator[] will default-initialise to 0.
-                ++recursing_threads[std::this_thread::get_id()];
-            },
-            [this]()
-            {
-                std::lock_guard<decltype(recurse_mutex)> lock{recurse_mutex};
-                if(--recursing_threads[std::this_thread::get_id()] == 0)
-                {
-                    recursing_threads.erase(std::this_thread::get_id());
-                }
-            });
-
         std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
         for (auto& maybe_observer: observers)
         {
-            std::lock_guard<decltype(maybe_observer.target_mutex)> lock{maybe_observer.target_mutex};
-            if (auto observer = maybe_observer.target.lock())
+            if (auto observer = maybe_observer.lock())
             {
                 f(*observer);
             }
