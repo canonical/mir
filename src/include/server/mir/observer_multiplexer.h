@@ -66,10 +66,15 @@ private:
             : target{from.target.exchange(nullptr)}
         {
         }
-
+        /*
+         * This is not threadsafe, but that's fine. This is only ever called
+         * while an exclusive lock is held on observer_mutex.
+         */
         Observable& operator=(Observable&& from)
         {
-            delete target.exchange(from.target.exchange(new std::weak_ptr<Observer>{}));
+            delete target.load();
+            target = from.target.load();
+            from.target = new std::weak_ptr<Observer>{};
             return *this;
         }
 
