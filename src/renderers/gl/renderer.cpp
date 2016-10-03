@@ -37,6 +37,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
+#include <mir/report_exception.h>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -287,70 +288,78 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     primitives.clear();
     tessellate(primitives, renderable);
 
-    auto surface_tex = texture_cache->load(renderable);
-
-    typedef struct  // Represents parameters of glBlendFuncSeparate()
+    // if we fail to load the texture, we need to carry on (part of lp:1629275)
+    try
     {
-        GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
-    } BlendSeparate;
+        auto surface_tex = texture_cache->load(renderable);
 
-    BlendSeparate client_blend;
-
-    // These renderable method names could be better (see LP: #1236224)
-    if (renderable.shaped())  // Client is RGBA:
-    {
-        client_blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                        GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
-    }
-    else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
-    {
-        client_blend = {GL_ONE,  GL_ZERO,
-                        GL_ZERO, GL_ONE};  // Avoid using src_alpha!
-    }
-    else
-    {   // Client is RGBX but we also have window translucency.
-        // The texture alpha channel is possibly uninitialized so we must be
-        // careful and avoid using SRC_ALPHA (LP: #1423462).
-        client_blend = {GL_ONE,  GL_ONE_MINUS_CONSTANT_ALPHA,
-                        GL_ZERO, GL_ONE};
-        glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
-    }
-
-    for (auto const& p : primitives)
-    {
-        BlendSeparate blend;
-
-        if (p.tex_id == 0)   // The client surface texture
+        typedef struct  // Represents parameters of glBlendFuncSeparate()
         {
-            blend = client_blend;
-            surface_tex->bind();
-        }
-        else   // Some other texture from the shell (e.g. decorations) which
-        {      // is always RGBA (valid SRC_ALPHA).
-            blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                     GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
-            glBindTexture(GL_TEXTURE_2D, p.tex_id);
-        }
+            GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
+        } BlendSeparate;
 
-        glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
-                              GL_FALSE, sizeof(mgl::Vertex),
-                              &p.vertices[0].position);
-        glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
-                              GL_FALSE, sizeof(mgl::Vertex),
-                              &p.vertices[0].texcoord);
+        BlendSeparate client_blend;
 
-        if (blend.dst_rgb == GL_ZERO)
+        // These renderable method names could be better (see LP: #1236224)
+        if (renderable.shaped())  // Client is RGBA:
         {
-            glDisable(GL_BLEND);
+            client_blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                            GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
+        }
+        else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
+        {
+            client_blend = {GL_ONE,  GL_ZERO,
+                            GL_ZERO, GL_ONE};  // Avoid using src_alpha!
         }
         else
-        {
-            glEnable(GL_BLEND);
-            glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
-                                blend.src_alpha, blend.dst_alpha);
+        {   // Client is RGBX but we also have window translucency.
+            // The texture alpha channel is possibly uninitialized so we must be
+            // careful and avoid using SRC_ALPHA (LP: #1423462).
+            client_blend = {GL_ONE,  GL_ONE_MINUS_CONSTANT_ALPHA,
+                            GL_ZERO, GL_ONE};
+            glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
         }
 
-        glDrawArrays(p.type, 0, p.nvertices);
+        for (auto const& p : primitives)
+        {
+            BlendSeparate blend;
+
+            if (p.tex_id == 0)   // The client surface texture
+            {
+                blend = client_blend;
+                surface_tex->bind();
+            }
+            else   // Some other texture from the shell (e.g. decorations) which
+            {      // is always RGBA (valid SRC_ALPHA).
+                blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                         GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
+                glBindTexture(GL_TEXTURE_2D, p.tex_id);
+            }
+
+            glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
+                                  GL_FALSE, sizeof(mgl::Vertex),
+                                  &p.vertices[0].position);
+            glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
+                                  GL_FALSE, sizeof(mgl::Vertex),
+                                  &p.vertices[0].texcoord);
+
+            if (blend.dst_rgb == GL_ZERO)
+            {
+                glDisable(GL_BLEND);
+            }
+            else
+            {
+                glEnable(GL_BLEND);
+                glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
+                                    blend.src_alpha, blend.dst_alpha);
+            }
+
+            glDrawArrays(p.type, 0, p.nvertices);
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        report_exception();
     }
 
     glDisableVertexAttribArray(prog.texcoord_attr);
