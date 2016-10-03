@@ -61,6 +61,8 @@ add_library(mirserverobjects OBJECT
   basic_callback.cpp
   ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm_factory.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm.h
+  ${PROJECT_SOURCE_DIR}/include/server/mir/observer_registrar.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_multiplexer.h
 )
 
 set(MIR_SERVER_OBJECTS
