@@ -1,4 +1,4 @@
-/* Copyright © 2013 Canonical Ltd.
+/* Copyright © 2013, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -28,6 +28,7 @@
 #include "mir/gl/texture_cache.h"
 #include "mir/gl/texture.h"
 #include "mir/log.h"
+#include "mir/report_exception.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -37,7 +38,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
-#include <mir/report_exception.h>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
