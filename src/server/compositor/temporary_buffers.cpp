@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "buffer_bundle.h"
+#include "buffer_acquisition.h"
 #include "temporary_buffers.h"
 
 #include <boost/throw_exception.hpp>

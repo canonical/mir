@@ -32,7 +32,6 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
-#include "src/server/compositor/buffer_bundle.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
 #include "mir_toolkit/mir_client_library.h"

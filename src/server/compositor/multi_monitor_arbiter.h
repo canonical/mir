@@ -20,7 +20,7 @@
 
 #include "mir/compositor/compositor_id.h"
 #include "mir/graphics/buffer_id.h"
-#include "buffer_bundle.h"
+#include "buffer_acquisition.h"
 #include <memory>
 #include <mutex>
 #include <deque>
