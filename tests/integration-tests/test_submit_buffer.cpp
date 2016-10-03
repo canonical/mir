@@ -22,6 +22,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/graphics/buffer_id.h"
@@ -32,7 +33,8 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/compositor/buffer_bundle.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/stream.h"
+#include "src/server/compositor/buffer_map.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "src/client/mir_connection.h"
@@ -63,49 +65,9 @@ MATCHER(DidNotTimeOut, "did not time out")
     return arg;
 }
 
-struct StubBundle : public mc::BufferBundle
+struct StubStreamFactory : public msc::BufferStreamFactory
 {
-    StubBundle(std::vector<mg::BufferID> const& ids) :
-        buffer_id_seq(ids)
-    {
-    }
-
-    void client_acquire(std::function<void(mg::Buffer* buffer)> complete) override
-    {
-        std::shared_ptr<mg::Buffer> stub_buffer;
-        if (buffers_acquired < buffer_id_seq.size())
-            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.at(buffers_acquired++));
-        else
-            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.back());
-
-        client_buffers.push_back(stub_buffer);
-        complete(stub_buffer.get());
-    }
-    void client_release(mg::Buffer*) override {}
-    std::shared_ptr<mg::Buffer> compositor_acquire(void const*) override
-        { return std::make_shared<mtd::StubBuffer>(); }
-    void compositor_release(std::shared_ptr<mg::Buffer> const&) override {}
-    std::shared_ptr<mg::Buffer> snapshot_acquire() override
-        { return std::make_shared<mtd::StubBuffer>(); }
-    void snapshot_release(std::shared_ptr<mg::Buffer> const&) override {}
-    mg::BufferProperties properties() const override { return mg::BufferProperties{}; }
-    void allow_framedropping(bool) override {}
-    void set_mode(mc::MultiMonitorMode) override {}
-    void force_requests_to_complete() override {}
-    void resize(const geom::Size&) override {}
-    int buffers_ready_for_compositor(void const*) const override { return 1; }
-    int buffers_free_for_client() const override { return 1; }
-    void drop_old_buffers() override {}
-    void drop_client_requests() override {}
-
-    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
-    std::vector<mg::BufferID> const buffer_id_seq;
-    unsigned int buffers_acquired{0};
-};
-
-struct StubBundleFactory : public msc::BufferStreamFactory
-{
-    StubBundleFactory(std::vector<mg::BufferID> const& ids) :
+    StubStreamFactory(std::vector<mg::BufferID> const& ids) :
         buffer_id_seq(ids)
     {}
 
@@ -114,10 +76,90 @@ struct StubBundleFactory : public msc::BufferStreamFactory
         int, mg::BufferProperties const& p) override
     { return create_buffer_stream(i, s, p); }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&) override
-    { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
-    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&) override
-    { return nullptr; }
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink, mg::BufferProperties const& properties) override
+    {
+        return std::make_shared<mc::Stream>(factory, sink, properties.size, properties.format);
+    }
+
+    mtd::StubFrameDroppingPolicyFactory factory;
+    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const& sink) override
+    {
+        struct BufferMap : mf::ClientBuffers
+        {
+            BufferMap(
+                std::shared_ptr<mf::BufferSink> const& sink,
+                std::vector<mg::BufferID> const& ids) :
+                sink(sink),
+                buffer_id_seq(ids)
+            {
+                std::reverse(buffer_id_seq.begin(), buffer_id_seq.end());
+            }
+
+            mg::BufferID add_buffer(mg::BufferProperties const& props) override
+            {
+                struct BufferIdWrapper : mg::Buffer
+                {
+                    BufferIdWrapper(std::shared_ptr<mg::Buffer> const& b, mg::BufferID id) :
+                        wrapped(b),
+                        id_(id)
+                    {
+                    }
+                
+                    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+                    {
+                        return wrapped->native_buffer_handle();
+                    }
+                    mg::BufferID id() const override
+                    {
+                        return id_;
+                    }
+                    geom::Size size() const override
+                    {
+                        return wrapped->size();
+                    }
+                    MirPixelFormat pixel_format() const override
+                    {
+                        return wrapped->pixel_format();
+                    }
+                    mg::NativeBufferBase* native_buffer_base() override
+                    {
+                        return wrapped->native_buffer_base();
+                    }
+                    std::shared_ptr<mg::Buffer> const wrapped;
+                    mg::BufferID const id_;
+                };
+
+                auto id = buffer_id_seq.back();
+                buffer_id_seq.pop_back();
+                b = std::make_shared<BufferIdWrapper>(alloc->alloc_buffer(props), id);
+                sink->add_buffer(*b);
+                return id; 
+            }
+
+            void remove_buffer(mg::BufferID) override
+            {
+            } 
+
+            std::shared_ptr<mg::Buffer>& operator[](mg::BufferID) override
+            {
+                return b;
+            }
+
+            void send_buffer(mg::BufferID) override
+            {
+            }
+
+            void receive_buffer(mg::BufferID) override
+            {
+            }
+
+            std::shared_ptr<mg::Buffer> b;
+            std::shared_ptr<mf::BufferSink> const sink;
+            std::shared_ptr<mtd::StubBufferAllocator> alloc{std::make_shared<mtd::StubBufferAllocator>()};
+            std::vector<mg::BufferID> buffer_id_seq;
+        };
+        return std::make_shared<BufferMap>(sink, buffer_id_seq);
+    }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
 
@@ -128,8 +170,9 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
     {
         *last_fd = mir::Fd{-1};
     }
-    void pack_buffer(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType) const override
+    void pack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const& b, mg::BufferIpcMsgType) const override
     {
+        msg.pack_size(b.size());
     }
 
     void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
@@ -182,65 +225,16 @@ struct StubPlatform : public mtd::NullPlatform
     std::shared_ptr<mir::Fd> const last_fd;
 };
 
-class SinkSkimmingCoordinator : public msc::SessionCoordinator
-{
-public:
-    SinkSkimmingCoordinator(std::shared_ptr<msc::SessionCoordinator> const& wrapped) :
-        wrapped(wrapped)
-    {
-    }
-
-    void set_focus_to(std::shared_ptr<msc::Session> const& focus) override
-    {
-        wrapped->set_focus_to(focus);
-    }
-
-    void unset_focus() override
-    {
-        wrapped->unset_focus();
-    }
-
-    std::shared_ptr<msc::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        last_sink = sink;
-        return wrapped->open_session(client_pid, name, sink);
-    }
-
-    void close_session(std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->close_session(session);
-    }
-
-    std::shared_ptr<msc::Session> successor_of(std::shared_ptr<msc::Session> const& session) const override
-    {
-        return wrapped->successor_of(session);
-    }
-
-    std::shared_ptr<msc::SessionCoordinator> const wrapped;
-    std::weak_ptr<mf::EventSink> last_sink;
-};
-
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
 {
     ExchangeServerConfiguration(
         std::vector<mg::BufferID> const& id_seq,
         std::shared_ptr<mir::Fd> const& last_unpacked_fd) :
-        stream_factory{std::make_shared<StubBundleFactory>(id_seq)},
+        stream_factory{std::make_shared<StubStreamFactory>(id_seq)},
         platform{std::make_shared<StubPlatform>(last_unpacked_fd)}
     {
     }
 
-    std::shared_ptr<msc::SessionCoordinator> the_session_coordinator() override
-    {
-        return session_coordinator([this]{
-            coordinator = std::make_shared<SinkSkimmingCoordinator>(
-                DefaultServerConfiguration::the_session_coordinator());
-            return coordinator;
-        });
-    }
     std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
         return platform;
@@ -251,9 +245,8 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
         return stream_factory;
     }
 
-    std::shared_ptr<StubBundleFactory> const stream_factory;
+    std::shared_ptr<StubStreamFactory> const stream_factory;
     std::shared_ptr<mg::Platform> const platform;
-    std::shared_ptr<SinkSkimmingCoordinator> coordinator;
 };
 
 struct SubmitBuffer : mir_test_framework::InProcessServer
@@ -311,6 +304,18 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
     bool arrived{false};
     mp::BufferRequest buffer_request; 
 };
+template<class Clock>
+bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_point<Clock> const& pt)
+{
+    while(Clock::now() < pt)
+    {
+        //auto z = mir_debug_surface_current_buffer_id(surface);
+        if (mir_debug_surface_current_buffer_id(surface) == id.as_value())
+            return true;
+        std::this_thread::yield();
+    }
+    return false;
+}
 }
 
 namespace
@@ -370,43 +375,16 @@ TEST_F(SubmitBuffer, submissions_happen)
     mir_connection_release(connection);
 }
 
-namespace
-{
-template<class Clock>
-bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_point<Clock> const& pt)
-{
-    while(Clock::now() < pt)
-    {
-        if (mir_debug_surface_current_buffer_id(surface) == id.as_value())
-            return true;
-        std::this_thread::yield();
-    }
-    return false;
-}
-}
-
 TEST_F(SubmitBuffer, server_can_send_buffer)
 {
     using namespace testing;
     using namespace std::literals::chrono_literals;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
-    auto sink = server_configuration.coordinator->last_sink.lock();
 
-    //first wait for the last id in the exchange sequence to be seen. Avoids lp: #1487967, where
-    //the stub sink could send before the server sends its sequence.
     auto timeout = std::chrono::steady_clock::now() + 5s;
     EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), surface, timeout))
         << "failed to see the last scheduled buffer become the current one";
-
-    //spin-wait for the id to become the current one.
-    //The notification doesn't generate a client-facing callback on the stream yet
-    //(although probably should, seems like something a media decoder would need)
-    mtd::StubBuffer stub_buffer;
-    timeout = std::chrono::steady_clock::now() + 5s;
-    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
-    EXPECT_TRUE(spin_wait_for_id(stub_buffer.id(), surface, timeout))
-        << "failed to see the sent buffer become the current one";
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
