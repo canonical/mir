@@ -120,6 +120,10 @@ private:
 
     std::mutex addition_list_mutex;
     std::vector<std::weak_ptr<Observer>> addition_list;
+
+    void run_garbage_collection(
+        std::unique_lock<decltype(observer_mutex)> const&,
+        Observer const* additional_garbage);
 };
 
 template<class Observer>
@@ -128,6 +132,7 @@ void ObserverMultiplexer<Observer>::register_interest(std::weak_ptr<Observer> co
     if (auto l = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
         observers.push_back(observer);
+        run_garbage_collection(l, nullptr);
     }
     else
     {
@@ -155,16 +160,7 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
 
     if (auto l = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
-        observers.erase(
-            std::remove_if(
-                observers.begin(),
-                observers.end(),
-                [&observer](auto& candidate)
-                {
-                    auto resolved_candidate = candidate.lock().get();
-                    return (resolved_candidate == nullptr) || (resolved_candidate == &observer);
-                }),
-            observers.end());
+        run_garbage_collection(l, &observer);
     }
     else
     {
@@ -185,12 +181,7 @@ void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
 {
     if (auto observer_lock = std::unique_lock<decltype(observer_mutex)>{observer_mutex, std::try_to_lock})
     {
-        std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
-        for (auto const& addition : addition_list)
-        {
-            observers.push_back(addition);
-        }
-        addition_list.clear();
+        run_garbage_collection(observer_lock, nullptr);
     }
 
     {
@@ -215,6 +206,34 @@ void ObserverMultiplexer<Observer>::for_each_observer(Callable&& f)
             }
         }
     }
+}
+
+template<class Observer>
+void ObserverMultiplexer<Observer>::run_garbage_collection(
+    std::unique_lock<decltype(observer_mutex)> const&,
+    Observer const* additional_garbage)
+{
+    {
+        // Move everything from the addition_list to the main observer vector.
+        std::lock_guard<std::mutex> adder_lock{addition_list_mutex};
+        for (auto const& addition : addition_list)
+        {
+            observers.push_back(addition);
+        }
+        addition_list.clear();
+    }
+
+    // Then eliminate any expired observers.
+    observers.erase(
+        std::remove_if(
+            observers.begin(),
+            observers.end(),
+            [additional_garbage](auto& candidate)
+            {
+                auto resolved_candidate = candidate.lock().get();
+                return (resolved_candidate == nullptr) || (resolved_candidate == additional_garbage);
+            }),
+        observers.end());
 }
 }
 
