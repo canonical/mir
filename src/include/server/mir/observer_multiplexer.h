@@ -26,6 +26,7 @@
 #include <vector>
 #include <algorithm>
 #include <mutex>
+#include <atomic>
 #include <thread>
 #include <shared_mutex>
 #include <unordered_map>
