@@ -51,6 +51,28 @@ protected:
     template<typename Callable>
     void for_each_observer(Callable&& f);
 private:
+    /*
+     * Theory of operation:
+     *
+     * We store our observers in a std::vector. Validity of iterators into this vector
+     * is guarded by the observer_mutex read/write mutex.
+     *
+     * All traversals of observers are guarded by a read lock.
+     *
+     * To ensure deadlock-freedom we never wait on a write-lock for the observers.
+     * Instead:
+     *  - Additions are handled by appending to a separate addition_list vector,
+     *    protected by its own mutex.
+     *  - Removals are handled by atomically replacing the relevant observer
+     *    with an expired std::weak_ptr. During traversals, expired observers
+     *    are skipped. Removal also removes from the addition_list.
+     *
+     * To remove expired elements from the observers vector and incorporate new
+     * elements from the addition_list we make a non-blocking attempt to take a
+     * write lock on the observers vector at various points and run a garbage
+     * collection if successful.
+     */
+
     struct Observable
     {
         Observable(std::weak_ptr<Observer> const& target)
