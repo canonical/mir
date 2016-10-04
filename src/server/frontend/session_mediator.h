@@ -261,7 +261,7 @@ private:
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
-    std::shared_ptr<SessionMediatorObserver> const report;
+    std::shared_ptr<SessionMediatorObserver> const observer;
     std::shared_ptr<EventSinkFactory> const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<MessageSender> const message_sender;

@@ -109,7 +109,7 @@ mf::SessionMediator::SessionMediator(
     ipc_operations(ipc_operations),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
-    report(observer),
+    observer(observer),
     sink_factory{sink_factory},
     event_sink{sink_factory->create_sink(message_sender)},
     message_sender{message_sender},
@@ -129,7 +129,7 @@ mf::SessionMediator::~SessionMediator() noexcept
 {
     if (auto session = weak_session.lock())
     {
-        report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
+        observer->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(session);
     }
     destroy_screencast_sessions();
@@ -145,7 +145,7 @@ void mf::SessionMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
-    report->session_connect_called(request->application_name());
+    observer->session_connect_called(request->application_name());
 
     auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
     weak_session = session;
@@ -241,7 +241,7 @@ void mf::SessionMediator::create_surface(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_surface_called(session->name());
+    observer->session_create_surface_called(session->name());
 
     auto params = ms::SurfaceCreationParameters()
         .of_size(request->width(), request->height())
@@ -421,7 +421,7 @@ void mf::SessionMediator::exchange_buffer(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_exchange_buffer_called(session->name());
+    observer->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_buffer_stream(stream_id);
     advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
@@ -440,7 +440,7 @@ void mf::SessionMediator::submit_buffer(
 {
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-    report->session_submit_buffer_called(session->name());
+    observer->session_submit_buffer_called(session->name());
     
     mf::BufferStreamId const stream_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
@@ -480,7 +480,7 @@ void mf::SessionMediator::allocate_buffers(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_allocate_buffers_called(session->name());
+    observer->session_allocate_buffers_called(session->name());
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
@@ -508,7 +508,7 @@ void mf::SessionMediator::release_buffers(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_release_buffers_called(session->name());
+    observer->session_release_buffers_called(session->name());
     if (request->has_id())
     {
         auto stream_id = mf::BufferStreamId{request->id().value()};
@@ -543,7 +543,7 @@ void mf::SessionMediator::release_surface(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_release_surface_called(session->name());
+    observer->session_release_surface_called(session->name());
 
     auto const id = SurfaceId(request->value());
 
@@ -572,7 +572,7 @@ void mf::SessionMediator::disconnect(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_disconnect_called(session->name());
+        observer->session_disconnect_called(session->name());
 
         shell->close_session(session);
         destroy_screencast_sessions();
@@ -598,7 +598,7 @@ void mf::SessionMediator::configure_surface(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_configure_surface_called(session->name());
+    observer->session_configure_surface_called(session->name());
 
     auto const id = mf::SurfaceId(request->surfaceid().value());
     int value = request->ivalue();
@@ -719,7 +719,7 @@ void mf::SessionMediator::configure_display(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_configure_display_called(session->name());
+    observer->session_configure_display_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(request);
     display_changer->configure(session, config);
@@ -740,7 +740,7 @@ void mf::SessionMediator::set_base_display_configuration(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_set_base_display_configuration_called(session->name());
+    observer->session_set_base_display_configuration_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(request);
     display_changer->set_base_configuration(config);
@@ -758,7 +758,7 @@ void mf::SessionMediator::preview_base_display_configuration(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_preview_base_display_configuration_called(session->name());
+    observer->session_preview_base_display_configuration_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(&request->configuration());
     display_changer->preview_base_configuration(
@@ -779,7 +779,7 @@ void mf::SessionMediator::confirm_base_display_configuration(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_confirm_base_display_configuration_called(session->name());
+    observer->session_confirm_base_display_configuration_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(request);
 
@@ -882,7 +882,7 @@ void mf::SessionMediator::create_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_buffer_stream_called(session->name());
+    observer->session_create_buffer_stream_called(session->name());
     
     auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
         mg::BufferUsage::hardware : mg::BufferUsage::software;
@@ -922,7 +922,7 @@ void mf::SessionMediator::release_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_release_buffer_stream_called(session->name());
+    observer->session_release_buffer_stream_called(session->name());
 
     auto const id = BufferStreamId(request->value());
 
@@ -964,7 +964,7 @@ void mf::SessionMediator::configure_cursor(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_configure_surface_cursor_called(session->name());
+    observer->session_configure_surface_cursor_called(session->name());
 
     auto const id = mf::SurfaceId(cursor_request->surfaceid().value());
     auto const surface = session->get_surface(id);
@@ -1103,7 +1103,7 @@ void mf::SessionMediator::start_prompt_session(
     ms::PromptSessionCreationParameters parameters;
     parameters.application_pid = request->application_pid();
 
-    report->session_start_prompt_session_called(session->name(), parameters.application_pid);
+    observer->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
     weak_prompt_session = shell->start_prompt_session_for(session, parameters);
 
@@ -1127,7 +1127,7 @@ void mf::SessionMediator::stop_prompt_session(
 
     weak_prompt_session.reset();
 
-    report->session_stop_prompt_session_called(session->name());
+    observer->session_stop_prompt_session_called(session->name());
 
     shell->stop_prompt_session(prompt_session);
 
