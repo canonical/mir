@@ -66,7 +66,7 @@ class Display : public graphics::Display,
 {
 public:
     explicit Display(::Display* x_dpy,
-                     geometry::Size const size,
+                     geometry::Size const requested_size,
                      std::shared_ptr<GLConfig> const& gl_config,
                      std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
@@ -101,7 +101,7 @@ public:
 private:
     helpers::EGLHelper shared_egl;
     ::Display* const x_dpy;
-    mir::geometry::Size const size;
+    mir::geometry::Size const actual_size;
     std::shared_ptr<GLConfig> const gl_config;
     float pixel_width;
     float pixel_height;

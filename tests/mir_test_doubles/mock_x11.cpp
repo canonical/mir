@@ -57,8 +57,8 @@ mtd::FakeX11Resources::FakeX11Resources()
     motion_event_return.type = MotionNotify;
     enter_notify_event_return.type = EnterNotify;
     leave_notify_event_return.type = LeaveNotify;
-    screen.width = 1024;
-    screen.height = 768;
+    screen.width = 2880;
+    screen.height = 1800;
     screen.mwidth = 338;
     screen.mwidth = 270;
 }
@@ -91,6 +91,11 @@ mtd::MockX11::MockX11()
                                      {
                                          return fake_x11.pending_events;
                                      }));
+
+    ON_CALL(*this, XGetGeometry(fake_x11.display,_,_,_,_,_,_,_,_))
+    .WillByDefault(DoAll(SetArgPointee<5>(fake_x11.screen.width),
+                         SetArgPointee<6>(fake_x11.screen.height),
+                         Return(1)));
 }
 
 mtd::MockX11::~MockX11()
@@ -236,4 +241,16 @@ Status XSetWMProtocols(Display* display, Window w, Atom* protocols, int count)
 Screen* XDefaultScreenOfDisplay(Display* display)
 {
     return global_mock->XDefaultScreenOfDisplay(display);
+}
+
+Status XGetGeometry(Display* display, Drawable d,
+                    Window* root_return,
+                    int* x_return, int* y_return,
+                    unsigned int* width_return, unsigned int* height_return,
+                    unsigned int* border_width_return, unsigned int* depth_return)
+{
+    return global_mock->XGetGeometry(display, d, root_return,
+                                     x_return, y_return,
+                                     width_return, height_return,
+                                     border_width_return, depth_return);
 }
