@@ -256,7 +256,7 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
     std::shared_ptr<SinkSkimmingCoordinator> coordinator;
 };
 
-struct ExchangeBufferTest : mir_test_framework::InProcessServer
+struct SubmitBuffer : mir_test_framework::InProcessServer
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
         mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
@@ -273,30 +273,12 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         cv.notify_all();
     }
 
-    bool exchange_buffer(mclr::DisplayServer& server)
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        mp::Buffer next;
-        server.exchange_buffer(&buffer_request, &next,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
-
-
-        arrived = false;
-        auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
-        for (auto i = 0; i < next.fd().size(); i++)
-            ::close(next.fd(i));
-        next.set_fds_on_side_channel(0);
-
-        *buffer_request.mutable_buffer() = next;
-        return completed;
-    }
-
     bool submit_buffer(mclr::DisplayServer& server, mp::BufferRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.submit_buffer(&request, &v,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
+            google::protobuf::NewCallback(this, &SubmitBuffer::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
@@ -307,7 +289,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.allocate_buffers(&request, &v,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
+            google::protobuf::NewCallback(this, &SubmitBuffer::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
@@ -318,7 +300,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
         server.release_buffers(&request, &v,
-            google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
+            google::protobuf::NewCallback(this, &SubmitBuffer::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
@@ -331,28 +313,6 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 };
 }
 
-//tests for the exchange_buffer rpc call
-TEST_F(ExchangeBufferTest, exchanges_happen)
-{
-    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
-
-    auto rpc_channel = connection->rpc_channel();
-    mclr::DisplayServer server(rpc_channel);
-    buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
-    for (auto i = 0; i < buffer_request.buffer().fd().size(); i++)
-        ::close(buffer_request.buffer().fd(i));
-
-    for (auto const& id : buffer_id_exchange_seq)
-    {
-        EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
-        ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
-    }
-
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
-}
-
 namespace
 {
 MATCHER(NoErrorOnFileRead, "")
@@ -360,7 +320,7 @@ MATCHER(NoErrorOnFileRead, "")
     return arg > 0;
 }
 }
-TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
+TEST_F(SubmitBuffer, fds_can_be_sent_back)
 {
     using namespace testing;
     std::string test_string{"mir was a space station"};
@@ -378,7 +338,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     buffer_request.mutable_buffer()->add_fd(file);
 
-    ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
+    ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
@@ -391,7 +351,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 }
 
 //tests for the submit buffer protocol.
-TEST_F(ExchangeBufferTest, submissions_happen)
+TEST_F(SubmitBuffer, submissions_happen)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
@@ -425,7 +385,7 @@ bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_po
 }
 }
 
-TEST_F(ExchangeBufferTest, server_can_send_buffer)
+TEST_F(SubmitBuffer, server_can_send_buffer)
 {
     using namespace testing;
     using namespace std::literals::chrono_literals;
@@ -453,7 +413,7 @@ TEST_F(ExchangeBufferTest, server_can_send_buffer)
 }
 
 //TODO: check that a buffer arrives asynchronously.
-TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
+TEST_F(SubmitBuffer, allocate_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
@@ -468,7 +428,7 @@ TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
     mir_connection_release(connection);
 }
 
-TEST_F(ExchangeBufferTest, release_buffers_doesnt_time_out)
+TEST_F(SubmitBuffer, release_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);

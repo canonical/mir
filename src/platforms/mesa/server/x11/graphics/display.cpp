@@ -18,26 +18,51 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/egl_resources.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
-#include "gl_context.h"
 
 #include <boost/throw_exception.hpp>
-#include <fcntl.h>
-#include <mutex>
 
 #include <X11/Xatom.h>
 
 #define MIR_LOG_COMPONENT "x11-display"
 #include "mir/log.h"
 
+namespace mg=mir::graphics;
+namespace mgx=mg::X;
+namespace geom=mir::geometry;
+
 namespace
 {
+geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
+{
+    unsigned int screen_width, screen_height, uint_dummy;
+    int int_dummy;
+    Window window_dummy;
+    int const border = 150;
+
+    XGetGeometry(dpy, XDefaultRootWindow(dpy), &window_dummy, &int_dummy, &int_dummy,
+        &screen_width, &screen_height, &uint_dummy, &uint_dummy);
+
+    mir::log_info("Screen resolution = %dx%d", screen_width, screen_height);
+
+    if ((screen_width < requested_size.width.as_uint32_t()+border) ||
+        (screen_height < requested_size.height.as_uint32_t()+border))
+    {
+        mir::log_info(" ... is smaller than the requested size (%dx%d) plus border (%d). Clipping to (%dx%d).",
+            requested_size.width.as_uint32_t(), requested_size.height.as_uint32_t(), border,
+            screen_width-border, screen_height-border);
+        return geom::Size{screen_width-border, screen_height-border};
+    }
+
+    return requested_size;
+}
+
 auto get_pixel_width(Display *dpy)
 {
     auto screen = XDefaultScreenOfDisplay(dpy);
@@ -50,66 +75,45 @@ auto get_pixel_height(Display *dpy)
 
     return float(screen->mheight) / screen->height;
 }
-}
 
-namespace mg=mir::graphics;
-namespace mgx=mg::X;
-namespace geom=mir::geometry;
-
-mgx::X11EGLDisplay::X11EGLDisplay(::Display* x_dpy)
-    : egl_dpy{eglGetDisplay(x_dpy)}
+class XGLContext : public mir::renderer::gl::Context
 {
-    if (!egl_dpy)
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an egl display"));
+public:
+    XGLContext(::Display* const x_dpy,
+               std::shared_ptr<mg::GLConfig> const& gl_config,
+               EGLContext const shared_ctx)
+        : egl{*gl_config}
+    {
+        egl.setup(x_dpy, shared_ctx);
+    }
 
-    EGLint egl_major, egl_minor;
-    if (!eglInitialize(egl_dpy, &egl_major, &egl_minor))
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglInitialize failed"));
+    ~XGLContext() = default;
 
-    mir::log_info("EGL Version %d.%d", egl_major, egl_minor);
-}
+    void make_current() const override
+    {
+        egl.make_current();
+    }
 
-mgx::X11EGLDisplay::~X11EGLDisplay()
-{
-    eglTerminate(egl_dpy);
-}
+    void release_current() const override
+    {
+        egl.release_current();
+    }
 
-mgx::X11EGLDisplay::operator EGLDisplay() const
-{
-    return egl_dpy;
+private:
+    mgx::helpers::EGLHelper egl;
+};
 }
 
 mgx::X11Window::X11Window(::Display* x_dpy,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
-                          GLConfig const& gl_config)
+                          EGLConfig const egl_cfg)
     : x_dpy{x_dpy}
 {
-    EGLint const att[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
-        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
-        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
-        EGL_NONE
-    };
-
     auto root = XDefaultRootWindow(x_dpy);
 
-    EGLint num_configs;
-    if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
-
-    mir::log_info("%d config(s) found", num_configs);
-
-    if (num_configs <= 0)
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
-
     EGLint vid;
-    if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
+    if (!eglGetConfigAttrib(egl_dpy, egl_cfg, EGL_NATIVE_VISUAL_ID, &vid))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
     XVisualInfo visTemplate;
@@ -134,6 +138,7 @@ mgx::X11Window::X11Window(::Display* x_dpy,
     r_mask = visInfo->red_mask;
 
     XSetWindowAttributes attr;
+    std::memset(&attr, 0, sizeof(attr));
     attr.background_pixel = 0;
     attr.border_pixel = 0;
     attr.colormap = XCreateColormap(x_dpy, root, visInfo->visual, AllocNone);
@@ -214,109 +219,62 @@ mgx::X11Window::operator Window() const
     return win;
 }
 
-EGLConfig mgx::X11Window::egl_config() const
-{
-    return config;
-}
-
 unsigned long mgx::X11Window::red_mask() const
 {
     return r_mask;
 }
 
-mgx::X11EGLContext::X11EGLContext(EGLDisplay egl_dpy, EGLConfig config)
-    : egl_dpy{egl_dpy}
-{
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
-
-    static const EGLint ctx_attribs[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
-        EGL_NONE };
-
-    egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
-    if (!egl_ctx)
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateContext failed"));
-}
-
-mgx::X11EGLContext::~X11EGLContext()
-{
-    eglDestroyContext(egl_dpy, egl_ctx);
-}
-
-mgx::X11EGLContext::operator EGLContext() const
-{
-    return egl_ctx;
-}
-
-mgx::X11EGLSurface::X11EGLSurface(EGLDisplay egl_dpy, EGLConfig config, Window win)
-    : egl_dpy{egl_dpy}, egl_surf{eglCreateWindowSurface(egl_dpy, config, win, NULL)}
-{
-    if (!egl_surf)
-        BOOST_THROW_EXCEPTION(mg::egl_error("eglCreateWindowSurface failed"));
-}
-
-mgx::X11EGLSurface::~X11EGLSurface()
-{
-    eglDestroySurface(egl_dpy, egl_surf);
-}
-
-mgx::X11EGLSurface::operator EGLSurface() const
-{
-    return egl_surf;
-}
-
 mgx::Display::Display(::Display* x_dpy,
-                      geom::Size const size,
-                      GLConfig const& gl_config,
+                      geom::Size const requested_size,
+                      std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : egl_display{X11EGLDisplay(x_dpy)},
-      size{size},
+    : shared_egl{*gl_config},
+      x_dpy{x_dpy},
+      actual_size{clip_to_display(x_dpy, requested_size)},
+      gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
-      win{X11Window(x_dpy,
-                    egl_display,
-                    size,
-                    gl_config)},
-      egl_context{X11EGLContext(egl_display,
-                                win.egl_config())},
-      egl_surface{X11EGLSurface(egl_display,
-                                win.egl_config(),
-                                win)},
       report{report},
       orientation{mir_orientation_normal}
 {
-    auto red_mask = win.red_mask();
+    shared_egl.setup(x_dpy);
+
+    win = std::make_unique<X11Window>(x_dpy,
+                                      shared_egl.display(),
+                                      actual_size,
+                                      shared_egl.config());
+
+    auto red_mask = win->red_mask();
     pf = (red_mask == 0xFF0000 ? mir_pixel_format_argb_8888
                                : mir_pixel_format_abgr_8888);
 
-    display_group = std::make_unique<mgx::DisplayGroup>(
-        std::make_unique<mgx::DisplayBuffer>(size,
-                                             egl_display,
-                                             egl_surface,
-                                             egl_context,
-                                             report,
-                                             orientation));
+    display_buffer = std::make_unique<mgx::DisplayBuffer>(
+                         x_dpy,
+                         *win,
+                         actual_size,
+                         shared_egl.context(),
+                         report,
+                         orientation,
+                         *gl_config);
 
-    report->report_egl_configuration(egl_display, win.egl_config());
+    shared_egl.make_current();
+
     report->report_successful_display_construction();
 }
 
 mgx::Display::~Display() noexcept
 {
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
-    f(*display_group);
+    f(*display_buffer);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
     return std::make_unique<mgx::DisplayConfiguration>(
-        pf, size, geom::Size{size.width * pixel_width, size.height * pixel_height}, orientation);
+        pf, actual_size, geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height}, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -335,7 +293,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
     });
 
     orientation = o;
-    display_group->set_orientation(orientation);
+    display_buffer->set_orientation(orientation);
 }
 
 void mgx::Display::register_configuration_change_handler(
@@ -378,7 +336,7 @@ mg::NativeDisplay* mgx::Display::native_display()
 
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
 {
-    return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
+    return std::make_unique<XGLContext>(x_dpy, gl_config, shared_egl.context());
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(

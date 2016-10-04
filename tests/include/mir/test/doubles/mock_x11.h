@@ -88,7 +88,8 @@ public:
     MOCK_METHOD9(XGrabPointer, int(Display*, Window, Bool, unsigned int, int, int, Window, Cursor, Time));
     MOCK_METHOD2(XUngrabPointer, int(Display*, Time));
     MOCK_METHOD3(XInternAtom, Atom(Display*, const char*, Bool));
-    MOCK_METHOD4(XSetWMProtocols, Status(Display *, Window, Atom*, int));
+    MOCK_METHOD4(XSetWMProtocols, Status(Display*, Window, Atom*, int));
+    MOCK_METHOD9(XGetGeometry, Status(Display*, Drawable, Window*, int*, int*, unsigned int*, unsigned int*, unsigned int*, unsigned int*));
 
     FakeX11Resources fake_x11;
 };
