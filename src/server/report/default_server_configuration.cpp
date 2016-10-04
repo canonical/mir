@@ -25,7 +25,6 @@
 #include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
-#include "logging/display_configuration_report.h"
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
@@ -59,7 +58,7 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
 
 std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports()
 {
-    return std::make_unique<report::Reports>(*this);
+    return std::make_unique<report::Reports>(*this, *the_options());
 }
 
 auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
@@ -113,15 +112,6 @@ auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::
         [this]()->std::shared_ptr<mi::InputReport>
         {
             return report_factory(options::input_report_opt)->create_input_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_seat_report() -> std::shared_ptr<mi::SeatReport>
-{
-    return seat_report(
-        [this]()->std::shared_ptr<mi::SeatReport>
-        {
-            return report_factory(options::seat_report_opt)->create_seat_report();
         });
 }
 

@@ -177,7 +177,6 @@ MIR_SERVER_0.25 {
     mir::Server::override_the_logger*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
-    mir::Server::override_the_seat_report*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
@@ -213,6 +212,7 @@ MIR_SERVER_0.25 {
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
+    mir::Server::the_seat_observer_registrar*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;

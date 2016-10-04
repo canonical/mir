@@ -82,14 +82,14 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
-    NiceMock<mtd::MockSeatReport> mock_seat_report;
+    NiceMock<mtd::MockSeatObserver> mock_seat_observer;
     NiceMock<mtd::MockServerStatusListener> mock_status_listener;
     mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
     mi::BasicSeat seat{
         mt::fake_shared(mock_dispatcher),mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock), mt::fake_shared(mock_seat_report)};
+        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock), mt::fake_shared(mock_seat_observer)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
         cookie_authority, mt::fake_shared(key_mapper), mt::fake_shared(mock_status_listener)};

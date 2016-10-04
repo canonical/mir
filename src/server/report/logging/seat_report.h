@@ -19,7 +19,7 @@
 #ifndef MIR_REPORT_LOGGING_SEAT_REPORT_H_
 #define MIR_REPORT_LOGGING_SEAT_REPORT_H_
 
-#include <mir/input/seat_report.h>
+#include <mir/input/seat_observer.h>
 
 #include <memory>
 
@@ -41,7 +41,7 @@ namespace report
 namespace logging
 {
 
-class SeatReport : public input::SeatReport
+class SeatReport : public input::SeatObserver
 {
 public:
     SeatReport(std::shared_ptr<mir::logging::Logger> const& log);

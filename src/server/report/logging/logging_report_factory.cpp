@@ -75,7 +75,7 @@ std::shared_ptr<mir::input::InputReport> mr::LoggingReportFactory::create_input_
     return std::make_shared<logging::InputReport>(logger);
 }
 
-std::shared_ptr<mir::input::SeatReport> mr::LoggingReportFactory::create_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mr::LoggingReportFactory::create_seat_report()
 {
     return std::make_shared<logging::SeatReport>(logger);
 }

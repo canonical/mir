@@ -57,7 +57,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     Nice<mtd::MockInputSeat> mock_seat;
-    Nice<mtd::MockSeatReport> mock_seat_report;
+    Nice<mtd::MockSeatObserver> mock_seat_report;
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};

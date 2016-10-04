@@ -126,7 +126,7 @@ class MirClientHostConnection;
 namespace input
 {
 class InputReport;
-class SeatReport;
+class SeatObserver;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
@@ -314,7 +314,7 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
-    virtual std::shared_ptr<input::SeatReport> the_seat_report();
+    virtual std::shared_ptr<ObserverRegistrar<input::SeatObserver>> the_seat_observer_registrar();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
 
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
@@ -356,6 +356,7 @@ protected:
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
+    std::shared_ptr<input::SeatObserver> the_seat_observer();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -380,7 +381,6 @@ protected:
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
-    CachedPtr<input::SeatReport> seat_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
@@ -453,6 +453,8 @@ private:
     std::shared_ptr<input::EventFilter> const default_filter;
     CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
         display_configuration_observer_multiplexer;
+    CachedPtr<ObserverMultiplexer<input::SeatObserver>>
+        seat_observer_multiplexer;
     std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;

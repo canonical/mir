@@ -66,7 +66,7 @@ class CoordinateTranslator;
 }
 namespace input
 {
-class SeatReport;
+class SeatObserver;
 }
 
 class Fd;
@@ -286,9 +286,6 @@ public:
     /// Sets an override functor for creating the session mediator report.
     void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
 
-    /// Sets an override functor for creating the seat report.
-    void override_the_seat_report(Builder<input::SeatReport> const& seat_report_builder);
-
     /// Sets an override functor for creating the shell.
     void override_the_shell(Builder<shell::Shell> const& wrapper);
 
@@ -418,6 +415,10 @@ public:
     /// \return a registrar to add and remove DisplayConfigurationChangeObservers
     auto the_display_configuration_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>;
+
+    /// \return a registrar to add and remove SeatObservers
+    auto the_seat_observer_registrar() const ->
+        std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
 
 /** @} */
 

@@ -64,7 +64,7 @@ std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_
     return std::make_shared<null::InputReport>();
 }
 
-std::shared_ptr<mir::input::SeatReport> mir::report::NullReportFactory::create_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mir::report::NullReportFactory::create_seat_report()
 {
     return std::make_shared<null::SeatReport>();
 }
@@ -114,7 +114,7 @@ std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
     return NullReportFactory{}.create_input_report();
 }
 
-std::shared_ptr<mir::input::SeatReport> mir::report::null_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mir::report::null_seat_report()
 {
     return NullReportFactory{}.create_seat_report();
 }

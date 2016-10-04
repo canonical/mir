@@ -20,7 +20,7 @@
 #ifndef MIR_REPORT_NULL_SEAT_REPORT_H_
 #define MIR_REPORT_NULL_SEAT_REPORT_H_
 
-#include "mir/input/seat_report.h"
+#include "mir/input/seat_observer.h"
 
 namespace mir
 {
@@ -29,7 +29,7 @@ namespace report
 namespace null
 {
 
-class SeatReport : public input::SeatReport
+class SeatReport : public input::SeatObserver
 {
 public:
     virtual void seat_add_device(uint64_t id) override;

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_INPUT_SEAT_REPORT_H_
-#define MIR_INPUT_SEAT_REPORT_H_
+#ifndef MIR_INPUT_SEAT_OBSERVER_H_
+#define MIR_INPUT_SEAT_OBSERVER_H_
 
 #include <string>
 #include <vector>
@@ -34,10 +34,10 @@ class Rectangle;
 }
 namespace input
 {
-class SeatReport
+class SeatObserver
 {
 public:
-    virtual ~SeatReport() = default;
+    virtual ~SeatObserver() = default;
     
     virtual void seat_add_device(uint64_t id) = 0;
     virtual void seat_remove_device(uint64_t id) = 0;
@@ -52,4 +52,4 @@ public:
 }
 }
 
-#endif /* MIR_INPUT_SEAT_REPORT_H_ */
+#endif /* MIR_INPUT_SEAT_OBSERVER_H_ */

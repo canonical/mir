@@ -39,7 +39,7 @@ class CursorListener;
 class InputRegion;
 class InputDispatcher;
 class KeyMapper;
-class SeatReport;
+class SeatObserver;
 
 class BasicSeat : public Seat
 {
@@ -50,7 +50,7 @@ public:
               std::shared_ptr<InputRegion> const& input_region,
               std::shared_ptr<KeyMapper> const& key_mapper,
               std::shared_ptr<time::Clock> const& clock,
-              std::shared_ptr<SeatReport> const& report);
+              std::shared_ptr<SeatObserver> const& report);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;

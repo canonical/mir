@@ -23,7 +23,7 @@
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/key_mapper.h"
-#include "mir/input/seat_report.h"
+#include "mir/input/seat_observer.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
@@ -48,7 +48,7 @@ mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatch
                                                    std::shared_ptr<InputRegion> const& input_region,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
-                                                   std::shared_ptr<SeatReport> const& report)
+                                                   std::shared_ptr<SeatObserver> const& report)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
       input_region{input_region}, key_mapper{key_mapper}, clock{clock}, report{report}, buttons{0}
 {

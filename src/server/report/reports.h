@@ -32,6 +32,14 @@ namespace graphics
 {
 class DisplayConfigurationObserver;
 }
+namespace input
+{
+class SeatObserver;
+}
+namespace options
+{
+class Option;
+}
 
 namespace report
 {
@@ -40,14 +48,18 @@ namespace logging
 class DisplayConfigurationReport;
 }
 
+class ReportFactory;
+
 class Reports
 {
 public:
-    Reports(DefaultServerConfiguration& server);
+    Reports(DefaultServerConfiguration& server, options::Option const& options);
 
 private:
     std::shared_ptr<logging::DisplayConfigurationReport> const display_configuration_report;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_configuration_multiplexer;
+    std::shared_ptr<input::SeatObserver> const seat_report;
+    std::shared_ptr<ObserverRegistrar<input::SeatObserver>> const seat_observer_multiplexer;
 };
 }
 }

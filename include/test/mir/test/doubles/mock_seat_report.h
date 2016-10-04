@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SEAT_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_SEAT_REPORT_H_
 
-#include "mir/input/seat_report.h"
+#include "mir/input/seat_observer.h"
 #include <gmock/gmock.h>
 
 class MirEvent;
@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-class MockSeatReport : public input::SeatReport
+class MockSeatObserver : public input::SeatObserver
 {
 public:
     MOCK_METHOD1(seat_add_device, void(uint64_t /*id*/));
