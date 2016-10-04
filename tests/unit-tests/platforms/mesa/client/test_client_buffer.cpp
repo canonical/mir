@@ -192,7 +192,6 @@ TEST_F(MesaClientBufferTest, packs_empty_update_msg)
     EXPECT_THAT(msg.fd_items, Eq(0)); 
 }
 
-
 TEST_F(MesaClientBufferTest, suggests_dma_import)
 {
     static EGLint expected_image_attrs[] =
