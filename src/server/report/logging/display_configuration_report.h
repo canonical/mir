@@ -19,7 +19,7 @@
 #ifndef MIR_DISPLAYCONFIGURATIONREPORT_H
 #define MIR_DISPLAYCONFIGURATIONREPORT_H
 
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 
 #include <memory>
 
@@ -31,15 +31,17 @@ namespace report
 {
 namespace logging
 {
-class DisplayConfigurationReport : public mir::graphics::DisplayConfigurationReport
+class DisplayConfigurationReport : public mir::graphics::DisplayConfigurationObserver
 {
 public:
     DisplayConfigurationReport(std::shared_ptr<mir::logging::Logger> const& logger);
     ~DisplayConfigurationReport();
 
-    virtual void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void configuration_applied(graphics::DisplayConfiguration const& config) override;
 
-    virtual void new_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void configuration_failed(graphics::DisplayConfiguration const& attempted, std::exception const& error) override;
+
+    virtual void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
 
 private:
     void log_configuration(graphics::DisplayConfiguration const& configuration) const;

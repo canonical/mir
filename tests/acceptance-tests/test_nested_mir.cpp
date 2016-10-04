@@ -23,7 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/shell/shell.h"
 #include "mir/input/cursor_listener.h"
@@ -36,6 +36,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/shell/display_configuration_controller.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
+#include "mir/observer_registrar.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
@@ -75,72 +76,73 @@ namespace
 {
 struct InputReadyServerStatusListener : mir::ServerStatusListener
 {
-    std::shared_ptr<std::promise<void>> const input_ready;
-    InputReadyServerStatusListener(std::shared_ptr<std::promise<void>> const& promise)
-        : input_ready(promise)
-    {}
+std::shared_ptr<std::promise<void>> const input_ready;
+InputReadyServerStatusListener(std::shared_ptr<std::promise<void>> const& promise)
+: input_ready(promise)
+{}
 
-    void paused() override {}
-    void resumed() override {}
-    void started() override {}
-    void ready_for_user_input() override
-    {
-        input_ready->set_value();
-    }
-    void stop_receiving_input() override {}
+void paused() override {}
+void resumed() override {}
+void started() override {}
+void ready_for_user_input() override
+{
+input_ready->set_value();
+}
+void stop_receiving_input() override {}
 };
 
 struct MockSessionMediatorReport : mf::SessionMediatorReport
 {
-    MockSessionMediatorReport()
-    {
-        EXPECT_CALL(*this, session_connect_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_disconnect_called(_)).Times(AnyNumber());
+MockSessionMediatorReport()
+{
+EXPECT_CALL(*this, session_connect_called(_)).Times(AnyNumber());
+EXPECT_CALL(*this, session_disconnect_called(_)).Times(AnyNumber());
 
-        // These are not needed for the 1st test, but they will be soon
-        EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
-    }
+// These are not needed for the 1st test, but they will be soon
+EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
+EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
+EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
+}
 
-    MOCK_METHOD1(session_connect_called, void (std::string const&));
-    MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
-    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
-    MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
-    MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
-    MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
-    MOCK_METHOD1(session_release_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_disconnect_called, void (std::string const&));
-    MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
-    MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
+MOCK_METHOD1(session_connect_called, void (std::string const&));
+MOCK_METHOD1(session_create_surface_called, void (std::string const&));
+MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
+MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
+MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
+MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
+MOCK_METHOD1(session_release_surface_called, void (std::string const&));
+MOCK_METHOD1(session_disconnect_called, void (std::string const&));
+MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
+MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
 
-    void session_configure_surface_called(std::string const&) override {};
-    void session_configure_surface_cursor_called(std::string const&) override {};
-    void session_configure_display_called(std::string const&) override {};
-    void session_set_base_display_configuration_called(std::string const&) override {};
-    void session_preview_base_display_configuration_called(std::string const&) override {};
-    void session_confirm_base_display_configuration_called(std::string const&) override {};
-    void session_create_buffer_stream_called(std::string const&) override {}
-    void session_release_buffer_stream_called(std::string const&) override {}
-    void session_error(const std::string&, const char*, const std::string&) override {};
+void session_configure_surface_called(std::string const&) override {};
+void session_configure_surface_cursor_called(std::string const&) override {};
+void session_configure_display_called(std::string const&) override {};
+void session_set_base_display_configuration_called(std::string const&) override {};
+void session_preview_base_display_configuration_called(std::string const&) override {};
+void session_confirm_base_display_configuration_called(std::string const&) override {};
+void session_create_buffer_stream_called(std::string const&) override {}
+void session_release_buffer_stream_called(std::string const&) override {}
+void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
 struct MockCursor : public mtd::StubCursor
 {
-    MOCK_METHOD1(show, void(mg::CursorImage const&));
+MOCK_METHOD1(show, void(mg::CursorImage const&));
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
-    MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
+MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
 
-struct MockDisplayConfigurationReport : public mg::DisplayConfigurationReport
+struct MockDisplayConfigurationReport : public mg::DisplayConfigurationObserver
 {
     MOCK_METHOD1(initial_configuration, void (mg::DisplayConfiguration const& configuration));
-    MOCK_METHOD1(new_configuration, void (mg::DisplayConfiguration const& configuration));
+    MOCK_METHOD1(configuration_applied, void (mg::DisplayConfiguration const& configuration));
+    MOCK_METHOD2(configuration_failed, void(mg::DisplayConfiguration const&, std::exception const&));
 };
 
 std::vector<geom::Rectangle> const display_geometry
@@ -484,9 +486,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
                 return mock_session_mediator_report;
             });
 
-        server.override_the_display_configuration_report([this]
-            { return the_mock_display_configuration_report(); });
-
         server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return the_mock_cursor(); });
 
         server.wrap_shell([&, this](auto const& wrapped)
@@ -495,6 +494,8 @@ struct NestedServer : mtf::HeadlessInProcessServer
         });
 
         mtf::HeadlessInProcessServer::SetUp();
+
+        server.the_display_configuration_observer_registrar()->register_interest(the_mock_display_configuration_report());
     }
 
     void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
@@ -511,11 +512,11 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     std::shared_ptr<MockDisplayConfigurationReport> the_mock_display_configuration_report()
     {
-        return mock_display_configuration_report([]
-            { return std::make_shared<NiceMock<MockDisplayConfigurationReport>>(); });
+        return mock_display_configuration_report;
     }
 
-    mir::CachedPtr<MockDisplayConfigurationReport> mock_display_configuration_report;
+    std::shared_ptr<MockDisplayConfigurationReport> const
+        mock_display_configuration_report{std::make_shared<NiceMock<MockDisplayConfigurationReport>>()};
 
     std::shared_ptr<MockCursor> the_mock_cursor()
     {
@@ -894,7 +895,7 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
 
     client.update_display_configuration(
@@ -924,7 +925,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
         for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
             output->orientation = new_orientation;
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(configuration)))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { config_reported.raise(); }));
 
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
@@ -1098,7 +1099,7 @@ TEST_F(NestedServer, applies_display_config_on_startup)
     expected_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
         { output.orientation = mir_orientation_inverted;});
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(std::ref(*expected_config))))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(std::ref(*expected_config))))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
 
     struct MyNestedMirRunner : NestedMirRunner
@@ -1165,7 +1166,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
         {
             mt::Signal initial_condition;
 
-            EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+            EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
                 .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
             client.update_display_configuration(
@@ -1178,7 +1179,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
             ASSERT_TRUE(initial_condition.raised());
         }
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
     }
 
@@ -1204,7 +1205,7 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
 
         mt::Signal initial_condition;
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(new_config);
@@ -1214,7 +1215,7 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
     }
 
@@ -1260,7 +1261,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
         mt::Signal initial_condition;
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(initial_config);
@@ -1277,7 +1278,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(*expect_config)))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(*expect_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.raise(); }));
 
     display.emit_configuration_change_event(expect_config);
@@ -1307,7 +1308,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(*expect_config)))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(*expect_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.raise(); }));
 
     display.emit_configuration_change_event(expect_config);
@@ -1361,7 +1362,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
         mt::Signal initial_condition;
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
         nested_mir.server.the_display_configuration_controller()->set_base_configuration(initial_config);
@@ -1384,7 +1385,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(expected_config)))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(expected_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.raise(); }));
 
     display.emit_configuration_change_event(new_config);
@@ -1420,7 +1421,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(expected_config)))
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(mt::DisplayConfigMatches(expected_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.raise(); }));
 
     display.emit_configuration_change_event(new_config);

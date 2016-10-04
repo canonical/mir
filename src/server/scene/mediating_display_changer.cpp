@@ -28,7 +28,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/server_action_queue.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
@@ -131,7 +131,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
-    std::shared_ptr<mg::DisplayConfigurationReport> const& report,
+    std::shared_ptr<mg::DisplayConfigurationObserver> const& observer,
     std::shared_ptr<mi::InputRegion> const& region,
     std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
@@ -140,7 +140,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
-      report{report},
+      observer{observer},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
       region{region},
@@ -180,7 +180,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                 });
         });
 
-    report->initial_configuration(*base_configuration_);
+    observer->initial_configuration(*base_configuration_);
     update_input_rectangles(*base_configuration_);
 }
 
@@ -409,8 +409,6 @@ bool configuration_has_new_outputs_enabled(
 void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
-    report->new_configuration(*conf);
-
     auto existing_configuration = display->configuration();
     try
     {
@@ -423,11 +421,13 @@ void ms::MediatingDisplayChanger::apply_config(
             display->configure(*conf);
         }
 
+        observer->configuration_applied(*conf);
         update_input_rectangles(*conf);
         base_configuration_applied = false;
     }
-    catch (...)
+    catch (std::exception const& e)
     {
+        observer->configuration_failed(*conf, e);
         try
         {
             /*

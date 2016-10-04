@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/configuration.h"
 
+#include "reports.h"
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
 #include "null_report_factory.h"
@@ -54,6 +55,11 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
             options::off_opt_value + "\" and \"" + options::log_opt_value +
                            "\" and \"" + options::lttng_opt_value + "\")");
     }
+}
+
+std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports()
+{
+    return std::make_unique<report::Reports>(*this);
 }
 
 auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
@@ -98,14 +104,6 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
         [this]()->std::shared_ptr<mg::DisplayReport>
         {
             return report_factory(options::display_report_opt)->create_display_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_display_configuration_report() -> std::shared_ptr<mg::DisplayConfigurationReport>
-{
-    return display_configuration_report([this]() -> std::shared_ptr<mg::DisplayConfigurationReport>
-        {
-            return std::make_shared<mir::report::logging::DisplayConfigurationReport>(the_logger());
         });
 }
 

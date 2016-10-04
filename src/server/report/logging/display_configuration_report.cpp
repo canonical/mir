@@ -21,6 +21,7 @@
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
 
 namespace mg = mir::graphics;
@@ -48,10 +49,21 @@ void mrl::DisplayConfigurationReport::initial_configuration(mg::DisplayConfigura
     log_configuration(configuration);
 }
 
-void mrl::DisplayConfigurationReport::new_configuration(mg::DisplayConfiguration const& configuration)
+void mrl::DisplayConfigurationReport::configuration_applied(
+    mg::DisplayConfiguration const& config)
 {
     logger->log(component, severity, "New display configuration:");
-    log_configuration(configuration);
+    log_configuration(config);
+}
+
+void mrl::DisplayConfigurationReport::configuration_failed(
+    mg::DisplayConfiguration const& attempted,
+    std::exception const& error)
+{
+    logger->log(component, ml::Severity::error, "Failed to apply display configuration:");
+    log_configuration(attempted);
+    logger->log(component, ml::Severity::error, "Error details:");
+    logger->log(component, ml::Severity::error, "%s", boost::diagnostic_information(error).c_str());
 }
 
 void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration const& configuration) const

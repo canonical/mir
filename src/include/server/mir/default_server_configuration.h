@@ -31,6 +31,12 @@ class ServerActionQueue;
 class SharedLibrary;
 class SharedLibraryProberReport;
 
+template<class Observer>
+class ObserverRegistrar;
+
+template<class Observer>
+class ObserverMultiplexer;
+
 namespace cookie
 {
 class Authority;
@@ -106,7 +112,7 @@ namespace graphics
 class Platform;
 class Display;
 class DisplayReport;
-class DisplayConfigurationReport;
+class DisplayConfigurationObserver;
 class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
@@ -153,6 +159,7 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
+class Reports;
 }
 
 namespace renderer
@@ -215,7 +222,8 @@ public:
     virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
-    virtual std::shared_ptr<graphics::DisplayConfigurationReport> the_display_configuration_report();
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>
+        the_display_configuration_observer_registrar();
 
     /** @} */
 
@@ -347,6 +355,7 @@ protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
+    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -418,7 +427,6 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<graphics::DisplayConfigurationReport> display_configuration_report;
     CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
@@ -443,6 +451,9 @@ protected:
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> const default_filter;
+    CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
+        display_configuration_observer_multiplexer;
+    std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;
 
@@ -453,6 +464,7 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+    auto initialise_reports() -> std::shared_ptr<report::Reports>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
 };

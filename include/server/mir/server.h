@@ -28,9 +28,12 @@
 
 namespace mir
 {
+template<class Observer>
+class ObserverRegistrar;
+
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
-namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationReport; }
+namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -243,10 +246,6 @@ public:
     void override_the_display_buffer_compositor_factory(
         Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
 
-    /// Sets an override functor for creating the display configuration report.
-    void override_the_display_configuration_report(
-        Builder<graphics::DisplayConfigurationReport> const& report_builder);
-
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
@@ -415,6 +414,10 @@ public:
 
     /// \return the persistent surface store
     auto the_persistent_surface_store() const -> std::shared_ptr<shell::PersistentSurfaceStore>;
+
+    /// \return a registrar to add and remove DisplayConfigurationChangeObservers
+    auto the_display_configuration_observer_registrar() const ->
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>;
 
 /** @} */
 
