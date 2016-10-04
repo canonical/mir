@@ -36,12 +36,9 @@ public:
     virtual ~MirRenderSurface() = default;
     virtual MirConnection* connection() const = 0;
     virtual MirWaitHandle* create_client_buffer_stream(
-        MirBufferUsage buffer_usage,
-        bool autorelease,
         mir_buffer_stream_callback callback,
         void* context) = 0;
     virtual int stream_id() = 0;
-    virtual bool autorelease_content() const = 0;
 
     virtual MirWaitHandle* release_buffer_stream(
         void* native_surface,

@@ -66,6 +66,7 @@ class DisplayConfiguration;
 class EventHandlerRegister;
 class AsyncBufferFactory;
 class MirBuffer;
+class BufferStream;
 
 namespace rpc
 {
@@ -148,11 +149,14 @@ public:
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs);
 
+    typedef void (*buffer_stream_callback)(mir::client::BufferStream* stream, void* context);
+
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
-        mir_buffer_stream_callback callback,
+        mir_buffer_stream_callback mbs_callback,
+        buffer_stream_callback bs_callback,
         void *context);
     MirWaitHandle* release_buffer_stream(
         mir::client::ClientBufferStream*,
@@ -209,11 +213,10 @@ public:
 
     MirRenderSurface* create_render_surface(
         int width, int height,
-        MirPixelFormat format);
-    MirWaitHandle* release_render_surface(
-        void* render_surface,
-        mir_render_surface_callback callback,
-        void* context);
+        MirPixelFormat format,
+        MirBufferUsage usage);
+    void release_render_surface(
+        void* render_surface);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -237,12 +240,13 @@ private:
     struct StreamCreationRequest
     {
         StreamCreationRequest(
-            mir_buffer_stream_callback cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
-            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
+            mir_buffer_stream_callback mbs_cb, buffer_stream_callback bs_cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
+            mbs_callback(mbs_cb), bs_callback(bs_cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
             wh(std::make_shared<MirWaitHandle>())
         {
         }
-        mir_buffer_stream_callback callback;
+        mir_buffer_stream_callback mbs_callback;
+        buffer_stream_callback bs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;

@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_RENDER_SURFACE_H
 #define MIR_CLIENT_RENDER_SURFACE_H
 
+#include "mir_connection.h"
 #include "mir_render_surface.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/client_types.h"
@@ -48,29 +49,24 @@ class RenderSurface : public MirRenderSurface
 public:
     RenderSurface(int const width, int const height,
                   MirPixelFormat const format,
+                  MirBufferUsage usage,
                   MirConnection* const connection,
                   rpc::DisplayServer& display_server,
                   std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
                   std::shared_ptr<void> native_window,
-                  int num_buffers,
-                  std::shared_ptr<ClientPlatform> client_platform,
-                  std::shared_ptr<AsyncBufferFactory> async_buffer_factory,
-                  std::shared_ptr<mir::logging::Logger> mir_logger);
+                  std::shared_ptr<ClientPlatform> client_platform);
     MirConnection* connection() const override;
     MirWaitHandle* create_client_buffer_stream(
-        MirBufferUsage buffer_usage,
-        bool autorelease,
         mir_buffer_stream_callback callback,
         void *context) override;
     int stream_id() override;
-    bool autorelease_content() const override;
 
     MirWaitHandle* release_buffer_stream(
         void* native_surface,
         mir_render_surface_callback callback,
         void* context) override;
 
-    friend void render_surface_buffer_stream_create_callback(MirBufferStream* stream, void* context);
+    friend void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context);
     friend void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context);
 
     struct StreamCreationRequest
@@ -107,22 +103,15 @@ public:
 private:
     int const width_, height_;
     MirPixelFormat const format_;
+    MirBufferUsage buffer_usage;
     MirConnection* const connection_;
     rpc::DisplayServer& server;
     std::shared_ptr<ConnectionSurfaceMap> surface_map;
     std::shared_ptr<void> wrapped_native_window;
-    int const nbuffers;
     std::shared_ptr<ClientPlatform> platform;
-    std::shared_ptr<AsyncBufferFactory> buffer_factory;
-    std::shared_ptr<mir::logging::Logger> const logger;
-    std::unique_ptr<mir::protobuf::Void> void_response;
-    bool autorelease_;
     ClientBufferStream* stream_;
-    MirBufferUsage buffer_usage;
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
-    std::mutex release_wait_handle_guard;
-    std::vector<MirWaitHandle*> release_wait_handles;
 
     std::mutex mutex;
 };

@@ -46,7 +46,8 @@ extern "C" {
 MirRenderSurface* mir_connection_create_render_surface(
     MirConnection* connection,
     int const width, int const height,
-    MirPixelFormat const format);
+    MirPixelFormat const format,
+    MirBufferUsage usage);
 
 /**
  * Test for a valid render surface.
@@ -59,27 +60,11 @@ bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface);
 
 /**
- * Release the specified render surface asynchronously.
- *
- * \param [in] render_surface    The render surface to be released
- * \param [in] callback          Callback function to be invoked when the request
- *                               completes
- * \param [in] context           User data passed to the callback function
- *
- * \return                       A handle that can be supplied to mir_wait_for
- *                               in order to get notified when the request is complete
- */
-MirWaitHandle* mir_render_surface_release(
-    MirRenderSurface* render_surface,
-    mir_render_surface_callback callback,
-    void* context);
-
-/**
- * Release the specified render surface synchronously.
+ * Release the specified render surface. This will not release the containee.
  *
  * \param [in] render_surface    The render surface to be released
  */
-void mir_render_surface_release_sync(
+void mir_render_surface_release(
     MirRenderSurface* render_surface);
 
 /**

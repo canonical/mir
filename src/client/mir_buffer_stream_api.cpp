@@ -56,7 +56,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
 try
 {
     return connection->create_client_buffer_stream(
-        width, height, format, buffer_usage, callback, context);
+        width, height, format, buffer_usage, callback, nullptr, context);
 }
 catch (std::exception const& ex)
 {

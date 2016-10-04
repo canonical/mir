@@ -45,29 +45,22 @@ namespace ml = mir::logging;
 mcl::RenderSurface::RenderSurface(
     int const width, int const height,
     MirPixelFormat const format,
+    MirBufferUsage usage,
     MirConnection* const connection,
     mclr::DisplayServer& display_server,
     std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
     std::shared_ptr<void> native_window,
-    int num_buffers,
-    std::shared_ptr<ClientPlatform> client_platform,
-    std::shared_ptr<AsyncBufferFactory> async_buffer_factory,
-    std::shared_ptr<ml::Logger> mir_logger) :
+    std::shared_ptr<ClientPlatform> client_platform) :
         width_(width),
         height_(height),
         format_(format),
+        buffer_usage(usage),
         connection_(connection),
         server(display_server),
         surface_map(connection_surface_map),
         wrapped_native_window(native_window),
-        nbuffers(num_buffers),
         platform(client_platform),
-        buffer_factory(async_buffer_factory),
-        logger(mir_logger),
-        void_response(mcl::make_protobuf_object<mp::Void>()),
-        autorelease_(false),
         stream_(nullptr),
-        buffer_usage(mir_buffer_usage_hardware),
         stream_creation_request(nullptr),
         stream_release_request(nullptr)
 {
@@ -82,27 +75,22 @@ namespace mir
 {
 namespace client
 {
-void render_surface_buffer_stream_create_callback(MirBufferStream* stream, void* context)
+void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context)
 {
-    std::shared_ptr<mcl::RenderSurface::StreamCreationRequest> request{reinterpret_cast<mcl::RenderSurface::StreamCreationRequest*>(context)};
+    mcl::RenderSurface::StreamCreationRequest* request{reinterpret_cast<mcl::RenderSurface::StreamCreationRequest*>(context)};
     mcl::RenderSurface* rs = request->rs;
 
-    if (rs->stream_creation_request == request)
-    {
-        printf("request matches\n");
-        rs->stream_creation_request.reset();
-    }
-    else
-        //TODO: throw?
-        printf("request does not match\n");
+    //TODO: check if there is no outstanding request already?
 
-    rs->stream_ = reinterpret_cast<ClientBufferStream*>(stream);
+    rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
     if (rs->buffer_usage == mir_buffer_usage_hardware)
+    {
         rs->platform->use_egl_native_window(
-            rs->wrapped_native_window, reinterpret_cast<EGLNativeSurface*>(stream));
+            rs->wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream));
+    }
 
     if (request->callback)
-        request->callback(stream, request->context);
+        request->callback(reinterpret_cast<MirBufferStream*>(rs->stream_), request->context);
 }
 
 void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, void* context)
@@ -110,14 +98,11 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, 
     std::shared_ptr<mcl::RenderSurface::StreamReleaseRequest> request{reinterpret_cast<mcl::RenderSurface::StreamReleaseRequest*>(context)};
     mcl::RenderSurface* rs = request->rs;
 
+    //TODO: check if there is no outstanding request already?
     if (rs->stream_release_request == request)
     {
-        printf("request matches\n");
         rs->stream_release_request.reset();
     }
-    else
-        //TODO: throw?
-        printf("request does not match\n");
 
     rs->stream_ = nullptr;
     rs->surface_map->erase(request->native_surface);
@@ -129,30 +114,20 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, 
 }
 
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
-    MirBufferUsage buffer_usage,
-    bool autorelease,
     mir_buffer_stream_callback callback,
     void* context)
 {
-    autorelease_ = autorelease;
-    buffer_usage = buffer_usage;
-
     // TODO: check if there is an outstanding stream request
     stream_creation_request = std::make_shared<StreamCreationRequest>(callback, context, this);
 
     return connection_->create_client_buffer_stream(
-        width_, height_, format_, buffer_usage,
+        width_, height_, format_, buffer_usage, nullptr,
         render_surface_buffer_stream_create_callback, stream_creation_request.get());
-}
-
-bool mcl::RenderSurface::autorelease_content() const
-{
-    return autorelease_;
 }
 
 int mcl::RenderSurface::stream_id()
 {
-    return stream_->rpc_id().as_value();
+    return (stream_ ? stream_->rpc_id().as_value() : -1);
 }
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(

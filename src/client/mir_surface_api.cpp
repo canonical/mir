@@ -643,17 +643,6 @@ try
 {
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-    MirBufferStream* stream = nullptr;
-
-    if (rs->stream_id() < 0)
-    {
-        auto wh = rs->create_client_buffer_stream(
-            mir_buffer_usage_hardware,
-            true,
-            reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-            &stream);
-        wh->wait_for_all();
-    }
 
     ContentInfo info{{displacement_x, displacement_y}, rs->stream_id(), {}};
 
