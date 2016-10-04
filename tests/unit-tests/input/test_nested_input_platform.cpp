@@ -47,32 +47,10 @@ using namespace testing;
 namespace
 {
 
-struct MockHostConnection : mtd::StubHostConnection
-{
-    MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(mgn::UniqueInputConfig)> const&));
-    MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
-    void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
-    {
-        if (event_callback)
-            event_callback(event, source_frame);
-    }
-
-    MockHostConnection()
-    {
-        ON_CALL(*this, set_input_device_change_callback(_))
-            .WillByDefault(SaveArg<0>(&device_change_callback));
-        ON_CALL(*this, set_input_event_callback(_))
-            .WillByDefault(SaveArg<0>(&event_callback));
-    }
-
-    std::function<void(mgn::UniqueInputConfig)> device_change_callback;
-    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
-};
-
 struct TestNestedInputPlatform : Test
 {
     NiceMock<mtd::MockInputDeviceRegistry> mock_input_device_registry;
-    NiceMock<MockHostConnection> mock_host_connection;
+    NiceMock<mtd::MockHostConnection> mock_host_connection;
     NiceMock<mtd::MockInputSeat> mock_seat;
     mgn::InputPlatform platform{mt::fake_shared(mock_host_connection), mt::fake_shared(mock_input_device_registry),
                                 mr::null_input_report()};
