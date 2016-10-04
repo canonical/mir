@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace logging { class Logger; }
+namespace logging { class Logger; enum class Severity; }
 
 namespace report
 {
@@ -48,7 +48,9 @@ public:
         std::exception const& error) override;
 
 private:
-    void log_configuration(graphics::DisplayConfiguration const& configuration) const;
+    void log_configuration(
+        mir::logging::Severity severity,
+        graphics::DisplayConfiguration const& configuration) const;
     std::shared_ptr<mir::logging::Logger> const logger;
 };
 }
