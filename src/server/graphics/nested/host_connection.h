@@ -23,6 +23,7 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/nested_context.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/buffer_properties.h"
@@ -46,6 +47,8 @@ using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig
 
 class HostStream;
 class HostSurface;
+class HostChain;
+class HostSurfaceSpec;
 class NativeBuffer;
 class HostConnection : public NestedContext
 {
@@ -56,7 +59,9 @@ public:
     virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
-    virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) = 0;
+    virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
+    virtual std::unique_ptr<HostChain> create_chain() const = 0;
+    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
     virtual std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,

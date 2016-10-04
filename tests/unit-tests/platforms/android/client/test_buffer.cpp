@@ -137,7 +137,7 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
 TEST_F(AndroidClientBuffer, can_update_fences)
 {
     int fake_fence = 8482;
-    MirNativeFence fence = &fake_fence;
+    mir::Fd fence { mir::IntOwnedFd{fake_fence} };
     Sequence seq;
     EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::BufferAccess::write))
         .InSequence(seq);
@@ -148,32 +148,33 @@ TEST_F(AndroidClientBuffer, can_update_fences)
     buffer.set_fence(fence, mir_read);
 }
 
-TEST_F(AndroidClientBuffer, updating_fences_with_null_resets_fence)
+TEST_F(AndroidClientBuffer, updating_fences_with_invalid_resets_fence)
 {
     EXPECT_CALL(*mock_native_buffer, reset_fence());
     mcla::Buffer buffer(mock_registrar, package, pf);
-    buffer.set_fence(nullptr, mir_read_write);
+    buffer.set_fence(mir::Fd{}, mir_read_write);
 }
 
 TEST_F(AndroidClientBuffer, updating_fences_with_made_up_access_throws)
 {
-    int fence = 21;
+    int fake_fence = 8482;
+    mir::Fd fence { mir::IntOwnedFd{fake_fence} };
     mcla::Buffer buffer(mock_registrar, package, pf);
     EXPECT_THROW({
-        buffer.set_fence(&fence, static_cast<MirBufferAccess>(111));
+        buffer.set_fence(fence, static_cast<MirBufferAccess>(111));
     }, std::invalid_argument);
 }
 
 TEST_F(AndroidClientBuffer, can_retreive_fences)
 {
     int fake_fence = 42;
+    mir::Fd fence { mir::IntOwnedFd{fake_fence} };
     EXPECT_CALL(*mock_native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
     
     mcla::Buffer buffer(mock_registrar, package, pf);
-    auto fence = buffer.get_fence();
-    ASSERT_THAT(fence, Ne(nullptr));
-    EXPECT_THAT(*static_cast<decltype(fake_fence)*>(fence), Eq(fake_fence));
+    auto f = buffer.get_fence();
+    EXPECT_THAT(f, Eq(fence));
 }
 
 TEST_F(AndroidClientBuffer, can_wait_fence)

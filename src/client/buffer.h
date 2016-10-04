@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/geometry/size.h"
+#include "mir/fd.h"
 #include "atomic_callback.h"
 #include "mir_buffer.h"
 #include <memory>
@@ -49,12 +50,11 @@ public:
     void received() override;
     void received(MirBufferPackage const& update_message) override;
 
-    MirNativeBuffer* as_mir_native_buffer() const override;
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
 
-    void set_fence(MirNativeFence, MirBufferAccess) override;
-    MirNativeFence get_fence() const override;
+    void set_fence(Fd, MirBufferAccess) override;
+    Fd get_fence() const override;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
 
     MirBufferUsage buffer_usage() const override;

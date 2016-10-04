@@ -31,7 +31,6 @@ extern "C" {
 /* NOTE: this file will be rolled into mir_toolkit/client_types.h when made public. */
 typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
-typedef void* MirNativeFence;
 typedef struct MirRenderSurface MirRenderSurface;
 
 typedef void (*mir_buffer_callback)(MirBuffer*, void* context);

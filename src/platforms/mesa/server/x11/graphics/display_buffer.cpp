@@ -17,29 +17,33 @@
  *
  */
 
-#include "mir/graphics/egl_error.h"
+#include "mir/fatal.h"
 #include "display_buffer.h"
 #include "display_configuration.h"
-
-#include <boost/throw_exception.hpp>
+#include "mir/graphics/display_report.h"
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
-                                  EGLDisplay const d,
-                                  EGLSurface const s,
-                                  EGLContext const c,
+mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
+                                  Window const win,
+                                  geom::Size const sz,
+                                  EGLContext const shared_context,
                                   std::shared_ptr<DisplayReport> const& r,
-                                  MirOrientation const o)
+                                  MirOrientation const o,
+                                  GLConfig const& gl_config)
                                   : size{sz},
-                                    egl_dpy{d},
-                                    egl_surf{s},
-                                    egl_ctx{c},
                                     report{r},
-                                    orientation_{o}
+                                    orientation_{o},
+                                    egl{gl_config}
 {
+    egl.setup(x_dpy, win, shared_context);
+    egl.report_egl_configuration(
+        [&r] (EGLDisplay disp, EGLConfig cfg)
+        {
+            r->report_egl_configuration(disp, cfg);
+        });
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
@@ -56,14 +60,13 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 
 void mgx::DisplayBuffer::make_current()
 {
-    if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make current"));
+    if (!egl.make_current())
+        fatal_error("Failed to make EGL surface current");
 }
 
 void mgx::DisplayBuffer::release_current()
 {
-    if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make uncurrent"));
+    egl.release_current();
 }
 
 bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
@@ -73,8 +76,8 @@ bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
 
 void mgx::DisplayBuffer::swap_buffers()
 {
-    if (!eglSwapBuffers(egl_dpy, egl_surf))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+    if (!egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
 
     /*
      * Admittedly we are not a real display and will miss some real vsyncs
@@ -106,4 +109,19 @@ void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
 {
     return this;
+}
+
+void mgx::DisplayBuffer::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
+{
+    f(*this);
+}
+
+void mgx::DisplayBuffer::post()
+{
+}
+
+std::chrono::milliseconds mgx::DisplayBuffer::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
 }

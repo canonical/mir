@@ -25,8 +25,10 @@
 #include "mir/raii.h"
 
 #include "mir/test/doubles/mock_egl.h"
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
 #include "mir/test/doubles/mock_drm.h"
+#endif
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
 #include "mir/test/doubles/mock_gbm.h"
 #endif
 
