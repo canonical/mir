@@ -79,15 +79,6 @@ auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<
         });
 }
 
-auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shared_ptr<mf::SessionMediatorReport>
-{
-    return session_mediator_report(
-        [this]()->std::shared_ptr<mf::SessionMediatorReport>
-        {
-            return report_factory(options::session_mediator_report_opt)->create_session_mediator_report();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::shared_ptr<mf::MessageProcessorReport>
 {
     return message_processor_report(

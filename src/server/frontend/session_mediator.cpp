@@ -20,7 +20,7 @@
 #include "reordering_message_sender.h"
 #include "event_sink_factory.h"
 
-#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator_observer.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
@@ -93,7 +93,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mg::PlatformIpcOperations> const& ipc_operations,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
-    std::shared_ptr<SessionMediatorReport> const& report,
+    std::shared_ptr<SessionMediatorObserver> const& observer,
     std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<MessageResourceCache> const& resource_cache,
@@ -109,7 +109,7 @@ mf::SessionMediator::SessionMediator(
     ipc_operations(ipc_operations),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
-    report(report),
+    report(observer),
     sink_factory{sink_factory},
     event_sink{sink_factory->create_sink(message_sender)},
     message_sender{message_sender},

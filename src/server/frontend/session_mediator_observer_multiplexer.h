@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012,2014 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,28 +13,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
- *              Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#ifndef MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_MULTIPLEXER_H_
+#define MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_MULTIPLEXER_H_
 
-#ifndef MIR_REPORT_NULL_SESSION_MEDIATOR_REPORT_H_
-#define MIR_REPORT_NULL_SESSION_MEDIATOR_REPORT_H_
-
+#include "mir/observer_multiplexer.h"
 #include "mir/frontend/session_mediator_observer.h"
-
-#include <string>
 
 namespace mir
 {
-namespace report
+namespace frontend
 {
-namespace null
+class SessionMediatorObserverMultiplexer : public ObserverMultiplexer<SessionMediatorObserver>
 {
-
-// Do-nothing implementation to satisfy dependencies
-class SessionMediatorReport : public frontend::SessionMediatorObserver
-{
+public:
     void session_connect_called(std::string const& app_name) override;
 
     void session_create_surface_called(std::string const& app_name) override;
@@ -71,14 +65,10 @@ class SessionMediatorReport : public frontend::SessionMediatorObserver
 
     void session_release_buffer_stream_called(std::string const& app_name) override;
 
-    void session_error(
-        std::string const& app_name,
-        char const* method,
-        std::string const& what) override;
+    void session_error(std::string const& app_name, char const* method, std::string const& what) override;
 };
 }
 }
-}
 
+#endif //MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_MULTIPLEXER_H_
 
-#endif /* MIR_FRONTEND_SESSION_MEDIATOR_REPORT_H_ */

@@ -31,7 +31,7 @@ class CompositorReport;
 namespace frontend
 {
 class ConnectorReport;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class MessageProcessorReport;
 }
 namespace graphics
@@ -59,7 +59,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayReport> create_display_report() = 0;
     virtual std::shared_ptr<scene::SceneReport> create_scene_report() = 0;
     virtual std::shared_ptr<frontend::ConnectorReport> create_connector_report() = 0;
-    virtual std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() = 0;
+    virtual std::shared_ptr<frontend::SessionMediatorObserver> create_session_mediator_report() = 0;
     virtual std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() = 0;
     virtual std::shared_ptr<input::InputReport> create_input_report() = 0;
     virtual std::shared_ptr<input::SeatObserver> create_seat_report() = 0;

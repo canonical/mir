@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator_observer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/input/cursor_images.h"
@@ -91,7 +91,7 @@ input_ready->set_value();
 void stop_receiving_input() override {}
 };
 
-struct MockSessionMediatorReport : mf::SessionMediatorReport
+struct MockSessionMediatorReport : mf::SessionMediatorObserver
 {
 MockSessionMediatorReport()
 {
@@ -473,18 +473,14 @@ struct NestedServer : mtf::HeadlessInProcessServer
     mt::Signal condition;
     mt::Signal test_processed_result;
 
-    std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
+    std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report
+        {std::make_shared<NiceMock<MockSessionMediatorReport>>()};
     NiceMock<MockDisplay> display{display_geometry};
     std::shared_ptr<StubSurfaceObserver> stub_observer = std::make_shared<StubSurfaceObserver>();
 
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
-        server.override_the_session_mediator_report([this]
-            {
-                mock_session_mediator_report = std::make_shared<NiceMock<MockSessionMediatorReport>>();
-                return mock_session_mediator_report;
-            });
 
         server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return the_mock_cursor(); });
 
@@ -495,6 +491,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         mtf::HeadlessInProcessServer::SetUp();
 
+        server.the_session_mediator_observer_registrar()->register_interest(mock_session_mediator_report);
         server.the_display_configuration_observer_registrar()->register_interest(the_mock_display_configuration_report());
     }
 

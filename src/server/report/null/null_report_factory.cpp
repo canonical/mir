@@ -49,7 +49,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::NullReportFactory::
     return std::make_shared<null::ConnectorReport>();
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::NullReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::NullReportFactory::create_session_mediator_report()
 {
     return std::make_shared<null::SessionMediatorReport>();
 }
@@ -101,7 +101,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_repo
 {
     return NullReportFactory{}.create_connector_report();
 }
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::null_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
 {
     return NullReportFactory{}.create_session_mediator_report();
 }

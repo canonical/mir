@@ -62,7 +62,7 @@ class Connector;
 class ConnectorReport;
 class ProtobufIpcFactory;
 class ConnectionCreator;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
@@ -247,7 +247,8 @@ public:
     /** @name frontend configuration - dependencies
      * dependencies of frontend on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
+    virtual std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>>
+        the_session_mediator_observer_registrar();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     // the_frontend_shell() is an adapter for the_shell().
@@ -357,6 +358,7 @@ protected:
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<frontend::SessionMediatorObserver> the_session_mediator_observer();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -402,7 +404,6 @@ protected:
     CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
@@ -455,6 +456,8 @@ private:
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>
         seat_observer_multiplexer;
+    CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
+        session_mediator_observer_multiplexer;
     std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;
