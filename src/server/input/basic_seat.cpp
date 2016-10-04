@@ -32,14 +32,14 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<mi::InputRegion> const& input_region,
                          std::shared_ptr<mi::KeyMapper> const& key_mapper,
                          std::shared_ptr<time::Clock> const& clock,
-                         std::shared_ptr<mi::SeatObserver> const& report) :
+                         std::shared_ptr<mi::SeatObserver> const& observer) :
       input_state_tracker{dispatcher,
                           touch_visualizer,
                           cursor_listener,
                           input_region,
                           key_mapper,
                           clock,
-                          report},
+                          observer},
       input_region{input_region}
 {
 }

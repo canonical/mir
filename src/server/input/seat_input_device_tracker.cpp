@@ -48,16 +48,16 @@ mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatch
                                                    std::shared_ptr<InputRegion> const& input_region,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
-                                                   std::shared_ptr<SeatObserver> const& report)
+                                                   std::shared_ptr<SeatObserver> const& observer)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, report{report}, buttons{0}
+      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
 {
 }
 
 void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
 {
     device_data[id];
-    report->seat_add_device(id);
+    observer->seat_add_device(id);
 }
 
 void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
@@ -78,7 +78,7 @@ void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
     if (spot_update_needed)
         update_spots();
 
-    report->seat_remove_device(id);
+    observer->seat_remove_device(id);
 }
 
 void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
@@ -103,7 +103,7 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
     }
 
     dispatcher->dispatch(event);
-    report->seat_dispatch_event(event);
+    observer->seat_dispatch_event(event);
 }
 
 bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)
@@ -206,16 +206,20 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 
 void mi::SeatInputDeviceTracker::set_confinement_regions(geometry::Rectangles const& regions)
 {
-    std::lock_guard<std::mutex> lg(region_mutex);
-    confined_region = regions;
-    report->seat_set_confinement_region_called(regions);
+    {
+        std::lock_guard<std::mutex> lg(region_mutex);
+        confined_region = regions;
+    }
+    observer->seat_set_confinement_region_called(regions);
 }
 
 void mi::SeatInputDeviceTracker::reset_confinement_regions()
 {
-    std::lock_guard<std::mutex> lg(region_mutex);
-    confined_region.clear();
-    report->seat_reset_confinement_regions();
+    {
+        std::lock_guard<std::mutex> lg(region_mutex);
+        confined_region.clear();
+    }
+    observer->seat_reset_confinement_regions();
 }
 
 void mi::SeatInputDeviceTracker::confine_function(mir::geometry::Point& p) const
@@ -281,7 +285,7 @@ void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<
     if (device != end(device_data))
         device->second.scan_codes = scan_codes;
 
-    report->seat_set_key_state(id, scan_codes);
+    observer->seat_set_key_state(id, scan_codes);
 }
 
 void mi::SeatInputDeviceTracker::set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons)
@@ -291,7 +295,7 @@ void mi::SeatInputDeviceTracker::set_pointer_state(MirInputDeviceId id, MirPoint
     if (device != end(device_data))
         device->second.update_button_state(buttons);
 
-    report->seat_set_pointer_state(id, buttons);
+    observer->seat_set_pointer_state(id, buttons);
 }
 
 void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
@@ -299,7 +303,7 @@ void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
     cursor_x = x;
     cursor_y = y;
 
-    report->seat_set_cursor_position(x, y);
+    observer->seat_set_cursor_position(x, y);
 }
 
 bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const

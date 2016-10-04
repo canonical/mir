@@ -50,7 +50,7 @@ public:
               std::shared_ptr<InputRegion> const& input_region,
               std::shared_ptr<KeyMapper> const& key_mapper,
               std::shared_ptr<time::Clock> const& clock,
-              std::shared_ptr<SeatObserver> const& report);
+              std::shared_ptr<SeatObserver> const& observer);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;
