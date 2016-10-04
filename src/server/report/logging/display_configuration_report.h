@@ -41,7 +41,11 @@ public:
 
     void configuration_failed(graphics::DisplayConfiguration const& attempted, std::exception const& error) override;
 
-    virtual void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
+
+    void catastrophic_configuration_error(
+        graphics::DisplayConfiguration const& failed_fallback,
+        std::exception const& error) override;
 
 private:
     void log_configuration(graphics::DisplayConfiguration const& configuration) const;

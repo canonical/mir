@@ -125,3 +125,14 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
         }
     });
 }
+
+void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
+    mg::DisplayConfiguration const& failed_fallback,
+    std::exception const& error)
+{
+    logger->log(component, ml::Severity::critical, "Failed to revert to safe display configuration!");
+    logger->log(component, ml::Severity::critical, "Attempted to fall back to configuration:");
+    log_configuration(failed_fallback);
+    logger->log(component, ml::Severity::critical, "Error details:");
+    logger->log(component, ml::Severity::critical, "%s", boost::diagnostic_information(error).c_str());
+}

@@ -42,3 +42,14 @@ void mg::DisplayConfigurationObserverMultiplexer::configuration_failed(
             observer.configuration_failed(attempted, error);
         });
 }
+
+void mg::DisplayConfigurationObserverMultiplexer::catastrophic_configuration_error(
+    mg::DisplayConfiguration const& failed_fallback,
+    std::exception const& error)
+{
+    for_each_observer(
+        [&failed_fallback, &error](auto& observer)
+        {
+            observer.catastrophic_configuration_error(failed_fallback, error);
+        });
+}

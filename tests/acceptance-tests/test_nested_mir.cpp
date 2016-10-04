@@ -143,6 +143,7 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationObserver
     MOCK_METHOD1(initial_configuration, void (mg::DisplayConfiguration const& configuration));
     MOCK_METHOD1(configuration_applied, void (mg::DisplayConfiguration const& configuration));
     MOCK_METHOD2(configuration_failed, void(mg::DisplayConfiguration const&, std::exception const&));
+    MOCK_METHOD2(catastrophic_configuration_error, void(mg::DisplayConfiguration const&, std::exception const&));
 };
 
 std::vector<geom::Rectangle> const display_geometry

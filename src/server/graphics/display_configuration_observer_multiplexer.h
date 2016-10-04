@@ -35,6 +35,10 @@ public:
     void configuration_applied(DisplayConfiguration const& config) override;
 
     void configuration_failed(DisplayConfiguration const& attempted, std::exception const& error) override;
+
+    void catastrophic_configuration_error(
+        DisplayConfiguration const& failed_fallback,
+        std::exception const& error) override;
 };
 
 }

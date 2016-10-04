@@ -173,6 +173,9 @@ struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
     void initial_configuration(mg::DisplayConfiguration const&) override {}
     void configuration_applied(mg::DisplayConfiguration const&) override {}
     void configuration_failed(mg::DisplayConfiguration const&, std::exception const&) override {}
+    void catastrophic_configuration_error(
+        mg::DisplayConfiguration const&,
+        std::exception const&) override { }
 };
 
 

@@ -35,6 +35,9 @@ public:
     virtual void configuration_failed(
         DisplayConfiguration const& attempted,
         std::exception const& error) = 0;
+    virtual void catastrophic_configuration_error(
+        DisplayConfiguration const& failed_fallback,
+        std::exception const& error) = 0;
 
 protected:
     DisplayConfigurationObserver() = default;

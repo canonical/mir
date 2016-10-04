@@ -427,7 +427,6 @@ void ms::MediatingDisplayChanger::apply_config(
     }
     catch (std::exception const& e)
     {
-        observer->configuration_failed(*conf, e);
         try
         {
             /*
@@ -442,10 +441,12 @@ void ms::MediatingDisplayChanger::apply_config(
                 [this] { compositor->start(); }};
             display->configure(*existing_configuration);
         }
-        catch (...)
+        catch (std::exception const& e)
         {
-            // OMG WHY HAS EVERYTHING EXPLODED?
+            observer->catastrophic_configuration_error(*existing_configuration, e);
+            throw;
         }
+        observer->configuration_failed(*conf, e);
         throw;
     }
 }
