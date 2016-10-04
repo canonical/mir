@@ -19,6 +19,7 @@
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
 #include "host_stream.h"
+#include "host_chain.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/raii.h"
@@ -111,6 +112,10 @@ public:
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
         mir_surface_release_sync(mir_surface);
+    }
+
+    void apply_spec(mgn::HostSurfaceSpec&) override
+    {
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -462,13 +467,23 @@ void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::
 }
 
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
-    mg::BufferProperties const& properties)
+    mg::BufferProperties const& properties) const
 {
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
+std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }
