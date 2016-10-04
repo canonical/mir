@@ -27,11 +27,13 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_gl_config.h"
+#include "mir/test/fake_shared.h"
 
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
-namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
+namespace mtd=mt::doubles;
 namespace geom=mir::geometry;
 using namespace testing;
 
@@ -97,7 +99,7 @@ public:
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   mock_gl_config,
+                   mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -112,16 +114,7 @@ TEST_F(X11DisplayTest, creates_display_successfully)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglGetDisplay(mock_x11.fake_x11.display))
-        .Times(Exactly(1));
-
     EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, size.width.as_int(), size.height.as_int(),_,_,_,_,_,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display,_, EGL_NO_CONTEXT,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_, reinterpret_cast<mtd::MockEGL::AnyNativeType>(mock_x11.fake_x11.window), nullptr))
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
