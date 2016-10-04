@@ -18,6 +18,7 @@
  */
 
 #include "gbm_format_conversions.h"
+#include <stddef.h>
 #include <gbm.h>
 
 namespace mgm = mir::graphics::mesa;
