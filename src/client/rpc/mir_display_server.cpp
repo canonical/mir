@@ -175,13 +175,6 @@ void mclr::DisplayServer::stop_prompt_session(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    channel->call_method(std::string(__func__), request, response, done);
-}
 void mclr::DisplayServer::submit_buffer(
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Void* response,
