@@ -35,7 +35,10 @@ public:
     /**
      * Add an observer to the set notified of all observations
      *
-     * The ObserverRegistrar does not take
+     * This is threadsafe and can be called in any context.
+     *
+     * The ObserverRegistrar does not take any ownership of \p observer, and will
+     * automatically remove it when \p observer expires.
      *
      * \param [in] observer The observer to register
      */
@@ -45,8 +48,10 @@ public:
      * Remove an observer from the set notified of all observations.
      *
      * This is threadsafe and can be called in any context.
+     *
      * It is \b not guaranteed that methods of \p observer will not be called after
-     * this returns.
+     * this returns. In order to guarantee the observer will no longer be entered it
+     * is necessary to wait for the owning shared_ptr's reference count to hit 0.
      *
      * \param observer [in] The observer to unregister
      */
