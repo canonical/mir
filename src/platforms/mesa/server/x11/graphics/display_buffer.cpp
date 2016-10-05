@@ -42,6 +42,13 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                     egl{gl_config},
                                     last_frame{f}
 {
+    egl.setup(x_dpy, win, shared_context);
+    egl.report_egl_configuration(
+        [&r] (EGLDisplay disp, EGLConfig cfg)
+        {
+            r->report_egl_configuration(disp, cfg);
+        });
+
     /*
      * EGL_CHROMIUM_sync_control is an EGL extension that Google invented/copied
      * so they could switch Chrome(ium) from GLX to EGL:
@@ -67,13 +74,6 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
             strstr(extensions, "EGL_CHROMIUM_sync_control") ?
             eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
             );
-
-    egl.setup(x_dpy, win, shared_context);
-    egl.report_egl_configuration(
-        [&r] (EGLDisplay disp, EGLConfig cfg)
-        {
-            r->report_egl_configuration(disp, cfg);
-        });
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
