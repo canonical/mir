@@ -306,6 +306,11 @@ void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
      * XXX It's presently useful but idealistically inefficient that we
      *     get a callback on every frame, even when the compositor is idle.
      *     (LP: #1374318)
+     *     Although we possibly shouldn't fix that at all because the
+     *     call to increment_with_timestamp would produce incorrect MSC values
+     *     if it were to miss a physical frame. The X11 platform has that
+     *     problem already, but it's less important for production use than
+     *     Android.
      */
     auto& f = last_frame[as_output_id(name).as_value()];
     f.increment_with_timestamp(timestamp);

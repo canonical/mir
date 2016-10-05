@@ -35,7 +35,9 @@ void AtomicFrame::store(Frame const& f)
 
 void AtomicFrame::increment_now()
 {
-    increment_with_timestamp(Frame::Timestamp::now(frame.ust.clock_id));
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    frame.ust = Frame::Timestamp::now(frame.ust.clock_id);
+    frame.msc++;
 }
 
 void AtomicFrame::increment_with_timestamp(Frame::Timestamp t)
