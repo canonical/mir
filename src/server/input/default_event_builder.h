@@ -54,6 +54,12 @@ public:
     EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) override;
 
     EventUPtr device_state_event(float cursor_x, float cursor_y) override;
+
+    EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
+                            float x, float y, float hscroll_value, float vscroll_value, float relative_x_value,
+                            float relative_y_value) override;
+
+
 private:
     MirInputDeviceId const device_id;
     std::shared_ptr<cookie::Authority> const cookie_authority;
