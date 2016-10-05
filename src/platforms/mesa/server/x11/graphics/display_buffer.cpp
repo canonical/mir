@@ -40,7 +40,8 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                     report{r},
                                     orientation_{o},
                                     egl{gl_config},
-                                    last_frame{f}
+                                    last_frame{f},
+                                    eglGetSyncValues{nullptr}
 {
     egl.setup(x_dpy, win, shared_context);
     egl.report_egl_configuration(
@@ -68,12 +69,16 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
      * However this remains the correct and only way of doing it in EGL on X11.
      * AFAIK the only existing implementation is Mesa.
      */
-    auto extensions = eglQueryString(egl.display(), EGL_EXTENSIONS);
-    eglGetSyncValues =
-        reinterpret_cast<EglGetSyncValuesCHROMIUM*>(
-            strstr(extensions, "EGL_CHROMIUM_sync_control") ?
-            eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
-            );
+    auto const extensions = eglQueryString(egl.display(), EGL_EXTENSIONS);
+    auto const extension = "EGL_CHROMIUM_sync_control";
+    auto const found = strstr(extensions, extension);
+    if (found)
+    {
+        char end = found[strlen(extension)];
+        if (end == '\0' || end == ' ')
+            eglGetSyncValues = reinterpret_cast<EglGetSyncValuesCHROMIUM*>(
+                                 eglGetProcAddress("eglGetSyncValuesCHROMIUM"));
+    }
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
