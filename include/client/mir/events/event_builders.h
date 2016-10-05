@@ -24,6 +24,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
@@ -152,6 +153,10 @@ EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      float x_axis_value,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);
+
+EventUPtr clone_event(MirEvent const& event);
+void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+
 }
 }
 

@@ -440,5 +440,7 @@ MIR_CLIENT_DETAIL_0.25 {
   global:
     extern "C++" {
       mir::client::DefaultConnectionConfiguration::the_error_handler*;
+      mir::events::clone_event*;
+      mir::events::transform_positions*;
     };
 } MIR_CLIENT_DETAIL_0.24;

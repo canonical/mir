@@ -446,3 +446,24 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
 
     return make_uptr_event(e);
 }
+
+mir::EventUPtr mev::clone_event(MirEvent const& event)
+{
+    return make_uptr_event(event.clone());
+}
+
+void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)
+{
+    if (event.type() == mir_event_type_motion)
+    {
+        auto mev = event.to_input()->to_motion();
+        for (unsigned i = 0; i < mev->pointer_count(); i++)
+        {
+            auto x = mev->x(i);
+            auto y = mev->y(i);
+            mev->set_x(i, x - movement.dx.as_int());
+            mev->set_y(i, y - movement.dy.as_int());
+        }
+    }
+}
+

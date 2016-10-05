@@ -70,26 +70,12 @@ struct InputDispatcherSceneObserver : public ms::Observer
     std::function<void(ms::Surface*)> const on_removed;
 };
 
-template <typename T>
-void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
+void deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
-    T to_deliver = *ev;
-
-    if (to_deliver.type() == mir_event_type_motion)
-    {
-        auto sx = surface->input_bounds().top_left.x.as_int();
-        auto sy = surface->input_bounds().top_left.y.as_int();
-
-        auto mev = to_deliver.to_input()->to_motion();
-        for (unsigned i = 0; i < mev->pointer_count(); i++)
-        {
-            auto x = mev->x(i);
-            auto y = mev->y(i);
-            mev->set_x(i, x - sx);
-            mev->set_y(i, y - sy);
-        }
-    }
-    surface->consume(&to_deliver);
+    auto to_deliver = mev::clone_event(*ev);
+    auto const& bounds = surface->input_bounds();
+    mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
+    surface->consume(to_deliver.get());
 }
 
 }
@@ -158,19 +144,18 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
         touch_state_by_id.erase(touch_it);
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_key(MirKeyboardEvent const* kev)
+bool mi::SurfaceInputDispatcher::dispatch_key(MirEvent const* kev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
     if (!started)
         return false;
-    
+
     auto strong_focus = focus_surface.lock();
     if (!strong_focus)
         return false;
 
-
-    deliver(strong_focus, kev);
+    strong_focus->consume(kev);
 
     return true;
 }
@@ -212,19 +197,21 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
                                                        MirPointerEvent const* pev,
                                                        MirPointerAction action)
 {
+    auto surface_displacement = surface->input_bounds().top_left;
+
     auto event = mev::make_event(mir_input_event_get_device_id(pev),
         std::chrono::nanoseconds(mir_input_event_get_event_time(pev)),
         std::vector<uint8_t>{},
         mir_pointer_event_modifiers(pev),
         action, mir_pointer_event_buttons(pev),
-        mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
-        mir_pointer_event_axis_value(pev,mir_pointer_axis_y),
-        mir_pointer_event_axis_value(pev,mir_pointer_axis_hscroll),
-        mir_pointer_event_axis_value(pev,mir_pointer_axis_vscroll),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_x) - surface_displacement.x.as_int(),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_y) - surface_displacement.y.as_int(),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll),
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
         mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
 
-    deliver(surface, event->to_input()->to_motion());;
+    surface->consume(event.get());
 }
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
@@ -381,7 +368,7 @@ bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
     switch (mir_input_event_get_type(iev))
     {
     case mir_input_event_type_key:
-        return dispatch_key(mir_input_event_get_keyboard_event(iev));
+        return dispatch_key(&event);
     case mir_input_event_type_touch:
         return dispatch_touch(id, mir_input_event_get_touch_event(iev));
     case mir_input_event_type_pointer:
