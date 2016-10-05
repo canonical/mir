@@ -195,7 +195,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     pointer_pos = mir::geometry::Point{abs_x, abs_y};
     auto const movement = pointer_pos - old_pointer_pos;
 
-        return builder->pointer_event(time, action, button_state, abs_x, abs_y, hscroll_value, vscroll_value,
+    return builder->pointer_event(time, action, button_state, abs_x, abs_y, hscroll_value, vscroll_value,
                                   movement.dx.as_int(), movement.dy.as_int());
 }
 
