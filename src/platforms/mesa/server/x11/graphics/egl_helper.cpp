@@ -161,7 +161,8 @@ void mgxh::EGLHelper::setup_internal(::Display* const x_dpy, bool initialize)
         if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
 
-        if ((major != required_egl_version_major) || (minor != required_egl_version_minor))
+        if ((major < required_egl_version_major) ||
+            (major == required_egl_version_major && minor < required_egl_version_minor))
         {
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
