@@ -32,14 +32,11 @@ extern "C" {
 
 /** Create a render surface.
  *
- * \warning: This call is always synchronous as there is no actual buffer
- *           backing the surface yet. In case of error, the call will succeed
- *           but an error render surface will be returned.
+ * \warning: This call is always synchronous as there is no actual rendering
+ *           construct backing the surface yet. In case of error, the call
+ *           will succeed but an error render surface will be returned.
  *
  * \param [in] connection       A valid connection
- * \param [in] width            Requested width
- * \param [in] height           Requested height
- * \param [in] format           Requested pixel format
  *
  * \return                      The newly created render surface
  */
@@ -50,6 +47,7 @@ MirRenderSurface* mir_connection_create_render_surface(
  * Test for a valid render surface.
  *
  * \param [in] render_surface  The render surface
+ *
  * \return                     True if the supplied render_surface is valid,
  *                             or false otherwise
  */
@@ -57,7 +55,9 @@ bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface);
 
 /**
- * Release the specified render surface. This will not release the containee.
+ * Release the specified render surface.
+ *
+ * \warning: This will not release the containee.
  *
  * \param [in] render_surface    The render surface to be released
  */
@@ -67,17 +67,17 @@ void mir_render_surface_release(
 /**
  * Create a new buffer stream, backing the given render surface, asynchronously.
  *
- * \warning: The newly created render surface will inherit the width, height and format
- *           of the render surface container. Its 'usage' is implied and equal to
- *           'mir_buffer_usage_software'.
- *
  * \param [in] render_surface    The render surface
- * \param [in] callback          Callback function to be invoked when the request
+ * \param [in] width             Requested width
+ * \param [in] height            Requested height
+ * \param [in] format            Requested pixel format
+ * \param [in] usage             Requested buffer usage
+ * \param [in] callback          Callback function to be invoked when request
  *                               completes
  * \param [in] context           User data passed to the callback function
  *
  * \return                       A handle that can be supplied to mir_wait_for
- *                               in order to get notified when the request is complete
+ *                               to get notified when the request is complete
  */
 MirWaitHandle* mir_render_surface_create_buffer_stream(
         MirRenderSurface* render_surface,
@@ -90,11 +90,11 @@ MirWaitHandle* mir_render_surface_create_buffer_stream(
 /**
  * Create a new buffer stream, backing the given render surface, synchronously.
  *
- * \warning: The newly created render surface will inherit the width, height and format
- *           of the render surface container. Its 'usage' is implied and equal to
- *           'mir_buffer_usage_software'.
- *
  * \param [in] render_surface    The render surface
+ * \param [in] width             Requested width
+ * \param [in] height            Requested height
+ * \param [in] format            Requested pixel format
+ * \param [in] usage             Requested buffer usage
  *
  * \return                       The newly created buffer stream
  */
@@ -105,24 +105,26 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
     MirBufferUsage usage);
 
 /**
- * Set the MirSurfaceContent to display a render surface.
+ * Set the MirSurfaceSpec to display content contained in a render surface
  *
- * The initial call to mir_surface_spec_add_render_surface will set
- * the bottom-most content, and subsequent calls will stack the content
- * on top.
+ * \warning: The initial call to mir_surface_spec_add_render_surface will set
+ *           the bottom-most content, and subsequent calls will stack the
+ *           content on top.
  *
- * \param spec             The surface_spec to be updated.
- * \param scaled_width     The width that the content will displayed at.
- * \param scaled_height    The height that the content will be displayed at.
- * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
- * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
- * \param render_surface   The render surface containing the content to be displayed.
+ * \param spec             The surface_spec to be updated
+ * \param render_surface   The render surface containing the content to be displayed
+ * \param scaled_width     The width that the content will displayed at
+ *                         (Ignored for buffer streams)
+ * \param scaled_height    The height that the content will be displayed at
+ *                         (Ignored for buffer streams)
+ * \param displacement_x   The x displacement from the top-left corner of the MirSurface
+ * \param displacement_y   The y displacement from the top-left corner of the MirSurface
  */
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
     int scaled_width, int scaled_height,
-    int displacement_x, int displacement_y,
-    MirRenderSurface* render_surface);
+    int displacement_x, int displacement_y);
 
 #ifdef __cplusplus
 }

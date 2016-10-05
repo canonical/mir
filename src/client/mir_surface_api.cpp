@@ -636,9 +636,9 @@ catch (std::exception const& ex)
 
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
     int /*scaled_width*/, int /*scaled_height*/,
-    int displacement_x, int displacement_y,
-    MirRenderSurface* render_surface)
+    int displacement_x, int displacement_y)
 try
 {
     mir::require(spec && render_surface);
