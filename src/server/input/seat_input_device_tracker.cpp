@@ -96,8 +96,7 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
 
         if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
         {
-            event.to_input()->to_motion()->set_x(0, cursor_x);
-            event.to_input()->to_motion()->set_y(0, cursor_y);
+            mev::set_cursor_position(event, cursor_x, cursor_y);
             mev::set_button_state(event, button_state());
         }
     }
