@@ -61,7 +61,7 @@ add_library(mirclientobjects OBJECT
   logging/input_receiver_report.cpp
   logging/perf_report.cpp
   default_connection_configuration.cpp
-  surface_map.cpp
+  connection_surface_map.cpp
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
