@@ -47,16 +47,16 @@ class DisplayServer;
 class RenderSurface : public MirRenderSurface
 {
 public:
-    RenderSurface(int const width, int const height,
-                  MirPixelFormat const format,
-                  MirBufferUsage usage,
-                  MirConnection* const connection,
+    RenderSurface(MirConnection* const connection,
                   rpc::DisplayServer& display_server,
                   std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
                   std::shared_ptr<void> native_window,
                   std::shared_ptr<ClientPlatform> client_platform);
     MirConnection* connection() const override;
     MirWaitHandle* create_client_buffer_stream(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage usage,
         mir_buffer_stream_callback callback,
         void *context) override;
     int stream_id() override;
@@ -72,15 +72,20 @@ public:
     struct StreamCreationRequest
     {
         StreamCreationRequest(
-                mir_buffer_stream_callback cb, void* context, RenderSurface* rs) :
+                RenderSurface* rs,
+                MirBufferUsage usage,
+                mir_buffer_stream_callback cb,
+                void* context) :
+                    rs(rs),
+                    usage(usage),
                     callback(cb),
-                    context(context),
-                    rs(rs)
+                    context(context)
         {
         }
+        RenderSurface* rs;
+        MirBufferUsage usage;
         mir_buffer_stream_callback callback;
         void* context;
-        RenderSurface* rs;
     };
 
     struct StreamReleaseRequest
@@ -101,9 +106,6 @@ public:
     };
 
 private:
-    int const width_, height_;
-    MirPixelFormat const format_;
-    MirBufferUsage buffer_usage;
     MirConnection* const connection_;
     rpc::DisplayServer& server;
     std::shared_ptr<ConnectionSurfaceMap> surface_map;

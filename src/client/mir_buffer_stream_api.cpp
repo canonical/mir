@@ -36,16 +36,12 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-// assign_result is compatible with all 2-parameter callbacks
 void assign_result(void* result, void** context)
 {
     if (context)
         *context = result;
 }
-
 }
-
-
 
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,

@@ -70,14 +70,11 @@ RenderSurfaceToConnectionMap connection_map;
 }
 
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection,
-    int const width, int const height,
-    MirPixelFormat const format,
-    MirBufferUsage usage)
+    MirConnection* connection)
 try
 {
     mir::require(connection);
-    auto rs = connection->create_render_surface(width, height, format, usage);
+    auto rs = connection->create_render_surface();
     connection_map.insert(static_cast<void*>(rs), connection);
     return rs;
 }
@@ -92,7 +89,7 @@ bool mir_render_surface_is_valid(
 try
 {
     mir::require(render_surface &&
-                 connection_map.connection(static_cast<void*>(render_surface))->connection_surface_map()->render_surface(render_surface));
+        connection_map.connection(static_cast<void*>(render_surface))->connection_surface_map()->render_surface(render_surface));
     return true;
 }
 catch (std::exception const& ex)
@@ -116,15 +113,23 @@ catch (std::exception const& ex)
 }
 
 MirWaitHandle* mir_render_surface_create_buffer_stream(
-    MirRenderSurface* render_surface,
-    mir_buffer_stream_callback callback,
-    void* context)
+        MirRenderSurface* render_surface,
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage usage,
+        mir_buffer_stream_callback callback,
+        void* context)
 try
 {
     mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    return rs->create_client_buffer_stream(callback, context);
+    return rs->create_client_buffer_stream(
+        width, height,
+        format,
+        usage,
+        callback,
+        context);
 }
 catch (std::exception const& ex)
 {
@@ -133,10 +138,17 @@ catch (std::exception const& ex)
 }
 
 MirBufferStream* mir_render_surface_create_buffer_stream_sync(
-    MirRenderSurface* render_surface)
+    MirRenderSurface* render_surface,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage)
 {
     MirBufferStream* stream = nullptr;
-    mir_render_surface_create_buffer_stream(render_surface,
+    mir_render_surface_create_buffer_stream(
+        render_surface,
+        width, height,
+        format,
+        usage,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
     return stream;
 }

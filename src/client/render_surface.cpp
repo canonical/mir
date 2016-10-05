@@ -43,18 +43,11 @@ namespace mf = mir::frontend;
 namespace ml = mir::logging;
 
 mcl::RenderSurface::RenderSurface(
-    int const width, int const height,
-    MirPixelFormat const format,
-    MirBufferUsage usage,
     MirConnection* const connection,
     mclr::DisplayServer& display_server,
     std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
     std::shared_ptr<void> native_window,
     std::shared_ptr<ClientPlatform> client_platform) :
-        width_(width),
-        height_(height),
-        format_(format),
-        buffer_usage(usage),
         connection_(connection),
         server(display_server),
         surface_map(connection_surface_map),
@@ -83,7 +76,7 @@ void render_surface_buffer_stream_create_callback(BufferStream* stream, void* co
     //TODO: check if there is no outstanding request already?
 
     rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
-    if (rs->buffer_usage == mir_buffer_usage_hardware)
+    if (request->usage == mir_buffer_usage_hardware)
     {
         rs->platform->use_egl_native_window(
             rs->wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream));
@@ -114,14 +107,17 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, 
 }
 
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage,
     mir_buffer_stream_callback callback,
     void* context)
 {
     // TODO: check if there is an outstanding stream request
-    stream_creation_request = std::make_shared<StreamCreationRequest>(callback, context, this);
+    stream_creation_request = std::make_shared<StreamCreationRequest>(this, usage, callback, context);
 
     return connection_->create_client_buffer_stream(
-        width_, height_, format_, buffer_usage, nullptr,
+        width, height, format, usage, nullptr,
         render_surface_buffer_stream_create_callback, stream_creation_request.get());
 }
 

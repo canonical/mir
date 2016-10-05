@@ -36,6 +36,9 @@ public:
     virtual ~MirRenderSurface() = default;
     virtual MirConnection* connection() const = 0;
     virtual MirWaitHandle* create_client_buffer_stream(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage,
         mir_buffer_stream_callback callback,
         void* context) = 0;
     virtual int stream_id() = 0;

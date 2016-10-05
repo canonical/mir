@@ -211,10 +211,7 @@ public:
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
-    MirRenderSurface* create_render_surface(
-        int width, int height,
-        MirPixelFormat format,
-        MirBufferUsage usage);
+    MirRenderSurface* create_render_surface();
     void release_render_surface(
         void* render_surface);
 

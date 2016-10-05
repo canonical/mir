@@ -44,10 +44,7 @@ extern "C" {
  * \return                      The newly created render surface
  */
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection,
-    int const width, int const height,
-    MirPixelFormat const format,
-    MirBufferUsage usage);
+    MirConnection* connection);
 
 /**
  * Test for a valid render surface.
@@ -83,9 +80,12 @@ void mir_render_surface_release(
  *                               in order to get notified when the request is complete
  */
 MirWaitHandle* mir_render_surface_create_buffer_stream(
-    MirRenderSurface* render_surface,
-    mir_buffer_stream_callback callback,
-    void* context);
+        MirRenderSurface* render_surface,
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage usage,
+        mir_buffer_stream_callback callback,
+        void* context);
 
 /**
  * Create a new buffer stream, backing the given render surface, synchronously.
@@ -99,7 +99,10 @@ MirWaitHandle* mir_render_surface_create_buffer_stream(
  * \return                       The newly created buffer stream
  */
 MirBufferStream* mir_render_surface_create_buffer_stream_sync(
-    MirRenderSurface* render_surface);
+    MirRenderSurface* render_surface,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage);
 
 /**
  * Set the MirSurfaceContent to display a render surface.
