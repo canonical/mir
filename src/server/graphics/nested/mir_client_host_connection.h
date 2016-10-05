@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <string>
 #include <vector>
@@ -62,7 +63,9 @@ public:
     std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
     std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
-    std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) override;
+    std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
+    std::unique_ptr<HostChain> create_chain() const override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
     std::shared_ptr<HostSurface> create_surface(
         std::shared_ptr<HostStream> const& stream,
         geometry::Displacement stream_displacement,
@@ -94,7 +97,9 @@ private:
 
     std::vector<HostSurface*> surfaces;
 
+    RecursiveReadWriteMutex input_config_callback_mutex;
     std::function<void(UniqueInputConfig)> input_config_callback;
+    RecursiveReadWriteMutex event_callback_mutex;
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
 
     struct NestedCursorImage : graphics::CursorImage

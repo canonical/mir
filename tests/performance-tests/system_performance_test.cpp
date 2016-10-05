@@ -150,7 +150,7 @@ SystemPerformanceTest::SystemPerformanceTest() : bin_dir{mir_bin_dir()}
 {
 }
 
-void SystemPerformanceTest::SetUp(std::string const server_args)
+void SystemPerformanceTest::set_up_with(std::string const server_args)
 {
     auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
     auto const server_cmd =

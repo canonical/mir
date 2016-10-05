@@ -27,11 +27,13 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_gl_config.h"
+#include "mir/test/fake_shared.h"
 
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
-namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
+namespace mtd=mt::doubles;
 namespace geom=mir::geometry;
 using namespace testing;
 
@@ -94,13 +96,18 @@ public:
         mock_x11.fake_x11.screen.mwidth = mm.width.as_int();
         mock_x11.fake_x11.screen.mheight = mm.height.as_int();
         size = window;
+
+        ON_CALL(mock_x11, XGetGeometry(mock_x11.fake_x11.display,_,_,_,_,_,_,_,_))
+        .WillByDefault(DoAll(SetArgPointee<5>(mock_x11.fake_x11.screen.width),
+                             SetArgPointee<6>(mock_x11.fake_x11.screen.height),
+                             Return(1)));
     }
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
                    size,
-                   mock_gl_config,
+                   mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -115,16 +122,7 @@ TEST_F(X11DisplayTest, creates_display_successfully)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglGetDisplay(mock_x11.fake_x11.display))
-        .Times(Exactly(1));
-
     EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, size.width.as_int(), size.height.as_int(),_,_,_,_,_,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display,_, EGL_NO_CONTEXT,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_, reinterpret_cast<mtd::MockEGL::AnyNativeType>(mock_x11.fake_x11.window), nullptr))
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
@@ -161,7 +159,7 @@ TEST_F(X11DisplayTest, respects_gl_config)
 
 TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_screen)
 {
-    auto const pixel = geom::Size{2560, 1080};
+    auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
     auto const window = geom::Size{1280, 1024};
     auto const pixel_width = float(mm.width.as_int()) / float(pixel.width.as_int());
@@ -185,7 +183,7 @@ TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_scre
 
 TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
 {
-    auto const pixel = geom::Size{2560, 1080};
+    auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
     auto const window = geom::Size{1280, 1024};
 
@@ -202,4 +200,25 @@ TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
         );
 
     EXPECT_THAT(reported_resolution, Eq(window));
+}
+
+TEST_F(X11DisplayTest, adjusts_resolution_with_respect_to_screen_size)
+{
+    auto const pixel = geom::Size{1000, 1000};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+    auto const border = 150; //must match the border value in clip_to_display()
+
+    setup_x11_screen(pixel, mm, window);
+
+    auto display = create_display();
+    auto config = display->configuration();
+    geom::Size reported_resolution;
+    config->for_each_output(
+        [&reported_resolution](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_resolution = output.modes[0].size;
+        });
+
+    EXPECT_THAT(reported_resolution, Eq(geom::Size{pixel.width.as_uint32_t()-border, pixel.height.as_uint32_t()-border}));
 }

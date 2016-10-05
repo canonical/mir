@@ -17,31 +17,30 @@
  *
  */
 
-#include "mir/graphics/egl_error.h"
 #include "mir/graphics/atomic_frame.h"
+#include "mir/fatal.h"
 #include "display_buffer.h"
 #include "display_configuration.h"
+#include "mir/graphics/display_report.h"
 #include <cstring>
-#include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
-                                  EGLDisplay const d,
-                                  EGLSurface const s,
-                                  EGLContext const c,
+mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
+                                  Window const win,
+                                  geom::Size const sz,
+                                  EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,
                                   std::shared_ptr<DisplayReport> const& r,
-                                  MirOrientation const o)
+                                  MirOrientation const o,
+                                  GLConfig const& gl_config)
                                   : size{sz},
-                                    egl_dpy{d},
-                                    egl_surf{s},
-                                    egl_ctx{c},
-                                    last_frame{f},
                                     report{r},
-                                    orientation_{o}
+                                    orientation_{o},
+                                    egl{gl_config},
+                                    last_frame{f}
 {
     /*
      * EGL_CHROMIUM_sync_control is an EGL extension that Google invented/copied
@@ -62,12 +61,19 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
      * However this remains the correct and only way of doing it in EGL on X11.
      * AFAIK the only existing implementation is Mesa.
      */
-    auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
+    auto extensions = eglQueryString(egl.display(), EGL_EXTENSIONS);
     eglGetSyncValues =
         reinterpret_cast<EglGetSyncValuesCHROMIUM*>(
             strstr(extensions, "EGL_CHROMIUM_sync_control") ?
             eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
             );
+
+    egl.setup(x_dpy, win, shared_context);
+    egl.report_egl_configuration(
+        [&r] (EGLDisplay disp, EGLConfig cfg)
+        {
+            r->report_egl_configuration(disp, cfg);
+        });
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
@@ -84,14 +90,13 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
 
 void mgx::DisplayBuffer::make_current()
 {
-    if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make current"));
+    if (!egl.make_current())
+        fatal_error("Failed to make EGL surface current");
 }
 
 void mgx::DisplayBuffer::release_current()
 {
-    if (!eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot make uncurrent"));
+    egl.release_current();
 }
 
 bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
@@ -101,8 +106,8 @@ bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
 
 void mgx::DisplayBuffer::swap_buffers()
 {
-    if (!eglSwapBuffers(egl_dpy, egl_surf))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+    if (!egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
 
     /*
      * It would be nice to call this on demand as required. However the
@@ -115,7 +120,7 @@ void mgx::DisplayBuffer::swap_buffers()
      */
     int64_t ust_us, msc, sbc;
     if (eglGetSyncValues &&
-        eglGetSyncValues(egl_dpy, egl_surf, &ust_us, &msc, &sbc))
+        eglGetSyncValues(egl.display(), egl.surface(), &ust_us, &msc, &sbc))
     {
         std::chrono::nanoseconds const ust_ns{ust_us * 1000};
         mg::Frame frame;
@@ -160,4 +165,19 @@ void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
 {
     return this;
+}
+
+void mgx::DisplayBuffer::for_each_display_buffer(
+    std::function<void(graphics::DisplayBuffer&)> const& f)
+{
+    f(*this);
+}
+
+void mgx::DisplayBuffer::post()
+{
+}
+
+std::chrono::milliseconds mgx::DisplayBuffer::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
 }

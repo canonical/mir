@@ -55,6 +55,7 @@ EventUPtr make_event(
     frontend::SurfaceId const& surface_id,
     int dpi,
     float scale,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t id);
 
