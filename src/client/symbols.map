@@ -433,6 +433,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_surface_placement_get_relative_position;
     mir_display_output_type_name;
     mir_output_type_name;
+    mir_surface_output_event_get_refresh_rate;
 } MIR_CLIENT_0.24;
 
 MIR_CLIENT_DETAIL_0.25 {
