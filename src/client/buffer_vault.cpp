@@ -352,4 +352,3 @@ void mcl::BufferVault::set_interval(int i)
         }
     }
 }
-
