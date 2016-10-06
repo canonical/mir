@@ -57,7 +57,8 @@ bool mir_render_surface_is_valid(
 /**
  * Release the specified render surface.
  *
- * \warning: This will not release the containee.
+ * \warning: This will not release the content. It's an error to release
+ *           the render surface without releasing the content first.
  *
  * \param [in] render_surface    The render surface to be released
  */
@@ -110,6 +111,8 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
  * \warning: The initial call to mir_surface_spec_add_render_surface will set
  *           the bottom-most content, and subsequent calls will stack the
  *           content on top.
+ * \warning: It's an error to call this function with a render surface
+ *           that holds no content.
  *
  * \param spec             The surface_spec to be updated
  * \param render_surface   The render surface containing the content to be displayed

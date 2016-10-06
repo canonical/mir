@@ -30,7 +30,7 @@ void assign_result(void* result, void** context)
         *context = result;
 }
 
-// 'Native window handle' (a.k.a. client visible render surface) to connection map
+// 'Native window handle' (a.k.a. client-visible render surface) to connection map
 class RenderSurfaceToConnectionMap
 {
 public:

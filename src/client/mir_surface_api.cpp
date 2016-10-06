@@ -644,6 +644,8 @@ try
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
 
+    if (rs->stream_id() < 0)
+        BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
     ContentInfo info{{displacement_x, displacement_y}, rs->stream_id(), {}};
 
     if (spec->streams.is_set())

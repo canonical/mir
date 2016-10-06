@@ -59,7 +59,6 @@ MirConnection* mcl::ErrorStream::connection() const
 MirRenderSurface* mcl::ErrorStream::render_surface() const
 {
     return nullptr;
-//    return render_surface_;
 }
 
 mir::frontend::BufferStreamId mcl::ErrorStream::rpc_id() const
