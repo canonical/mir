@@ -23,6 +23,7 @@ add_library(
 
 target_link_libraries(
   mirsharedmesaservercommon-static
+  mirsharedmesa-static
 
   server_platform_common
   kms_utils
