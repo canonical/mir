@@ -533,7 +533,6 @@ public:
     }
     ~HostBuffer()
     {
-        f = []{};
         mir_buffer_release(handle);
     }
 
@@ -580,21 +579,22 @@ public:
 
     void available(MirBuffer* buffer)
     {
+        std::unique_lock<std::mutex> lk(mut);
+        if (!handle)
         {
-            std::unique_lock<std::mutex> lk(mut);
-            if (!handle)
-            {
-                handle = buffer;
-                cv.notify_all();
-            }
+            handle = buffer;
+            cv.notify_all();
         }
 
-        if (f)
-            f();
+        auto g = f;
+        lk.unlock();
+        if (g)
+            g();
     }
 
     void on_ownership_notification(std::function<void()> const& fn) override
     {
+        std::unique_lock<std::mutex> lk(mut);
         f = fn;
     }
 
