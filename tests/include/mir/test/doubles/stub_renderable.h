@@ -85,6 +85,10 @@ public:
     {
         return false;
     }
+    unsigned int swap_interval() const override
+    {
+        return 1;
+    }
 
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
@@ -146,6 +150,15 @@ struct PlaneAlphaRenderable : public StubRenderable
         return 1.0f - ( 3.0f / 1024.0f );
     }
 };
+
+struct IntervalZeroRenderable : StubRenderable
+{
+    unsigned int swap_interval() const override
+    {
+        return 0;
+    }
+};
+
 }
 }
 }

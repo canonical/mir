@@ -519,6 +519,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
     }
 
     std::unique_lock<std::mutex> lg(guard);
+    printf("SET SWAPINTERVAL %i\n", interval);
     if (swapinterval_ != interval)
     {
         swapinterval_ = interval;
@@ -824,6 +825,11 @@ public:
 
     ~SurfaceSnapshot()
     {
+    }
+
+    unsigned int swap_interval() const override
+    {
+        return underlying_buffer_stream->framedropping() ? 0 : 1;
     }
  
     std::shared_ptr<mg::Buffer> buffer() const override
