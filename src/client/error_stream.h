@@ -56,6 +56,7 @@ public:
     MirWaitHandle* set_scale(float);
     char const* get_error_message() const;
     MirConnection* connection() const;
+    MirRenderSurface* render_surface() const;
 private:
     std::string const error;
     MirConnection* const connection_;

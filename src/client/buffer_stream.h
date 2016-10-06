@@ -73,6 +73,7 @@ class BufferStream : public EGLNativeSurface, public ClientBufferStream
 public:
     BufferStream(
         MirConnection* connection,
+        MirRenderSurface* render_surface,
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
@@ -127,6 +128,7 @@ public:
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+    MirRenderSurface* render_surface() const override;
 
 protected:
     BufferStream(BufferStream const&) = delete;
@@ -167,6 +169,7 @@ private:
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
+    MirRenderSurface* render_surface_;
 };
 
 }

@@ -22,6 +22,7 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 #include "buffer_stream.h"
+#include "render_surface.h"
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/client_buffer.h"
@@ -52,7 +53,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
 try
 {
     return connection->create_client_buffer_stream(
-        width, height, format, buffer_usage, callback, nullptr, context);
+        width, height, format, buffer_usage, nullptr, callback, nullptr, context);
 }
 catch (std::exception const& ex)
 {
@@ -83,8 +84,14 @@ MirWaitHandle* mir_buffer_stream_release(
     void* context)
 {
     auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto connection = bs->connection();
-    return connection->release_buffer_stream(bs, callback, context);
+    auto render_surface = bs->render_surface();
+    if (render_surface)
+        return render_surface->release_buffer_stream(callback, context);
+    else
+    {
+        auto connection = bs->connection();
+        return connection->release_buffer_stream(bs, callback, context);
+    }
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)

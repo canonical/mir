@@ -62,8 +62,7 @@ public:
     int stream_id() override;
 
     MirWaitHandle* release_buffer_stream(
-        void* native_surface,
-        mir_render_surface_callback callback,
+        mir_buffer_stream_callback callback,
         void* context) override;
 
     friend void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context);
@@ -91,18 +90,16 @@ public:
     struct StreamReleaseRequest
     {
         StreamReleaseRequest(
-                mir_render_surface_callback cb, void* context, RenderSurface* rs, void* native_surface) :
-                    callback(cb),
-                    context(context),
-                    rs(rs),
-                    native_surface(native_surface)
+                mir_buffer_stream_callback cb, void* context, RenderSurface* rs)
+                    : callback(cb),
+                      context(context),
+                      rs(rs)
 
         {
         }
-        mir_render_surface_callback callback;
+        mir_buffer_stream_callback callback;
         void* context;
         RenderSurface* rs;
-        void* native_surface;
     };
 
 private:

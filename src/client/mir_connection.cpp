@@ -390,7 +390,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         try
         {
             default_stream = std::make_shared<mcl::BufferStream>(
-                this, request->wh, server, platform, surface_map, buffer_factory,
+                this, nullptr, request->wh, server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
                 mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
             surface_map->insert(default_stream->rpc_id(), default_stream);
@@ -474,8 +474,10 @@ void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+
     if (data.handle)
         data.handle->result_received();
+
     surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
@@ -827,7 +829,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform, surface_map, buffer_factory,
+            this, request->rs, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
@@ -852,6 +854,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
+    MirRenderSurface* render_surface,
     mir_buffer_stream_callback mbs_callback,
     buffer_stream_callback bs_callback,
     void *context)
@@ -862,7 +865,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
 
-    auto request = std::make_shared<StreamCreationRequest>(mbs_callback, bs_callback, context, params);
+    auto request = std::make_shared<StreamCreationRequest>(render_surface, mbs_callback, bs_callback, context, params);
     request->wh->expect_result();
 
     {

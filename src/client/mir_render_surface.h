@@ -44,8 +44,7 @@ public:
     virtual int stream_id() = 0;
 
     virtual MirWaitHandle* release_buffer_stream(
-        void* native_surface,
-        mir_render_surface_callback callback,
+        mir_buffer_stream_callback callback,
         void* context) = 0;
 protected:
     MirRenderSurface(MirRenderSurface const&) = delete;

@@ -155,6 +155,7 @@ public:
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
+        MirRenderSurface* render_surface,
         mir_buffer_stream_callback mbs_callback,
         buffer_stream_callback bs_callback,
         void *context);
@@ -219,10 +220,15 @@ private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
-            cb(cb), context(context), spec(spec),
-            response(std::make_shared<mir::protobuf::Surface>()),
-            wh(std::make_shared<MirWaitHandle>())
+        SurfaceCreationRequest(
+            mir_surface_callback cb,
+            void* context,
+            MirSurfaceSpec const& spec)
+            : cb(cb),
+              context(context),
+              spec(spec),
+              response(std::make_shared<mir::protobuf::Surface>()),
+              wh(std::make_shared<MirWaitHandle>())
         {
         }
         mir_surface_callback cb;
@@ -237,11 +243,21 @@ private:
     struct StreamCreationRequest
     {
         StreamCreationRequest(
-            mir_buffer_stream_callback mbs_cb, buffer_stream_callback bs_cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
-            mbs_callback(mbs_cb), bs_callback(bs_cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
-            wh(std::make_shared<MirWaitHandle>())
+            MirRenderSurface* rs,
+            mir_buffer_stream_callback mbs_cb,
+            buffer_stream_callback bs_cb,
+            void* context,
+            mir::protobuf::BufferStreamParameters const& params)
+            : rs(rs),
+              mbs_callback(mbs_cb),
+              bs_callback(bs_cb),
+              context(context),
+              parameters(params),
+              response(std::make_shared<mir::protobuf::BufferStream>()),
+              wh(std::make_shared<MirWaitHandle>())
         {
         }
+        MirRenderSurface* rs;
         mir_buffer_stream_callback mbs_callback;
         buffer_stream_callback bs_callback;
         void* context;

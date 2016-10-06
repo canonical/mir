@@ -24,27 +24,23 @@
 
 namespace
 {
-// assign_result is compatible with all 2-parameter callbacks
 void assign_result(void* result, void** context)
 {
     if (context)
         *context = result;
 }
-}
 
-namespace
-{
-// 'Native' render surface to connection
+// 'Native window handle' (a.k.a. client visible render surface) to connection map
 class RenderSurfaceToConnectionMap
 {
 public:
-    void insert(void* render_surface_key, MirConnection* connection)
+    void insert(void* const render_surface_key, MirConnection* const connection)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         connections[render_surface_key] = connection;
     }
 
-    void erase(void* render_surface_key)
+    void erase(void* const render_surface_key)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         auto conn_it = connections.find(render_surface_key);
@@ -52,7 +48,7 @@ public:
             connections.erase(conn_it);
     }
 
-    MirConnection* connection(void* render_surface_key) const
+    MirConnection* connection(void* const render_surface_key) const
     {
         std::shared_lock<decltype(guard)> lk(guard);
         auto const it = connections.find(render_surface_key);
@@ -104,6 +100,10 @@ try
 {
     mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    if (rs->stream_id() >= 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Render surface still holds content"));
+
     connection_map.erase(static_cast<void*>(render_surface));
     connection->release_render_surface(render_surface);
 }

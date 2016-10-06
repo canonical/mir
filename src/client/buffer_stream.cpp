@@ -419,6 +419,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    MirRenderSurface* render_surface,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
@@ -440,7 +441,8 @@ mcl::BufferStream::BufferStream(
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
       map(map),
-      factory(factory)
+      factory(factory),
+      render_surface_(render_surface)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())
@@ -789,4 +791,9 @@ char const * mcl::BufferStream::get_error_message() const
 MirConnection* mcl::BufferStream::connection() const
 {
     return connection_;
+}
+
+MirRenderSurface* mcl::BufferStream::render_surface() const
+{
+    return render_surface_;
 }

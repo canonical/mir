@@ -86,22 +86,17 @@ void render_surface_buffer_stream_create_callback(BufferStream* stream, void* co
         request->callback(reinterpret_cast<MirBufferStream*>(rs->stream_), request->context);
 }
 
-void render_surface_buffer_stream_release_callback(MirBufferStream* /*stream*/, void* context)
+void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context)
 {
-    std::shared_ptr<mcl::RenderSurface::StreamReleaseRequest> request{reinterpret_cast<mcl::RenderSurface::StreamReleaseRequest*>(context)};
+    mcl::RenderSurface::StreamReleaseRequest* request{reinterpret_cast<mcl::RenderSurface::StreamReleaseRequest*>(context)};
     mcl::RenderSurface* rs = request->rs;
 
     //TODO: check if there is no outstanding request already?
-    if (rs->stream_release_request == request)
-    {
-        rs->stream_release_request.reset();
-    }
-
-    rs->stream_ = nullptr;
-    rs->surface_map->erase(request->native_surface);
 
     if (request->callback)
-        request->callback(rs, request->context);
+        request->callback(stream, request->context);
+
+    rs->stream_ = nullptr;
 }
 }
 }
@@ -117,8 +112,9 @@ MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
     stream_creation_request = std::make_shared<StreamCreationRequest>(this, usage, callback, context);
 
     return connection_->create_client_buffer_stream(
-        width, height, format, usage, nullptr,
-        render_surface_buffer_stream_create_callback, stream_creation_request.get());
+        width, height, format, usage, this, nullptr,
+        render_surface_buffer_stream_create_callback,
+        stream_creation_request.get());
 }
 
 int mcl::RenderSurface::stream_id()
@@ -127,12 +123,11 @@ int mcl::RenderSurface::stream_id()
 }
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
-    void* native_surface,
-    mir_render_surface_callback callback,
+    mir_buffer_stream_callback callback,
     void* context)
 {
     // TODO: check if there is an outstanding stream request
-    stream_release_request = std::make_shared<StreamReleaseRequest>(callback, context, this, native_surface);
+    stream_release_request = std::make_shared<StreamReleaseRequest>(callback, context, this);
 
     return connection_->release_buffer_stream(
         stream_, render_surface_buffer_stream_release_callback,
