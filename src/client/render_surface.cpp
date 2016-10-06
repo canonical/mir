@@ -42,6 +42,39 @@ namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace ml = mir::logging;
 
+namespace mir
+{
+namespace client
+{
+void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context)
+{
+    RenderSurface::StreamCreationRequest* request{reinterpret_cast<RenderSurface::StreamCreationRequest*>(context)};
+    RenderSurface* rs = request->rs;
+
+    rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
+    if (request->usage == mir_buffer_usage_hardware)
+    {
+        rs->platform->use_egl_native_window(
+            rs->wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream));
+    }
+
+    if (request->callback)
+        request->callback(reinterpret_cast<MirBufferStream*>(rs->stream_), request->context);
+}
+
+void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context)
+{
+    RenderSurface::StreamReleaseRequest* request{reinterpret_cast<RenderSurface::StreamReleaseRequest*>(context)};
+    RenderSurface* rs = request->rs;
+
+    if (request->callback)
+        request->callback(stream, request->context);
+
+    rs->stream_ = nullptr;
+}
+}
+}
+
 mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
     mclr::DisplayServer& display_server,
@@ -64,41 +97,9 @@ MirConnection* mcl::RenderSurface::connection() const
     return connection_;
 }
 
-namespace mir
+int mcl::RenderSurface::stream_id()
 {
-namespace client
-{
-void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context)
-{
-    mcl::RenderSurface::StreamCreationRequest* request{reinterpret_cast<mcl::RenderSurface::StreamCreationRequest*>(context)};
-    mcl::RenderSurface* rs = request->rs;
-
-    //TODO: check if there is no outstanding request already?
-
-    rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
-    if (request->usage == mir_buffer_usage_hardware)
-    {
-        rs->platform->use_egl_native_window(
-            rs->wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream));
-    }
-
-    if (request->callback)
-        request->callback(reinterpret_cast<MirBufferStream*>(rs->stream_), request->context);
-}
-
-void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context)
-{
-    mcl::RenderSurface::StreamReleaseRequest* request{reinterpret_cast<mcl::RenderSurface::StreamReleaseRequest*>(context)};
-    mcl::RenderSurface* rs = request->rs;
-
-    //TODO: check if there is no outstanding request already?
-
-    if (request->callback)
-        request->callback(stream, request->context);
-
-    rs->stream_ = nullptr;
-}
-}
+    return (stream_ ? stream_->rpc_id().as_value() : -1);
 }
 
 MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
@@ -108,7 +109,7 @@ MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void* context)
 {
-    // TODO: check if there is an outstanding stream request
+    // TODO: check that there is no outstanding stream request
     stream_creation_request = std::make_shared<StreamCreationRequest>(this, usage, callback, context);
 
     return connection_->create_client_buffer_stream(
@@ -117,16 +118,11 @@ MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
         stream_creation_request.get());
 }
 
-int mcl::RenderSurface::stream_id()
-{
-    return (stream_ ? stream_->rpc_id().as_value() : -1);
-}
-
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     mir_buffer_stream_callback callback,
     void* context)
 {
-    // TODO: check if there is an outstanding stream request
+    // TODO: check that there is no outstanding stream request
     stream_release_request = std::make_shared<StreamReleaseRequest>(callback, context, this);
 
     return connection_->release_buffer_stream(
