@@ -54,6 +54,7 @@ public:
                                     float x_position, float y_position,
                                     float hscroll_value, float vscroll_value, float relative_x_value,
                                     float relative_y_value) = 0;
+
     virtual EventUPtr touch_event(Timestamp timestamp, std::vector<mir::events::ContactState> const& contacts) = 0;
 protected:
     EventBuilder(EventBuilder const&) = delete;
