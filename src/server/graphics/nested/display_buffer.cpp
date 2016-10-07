@@ -155,11 +155,11 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 
     if (content != BackingContent::chain)
     {
-        host_surface->set_swapinterval(0);
         auto spec = host_connection->create_surface_spec();
         spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
+        host_surface->set_swapinterval(list.back()->swap_interval());
     }
     return true;
 }
