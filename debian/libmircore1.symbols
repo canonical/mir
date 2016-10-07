@@ -20,6 +20,11 @@ libmircore.so.1 libmircore1 #MINVER#
  (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangle const&)@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangles const&)@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Size const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Point::Point()@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag> const&, mir::geometry::detail::IntWrapper<mir::geometry::YTag> const&>(mir::geometry::detail::IntWrapper<mir::geometry::XTag> const&, mir::geometry::detail::IntWrapper<mir::geometry::YTag> const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag>, mir::geometry::detail::IntWrapper<mir::geometry::YTag> >(mir::geometry::detail::IntWrapper<mir::geometry::XTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag>, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&>(mir::geometry::detail::IntWrapper<mir::geometry::XTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag>&, mir::geometry::detail::IntWrapper<mir::geometry::YTag> >(mir::geometry::detail::IntWrapper<mir::geometry::XTag>&, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&&)@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangle::bottom_left() const@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangle::bottom_right() const@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangle::contains(mir::geometry::Point const&) const@MIR_CORE_0.25" 0.25.0
@@ -44,3 +49,4 @@ libmircore.so.1 libmircore1 #MINVER#
  (c++)"mir::geometry::Rectangles::remove(mir::geometry::Rectangle const&)@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangle::top_right() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Size::Size<int, int>(int&&, int&&)@MIR_CORE_0.25" 0.25.0
