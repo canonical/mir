@@ -19,7 +19,7 @@
 #include "typo_glcache.h"
 #include MIR_SERVER_GL_H
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 GLCache::GLCache(std::shared_ptr<Renderer> const& r)
     : renderer(r)

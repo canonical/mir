@@ -19,7 +19,7 @@
 #include "typo_renderer.h"
 #include <cstring>
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 Renderer::Image::Image()
     : buf(nullptr), width(0), stride(0), height(0), align(4), format(alpha8)

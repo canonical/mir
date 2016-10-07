@@ -19,7 +19,7 @@
 #include "typo_stub_renderer.h"
 #include <cstring>
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 void StubRenderer::render(char const* str, Image& img)
 {
