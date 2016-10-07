@@ -95,3 +95,23 @@ mir::EventUPtr mi::DefaultEventBuilder::device_state_event(float cursor_x, float
     seat->set_cursor_position(cursor_x, cursor_y);
     return seat->create_device_state();
 }
+
+mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp,
+                                                      MirPointerAction action,
+                                                      MirPointerButtons buttons_pressed,
+                                                      float x_axis,
+                                                      float y_axis,
+                                                      float hscroll_value,
+                                                      float vscroll_value,
+                                                      float relative_x_value,
+                                                      float relative_y_value)
+{
+    std::vector<uint8_t> vec_cookie{};
+    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
+    {
+        auto const cookie = cookie_authority->make_cookie(timestamp.count());
+        vec_cookie = cookie->serialize();
+    }
+    return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
+                          hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+}

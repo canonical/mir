@@ -30,7 +30,7 @@ class SystemPerformanceTest : public testing::Test
 {
 protected:
     SystemPerformanceTest();
-    void SetUp(std::string const server_args);
+    void set_up_with(std::string const server_args);
     void TearDown() override;
     void spawn_clients(std::initializer_list<std::string> clients);
     void run_server_for(std::chrono::seconds timeout);

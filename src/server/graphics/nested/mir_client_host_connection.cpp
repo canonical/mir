@@ -19,6 +19,7 @@
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
 #include "host_stream.h"
+#include "host_chain.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/raii.h"
@@ -111,6 +112,10 @@ public:
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
         mir_surface_release_sync(mir_surface);
+    }
+
+    void apply_spec(mgn::HostSurfaceSpec&) override
+    {
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -286,6 +291,7 @@ mgn::MirClientHostConnection::MirClientHostConnection(
         [](MirConnection* connection, void* context)
         {
             auto obj = static_cast<MirClientHostConnection*>(context);
+            RecursiveReadLock lock{obj->input_config_callback_mutex};
             if (obj->input_config_callback)
                 obj->input_config_callback(make_input_config(connection));
         },
@@ -448,27 +454,41 @@ mgn::UniqueInputConfig mgn::MirClientHostConnection::create_input_device_config(
 
 void mgn::MirClientHostConnection::set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb)
 {
+    RecursiveWriteLock lock{input_config_callback_mutex};
     input_config_callback = cb;
 }
 
 void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb)
 {
+    RecursiveWriteLock lock{event_callback_mutex};
     event_callback = cb;
 }
 
 void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
 {
-    event_callback(event, source_frame);
+    RecursiveReadLock lock{event_callback_mutex};
+    if (event_callback)
+        event_callback(event, source_frame);
 }
 
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
-    mg::BufferProperties const& properties)
+    mg::BufferProperties const& properties) const
 {
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
+std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
 }

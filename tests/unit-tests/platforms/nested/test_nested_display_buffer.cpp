@@ -17,12 +17,19 @@
  */
 
 #include "src/server/graphics/nested/display_buffer.h"
+#include "src/server/graphics/nested/native_buffer.h"
+#include "src/server/graphics/nested/host_stream.h"
+#include "src/server/graphics/nested/host_chain.h"
+#include "src/server/graphics/nested/host_surface_spec.h"
 
 #include "mir/events/event_builders.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_host_connection.h"
+#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -38,6 +45,9 @@ using namespace testing;
 
 namespace
 {
+struct FunkyBuffer : mg::NativeBuffer
+{
+};
 
 class EventHostSurface : public mgn::HostSurface
 {
@@ -64,28 +74,92 @@ public:
             event_handler(nullptr, ev.get(), event_context);
     }
 
+    void apply_spec(mgn::HostSurfaceSpec&) override
+    {
+    }
 private:
     std::mutex event_mutex;
     mir_surface_event_callback event_handler;
     void* event_context;
 };
 
+struct MockHostSurface : mgn::HostSurface
+{
+    MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
+    MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
+    MOCK_METHOD1(apply_spec, void(mgn::HostSurfaceSpec&));
+};
+
+struct MockNestedChain : mgn::HostChain
+{
+    MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
+    MOCK_METHOD0(handle, MirPresentationChain*());
+};
+
+struct MockNestedStream : mgn::HostStream
+{
+    MOCK_CONST_METHOD0(handle, MirBufferStream*());
+    MOCK_CONST_METHOD0(egl_native_window, EGLNativeWindowType());
+};
+
+struct StubNestedBuffer :
+    mtd::StubBuffer,
+    mgn::NativeBuffer,
+    std::enable_shared_from_this<StubNestedBuffer>
+{
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+    {
+        return std::const_pointer_cast<StubNestedBuffer>(shared_from_this());
+    }
+
+    mtd::NullClientBuffer mutable null_buffer;
+    MirBuffer* client_handle() const override { return reinterpret_cast<::MirBuffer*>(&null_buffer); }
+    void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
+    MirGraphicsRegion get_graphics_region() override
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr };
+    }
+    geom::Size size() const override { return {}; }
+    MirPixelFormat format() const override { return mir_pixel_format_invalid; }
+    void on_ownership_notification(std::function<void()> const& f) override { fn = f; }
+    MirNativeBuffer* get_native_handle() override { return nullptr; }
+    MirBufferPackage* package() const override { return nullptr; }
+    mir::Fd fence() const override { return mir::Fd{mir::Fd::invalid}; }
+    void set_fence(mir::Fd) override {}
+    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
+    {
+        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{};
+    }
+    void trigger()
+    {
+        if (fn) fn();
+    }
+    std::function<void()> fn;
+};
+
+struct MockNestedBuffer : StubNestedBuffer
+{
+    MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
+};
+
+
 struct NestedDisplayBuffer : Test
 {
     NestedDisplayBuffer()
     {
-        output.top_left = { 0, 0 };
+        output.top_left = rectangle.top_left;
         output.current_mode_index = 0;
         output.orientation = mir_orientation_normal;
         output.current_format = mir_pixel_format_abgr_8888;
-        output.modes = { { { 10, 11 }, 55.0f } };
+        output.modes = { { rectangle.size, 55.0f } };
     }
 
-    auto create_display_buffer()
+    auto create_display_buffer(std::shared_ptr<mgn::HostConnection> const& connection)
     {
-        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, host_connection);
+        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, connection);
     }
 
+    mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
     NiceMock<mtd::MockEGL> mock_egl;
     mgnd::EGLDisplayHandle egl_display{nullptr, std::make_shared<mtd::StubGLConfig>()};
     EventHostSurface host_surface;
@@ -101,7 +175,7 @@ struct NestedDisplayBuffer : Test
 // in practice the reproduction rate is very close to 100%.
 TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 {
-    auto display_buffer = create_display_buffer();
+    auto display_buffer = create_display_buffer(host_connection);
     std::thread t{
         [&]
         {
@@ -111,4 +185,236 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 
     display_buffer.reset();
     t.join();
+}
+
+TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    NiceMock<MockNestedBuffer> nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_));
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
+
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
+}
+
+TEST_F(NestedDisplayBuffer, accepts_double_submissions_of_same_buffer_after_buffer_triggered)
+{
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    nested_buffer1.trigger();
+    EXPECT_TRUE(display_buffer->overlay(list1));
+}
+
+TEST_F(NestedDisplayBuffer, throws_on_interleaving_without_trigger)
+{
+    StubNestedBuffer nested_buffer1; 
+    StubNestedBuffer nested_buffer2; 
+    mg::RenderableList list1 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer1), rectangle) };
+    mg::RenderableList list2 =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer2), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list1));
+    EXPECT_TRUE(display_buffer->overlay(list2));
+    EXPECT_THROW({
+        EXPECT_TRUE(display_buffer->overlay(list1));
+    }, std::logic_error);
+}
+
+TEST_F(NestedDisplayBuffer, holds_buffer_until_host_says_its_done_using_it)
+{
+    auto nested_buffer = std::make_shared<StubNestedBuffer>();
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(nested_buffer, rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+
+    auto use_count = nested_buffer.use_count(); 
+    EXPECT_TRUE(display_buffer->overlay(list));
+    EXPECT_THAT(nested_buffer.use_count(), Eq(use_count + 1));
+    nested_buffer->trigger();
+    EXPECT_THAT(nested_buffer.use_count(), Eq(use_count));
+}
+
+TEST_F(NestedDisplayBuffer, toggles_back_to_gl)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::StubHostConnection host_connection(mt::fake_shared(mock_host_surface));
+
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    InSequence seq;
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_));
+    EXPECT_CALL(mock_host_surface, apply_spec(_));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    display_buffer->swap_buffers();
+}
+
+//If we don't release the HostChain, then one of the client's buffers will get
+//reserved in the host, but not shown onscreen. This will degrade the client's
+//available buffers by one. Releasing the chain will result in that buffer
+//getting returned to the client.
+TEST_F(NestedDisplayBuffer, recreates_chain)
+{
+    int fake_chain_handle = 4;
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::MockHostConnection mock_host_connection;
+    NiceMock<MockNestedBuffer> nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_chain2 = std::make_unique<NiceMock<MockNestedChain>>();
+    EXPECT_CALL(nested_buffer, on_ownership_notification(_))
+        .Times(2);
+    EXPECT_CALL(*mock_chain, submit_buffer(Ref(nested_buffer)));
+    ON_CALL(*mock_chain, handle())
+        .WillByDefault(Return(reinterpret_cast<MirPresentationChain*>(&fake_chain_handle)));
+    EXPECT_CALL(*mock_chain2, submit_buffer(Ref(nested_buffer)));
+
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .Times(2)
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain2); }));
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    display_buffer->swap_buffers();
+    EXPECT_TRUE(display_buffer->overlay(list));
+    Mock::VerifyAndClearExpectations(&nested_buffer);
+}
+
+TEST_F(NestedDisplayBuffer, only_applies_spec_once_per_mode_toggle)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    mtd::StubHostConnection host_connection(mt::fake_shared(mock_host_surface));
+
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+          { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(mt::fake_shared(host_connection));
+
+    EXPECT_CALL(mock_host_surface, apply_spec(_))
+        .Times(2);
+    EXPECT_TRUE(display_buffer->overlay(list));
+    EXPECT_TRUE(display_buffer->overlay(list));
+    display_buffer->swap_buffers();
+    display_buffer->swap_buffers();
+}
+
+TEST_F(NestedDisplayBuffer, rejects_list_containing_unknown_buffers)
+{
+    mtd::StubBuffer foreign_buffer(std::make_shared<FunkyBuffer>());
+ 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(foreign_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->overlay(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_list_containing_rotated_buffers)
+{
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubTransformedRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->overlay(list));
+}
+
+TEST_F(NestedDisplayBuffer, accepts_list_with_unshown_unknown_buffers)
+{
+    StubNestedBuffer nested_buffer; 
+    mtd::StubBuffer foreign_buffer(std::make_shared<FunkyBuffer>());
+    mg::RenderableList list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(foreign_buffer), rectangle),
+          std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_empty_list)
+{
+    mg::RenderableList list;
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->overlay(list));
+}
+
+TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_from_output)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Size different_size{rectangle.size.width, rectangle.size.height + geom::DeltaY{1}};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(
+            mt::fake_shared(nested_buffer),
+            geom::Rectangle{rectangle.top_left, different_size})
+    };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->overlay(list));
+}
+
+/* Once we have synchronous MirSurface scene updates, we can probably
+ * passthrough more than one renderable if needed
+ */
+TEST_F(NestedDisplayBuffer, rejects_list_containing_multiple_onscreen_renderables)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Rectangle small_rect { {0, 0}, { 5, 5 }};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle),
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), small_rect) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_FALSE(display_buffer->overlay(list));
+}
+
+TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fullscreen_on_top)
+{
+    StubNestedBuffer nested_buffer; 
+    geom::Rectangle small_rect { {0, 0}, { 5, 5 }};
+    mg::RenderableList list = {
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), small_rect),
+        std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto display_buffer = create_display_buffer(host_connection);
+    EXPECT_TRUE(display_buffer->overlay(list));
 }

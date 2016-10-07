@@ -120,20 +120,20 @@ public:
         case mir_input_event_type_pointer:
             {
                 auto const* pointer_event = mir_input_event_get_pointer_event(event);
+                auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
+                auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
                 auto new_event = builder->pointer_event(
                         event_time,
                         mir_pointer_event_action(pointer_event),
                         mir_pointer_event_buttons(pointer_event),
+                        x + frame.top_left.x.as_int(),
+                        y + frame.top_left.y.as_int(),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_x),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_y)
                         );
 
-                auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
-                auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-                new_event->to_input()->to_motion()->set_x(0, x + frame.top_left.x.as_int());
-                new_event->to_input()->to_motion()->set_y(0, y + frame.top_left.y.as_int());
                 destination->handle_input(*new_event);
                 break;
             }
