@@ -132,6 +132,7 @@ public:
         EGLNativeWindowType egl_native_window() override { return {}; }
         void set_event_handler(mir_surface_event_callback, void*) override {}
         void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
+        void set_swapinterval(unsigned int) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     

@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/buffer.h"
 #include "queueing_schedule.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -31,7 +30,6 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     if (it != queue.end())
         queue.erase(it);
     queue.emplace_back(buffer);
-    printf("SCHEDULE IN QUEUEING SCHEDULE BID %i, queue length %i\n", buffer->id().as_value(), (int) queue.size());
 }
 
 unsigned int mc::QueueingSchedule::num_scheduled()

@@ -180,7 +180,6 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
     {
         promises.emplace_back(std::move(promise));
 
-        printf("NO BUFFER AVAILABLE\n");
         auto s = size;
         bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
         if (allocate_buffer)

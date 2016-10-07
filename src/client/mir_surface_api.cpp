@@ -368,18 +368,10 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 
     try
     {
-#if 0
         if (surf)
         {
             if (auto stream = surf->get_buffer_stream())
-            {
                 return stream->set_swap_interval(interval);
-            }
-        }
-#endif
-        if (surf)
-        {
-            return surf->configure(mir_surface_attrib_swapinterval, interval);
         }
     }
     catch (std::exception const& ex)

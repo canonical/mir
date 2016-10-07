@@ -568,7 +568,6 @@ void mf::SessionMediator::configure_surface(
 
     report->session_configure_surface_called(session->name());
 
-    printf("SET SWAPINTERVAL\n");
     auto const id = mf::SurfaceId(request->surfaceid().value());
     int value = request->ivalue();
     int newvalue = shell->set_surface_attribute(session, id, attrib, value);

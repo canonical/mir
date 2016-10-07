@@ -510,7 +510,6 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
    
-    printf("DEFAULT STREAMM GET %X\n", (int)(long)default_stream.get()); 
     return default_stream.get();
 }
 
