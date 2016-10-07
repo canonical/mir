@@ -1,3 +1,5 @@
+set(MIRCORE_ABI 1)
+
 add_library(mircore SHARED
     fatal.cpp
     geometry/rectangle.cpp
@@ -22,7 +24,7 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircore
     PROPERTIES
-    SOVERSION 1
+    SOVERSION ${MIRCORE_ABI}
     LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
     LINK_DEPENDS ${symbol_map}
 )
