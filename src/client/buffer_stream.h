@@ -25,6 +25,7 @@
 #include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -68,6 +69,22 @@ class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
 class ServerBufferSemantics;
+
+class IntervalConfig
+{
+public:
+    void on_swap_interval_set(int interval);
+    int swap_interval() const;
+    MirWaitHandle* set_swap_interval(int i);
+    MirWaitHandle* set_swap_interval(
+        rpc::DisplayServer& server, frontend::BufferStreamId id, int interval);
+private:
+    std::unique_ptr<protobuf::Void> protobuf_void{std::make_unique<protobuf::Void>()};
+    MirWaitHandle interval_wait_handle;
+    std::mutex mutable mutex;
+    int swap_interval_ = 1;
+};
+
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -135,7 +152,6 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
@@ -148,14 +164,13 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool fixed_swap_interval;
-    int swap_interval_;
+    optional_value<int> user_swap_interval;
+    IntervalConfig interval_config;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     std::shared_ptr<void> egl_native_window_;
 
-    MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     std::shared_ptr<MemoryRegion> secured_region;

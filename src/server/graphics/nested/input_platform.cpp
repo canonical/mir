@@ -30,7 +30,6 @@
 #include "mir/input/device_capability.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
-#include "mir/events/event_private.h"
 
 #include <chrono>
 
@@ -229,7 +228,7 @@ void mgn::InputPlatform::start()
                 {
                     unknown_device_events[id].emplace_back(
                         std::piecewise_construct,
-                        std::forward_as_tuple(event.clone(), [](MirEvent* e){delete e;}),
+                        std::forward_as_tuple(mir::events::clone_event(event)),
                         std::forward_as_tuple(area));
                 }
             }

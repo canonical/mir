@@ -408,6 +408,13 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     geom::Size size_;
 };
 
+mir::optional_value<int> parse_env_for_swap_interval()
+{
+    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+        return {atoi(env)};
+    else
+        return {};
+}
 }
 
 mcl::BufferStream::BufferStream(
@@ -426,6 +433,7 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
+      user_swap_interval(parse_env_for_swap_interval()),
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -435,7 +443,6 @@ mcl::BufferStream::BufferStream(
       map(map),
       factory(factory)
 {
-    init_swap_interval();
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -481,8 +488,8 @@ mcl::BufferStream::BufferStream(
         // knowing the swap interval is not a precondition to creation. It's
         // only a precondition to your second and subsequent swaps, so don't
         // bother the creation parameters with this stuff...
-        if (fixed_swap_interval)
-            force_swap_interval(swap_interval_);
+        if (user_swap_interval.is_set())
+            set_swap_interval(user_swap_interval.value());
     }
     catch (std::exception const& error)
     {
@@ -501,22 +508,6 @@ mcl::BufferStream::BufferStream(
     perf_report->name_surface(surface_name.c_str());
 }
 
-void mcl::BufferStream::init_swap_interval()
-{
-    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
-    if (env)
-    {
-        swap_interval_ = atoi(env);
-        fixed_swap_interval = true;
-    }
-    else
-    {
-        swap_interval_ = 1;
-        fixed_swap_interval = false;
-    }
-}
-
-
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
@@ -531,7 +522,7 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      swap_interval_(1),
+      user_swap_interval(parse_env_for_swap_interval()),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
@@ -561,6 +552,9 @@ mcl::BufferStream::BufferStream(
     }
 
     egl_native_window_ = client_platform->create_egl_native_window(this);
+
+    if (user_swap_interval.is_set())
+        set_swap_interval(user_swap_interval.value());
 }
 
 mcl::BufferStream::~BufferStream()
@@ -659,58 +653,66 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::on_swap_interval_set(int interval)
+uint32_t mcl::BufferStream::get_current_buffer_id()
+{
+    return buffer_depository->current_buffer_id();
+}
+
+void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
+{
+    if (attrib != mir_surface_attrib_swapinterval)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
+        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
+    }
+    mir_wait_for(set_swap_interval(interval));
+}
+
+
+int mcl::BufferStream::swap_interval() const
+{
+    return interval_config.swap_interval();
+}
+
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int i)
+{
+    int interval;
+    if (user_swap_interval.is_set())
+        interval = user_swap_interval.value();
+    else
+        interval = i;
+
+    buffer_depository->set_interval(interval);
+    return interval_config.set_swap_interval(display_server, rpc_id(), interval);
+}
+
+void mcl::IntervalConfig::on_swap_interval_set(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     swap_interval_ = interval;
     interval_wait_handle.result_received();
 }
 
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    if (attrib != mir_surface_attrib_swapinterval)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
-        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
-    }
-
-    auto i = interval;
-    lock.unlock();
-    set_swap_interval(i);
-    interval_wait_handle.wait_for_all();
-}
-
-uint32_t mcl::BufferStream::get_current_buffer_id()
-{
-    return buffer_depository->current_buffer_id();
-}
-
-int mcl::BufferStream::swap_interval() const
+int mcl::IntervalConfig::swap_interval() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     return swap_interval_;
 }
 
-MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
+MirWaitHandle* mcl::IntervalConfig::set_swap_interval(
+    mclr::DisplayServer& server, mf::BufferStreamId id, int interval)
 {
-    if (fixed_swap_interval)
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    if (interval == swap_interval_)
         return nullptr;
-    else
-        return force_swap_interval(interval);
-}
+    lock.unlock();
 
-MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
-{
     mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.mutable_id()->set_value(id.as_value());
     configuration.set_swapinterval(interval);
-
-    buffer_depository->set_interval(interval);
-
     interval_wait_handle.expect_result();
-    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
+    server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::IntervalConfig::on_swap_interval_set, interval));
 
     return &interval_wait_handle;
 }
