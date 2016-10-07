@@ -240,7 +240,7 @@ TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
             buffer_(buffer)
         {
         }
-        unsigned int swap_interval() const
+        unsigned int swap_interval() const override
         {
             return 1u;
         }

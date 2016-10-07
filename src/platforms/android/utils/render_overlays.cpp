@@ -142,7 +142,7 @@ public:
     {
     }
 
-    unsigned int swap_interval() const
+    unsigned int swap_interval() const override
     {
         return 1u;
     }
