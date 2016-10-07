@@ -5,7 +5,6 @@ set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
 add_subdirectory(fd)
-add_subdirectory(geometry)
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
@@ -14,12 +13,10 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
-add_subdirectory(fatal)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirevents>
   $<TARGET_OBJECTS:mirtime>
-  $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
@@ -45,6 +42,7 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
+  mircore
   ${MIR_COMMON_REFERENCES}
 )
 
