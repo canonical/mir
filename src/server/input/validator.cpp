@@ -17,7 +17,6 @@
  */
 
 #include "mir/input/validator.h"
-#include "mir/cookie/authority.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/event.h"
 

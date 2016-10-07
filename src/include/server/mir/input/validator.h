@@ -28,10 +28,6 @@
 
 namespace mir
 {
-namespace cookie
-{
-class Authority;
-}
 namespace input
 {
 class Validator
