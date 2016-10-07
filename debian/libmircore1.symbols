@@ -50,3 +50,7 @@ libmircore.so.1 libmircore1 #MINVER#
  (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Rectangle::top_right() const@MIR_CORE_0.25" 0.25.0
  (c++)"mir::geometry::Size::Size<int, int>(int&&, int&&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Displacement::Displacement<mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag> >(mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag>&&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Displacement::Displacement<int, int>(int&&, int&&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Size::Size()@MIR_CORE_0.25" 0.25.0
+
