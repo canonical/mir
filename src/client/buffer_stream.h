@@ -25,6 +25,7 @@
 #include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -148,7 +149,7 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool fixed_swap_interval;
+    optional_value<int> user_swap_interval;
     int swap_interval_;
     float scale_;
 

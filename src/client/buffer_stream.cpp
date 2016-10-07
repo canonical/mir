@@ -408,6 +408,13 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     geom::Size size_;
 };
 
+mir::optional_value<int> parse_env_for_swap_interval()
+{
+    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+        return {atoi(env)};
+    else
+        return {};
+}
 }
 
 mcl::BufferStream::BufferStream(
@@ -426,6 +433,8 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
+      user_swap_interval(parse_env_for_swap_interval()),
+      swap_interval_(user_swap_interval.is_set() ? user_swap_interval.value() : 1),
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -435,7 +444,6 @@ mcl::BufferStream::BufferStream(
       map(map),
       factory(factory)
 {
-    init_swap_interval();
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -481,7 +489,7 @@ mcl::BufferStream::BufferStream(
         // knowing the swap interval is not a precondition to creation. It's
         // only a precondition to your second and subsequent swaps, so don't
         // bother the creation parameters with this stuff...
-        if (fixed_swap_interval)
+        if (user_swap_interval.is_set())
             force_swap_interval(swap_interval_);
     }
     catch (std::exception const& error)
@@ -501,22 +509,6 @@ mcl::BufferStream::BufferStream(
     perf_report->name_surface(surface_name.c_str());
 }
 
-void mcl::BufferStream::init_swap_interval()
-{
-    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
-    if (env)
-    {
-        swap_interval_ = atoi(env);
-        fixed_swap_interval = true;
-    }
-    else
-    {
-        swap_interval_ = 1;
-        fixed_swap_interval = false;
-    }
-}
-
-
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
@@ -531,7 +523,8 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      swap_interval_(1),
+      user_swap_interval(parse_env_for_swap_interval()),
+      swap_interval_(user_swap_interval.is_set() ? user_swap_interval.value() : 1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
@@ -694,7 +687,7 @@ int mcl::BufferStream::swap_interval() const
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    if (fixed_swap_interval)
+    if (user_swap_interval.is_set())
         return nullptr;
     else
         return force_swap_interval(interval);
