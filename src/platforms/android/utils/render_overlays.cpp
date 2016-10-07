@@ -142,6 +142,11 @@ public:
     {
     }
 
+    unsigned int swap_interval() const
+    {
+        return 1u;
+    }
+
     ID id() const override
     {
         return this;
