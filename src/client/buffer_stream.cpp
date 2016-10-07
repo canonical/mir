@@ -434,7 +434,6 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       user_swap_interval(parse_env_for_swap_interval()),
-      swap_interval_(1),
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -489,7 +488,8 @@ mcl::BufferStream::BufferStream(
         // knowing the swap interval is not a precondition to creation. It's
         // only a precondition to your second and subsequent swaps, so don't
         // bother the creation parameters with this stuff...
-        set_swap_interval(swap_interval_);
+        if (user_swap_interval.is_set())
+            set_swap_interval(user_swap_interval.value());
     }
     catch (std::exception const& error)
     {
@@ -523,7 +523,6 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
       user_swap_interval(parse_env_for_swap_interval()),
-      swap_interval_(user_swap_interval.is_set() ? user_swap_interval.value() : 1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
@@ -553,6 +552,9 @@ mcl::BufferStream::BufferStream(
     }
 
     egl_native_window_ = client_platform->create_egl_native_window(this);
+
+    if (user_swap_interval.is_set())
+        set_swap_interval(user_swap_interval.value());
 }
 
 mcl::BufferStream::~BufferStream()
@@ -651,11 +653,9 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::on_swap_interval_set(int interval)
+uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    swap_interval_ = interval;
-    interval_wait_handle.result_received();
+    return buffer_depository->current_buffer_id();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
@@ -668,15 +668,10 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     mir_wait_for(set_swap_interval(interval));
 }
 
-uint32_t mcl::BufferStream::get_current_buffer_id()
-{
-    return buffer_depository->current_buffer_id();
-}
 
 int mcl::BufferStream::swap_interval() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return swap_interval_;
+    return interval_config.swap_interval();
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int i)
@@ -686,20 +681,38 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int i)
         interval = user_swap_interval.value();
     else
         interval = i;
-    
+
+    buffer_depository->set_interval(interval);
+    return interval_config.set_swap_interval(display_server, rpc_id(), interval);
+}
+
+void mcl::IntervalConfig::on_swap_interval_set(int interval)
+{
     std::unique_lock<decltype(mutex)> lock(mutex);
-    if (i == swap_interval_)
+    swap_interval_ = interval;
+    interval_wait_handle.result_received();
+}
+
+int mcl::IntervalConfig::swap_interval() const
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return swap_interval_;
+}
+
+MirWaitHandle* mcl::IntervalConfig::set_swap_interval(
+    mclr::DisplayServer& server, mf::BufferStreamId id, int interval)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    if (interval == swap_interval_)
         return nullptr;
     lock.unlock();
 
-    buffer_depository->set_interval(interval);
-
     mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.mutable_id()->set_value(id.as_value());
     configuration.set_swapinterval(interval);
     interval_wait_handle.expect_result();
-    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
+    server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::IntervalConfig::on_swap_interval_set, interval));
 
     return &interval_wait_handle;
 }
