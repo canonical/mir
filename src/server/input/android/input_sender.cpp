@@ -24,7 +24,6 @@
 #include "mir/scene/surface.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
-#include "mir/events/event_private.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
