@@ -19,14 +19,19 @@
 #ifndef MIR_INPUT_VALIDATOR_H_
 #define MIR_INPUT_VALIDATOR_H_
 
-#include "mir/events/event_builders.h"
+#include "mir/events/contact_state.h"
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 #include <mutex>
 
 namespace mir
 {
+namespace cookie
+{
+class Authority;
+}
 namespace input
 {
 class Validator
@@ -35,20 +40,18 @@ public:
     Validator(std::function<void(MirEvent const&)> const& dispatch_valid_event);
 
     void validate_and_dispatch(MirEvent const& event);
-    
+
 private:
     std::mutex state_guard;
-
     std::function<void(MirEvent const&)> const dispatch_valid_event;
+    std::unordered_map<MirInputDeviceId, std::vector<events::ContactState>> last_event_by_device;
 
-    std::unordered_map<MirInputDeviceId, EventUPtr> last_event_by_device;
-
-    void handle_touch_event(MirInputDeviceId,
-        MirTouchEvent const* event);
+    void handle_touch_event(MirEvent const& event);
     void ensure_stream_validity_locked(std::lock_guard<std::mutex> const& lg,
-        MirTouchEvent const* ev, MirTouchEvent const* last_ev);
+                                       std::vector<events::ContactState> const& new_state,
+                                       std::vector<events::ContactState> & last_state,
+                                       std::function<void(std::vector<events::ContactState> const&)> const&);
 };
-
 }
 }
 

@@ -52,7 +52,7 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id);
 // Keymap event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirInputDeviceId id, std::string const& model,
                      std::string const& layout, std::string const& variant, std::string const& options);
-// Surface output event
+    // Surface output event
 EventUPtr make_event(
     frontend::SurfaceId const& surface_id,
     int dpi,
