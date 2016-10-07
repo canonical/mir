@@ -21,6 +21,7 @@
 #include "src/platforms/mesa/client/client_buffer_factory.h"
 #include "src/platforms/mesa/client/buffer_file_ops.h"
 #include "src/platforms/mesa/include/native_buffer.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <sys/mman.h>
 #include <gmock/gmock.h>
@@ -31,6 +32,7 @@
 namespace geom=mir::geometry;
 namespace mclg=mir::client::mesa;
 namespace mgm=mir::graphics::mesa;
+using namespace testing;
 namespace
 {
 
@@ -42,7 +44,7 @@ public:
     MOCK_CONST_METHOD2(unmap, void(void* addr, size_t size));
 };
 
-struct MesaClientBufferTest : public testing::Test
+struct MesaClientBufferTest : public Test
 {
     void SetUp()
     {
@@ -51,7 +53,7 @@ struct MesaClientBufferTest : public testing::Test
         stride = geom::Stride(66);
         pf = mir_pixel_format_abgr_8888;
         size = geom::Size{width, height};
-        buffer_file_ops = std::make_shared<testing::NiceMock<MockBufferFileOps>>();
+        buffer_file_ops = std::make_shared<NiceMock<MockBufferFileOps>>();
 
         package = std::make_shared<MirBufferPackage>();
         package->fd[0] = 167;
@@ -68,7 +70,7 @@ struct MesaClientBufferTest : public testing::Test
     MirPixelFormat pf;
     geom::Size size;
 
-    std::shared_ptr<testing::NiceMock<MockBufferFileOps>> buffer_file_ops;
+    std::shared_ptr<NiceMock<MockBufferFileOps>> buffer_file_ops;
     std::shared_ptr<MirBufferPackage> package;
     std::shared_ptr<MirBufferPackage> package_copy;
 
@@ -76,10 +78,8 @@ struct MesaClientBufferTest : public testing::Test
 
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_width_and_height)
+TEST_F(MesaClientBufferTest, width_and_height)
 {
-    using namespace testing;
-
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     EXPECT_EQ(buffer.size().height, height);
@@ -87,19 +87,15 @@ TEST_F(MesaClientBufferTest, DISABLED_width_and_height)
     EXPECT_EQ(buffer.pixel_format(), pf);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_buffer_returns_correct_stride)
+TEST_F(MesaClientBufferTest, buffer_returns_correct_stride)
 {
-    using namespace testing;
-
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     EXPECT_EQ(buffer.stride(), stride);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_buffer_returns_set_package)
+TEST_F(MesaClientBufferTest, buffer_returns_set_package)
 {
-    using namespace testing;
-
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 
     auto package_return = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer.native_buffer_handle());
@@ -113,9 +109,8 @@ TEST_F(MesaClientBufferTest, DISABLED_buffer_returns_set_package)
         EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_secure_for_cpu_write_maps_buffer_fd)
+TEST_F(MesaClientBufferTest, secure_for_cpu_write_maps_buffer_fd)
 {
-    using namespace testing;
     void *map_addr{reinterpret_cast<void*>(0xabcdef)};
 
     EXPECT_CALL(*buffer_file_ops, map(package->fd[0],_,_))
@@ -135,10 +130,8 @@ TEST_F(MesaClientBufferTest, DISABLED_secure_for_cpu_write_maps_buffer_fd)
     ASSERT_EQ(pf, mem_region->format);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_secure_for_cpu_write_throws_on_map_failure)
+TEST_F(MesaClientBufferTest, secure_for_cpu_write_throws_on_map_failure)
 {
-    using namespace testing;
-
     EXPECT_CALL(*buffer_file_ops, map(package->fd[0],_,_))
         .WillOnce(Return(MAP_FAILED));
     EXPECT_CALL(*buffer_file_ops, unmap(_,_))
@@ -153,20 +146,16 @@ TEST_F(MesaClientBufferTest, DISABLED_secure_for_cpu_write_throws_on_map_failure
     }, std::runtime_error);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_buffer_fd_closed_on_buffer_destruction)
+TEST_F(MesaClientBufferTest, buffer_fd_closed_on_buffer_destruction)
 {
-    using namespace testing;
-
     EXPECT_CALL(*buffer_file_ops, close(package->fd[0]))
         .Times(1);
 
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_factory_gets_size_from_package)
+TEST_F(MesaClientBufferTest, factory_gets_size_from_package)
 {
-    using namespace testing;
-
     mclg::ClientBufferFactory factory(buffer_file_ops);
 
     geom::Size unused_size{0, 0};
@@ -179,10 +168,8 @@ TEST_F(MesaClientBufferTest, DISABLED_factory_gets_size_from_package)
     EXPECT_NE(unused_size, buf_size);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_creation_with_invalid_buffer_package_throws)
+TEST_F(MesaClientBufferTest, creation_with_invalid_buffer_package_throws)
 {
-    using namespace testing;
-
     mclg::ClientBufferFactory factory(buffer_file_ops);
     auto const invalid_package = std::make_shared<MirBufferPackage>();
     package->fd_items = 0;
@@ -193,9 +180,8 @@ TEST_F(MesaClientBufferTest, DISABLED_creation_with_invalid_buffer_package_throw
     }, std::runtime_error);
 }
 
-TEST_F(MesaClientBufferTest, DISABLED_packs_empty_update_msg)
+TEST_F(MesaClientBufferTest, packs_empty_update_msg)
 {
-    using namespace testing;
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
     MirBufferPackage msg;
     msg.data_items = 2;
@@ -204,4 +190,30 @@ TEST_F(MesaClientBufferTest, DISABLED_packs_empty_update_msg)
     buffer.fill_update_msg(msg);
     EXPECT_THAT(msg.data_items, Eq(0)); 
     EXPECT_THAT(msg.fd_items, Eq(0)); 
+}
+
+TEST_F(MesaClientBufferTest, suggests_dma_import)
+{
+    static EGLint expected_image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_WIDTH, static_cast<const EGLint>(package->width),
+        EGL_HEIGHT, static_cast<const EGLint>(package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(GBM_FORMAT_ABGR8888),
+        EGL_DMA_BUF_PLANE0_FD_EXT, package->fd[0],
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(package->stride),
+        EGL_NONE
+    };
+
+    EGLenum type;
+    EGLClientBuffer egl_buffer;
+    EGLint* attrs;
+    
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
+    buffer.egl_image_creation_parameters(&type, &egl_buffer, &attrs);
+
+    EXPECT_THAT(type, Eq(EGL_LINUX_DMA_BUF_EXT));
+    EXPECT_THAT(egl_buffer, Eq(nullptr));
+    EXPECT_THAT(attrs, mir::test::doubles::AttrMatches(expected_image_attrs));
 }
