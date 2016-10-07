@@ -234,7 +234,7 @@ MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int i
  *   \return              The swapinterval value that the client is operating with.
  *                        Returns -1 if stream is invalid.
  */
-int mir_surface_get_swapinterval(MirSurface* surface);
+int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
 
 #ifdef __cplusplus
 }

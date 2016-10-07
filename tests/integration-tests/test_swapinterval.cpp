@@ -153,7 +153,7 @@ TEST_F(SwapInterval, change_to_one_disables_framedropping)
     mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
     mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 1));
 
-    EXPECT_EQ(1, mir_surface_get_swapinterval(stream));
+    EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());
 }
 

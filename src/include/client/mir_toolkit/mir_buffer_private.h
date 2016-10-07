@@ -30,15 +30,6 @@
 extern "C" {
 #endif
 
-/* change the behavior of mir_presentation_chain_submit_buffer
- * to either queue or drop buffers.
- *
- * In the near future, mir_presentation_chain_submit_buffer will just have
- * dropping behavior, but this is needed to accommodate nested passthrough
- */
-void mir_presentation_chain_set_queued_submissions(MirPresentationChain* )
-
-
 /** Suggest parameters to use with EGLCreateImage for a given MirBuffer
  *
  *   \param [in] buffer         The buffer
