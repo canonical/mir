@@ -1,0 +1,31 @@
+libmircore.so.1 libmircore1 #MINVER#
+ MIR_CORE_0.25@MIR_CORE_0.25 0.25.0
+ (c++)"mir::fatal_error@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::fatal_error_abort(char const*, ...)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::fatal_error_except(char const*, ...)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::add(mir::geometry::Rectangle const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::clear()@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::remove(mir::geometry::Rectangle const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::Rectangle> const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::Rectangle> const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangles const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Displacement const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Size const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Point const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangle const&)@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::bounding_rectangle() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::end() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::begin() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::confine(mir::geometry::Point&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::operator==(mir::geometry::Rectangles const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangles::operator!=(mir::geometry::Rectangles const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::bottom_left() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::bottom_right() const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::intersection_with(mir::geometry::Rectangle const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::contains(mir::geometry::Point const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::contains(mir::geometry::Rectangle const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::overlaps(mir::geometry::Rectangle const&) const@MIR_CORE_0.25" 0.25.0
+ (c++)"mir::geometry::Rectangle::top_right() const@MIR_CORE_0.25" 0.25.0
