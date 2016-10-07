@@ -397,13 +397,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         interval = std::max(0, std::min(1, interval));
-        if (current_swap_interval == interval)
-            return;
-        if (interval == 0)
-            vault.increase_buffer_count();
-        else
-            vault.decrease_buffer_count();
-        current_swap_interval = interval;
+        vault.set_interval(interval);
     }
 
     // Future must be before vault, to ensure vault's destruction marks future
@@ -414,7 +408,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     std::mutex mutable mutex;
     std::shared_ptr<mcl::MirBuffer> current{nullptr};
     MirWaitHandle scale_wait_handle;
-    int current_swap_interval = 1;
     geom::Size size_;
 };
 

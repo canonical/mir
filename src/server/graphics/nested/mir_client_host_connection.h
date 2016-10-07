@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <string>
 #include <vector>
@@ -97,7 +98,9 @@ private:
 
     std::vector<HostSurface*> surfaces;
 
+    RecursiveReadWriteMutex input_config_callback_mutex;
     std::function<void(UniqueInputConfig)> input_config_callback;
+    RecursiveReadWriteMutex event_callback_mutex;
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
 
     struct NestedCursorImage : graphics::CursorImage

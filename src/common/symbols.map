@@ -402,5 +402,7 @@ MIR_COMMON_0.25 {
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
       mir::output_type_name*;
+      MirSurfaceOutputEvent::refresh_rate*;
+      MirSurfaceOutputEvent::set_refresh_rate*;
     };
 } MIR_COMMON_0.24;

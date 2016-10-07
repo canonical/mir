@@ -312,6 +312,7 @@ mgn::MirClientHostConnection::MirClientHostConnection(
         [](MirConnection* connection, void* context)
         {
             auto obj = static_cast<MirClientHostConnection*>(context);
+            RecursiveReadLock lock{obj->input_config_callback_mutex};
             if (obj->input_config_callback)
                 obj->input_config_callback(make_input_config(connection));
         },
@@ -474,17 +475,21 @@ mgn::UniqueInputConfig mgn::MirClientHostConnection::create_input_device_config(
 
 void mgn::MirClientHostConnection::set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb)
 {
+    RecursiveWriteLock lock{input_config_callback_mutex};
     input_config_callback = cb;
 }
 
 void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb)
 {
+    RecursiveWriteLock lock{event_callback_mutex};
     event_callback = cb;
 }
 
 void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
 {
-    event_callback(event, source_frame);
+    RecursiveReadLock lock{event_callback_mutex};
+    if (event_callback)
+        event_callback(event, source_frame);
 }
 
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
