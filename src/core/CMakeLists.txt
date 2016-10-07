@@ -27,9 +27,25 @@ set_target_properties(mircore
     LINK_DEPENDS ${symbol_map}
 )
 
+set(PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/mircore.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/mircore.pc
+    @ONLY
+)
+
 install(TARGETS mircore LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/mir ${CMAKE_SOURCE_DIR}/include/core/mir_toolkit
     DESTINATION "include/mircore"
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/mircore.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
