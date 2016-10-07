@@ -371,14 +371,20 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
         if (surf)
         {
             if (auto stream = surf->get_buffer_stream())
+            {
+                printf("PEP\n");
                 return stream->set_swap_interval(interval);
+            }
         }
+        else printf("NO SURF????\n");
     }
     catch (std::exception const& ex)
     {
+        printf("THERE WAS AN ECX\n");
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
+        printf("WHO KNOWS\n");
     return nullptr;
 }
 

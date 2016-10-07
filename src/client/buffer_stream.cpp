@@ -142,6 +142,8 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         if (server_connection_lost)
             BOOST_THROW_EXCEPTION(std::runtime_error("disconnected: no new buffers"));
+
+
         //always submit what we have, whether we have a buffer, or will have to wait for an async reply
         auto request = mcl::make_protobuf_object<mp::BufferRequest>();
         request->mutable_id()->set_value(stream_id);
@@ -280,6 +282,7 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
+        printf("SUBMIT!--> %i\n", buffer.rpc_id());
         //note, NewCallback will trigger on exception, deleting this object there
         auto protobuf_void = new mp::Void;
         server.submit_buffer(&request, protobuf_void,

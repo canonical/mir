@@ -519,6 +519,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
     }
 
     std::unique_lock<std::mutex> lg(guard);
+    printf("SWAPINTERVAL SET IN SERVER %i\n", interval);
     if (swapinterval_ != interval)
     {
         swapinterval_ = interval;

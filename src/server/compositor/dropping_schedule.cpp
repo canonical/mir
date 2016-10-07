@@ -34,8 +34,12 @@ void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     if ((the_only_buffer != buffer) && the_only_buffer)
+    {
+        printf("DROP A B %i\n", buffer->id().as_value());
         sender->send_buffer(the_only_buffer->id());
+    }
     the_only_buffer = buffer;
+    printf("SCHEDULE IN dropping SCHEDULE BID %i\n", buffer->id().as_value());
 }
 
 unsigned int mc::DroppingSchedule::num_scheduled()

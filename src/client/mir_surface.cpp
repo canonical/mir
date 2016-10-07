@@ -287,11 +287,13 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     // may be deprecated in terms of mir_buffer_stream_ alternatives
     if ((at == mir_surface_attrib_swapinterval) && default_stream)
     {
+        printf("DEFAULT STREAM SWAPINT\n");
         default_stream->set_swap_interval(value);
         return &configure_wait_handle;
     }
 
     std::unique_lock<decltype(mutex)> lock(mutex);
+    printf("NEWP defoult, gotta go throeugh\n"); 
 
     mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface->id());

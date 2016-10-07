@@ -106,6 +106,8 @@ void mgn::detail::DisplayBuffer::swap_buffers()
         //if the host_chain is not released, a buffer of the passthrough surface might get caught
         //up in the host server, resulting a drop in nbuffers available to the client
         host_chain = nullptr;
+
+        host_surface->set_swapinterval(1);
     }
 }
 
@@ -153,6 +155,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 
     if (content != BackingContent::chain)
     {
+        host_surface->set_swapinterval(0);
         auto spec = host_connection->create_surface_spec();
         spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
         content = BackingContent::chain;
