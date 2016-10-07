@@ -142,6 +142,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
+include_directories(include/core)
 include_directories(include/common)
 include_directories(include/cookie)
 
