@@ -1,8 +1,9 @@
-add_library(mircore
+add_library(mircore SHARED
     fatal.cpp
     geometry/rectangle.cpp
     geometry/rectangles.cpp
     geometry/ostream.cpp
+    ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/length.h
@@ -24,4 +25,11 @@ set_target_properties(mircore
     SOVERSION 1
     LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
     LINK_DEPENDS ${symbol_map}
+)
+
+install(TARGETS mircore LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/mir ${CMAKE_SOURCE_DIR}/include/core/mir_toolkit
+    DESTINATION "include/mircore"
 )

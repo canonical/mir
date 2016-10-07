@@ -1,4 +1,4 @@
-MIR_CORE_0.1 {
+MIR_CORE_0.25 {
  global:
   extern "C++" {
     mir::fatal_error*;
