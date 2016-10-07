@@ -894,10 +894,14 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
     surface_map->insert(id, stream); 
 
     if (request->mbs_callback)
-    {
-        request->mbs_callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
-    }
-    request->wh->result_received();
+        request->mbs_callback(
+            reinterpret_cast<MirBufferStream*>(
+                dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+
+/*    if (request->bs_callback)
+        request->bs_callback(
+                stream.get(), request->context);
+*/
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
@@ -1291,7 +1295,6 @@ MirRenderSurface* MirConnection::create_render_surface()
     rs = std::make_shared<mcl::RenderSurface>(
         this,
         server,
-        surface_map,
         egl_native_window,
         platform);
     surface_map->insert(egl_native_window.get(), rs);

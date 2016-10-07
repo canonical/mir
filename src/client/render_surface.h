@@ -24,22 +24,16 @@
 #include "mir_render_surface.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/client_types.h"
-#include "mir_protobuf.pb.h"
 #include "mir/frontend/surface_id.h"
+
 #include <mutex>
 #include <memory>
 
 namespace mir
 {
-namespace logging
-{
-class Logger;
-}
 namespace client
 {
-class ConnectionSurfaceMap;
 class ClientPlatform;
-class AsyncBufferFactory;
 namespace rpc
 {
 class DisplayServer;
@@ -49,7 +43,6 @@ class RenderSurface : public MirRenderSurface
 public:
     RenderSurface(MirConnection* const connection,
                   rpc::DisplayServer& display_server,
-                  std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
                   std::shared_ptr<void> native_window,
                   std::shared_ptr<ClientPlatform> client_platform);
     MirConnection* connection() const override;
@@ -90,22 +83,22 @@ public:
     struct StreamReleaseRequest
     {
         StreamReleaseRequest(
-                mir_buffer_stream_callback cb, void* context, RenderSurface* rs)
-                    : callback(cb),
-                      context(context),
-                      rs(rs)
-
+                RenderSurface* rs,
+                mir_buffer_stream_callback cb,
+                void* context) :
+                    rs(rs),
+                    callback(cb),
+                    context(context)
         {
         }
+        RenderSurface* rs;
         mir_buffer_stream_callback callback;
         void* context;
-        RenderSurface* rs;
     };
 
 private:
     MirConnection* const connection_;
     rpc::DisplayServer& server;
-    std::shared_ptr<ConnectionSurfaceMap> surface_map;
     std::shared_ptr<void> wrapped_native_window;
     std::shared_ptr<ClientPlatform> platform;
     ClientBufferStream* stream_;

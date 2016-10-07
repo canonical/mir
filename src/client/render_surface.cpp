@@ -18,29 +18,14 @@
  */
 
 #include "render_surface.h"
+#include "buffer_stream.h"
 #include "mir_wait_handle.h"
 #include "rpc/mir_display_server.h"
-#include "connection_surface_map.h"
-#include "buffer_stream.h"
-#include "error_stream.h"
-#include "perf_report.h"
-#include "logging/perf_report.h"
-#include "lttng/perf_report.h"
-#include "make_protobuf_object.h"
-#include "mir_toolkit/mir_surface.h"
-#include "mir/client_platform.h"
-#include "mir_connection.h"
 
-#include <algorithm>
-#include <unistd.h>
-#include <boost/exception/diagnostic_information.hpp>
+#include "mir/client_platform.h"
 
 namespace mcl = mir::client;
 namespace mclr = mcl::rpc;
-namespace mp = mir::protobuf;
-namespace gp = google::protobuf;
-namespace mf = mir::frontend;
-namespace ml = mir::logging;
 
 namespace mir
 {
@@ -78,12 +63,10 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void
 mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
     mclr::DisplayServer& display_server,
-    std::shared_ptr<ConnectionSurfaceMap> connection_surface_map,
     std::shared_ptr<void> native_window,
     std::shared_ptr<ClientPlatform> client_platform) :
         connection_(connection),
         server(display_server),
-        surface_map(connection_surface_map),
         wrapped_native_window(native_window),
         platform(client_platform),
         stream_(nullptr),
@@ -123,7 +106,7 @@ MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     void* context)
 {
     // TODO: check that there is no outstanding stream request
-    stream_release_request = std::make_shared<StreamReleaseRequest>(callback, context, this);
+    stream_release_request = std::make_shared<StreamReleaseRequest>(this, callback, context);
 
     return connection_->release_buffer_stream(
         stream_, render_surface_buffer_stream_release_callback,
