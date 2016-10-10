@@ -133,7 +133,6 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
                     && mir_keyboard_event_scan_code(kevent) == KEY_R)
                 {
                     state->reset = true;
-                    printf("\n\nMeasurements reset.\n");
                 }
             }
         }
@@ -461,6 +460,7 @@ static void* capture_thread_func(void* arg)
         {
             nhistory = 0;
             state->reset = false;
+            printf("\n\nMeasurements reset.\n");
         }
 
         // Note using the buffer timestamp from the kernel means we're
