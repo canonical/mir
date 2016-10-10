@@ -32,6 +32,7 @@ set_target_properties(
 
 target_link_libraries(mirclientplatformmesa
   mirclient
+  mirsharedmesa-static
   client_platform_common
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )

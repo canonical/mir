@@ -73,8 +73,7 @@ public:
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
-    void increase_buffer_count();
-    void decrease_buffer_count();
+    void set_interval(int);
 
 private:
     enum class Owner;
@@ -105,6 +104,7 @@ private:
     size_t needed_buffer_count;
     size_t const initial_buffer_count;
     int last_received_id = 0;
+    int interval = 1;
     MirWaitHandle next_buffer_wait_handle;
     std::function<void()> deferred_cb;
 };

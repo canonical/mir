@@ -134,6 +134,8 @@ target_link_libraries(
   mirclient-static
   mirclientlttng-static
 
+  mirsharedmesa-static
+
   mir-test-static
   mir-test-framework-static
 
