@@ -23,6 +23,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <atomic>
 
 #include <gtest/gtest.h>
 
@@ -206,8 +207,91 @@ TEST(PosixRWMutex, successful_trylock_excludes_exclusive_lock)
         }};
 
     std::this_thread::sleep_for(1s);
-
     EXPECT_FALSE(lock_taken_in_thread);
 
     exclusive_lock.unlock();
+}
+
+TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
+{
+    mir::PosixRWMutex mutex{mir::PosixRWMutex::Type::PreferWriterNonRecursive};
+
+    std::atomic<bool> shutdown_readers{false};
+
+    std::mutex reader_mutex;
+    int reader_to_run{0};
+    std::condition_variable reader_changed;
+
+    std::array<mt::AutoUnblockThread, 2> readers;
+
+    for (auto i = 0u; i < readers.size(); ++i)
+    {
+        readers[i] = mt::AutoUnblockThread{
+            [&shutdown_readers]() { shutdown_readers = true; },
+            [&shutdown_readers, &reader_mutex, &reader_to_run, &reader_changed, &mutex](int id)
+            {
+                while (!shutdown_readers)
+                {
+                    if (auto lock = std::shared_lock<decltype(mutex)>{mutex, std::try_to_lock})
+                    {
+                        {
+                            std::unique_lock<decltype(reader_mutex)> l{reader_mutex};
+                            if (reader_to_run != id)
+                            {
+                                reader_changed.wait(l, [&reader_to_run, id]() { return reader_to_run == id; });
+                            }
+                        }
+
+                        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+
+                        {
+                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
+                            reader_to_run = (id + 1) % 2;
+                        }
+                        reader_changed.notify_all();
+                    }
+                    else
+                    {
+                        // Unable to acquire lock? Either some thread has taken an exclusive lock, or
+                        // some thread is waiting on an exclusive lock and we're preempted.
+                        //
+                        // In the latter case we need to let the waiting thread release its shared lock.
+                        {
+                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
+                            reader_to_run = (id + 1) % 2;
+                        }
+                        reader_changed.notify_all();
+                    }
+                }
+            },
+            i};
+    }
+
+    mt::AutoJoinThread watchdog{
+        [&shutdown_readers]()
+        {
+            using namespace std::chrono_literals;
+            auto timeout = std::chrono::steady_clock::now() + 10s;
+
+            while (!shutdown_readers && (std::chrono::steady_clock::now() < timeout))
+            {
+                std::this_thread::sleep_for(1ms);
+            }
+
+            if (!shutdown_readers)
+            {
+                ADD_FAILURE() << "Timeout waiting to acquire write lock";
+            }
+            shutdown_readers = true;
+        }};
+
+    // Spin until the reader threads have spooled up and taken a shared lock.
+    while(std::unique_lock<decltype(mutex)>{mutex, std::try_to_lock})
+    {
+        std::this_thread::yield();
+    }
+
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
+    shutdown_readers = true;
 }
