@@ -144,7 +144,7 @@ void mir::PosixRWMutex::unlock_shared()
  */
 void mir::PosixRWMutex::lock()
 {
-    auto err = pthread_rwlock_rdlock(&mutex);
+    auto err = pthread_rwlock_wrlock(&mutex);
     if (err != 0)
     {
         BOOST_THROW_EXCEPTION((std::system_error{
