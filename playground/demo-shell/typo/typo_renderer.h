@@ -24,15 +24,29 @@ namespace mir { namespace examples { namespace typo {
 class Renderer
 {
 public:
-    struct Image
+    class Image
     {
+    public:
         Image();
+        Image(Image const&) = delete;
+        Image(Image const&&) = delete;
+        Image& operator=(Image const&) = delete;
         ~Image();
+
         typedef enum {alpha8} Format;
+
         void reserve(int w, int h, Format f);
+        unsigned char* data() const { return buf; };
+        int width() const { return width_; }
+        int height() const { return height_; }
+        int stride() const { return stride_; }
+        int alignment() const { return align_; }
+        Format format() const { return format_; }
+
+    private:
         unsigned char* buf;
-        int width, stride, height, align;
-        Format format;
+        int width_, stride_, height_, align_;
+        Format format_;
     };
 
     virtual ~Renderer();

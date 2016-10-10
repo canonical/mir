@@ -105,17 +105,17 @@ void FreetypeRenderer::render(char const* str, Image& img)
         int right = x + bitmap.width;
         int bottom = y + bitmap.rows;
 
-        if (x >= 0 && right <= img.width && y >= 0 && bottom <= img.height)
+        if (x >= 0 && right <= width && y >= 0 && bottom <= height)
         {
             unsigned char* src = bitmap.buffer;
-            unsigned char* dest = img.buf + y*img.stride + x;
+            unsigned char* dest = img.data() + y*img.stride() + x;
 
             int ylimit = y + bitmap.rows;
             for (; y < ylimit; ++y)
             {
                 memcpy(dest, src, bitmap.width);
                 src += bitmap.pitch;
-                dest += img.stride;
+                dest += img.stride();
             }
         }
 

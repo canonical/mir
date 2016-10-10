@@ -22,7 +22,8 @@
 using namespace mir::examples::typo;
 
 Renderer::Image::Image()
-    : buf(nullptr), width(0), stride(0), height(0), align(4), format(alpha8)
+    : buf(nullptr), width_(0), stride_(0), height_(0), align_(4),
+      format_(alpha8)
 {
 }
 
@@ -33,13 +34,13 @@ Renderer::Image::~Image()
 
 void Renderer::Image::reserve(int w, int h, Format f)
 {
-    width = w;
-    height = h;
-    format = f;
+    width_ = w;
+    height_ = h;
+    format_ = f;
     int const bpp = 1;  // format is always alpha8
-    stride = (((width * bpp) + align - 1) / align) * align;
+    stride_ = (((width_ * bpp) + align_ - 1) / align_) * align_;
     delete[] buf;
-    auto size = stride * height;
+    auto size = stride_ * height_;
     buf = new unsigned char[size];
     memset(buf, 0, size);
 }
