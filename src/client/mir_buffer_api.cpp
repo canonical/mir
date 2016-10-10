@@ -49,11 +49,13 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void ignore(MirBuffer*, void*){}
 void mir_buffer_release(MirBuffer* b) 
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    buffer->set_callback(ignore, nullptr);
     auto connection = buffer->allocating_connection();
     connection->release_buffer(buffer);
 }
