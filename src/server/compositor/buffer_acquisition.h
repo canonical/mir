@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
+#ifndef MIR_COMPOSITOR_BUFFER_ACQUISITION_H_
+#define MIR_COMPOSITOR_BUFFER_ACQUISITION_H_
 
 #include "mir/graphics/buffer_properties.h"
 #include <memory>
@@ -64,36 +64,7 @@ protected:
     BufferAcquisition& operator=(BufferAcquisition const&) = delete;
 };
 
-class BufferBundle : public BufferAcquisition
-{
-public:
-    virtual ~BufferBundle() noexcept {}
-    virtual void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) = 0;
-    virtual void client_release(graphics::Buffer*) = 0;
-
-    virtual graphics::BufferProperties properties() const = 0;
-    virtual void allow_framedropping(bool dropping_allowed) = 0;
-    virtual void set_mode(MultiMonitorMode mode) = 0;
-    virtual void force_requests_to_complete() = 0;
-    virtual void resize(const geometry::Size &newsize) = 0;
-    virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
-
-    /**
-     * Return the number of client acquisitions that can be completed
-     * synchronously without blocking, before a compositor consumes one. This
-     * is used for pre-filling the queue in tests. Don't assume it's always
-     * nbuffers-1 as it might be less.
-     */
-    virtual int buffers_free_for_client() const = 0;
-    virtual void drop_old_buffers() = 0;
-    virtual void drop_client_requests() = 0;
-
-protected:
-    BufferBundle() = default;
-    BufferBundle(BufferBundle const&) = delete;
-    BufferBundle& operator=(BufferBundle const&) = delete;
-};
 }
 }
 
-#endif /*MIR_COMPOSITOR_BUFFER_BUNDLE_H_*/
+#endif /*MIR_COMPOSITOR_BUFFER_ACQUISITION_H_*/

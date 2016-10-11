@@ -48,6 +48,7 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
+namespace mev = mir::events;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
 
@@ -89,18 +90,10 @@ struct MockEventBuilder : mi::EventBuilder
                                   {
                                         return builder.key_event(time, action, key, scan_code);
                                   }));
-        ON_CALL(*this, touch_event(_))
-            .WillByDefault(Invoke([this](Timestamp time)
+        ON_CALL(*this, touch_event(_, _))
+            .WillByDefault(Invoke([this](Timestamp time, std::vector<mir::events::ContactState> const& contacts)
                                   {
-                                        return builder.touch_event(time);
-                                  }));
-        ON_CALL(*this, add_touch(_,_,_,_,_,_,_,_,_,_))
-            .WillByDefault(Invoke([this](MirEvent& event, MirTouchId id, MirTouchAction action,
-                                         MirTouchTooltype tooltype, float x, float y, float major, float minor,
-                                         float pressure, float size)
-                                  {
-                                        return builder.add_touch(event, id, action, tooltype, x, y, major, minor,
-                                                                 pressure, size);
+                                        return builder.touch_event(time, contacts);
                                   }));
         ON_CALL(*this, pointer_event(_, _, _, _, _, _, _))
             .WillByDefault(Invoke([this](Timestamp time, MirPointerAction action, MirPointerButtons buttons,
@@ -114,15 +107,23 @@ struct MockEventBuilder : mi::EventBuilder
                                   {
                                         return builder.configuration_event(time, action);
                                   }));
+        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _))
+            .WillByDefault(Invoke([this](Timestamp time, MirPointerAction action, MirPointerButtons buttons, float x,
+                                         float y, float hscroll, float vscroll, float relative_x, float relative_y)
+                                  {
+                                       return builder.pointer_event(time, action, buttons, x, y,
+                                                                    hscroll, vscroll, relative_x, relative_y);
+                                  }));
     }
     using EventBuilder::Timestamp;
     MOCK_METHOD4(key_event, mir::EventUPtr(Timestamp, MirKeyboardAction, xkb_keysym_t, int));
 
-    MOCK_METHOD1(touch_event, mir::EventUPtr(Timestamp));
-    MOCK_METHOD10(add_touch, void(MirEvent&, MirTouchId, MirTouchAction, MirTouchTooltype, float, float, float, float,
-                                  float, float));
+    MOCK_METHOD2(touch_event, mir::EventUPtr(Timestamp, std::vector<mir::events::ContactState> const&));
     MOCK_METHOD7(pointer_event,
                  mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float));
+    MOCK_METHOD9(
+        pointer_event,
+        mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
     MOCK_METHOD2(configuration_event, mir::EventUPtr(Timestamp, MirInputConfigurationAction));
     mir::EventUPtr device_state_event(float, float) override
     {
@@ -499,71 +500,79 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 {
-    int slot = 0;
+    MirTouchId slot = 0;
     float major = 6;
     float minor = 5;
+    float orientation = 0;
     float pressure = 0.6f;
     float x = 100;
     float y = 7;
 
+    std::vector<mev::ContactState> contacts{
+        {slot, mir_touch_action_down, mir_touch_tooltype_finger, x, y, pressure,
+            major, minor, orientation}};
+
     InSequence seq;
-    EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
-    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{0}, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
-                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_1, contacts));
     EXPECT_CALL(mock_sink, handle_input(mt::TouchEvent(x, y)));
 
     touch_screen.start(&mock_sink, &mock_builder);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor,
-                                        pressure);
+                                        pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
     process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
 {
-    int slot = 0;
+    MirTouchId slot = 0;
     float major = 6;
     float minor = 5;
     float pressure = 0.6f;
+    float orientation = 0;
     float x = 100;
     float y = 7;
 
+    std::vector<mev::ContactState> contacts{
+        {slot, mir_touch_action_change, mir_touch_tooltype_finger, x, y,
+         pressure, major, minor, orientation}};
+
     InSequence seq;
-    EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
-    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{0}, mir_touch_action_change, mir_touch_tooltype_finger, x, y,
-                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_1, contacts));
     EXPECT_CALL(mock_sink, handle_input(mt::TouchMovementEvent()));
 
     touch_screen.start(&mock_sink, &mock_builder);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_1, slot, x, y, major,
-                                        minor, pressure);
+                                        minor, pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
     process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_without_querying_properties)
 {
-    int slot = 3;
+    MirTouchId slot = 3;
     float major = 6;
     float minor = 5;
     float pressure = 0.6f;
     float x = 30;
     float y = 20;
+    float orientation = 0;
+    std::vector<mev::ContactState> contact_down{{slot, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
+        pressure, major, minor, orientation}};
+    std::vector<mev::ContactState> contact_up{{slot, mir_touch_action_up, mir_touch_tooltype_finger, x, y,
+        pressure, major, minor, orientation}};
+
 
     InSequence seq;
-    EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
-    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{slot}, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
-                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_1, contact_down));
     EXPECT_CALL(mock_sink, handle_input(mt::TouchEvent(x, y)));
 
-    EXPECT_CALL(mock_builder, touch_event(time_stamp_2));
-    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{slot}, mir_touch_action_up, mir_touch_tooltype_finger, x, y,
-                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_2, contact_up));
     EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x, y)));
 
     touch_screen.start(&mock_sink, &mock_builder);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor,
-                                        pressure);
+                                        pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
     env.mock_libinput.setup_touch_up_event(fake_device, event_time_2, slot);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
@@ -581,6 +590,7 @@ TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
     const float first_y = 20;
     const float second_x = 90;
     const float second_y = 90;
+    const float orientation = 0;
 
     InSequence seq;
     EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, first_x, first_y)));
@@ -593,16 +603,16 @@ TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
 
     touch_screen.start(&mock_sink, &mock_builder);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, first_slot, first_x,
-                                        first_y, major, minor, pressure);
+                                        first_y, major, minor, pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, second_slot, second_x,
-                                        second_y, major, minor, pressure);
+                                        second_y, major, minor, pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, first_slot, first_x,
-                                        first_y + 5, major, minor, pressure);
+                                        first_y + 5, major, minor, pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, second_slot,
-                                        second_x + 5, second_y, major, minor, pressure);
+                                        second_x + 5, second_y, major, minor, pressure, orientation);
     env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
 
     process_events(touch_screen);

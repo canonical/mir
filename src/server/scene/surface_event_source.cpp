@@ -57,6 +57,7 @@ void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
             id,
             new_output_properties->dpi,
             new_output_properties->scale,
+            new_output_properties->refresh_rate,
             new_output_properties->form_factor,
             static_cast<uint32_t>(new_output_properties->id.as_value())
         ));

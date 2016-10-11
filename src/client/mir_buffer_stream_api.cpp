@@ -224,3 +224,37 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->get_error_message();
 }
+
+MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int interval)
+try
+{
+    if ((interval < 0) || (interval > 1))
+        return nullptr;
+
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    if (!buffer_stream)
+        return nullptr;
+
+    return buffer_stream->set_swap_interval(interval);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+int mir_buffer_stream_get_swapinterval(MirBufferStream* stream)
+try
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    if (buffer_stream)
+        return buffer_stream->swap_interval();
+    else
+        return -1;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
+}
+

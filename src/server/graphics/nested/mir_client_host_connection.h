@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <string>
 #include <vector>
@@ -85,6 +86,7 @@ public:
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
+    bool supports_passthrough() override;
 
 private:
     void update_input_config(UniqueInputConfig input_config);
@@ -96,7 +98,9 @@ private:
 
     std::vector<HostSurface*> surfaces;
 
+    RecursiveReadWriteMutex input_config_callback_mutex;
     std::function<void(UniqueInputConfig)> input_config_callback;
+    RecursiveReadWriteMutex event_callback_mutex;
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
 
     struct NestedCursorImage : graphics::CursorImage

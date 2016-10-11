@@ -139,7 +139,7 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
 
     // Regression test for LP: #1621352
     ASSERT_NE(crtc_id, connector_id);
-    EXPECT_CALL(report, report_vsync(connector_id));
+    EXPECT_CALL(report, report_vsync(connector_id, _));
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
