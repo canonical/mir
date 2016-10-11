@@ -207,9 +207,13 @@ public:
 
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
     MirConnection* connection() const;
+
+    void wait_for_vsync();
+
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
+    void on_output_change(MirSurfaceOutputEvent const*);
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
@@ -243,6 +247,9 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
     MirOrientation orientation = mir_orientation_normal;
+    std::chrono::nanoseconds vsync_interval{1000000000LL/60};
+    // TODO: Move this into streams:
+    std::chrono::steady_clock::time_point last_target_vsync;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

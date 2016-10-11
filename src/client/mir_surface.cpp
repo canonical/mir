@@ -458,6 +458,9 @@ void MirSurface::handle_event(MirEvent const& e)
             default_stream->set_size(size);
         break;
     }
+    case mir_event_type_surface_output:
+        on_output_change(mir_event_get_surface_output_event(&e));
+        break;
     default:
         break;
     };
@@ -467,6 +470,51 @@ void MirSurface::handle_event(MirEvent const& e)
         auto callback = handle_event_callback;
         lock.unlock();
         callback(&e);
+    }
+}
+
+void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
+{
+    output_id = mir_surface_output_event_get_output_id(soevent);
+    long long ns = 1000000000LL /
+                   mir_surface_output_event_get_refresh_rate(soevent);
+    vsync_interval = std::chrono::nanoseconds(ns);
+    /*
+     * TODO: Notify streams of rate change
+     * TODO: Notify the input receiver of the rate change AFTER the server
+     *       has been modified to always use frame dropping. If we do it
+     *       before then the input receiver using the precise vsync rate
+     *       could easily cause extra queuing and increased touch lag.
+     */
+}
+
+void MirSurface::wait_for_vsync()
+{
+    // TODO: Replace all of this fake_last_vsync with a real timestamp when
+    //       available in future:
+    auto const now = std::chrono::steady_clock::now();
+    auto const now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            now.time_since_epoch()
+                        ).count();
+    auto const phase = std::chrono::nanoseconds(now_ns % vsync_interval.count());
+    auto const fake_last_vsync = now - phase;
+
+    auto const last_vsync = fake_last_vsync;
+
+    // TODO: Add client API to make this configurable:
+    auto const prerender_time = std::chrono::milliseconds(30);
+
+    auto const prerender_gap = vsync_interval - 
+        std::chrono::nanoseconds(prerender_time.count() % vsync_interval.count());
+    auto const prerender_whole_frames = prerender_time + prerender_gap;
+    auto const target_vsync = last_vsync + prerender_whole_frames;
+
+    // TODO: last_target_vsync should be per-stream
+    if (target_vsync > last_target_vsync)
+    {
+        last_target_vsync = target_vsync;
+        auto render_start = target_vsync - prerender_time;
+        std::this_thread::sleep_until(render_start);
     }
 }
 
