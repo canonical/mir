@@ -401,6 +401,7 @@ MIR_COMMON_0.25 {
       MirSurfacePlacementEvent::set_id*;
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
+      MirInputDeviceStateEvent::device_pressed_keys_for_index*;
       mir::output_type_name*;
       MirSurfaceOutputEvent::refresh_rate*;
       MirSurfaceOutputEvent::set_refresh_rate*;

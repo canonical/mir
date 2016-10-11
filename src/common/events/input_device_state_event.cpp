@@ -98,9 +98,9 @@ MirInputDeviceId MirInputDeviceStateEvent::device_id(size_t index) const
     return devices[index].id;
 }
 
-uint32_t const* MirInputDeviceStateEvent::device_pressed_keys(size_t index) const
+uint32_t MirInputDeviceStateEvent::device_pressed_keys_for_index(size_t index, size_t pressed_index) const
 {
-    return devices[index].pressed_keys.data();
+    return devices[index].pressed_keys[pressed_index];
 }
 
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
