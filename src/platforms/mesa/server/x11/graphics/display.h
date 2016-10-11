@@ -29,11 +29,14 @@
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
 
+class AtomicFrame;
 class GLConfig;
 class DisplayReport;
 
@@ -98,6 +101,8 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
+    Frame last_frame_on(unsigned output_id) const override;
+
 private:
     helpers::EGLHelper shared_egl;
     ::Display* const x_dpy;
@@ -109,6 +114,7 @@ private:
     MirPixelFormat pf;
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation; //TODO: keep entire current display configuration
+    std::shared_ptr<AtomicFrame> last_frame;
     std::unique_ptr<DisplayBuffer> display_buffer;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,38 +13,31 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
-#define MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
+#ifndef MIR_GRAPHICS_ATOMIC_FRAME_H_
+#define MIR_GRAPHICS_ATOMIC_FRAME_H_
 
 #include "mir/graphics/frame.h"
-#include <cstdint>
+#include <mutex>
 
-namespace mir
-{
-namespace graphics
-{
-namespace mesa
-{
+namespace mir { namespace graphics {
 
-class PageFlipper
+class AtomicFrame
 {
 public:
-    virtual ~PageFlipper() {}
-
-    virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id, uint32_t connector_id) = 0;
-    virtual Frame wait_for_flip(uint32_t crtc_id) = 0;
-
-protected:
-    PageFlipper() = default;
-    PageFlipper(PageFlipper const&) = delete;
-    PageFlipper& operator=(PageFlipper const&) = delete;
+    Frame load() const;
+    // Preferably use this and provide all fields from the driver:
+    void store(Frame const&);
+    // Or if your driver is limited these will suffice:
+    void increment_now();
+    void increment_with_timestamp(Frame::Timestamp t);
+private:
+    mutable std::mutex mutex;
+    Frame frame;
 };
 
-}
-}
-}
+}} // namespace mir::graphics
 
-#endif /* MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_ */
+#endif // MIR_GRAPHICS_ATOMIC_FRAME_H_

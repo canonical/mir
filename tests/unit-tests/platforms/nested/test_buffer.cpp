@@ -208,6 +208,7 @@ TEST_F(NestedBuffer, binds_to_texture)
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay());
     EXPECT_CALL(mock_egl, eglGetCurrentContext());
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_));
     EXPECT_CALL(*client_buffer, sync(mir_read, _));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _));
 

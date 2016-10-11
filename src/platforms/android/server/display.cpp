@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/frame.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
@@ -151,7 +152,9 @@ mga::Display::Display(
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
         std::bind(&mga::Display::on_hotplug, this),
-        std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
+        std::bind(&mga::Display::on_vsync, this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2))},
     config(
         hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
@@ -296,9 +299,32 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name) const
+void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
 {
-    display_report->report_vsync(as_output_id(name).as_value());
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    /*
+     * XXX It's presently useful but idealistically inefficient that we
+     *     get a callback on every frame, even when the compositor is idle.
+     *     (LP: #1374318)
+     *     Although we possibly shouldn't fix that at all because the
+     *     call to increment_with_timestamp would produce incorrect MSC values
+     *     if it were to miss a physical frame. The X11 platform has that
+     *     problem already, but it's less important for production use than
+     *     Android.
+     */
+    auto& f = last_frame[as_output_id(name).as_value()];
+    f.increment_with_timestamp(timestamp);
+    display_report->report_vsync(as_output_id(name).as_value(), f.load());
+}
+
+mg::Frame mga::Display::last_frame_on(unsigned output_id) const
+{
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    auto last = last_frame.find(output_id);
+    if (last == last_frame.end())
+         return {};  // Not an error. It might be a valid output_id pre-vsync
+    else
+         return last->second.load();
 }
 
 void mga::Display::register_configuration_change_handler(

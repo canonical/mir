@@ -47,7 +47,6 @@ struct StubNestedBuffer : mgn::NativeBuffer
 public:
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
     MirBuffer* client_handle() const override { return nullptr; }
-    MirNativeBuffer* get_native_handle() override { return nullptr; }
     MirGraphicsRegion get_graphics_region() override
     {
         return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
