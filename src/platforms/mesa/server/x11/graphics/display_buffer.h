@@ -33,6 +33,7 @@ namespace mir
 namespace graphics
 {
 
+class AtomicFrame;
 class GLConfig;
 class DisplayReport;
 
@@ -50,6 +51,7 @@ public:
             Window const win,
             geometry::Size const sz,
             EGLContext const shared_context,
+            std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
             MirOrientation const o,
             GLConfig const& gl_config);
@@ -76,6 +78,12 @@ private:
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;
     helpers::EGLHelper egl;
+    std::shared_ptr<AtomicFrame> const last_frame;
+
+    typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
+        (EGLDisplay dpy, EGLSurface surface, int64_t *ust,
+         int64_t *msc, int64_t *sbc);
+    EglGetSyncValuesCHROMIUM* eglGetSyncValues;
 };
 
 }

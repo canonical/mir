@@ -233,7 +233,7 @@ struct DisplayReport : mg::DisplayReport
     void report_successful_egl_buffer_swap_on_construction() override {}
     void report_successful_display_construction() override {}
     void report_egl_configuration(EGLDisplay, EGLConfig) override {}
-    void report_vsync(unsigned int) override {}
+    void report_vsync(unsigned int, mg::Frame const&) override {}
     void report_successful_drm_mode_set_crtc_on_construction() override {}
     void report_drm_master_failure(int) override {}
     void report_vt_switch_away_failure() override {}

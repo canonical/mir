@@ -57,6 +57,7 @@ public:
     EGLContext context() { return egl_context; }
     EGLDisplay display() { return egl_display; }
     EGLConfig config() { return egl_config; }
+    EGLSurface surface() const { return egl_surface; }
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:
