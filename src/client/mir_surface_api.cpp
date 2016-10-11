@@ -88,6 +88,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection
     auto spec = new MirSurfaceSpec{connection, width, height, format};
     spec->type = mir_surface_type_tip;
     spec->parent = parent;
+    spec->aux_rect = *rect;
+    spec->edge_attachment = mir_edge_attachment_any;
     return spec;
 }
 
