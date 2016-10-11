@@ -75,7 +75,6 @@ class IntervalConfig
 public:
     void on_swap_interval_set(int interval);
     int swap_interval() const;
-    MirWaitHandle* set_swap_interval(int i);
     MirWaitHandle* set_swap_interval(
         rpc::DisplayServer& server, frontend::BufferStreamId id, int interval);
 private:

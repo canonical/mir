@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+void mir_presentation_chain_set_queueing_mode(MirPresentationChain* chain);
+void mir_presentation_chain_set_dropping_mode(MirPresentationChain* chain);
+
 /** Suggest parameters to use with EGLCreateImage for a given MirBuffer
  *
  *   \param [in] buffer         The buffer

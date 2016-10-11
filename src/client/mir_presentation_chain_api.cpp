@@ -125,3 +125,25 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
+
+void mir_presentation_chain_set_queueing_mode(MirPresentationChain* chain)
+try
+{
+    mir::require(chain);
+    chain->set_queueing_mode();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_presentation_chain_set_dropping_mode(MirPresentationChain* chain)
+try
+{
+    mir::require(chain);
+    chain->set_dropping_mode();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}

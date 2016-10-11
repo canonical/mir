@@ -38,6 +38,8 @@ public:
     MirConnection* connection() const override;
     int rpc_id() const override;
     char const* error_msg() const override;
+    void set_dropping_mode() override;
+    void set_queueing_mode() override;
 private:
     MirConnection* const connection_;
     int const stream_id;
