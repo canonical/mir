@@ -642,7 +642,7 @@ libinput_config_dwt_state libinput_device_config_dwt_get_default_enabled(libinpu
 }
 
 libinput_event* mtd::MockLibInput::setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
-                                                     float x, float y, float major, float minor, float pressure)
+                                                     float x, float y, float major, float minor, float pressure, float orientation)
 {
     auto event = get_next_fake_ptr<libinput_event*>();
     auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
@@ -668,6 +668,8 @@ libinput_event* mtd::MockLibInput::setup_touch_event(libinput_device* dev, libin
         .WillByDefault(Return(minor));
     ON_CALL(*this, libinput_event_touch_get_pressure(touch_event))
         .WillByDefault(Return(pressure));
+    ON_CALL(*this, libinput_event_touch_get_orientation(touch_event))
+        .WillByDefault(Return(orientation));
 
     return event;
 }

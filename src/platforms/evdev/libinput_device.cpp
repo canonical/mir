@@ -243,21 +243,26 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
 {
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_touch_get_time_usec(touch));
     report->received_event_from_kernel(time.count(), EV_SYN, 0, 0);
-    auto event = builder->touch_event(time);
 
     // TODO make libinput indicate tool type
     auto const tool = mir_touch_tooltype_finger;
 
+    std::vector<events::ContactState> contacts;
     for(auto it = begin(last_seen_properties); it != end(last_seen_properties);)
     {
         auto & id = it->first;
         auto & data = it->second;
 
-        // TODO why do we send size to clients?
-        float const size = std::max(data.major, data.minor);
-
-        builder->add_touch(*event, id, data.action, tool, data.x, data.y,
-                           data.pressure, data.major, data.minor, size);
+        contacts.push_back(events::ContactState{
+                           id,
+                           data.action,
+                           tool,
+                           data.x,
+                           data.y,
+                           data.pressure,
+                           data.major,
+                           data.minor,
+                           data.orientation});
 
         if (data.action == mir_touch_action_down)
             data.action = mir_touch_action_change;
@@ -268,7 +273,7 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
             ++it;
     }
 
-    return event;
+    return builder->touch_event(time, contacts);
 }
 
 void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)

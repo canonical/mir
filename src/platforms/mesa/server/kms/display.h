@@ -99,6 +99,8 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
+    Frame last_frame_on(unsigned output_id) const override;
+
 private:
     void clear_connected_unused_outputs();
 
@@ -110,7 +112,7 @@ private:
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
-    RealKMSOutputContainer output_container;
+    mutable RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 

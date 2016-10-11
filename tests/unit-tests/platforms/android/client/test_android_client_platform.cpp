@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir_native_window.h"
 #include "mir/client_platform.h"
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
@@ -57,6 +58,20 @@ TEST_F(AndroidClientPlatformTest, egl_native_window_is_set)
     auto mock_egl_native_surface = std::make_shared<MockEGLNativeSurface>();
     auto egl_native_window = platform->create_egl_native_window(&surface);
     EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(AndroidClientPlatformTest, egl_native_window_can_be_set_with_null_native_surface)
+{
+    auto egl_native_window = platform->create_egl_native_window(nullptr);
+    EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(AndroidClientPlatformTest, error_interpreter_used_with_null_native_surface)
+{
+    auto egl_native_window = platform->create_egl_native_window(nullptr);
+    auto native_window = reinterpret_cast<mir::graphics::android::MirNativeWindow*>(egl_native_window.get());
+    ANativeWindow& window = *native_window;
+    EXPECT_EQ(window.setSwapInterval(&window, 1), -1);
 }
 
 TEST_F(AndroidClientPlatformTest, egl_pixel_format_asks_the_driver)
