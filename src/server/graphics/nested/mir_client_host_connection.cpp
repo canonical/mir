@@ -501,6 +501,14 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
 
+    void set_submission_mode(mgn::SubmissionMode mode) override
+    {
+        if (mode == mgn::SubmissionMode::queueing)
+            mir_presentation_chain_set_queueing_mode(chain);
+        else
+            mir_presentation_chain_set_dropping_mode(chain);
+    }
+
     MirPresentationChain* handle()
     {
         return chain;
