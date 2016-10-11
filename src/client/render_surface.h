@@ -26,7 +26,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir/frontend/surface_id.h"
 
-#include <mutex>
+#include <shared_mutex>
 #include <memory>
 
 namespace mir
@@ -105,7 +105,7 @@ private:
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
 
-    std::mutex mutex;
+    std::shared_timed_mutex guard;
 };
 }
 }

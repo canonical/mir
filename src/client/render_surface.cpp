@@ -24,6 +24,8 @@
 
 #include "mir/client_platform.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mcl = mir::client;
 namespace mclr = mcl::rpc;
 
@@ -33,10 +35,10 @@ namespace client
 {
 void render_surface_buffer_stream_create_callback(BufferStream* stream, void* context)
 {
-    RenderSurface::StreamCreationRequest* request{reinterpret_cast<RenderSurface::StreamCreationRequest*>(context)};
+    RenderSurface::StreamCreationRequest* request{
+        reinterpret_cast<RenderSurface::StreamCreationRequest*>(context)};
     RenderSurface* rs = request->rs;
 
-    rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
     if (request->usage == mir_buffer_usage_hardware)
     {
         rs->platform->use_egl_native_window(
@@ -44,18 +46,31 @@ void render_surface_buffer_stream_create_callback(BufferStream* stream, void* co
     }
 
     if (request->callback)
-        request->callback(reinterpret_cast<MirBufferStream*>(rs->stream_), request->context);
+        request->callback(
+            reinterpret_cast<MirBufferStream*>(dynamic_cast<ClientBufferStream*>(stream)),
+            request->context);
+
+    {
+        std::shared_lock<decltype(rs->guard)> lk(rs->guard);
+        rs->stream_ = dynamic_cast<ClientBufferStream*>(stream);
+        rs->stream_creation_request.reset();
+    }
 }
 
 void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void* context)
 {
-    RenderSurface::StreamReleaseRequest* request{reinterpret_cast<RenderSurface::StreamReleaseRequest*>(context)};
+    RenderSurface::StreamReleaseRequest* request{
+        reinterpret_cast<RenderSurface::StreamReleaseRequest*>(context)};
     RenderSurface* rs = request->rs;
 
     if (request->callback)
         request->callback(stream, request->context);
 
-    rs->stream_ = nullptr;
+    {
+        std::shared_lock<decltype(rs->guard)> lk(rs->guard);
+        rs->stream_release_request.reset();
+        rs->stream_ = nullptr;
+    }
 }
 }
 }
@@ -92,8 +107,26 @@ MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void* context)
 {
-    // TODO: check that there is no outstanding stream request
-    stream_creation_request = std::make_shared<StreamCreationRequest>(this, usage, callback, context);
+    {
+        std::shared_lock<decltype(guard)> lk(guard);
+
+        if (stream_)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Render surface already has content"));
+        }
+
+        if (!stream_creation_request)
+        {
+            stream_creation_request =
+                std::make_shared<StreamCreationRequest>(this, usage, callback, context);
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Content in process of being created"));
+        }
+    }
 
     return connection_->create_client_buffer_stream(
         width, height, format, usage, this, nullptr,
@@ -105,8 +138,26 @@ MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     mir_buffer_stream_callback callback,
     void* context)
 {
-    // TODO: check that there is no outstanding stream request
-    stream_release_request = std::make_shared<StreamReleaseRequest>(this, callback, context);
+    {
+        std::shared_lock<decltype(guard)> lk(guard);
+
+        if (!stream_)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Render surface has no content"));
+        }
+
+        if (!stream_release_request)
+        {
+            stream_release_request =
+                std::make_shared<StreamReleaseRequest>(this, callback, context);
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("Content in process of being released"));
+        }
+    }
 
     return connection_->release_buffer_stream(
         stream_, render_surface_buffer_stream_release_callback,

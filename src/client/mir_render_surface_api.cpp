@@ -144,11 +144,15 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
     MirBufferUsage usage)
 {
     MirBufferStream* stream = nullptr;
-    mir_render_surface_create_buffer_stream(
+    auto wh = mir_render_surface_create_buffer_stream(
         render_surface,
         width, height,
         format,
         usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream);
+
+    if (wh)
+        wh->wait_for_all();
+
     return stream;
 }
