@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <cstring>
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 FreetypeRenderer::FreetypeRenderer()
     : lib(nullptr), face(nullptr), preferred_height(16)
