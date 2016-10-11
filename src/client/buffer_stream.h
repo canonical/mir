@@ -26,6 +26,7 @@
 #include "client_buffer_depository.h"
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
+#include "interval_config.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -69,22 +70,6 @@ class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
 class ServerBufferSemantics;
-
-class IntervalConfig
-{
-public:
-    void on_swap_interval_set(int interval);
-    int swap_interval() const;
-    MirWaitHandle* set_swap_interval(int i);
-    MirWaitHandle* set_swap_interval(
-        rpc::DisplayServer& server, frontend::BufferStreamId id, int interval);
-private:
-    std::unique_ptr<protobuf::Void> protobuf_void{std::make_unique<protobuf::Void>()};
-    MirWaitHandle interval_wait_handle;
-    std::mutex mutable mutex;
-    int swap_interval_ = 1;
-};
-
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:

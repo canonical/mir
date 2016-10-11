@@ -16,36 +16,33 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ERROR_CHAIN_H
-#define MIR_CLIENT_ERROR_CHAIN_H
+#ifndef MIR_CLIENT_INTERVAL_CONFIG_H_
+#define MIR_CLIENT_INTERVAL_CONFIG_H_
 
-#include "mir_presentation_chain.h"
-#include <memory>
+#include "mir_protobuf.pb.h"
+#include "mir/frontend/buffer_stream_id.h"
+#include "mir_wait_handle.h"
+#include <mutex>
 
 namespace mir
 {
 namespace client
 {
-
-class ErrorChain : public MirPresentationChain
+namespace rpc { class DisplayServer; }
+class IntervalConfig
 {
 public:
-    ErrorChain(
-        MirConnection* connection,
-        int id,
-        std::string const& error_msg);
-    void submit_buffer(MirBuffer* buffer) override;
-    MirConnection* connection() const override;
-    int rpc_id() const override;
-    char const* error_msg() const override;
-    void set_dropping_mode() override;
-    void set_queueing_mode() override;
+    void on_swap_interval_set(int interval);
+    int swap_interval() const;
+    MirWaitHandle* set_swap_interval(
+        rpc::DisplayServer& server, frontend::BufferStreamId id, int interval);
 private:
-    MirConnection* const connection_;
-    int const stream_id;
-    std::string const error;
+    std::unique_ptr<protobuf::Void> protobuf_void{std::make_unique<protobuf::Void>()};
+    MirWaitHandle interval_wait_handle;
+    std::mutex mutable mutex;
+    int swap_interval_ = 1;
 };
 
 }
 }
-#endif /* MIR_CLIENT_ERROR_CHAIN_H */
+#endif /* MIR_CLIENT_INTERVAL_CONFIG */

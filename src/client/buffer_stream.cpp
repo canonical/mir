@@ -653,11 +653,6 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-uint32_t mcl::BufferStream::get_current_buffer_id()
-{
-    return buffer_depository->current_buffer_id();
-}
-
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
 {
     if (attrib != mir_surface_attrib_swapinterval)
@@ -668,6 +663,10 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     mir_wait_for(set_swap_interval(interval));
 }
 
+uint32_t mcl::BufferStream::get_current_buffer_id()
+{
+    return buffer_depository->current_buffer_id();
+}
 
 int mcl::BufferStream::swap_interval() const
 {
@@ -684,37 +683,6 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int i)
 
     buffer_depository->set_interval(interval);
     return interval_config.set_swap_interval(display_server, rpc_id(), interval);
-}
-
-void mcl::IntervalConfig::on_swap_interval_set(int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    swap_interval_ = interval;
-    interval_wait_handle.result_received();
-}
-
-int mcl::IntervalConfig::swap_interval() const
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return swap_interval_;
-}
-
-MirWaitHandle* mcl::IntervalConfig::set_swap_interval(
-    mclr::DisplayServer& server, mf::BufferStreamId id, int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    if (interval == swap_interval_)
-        return nullptr;
-    lock.unlock();
-
-    mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(id.as_value());
-    configuration.set_swapinterval(interval);
-    interval_wait_handle.expect_result();
-    server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::IntervalConfig::on_swap_interval_set, interval));
-
-    return &interval_wait_handle;
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

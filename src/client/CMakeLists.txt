@@ -89,6 +89,7 @@ add_library(mirclientobjects OBJECT
   mir_error.cpp
   mir_error.h
   mir_error_api.cpp
+  interval_config.cpp
   error_handler.h
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
