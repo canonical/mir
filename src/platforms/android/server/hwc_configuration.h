@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/frame.h"
 #include "mir/geometry/size.h"
 #include "display_name.h"
 #include <memory>
@@ -42,7 +43,7 @@ public:
     virtual DisplayConfigurationOutput active_config_for(DisplayName) = 0;
     virtual ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
-        std::function<void(DisplayName)> const& vsync_cb) = 0;
+        std::function<void(DisplayName,graphics::Frame::Timestamp)> const& vsync_cb) = 0;
 
 protected:
     HwcConfiguration() = default;
@@ -60,7 +61,7 @@ public:
     DisplayConfigurationOutput active_config_for(DisplayName) override;
     ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
-        std::function<void(DisplayName)> const& vsync_cb) override;
+        std::function<void(DisplayName,graphics::Frame::Timestamp)> const& vsync_cb) override;
 
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;
@@ -77,7 +78,7 @@ public:
     DisplayConfigurationOutput active_config_for(DisplayName) override;
     ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
-        std::function<void(DisplayName)> const& vsync_cb) override;
+        std::function<void(DisplayName,graphics::Frame::Timestamp)> const& vsync_cb) override;
 
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;

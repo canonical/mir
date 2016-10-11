@@ -227,13 +227,13 @@ mga::ConfigChangeSubscription subscribe_to_config_changes(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device,
     void const* subscriber,
     std::function<void()> const& hotplug,
-    std::function<void(mga::DisplayName)> const& vsync)
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return std::make_shared<
         mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
         [hotplug, vsync, subscriber, hwc_device]{
             hwc_device->subscribe_to_events(subscriber,
-                [vsync](mga::DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [vsync](mga::DisplayName name, mg::Frame::Timestamp ts){ vsync(name, ts); },
                 [hotplug](mga::DisplayName, bool){ hotplug(); },
                 []{});
         },
@@ -259,7 +259,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }
@@ -322,7 +322,7 @@ mg::DisplayConfigurationOutput mga::HwcPowerModeControl::active_config_for(Displ
 
 mga::ConfigChangeSubscription mga::HwcPowerModeControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }

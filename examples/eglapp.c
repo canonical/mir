@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <string.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -106,19 +107,35 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
 {
     MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
-    if (attrib != mir_surface_attrib_visibility)
-        return;
-    switch (mir_surface_event_get_attribute_value(sev))
+    int value = mir_surface_event_get_attribute_value(sev);
+
+    switch (attrib)
     {
-    case mir_surface_visibility_exposed:
-        printf("Surface exposed\n");
+    case mir_surface_attrib_visibility:
+        printf("Surface %s\n", value == mir_surface_visibility_exposed ?
+                               "exposed" : "occluded");
         break;
-    case mir_surface_visibility_occluded:
-        printf("Surface occluded\n");
+    case mir_surface_attrib_dpi:
+        // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:
         break;
     }
+}
+
+static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
+{
+    static char const* const form_factor_name[6] =
+        {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
+    unsigned ff = mir_surface_output_event_get_form_factor(out);
+    char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
+
+    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
+           mir_surface_output_event_get_output_id(out),
+           mir_surface_output_event_get_dpi(out),
+           mir_surface_output_event_get_scale(out),
+           form_factor,
+           mir_surface_output_event_get_refresh_rate(out));
 }
 
 static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
@@ -133,6 +150,9 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
         break;
     case mir_event_type_surface:
         mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        break;
+    case mir_event_type_surface_output:
+        handle_surface_output_event(mir_event_get_surface_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
@@ -181,8 +201,115 @@ static const MirDisplayOutput *find_active_output(
     return output;
 }
 
-mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
-                                unsigned int *width, unsigned int *height)
+static void show_help(struct mir_eglapp_arg const* const* arg_lists)
+{
+    int const indent = 2, desc_offset = 2;
+    struct mir_eglapp_arg const* const* list;
+    int max_len = 0;
+
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        struct mir_eglapp_arg const* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
+        {
+            int len = indent + strlen(arg->syntax);
+            if (len > max_len)
+                max_len = len;
+        }
+    }
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        struct mir_eglapp_arg const* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
+        {
+            int len = 0, remainder = 0;
+            printf("%*c%s%n", indent, ' ', arg->syntax, &len);
+            remainder = desc_offset + max_len - len;
+            printf("%*c%s", remainder, ' ', arg->description);
+            switch (arg->format[0])
+            {
+            case '=':
+                {
+                    char const* str = *(char const**)arg->variable;
+                    if (str)
+                        printf(" [%s]", str);
+                }
+                break;
+            case '%':
+                switch (arg->format[1])
+                {
+                case 'u': printf(" [%u]", *(unsigned*)arg->variable); break;
+                case 'f': printf(" [%.1f]", *(float*)arg->variable); break;
+                default: break;
+                }
+            default:
+                break;
+            }
+            printf("\n");
+        }
+    }
+}
+
+static mir_eglapp_bool parse_args(int argc, char *argv[],
+                             struct mir_eglapp_arg const* const* arg_lists)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        char const* operator = argv[i];
+        struct mir_eglapp_arg const* const* list;
+        for (list = arg_lists; *list != NULL; ++list)
+        {
+            struct mir_eglapp_arg const* arg;
+            for (arg = *list; arg->syntax != NULL; ++arg)
+            {
+                char const* space = strchr(arg->syntax, ' ');
+                int operator_len = space != NULL ? space - arg->syntax
+                                                 : (int)strlen(arg->syntax);
+                if (!strncmp(operator, arg->syntax, operator_len))
+                {
+                    char const* operand = operator + operator_len;
+                    if (!operand[0] && strchr("=%", arg->format[0]))
+                    {
+                        if (i+1 < argc)
+                            operand = argv[++i];
+                        else
+                        {
+                            fprintf(stderr, "Missing argument for %s\n",
+                                    operator);
+                            return 0;
+                        }
+                    }
+                    switch (arg->format[0])
+                    {
+                    case '$': return 1;  /* -- is special */
+                    case '!': *(mir_eglapp_bool*)arg->variable = 1; break;
+                    case '=': *(char const**)arg->variable = operand; break;
+                    case '%':
+                        if (!sscanf(operand, arg->format, arg->variable))
+                        {
+                            fprintf(stderr,
+                                    "Invalid option: %s  (expected %s)\n",
+                                    operand, arg->syntax);
+                            return 0;
+                        }
+                        break;
+                    default: abort(); break;
+                    }
+                    goto next;
+                }
+            }
+        }
+        fprintf(stderr, "Unknown option: %s\n", operator);
+        return 0;
+        next:
+        (void)0; /* Stop compiler warnings about label at the end */
+    }
+    return 1;
+}
+
+mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
+                                unsigned int* width, unsigned int* height,
+                                struct mir_eglapp_arg const* custom_args)
 {
     EGLint ctxattribs[] =
     {
@@ -195,153 +322,60 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLBoolean ok;
     EGLint swapinterval = 1;
     unsigned int output_id = mir_display_output_id_invalid;
-    char *mir_socket = NULL;
+    char const* mir_socket = NULL;
+    char const* dims = NULL;
     char const* cursor_name = mir_default_cursor_name;
     unsigned int rgb_bits = 8;
+    mir_eglapp_bool help = 0, no_vsync = 0, quiet = 0;
+    mir_eglapp_bool fullscreen = !*width || !*height;
 
-    if (argc > 1)
+    struct mir_eglapp_arg const default_args[] =
     {
-        int i;
-        for (i = 1; i < argc; i++)
-        {
-            mir_eglapp_bool help = 0;
-            const char *arg = argv[i];
+        {"-a <name>", "=", &appname, "Set application name"},
+        {"-b <0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
+        {"-c <name>", "=", &cursor_name, "Request cursor image by name"},
+        {"-e <nbits>", "%u", &rgb_bits, "EGL colour channel size"},
+        {"-f", "!", &fullscreen, "Force full screen"},
+        {"-h", "!", &help, "Show this help text"},
+        {"-m <socket>", "=", &mir_socket, "Mir server socket"},
+        {"-n", "!", &no_vsync, "Don't sync to vblank"},
+        {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
+        {"-q", "!", &quiet, "Quiet mode (no messages output)"},
+        {"-s <width>x<height>", "=", &dims, "Force surface size"},
+        {"--", "$", NULL, "Ignore all arguments that follow"},
+        {NULL, NULL, NULL, NULL}
+    };
 
-            if (arg[0] == '-')
-            {
-                if (arg[1] == '-' && arg[2] == '\0')
-                    break;
+    struct mir_eglapp_arg const* const arg_lists[] =
+    {
+        default_args,
+        custom_args,
+        NULL
+    };
 
-                switch (arg[1])
-                {
-                case 'a':
-                    appname = argv[++i];
-                    break;
-                case 'b':
-                    {
-                        float alpha = 1.0f;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%f", &alpha) == 1)
-                        {
-                            mir_eglapp_background_opacity = alpha;
-                        }
-                        else
-                        {
-                            printf("Invalid opacity value: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'e':
-                    {
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            ++i;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &rgb_bits) != 1)
-                        {
-                            printf("Invalid colour channel depth: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'n':
-                    swapinterval = 0;
-                    break;
-                case 'o':
-                    {
-                        unsigned int the_id = 0;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &the_id) == 1)
-                        {
-                            output_id = the_id;
-                        }
-                        else
-                        {
-                            printf("Invalid output ID: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'f':
-                    *width = 0;
-                    *height = 0;
-                    break;
-                case 's':
-                    {
-                        unsigned int w, h;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%ux%u", &w, &h) == 2)
-                        {
-                            *width = w;
-                            *height = h;
-                        }
-                        else
-                        {
-                            printf("Invalid size: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'm':
-                    mir_socket = argv[++i];
-                    break;
-                case 'c':
-                    cursor_name = argv[++i];
-                    break;
-                case 'q':
-                    {
-                        FILE *unused = freopen("/dev/null", "a", stdout);
-                        (void)unused;
-                        break;
-                    }
-                case 'h':
-                default:
-                    help = 1;
-                    break;
-                }
-            }
-            else
-            {
-                help = 1;
-            }
+    if (!parse_args(argc, argv, arg_lists))
+        return 0;
 
-            if (help)
-            {
-                printf("Usage: %s [<options>]\n"
-                       "  -a name          Set application name\n"
-                       "  -b               Background opacity (0.0 - 1.0)\n"
-                       "  -e               EGL colour channel size in bits\n"
-                       "  -h               Show this help text\n"
-                       "  -f               Force full screen\n"
-                       "  -o ID            Force placement on output monitor ID\n"
-                       "  -n               Don't sync to vblank\n"
-                       "  -m socket        Mir server socket\n"
-                       "  -s WIDTHxHEIGHT  Force surface size\n"
-                       "  -c name          Request cursor image by name\n"
-                       "  -q               Quiet mode (no messages output)\n"
-                       "  --               Ignore all arguments that follow\n"
-                       , argv[0]);
-                return 0;
-            }
-        }
+    if (help)
+    {
+        printf("Usage: %s [<options>]\n", argv[0]);
+        show_help(arg_lists);
+        return 0;
+    }
+
+    if (no_vsync)
+        swapinterval = 0;
+
+    if (dims && (2 != sscanf(dims, "%ux%u", width, height)))
+    {
+        fprintf(stderr, "Invalid dimensions: %s\n", dims);
+        return 0;
+    }
+
+    if (quiet)
+    {
+        FILE *unused = freopen("/dev/null", "a", stdout);
+        (void)unused;
     }
 
     connection = mir_connect_sync(mir_socket, appname);
@@ -409,10 +443,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
 
-    if (*width == 0)
+    if (fullscreen)  /* TODO: Use surface states for this */
+    {
         *width = mode->horizontal_resolution;
-    if (*height == 0)
         *height = mode->vertical_resolution;
+    }
 
     mir_display_config_destroy(display_config);
 
@@ -459,7 +494,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;

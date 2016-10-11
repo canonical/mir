@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     unsigned int width = 0, height = 0;
     GLfloat angle[4] = {3.1f, 4.1f, 5.9f, 2.6f};
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);

@@ -421,3 +421,9 @@ bool mgm::Display::apply_if_configuration_preserves_display_buffers(
 {
     return false;
 }
+
+mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
+{
+    auto output = output_container.get_kms_output_for(output_id);
+    return output->last_frame();
+}

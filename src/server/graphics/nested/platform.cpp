@@ -19,12 +19,18 @@
 #include "platform.h"
 #include "host_connection.h"
 #include "display.h"
+#include "buffer.h"
+#include "native_buffer.h"
+#include "ipc_operations.h"
 #include "mir/shared_library.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
+#include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/platform_operation_message.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -54,9 +60,53 @@ mgn::Platform::Platform(
 {
 }
 
+namespace
+{
+class BufferAllocator : public mg::GraphicBufferAllocator
+{
+public:
+    BufferAllocator(
+        std::shared_ptr<mgn::HostConnection> const& connection,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& guest_allocator) :
+        connection(connection),
+        guest_allocator(guest_allocator)
+    {
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties) override
+    {
+        if ((buffer_properties.size.width >= mir::geometry::Width{480}) &&
+            (buffer_properties.size.height >= mir::geometry::Height{480}))
+        {
+            return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+        }
+        else
+        {
+            return guest_allocator->alloc_buffer(buffer_properties);
+        }
+    }
+
+    std::vector<MirPixelFormat> supported_pixel_formats() override
+    {
+        return guest_allocator->supported_pixel_formats();
+    }
+
+private:
+    std::shared_ptr<mgn::HostConnection> const connection;
+    std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
+};
+}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    return guest_platform->create_buffer_allocator();
+    if (connection->supports_passthrough())
+    {
+        return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
+    }
+    else
+    {
+        return guest_platform->create_buffer_allocator();
+    }
 }
 
 mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
@@ -74,5 +124,5 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
-    return guest_platform->make_ipc_operations();
+    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
 }

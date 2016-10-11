@@ -375,3 +375,8 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
 {
     return false;
 }
+
+mg::Frame mgn::Display::last_frame_on(unsigned) const
+{
+    return {}; // TODO after the client API exists for us to get it
+}

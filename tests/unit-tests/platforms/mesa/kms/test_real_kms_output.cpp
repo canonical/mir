@@ -36,6 +36,8 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+using namespace ::testing;
+
 namespace
 {
 
@@ -43,14 +45,14 @@ class NullPageFlipper : public mgm::PageFlipper
 {
 public:
     bool schedule_flip(uint32_t,uint32_t,uint32_t) override { return true; }
-    void wait_for_flip(uint32_t) override { }
+    mg::Frame wait_for_flip(uint32_t) override { return {}; }
 };
 
 class MockPageFlipper : public mgm::PageFlipper
 {
 public:
     MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
-    MOCK_METHOD1(wait_for_flip, void(uint32_t));
+    MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
 };
 
 class RealKMSOutputTest : public ::testing::Test
@@ -62,6 +64,8 @@ public:
           possible_encoder_ids1{encoder_ids[0]},
           possible_encoder_ids2{encoder_ids[0], encoder_ids[1]}
     {
+        ON_CALL(mock_page_flipper, wait_for_flip(_))
+            .WillByDefault(Return(mg::Frame{}));
     }
 
     void setup_outputs_connected_crtc()
