@@ -72,6 +72,9 @@ class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
     BufferStream(
+        mir::client::rpc::DisplayServer& server,
+        std::weak_ptr<SurfaceMap> const& map);
+    BufferStream(
         MirConnection* connection,
         MirRenderSurface* render_surface,
         std::shared_ptr<MirWaitHandle> creation_wait_handle,

@@ -19,24 +19,64 @@
 #ifndef MIR_CLIENT_ERROR_STREAM_H_
 #define MIR_CLIENT_ERROR_STREAM_H_
 #include "client_buffer_stream.h"
+#include "buffer_stream.h"
 
 namespace mir
 {
 namespace client
 {
 class RenderSurface;
+
+class ErrorBufferStream : public BufferStream
+{
+public:
+    ErrorBufferStream(
+        mir::client::rpc::DisplayServer& server,
+        std::weak_ptr<SurfaceMap> const& map,
+        std::string const& error_msg,
+        MirConnection* conn,
+        frontend::BufferStreamId id,
+        std::shared_ptr<MirWaitHandle> const& wh);
+
+    MirSurfaceParameters get_parameters() const;
+    std::shared_ptr<ClientBuffer> get_current_buffer();
+    uint32_t get_current_buffer_id();
+    EGLNativeWindowType egl_native_window();
+    MirWaitHandle* next_buffer(std::function<void()> const& done);
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
+    int swap_interval() const;
+    MirWaitHandle* set_swap_interval(int interval);
+    MirNativeBuffer* get_current_buffer_package();
+    MirPlatformType platform_type();
+    frontend::BufferStreamId rpc_id() const;
+    MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
+    bool valid() const;
+    void buffer_available(mir::protobuf::Buffer const& buffer);
+    void buffer_unavailable();
+    void set_size(geometry::Size);
+    MirWaitHandle* set_scale(float);
+    char const* get_error_message() const;
+    MirConnection* connection() const;
+    MirRenderSurface* render_surface() const;
+
+private:
+    std::string const error;
+    MirConnection* const connection_;
+    frontend::BufferStreamId id;
+    std::shared_ptr<MirWaitHandle> const wh;
+};
+
 class ErrorStream : public ClientBufferStream
 {
 public:
     ErrorStream(
         std::string const& error_msg, MirConnection* conn,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
-
+#if 0
     ErrorStream(
         std::string const& error_msg, RenderSurface* render_surface,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
-
-    MirWaitHandle* get_create_wait_handle();
+#endif
     MirSurfaceParameters get_parameters() const;
     std::shared_ptr<ClientBuffer> get_current_buffer();
     uint32_t get_current_buffer_id();

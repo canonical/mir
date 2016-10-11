@@ -418,6 +418,18 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 }
 
 mcl::BufferStream::BufferStream(
+    mir::client::rpc::DisplayServer& server,
+    std::weak_ptr<mcl::SurfaceMap> const& map)
+        : display_server{server},
+          client_platform{nullptr},
+          perf_report{nullptr},
+          nbuffers{0},
+          map{map},
+          factory{nullptr}
+{
+}
+
+mcl::BufferStream::BufferStream(
     MirConnection* connection,
     MirRenderSurface* render_surface,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,

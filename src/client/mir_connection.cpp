@@ -890,18 +890,27 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
-    surface_map->insert(id, stream); 
 
     if (request->mbs_callback)
+    {
+        auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
+        surface_map->insert(id, stream);
+
         request->mbs_callback(
             reinterpret_cast<MirBufferStream*>(
                 dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+    }
 
-/*    if (request->bs_callback)
+    // TODO: An ugly hack for now... To be removed when a BufferStream
+    //       can only be created through the render surface interface.
+    if (request->bs_callback)
+    {
+        auto stream = std::make_shared<mcl::ErrorBufferStream>(server, surface_map, error_msg, this, id, request->wh);
+        surface_map->insert(id, stream);
+
         request->bs_callback(
                 stream.get(), request->context);
-*/
+    }
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
