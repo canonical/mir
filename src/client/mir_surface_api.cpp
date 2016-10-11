@@ -82,15 +82,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection
                                                        MirSurface* parent,
                                                        MirRectangle* rect)
 {
-    mir::require(mir_surface_is_valid(parent));
-    mir::require(rect != nullptr);
-
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_tip;
-    spec->parent = parent;
-    spec->aux_rect = *rect;
-    spec->edge_attachment = mir_edge_attachment_any;
-    return spec;
+    return mir_connection_create_spec_for_tip(connection, width, height, format, parent, rect, mir_edge_attachment_any);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
