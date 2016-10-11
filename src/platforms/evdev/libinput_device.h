@@ -93,7 +93,7 @@ private:
     {
         ContactData() {}
         MirTouchAction action{mir_touch_action_change};
-        float x{0}, y{0}, major{0}, minor{0}, pressure{0};
+        float x{0}, y{0}, major{0}, minor{0}, pressure{0}, orientation{0};
     };
     std::map<MirTouchId,ContactData> last_seen_properties;
 

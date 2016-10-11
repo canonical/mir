@@ -98,7 +98,7 @@ void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
     vsync_trigger.wait(lk, [this]{return vsync_occurred;});
 }
 
-void mga::HwcFbDevice::notify_vsync(mga::DisplayName, std::chrono::nanoseconds)
+void mga::HwcFbDevice::notify_vsync(mga::DisplayName, mg::Frame::Timestamp)
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
     vsync_occurred = true;

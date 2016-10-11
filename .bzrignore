@@ -1,3 +1,4 @@
 .idea
 .project
 include/server/mir/version.h
+build-*

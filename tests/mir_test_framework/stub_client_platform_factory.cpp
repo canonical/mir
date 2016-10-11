@@ -71,6 +71,10 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
     return std::make_shared<StubPlatformBufferFactory>();
 }
 
+void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*surface*/)
+{
+}
+
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
     return std::shared_ptr<void>{surface, [](void*){}};

@@ -11,9 +11,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include/
 )
 
+add_subdirectory(common/)
 add_subdirectory(server/)
 add_subdirectory(client/)
-
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/platforms/mesa/mir_toolkit

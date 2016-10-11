@@ -70,6 +70,7 @@ public:
     NativeDisplay* native_display() override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+    Frame last_frame_on(unsigned output_id) const override;
 
 private:
     mir::Fd const drm_node;

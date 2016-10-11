@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <linux/input.h>
 #include <linux/videodev2.h>
 #include <unistd.h>
 #include <string.h>
@@ -77,6 +78,7 @@ typedef struct  // Things shared between threads
     Time display_frame_time;
     Buffer const* preview;
     int expected_direction;
+    bool reset;
 } State;
 
 static Time now()
@@ -121,6 +123,19 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
+        {
+            MirInputEvent const* ievent = mir_event_get_input_event(event);
+            if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
+            {
+                MirKeyboardEvent const* kevent =
+                    mir_input_event_get_keyboard_event(ievent);
+                if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up
+                    && mir_keyboard_event_scan_code(kevent) == KEY_R)
+                {
+                    state->reset = true;
+                }
+            }
+        }
         break;
     case mir_event_type_resize:
         state->resized = true;
@@ -441,6 +456,13 @@ static void* capture_thread_func(void* arg)
         Buffer const* buf = acquire_frame(cam);
         pthread_mutex_lock(&state->mutex);
 
+        if (state->reset)
+        {
+            nhistory = 0;
+            state->reset = false;
+            printf("\n\nMeasurements reset.\n");
+        }
+
         // Note using the buffer timestamp from the kernel means we're
         // free to allocate multiple camera buffers without it adversely
         // affecting the latency measurement (in fact it will improve it).
@@ -680,7 +702,8 @@ int main(int argc, char* argv[])
         0,
         0,
         NULL,
-        0
+        0,
+        false
     };
     MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
