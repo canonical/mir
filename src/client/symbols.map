@@ -385,6 +385,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
 
+    #private functions needed temporarily by nested passthrough
+    #should not be published along with the rest of the NBS symbols
     mir_buffer_egl_image_parameters;
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
