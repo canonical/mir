@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/frame.h"
+#include "mir/graphics/atomic_frame.h"
 #include "mir/renderer/gl/context_source.h"
 #include "gl_context.h"
 #include "display_group.h"
@@ -30,6 +32,7 @@
 #include <memory>
 #include <mutex>
 #include <array>
+#include <unordered_map>
 
 namespace mir
 {
@@ -88,9 +91,11 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 
+    Frame last_frame_on(unsigned output_id) const override;
+
 private:
     void on_hotplug();
-    void on_vsync(DisplayName) const;
+    void on_vsync(DisplayName, graphics::Frame::Timestamp);
 
     geometry::Point const origin{0,0};
     std::shared_ptr<DisplayReport> const display_report;
@@ -109,6 +114,9 @@ private:
     OverlayOptimization const overlay_option;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
+
+    std::mutex mutable vsync_mutex;
+    std::unordered_map<unsigned,AtomicFrame> last_frame;
 };
 
 }

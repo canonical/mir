@@ -181,7 +181,13 @@ void mgm::RealKMSOutput::wait_for_page_flip()
         fatal_error("Output %s has no associated CRTC to wait on",
                    mgk::connector_name(connector).c_str());
     }
-    page_flipper->wait_for_flip(current_crtc->crtc_id);
+
+    last_frame_.store(page_flipper->wait_for_flip(current_crtc->crtc_id));
+}
+
+mg::Frame mgm::RealKMSOutput::last_frame() const
+{
+    return last_frame_.load();
 }
 
 void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)

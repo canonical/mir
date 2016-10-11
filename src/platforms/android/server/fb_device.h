@@ -39,7 +39,7 @@ public:
     DisplayConfigurationOutput active_config_for(DisplayName) override;
     ConfigChangeSubscription subscribe_to_config_changes(
         std::function<void()> const& hotplug_cb,
-        std::function<void(DisplayName)> const& vsync_cb) override;
+        std::function<void(DisplayName,graphics::Frame::Timestamp)> const& vsync_cb) override;
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };
