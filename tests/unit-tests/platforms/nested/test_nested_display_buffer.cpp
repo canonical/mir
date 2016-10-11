@@ -424,7 +424,9 @@ TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fu
 //the host, and stop swapinterval 0 from working.
 TEST_F(NestedDisplayBuffer, coordinates_clients_interval_setting_with_host)
 {
+    NiceMock<MockHostSurface> mock_host_surface;
     auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
 
     Sequence seq;
     EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::dropping))
@@ -435,15 +437,22 @@ TEST_F(NestedDisplayBuffer, coordinates_clients_interval_setting_with_host)
         .InSequence(seq);
 
     mtd::MockHostConnection mock_host_connection;
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
     EXPECT_CALL(mock_host_connection, create_chain())
         .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
     auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
 
-    StubNestedBuffer nested_buffer; 
+    auto nested_buffer1 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer2 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer3 = std::make_shared<StubNestedBuffer>();
     EXPECT_TRUE(display_buffer->overlay(
-      { std::make_shared<mtd::IntervalZeroRenderable>(mt::fake_shared(nested_buffer), rectangle) }));
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
     EXPECT_TRUE(display_buffer->overlay(
-      { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) }));
+      { std::make_shared<mtd::StubRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
     EXPECT_TRUE(display_buffer->overlay(
-      { std::make_shared<mtd::IntervalZeroRenderable>(mt::fake_shared(nested_buffer), rectangle) }));
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
 }
