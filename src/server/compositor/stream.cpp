@@ -164,6 +164,11 @@ void mc::Stream::allow_framedropping(bool dropping)
     }
 }
 
+bool mc::Stream::framedropping() const
+{
+    return schedule_mode == ScheduleMode::Dropping;
+}
+
 void mc::Stream::transition_schedule(
     std::shared_ptr<mc::Schedule>&& new_schedule, std::lock_guard<std::mutex> const&)
 {
