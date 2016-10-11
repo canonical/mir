@@ -16,15 +16,15 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_GLCACHE_H_
-#define MIR_EXAMPLES_TYPO_GLCACHE_H_
+#ifndef MIR_TYPO_GLCACHE_H_
+#define MIR_TYPO_GLCACHE_H_
 
 #include "typo_renderer.h"
 #include <string>
 #include <unordered_map>
 #include <memory>
 
-namespace mir { namespace examples { namespace typo {
+namespace mir { namespace typo {
 
 class GLCache
 {
@@ -51,6 +51,6 @@ private:
     std::shared_ptr<Renderer> renderer;
 };
 
-} } } // namespace mir::examples::typo
+} } // namespace mir::typo
 
-#endif // MIR_EXAMPLES_TYPO_GLCACHE_H_
+#endif // MIR_TYPO_GLCACHE_H_
