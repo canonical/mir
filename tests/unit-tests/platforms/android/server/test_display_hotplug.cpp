@@ -49,7 +49,7 @@ struct DisplayHotplug : ::testing::Test
             return mtd::StubDisplayConfig({{true,true}}).outputs[0];
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& cb, std::function<void(mga::DisplayName)> const&) override
+            std::function<void()> const& cb, std::function<void(mga::DisplayName, mg::Frame::Timestamp)> const&) override
         {
             hotplug_fn = cb;
             return {};
@@ -74,7 +74,7 @@ struct DisplayHotplug : ::testing::Test
             return wrapped.active_config_for(d);
         } 
         mga::ConfigChangeSubscription subscribe_to_config_changes(
-            std::function<void()> const& hotplug, std::function<void(mga::DisplayName)> const& vsync) override
+            std::function<void()> const& hotplug, std::function<void(mga::DisplayName, mg::Frame::Timestamp)> const& vsync) override
         {
             return wrapped.subscribe_to_config_changes(hotplug, vsync);
         }
