@@ -19,6 +19,8 @@
 #include "mir/posix_rw_mutex.h"
 
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
+
 
 #include <mutex>
 #include <shared_mutex>
@@ -223,17 +225,19 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
     std::condition_variable reader_changed;
 
     std::array<mt::AutoUnblockThread, 2> readers;
+    mt::Signal readers_started;
 
     for (auto i = 0u; i < readers.size(); ++i)
     {
         readers[i] = mt::AutoUnblockThread{
             [&shutdown_readers]() { shutdown_readers = true; },
-            [&shutdown_readers, &reader_mutex, &reader_to_run, &reader_changed, &mutex](int id)
+            [&shutdown_readers, &reader_mutex, &reader_to_run, &reader_changed, &mutex, &readers_started](int id)
             {
                 while (!shutdown_readers)
                 {
                     if (auto lock = std::shared_lock<decltype(mutex)>{mutex, std::try_to_lock})
                     {
+                        readers_started.raise();
                         {
                             std::unique_lock<decltype(reader_mutex)> l{reader_mutex};
                             if (reader_to_run != id)
@@ -285,11 +289,8 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
             shutdown_readers = true;
         }};
 
-    // Spin until the reader threads have spooled up and taken a shared lock.
-    while(std::unique_lock<decltype(mutex)>{mutex, std::try_to_lock})
-    {
-        std::this_thread::yield();
-    }
+    // Wait until the reader threads have spooled up and taken a shared lock.
+    ASSERT_TRUE(readers_started.wait_for(std::chrono::seconds{10}));
 
     std::lock_guard<decltype(mutex)> lock{mutex};
 
