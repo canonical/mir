@@ -33,6 +33,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override;
+    void use_egl_native_window(std::shared_ptr<void> native_window, mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
