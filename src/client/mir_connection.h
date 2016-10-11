@@ -220,13 +220,8 @@ private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(
-            mir_surface_callback cb,
-            void* context,
-            MirSurfaceSpec const& spec)
-            : cb(cb),
-              context(context),
-              spec(spec),
+        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirSurfaceSpec const& spec) :
+            cb(cb), context(context), spec(spec),
               response(std::make_shared<mir::protobuf::Surface>()),
               wh(std::make_shared<MirWaitHandle>())
         {

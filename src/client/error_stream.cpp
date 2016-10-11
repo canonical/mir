@@ -21,6 +21,7 @@
 namespace mcl = mir::client;
 
 mcl::ErrorBufferStream::ErrorBufferStream(
+        MirRenderSurface* const rs,
         mir::client::rpc::DisplayServer& server,
         std::weak_ptr<SurfaceMap> const& map,
         std::string const& error_msg,
@@ -28,12 +29,29 @@ mcl::ErrorBufferStream::ErrorBufferStream(
         frontend::BufferStreamId id,
         std::shared_ptr<MirWaitHandle> const& wh)
             : BufferStream(server, map),
+              rs(rs),
               error(error_msg),
               connection_(conn),
               id(id),
               wh(wh)
 {
 }
+
+// Implement EGLNativeSurface API as NULL,
+// as render_surface_buffer_stream_create_callback might call it
+MirSurfaceParameters mcl::ErrorBufferStream::get_parameters() const
+{
+    return MirSurfaceParameters{"", 0, 0, mir_pixel_format_invalid, mir_buffer_usage_hardware, 0};
+}
+
+std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBufferStream::get_current_buffer()
+{
+    return nullptr;
+}
+
+void mcl::ErrorBufferStream::request_and_wait_for_next_buffer() {}
+void mcl::ErrorBufferStream::request_and_wait_for_configure(MirSurfaceAttrib /*a*/, int /*value*/) {}
+void mcl::ErrorBufferStream::set_buffer_cache_size(unsigned int) {}
 
 char const* mcl::ErrorBufferStream::get_error_message() const
 {
@@ -52,22 +70,12 @@ MirConnection* mcl::ErrorBufferStream::connection() const
 
 MirRenderSurface* mcl::ErrorBufferStream::render_surface() const
 {
-    return nullptr;
+    return rs;
 }
 
 mir::frontend::BufferStreamId mcl::ErrorBufferStream::rpc_id() const
 {
     return id;
-}
-
-MirSurfaceParameters mcl::ErrorBufferStream::get_parameters() const
-{
-    throw std::runtime_error(error);
-}
-
-std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBufferStream::get_current_buffer()
-{
-    throw std::runtime_error(error);
 }
 
 uint32_t mcl::ErrorBufferStream::get_current_buffer_id()
@@ -128,18 +136,6 @@ mcl::ErrorStream::ErrorStream(
     wh(wh)
 {
 }
-
-#if 0
-mcl::ErrorStream::ErrorStream(
-    std::string const& error_msg, RenderSurface* render_surface,
-    mir::frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh) :
-    error(error_msg),
-    connection_(render_surface->connection()),
-    id(id),
-    wh(wh)
-{
-}
-#endif
 
 char const* mcl::ErrorStream::get_error_message() const
 {

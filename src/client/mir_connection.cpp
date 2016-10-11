@@ -474,10 +474,8 @@ void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
-
     if (data.handle)
         data.handle->result_received();
-
     surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
@@ -901,11 +899,11 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
                 dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
     }
 
-    // TODO: An ugly hack for now... To be removed when a BufferStream
-    //       can only be created through the render surface interface.
+    // TODO: A hack for now... To be removed when a BufferStream can
+    //       only be created through the render surface interface.
     if (request->bs_callback)
     {
-        auto stream = std::make_shared<mcl::ErrorBufferStream>(server, surface_map, error_msg, this, id, request->wh);
+        auto stream = std::make_shared<mcl::ErrorBufferStream>(request->rs, server, surface_map, error_msg, this, id, request->wh);
         surface_map->insert(id, stream);
 
         request->bs_callback(

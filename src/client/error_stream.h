@@ -18,6 +18,7 @@
 
 #ifndef MIR_CLIENT_ERROR_STREAM_H_
 #define MIR_CLIENT_ERROR_STREAM_H_
+
 #include "client_buffer_stream.h"
 #include "buffer_stream.h"
 
@@ -25,21 +26,24 @@ namespace mir
 {
 namespace client
 {
-class RenderSurface;
-
 class ErrorBufferStream : public BufferStream
 {
 public:
     ErrorBufferStream(
+        MirRenderSurface* const rs,
         mir::client::rpc::DisplayServer& server,
         std::weak_ptr<SurfaceMap> const& map,
         std::string const& error_msg,
         MirConnection* conn,
         frontend::BufferStreamId id,
         std::shared_ptr<MirWaitHandle> const& wh);
-
+    // EGLNativeSurface Interface
     MirSurfaceParameters get_parameters() const;
     std::shared_ptr<ClientBuffer> get_current_buffer();
+    void request_and_wait_for_next_buffer();
+    void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
+    void set_buffer_cache_size(unsigned int);
+    // ClientBufferStream Interface
     uint32_t get_current_buffer_id();
     EGLNativeWindowType egl_native_window();
     MirWaitHandle* next_buffer(std::function<void()> const& done);
@@ -60,6 +64,7 @@ public:
     MirRenderSurface* render_surface() const;
 
 private:
+    MirRenderSurface* const rs;
     std::string const error;
     MirConnection* const connection_;
     frontend::BufferStreamId id;
@@ -72,11 +77,7 @@ public:
     ErrorStream(
         std::string const& error_msg, MirConnection* conn,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
-#if 0
-    ErrorStream(
-        std::string const& error_msg, RenderSurface* render_surface,
-        frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
-#endif
+
     MirSurfaceParameters get_parameters() const;
     std::shared_ptr<ClientBuffer> get_current_buffer();
     uint32_t get_current_buffer_id();

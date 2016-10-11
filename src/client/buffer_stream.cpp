@@ -417,6 +417,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
 }
 
+// Needed to create an ErrorBufferStream through the MirConnection API
+// TODO: remove once streams can only be created through MirRenderSurface API
 mcl::BufferStream::BufferStream(
     mir::client::rpc::DisplayServer& server,
     std::weak_ptr<mcl::SurfaceMap> const& map)
