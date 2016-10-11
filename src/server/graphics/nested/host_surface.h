@@ -40,7 +40,6 @@ public:
     virtual void set_event_handler(mir_surface_event_callback cb,
                                    void* context) = 0;
     virtual void apply_spec(HostSurfaceSpec&) = 0;
-    virtual void set_swapinterval(unsigned int) = 0;
 protected:
     HostSurface() = default;
     HostSurface(HostSurface const&) = delete;

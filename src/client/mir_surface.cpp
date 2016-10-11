@@ -365,13 +365,11 @@ void MirSurface::on_configured()
         case mir_surface_attrib_focus:
         case mir_surface_attrib_dpi:
         case mir_surface_attrib_preferred_orientation:
-        case mir_surface_attrib_swapinterval:
             if (configure_result->has_ivalue())
                 attrib_cache[a] = configure_result->ivalue();
             else
                 assert(configure_result->has_error());
             break;
-
         default:
             assert(false);
             break;
@@ -509,7 +507,7 @@ void MirSurface::raise_surface(MirCookie const* cookie)
 mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-   
+    
     return default_stream.get();
 }
 

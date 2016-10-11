@@ -77,10 +77,6 @@ public:
     void apply_spec(mgn::HostSurfaceSpec&) override
     {
     }
-
-    void set_swapinterval(unsigned int) override
-    {
-    }
 private:
     std::mutex event_mutex;
     mir_surface_event_callback event_handler;
@@ -92,7 +88,6 @@ struct MockHostSurface : mgn::HostSurface
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
     MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
     MOCK_METHOD1(apply_spec, void(mgn::HostSurfaceSpec&));
-    MOCK_METHOD1(set_swapinterval, void(unsigned int));
 };
 
 struct MockNestedChain : mgn::HostChain

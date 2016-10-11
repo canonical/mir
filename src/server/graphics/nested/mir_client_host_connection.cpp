@@ -121,15 +121,6 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
-    void set_swapinterval(unsigned int interval) override
-    {
-        //it is weird that we don't have per-stream swapinterval 
-        auto wh = mir_surface_set_swapinterval(mir_surface, interval);
-        if (wh == nullptr)
-            return;
-        mir_wait_for(wh);
-    }
-
     void apply_spec(mgn::HostSurfaceSpec& spec) override
     {
         mir_surface_apply_spec(mir_surface, spec.handle());
