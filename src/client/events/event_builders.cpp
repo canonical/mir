@@ -479,3 +479,34 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
     }
 }
 
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+                               std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+                               std::vector<mev::ContactState> const& contacts)
+{
+    auto e = new_event<MirMotionEvent>();
+
+    e->set_device_id(device_id);
+    e->set_event_time(timestamp);
+    e->set_cookie(vector_to_cookie_as_blob(mac));
+    e->set_modifiers(modifiers);
+    e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
+    e->set_pointer_count(contacts.size());
+
+    size_t current_index = 0;
+    for (auto const& contact : contacts)
+    {
+        e->set_id(current_index, contact.touch_id);
+        e->set_tool_type(current_index, contact.tooltype);
+        e->set_x(current_index, contact.x);
+        e->set_y(current_index, contact.y);
+        e->set_pressure(current_index, contact.pressure);
+        e->set_touch_major(current_index, contact.touch_major);
+        e->set_touch_minor(current_index, contact.touch_minor);
+        e->set_size(current_index, contact.touch_major);
+        e->set_action(current_index, contact.action);
+        ++current_index;
+    }
+
+    return make_uptr_event(e);
+}
+
