@@ -85,6 +85,8 @@ public:
     std::unique_ptr<mir::time::Alarm> create_alarm(
         std::unique_ptr<LockableCallback> callback) override;
 
+    void spawn(std::function<void()>&& work) override;
+
     void reprocess_all_sources();
 
 private:
