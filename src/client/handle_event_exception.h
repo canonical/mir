@@ -25,6 +25,6 @@
     }                                \
     catch(std::exception const& e)   \
     {                                \
-		mir::log_critical(e.what()); \
-		abort();                     \
+        mir::log_critical(e.what()); \
+        abort();                     \
     }
