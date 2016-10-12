@@ -12,5 +12,5 @@ add_library(acceptance-test-throwback OBJECT
   test_shell_control_of_surface_configuration.cpp # uses CanonicalWindowManager
 
   test_presentation_chain.cpp
-#  test_render_surface.cpp
+  test_render_surface.cpp
 )

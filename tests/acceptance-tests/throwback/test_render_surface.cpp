@@ -40,74 +40,65 @@ struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 
 using namespace testing;
 
-TEST_F(RenderSurfaceTest, creates_render_surfaces)
+TEST_F(RenderSurfaceTest, creates_and_releases_render_surfaces)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
-    auto rs = mir_connection_create_render_surface(connection,
-        640, 480, mir_pixel_format_abgr_8888);
+    auto rs = mir_connection_create_render_surface(connection);
 
     ASSERT_THAT(rs, NotNull());
     EXPECT_TRUE(mir_render_surface_is_valid(rs));
 
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
 
-TEST_F(RenderSurfaceTest, creates_buffer_streams)
+TEST_F(RenderSurfaceTest, creates_and_releases_buffer_streams)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
-    auto rs = mir_connection_create_render_surface(connection,
-        640, 480, mir_pixel_format_abgr_8888);
+    auto rs = mir_connection_create_render_surface(connection);
 
-    ASSERT_THAT(rs, NotNull());
-    EXPECT_TRUE(mir_render_surface_is_valid(rs));
-
-    auto bs = mir_render_surface_create_buffer_stream_sync(rs);
+    auto bs = mir_render_surface_create_buffer_stream_sync(rs,
+                                                           640, 480,
+                                                           mir_pixel_format_abgr_8888,
+                                                           mir_buffer_usage_hardware);
     ASSERT_THAT(bs, NotNull());
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
     EXPECT_THAT(mir_buffer_stream_get_error_message(bs), StrEq(""));
 
     mir_buffer_stream_release_sync(bs);
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
 
-TEST_F(RenderSurfaceTest, render_surfaces_can_be_added_to_spec)
+TEST_F(RenderSurfaceTest, render_surfaces_with_content_can_be_added_to_spec)
 {
     int const width{800}, height{600};
-    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    MirPixelFormat const format{mir_pixel_format_abgr_8888};
+    MirBufferUsage const usage{mir_buffer_usage_software};
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
-    auto rs = mir_connection_create_render_surface(connection,
-        width, height, format);
+    auto rs = mir_connection_create_render_surface(connection);
+    auto bs = mir_render_surface_create_buffer_stream_sync(rs,
+                                                           640, 480,
+                                                           format,
+                                                           usage);
+    auto spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                              width, height,
+                                                              format);
 
-    ASSERT_THAT(rs, NotNull());
-    EXPECT_TRUE(mir_render_surface_is_valid(rs));
+    mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
 
-    auto bs = mir_render_surface_create_buffer_stream_sync(rs);
-    ASSERT_THAT(bs, NotNull());
-    EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
-    EXPECT_THAT(mir_buffer_stream_get_error_message(bs), StrEq(""));
-
-    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
-                                                                      width, height,
-                                                                      format);
-
-    mir_surface_spec_add_render_surface(surface_spec, width, height, 0, 0, rs);
-
-    auto surface = mir_surface_create_sync(surface_spec);
-    mir_surface_spec_release(surface_spec);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     EXPECT_THAT(surface, IsValid());
 
     mir_buffer_stream_release_sync(bs);
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
