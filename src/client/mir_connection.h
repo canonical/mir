@@ -213,8 +213,7 @@ public:
     void release_buffer(mir::client::MirBuffer* buffer);
 
     MirRenderSurface* create_render_surface();
-    void release_render_surface(
-        void* render_surface);
+    void release_render_surface(void* render_surface);
 
 private:
     //google cant have callbacks with more than 2 args

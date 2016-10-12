@@ -833,7 +833,10 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->mbs_callback)
-            request->mbs_callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+            request->mbs_callback(
+                reinterpret_cast<MirBufferStream*>(
+                    dynamic_cast<mcl::ClientBufferStream*>(stream.get())),
+                request->context);
 
         if (request->bs_callback)
             request->bs_callback(stream.get(), request->context);
@@ -863,7 +866,11 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
 
-    auto request = std::make_shared<StreamCreationRequest>(render_surface, mbs_callback, bs_callback, context, params);
+    auto request = std::make_shared<StreamCreationRequest>(render_surface,
+                                                           mbs_callback,
+                                                           bs_callback,
+                                                           context,
+                                                           params);
     request->wh->expect_result();
 
     {

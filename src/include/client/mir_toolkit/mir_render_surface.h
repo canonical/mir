@@ -116,7 +116,7 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
  *
  * \param spec             The surface_spec to be updated
  * \param render_surface   The render surface containing the content to be displayed
- * \param scaled_width     The width that the content will displayed at
+ * \param scaled_width     The width that the content will be displayed at
  *                         (Ignored for buffer streams)
  * \param scaled_height    The height that the content will be displayed at
  *                         (Ignored for buffer streams)

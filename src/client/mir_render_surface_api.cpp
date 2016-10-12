@@ -84,8 +84,10 @@ bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface)
 try
 {
-    mir::require(render_surface &&
-        connection_map.connection(static_cast<void*>(render_surface))->connection_surface_map()->render_surface(render_surface));
+    mir::require(render_surface);
+    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = conn->connection_surface_map()->render_surface(render_surface);
+    mir::require(rs != nullptr);
     return true;
 }
 catch (std::exception const& ex)
@@ -149,7 +151,8 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
         width, height,
         format,
         usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream);
+        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
+        &stream);
 
     if (wh)
         wh->wait_for_all();
