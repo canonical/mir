@@ -246,6 +246,7 @@ public:
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()}}
     {
     }
@@ -329,10 +330,10 @@ TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
 TEST_F(MirProtobufRpcChannelTest, reads_fds)
 {
     mclr::DisplayServer channel_user{channel};
-    mir::protobuf::Buffer reply;
-    mir::protobuf::BufferRequest request;
+    mir::protobuf::PlatformOperationMessage reply;
+    mir::protobuf::PlatformOperationMessage request;
 
-    channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){}));
+    channel_user.platform_operation(&request, &reply, google::protobuf::NewCallback([](){}));
 
     std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
                                           mir::Fd{open("/dev/null", O_RDONLY)},
@@ -400,6 +401,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_disconnected();
 }
@@ -422,11 +424,11 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)
         .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
 
     mclr::DisplayServer channel_user{channel};
-    mir::protobuf::Buffer reply;
+    mir::protobuf::Void reply;
     mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.submit_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -483,11 +485,11 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
     })));
 
     mclr::DisplayServer channel_user{channel};
-    mir::protobuf::Buffer reply;
+    mir::protobuf::Void reply;
     mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.submit_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -585,16 +587,14 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
     mir::protobuf::PingEvent pong_request;
     mir::protobuf::Void pong_reply;
 
-    mir::protobuf::Buffer buffer_reply;
-    mir::protobuf::BufferRequest buffer_request;
+    mir::protobuf::PlatformOperationMessage buffer_reply;
+    mir::protobuf::PlatformOperationMessage buffer_request;
 
     bool first_response_called{false};
     bool second_response_called{false};
 
-
-    channel_user.exchange_buffer(&buffer_request,
-                                 &buffer_reply,
-                                 google::protobuf::NewCallback(&set_flag, &first_response_called));
+    channel_user.platform_operation(&buffer_request, &buffer_reply,
+         google::protobuf::NewCallback(&set_flag, &first_response_called));
 
     typed_channel->process_next_request_first();
     channel_user.pong(&pong_request,
@@ -747,6 +747,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
 
     channel.on_data_available();
@@ -781,6 +782,7 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_data_available();
 }
@@ -813,6 +815,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
+                  std::make_shared<mir::client::ErrorHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_data_available();
 }

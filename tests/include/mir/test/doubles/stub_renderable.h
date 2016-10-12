@@ -101,6 +101,17 @@ private:
 
 struct StubTransformedRenderable : public StubRenderable
 {
+    StubTransformedRenderable()
+    {
+    }
+
+    StubTransformedRenderable(
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        geometry::Rectangle const& rect) :
+        StubRenderable(buffer, rect)
+    {
+    }
+
     glm::mat4 transformation() const override
     {
         glm::mat4 transform(1.0);

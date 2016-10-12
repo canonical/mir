@@ -65,6 +65,11 @@ void mtd::StubSession::send_display_config(
 {
 }
 
+void mtd::StubSession::send_error(
+    mir::ClientVisibleError const& /*error*/)
+{
+}
+
 void mtd::StubSession::hide()
 {
 }

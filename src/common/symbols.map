@@ -111,7 +111,6 @@ MIR_COMMON_5 {
     mir::default_server_socket;
     mir::libraries_for_path*;
     mir::logging::input_timestamp*;
-    mir::logging::log*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
@@ -170,9 +169,7 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       android::IntSet::remove*;
       android::KeyEvent::initialize*;
       android::MotionEvent::getAxisValue*;
-      android::MotionEvent::getAxisValue*;
       android::MotionEvent::getHistoricalAxisValue*;
-      android::MotionEvent::getRawAxisValue*;
       android::MotionEvent::getRawAxisValue*;
       android::PointerCoords::copyFrom*;
       android::PointerCoords::getAxisValue*;
@@ -365,6 +362,7 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::device_count*;
        MirInputDeviceStateEvent::device_id*;
        MirInputDeviceStateEvent::device_pointer_buttons*;
+       MirInputDeviceStateEvent::device_pressed_keys*;
        MirInputDeviceStateEvent::device_pressed_keys_count*;
        MirInputDeviceStateEvent::modifiers*;
        MirInputDeviceStateEvent::pointer_axis*;
@@ -380,7 +378,16 @@ MIR_COMMON_0.24 {
        android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
+
+       #
+       # This entry is a bug LP: #1617865 which now overrides the other entries
+       # for ReadableFd in MIR_COMMON_5.1 above. But rather than remove it and
+       # break the ABI again we have re-exported the old MIR_COMMON_5.1
+       # symbols using assembler directives in:
+       #   src/common/dispatch/legacy_readable_fd.cpp
+       # 
        mir::dispatch::ReadableFd*;
+
        vtable?for?mir::dispatch::ReadableFd;
     };
 } MIR_COMMON_0.22;
@@ -396,5 +403,7 @@ MIR_COMMON_0.25 {
       MirInputDeviceStateEvent::device_pressed_keys_for_index*;
       MirInputDeviceStateEvent::set_device_states*;
       mir::output_type_name*;
+      MirSurfaceOutputEvent::refresh_rate*;
+      MirSurfaceOutputEvent::set_refresh_rate*;
     };
 } MIR_COMMON_0.24;

@@ -44,6 +44,7 @@ struct MirInputDeviceStateEvent : MirEvent
     uint32_t device_count() const;
     MirInputDeviceId device_id(size_t index) const;
     MirPointerButtons device_pointer_buttons(size_t index) const;
+
     uint32_t device_pressed_keys_for_index(size_t index, size_t pressed_index) const;
     uint32_t device_pressed_keys_count(size_t index) const;
 

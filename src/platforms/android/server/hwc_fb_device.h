@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_FB_DEVICE_H_
 
+#include "mir/graphics/frame.h"
 #include "display_device.h"
 #include "hardware/gralloc.h"
 #include "hardware/fb.h"
@@ -56,7 +57,7 @@ private:
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
-    void notify_vsync(DisplayName, std::chrono::nanoseconds);
+    void notify_vsync(DisplayName, graphics::Frame::Timestamp);
 };
 
 }

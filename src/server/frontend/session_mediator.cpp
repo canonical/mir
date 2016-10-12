@@ -41,6 +41,7 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -79,9 +80,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-std::vector<uint16_t> convert_string_to_uint16_vector(std::string const& str_bytes)
+mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
-    std::vector<uint16_t> out(str_bytes.size() / (sizeof(uint16_t) / sizeof(char)));
+    mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
     std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
     return out;
 }
@@ -398,38 +399,6 @@ void mf::SessionMediator::create_surface(
         done->Run();
         buffering_sender->uncork();
     }
-}
-
-void mf::SessionMediator::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    mf::BufferStreamId const stream_id{request->id().value()};
-
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    auto buffer = buffer_stream_tracker.last_buffer(stream_id);
-    if (!buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error("No buffer found for given stream id"));
-
-    ipc_operations->unpack_buffer(request_msg, *buffer);
-
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_exchange_buffer_called(session->name());
-
-    auto const& surface = session->get_buffer_stream(stream_id);
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
-        [this, response, done]
-        (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, new_buffer, msg_type);
-            done->Run();
-        });
 }
 
 void mf::SessionMediator::submit_buffer(
@@ -1231,9 +1200,9 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
 
-        dest.gamma = {convert_string_to_uint16_vector(src.gamma_red()),
-                      convert_string_to_uint16_vector(src.gamma_green()),
-                      convert_string_to_uint16_vector(src.gamma_blue())};
+        dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
+                      convert_string_to_gamma_curve(src.gamma_green()),
+                      convert_string_to_gamma_curve(src.gamma_blue())};
     });
 
     return config;

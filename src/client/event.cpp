@@ -278,6 +278,12 @@ float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
     return ev->scale();
 }
 
+double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->refresh_rate();
+}
+
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
@@ -319,12 +325,6 @@ MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_id(index);
-}
-
-// Function is deprecated, and no one is currently using it.
-uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* /*ev*/, uint32_t /*index*/)
-{
-    return nullptr;
 }
 
 uint32_t mir_input_device_state_event_device_pressed_keys_for_index(MirInputDeviceStateEvent const* ev,

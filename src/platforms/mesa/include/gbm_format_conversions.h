@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,40 +13,27 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  *
  */
 
-#ifndef MIR_GRAPHICS_X_GL_CONTEXT_H_
-#define MIR_GRAPHICS_X_GL_CONTEXT_H_
+#ifndef MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_
+#define MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_
 
-#include "mir/renderer/gl/context.h"
-
-#include <EGL/egl.h>
+#include <mir_toolkit/common.h>
+#include <stdint.h>
+#include <limits>
 
 namespace mir
 {
 namespace graphics
 {
-namespace X
+namespace mesa
 {
-
-class XGLContext : public renderer::gl::Context
-{
-public:
-    XGLContext(EGLDisplay const d, EGLSurface const s, EGLContext const c);
-    ~XGLContext() = default;
-    void make_current() const override;
-    void release_current() const override;
-
-private:
-    EGLDisplay const egl_dpy;
-    EGLSurface const egl_surf;
-    EGLContext const egl_ctx;
-};
-
+enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
+MirPixelFormat gbm_format_to_mir_format(uint32_t format);
+uint32_t mir_format_to_gbm_format(MirPixelFormat format);
 }
 }
 }
-
-#endif /* MIR_GRAPHICS_X_GL_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_ */

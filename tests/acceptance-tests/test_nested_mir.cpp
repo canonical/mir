@@ -107,7 +107,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
-    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
@@ -641,6 +640,13 @@ struct ClientWithADisplayChangeCallback : virtual Client
 
 struct ClientWithAPaintedSurface : virtual Client
 {
+    ClientWithAPaintedSurface(NestedMirRunner& nested_mir, geom::Size size, MirPixelFormat format) :
+        Client(nested_mir),
+        surface(mtf::make_surface(connection, size, format))
+    {
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    }
+
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
         Client(nested_mir),
         surface(mtf::make_any_surface(connection))
@@ -1504,4 +1510,14 @@ TEST_F(NestedServer,
 
     EXPECT_TRUE(host_config_change.raised());
     Mock::VerifyAndClearExpectations(&display);
+}
+
+TEST_F(NestedServer, uses_passthrough_when_surface_size_is_appropriate)
+{
+    using namespace std::chrono_literals;
+    NestedMirRunner nested_mir{new_connection()};
+    nested_mir.wait_until_ready();
+    ClientWithAPaintedSurface client(
+        nested_mir, display_geometry.front().size, mir_pixel_format_xbgr_8888);
+    EXPECT_TRUE(nested_mir.passthrough_tracker->wait_for_passthrough_frames(1, 5s));
 }

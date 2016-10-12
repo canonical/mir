@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "client_buffer.h"
 #include "buffer_file_ops.h"
+#include "gbm_format_conversions.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -87,11 +88,20 @@ std::shared_ptr<mir::graphics::mesa::NativeBuffer> to_native_buffer(MirBufferPac
 mclm::ClientBuffer::ClientBuffer(
     std::shared_ptr<mclm::BufferFileOps> const& buffer_file_ops,
     std::shared_ptr<MirBufferPackage> const& package,
-    geom::Size size, MirPixelFormat pf)
-    : buffer_file_ops{buffer_file_ops},
-      creation_package{to_native_buffer(*package)},
-      rect({geom::Point{0, 0}, size}),
-      buffer_pf{pf}
+    geom::Size size, MirPixelFormat pf) :
+    buffer_file_ops{buffer_file_ops},
+    creation_package{to_native_buffer(*package)},
+    rect({geom::Point{0, 0}, size}),
+    buffer_pf{pf},
+    egl_image_attrs{
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_WIDTH, static_cast<const EGLint>(creation_package->width),
+        EGL_HEIGHT, static_cast<const EGLint>(creation_package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(mir::graphics::mesa::mir_format_to_gbm_format(buffer_pf)),
+        EGL_DMA_BUF_PLANE0_FD_EXT, creation_package->fd[0],
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
+        EGL_NONE}
 {
     if (package->fd_items != 1)
     {
@@ -149,23 +159,31 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
+void mclm::ClientBuffer::set_fence(mir::Fd, MirBufferAccess)
+{
+}
+
+mir::Fd mclm::ClientBuffer::get_fence() const
+{
+    return mir::Fd(mir::Fd::invalid);
+}
+
+bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+{
+    return true;
+}
+
+MirBufferPackage* mclm::ClientBuffer::package() const
 {
     if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))
         return native;
     BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
 }
 
-void mclm::ClientBuffer::set_fence(MirNativeFence, MirBufferAccess)
+void mclm::ClientBuffer::egl_image_creation_parameters(
+    EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attrs)
 {
-}
-
-MirNativeFence mclm::ClientBuffer::get_fence() const
-{
-    return nullptr;
-}
-
-bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
-{
-    return true;
+    *attrs = egl_image_attrs.data();
+    *type = EGL_LINUX_DMA_BUF_EXT;
+    *client_buffer = nullptr;
 }

@@ -325,3 +325,12 @@ TEST_F(XKBMapper, on_czech_qwerty_caps_lock_should_provide_uppercase_letters)
     map_event(keyboard_cz, mir_keyboard_action_up, KEY_CAPSLOCK);
     map_event(keyboard_cz, mir_keyboard_action_down, KEY_2);
 }
+
+TEST_F(XKBMapper, setting_keymap_again_overwrites_keymap)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "",""});
+    EXPECT_EQ(XKB_KEY_y, map_key(keyboard, mir_keyboard_action_down, KEY_Y));
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "de", "",""});
+    EXPECT_EQ(XKB_KEY_y, map_key(keyboard, mir_keyboard_action_down, KEY_Z));
+}

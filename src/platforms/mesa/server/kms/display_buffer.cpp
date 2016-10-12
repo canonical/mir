@@ -152,7 +152,7 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     set_crtc(scheduled_composite_frame);
 
-    egl.release_current();
+    release_current();
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();

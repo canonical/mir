@@ -290,6 +290,7 @@ MirConnection::MirConnection(
         input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
+        error_handler{conf.the_error_handler()},
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
@@ -922,7 +923,7 @@ void MirConnection::register_ping_event_callback(mir_ping_event_callback callbac
 
 void MirConnection::register_error_callback(mir_error_callback callback, void* context)
 {
-    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
+    error_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)
@@ -1042,7 +1043,7 @@ void MirConnection::preview_base_display_configuration(
         MirError const error{
             static_cast<MirErrorDomain>(message.structured_error().domain()),
             message.structured_error().code()};
-        error_handler(&error);
+        (*error_handler)(&error);
     };
 
     server.preview_base_display_configuration(
@@ -1062,7 +1063,7 @@ void MirConnection::cancel_base_display_configuration_preview()
         MirError const error{
             static_cast<MirErrorDomain>(message.structured_error().domain()),
             message.structured_error().code()};
-        error_handler(&error);
+        (*error_handler)(&error);
     };
 
     server.cancel_base_display_configuration_preview(
@@ -1223,7 +1224,7 @@ void MirConnection::chain_error(
 void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 {
     auto id = chain->rpc_id();
-    if (id > 0)
+    if (id >= 0)
     {
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
         mp::BufferStreamId buffer_stream_id;

@@ -13,4 +13,5 @@ add_library(
   cursor.cpp
   platform.cpp
   buffer.cpp
+  ipc_operations.cpp
 )
