@@ -23,6 +23,8 @@
 
 namespace mir
 {
+class Executor;
+
 /**
  * Register observers for a subsystem.
  *
@@ -35,11 +37,37 @@ public:
     /**
      * Add an observer to the set notified of all observations
      *
-     * The ObserverRegistrar does not take
+     * The ObserverRegistrar does not take any ownership of \p observer, and will
+     * automatically remove it when \p observer expires.
      *
      * \param [in] observer The observer to register
      */
     virtual void register_interest(std::weak_ptr<Observer> const& observer) = 0;
+
+    /**
+     * Add an observer with specified execution environment
+     *
+     * This is threadsafe and can be called in any context.
+     *
+     * The ObserverRegistrar does not take any ownership of \p observer, and will
+     * automatically remove it when \p observer expires.
+     *
+     * All calls to \p observer methods are performed in the context of
+     * \p executor.
+     *
+     * The \p executor should process work in a delayed fashion. Particularly,
+     * executor::spawn(work) is expected to \b not run \p work in the current
+     * stack. Eager execution of work may result in deadlocks if calls to the
+     * observer result in calls into the ObserverRegistrar.
+     *
+     * \param [in] observer The observer to register
+     * \param [in] executor Execution environment for calls to \p observer methods.
+     *                          The caller is responsible for ensuring \p executor outlives
+     *                          \p observer.
+     */
+    virtual void register_interest(
+        std::weak_ptr<Observer> const& observer,
+        Executor& executor) = 0;
 
     /**
      * Remove an observer from the set notified of all observations.
