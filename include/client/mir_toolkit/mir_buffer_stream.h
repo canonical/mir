@@ -215,6 +215,27 @@ MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float
  */
 void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale);
 
+/**
+ * Set the swapinterval for the stream.
+ *   \warning EGL users should use eglSwapInterval directly.
+ *   \warning Only swapinterval of 0 or 1 is supported.
+ *   \param [in] stream   The buffer stream
+ *   \param [in] interval The number of vblank signals that
+ *                        mir_buffer_stream_swap_buffers will wait for
+ *   \return              A wait handle that can be passed to mir_wait_for,
+ *                        or NULL if the interval could not be supported
+ */
+MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int interval);
+
+/**
+ * Query the swapinterval that the stream is operating with.
+ * The default interval is 1.
+ *   \param [in] stream   The buffer stream
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if stream is invalid.
+ */
+int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
+
 #ifdef __cplusplus
 }
 /**@}*/

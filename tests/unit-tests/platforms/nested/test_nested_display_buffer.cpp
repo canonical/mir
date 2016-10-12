@@ -122,7 +122,6 @@ struct StubNestedBuffer :
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
     void on_ownership_notification(std::function<void()> const& f) override { fn = f; }
-    MirNativeBuffer* get_native_handle() override { return nullptr; }
     MirBufferPackage* package() const override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd{mir::Fd::invalid}; }
     void set_fence(mir::Fd) override {}

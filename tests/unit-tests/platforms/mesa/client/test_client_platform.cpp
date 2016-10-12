@@ -22,6 +22,7 @@
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl_native_surface.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
@@ -154,4 +155,17 @@ TEST_F(MesaClientPlatformTest, returns_gbm_compatible_pixel_formats_only)
     EXPECT_EQ(mir_pixel_format_argb_8888, platform->get_egl_pixel_format(d, c));
     EXPECT_EQ(mir_pixel_format_xrgb_8888, platform->get_egl_pixel_format(d, c));
     EXPECT_EQ(mir_pixel_format_invalid, platform->get_egl_pixel_format(d, c));
+}
+
+TEST_F(MesaClientPlatformTest, egl_native_window_is_set)
+{
+    testing::NiceMock<mtd::MockEGLNativeSurface> mock_surface;
+    auto egl_native_window = platform->create_egl_native_window(&mock_surface);
+    EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_surface)
+{
+    auto egl_native_window = platform->create_egl_native_window(nullptr);
+    EXPECT_NE(nullptr, egl_native_window);
 }

@@ -322,3 +322,9 @@ catch (std::exception const& e)
     MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
 }
+
+void mga::MirNativeWindow::use_native_surface(
+    std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
+{
+    driver_interpreter = interpreter;
+}

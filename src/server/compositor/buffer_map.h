@@ -58,7 +58,9 @@ private:
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
 
-    std::shared_ptr<frontend::BufferSink> const sink;
+    //would be better to schedule the async buffer callbacks in the ipc subsystem,
+    //instead of driving from within the compositor threads (LP: #1395421)
+    std::weak_ptr<frontend::BufferSink> const sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };
 }
