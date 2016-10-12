@@ -19,7 +19,6 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/action_queue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/multiplexing_dispatchable.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/readable_fd.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/legacy_readable_fd.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/threaded_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 )
