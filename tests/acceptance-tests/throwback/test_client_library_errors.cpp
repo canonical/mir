@@ -78,6 +78,10 @@ public:
             dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context);
     }
 
+    void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*surface*/) override
+    {
+    }
+
     std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *surface) override
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())

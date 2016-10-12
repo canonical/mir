@@ -63,7 +63,10 @@ public:
     void allow_framedropping(bool) override
     {
     }
-
+    bool framedropping() const override
+    {
+        return false;
+    }
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
