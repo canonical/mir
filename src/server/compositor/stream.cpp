@@ -73,6 +73,12 @@ mc::Stream::Stream(
 {
 }
 
+mc::Stream::~Stream()
+{
+    while(schedule->num_scheduled())
+        buffers->send_buffer(schedule->next_buffer()->id());
+}
+
 unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
 {
     auto server_count = schedule->num_scheduled();
@@ -156,6 +162,11 @@ void mc::Stream::allow_framedropping(bool dropping)
         transition_schedule(std::make_shared<mc::QueueingSchedule>(), lk);
         schedule_mode = ScheduleMode::Queueing;
     }
+}
+
+bool mc::Stream::framedropping() const
+{
+    return schedule_mode == ScheduleMode::Dropping;
 }
 
 void mc::Stream::transition_schedule(

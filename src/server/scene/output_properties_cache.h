@@ -37,6 +37,7 @@ struct OutputProperties
     geometry::Rectangle extents;
     int dpi;
     float scale;
+    double refresh_rate;
     MirFormFactor form_factor;
     graphics::DisplayConfigurationOutputId id;
 };

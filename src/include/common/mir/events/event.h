@@ -69,8 +69,6 @@ struct MirEvent
 
     MirSurfacePlacementEvent const* to_surface_placement() const;
 
-    MirEvent* clone() const;
-
     static mir::EventUPtr deserialize(std::string const& bytes);
     static std::string serialize(MirEvent const* event);
 

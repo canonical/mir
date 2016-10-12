@@ -182,6 +182,7 @@ struct SurfaceOutputEvent
     scale @2 :Float32;
     formFactor @3 :FormFactor;
     outputId @4 :UInt32;
+    refreshRate @5 :Float64;
 
     enum FormFactor
     {

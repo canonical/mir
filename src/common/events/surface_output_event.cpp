@@ -53,6 +53,16 @@ void MirSurfaceOutputEvent::set_scale(float scale)
     event.getSurfaceOutput().setScale(scale);
 }
 
+double MirSurfaceOutputEvent::refresh_rate() const
+{
+    return event.asReader().getSurfaceOutput().getRefreshRate();
+}
+
+void MirSurfaceOutputEvent::set_refresh_rate(double rate)
+{
+    event.getSurfaceOutput().setRefreshRate(rate);
+}
+
 MirFormFactor MirSurfaceOutputEvent::form_factor() const
 {
     return static_cast<MirFormFactor>(event.asReader().getSurfaceOutput().getFormFactor());

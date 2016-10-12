@@ -72,7 +72,8 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
             return mcl::rpc::make_rpc_channel(
                 the_socket_file(), the_surface_map(), the_buffer_factory(),
                 the_display_configuration(), the_input_devices(), the_rpc_report(),
-                the_lifecycle_control(), the_ping_handler(), the_event_sink());
+                the_lifecycle_control(), the_ping_handler(),
+                the_error_handler(), the_event_sink());
         });
 }
 
@@ -242,5 +243,14 @@ std::shared_ptr<mir::client::AsyncBufferFactory> mir::client::DefaultConnectionC
         [this] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
         {
             return std::make_shared<mir::client::BufferFactory>();
+        });
+}
+
+std::shared_ptr<mir::client::ErrorHandler> mir::client::DefaultConnectionConfiguration::the_error_handler()
+{
+    return error_handler(
+        []
+        {
+            return std::make_shared<ErrorHandler>();
         });
 }

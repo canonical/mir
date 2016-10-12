@@ -36,6 +36,9 @@ struct MirSurfaceOutputEvent : MirEvent
     float scale() const;
     void set_scale(float scale);
 
+    double refresh_rate() const;
+    void set_refresh_rate(double);
+
     MirFormFactor form_factor() const;
     void set_form_factor(MirFormFactor factor);
 

@@ -362,6 +362,8 @@ MIR_COMMON_0.25 {
       MirEvent::operator*;
       MirInputEvent::operator*;
       mir::output_type_name*;
+      MirSurfaceOutputEvent::refresh_rate*;
+      MirSurfaceOutputEvent::set_refresh_rate*;
     };
   local: *;
 };

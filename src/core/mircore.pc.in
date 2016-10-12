@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@/mircore
+
+Name: mircore
+Description: Mir core library
+Version: @MIR_VERSION@
+Libs: -L${libdir} -lmircore
+Cflags: -I${includedir}

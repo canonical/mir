@@ -16,13 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_EGL_IMAGE_FACTORY_H_
-#define MIR_GRAPHICS_NESTED_EGL_IMAGE_FACTORY_H_
+#ifndef MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
+#define MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 
 #include "mir_toolkit/client_types_nbs.h"
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <memory>
 
 namespace mir
 {
@@ -30,21 +27,19 @@ namespace graphics
 {
 namespace nested
 {
-
 class NativeBuffer;
-class EglImageFactory
+class HostChain
 {
 public:
-    virtual ~EglImageFactory() = default;
-    virtual std::unique_ptr<EGLImageKHR> create_egl_image_from(
-        NativeBuffer& buffer, EGLDisplay display, EGLint const* attrs) const = 0;
+    virtual ~HostChain() = default;
+    virtual void submit_buffer(NativeBuffer&) = 0;
+    virtual MirPresentationChain* handle() = 0;
 protected:
-    EglImageFactory() = default;
-    EglImageFactory(EglImageFactory const&) = delete;
-    EglImageFactory& operator=(EglImageFactory const&) = delete;
+    HostChain() = default;
+    HostChain(HostChain const&) = delete;
+    HostChain& operator=(HostChain const&) = delete;
 };
-
 }
 }
 }
-#endif /* MIR_GRAPHICS_NESTED_EGL_IMAGE_FACTORY_H_ */
+#endif // MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
