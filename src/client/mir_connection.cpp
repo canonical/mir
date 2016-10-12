@@ -1299,17 +1299,16 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
 
 MirRenderSurface* MirConnection::create_render_surface()
 {
-    auto egl_native_window = platform->create_egl_native_window(nullptr);
+    auto native_window = platform->create_egl_native_window(nullptr);
 
     std::shared_ptr<MirRenderSurface> rs {nullptr};
     rs = std::make_shared<mcl::RenderSurface>(
         this,
-        server,
-        egl_native_window,
+        native_window,
         platform);
-    surface_map->insert(egl_native_window.get(), rs);
+    surface_map->insert(native_window.get(), rs);
 
-    return static_cast<MirRenderSurface*>(egl_native_window.get());
+    return static_cast<MirRenderSurface*>(native_window.get());
 }
 
 void MirConnection::release_render_surface(void* render_surface)

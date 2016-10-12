@@ -77,11 +77,9 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void
 
 mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
-    mclr::DisplayServer& display_server,
     std::shared_ptr<void> native_window,
     std::shared_ptr<ClientPlatform> client_platform) :
         connection_(connection),
-        server(display_server),
         wrapped_native_window(native_window),
         platform(client_platform),
         stream_(nullptr),

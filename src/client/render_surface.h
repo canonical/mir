@@ -42,7 +42,6 @@ class RenderSurface : public MirRenderSurface
 {
 public:
     RenderSurface(MirConnection* const connection,
-                  rpc::DisplayServer& display_server,
                   std::shared_ptr<void> native_window,
                   std::shared_ptr<ClientPlatform> client_platform);
     MirConnection* connection() const override;
@@ -98,13 +97,11 @@ public:
 
 private:
     MirConnection* const connection_;
-    rpc::DisplayServer& server;
     std::shared_ptr<void> wrapped_native_window;
     std::shared_ptr<ClientPlatform> platform;
     ClientBufferStream* stream_;
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
-
     std::shared_timed_mutex guard;
 };
 }
