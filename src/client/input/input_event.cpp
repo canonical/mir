@@ -18,6 +18,7 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+
 // TODO Remove me once we use capnproto for input platform serialization
 #include "mir/cookie/blob.h"
 
@@ -28,7 +29,8 @@
 #include "mir/require.h"
 #include "mir_toolkit/mir_cookie.h"
 
-#include "../mir_cookie.h"
+#include "mir_cookie.h"
+#include "handle_event_exception.h"
 
 #include <string.h>
 
@@ -94,7 +96,7 @@ MirInputEventType type_from_device_class(int32_t source_class)
 }
 }
 
-MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) try
+MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     if (ev->type() != mir_event_type_key && ev->type() != mir_event_type_motion)
     {
@@ -111,13 +113,9 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) try
+MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     if(mir_event_get_type(ev) != mir_event_type_input)
     {
@@ -134,13 +132,9 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-int64_t mir_input_event_get_event_time(MirInputEvent const* ev) try
+int64_t mir_input_event_get_event_time(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     if(mir_event_get_type(ev) != mir_event_type_input)
     {
@@ -157,11 +151,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 {
@@ -192,53 +182,33 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
     return reinterpret_cast<MirKeyboardEvent const*>(ev);
 }
 
-MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev) try
+MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev) HANDLE_EVENT_EXCEPTION(
 {
     return kev->action();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev) try
+xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev) HANDLE_EVENT_EXCEPTION(
 {
     return kev->key_code();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) try
+int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) HANDLE_EVENT_EXCEPTION(
 {
     return kev->scan_code();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) try
+MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) HANDLE_EVENT_EXCEPTION(
 {    
     return kev->modifiers();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 /* Touch event accessors */
 
-MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) try
+MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) HANDLE_EVENT_EXCEPTION(
 {    
     return tev->to_motion()->modifiers();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) try
+MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
     {
@@ -248,22 +218,14 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) tr
     }
 
     return reinterpret_cast<MirTouchEvent const*>(ev);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-unsigned int mir_touch_event_point_count(MirTouchEvent const* event) try
+unsigned int mir_touch_event_point_count(MirTouchEvent const* event) HANDLE_EVENT_EXCEPTION(
 {
     return event->to_motion()->pointer_count();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) try
+MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) HANDLE_EVENT_EXCEPTION(
 {
     if (touch_index >= event->to_motion()->pointer_count())
     {
@@ -272,13 +234,9 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) tr
     }
 
     return event->to_motion()->id(touch_index);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) try
+MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -287,14 +245,10 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
     }
     
     return static_cast<MirTouchAction>(event->to_motion()->action(touch_index));
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
-    size_t touch_index) try
+    size_t touch_index) HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -303,14 +257,10 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     }
 
     return event->to_motion()->tool_type(touch_index);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
 float mir_touch_event_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis) try
+    size_t touch_index, MirTouchAxis axis) HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -336,15 +286,11 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
     default:
         return -1;
     }
-}  catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}                                                                           
+})
 
 /* Pointer event accessors */
 
-MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev) try
+MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_pointer)
     {
@@ -354,50 +300,30 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     }
 
     return reinterpret_cast<MirPointerEvent const*>(ev);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) try
+MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) HANDLE_EVENT_EXCEPTION(
 {    
     return pev->to_motion()->modifiers();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev) try
+MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev) HANDLE_EVENT_EXCEPTION(
 {    
     return static_cast<MirPointerAction>(pev->to_motion()->action(0));
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
 bool mir_pointer_event_button_state(MirPointerEvent const* pev,
-    MirPointerButton button) try
+    MirPointerButton button) HANDLE_EVENT_EXCEPTION(
 {
    return pev->to_motion()->buttons() & button;
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev) try
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev) HANDLE_EVENT_EXCEPTION(
 {
    return pev->to_motion()->buttons();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis) try
+float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis) HANDLE_EVENT_EXCEPTION(
 {
    auto mev = pev->to_motion();
    switch (axis)
@@ -418,13 +344,9 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
    }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-bool mir_input_event_has_cookie(MirInputEvent const* ev) try
+bool mir_input_event_has_cookie(MirInputEvent const* ev) HANDLE_EVENT_EXCEPTION(
 {
     switch (mir_input_event_get_type(ev))
     {
@@ -458,22 +380,14 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev) try
     }
 
     return false;
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-size_t mir_cookie_buffer_size(MirCookie const* cookie) try
+size_t mir_cookie_buffer_size(MirCookie const* cookie) HANDLE_EVENT_EXCEPTION(
 {
     return cookie->size();
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) HANDLE_EVENT_EXCEPTION(
 {
     switch (iev->type())
     {
@@ -487,32 +401,20 @@ MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
         abort();
     }
     }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) try
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) HANDLE_EVENT_EXCEPTION(
 {
     return cookie->copy_to(buffer, size);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
+MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) HANDLE_EVENT_EXCEPTION(
 {
     if (size != mir::cookie::default_blob_size)
         return NULL;
 
     return new MirCookie(buffer, size);
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
+})
 
 void mir_cookie_release(MirCookie const* cookie)
 {
