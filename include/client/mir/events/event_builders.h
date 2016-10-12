@@ -26,6 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/events/contact_state.h"
 
 #include <memory>
 #include <functional>
@@ -154,6 +155,10 @@ EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      float x_axis_value,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);
+
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+    std::vector<ContactState> const& contacts);
 
 EventUPtr clone_event(MirEvent const& event);
 void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);

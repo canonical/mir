@@ -42,7 +42,7 @@ public:
                       unsigned int vendor, unsigned int product);
 
     libinput_event* setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
-                                      float x, float y, float major, float minor, float pressure);
+                                      float x, float y, float major, float minor, float pressure, float orientation);
     libinput_event* setup_touch_frame(libinput_device *dev, uint64_t event_time);
     libinput_event* setup_touch_up_event(libinput_device* dev, uint64_t event_time, int slot);
     libinput_event* setup_key_event(libinput_device* dev, uint64_t event_time, uint32_t key, libinput_key_state state);

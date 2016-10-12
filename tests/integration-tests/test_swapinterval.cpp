@@ -112,10 +112,13 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     {
         mtf::BasicClientServerFixture<ServerConfig>::SetUp();
         surface = mtf::make_any_surface(connection);
+        stream = mir_connection_create_buffer_stream_sync(
+            connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     }
 
     void TearDown()
     {
+        mir_buffer_stream_release_sync(stream);
         mir_surface_release_sync(surface);
         mtf::BasicClientServerFixture<ServerConfig>::TearDown();
     }
@@ -126,17 +129,41 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     }
 
     MirSurface* surface;
+    MirBufferStream* stream;
 };
 
 }
 
 TEST_F(SwapInterval, defaults_to_one)
 {
-    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());
 }
 
 TEST_F(SwapInterval, change_to_zero_enables_framedropping)
+{
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
+
+    EXPECT_EQ(0, mir_buffer_stream_get_swapinterval(stream));
+    EXPECT_TRUE(framedropping_enabled());
+}
+
+TEST_F(SwapInterval, change_to_one_disables_framedropping)
+{
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 1));
+
+    EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
+    EXPECT_FALSE(framedropping_enabled());
+}
+
+TEST_F(SwapInterval, defaults_to_one_legacy)
+{
+    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_FALSE(framedropping_enabled());
+}
+
+TEST_F(SwapInterval, change_to_zero_enables_framedropping_legacy)
 {
     mir_wait_for(mir_surface_set_swapinterval(surface, 0));
 
@@ -144,7 +171,7 @@ TEST_F(SwapInterval, change_to_zero_enables_framedropping)
     EXPECT_TRUE(framedropping_enabled());
 }
 
-TEST_F(SwapInterval, change_to_one_disables_framedropping)
+TEST_F(SwapInterval, change_to_one_disables_framedropping_legacy)
 {
     mir_wait_for(mir_surface_set_swapinterval(surface, 0));
     mir_wait_for(mir_surface_set_swapinterval(surface, 1));

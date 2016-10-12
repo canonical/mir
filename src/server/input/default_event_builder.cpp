@@ -21,7 +21,6 @@
 #include "mir/input/seat.h"
 #include "mir/events/event_builders.h"
 #include "mir/cookie/authority.h"
-#include "mir/events/event_private.h"
 
 #include <algorithm>
 
@@ -42,31 +41,6 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboa
 {
     auto const cookie = cookie_authority->make_cookie(timestamp.count());
     return me::make_event(device_id, timestamp, cookie->serialize(), action, key_code, scan_code, mir_input_event_modifier_none);
-}
-
-mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp)
-{
-    return me::make_event(device_id, timestamp, std::vector<uint8_t>{}, mir_input_event_modifier_none);
-}
-
-void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action,
-                                        MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
-                                        float pressure_value, float touch_major_value, float touch_minor_value,
-                                        float size_value)
-{
-    if (action == mir_touch_action_up || action == mir_touch_action_down)
-    {
-        auto mev = event.to_input()->to_motion();
-        auto const cookie = cookie_authority->make_cookie(mev->event_time().count());
-        auto const serialized_cookie = cookie->serialize();
-        mir::cookie::Blob event_cookie;
-        std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
-
-        mev->set_cookie(event_cookie);
-    }
-
-    me::add_touch(event, touch_id, action, tooltype, x_axis_value, y_axis_value, pressure_value, touch_major_value,
-                  touch_minor_value, size_value);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPointerAction action,
@@ -114,4 +88,19 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp,
     }
     return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+}
+
+mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, std::vector<events::ContactState> const& contacts)
+{
+    std::vector<uint8_t> vec_cookie{};
+    for (auto const& contact : contacts)
+    {
+        if (contact.action == mir_touch_action_up || contact.action == mir_touch_action_down)
+        {
+            auto const cookie = cookie_authority->make_cookie(timestamp.count());
+            vec_cookie = cookie->serialize();
+            break;
+        }
+    }
+    return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
 }

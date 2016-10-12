@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_NESTED_HOST_SURFACE_SPEC_H_
 #define MIR_GRAPHICS_NESTED_HOST_SURFACE_SPEC_H_
 
+#include "mir_toolkit/client_types.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 
@@ -36,6 +37,7 @@ public:
     virtual ~HostSurfaceSpec() = default;
     virtual void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size) = 0;
     virtual void add_stream(HostStream&, geometry::Displacement disp) = 0;
+    virtual MirSurfaceSpec* handle() = 0;
 protected:
     HostSurfaceSpec() = default;
     HostSurfaceSpec(HostSurfaceSpec const&) = delete;

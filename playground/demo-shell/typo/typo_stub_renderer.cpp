@@ -19,7 +19,7 @@
 #include "typo_stub_renderer.h"
 #include <cstring>
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 void StubRenderer::render(char const* str, Image& img)
 {
@@ -36,12 +36,12 @@ void StubRenderer::render(char const* str, Image& img)
     char const* s = str;
     for (int n = 0; unicode_from_utf8(&s); ++n)
     {
-        unsigned char* row = img.buf + top*img.stride +
+        unsigned char* row = img.data() + top*img.stride() +
                              n*(char_width+char_space);
         for (int y = 0; y < char_height; ++y)
         {
             memset(row, 255, char_width);
-            row += img.stride;
+            row += img.stride();
         }
     }
 }

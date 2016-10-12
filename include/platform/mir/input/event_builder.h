@@ -21,8 +21,10 @@
 #define MIR_INPUT_EVENT_BUILDER_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/events/contact_state.h"
 #include <memory>
 #include <chrono>
+#include <vector>
 
 namespace mir
 {
@@ -40,11 +42,6 @@ public:
 
     virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) = 0;
 
-    virtual EventUPtr touch_event(Timestamp timestamp) = 0;
-    virtual void add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action, MirTouchTooltype tooltype,
-                           float x_axis_value, float y_axis_value, float pressure_value, float touch_major_value,
-                           float touch_minor_value, float size_value) = 0;
-
     virtual EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
                                     float hscroll_value, float vscroll_value, float relative_x_value,
                                     float relative_y_value) = 0;
@@ -57,6 +54,8 @@ public:
                                     float x_position, float y_position,
                                     float hscroll_value, float vscroll_value, float relative_x_value,
                                     float relative_y_value) = 0;
+
+    virtual EventUPtr touch_event(Timestamp timestamp, std::vector<mir::events::ContactState> const& contacts) = 0;
 protected:
     EventBuilder(EventBuilder const&) = delete;
     EventBuilder& operator=(EventBuilder const&) = delete;

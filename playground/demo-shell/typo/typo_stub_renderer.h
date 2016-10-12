@@ -16,12 +16,12 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_STUB_RENDERER_H_
-#define MIR_EXAMPLES_TYPO_STUB_RENDERER_H_
+#ifndef MIR_TYPO_STUB_RENDERER_H_
+#define MIR_TYPO_STUB_RENDERER_H_
 
 #include "typo_renderer.h"
 
-namespace mir { namespace examples { namespace typo {
+namespace mir { namespace typo {
 
 class StubRenderer : public Renderer
 {
@@ -29,6 +29,6 @@ public:
     void render(char const* str, Image& img) override;
 };
 
-} } } // namespace mir::examples::typo
+} } // namespace mir::typo
 
-#endif // MIR_EXAMPLES_TYPO_STUB_RENDERER_H_
+#endif // MIR_TYPO_STUB_RENDERER_H_

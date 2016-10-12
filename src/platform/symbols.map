@@ -90,6 +90,7 @@ MIRPLATFORM_0.25 {
     mir::graphics::Renderable::screen_position*;
     mir::graphics::Renderable::shaped*;
     mir::graphics::Renderable::transformation*;
+    mir::graphics::Renderable::swap_interval*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::options::arw_server_socket_opt*;
@@ -271,6 +272,10 @@ MIRPLATFORM_0.25 {
     android::isEligibleBuiltInKeyboard*;
     __android_log_assert;
     __android_log_print;
+
+    mir::graphics::AtomicFrame::load*;
+    mir::graphics::AtomicFrame::store*;
+    mir::graphics::AtomicFrame::increment*
   };
  local: *;
 };

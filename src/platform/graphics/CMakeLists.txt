@@ -12,6 +12,7 @@ set(
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
   platform_probe.cpp
+  atomic_frame.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT

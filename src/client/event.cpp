@@ -327,11 +327,13 @@ MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent
     return ev->device_id(index);
 }
 
-uint32_t const* mir_input_device_state_event_device_pressed_keys(MirInputDeviceStateEvent const* ev, uint32_t index)
+uint32_t mir_input_device_state_event_device_pressed_keys_for_index(MirInputDeviceStateEvent const* ev,
+                                                                    uint32_t index,
+                                                                    uint32_t pressed_index)
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
-    return ev->device_pressed_keys(index);
+    return ev->device_pressed_keys_for_index(index, pressed_index);
 }
 
 uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index)

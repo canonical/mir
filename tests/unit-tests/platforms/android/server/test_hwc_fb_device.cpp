@@ -142,7 +142,7 @@ TEST_F(HwcFbDevice, hwc10_post)
 {
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list{&skip_layer};
-    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_cb;
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> vsync_cb;
     EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
         .WillOnce(SaveArg<1>(&vsync_cb));
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
@@ -155,7 +155,7 @@ TEST_F(HwcFbDevice, hwc10_post)
             while(vsync_thread_on)
             {
                 std::this_thread::sleep_for(std::chrono::microseconds(500));
-                vsync_cb(mga::DisplayName::primary, std::chrono::nanoseconds(0));
+                vsync_cb(mga::DisplayName::primary, mg::Frame::Timestamp{});
             }});
 
     Sequence seq;
