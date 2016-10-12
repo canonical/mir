@@ -29,7 +29,7 @@ namespace mcl = mir::client;
 
 // Cursor names are from CSS3: https://www.w3.org/TR/css-ui-3/#propdef-cursor
 extern "C" char const *const mir_default_cursor_name = "default";
-extern "C" char const *const mir_disabled_cursor_name = "disabled";
+extern "C" char const *const mir_disabled_cursor_name = "none";
 extern "C" char const* const mir_arrow_cursor_name = "default";
 extern "C" char const* const mir_busy_cursor_name = "wait";
 extern "C" char const* const mir_caret_cursor_name = "text";
