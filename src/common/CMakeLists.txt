@@ -57,6 +57,6 @@ set_target_properties(mircommon
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
   DESTINATION "include/mircommon"
 )
