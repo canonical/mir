@@ -83,9 +83,9 @@ void MirInputDeviceStateEvent::set_modifiers(MirInputEventModifiers modifiers)
     modifiers_ = modifiers;
 }
 
-void MirInputDeviceStateEvent::add_device(MirInputDeviceId id, std::vector<uint32_t> && pressed_keys, MirPointerButtons pointer_buttons)
+void MirInputDeviceStateEvent::set_device_states(std::vector<mir::events::InputDeviceState> const& device_states)
 {
-    devices.emplace_back(id, std::move(pressed_keys), pointer_buttons);
+    devices = device_states;
 }
 
 uint32_t MirInputDeviceStateEvent::device_count() const
@@ -98,9 +98,9 @@ MirInputDeviceId MirInputDeviceStateEvent::device_id(size_t index) const
     return devices[index].id;
 }
 
-uint32_t const* MirInputDeviceStateEvent::device_pressed_keys(size_t index) const
+uint32_t MirInputDeviceStateEvent::device_pressed_keys_for_index(size_t index, size_t pressed_index) const
 {
-    return devices[index].pressed_keys.data();
+    return devices[index].pressed_keys[pressed_index];
 }
 
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
@@ -110,7 +110,7 @@ uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
 
 MirPointerButtons MirInputDeviceStateEvent::device_pointer_buttons(size_t index) const
 {
-    return devices[index].pointer_buttons;
+    return devices[index].buttons;
 }
 
 namespace
@@ -159,6 +159,7 @@ mir::EventUPtr MirInputDeviceStateEvent::deserialize(std::string const& bytes)
     new_event->set_pointer_axis(mir_pointer_axis_x, pointer_x);
     new_event->set_pointer_axis(mir_pointer_axis_y, pointer_y);
 
+    std::vector<mir::events::InputDeviceState> states;
     for (size_t i = 0; i != count; ++i)
     {
         uint32_t pressed_count = 0;
@@ -172,8 +173,9 @@ mir::EventUPtr MirInputDeviceStateEvent::deserialize(std::string const& bytes)
         for (size_t j = 0;j != pressed_count; ++j)
             pos = mir::event::consume(pos, pressed_keys[j]);
 
-        new_event->add_device(id, std::move(pressed_keys), pointer_buttons);
+        states.push_back({id, std::move(pressed_keys), pointer_buttons});
     }
+    new_event->set_device_states(states);
 
     return mir::EventUPtr(new_event, delete_input_device_state_event);
 }
@@ -206,7 +208,7 @@ std::string MirInputDeviceStateEvent::serialize(MirEvent const* event)
     for (auto const& dev : input_state->devices)
     {
         encode(encoded, dev.id);
-        encode(encoded, dev.pointer_buttons);
+        encode(encoded, dev.buttons);
         encode(encoded, uint32_t(dev.pressed_keys.size()));
         for (auto const& key : dev.pressed_keys)
             encode(encoded, key);
