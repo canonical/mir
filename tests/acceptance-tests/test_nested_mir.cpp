@@ -432,7 +432,6 @@ public:
         mir_surface_set_event_handler(surface, nullptr, nullptr);
     }
 
-
 protected:
     NestedMirRunner(std::string const& connection_string, bool)
         : mtf::HeadlessNestedServerRunner(connection_string)
