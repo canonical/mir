@@ -272,7 +272,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
     }
 
     mt::AutoJoinThread watchdog{
-        [&shutdown_readers]()
+        [&]()
         {
             using namespace std::chrono_literals;
             auto timeout = std::chrono::steady_clock::now() + 10s;
@@ -287,6 +287,17 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                 ADD_FAILURE() << "Timeout waiting to acquire write lock";
             }
             shutdown_readers = true;
+
+            // Ensure that each reader has a chance to run...
+            for (int i = 0; i < 2 ; ++i)
+            {
+                {
+                    std::lock_guard<decltype(reader_mutex)> lock{reader_mutex};
+                    reader_to_run = i;
+                }
+                reader_changed.notify_all();
+                readers[i].stop();
+            }
         }};
 
     // Wait until the reader threads have spooled up and taken a shared lock.
