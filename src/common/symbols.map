@@ -112,9 +112,7 @@ MIR_COMMON_0.25 {
     # These symbols are supposed to be "private" (they're under src/include)
     # but they are used by libmirplatform, libmirclient or libmirserver
     mir::default_server_socket;
-    mir::libraries_for_path*;
     mir::logging::input_timestamp*;
-    mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
     mir::RecursiveReadWriteMutex::read_lock*;
@@ -124,7 +122,6 @@ MIR_COMMON_0.25 {
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
-    vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
 
@@ -364,6 +361,18 @@ MIR_COMMON_0.25 {
       mir::output_type_name*;
       MirSurfaceOutputEvent::refresh_rate*;
       MirSurfaceOutputEvent::set_refresh_rate*;
+      vtable?for?mir::logging::DumbConsoleLogger;
+      mir::logging::DumbConsoleLogger::log*;
+      non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
+      typeinfo?for?mir::logging::NullSharedLibraryProberReport;
+      vtable?for?mir::logging::NullSharedLibraryProberReport;
+      mir::libraries_for_path*;
+      mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
+      mir::SharedLibraryProberReport::operator*;
+      mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
+      mir::SharedLibraryProberReport::SharedLibraryProberReport*;
+      non-virtual?thunk?to?mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
+      vtable?for?mir::SharedLibraryProberReport;
     };
   local: *;
 };
