@@ -1,5 +1,8 @@
-MIR_COMMON_5 {
+MIR_COMMON_0.25 {
  global:
+  __android_log_assert;
+  __android_log_print;
+  systemTime;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
@@ -138,16 +141,8 @@ MIR_COMMON_5 {
 
     mir::SignalBlocker::SignalBlocker*;
     mir::SignalBlocker::?SignalBlocker*;
-  };
-};
 
-MIR_COMMON_5.1 {  # New functions in Mir 0.16
- global:
-    __android_log_assert;
-    __android_log_print;
-    systemTime;
-    toMillisecondTimeoutDelay;
-    extern "C++" {
+# New functions in Mir 0.16
       android::InputChannel::InputChannel*;
       android::InputChannel::openInputFdPair*;
       android::InputConsumer::consume*;
@@ -188,37 +183,21 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       mir::write_to_log;
       typeinfo?for?android::RefBase;
       vtable?for?android::IntSet;
-      mir::dispatch::ReadableFd::ReadableFd*;
-      mir::dispatch::ReadableFd::?ReadableFd*;
-      mir::dispatch::ReadableFd::watch_fd*;
-      mir::dispatch::ReadableFd::dispatch*;
-      mir::dispatch::ReadableFd::relevant_events*;
+      vtable?for?mir::dispatch::ReadableFd;
+      mir::dispatch::ReadableFd*;
       mir::logger::Logger::log*;
-    };
-  local: *;
-} MIR_COMMON_5;
 
-MIR_COMMON_5v19 { # New functions in Mir 0.19.0
-  global:
-    extern "C++" {
+# New functions in Mir 0.19.0
       typeinfo?for?mir::logging::SharedLibraryProberReport;
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
       typeinfo?for?mir::logging::DumbConsoleLogger;
       mir::detail::libname_impl*;
-    };
-} MIR_COMMON_5.1;
 
-MIR_COMMON_0.19.1 { # New functions in Mir 0.19.1
-  global:
-    extern "C++" {
+# New functions in Mir 0.19.1
       mir::select_libraries_for_path*;
-    };
-} MIR_COMMON_5v19;  # <- Note Mir 0.19.0 used the wrong syntax
 
-MIR_COMMON_0.22 {
-  global:
-    extern "C++" {
+# New functions in Mir 0.22
        MirEvent::to_surface*;
        MirEvent::to_resize*;
        MirEvent::to_orientation*;
@@ -348,12 +327,8 @@ MIR_COMMON_0.22 {
        MirPromptSessionEvent::MirPromptSessionEvent*;
        MirPromptSessionEvent::new_state*;
        MirPromptSessionEvent::set_new_state*;
-    };
-} MIR_COMMON_0.19.1;
 
-MIR_COMMON_0.24 {
-  global:
-    extern "C++" {
+# New functions in Mir 0.24
        android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
@@ -363,7 +338,6 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::device_count*;
        MirInputDeviceStateEvent::device_id*;
        MirInputDeviceStateEvent::device_pointer_buttons*;
-       MirInputDeviceStateEvent::device_pressed_keys*;
        MirInputDeviceStateEvent::device_pressed_keys_count*;
        MirInputDeviceStateEvent::modifiers*;
        MirInputDeviceStateEvent::pointer_axis*;
@@ -380,27 +354,14 @@ MIR_COMMON_0.24 {
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
 
-       #
-       # This entry is a bug LP: #1617865 which now overrides the other entries
-       # for ReadableFd in MIR_COMMON_5.1 above. But rather than remove it and
-       # break the ABI again we have re-exported the old MIR_COMMON_5.1
-       # symbols using assembler directives in:
-       #   src/common/dispatch/legacy_readable_fd.cpp
-       # 
-       mir::dispatch::ReadableFd*;
-
-       vtable?for?mir::dispatch::ReadableFd;
-    };
-} MIR_COMMON_0.22;
-
-MIR_COMMON_0.25 {
-  global:
-    extern "C++" {
+# New functions in Mir 0.25
       MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
       MirSurfacePlacementEvent::id*;
       MirSurfacePlacementEvent::set_id*;
       MirSurfacePlacementEvent::placement*;
       MirSurfacePlacementEvent::set_placement*;
+      MirInputDeviceStateEvent::device_pressed_keys_for_index*;
+      mir::output_type_name*;
       MirSurfaceOutputEvent::refresh_rate*;
       MirSurfaceOutputEvent::set_refresh_rate*;
       mir::output_type_name*;
@@ -413,4 +374,5 @@ MIR_COMMON_0.25 {
       mir::PosixRWMutex::try_shared_lock*;
       mir::PosixRWMutex::unlock_shared*;
     };
-} MIR_COMMON_0.24;
+  local: *;
+};

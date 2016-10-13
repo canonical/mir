@@ -106,7 +106,10 @@ struct WrappingDisplay : mg::Display
     {
         return display->native_display();
     }
-
+    mg::Frame last_frame_on(unsigned output_id) const override
+    {
+        return display->last_frame_on(output_id);
+    }
     std::shared_ptr<Display> const display;
 };
 

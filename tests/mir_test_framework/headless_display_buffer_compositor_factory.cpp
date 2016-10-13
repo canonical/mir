@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -30,13 +31,27 @@ namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory() :
+    tracker(nullptr)
+{
+}
+
+mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory(
+    std::shared_ptr<PassthroughTracker> const& tracker) :
+    tracker(tracker)
+{
+}
+
 std::unique_ptr<mir::compositor::DisplayBufferCompositor>
 mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBuffer& db)
 {
     struct HeadlessDBC : mir::compositor::DisplayBufferCompositor
     {
-        HeadlessDBC(mg::DisplayBuffer& db) :
+        HeadlessDBC(
+            mg::DisplayBuffer& db,
+            std::shared_ptr<mtf::PassthroughTracker> const& tracker) :
             db(db),
+            tracker(tracker),
             render_target(dynamic_cast<mrg::RenderTarget*>(
                 db.native_display_buffer()))
         {
@@ -73,7 +88,11 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         {
             auto renderlist = filter(seq, db.view_area());
             if (db.overlay(renderlist))
+            {
+                if (tracker)
+                    tracker->note_passthrough();
                 return;
+            }
 
             // Invoke GL renderer specific functions if the DisplayBuffer supports them
             if (render_target)
@@ -87,7 +106,8 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
                 render_target->swap_buffers();
         }
         mg::DisplayBuffer& db;
+        std::shared_ptr<PassthroughTracker> const tracker;
         mrg::RenderTarget* const render_target;
     };
-    return std::make_unique<HeadlessDBC>(db);
+    return std::make_unique<HeadlessDBC>(db, tracker);
 }
