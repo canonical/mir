@@ -231,7 +231,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
     {
         readers[i] = mt::AutoUnblockThread{
             [&shutdown_readers]() { shutdown_readers = true; },
-            [&shutdown_readers, &reader_mutex, &reader_to_run, &reader_changed, &mutex, &readers_started](int id)
+            [&](int id, std::function<void()> const& trigger_next_reader)
             {
                 while (!shutdown_readers)
                 {
@@ -248,11 +248,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
 
                         std::this_thread::sleep_for(std::chrono::milliseconds{1});
 
-                        {
-                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
-                            reader_to_run = (id + 1) % 2;
-                        }
-                        reader_changed.notify_all();
+                        trigger_next_reader();
                     }
                     else
                     {
@@ -260,15 +256,19 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                         // some thread is waiting on an exclusive lock and we're preempted.
                         //
                         // In the latter case we need to let the waiting thread release its shared lock.
-                        {
-                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
-                            reader_to_run = (id + 1) % 2;
-                        }
-                        reader_changed.notify_all();
+                        trigger_next_reader();
                     }
                 }
             },
-            i};
+            i,
+            [&]()
+            {
+                {
+                    std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
+                    reader_to_run = (reader_to_run + 1) % readers.size();
+                }
+                reader_changed.notify_all();
+            }};
     }
 
     mt::AutoJoinThread watchdog{
@@ -289,7 +289,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
             shutdown_readers = true;
 
             // Ensure that each reader has a chance to run...
-            for (int i = 0; i < 2 ; ++i)
+            for (auto i = 0u; i < readers.size() ; ++i)
             {
                 {
                     std::lock_guard<decltype(reader_mutex)> lock{reader_mutex};
