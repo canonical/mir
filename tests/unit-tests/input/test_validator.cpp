@@ -131,18 +131,18 @@ TEST_F(Validator, multiple_missing_releases_are_inserted)
     add_another_touch(touch_3, 2, mir_touch_action_down);
     auto touch_4 = make_touch(2, mir_touch_action_change);
 
-    auto inserted_release_id1 = make_touch(0, mir_touch_action_change);
-    add_another_touch(inserted_release_id1, 1, mir_touch_action_up);
-    add_another_touch(inserted_release_id1, 2, mir_touch_action_change);
     auto inserted_release_id0 = make_touch(0, mir_touch_action_up);
+    add_another_touch(inserted_release_id0, 1, mir_touch_action_change);
     add_another_touch(inserted_release_id0, 2, mir_touch_action_change);
+    auto inserted_release_id1 = make_touch(1, mir_touch_action_up);
+    add_another_touch(inserted_release_id1, 2, mir_touch_action_change);
 
     InSequence seq;
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id1))));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id0))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id1))));
     EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_4))));
 
     rewriter.validate_and_dispatch(*touch_1);
