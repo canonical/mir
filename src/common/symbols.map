@@ -63,7 +63,6 @@ MIR_COMMON_0.25 {
     non-virtual?thunk?to?mir::graphics::NativeBuffer::?NativeBuffer*;
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::Logger::?Logger*;
-    typeinfo?for?MirBufferPackage;
     typeinfo?for?mir::detail::RefCountedLibrary;
     typeinfo?for?mir::dispatch::ActionQueue;
     typeinfo?for?mir::dispatch::Dispatchable;
@@ -78,7 +77,6 @@ MIR_COMMON_0.25 {
     typeinfo?for?mir::logging::Logger;
     typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::time::PosixTimestamp;
-    vtable?for?MirBufferPackage;
     vtable?for?mir::detail::RefCountedLibrary;
     vtable?for?mir::dispatch::ActionQueue;
     vtable?for?mir::dispatch::Dispatchable;
