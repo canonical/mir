@@ -364,6 +364,15 @@ MIR_COMMON_0.25 {
       mir::output_type_name*;
       MirSurfaceOutputEvent::refresh_rate*;
       MirSurfaceOutputEvent::set_refresh_rate*;
+      mir::output_type_name*;
+      mir::PosixRWMutex::PosixRWMutex*;
+      mir::PosixRWMutex::?PosixRWMutex*;
+      mir::PosixRWMutex::lock*;
+      mir::PosixRWMutex::try_lock*;
+      mir::PosixRWMutex::unlock*;
+      mir::PosixRWMutex::shared_lock*;
+      mir::PosixRWMutex::try_shared_lock*;
+      mir::PosixRWMutex::unlock_shared*;
     };
   local: *;
 };

@@ -21,6 +21,8 @@ list(APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
+  posix_rw_mutex.cpp
 )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
