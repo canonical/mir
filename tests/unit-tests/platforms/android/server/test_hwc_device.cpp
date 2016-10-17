@@ -599,6 +599,17 @@ TEST_F(HwcDevice, rejects_empty_list)
     EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 
+//LP: #1369763. We could get swapinterval 0 to work with overlays, but we'd need
+//the vsync signal from hwc to reach the client, so the client can rate-limit its submissions.
+TEST_F(HwcDevice, rejects_list_containing_interval_0)
+{
+    mga::HwcDevice device(mock_device);
+
+    auto renderable = std::make_shared<mtd::StubTransformedRenderable>();
+    mg::RenderableList renderlist{renderable};
+    EXPECT_FALSE(device.compatible_renderlist(renderlist));
+}
+
 //TODO: we could accept a 90 degree transform
 TEST_F(HwcDevice, rejects_list_containing_transformed)
 {

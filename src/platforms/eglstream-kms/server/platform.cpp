@@ -86,11 +86,14 @@ mge::Platform::Platform(
 
     EGLint major{1};
     EGLint minor{4};
+    auto const required_egl_version_major = major;
+    auto const required_egl_version_minor = minor;
     if (eglInitialize(display, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
     }
-    if (major != 1 || minor != 4)
+    if ((major < required_egl_version_major) ||
+        (major == required_egl_version_major && minor < required_egl_version_minor))
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{
             "Incompatible EGL version"s +

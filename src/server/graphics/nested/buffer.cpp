@@ -181,7 +181,7 @@ mgn::Buffer::Buffer(
 
 std::shared_ptr<mg::NativeBuffer> mgn::Buffer::native_buffer_handle() const
 {
-    return nullptr;
+    return buffer;
 }
 
 geom::Size mgn::Buffer::size() const

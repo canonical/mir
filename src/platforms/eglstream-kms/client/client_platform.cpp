@@ -39,7 +39,11 @@ std::shared_ptr<mcl::ClientBufferFactory> mcle::ClientPlatform::create_buffer_fa
     return std::make_shared<mcle::ClientBufferFactory>();
 }
 
-std::shared_ptr<void> mcle::ClientPlatform::create_egl_native_window(EGLNativeSurface* /*client_surface*/)
+void mcle::ClientPlatform::use_egl_native_window(std::shared_ptr<void> /*native_window*/, EGLNativeSurface* /*surface*/)
+{
+}
+
+std::shared_ptr<void> mcle::ClientPlatform::create_egl_native_window(EGLNativeSurface* /*surface*/)
 {
     return nullptr;
 }

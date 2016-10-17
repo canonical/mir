@@ -22,6 +22,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/atomic_frame.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -235,7 +236,8 @@ mgx::Display::Display(::Display* x_dpy,
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
       report{report},
-      orientation{mir_orientation_normal}
+      orientation{mir_orientation_normal},
+      last_frame{std::make_shared<AtomicFrame>()}
 {
     shared_egl.setup(x_dpy);
 
@@ -253,6 +255,7 @@ mgx::Display::Display(::Display* x_dpy,
                          *win,
                          actual_size,
                          shared_egl.context(),
+                         last_frame,
                          report,
                          orientation,
                          *gl_config);
@@ -343,4 +346,9 @@ bool mgx::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& /*conf*/) const
 {
     return false;
+}
+
+mg::Frame mgx::Display::last_frame_on(unsigned) const
+{
+    return last_frame->load();
 }

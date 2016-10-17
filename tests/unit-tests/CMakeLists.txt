@@ -79,6 +79,7 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  test_posix_rw_mutex.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
@@ -133,6 +134,8 @@ target_link_libraries(
 
   mirclient-static
   mirclientlttng-static
+
+  mirsharedmesa-static
 
   mir-test-static
   mir-test-framework-static
