@@ -200,10 +200,6 @@ struct BufferDepository
         vault.disconnected();
     }
 
-    void set_buffer_cache_size(unsigned int)
-    {
-    }
-
     MirWaitHandle* set_scale(float scale, mf::BufferStreamId)
     {
         scale_wait_handle.expect_result();
@@ -534,10 +530,8 @@ bool mcl::BufferStream::valid() const
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
-void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+void mcl::BufferStream::set_buffer_cache_size(unsigned int)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    buffer_depository->set_buffer_cache_size(cache_size);
 }
 
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
