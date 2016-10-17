@@ -82,7 +82,6 @@ public:
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
         geometry::Size ideal_size, size_t nbuffers);
-
     // For surfaceless buffer streams
     BufferStream(
         MirConnection* connection,
