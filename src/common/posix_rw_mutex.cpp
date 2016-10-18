@@ -64,6 +64,18 @@ mir::PosixRWMutex::PosixRWMutex(Type type)
         case Type::PreferWriterNonRecursive:
             pthread_type = PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP;
             break;
+#ifndef __clang__
+    /*
+     * clang detects that the above cases are exhaustive, but gcc doesn't.
+     *
+     * Leave the default clause out if building with clang so that this becomes a build error
+     * if the above cases are *not* exhaustive, and give gcc a default clause to satisfy
+     * its uninitialised variable warning.
+     */
+        default:
+            pthread_type = PTHREAD_RWLOCK_DEFAULT_NP;
+            break;
+#endif
     }
 
     pthread_rwlockattr_t attr;

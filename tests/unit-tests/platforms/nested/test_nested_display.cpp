@@ -70,7 +70,8 @@ struct NestedDisplay : testing::Test
             std::make_shared<SingleDisplayHostConnection>(),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
-            gl_config};
+            gl_config,
+            mgn::PassthroughOption::disabled};
 
         return std::unique_ptr<mgn::Display>{nested_display_raw};
     }

@@ -153,9 +153,15 @@ struct NestedDisplayBuffer : Test
         output.modes = { { rectangle.size, 55.0f } };
     }
 
+    auto create_display_buffer(
+        std::shared_ptr<mgn::HostConnection> const& connection, mgn::PassthroughOption option)
+    {
+        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, connection, option);
+    }
+
     auto create_display_buffer(std::shared_ptr<mgn::HostConnection> const& connection)
     {
-        return std::make_shared<mgnd::DisplayBuffer>(egl_display, output, connection);
+        return create_display_buffer(connection, mgn::PassthroughOption::enabled);
     }
 
     mir::geometry::Rectangle const rectangle { {0,0}, {1024, 768} };
@@ -184,6 +190,19 @@ TEST_F(NestedDisplayBuffer, event_dispatch_does_not_race_with_destruction)
 
     display_buffer.reset();
     t.join();
+}
+
+TEST_F(NestedDisplayBuffer, respects_passthrough_option)
+{
+    StubNestedBuffer nested_buffer; 
+    mg::RenderableList optimizable_list =
+        { std::make_shared<mtd::StubRenderable>(mt::fake_shared(nested_buffer), rectangle) };
+
+    auto enabled_display_buffer = create_display_buffer(host_connection, mgn::PassthroughOption::enabled);
+    auto disabled_display_buffer = create_display_buffer(host_connection, mgn::PassthroughOption::disabled);
+
+    EXPECT_TRUE(enabled_display_buffer->overlay(optimizable_list));
+    EXPECT_FALSE(disabled_display_buffer->overlay(optimizable_list));
 }
 
 TEST_F(NestedDisplayBuffer, creates_stream_and_chain_for_passthrough)
