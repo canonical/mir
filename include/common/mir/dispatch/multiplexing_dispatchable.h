@@ -20,6 +20,7 @@
 #define MIR_DISPATCH_MULTIPLEXING_DISPATCHABLE_H_
 
 #include "mir/dispatch/dispatchable.h"
+#include "mir/posix_rw_mutex.h"
 
 #include <functional>
 #include <initializer_list>
@@ -94,7 +95,7 @@ public:
      */
     void remove_watch(Fd const& fd);
 private:
-    pthread_rwlock_t lifetime_mutex;
+    PosixRWMutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
     Fd epoll_fd;

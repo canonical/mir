@@ -17,17 +17,40 @@
  */
 
 #include "mir/input/validator.h"
-
+#include "mir/events/event_builders.h"
 #include "mir_toolkit/event.h"
 
-#include "mir/events/event_private.h"
-
-#include <string.h>
-
-#include <unordered_set>
+#include <set>
+#include <algorithm>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
+
+namespace
+{
+std::vector<mev::ContactState> get_contact_state(MirTouchEvent const* event)
+{
+    std::vector<mev::ContactState> ret;
+    ret.reserve(mir_touch_event_point_count(event));
+
+    for (size_t i = 0, count = mir_touch_event_point_count(event); i != count; ++i)
+    {
+        ret.push_back(mev::ContactState{
+                      mir_touch_event_id(event, i),
+                      mir_touch_event_action(event, i),
+                      mir_touch_event_tooltype(event, i),
+                      mir_touch_event_axis_value(event, i, mir_touch_axis_x),
+                      mir_touch_event_axis_value(event, i, mir_touch_axis_y),
+                      mir_touch_event_axis_value(event, i, mir_touch_axis_pressure),
+                      mir_touch_event_axis_value(event, i, mir_touch_axis_touch_major),
+                      mir_touch_event_axis_value(event, i, mir_touch_axis_touch_minor),
+                      0.0f
+                      });
+    }
+
+    return ret;
+}
+}
 
 mi::Validator::Validator(std::function<void(MirEvent const&)> const& dispatch_valid_event)
     : dispatch_valid_event(dispatch_valid_event)
@@ -48,125 +71,10 @@ void mi::Validator::validate_and_dispatch(MirEvent const& event)
         dispatch_valid_event(event);
         return;
     }
-    auto tev = mir_input_event_get_touch_event(iev);
-    handle_touch_event(mir_input_event_get_device_id(iev), tev);
+    handle_touch_event(event);
 
     return;
 }
-
-namespace
-{
-void delete_event(MirEvent *e) { delete e; }
-
-mir::EventUPtr make_event_uptr(MirEvent *e)
-{
-    return mir::EventUPtr(e, delete_event);
-}
-
-mir::EventUPtr copy_event(MirTouchEvent const* ev)
-{
-    return make_event_uptr(new MirTouchEvent(*ev));
-}
-
-// Return a copy of ev with existing touch actions converted to change.
-// Note this is always a valid successor of ev in the event stream.
-mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
-{
-    auto ret = copy_event(ev);
-
-    for (size_t i = 0; i < ev->pointer_count(); i++)
-    {
-        ret->to_input()->to_motion()->set_action(i, mir_touch_action_change);
-    }
-    return ret;
-}
-
-// Helper function to find index for a given touch ID
-// TODO: Existence of this probably suggests a problem with TouchEvent API...
-int index_for_id(MirTouchEvent const* touch_ev, MirTouchId id)
-{
-    for (size_t i = 0; i < touch_ev->pointer_count(); i++)
-    {
-        if (touch_ev->id(i) == id)
-            return i;
-    }
-    return -1;
-}
-
-// Return an event which is a valid successor of valid_ev but contains a mir_touch_action_down for missing_id
-mir::EventUPtr add_missing_down(MirEvent const* valid_ev, MirTouchEvent const* ev, MirTouchId missing_id)
-{
-    auto valid_tev = valid_ev->to_input()->to_motion()->to_touch();//reinterpret_cast<MirTouchEvent const*>(valid_ev);
-    
-    // So as not to repeat already occurred actions, we copy the last valid (Delivered) event and replace all the actions
-    // with change, then we will add a missing down for touch "missing_id"
-    auto ret = convert_touch_actions_to_change(valid_tev);
-    auto index = index_for_id(ev, missing_id);
-
-    // In the case where a touch ID goes up and then reappears without a down we don't want to
-    // add a new touch but merely replace the action in the last event.
-    if (auto existing_index = index_for_id(ret->to_input()->to_motion()->to_touch(), missing_id) >= 0)
-    {
-        ret->to_input()->to_motion()->set_action(existing_index, mir_touch_action_down);
-    }
-    else
-    {
-        mev::add_touch(*ret, missing_id, mir_touch_action_down,
-            mir_touch_event_tooltype(ev, index),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_x),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_y),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_pressure),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_touch_major),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_touch_minor),
-            mir_touch_event_axis_value(ev, index, mir_touch_axis_size));
-    }
-    
-  return ret;
-}
-
-// We copy valid_ev but replace the touch action for missign_an_up_id with mir_touch_action_up
-mir::EventUPtr add_missing_up(MirEvent const* valid_ev, MirTouchId missing_an_up_id)
-{
-    auto tev = reinterpret_cast<MirTouchEvent const*>(valid_ev);
-    
-    // Because we can only have one action per ev, we copy the last valid (Delivered) event and replace all the actions
-    // with change, then we will change the action for the ID which should have gone up to an up.
-    auto ret = convert_touch_actions_to_change(tev);
-    auto index = index_for_id(tev, missing_an_up_id);
-
-    ret->to_input()->to_motion()->set_action(index, mir_touch_action_up);
-
-    return ret;
-}
-
-// We copy ev but remove touch points which have been released producing a valid successor of
-// ev
-mir::EventUPtr remove_old_releases_from(MirEvent const* ev)
-{
-    auto tev = ev->to_input()->to_motion()->to_touch();
-    auto ret = copy_event(tev);
-    ret->to_input()->to_motion()->set_pointer_count(0);
-    
-    for (size_t i = 0; i < mir_touch_event_point_count(tev); i++)
-    {
-        auto action = mir_touch_event_action(tev, i);
-        if (action == mir_touch_action_up)
-            continue;
-        mev::add_touch(*ret,
-            mir_touch_event_id(tev, i), mir_touch_event_action(tev, i),
-            mir_touch_event_tooltype(tev, i),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_x),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_y),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor),
-            mir_touch_event_axis_value(tev, i, mir_touch_axis_size));
-    }
-    return ret;
-}
-}
-
-typedef std::unordered_set<MirTouchId> TouchSet;
 
 // This is the core of the touch validator. Given a valid event 'last_ev' which was the last_event to be dispatched
 // this function must dispatch events such that 'ev' is a valid event to dispatch.
@@ -187,80 +95,94 @@ typedef std::unordered_set<MirTouchId> TouchSet;
 //     Now we check for found touch points which were not expected. If these show up with mir_touch_action_down
 // things are fine. On the other hand if they show up with mir_touch_action_change then a touch point
 // has appeared before its gone down and thus we must inject an event signifying this touch going down.
-void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> const&,
-    MirTouchEvent const* ev, MirTouchEvent const* last_ev)
+void mi::Validator::ensure_stream_validity_locked(
+    std::lock_guard<std::mutex> const&,
+    std::vector<mev::ContactState> const& new_event,
+    std::vector<mev::ContactState>& last_state,
+    std::function<void(std::vector<mev::ContactState> const&)> const& dispatch)
 {
+    using TouchSet = std::set<MirTouchId>;
     TouchSet expected;
-    for (size_t i = 0; i < mir_touch_event_point_count(last_ev); i++)
+    for (auto const& contact : last_state)
+        expected.insert(contact.touch_id);
+
+    TouchSet in_next_event;
+    TouchSet changed_in_next_event;
+    for (auto const& contact : new_event)
     {
-        auto action = mir_touch_event_action(last_ev, i);
-        if (action == mir_touch_action_up)
-            continue;
-        expected.insert(mir_touch_event_id(last_ev, i));
+        in_next_event.insert(contact.touch_id);
+        if (contact.action != mir_touch_action_down)
+            changed_in_next_event.insert(contact.touch_id);
     }
 
-    TouchSet found;
-    for (size_t i = 0; i < mir_touch_event_point_count(ev); i++)
+    std::vector<MirTouchId> missing_up;
+    set_difference(begin(expected), end(expected),
+                   begin(in_next_event), end(in_next_event),
+                   std::back_inserter(missing_up));
+
+    std::vector<MirTouchId> missing_down;
+    set_difference(begin(changed_in_next_event), end(changed_in_next_event),
+                   begin(expected), end(expected),
+                   std::back_inserter(missing_down));
+
+    for (auto touch_id : missing_up)
     {
-        auto id = mir_touch_event_id(ev, i);
-        found.insert(id);
+        // TODO on purpose we only send out one state change per event..
+        auto pos = find_if(begin(last_state), end(last_state), [touch_id](auto& item){return item.touch_id == touch_id;});
+        pos->action = mir_touch_action_up;
+        dispatch(last_state);
+        last_state.erase(pos);
     }
 
-    // Insert missing touch releases
-    auto last_ev_copy =
-        remove_old_releases_from(reinterpret_cast<MirEvent const*>(last_ev));
-    for (auto const& expected_id : expected)
+    for (auto touch_id : missing_down)
     {
-        if (found.find(expected_id) == found.end())
-        {
-            auto inject_ev = add_missing_up(last_ev_copy.get(), expected_id);
-            dispatch_valid_event(*inject_ev);
-            last_ev_copy = remove_old_releases_from(inject_ev.get());
-        }
-    }
-
-    for (size_t i = 0; i < mir_touch_event_point_count(ev); i++)
-    {
-        auto id = mir_touch_event_id(ev, i);
-        if (expected.find(id) == expected.end() &&
-            mir_touch_event_action(ev, i) != mir_touch_action_down)
-        {
-            
-            auto inject_ev = add_missing_down(last_ev_copy.get(), ev, id);
-            dispatch_valid_event(*inject_ev);
-            last_ev_copy = std::move(inject_ev);
-        }
+        // TODO on purpose we only send out one state change per event..
+        auto pos = find_if(begin(new_event), end(new_event), [touch_id](auto& item){return item.touch_id == touch_id;});
+        last_state.push_back(*pos);
+        last_state.back().action = mir_touch_action_down;
+        dispatch(last_state);
+        last_state.back().action = mir_touch_action_change;
     }
 }
 
-
-void mi::Validator::handle_touch_event(MirInputDeviceId id, MirTouchEvent const* ev)
+void mi::Validator::handle_touch_event(MirEvent const& event)
 {
     std::lock_guard<std::mutex> lg(state_guard);
 
-    auto it = last_event_by_device.find(id);
-    MirTouchEvent const* last_ev = nullptr;
-    auto default_ev = mev::make_event(id,
-        std::chrono::high_resolution_clock::now().time_since_epoch(),
-        std::vector<uint8_t>{}, /* No need for a mac, since there's no pointer count for a default event */
-        mir_input_event_modifier_none); 
+    auto const input_event = mir_event_get_input_event(&event);
+    auto const id = mir_input_event_get_device_id(input_event);
+    auto const touch_event = mir_input_event_get_touch_event(input_event);
+    auto new_state = get_contact_state(touch_event);
 
-    if (it == last_event_by_device.end())
-    {
-        last_event_by_device.insert(std::make_pair(id, copy_event(ev)));
-        last_ev = reinterpret_cast<MirTouchEvent const*>(default_ev.get());
-    }
-    else
-    {
-        last_ev = mir_input_event_get_touch_event(mir_event_get_input_event(it->second.get()));
-    }
-    
-    ensure_stream_validity_locked(lg, ev, last_ev);
+    ensure_stream_validity_locked(
+        lg,
+        new_state,
+        last_event_by_device[id],
+        [this, touch_event, id](std::vector<events::ContactState> const& contacts)
+        {
+            dispatch_valid_event(*mev::make_event(
+                    id,
+                    std::chrono::nanoseconds{mir_touch_event_modifiers(touch_event)},
+                    std::vector<uint8_t>{},
+                    mir_touch_event_modifiers(touch_event),
+                    contacts
+                    ));
+        });
 
-    // Seems to be no better way to replace a non default constructible value type in an unordered_map
-    // C++17 will give us insert_or_assign
-    last_event_by_device.erase(id);
-    last_event_by_device.insert(std::make_pair(id, copy_event(ev)));
-    
-    dispatch_valid_event(*reinterpret_cast<MirEvent const*>(ev));
+    dispatch_valid_event(event);
+
+    new_state.erase(
+        remove_if(
+            begin(new_state),
+            end(new_state),
+            [](auto& item)
+            {
+                if (item.action == mir_touch_action_down)
+                   item.action = mir_touch_action_change;
+                return item.action == mir_touch_action_up;
+            }),
+        end(new_state)
+        );
+
+    last_event_by_device[id] = new_state;
 }
