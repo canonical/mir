@@ -453,8 +453,7 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
     e->set_pointer_buttons(pointer_buttons);
     e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
     e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
-    for (auto& dev : device_states)
-        e->add_device(dev.id, std::move(dev.pressed_keys), dev.buttons);
+    e->set_device_states(device_states);
 
     return make_uptr_event(e);
 }

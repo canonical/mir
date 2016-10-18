@@ -26,6 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/events/input_device_state.h"
 #include "mir/events/contact_state.h"
 
 #include <memory>
@@ -141,13 +142,6 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
     MirInputDeviceId id, std::chrono::nanoseconds time);
-
-struct InputDeviceState
-{
-    MirInputDeviceId id;
-    std::vector<uint32_t> pressed_keys;
-    MirPointerButtons buttons;
-};
 
 EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      MirPointerButtons pointer_buttons,
