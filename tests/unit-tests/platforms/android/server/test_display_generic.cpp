@@ -30,6 +30,7 @@
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/test/doubles/mock_android_hw.h"
 #include "mir/test/doubles/mock_display_device.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -42,10 +43,13 @@ class DisplayTestGeneric : public ::testing::Test
 {
 public:
     DisplayTestGeneric() :
-        platform{create_host_platform(
-            std::make_shared<mir::options::ProgramOption>(),
-            std::make_shared<mtd::NullEmergencyCleanup>(),
-            mir::report::null_display_report())}
+        platform{
+            create_host_platform(
+                std::make_shared<mir::options::ProgramOption>(),
+                std::make_shared<mtd::NullEmergencyCleanup>(),
+                mir::report::null_display_report(),
+                logger)
+        }
 
     {
         using namespace testing;
@@ -70,6 +74,7 @@ public:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     mir::UniqueModulePtr<mg::Platform> platform;
+    std::shared_ptr<mir::logging::DumbConsoleLogger> const logger = std::make_shared<mir::logging::DumbConsoleLogger>();
 };
 
 #include "../../test_display.h"
