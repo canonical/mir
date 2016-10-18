@@ -25,7 +25,6 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/events/event_private.h"
 #include "buffer.h"
 
 #include <sstream>
@@ -63,7 +62,8 @@ std::shared_ptr<mgn::HostSurface> create_host_surface(
 mgn::detail::DisplayBuffer::DisplayBuffer(
     EGLDisplayHandle const& egl_display,
     mg::DisplayConfigurationOutput best_output,
-    std::shared_ptr<HostConnection> const& host_connection) :
+    std::shared_ptr<HostConnection> const& host_connection,
+    mgn::PassthroughOption const option) :
     egl_display(egl_display),
     host_stream{create_host_stream(*host_connection, best_output)},
     host_surface{create_host_surface(*host_connection, host_stream, best_output)},
@@ -72,7 +72,8 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_config{egl_display.choose_windowed_config(best_output.current_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{best_output.extents()},
-    egl_surface{egl_display, host_stream->egl_native_window(), egl_config}, 
+    egl_surface{egl_display, host_stream->egl_native_window(), egl_config},
+    passthrough_option(option),
     content{BackingContent::stream}
 {
     host_surface->set_event_handler(event_thunk, this);
@@ -115,7 +116,8 @@ void mgn::detail::DisplayBuffer::bind()
 
 bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 {
-    if (list.empty() ||
+    if ((passthrough_option == mgn::PassthroughOption::disabled) ||
+        list.empty() ||
         (list.back()->screen_position() != area) ||
         (list.back()->alpha() != 1.0f) ||
         (list.back()->shaped()) ||
