@@ -69,7 +69,7 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
     for (auto& module : platform_modules)
     {
         auto factory = module->load_function<CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
-        return factory(context);
+        return factory(context, nullptr);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate client platform module found"});
