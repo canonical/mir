@@ -20,6 +20,8 @@ list(APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
+  posix_rw_mutex.cpp
 )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -59,6 +61,6 @@ set_target_properties(mircommon
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
   DESTINATION "include/mircommon"
 )

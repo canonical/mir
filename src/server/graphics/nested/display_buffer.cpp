@@ -25,7 +25,6 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/events/event_private.h"
 #include "buffer.h"
 
 #include <sstream>
