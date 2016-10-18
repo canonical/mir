@@ -313,9 +313,10 @@ extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::
 #endif
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mg::DisplayReport> const& /*report*/)
+    std::shared_ptr<mo::Option> const&,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     std::shared_ptr<mg::Platform> result{};
