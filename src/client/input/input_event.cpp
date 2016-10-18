@@ -29,8 +29,8 @@
 #include "mir/require.h"
 #include "mir_toolkit/mir_cookie.h"
 
-#include "mir_cookie.h"
-#include "handle_event_exception.h"
+#include "../mir_cookie.h"
+#include "../handle_event_exception.h"
 
 #include <string.h>
 
