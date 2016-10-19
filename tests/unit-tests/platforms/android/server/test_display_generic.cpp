@@ -43,6 +43,7 @@ class DisplayTestGeneric : public ::testing::Test
 {
 public:
     DisplayTestGeneric() :
+        logger{std::make_shared<mir::logging::DumbConsoleLogger>()},
         platform{
             create_host_platform(
                 std::make_shared<mir::options::ProgramOption>(),
@@ -73,8 +74,8 @@ public:
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    std::shared_ptr<mir::logging::DumbConsoleLogger> const logger;
     mir::UniqueModulePtr<mg::Platform> platform;
-    std::shared_ptr<mir::logging::DumbConsoleLogger> const logger = std::make_shared<mir::logging::DumbConsoleLogger>();
 };
 
 #include "../../test_display.h"
