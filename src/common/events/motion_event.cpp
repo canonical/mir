@@ -35,11 +35,11 @@ MirMotionEvent::MirMotionEvent(MirInputDeviceId id,
     event.initMotionSet();
 
     auto mev = event.getMotionSet();
-    mev.initMotions(contacts.size());
+    mev.initMotions(mir::capnp::MotionSetEvent::MAX_COUNT);
     mev.getDeviceId().setId(id);
     mev.getEventTime().setCount(timestamp.count());
     mev.setModifiers(modifiers);
-    mev.setCount(mir::capnp::MotionSetEvent::MAX_COUNT);
+    mev.setCount(contacts.size());
 
     ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
     mev.setCookie(cookie_data);
