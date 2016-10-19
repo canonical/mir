@@ -370,6 +370,8 @@ TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
     }
     threads_done.ready();
 
+    executor.drain_work();
+
     auto precount = call_count.load();
 
     multiplexer.observation_made("Banana");
