@@ -46,6 +46,15 @@ MIR_COMMON_0.25 {
     mir::logging::Logger::operator*;
     mir::logging::set_logger*;
     mir::logv*;
+    mir::PosixRWMutex::lock*;
+    mir::PosixRWMutex::lock_shared*;
+    mir::PosixRWMutex::operator*;
+    mir::PosixRWMutex::?PosixRWMutex*;
+    mir::PosixRWMutex::PosixRWMutex*;
+    mir::PosixRWMutex::try_lock*;
+    mir::PosixRWMutex::try_lock_shared*;
+    mir::PosixRWMutex::unlock*;
+    mir::PosixRWMutex::unlock_shared*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
@@ -63,7 +72,6 @@ MIR_COMMON_0.25 {
     non-virtual?thunk?to?mir::graphics::NativeBuffer::?NativeBuffer*;
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::Logger::?Logger*;
-    typeinfo?for?MirBufferPackage;
     typeinfo?for?mir::detail::RefCountedLibrary;
     typeinfo?for?mir::dispatch::ActionQueue;
     typeinfo?for?mir::dispatch::Dispatchable;
@@ -71,14 +79,15 @@ MIR_COMMON_0.25 {
     typeinfo?for?mir::dispatch::ReadableFd;
     typeinfo?for?mir::dispatch::ThreadedDispatcher;
     typeinfo?for?mir::events::ContactState;
+    typeinfo?for?mir::events::InputDeviceState;
     typeinfo?for?mir::Fd;
     typeinfo?for?mir::graphics::NativeBuffer;
     typeinfo?for?mir::input::Keymap;
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?mir::logging::Logger;
+    typeinfo?for?mir::PosixRWMutex;
     typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::time::PosixTimestamp;
-    vtable?for?MirBufferPackage;
     vtable?for?mir::detail::RefCountedLibrary;
     vtable?for?mir::dispatch::ActionQueue;
     vtable?for?mir::dispatch::Dispatchable;
@@ -86,11 +95,13 @@ MIR_COMMON_0.25 {
     vtable?for?mir::dispatch::ReadableFd;
     vtable?for?mir::dispatch::ThreadedDispatcher;
     vtable?for?mir::events::ContactState;
+    vtable?for?mir::events::InputDeviceState;
     vtable?for?mir::Fd;
     vtable?for?mir::graphics::NativeBuffer;
     vtable?for?mir::input::Keymap;
     vtable?for?mir::IntOwnedFd;
     vtable?for?mir::logging::Logger;
+    vtable?for?mir::PosixRWMutex;
     vtable?for?mir::SharedLibrary;
     vtable?for?mir::time::PosixTimestamp;
 
@@ -367,13 +378,5 @@ MIR_COMMON_0.25_PRIVATE {
       MirSurfaceOutputEvent::refresh_rate*;
       MirSurfaceOutputEvent::set_refresh_rate*;
       mir::output_type_name*;
-      mir::PosixRWMutex::PosixRWMutex*;
-      mir::PosixRWMutex::?PosixRWMutex*;
-      mir::PosixRWMutex::lock*;
-      mir::PosixRWMutex::try_lock*;
-      mir::PosixRWMutex::unlock*;
-      mir::PosixRWMutex::shared_lock*;
-      mir::PosixRWMutex::try_shared_lock*;
-      mir::PosixRWMutex::unlock_shared*;
     };
 } MIR_COMMON_0.25;
