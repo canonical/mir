@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }
