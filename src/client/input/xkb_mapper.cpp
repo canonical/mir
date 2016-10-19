@@ -24,6 +24,8 @@
 #include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
+#include <cstdlib>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -31,6 +33,18 @@ namespace mircv = mi::receiver;
 
 namespace
 {
+
+char const* get_locale_from_environment()
+{
+    char const* loc = getenv("LC_ALL");
+    if (!loc)
+        loc = getenv("LC_CTYPE");
+    if (!loc)
+        loc = getenv("LANG");
+    if (!loc)
+        loc = "C";
+    return loc;
+}
 
 MirInputEventModifiers xkb_key_code_to_modifier(xkb_keysym_t key)
 {
@@ -76,6 +90,26 @@ uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
     // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
     return evdev_scan_code + 8;
 }
+
+
+mi::XKBComposeStatePtr make_unique_compose_state(mi::XKBComposeTablePtr const& table)
+{
+    return {xkb_compose_state_new(table.get(), XKB_COMPOSE_STATE_NO_FLAGS), &xkb_compose_state_unref};
+}
+
+mi::XKBComposeTablePtr make_unique_compose_table_from_locale(mi::XKBContextPtr const& context, std::string const& locale)
+{
+    return {xkb_compose_table_new_from_locale(
+            context.get(),
+            locale.c_str(),
+            XKB_COMPOSE_COMPILE_NO_FLAGS),
+           &xkb_compose_table_unref};
+}
+
+mi::XKBStatePtr make_unique_state(xkb_keymap* keymap)
+{
+    return {xkb_state_new(keymap), xkb_state_unref};
+}
 }
 
 mi::XKBContextPtr mi::make_unique_context()
@@ -102,14 +136,9 @@ mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, char const* buffer
             &xkb_keymap_unref};
 }
 
-using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
-mi::XKBStatePtr mi::make_unique_state(xkb_keymap* keymap)
-{
-    return {xkb_state_new(keymap), xkb_state_unref};
-}
-
-mircv::XKBMapper::XKBMapper()
-    : context{make_unique_context()}
+mircv::XKBMapper::XKBMapper() :
+    context{make_unique_context()},
+    compose_table{make_unique_compose_table_from_locale(context, get_locale_from_environment())}
 {
 }
 
@@ -152,8 +181,12 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
         if (input_type == mir_input_event_type_key)
         {
             auto mapping_state = get_keymapping_state(device_id);
-            if (mapping_state && mapping_state->update_and_map(ev))
-                update_modifier();
+            if (mapping_state)
+            {
+                auto compose_state = get_compose_state(device_id);
+                if (mapping_state->update_and_map(ev, compose_state))
+                    update_modifier();
+            }
         }
         else if (modifier_state.is_set())
         {
@@ -250,18 +283,16 @@ void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> cons
     state = make_unique_state(keymap.get());
     modifier_state = mir_input_event_modifier_none;
     for (uint32_t scan_code : key_state)
-        update_state(to_xkb_scan_code(scan_code), mir_keyboard_action_down);
+        update_state(to_xkb_scan_code(scan_code), mir_keyboard_action_down, nullptr);
 }
 
-bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
+bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::XKBMapper::ComposeState* compose_state)
 {
     auto& key_ev = *event.to_input()->to_keyboard();
-    // TODO test if key entry is start of a compose key sequence..
-    // then use compose key API to map key..
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
     auto old_state = modifier_state;
 
-    key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action()));
+    key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action(), compose_state));
     // TODO we should also indicate effective/consumed modifier state to properly
     // implement short cuts with keys that are only reachable via modifier keys
     key_ev.set_modifiers(expand_modifiers(modifier_state));
@@ -269,10 +300,13 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
     return old_state != modifier_state;
 }
 
-xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action)
+xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state)
 {
     auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
     auto mod_change = xkb_key_code_to_modifier(key_sym);
+
+    if (compose_state)
+        key_sym = compose_state->update_state(key_sym, action);
 
     if (action == mir_keyboard_action_up)
     {
@@ -286,4 +320,79 @@ xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code,
     }
 
     return key_sym;
+}
+
+mircv::XKBMapper::ComposeState* mircv::XKBMapper::get_compose_state(MirInputDeviceId id)
+{
+    auto dev_compose_state = device_composing.find(id);
+
+    if (dev_compose_state != end(device_composing))
+    {
+        return &dev_compose_state->second;
+    }
+    if (compose_table)
+    {
+        return
+            &device_composing.emplace(std::piecewise_construct,
+                                      std::forward_as_tuple(id),
+                                      std::forward_as_tuple(compose_table)).first->second;
+    }
+    return nullptr;
+}
+
+mircv::XKBMapper::ComposeState::ComposeState(XKBComposeTablePtr const& table) :
+    state{make_unique_compose_state(table)}
+{
+}
+
+void mircv::XKBMapper::ComposeState::update_and_map(MirEvent& event)
+{
+    auto& key_ev = *event.to_input()->to_keyboard();
+
+    auto const key_sym = key_ev.key_code();
+    auto const action = key_ev.action();
+    key_ev.set_key_code(update_state(key_sym, action));
+}
+
+xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action)
+{
+    // the state machine only cares about downs
+    if (action == mir_keyboard_action_down)
+    {
+        if (xkb_compose_state_feed(state.get(), mapped_key) == XKB_COMPOSE_FEED_ACCEPTED)
+        {
+            auto result =  xkb_compose_state_get_status(state.get());
+            if (result == XKB_COMPOSE_COMPOSED)
+            {
+                auto composed_key_sym = xkb_compose_state_get_one_sym(state.get());
+                last_composed_key = std::make_tuple(mapped_key, composed_key_sym);
+                return composed_key_sym;
+            }
+            else if (result == XKB_COMPOSE_COMPOSING)
+            {
+                consumed_keys.insert(mapped_key);
+                return XKB_KEY_NoSymbol;
+            }
+            else if (result == XKB_COMPOSE_CANCELLED)
+            {
+                consumed_keys.insert(mapped_key);
+                return XKB_KEY_NoSymbol;
+            }
+        }
+    }
+    else
+    {
+        if (last_composed_key.is_set() &&
+            mapped_key == std::get<0>(last_composed_key.value()))
+        {
+            if (action == mir_keyboard_action_up)
+                return std::get<1>(last_composed_key.consume());
+            else
+                return std::get<1>(last_composed_key.value());
+        }
+        if (consumed_keys.erase(mapped_key))
+            return XKB_KEY_NoSymbol;
+    }
+
+    return mapped_key;
 }
