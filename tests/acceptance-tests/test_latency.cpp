@@ -312,6 +312,27 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
 }
 
+TEST_F(ClientLatency, dropping_latency_is_limited_to_one)  // TODO
+{
+    using namespace testing;
+
+    auto stream = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(stream, 0);
+
+    do
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
+
+    auto max_latency = display.group.max_latency();
+    EXPECT_THAT(max_latency, Le(1u));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+}
+
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     using namespace testing;
