@@ -20,6 +20,7 @@
 #include "mir/scene/buffer_stream_factory.h"
 
 #include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
 
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
@@ -81,7 +82,7 @@ public:
 
     std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&) override
     {
-        return nullptr;
+        return std::make_shared<mtd::StubClientBuffers>();
     }
 
 private:

@@ -1,3 +1,4 @@
+
 /*
  * Copyright © 2015 Canonical Ltd.
  *
@@ -50,9 +51,10 @@ public:
     std::shared_ptr<mg::Platform> create_platform()
     {
       return create_host_platform(
-              std::make_shared<mir::options::ProgramOption>(),
-              std::make_shared<mtd::NullEmergencyCleanup>(),
-              mir::report::null_display_report());
+          std::make_shared<mir::options::ProgramOption>(),
+          std::make_shared<mtd::NullEmergencyCleanup>(),
+          mir::report::null_display_report(),
+          logger);
     }
 
     std::shared_ptr<ml::Logger> logger;
