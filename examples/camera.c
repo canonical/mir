@@ -373,15 +373,25 @@ int main(int argc, char *argv[])
     unsigned int win_height = 1;
 
     char const* dev_video = "/dev/video0";
+    mir_eglapp_bool ultrafast = 0;
     struct mir_eglapp_arg custom_args[] =
     {
         {"-d <path>", "=", &dev_video, "Path to camera device"},
+        {"-u", "!", &ultrafast, "Ultra fast mode (low resolution)"},
         {NULL, NULL, NULL, NULL},
     };
     if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
         return 1;
 
-    Camera *cam = open_camera(dev_video, camera_pref_resolution, 1);
+    // By default we prefer high resolution and low CPU usage but if you
+    // ask for ultrafast mode expect low resultion and high CPU usage...
+    enum CameraPref pref = camera_pref_resolution;
+    if (ultrafast)
+    {
+        pref = camera_pref_speed;
+        mir_surface_set_swapinterval(mir_eglapp_native_surface(), 0);
+    }
+    Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
