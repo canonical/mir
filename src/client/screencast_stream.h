@@ -20,7 +20,6 @@
 #define MIR_CLIENT_SCREENCAST_STREAM_H
 
 #include "mir_wait_handle.h"
-#include "client_buffer_depository.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"

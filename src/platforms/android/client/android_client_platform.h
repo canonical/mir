@@ -25,7 +25,6 @@ namespace mir
 namespace client
 {
 
-class ClientBufferDepository;
 namespace android
 {
 
