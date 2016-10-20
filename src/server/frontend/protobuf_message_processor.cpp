@@ -68,8 +68,6 @@ template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::pro
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 template<> struct result_ptr_t<mir::protobuf::PlatformOperationMessage> { typedef ::mir::protobuf::PlatformOperationMessage* type; };
 
-//The exchange_buffer and next_buffer calls can complete on a different thread than the
-//one the invocation was called on. Make sure to preserve the result resource. 
 template<class ParameterMessage>
 ParameterMessage parse_parameter(Invocation const& invocation)
 {
@@ -217,17 +215,13 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::create_surface, invocation);
         }
-        else if ("exchange_buffer" == invocation.method_name())
+        else if ("submit_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
             request.mutable_buffer()->clear_fd();
             for (auto& fd : side_channel_fds)
                 request.mutable_buffer()->add_fd(fd);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
-        }
-        else if ("submit_buffer" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::submit_buffer, invocation);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::submit_buffer, invocation.id(), &request);
         }
         else if ("allocate_buffers" == invocation.method_name())
         {
@@ -351,6 +345,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::confirm_base_display_configuration, invocation);
         }
+        else if ("cancel_base_display_configuration_preview" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::cancel_base_display_configuration_preview, invocation);
+        }
         else
         {
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
@@ -378,7 +376,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     sender->send_response(id, response, {extract_fds_from(response)});
 }
 
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Void> response)
 {
     send_response(id, response.get());
 }

@@ -1,4 +1,4 @@
-MIRPLATFORM_0.24 {
+MIRPLATFORM_0.25 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -10,8 +10,6 @@ MIRPLATFORM_0.24 {
     mir::graphics::Buffer::native_buffer_handle*;
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
-    mir::graphics::Buffer::stride*;
-    mir::graphics::Buffer::write*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;
@@ -28,7 +26,7 @@ MIRPLATFORM_0.24 {
     mir::graphics::DisplayBuffer::native_display_buffer*;
     mir::graphics::DisplayBuffer::operator*;
     mir::graphics::DisplayBuffer::orientation*;
-    mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
+    mir::graphics::DisplayBuffer::overlay*;
     mir::graphics::DisplayBuffer::view_area*;
     mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;
@@ -47,6 +45,7 @@ MIRPLATFORM_0.24 {
     mir::graphics::Display::create_hardware_cursor*;
     mir::graphics::Display::Display*;
     mir::graphics::Display::for_each_display_buffer*;
+    mir::graphics::Display::native_display*;
     mir::graphics::Display::pause*;
     mir::graphics::Display::register_configuration_change_handler*;
     mir::graphics::Display::register_pause_resume_handlers*;
@@ -57,16 +56,12 @@ MIRPLATFORM_0.24 {
     mir::graphics::EventHandlerRegister::register_fd_handler*;
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
+    mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::GLConfig::depth_buffer_bits*;
     mir::graphics::GLConfig::?GLConfig*;
     mir::graphics::GLConfig::GLConfig*;
     mir::graphics::GLConfig::operator*;
     mir::graphics::GLConfig::stencil_buffer_bits*;
-    mir::graphics::GLContext::?GLContext*;
-    mir::graphics::GLContext::GLContext*;
-    mir::graphics::GLContext::make_current*;
-    mir::graphics::GLContext::operator*;
-    mir::graphics::GLContext::release_current*;
     mir::graphics::GraphicBufferAllocator::alloc_buffer*;
     mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
     mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
@@ -95,6 +90,7 @@ MIRPLATFORM_0.24 {
     mir::graphics::Renderable::screen_position*;
     mir::graphics::Renderable::shaped*;
     mir::graphics::Renderable::transformation*;
+    mir::graphics::Renderable::swap_interval*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::options::arw_server_socket_opt*;
@@ -126,8 +122,10 @@ MIRPLATFORM_0.24 {
     mir::options::glog_stderrthreshold*;
     mir::options::platform_path*;
     mir::options::host_socket_opt*;
+    mir::options::nested_passthrough_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
+    mir::options::seat_report_opt*;
     mir::options::log_opt_value*;
     mir::options::lttng_opt_value*;
     mir::options::msg_processor_report_opt*;
@@ -135,7 +133,6 @@ MIRPLATFORM_0.24 {
     mir::options::no_server_socket_opt*;
     mir::options::platform_input_lib*;
     mir::options::off_opt_value*;
-    mir::options::offscreen_opt*;
     mir::options::Option::get*;
     mir::options::Option::is_set*;
     mir::options::Option::operator*;
@@ -162,7 +159,6 @@ MIRPLATFORM_0.24 {
     non-virtual?thunk?to?mir::graphics::DisplayConfiguration::valid*;
     non-virtual?thunk?to?mir::graphics::EventHandlerRegister::?EventHandlerRegister*;
     non-virtual?thunk?to?mir::graphics::GLConfig::?GLConfig*;
-    non-virtual?thunk?to?mir::graphics::GLContext::?GLContext*;
     non-virtual?thunk?to?mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
     non-virtual?thunk?to?mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     non-virtual?thunk?to?mir::graphics::Renderable::?Renderable*;
@@ -191,7 +187,6 @@ MIRPLATFORM_0.24 {
     typeinfo?for?mir::graphics::DisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::EventHandlerRegister;
     typeinfo?for?mir::graphics::GLConfig;
-    typeinfo?for?mir::graphics::GLContext;
     typeinfo?for?mir::graphics::GraphicBufferAllocator;
     typeinfo?for?mir::graphics::Platform;
     typeinfo?for?mir::graphics::PlatformIpcOperations;
@@ -218,7 +213,6 @@ MIRPLATFORM_0.24 {
     vtable?for?mir::graphics::DisplayConfigurationPolicy;
     vtable?for?mir::graphics::EventHandlerRegister;
     vtable?for?mir::graphics::GLConfig;
-    vtable?for?mir::graphics::GLContext;
     vtable?for?mir::graphics::GraphicBufferAllocator;
     vtable?for?mir::graphics::Platform;
     vtable?for?mir::graphics::PlatformIpcOperations;
@@ -279,6 +273,10 @@ MIRPLATFORM_0.24 {
     android::isEligibleBuiltInKeyboard*;
     __android_log_assert;
     __android_log_print;
+
+    mir::graphics::AtomicFrame::load*;
+    mir::graphics::AtomicFrame::store*;
+    mir::graphics::AtomicFrame::increment*
   };
  local: *;
 };

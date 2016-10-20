@@ -17,10 +17,10 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/frame.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
 #include "virtual_output.h"
@@ -117,13 +117,14 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     geom::Displacement displacement,
+    std::shared_ptr<mga::NativeWindowReport> const& report,
     mga::OverlayOptimization overlay_option)
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
     auto cache = std::make_shared<mga::InterpreterCache>();
-    mga::DeviceQuirks quirks(mga::PropertiesOps{});
+    mga::DeviceQuirks quirks(mga::PropertiesOps{}, gl_context);
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache, quirks); 
-    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
+    auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter, report);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
         display_buffer_builder.create_layer_list(),
@@ -143,13 +144,17 @@ mga::Display::Display(
     std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<DisplayReport> const& display_report,
+    std::shared_ptr<NativeWindowReport> const& native_window_report,
     mga::OverlayOptimization overlay_option) :
     display_report{display_report},
+    native_window_report{native_window_report},
     display_buffer_builder{display_buffer_builder},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
         std::bind(&mga::Display::on_hotplug, this),
-        std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
+        std::bind(&mga::Display::on_vsync, this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2))},
     config(
         hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
@@ -169,6 +174,7 @@ mga::Display::Display(
             gl_program_factory,
             gl_context,
             geom::Displacement{0,0},
+            native_window_report,
             overlay_option),
             [this] { on_hotplug(); }), //Recover from exception by forcing a configuration change
     overlay_option(overlay_option)
@@ -187,6 +193,7 @@ mga::Display::Display(
                 gl_program_factory,
                 gl_context,
                 geom::Displacement{0,0},
+                native_window_report,
                 overlay_option));
     }
 
@@ -254,6 +261,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
                 gl_program_factory,
                 gl_context,
                 config.external().top_left - origin,
+                native_window_report,
                 overlay_option));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);
@@ -291,9 +299,32 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name) const
+void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
 {
-    display_report->report_vsync(as_output_id(name).as_value());
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    /*
+     * XXX It's presently useful but idealistically inefficient that we
+     *     get a callback on every frame, even when the compositor is idle.
+     *     (LP: #1374318)
+     *     Although we possibly shouldn't fix that at all because the
+     *     call to increment_with_timestamp would produce incorrect MSC values
+     *     if it were to miss a physical frame. The X11 platform has that
+     *     problem already, but it's less important for production use than
+     *     Android.
+     */
+    auto& f = last_frame[as_output_id(name).as_value()];
+    f.increment_with_timestamp(timestamp);
+    display_report->report_vsync(as_output_id(name).as_value(), f.load());
+}
+
+mg::Frame mga::Display::last_frame_on(unsigned output_id) const
+{
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    auto last = last_frame.find(output_id);
+    if (last == last_frame.end())
+         return {};  // Not an error. It might be a valid output_id pre-vsync
+    else
+         return last->second.load();
 }
 
 void mga::Display::register_configuration_change_handler(
@@ -329,11 +360,6 @@ auto mga::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
-{
-    return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
-}
-
 std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width, int height)
 {
     auto enable_virtual_output = [this, width, height]
@@ -347,4 +373,20 @@ std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width
         on_hotplug();
     };
     return {std::make_unique<mga::VirtualOutput>(enable_virtual_output, disable_virtual_output)};
+}
+
+mg::NativeDisplay* mga::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
+{
+    return std::make_unique<mga::PbufferGLContext>(gl_context);
+}
+
+bool mga::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
 }

@@ -20,7 +20,13 @@
 #define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/client_types_nbs.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/nested_context.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include <memory>
 #include <vector>
@@ -33,10 +39,17 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+class BufferProperties;
  
 namespace nested
 {
+using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
+
+class HostStream;
 class HostSurface;
+class HostChain;
+class HostSurfaceSpec;
+class NativeBuffer;
 class HostConnection : public NestedContext
 {
 public:
@@ -46,13 +59,25 @@ public:
     virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
     virtual void apply_display_config(MirDisplayConfiguration&) = 0;
+    virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
+    virtual std::unique_ptr<HostChain> create_chain() const = 0;
+    virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
     virtual std::shared_ptr<HostSurface> create_surface(
-        int width, int height, MirPixelFormat pf, char const* name,
-        MirBufferUsage usage, uint32_t output_id) = 0;
+        std::shared_ptr<HostStream> const& stream,
+        geometry::Displacement stream_displacement,
+        graphics::BufferProperties properties,
+        char const* name, uint32_t output_id) = 0;
 
     virtual void set_cursor_image(CursorImage const& image) = 0;
     virtual void hide_cursor() = 0;
     virtual auto graphics_platform_library() -> std::string = 0;
+
+    virtual UniqueInputConfig create_input_device_config() = 0;
+    virtual void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) = 0;
+    virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
+    virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
+    virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
+    virtual bool supports_passthrough() = 0;
 
 protected:
     HostConnection() = default;

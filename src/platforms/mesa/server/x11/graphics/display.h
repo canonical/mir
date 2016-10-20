@@ -20,85 +20,66 @@
 #define MIR_GRAPHICS_X_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir_toolkit/common.h"
-#include "display_group.h"
 #include "mir/geometry/size.h"
+#include "mir/renderer/gl/context_source.h"
+#include "mir_toolkit/common.h"
+#include "egl_helper.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
+
+class AtomicFrame;
+class GLConfig;
+class DisplayReport;
+
 namespace X
 {
 
-class X11EGLDisplay
-{
-public:
-    X11EGLDisplay(::Display* x_dpy);
-    ~X11EGLDisplay();
-
-    operator EGLDisplay() const;
-
-private:
-    EGLDisplay const egl_dpy;
-};
+class DisplayBuffer;
 
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, mir::geometry::Size const size);
+    X11Window(::Display* const x_dpy,
+              EGLDisplay egl_dpy,
+              geometry::Size const size,
+              EGLConfig const egl_cfg);
     ~X11Window();
 
     operator Window() const;
-    EGLConfig egl_config() const;
     unsigned long red_mask() const;
 
 private:
     ::Display* const x_dpy;
     Window win;
-    EGLConfig config;
     unsigned long r_mask;
 };
 
-class X11EGLContext
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
-    X11EGLContext(EGLDisplay egl_dpy, EGLConfig config);
-    ~X11EGLContext();
-
-    operator EGLContext() const;
-
-private:
-    EGLContext egl_ctx;
-    EGLDisplay const egl_dpy;
-};
-
-class X11EGLSurface
-{
-public:
-    X11EGLSurface(EGLDisplay egl_dpy, EGLConfig config, Window win);
-    ~X11EGLSurface();
-
-    operator EGLSurface() const;
-
-private:
-    EGLDisplay const egl_dpy;
-    EGLSurface const egl_surf;
-};
-
-class Display : public graphics::Display
-{
-public:
-    explicit Display(::Display* x_dpy, mir::geometry::Size const size);
+    explicit Display(::Display* x_dpy,
+                     geometry::Size const requested_size,
+                     std::shared_ptr<GLConfig> const& gl_config,
+                     std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
+
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) const override;
+
     void configure(graphics::DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
@@ -114,21 +95,31 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<graphics::GLContext> create_gl_context() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
+    NativeDisplay* native_display() override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+
+    Frame last_frame_on(unsigned output_id) const override;
+
 private:
-    X11EGLDisplay const egl_display;
-    mir::geometry::Size const size;
-    X11Window const win;
-    X11EGLContext egl_context;
-    X11EGLSurface egl_surface;
+    helpers::EGLHelper shared_egl;
+    ::Display* const x_dpy;
+    mir::geometry::Size const actual_size;
+    std::shared_ptr<GLConfig> const gl_config;
+    float pixel_width;
+    float pixel_height;
+    std::unique_ptr<X11Window> win;
     MirPixelFormat pf;
-    std::unique_ptr<DisplayGroup> display_group;
+    std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation; //TODO: keep entire current display configuration
+    std::shared_ptr<AtomicFrame> last_frame;
+    std::unique_ptr<DisplayBuffer> display_buffer;
 };
 
 }
+
 }
 }
 #endif /* MIR_GRAPHICS_X_DISPLAY_H_ */

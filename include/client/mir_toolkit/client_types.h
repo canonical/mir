@@ -200,7 +200,8 @@ __attribute__ ((deprecated))
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,
-    mir_platform_type_android
+    mir_platform_type_android,
+    mir_platform_type_eglstream,
 } MirPlatformType;
 
 typedef struct MirPlatformPackage
@@ -267,43 +268,23 @@ typedef struct MirDisplayCard
 
 typedef enum MirDisplayOutputType
 {
-    mir_display_output_type_unknown,
-    mir_display_output_type_vga,
-    mir_display_output_type_dvii,
-    mir_display_output_type_dvid,
-    mir_display_output_type_dvia,
-    mir_display_output_type_composite,
-    mir_display_output_type_svideo,
-    mir_display_output_type_lvds,
-    mir_display_output_type_component,
-    mir_display_output_type_ninepindin,
-    mir_display_output_type_displayport,
-    mir_display_output_type_hdmia,
-    mir_display_output_type_hdmib,
-    mir_display_output_type_tv,
-    mir_display_output_type_edp,
-    mir_display_output_type_virtual
+    mir_display_output_type_unknown     = mir_output_type_unknown,
+    mir_display_output_type_vga         = mir_output_type_vga,
+    mir_display_output_type_dvii        = mir_output_type_dvii,
+    mir_display_output_type_dvid        = mir_output_type_dvid,
+    mir_display_output_type_dvia        = mir_output_type_dvia,
+    mir_display_output_type_composite   = mir_output_type_composite,
+    mir_display_output_type_svideo      = mir_output_type_svideo,
+    mir_display_output_type_lvds        = mir_output_type_lvds,
+    mir_display_output_type_component   = mir_output_type_component,
+    mir_display_output_type_ninepindin  = mir_output_type_ninepindin,
+    mir_display_output_type_displayport = mir_output_type_displayport,
+    mir_display_output_type_hdmia       = mir_output_type_hdmia,
+    mir_display_output_type_hdmib       = mir_output_type_hdmib,
+    mir_display_output_type_tv          = mir_output_type_tv,
+    mir_display_output_type_edp         = mir_output_type_edp,
+    mir_display_output_type_virtual     = mir_output_type_virtual
 } MirDisplayOutputType;
-
-typedef enum MirOutputType
-{
-    mir_output_type_unknown,
-    mir_output_type_vga,
-    mir_output_type_dvii,
-    mir_output_type_dvid,
-    mir_output_type_dvia,
-    mir_output_type_composite,
-    mir_output_type_svideo,
-    mir_output_type_lvds,
-    mir_output_type_component,
-    mir_output_type_ninepindin,
-    mir_output_type_displayport,
-    mir_output_type_hdmia,
-    mir_output_type_hdmib,
-    mir_output_type_tv,
-    mir_output_type_edp,
-    mir_output_type_virtual
-} MirOutputType;
 
 typedef enum MirOutputConnectionState
 {
@@ -471,6 +452,18 @@ typedef enum MirDisplayConfigurationError {
      * Client is not permitted to change global display configuration
      */
     mir_display_configuration_error_unauthorized,
+    /**
+     * A global configuration change request is already pending
+     */
+    mir_display_configuration_error_in_progress,
+    /**
+     * A cancel request was received, but no global display configuration preview is in progress
+     */
+    mir_display_configuration_error_no_preview_in_progress,
+    /**
+     * Display configuration was attempted but was rejected by the hardware
+     */
+     mir_display_configuration_error_rejected_by_hardware
 } MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(

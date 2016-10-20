@@ -23,6 +23,8 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
+#include "software_buffer.h"
+#include "gbm_format_conversions.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -287,11 +289,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     auto shm_file =
         std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
-    auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
-                                    buffer_properties.format);
-
-    return buffer;
+    return std::make_shared<mgm::SoftwareBuffer>(
+        std::move(shm_file),
+        buffer_properties.size,
+        buffer_properties.format);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()

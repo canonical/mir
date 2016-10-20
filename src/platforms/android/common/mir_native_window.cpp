@@ -19,6 +19,7 @@
 #include "mir_native_window.h"
 #include "android_driver_interpreter.h"
 #include "sync_fence.h"
+#include "native_window_report.h"
 
 #define MIR_LOG_COMPONENT "AndroidWindow"
 #include "mir/uncaught.h"
@@ -88,7 +89,7 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer, -1);
+    return self->queueBufferDeprecated(buffer);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
@@ -115,7 +116,8 @@ int lockBuffer_static(struct ANativeWindow* /*window*/,
 int cancelBuffer_deprecated_static(struct ANativeWindow* window,
                         struct ANativeWindowBuffer* buffer)
 {
-    return cancelBuffer_static(window, buffer, -1);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
+    return self->cancelBufferDeprecated(buffer);
 }
 
 int cancelBuffer_static(struct ANativeWindow* window,
@@ -126,8 +128,12 @@ int cancelBuffer_static(struct ANativeWindow* window,
 }
 }
 
-mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
- : driver_interpreter(interpreter), sync_ops(std::make_shared<mga::RealSyncFileOps>())
+mga::MirNativeWindow::MirNativeWindow(
+    std::shared_ptr<AndroidDriverInterpreter> const& interpreter,
+    std::shared_ptr<NativeWindowReport> const& report) :
+    driver_interpreter(interpreter),
+    report(report),
+    sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
@@ -177,6 +183,8 @@ try
         *fence_fd = buffer->copy_fence();
         *buffer_to_driver = buffer->anwb();
     }
+
+    report->buffer_event(mga::BufferEvent::Dequeue, this, *buffer_to_driver, *fence_fd);
     return 0;
 }
 catch (std::exception const& e)
@@ -199,6 +207,7 @@ try
         *buffer_to_driver = buffer->anwb();
         buffer->ensure_available_for(mga::BufferAccess::write);
     }
+    report->buffer_event(mga::BufferEvent::Dequeue, this, *buffer_to_driver);
     return 0;
 }
 catch (std::exception const& e)
@@ -210,7 +219,21 @@ catch (std::exception const& e)
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
 try
 {
+    report->buffer_event(mga::BufferEvent::Queue, this, buffer, fence);
     driver_interpreter->driver_returns_buffer(buffer, fence);
+    return 0;
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+    return -1;
+}
+
+int mga::MirNativeWindow::queueBufferDeprecated(struct ANativeWindowBuffer* buffer)
+try
+{
+    report->buffer_event(mga::BufferEvent::Queue, this, buffer);
+    driver_interpreter->driver_returns_buffer(buffer, -1);
     return 0;
 }
 catch (std::exception const& e)
@@ -222,9 +245,23 @@ catch (std::exception const& e)
 int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
 try
 {
+    report->buffer_event(mga::BufferEvent::Cancel, this, buffer, fence);
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence));
     sync_fence.wait();
 
+    cancelled_buffers.push_back(buffer);
+    return 0;
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
+    return -1;
+}
+
+int mga::MirNativeWindow::cancelBufferDeprecated(struct ANativeWindowBuffer* buffer)
+try
+{
+    report->buffer_event(mga::BufferEvent::Cancel, this, buffer);
     cancelled_buffers.push_back(buffer);
     return 0;
 }
@@ -238,6 +275,7 @@ int mga::MirNativeWindow::query(int key, int* value) const
 try
 {
     *value = driver_interpreter->driver_requests_info(key);
+    report->query_event(this, key, *value);
     return 0;
 }
 catch (std::exception const& e)
@@ -256,13 +294,24 @@ try
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_interpreter->dispatch_driver_request_format(va_arg(args, int));
+        {
+            auto format = va_arg(args, int);
+            driver_interpreter->dispatch_driver_request_format(format);
+            report->perform_event(this, key, {format});
             break;
+        }
         case NATIVE_WINDOW_SET_BUFFER_COUNT:
-            driver_interpreter->dispatch_driver_request_buffer_count(va_arg(args, int));
+        {
+            auto count = va_arg(args, int);
+            driver_interpreter->dispatch_driver_request_buffer_count(count);
+            report->perform_event(this, key, {count});
             break;
+        }
         default:
+        {
+            report->perform_event(this, key, {});
             break;
+        }
     }
 
     va_end(args);
@@ -272,4 +321,10 @@ catch (std::exception const& e)
 {
     MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return -1;
+}
+
+void mga::MirNativeWindow::use_native_surface(
+    std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
+{
+    driver_interpreter = interpreter;
 }

@@ -20,7 +20,7 @@
 
 #include "mir/compositor/compositor_id.h"
 #include "mir/graphics/buffer_id.h"
-#include "buffer_bundle.h"
+#include "buffer_acquisition.h"
 #include <memory>
 #include <mutex>
 #include <deque>
@@ -41,6 +41,7 @@ public:
         MultiMonitorMode mode,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
+    ~MultiMonitorArbiter();
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;

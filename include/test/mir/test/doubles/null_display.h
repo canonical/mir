@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/test/doubles/null_display_configuration.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -32,7 +33,9 @@ namespace test
 namespace doubles
 {
 
-class NullDisplay : public graphics::Display
+class NullDisplay : public graphics::Display,
+                    public graphics::NativeDisplay,
+                    public renderer::gl::ContextSource
 {
  public:
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
@@ -44,6 +47,10 @@ class NullDisplay : public graphics::Display
         return std::unique_ptr<graphics::DisplayConfiguration>(
             new NullDisplayConfiguration
         );
+    }
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) const override
+    {
+        return false;
     }
     void configure(graphics::DisplayConfiguration const&)  override{}
     void register_configuration_change_handler(
@@ -63,13 +70,21 @@ class NullDisplay : public graphics::Display
     {
          return {}; 
     }
-    std::unique_ptr<graphics::GLContext> create_gl_context() override
-    {
-        return std::unique_ptr<NullGLContext>{new NullGLContext()};
-    }
     std::unique_ptr<graphics::VirtualOutput> create_virtual_output(int /*width*/, int /*height*/) override
     {
         return nullptr;
+    }
+    graphics::NativeDisplay* native_display() override
+    {
+        return this;
+    }
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override
+    {
+        return std::unique_ptr<NullGLContext>{new NullGLContext()};
+    }
+    graphics::Frame last_frame_on(unsigned) const override
+    {
+        return {};
     }
     NullDisplaySyncGroup group;
 };

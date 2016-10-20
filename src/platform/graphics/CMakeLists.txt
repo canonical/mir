@@ -7,10 +7,12 @@ set(
   egl_resources.cpp
   egl_error.cpp
   display_configuration.cpp
+  gamma_curves.cpp
   buffer_basic.cpp
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
   platform_probe.cpp
+  atomic_frame.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT

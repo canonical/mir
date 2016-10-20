@@ -28,6 +28,9 @@
 #include <system_error>
 #include <chrono>
 
+#define MIR_LOG_COMPONENT "android/server"
+#include "mir/log.h"
+
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
@@ -41,6 +44,10 @@ MirPixelFormat determine_hwc_fb_format()
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_FRAMEBUFFER_TARGET_ANDROID, EGL_TRUE,
+        EGL_RECORDABLE_ANDROID, EGL_TRUE,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
         EGL_NONE
     };
 
@@ -57,13 +64,18 @@ MirPixelFormat determine_hwc_fb_format()
         int visual_id;
         eglGetConfigAttrib(egl_display, fb_egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
         fb_format = mga::to_mir_format(visual_id);
+        mir::log_info("Found %d matching egl configs", matching_configs);
+        mir::log_info("Android visual ID for selected display format : %d", visual_id);
     }
     else
     {
+        mir::log_info("No matching egl configs found");
         //we couldn't figure out the fb format via egl. In this case, we
         //assume abgr_8888. HWC api really should provide this information directly.
         fb_format = mir_pixel_format_abgr_8888;
     }
+
+    mir::log_info("Selected Mir display format : %d", fb_format);
 
     eglTerminate(egl_display);
     return fb_format;
@@ -84,6 +96,15 @@ mga::HwcBlankingControl::HwcBlankingControl(
     hwc_device{hwc_device},
     off{false},
     format(determine_hwc_fb_format())
+{
+}
+
+mga::HwcBlankingControl::HwcBlankingControl(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
+    MirPixelFormat format) :
+    hwc_device{hwc_device},
+    off{false},
+    format{format}
 {
 }
 
@@ -137,7 +158,7 @@ mg::DisplayConfigurationOutput populate_config(
         type = mg::DisplayConfigurationOutputType::displayport;
         form_factor = mir_form_factor_monitor;
     }
-    
+
     return {
         as_output_id(name),
         mg::DisplayConfigurationCardId{0},
@@ -154,7 +175,10 @@ mg::DisplayConfigurationOutput populate_config(
         external_mode,
         mir_orientation_normal,
         1.0f,
-        form_factor
+        form_factor,
+        mir_subpixel_arrangement_unknown,
+        {},
+        mir_output_gamma_unsupported
     };
 }
 
@@ -203,13 +227,13 @@ mga::ConfigChangeSubscription subscribe_to_config_changes(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device,
     void const* subscriber,
     std::function<void()> const& hotplug,
-    std::function<void(mga::DisplayName)> const& vsync)
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return std::make_shared<
         mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
         [hotplug, vsync, subscriber, hwc_device]{
             hwc_device->subscribe_to_events(subscriber,
-                [vsync](mga::DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [vsync](mga::DisplayName name, mg::Frame::Timestamp ts){ vsync(name, ts); },
                 [hotplug](mga::DisplayName, bool){ hotplug(); },
                 []{});
         },
@@ -226,7 +250,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
     {
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
+        else
             return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
@@ -235,7 +259,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }
@@ -298,7 +322,7 @@ mg::DisplayConfigurationOutput mga::HwcPowerModeControl::active_config_for(Displ
 
 mga::ConfigChangeSubscription mga::HwcPowerModeControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }

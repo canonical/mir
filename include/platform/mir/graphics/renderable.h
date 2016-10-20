@@ -70,6 +70,7 @@ public:
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
 
+    virtual unsigned int swap_interval() const = 0;
 protected:
     Renderable() = default;
     Renderable(Renderable const&) = delete;

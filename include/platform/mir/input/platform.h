@@ -75,9 +75,6 @@ public:
 
     /*!
      * Request the platform to start monitoring for devices.
-     *
-     * \param input_device_registry should be informed about available input devices
-     * \param trigger_registry should be used to register event sources that may indicate a changes of the available devices
      */
     virtual void start() = 0;
     /*!
@@ -109,6 +106,13 @@ typedef ModuleProperties const*(*DescribeModule)();
 
 extern "C"
 {
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
 /**
  * Function used to initialize an input platform.
  *
@@ -116,7 +120,6 @@ extern "C"
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
  * \param [in] input_device_registry object to register input devices handled by this platform
  * \param [in] report the object to use to report interesting events from the input subsystem
- * \param [in] platform_policy object to use to obtain input related configuration and input event filtering interfaces
  *
  * This factory function needs to be implemented by each platform.
  *
@@ -159,5 +162,9 @@ mir::input::PlatformPriority probe_input_platform(mir::options::Option const& op
  * \ingroup platform_enablement
  */
 mir::ModuleProperties const* describe_input_module();
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 }
 #endif // MIR_INPUT_PLATFORM_H_

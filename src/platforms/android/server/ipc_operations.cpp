@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/libname.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "android_native_buffer.h"
 #include "ipc_operations.h"
 
@@ -34,18 +35,18 @@ namespace mga = mir::graphics::android;
 
 void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer.native_buffer_handle());
 
     native_buffer->wait_for_unlock_by_gpu();
     mir::Fd fence_fd(native_buffer->copy_fence());
     if (fence_fd != mir::Fd::invalid)
     {
-        msg.pack_data(static_cast<int>(mga::BufferFlag::fenced));
+        msg.pack_flags(mir_buffer_flag_fenced);
         msg.pack_fd(fence_fd);
     }
     else
     {
-        msg.pack_data(static_cast<int>(mga::BufferFlag::unfenced));
+        msg.pack_flags(0);
     }
 
     if (msg_type == mg::BufferIpcMsgType::full_msg)
@@ -62,7 +63,9 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
             msg.pack_data(buffer_handle->data[offset++]);
         }
 
-        msg.pack_stride(buffer.stride());
+        mir::geometry::Stride byte_stride{
+            native_buffer->anwb()->stride * MIR_BYTES_PER_PIXEL(buffer.pixel_format())};
+        msg.pack_stride(byte_stride);
         msg.pack_size(buffer.size());
     }
 }

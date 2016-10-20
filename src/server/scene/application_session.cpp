@@ -328,6 +328,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
                     surface.first,
                     output_properties->dpi,
                     output_properties->scale,
+                    output_properties->refresh_rate,
                     output_properties->form_factor,
                     static_cast<uint32_t>(output_properties->id.as_value())
                     ));
@@ -446,4 +447,9 @@ void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
 std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
 {
     return (*buffers)[id];
+}
+
+void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)
+{
+    event_sink->handle_error(error);
 }

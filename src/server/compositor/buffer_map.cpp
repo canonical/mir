@@ -48,18 +48,28 @@ mc::BufferMap::BufferMap(
 
 mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto buffer = allocator->alloc_buffer(properties);
-    buffers[buffer->id()] = {buffer, Owner::client};
-    sink->add_buffer(*buffer);
-    return buffer->id();
+    try
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        auto buffer = allocator->alloc_buffer(properties);
+        buffers[buffer->id()] = {buffer, Owner::client};
+        if (auto s = sink.lock())
+            s->add_buffer(*buffer);
+        return buffer->id();
+    } catch (std::exception& e)
+    {
+        if (auto s = sink.lock())
+            s->error_buffer(properties, e.what());
+        throw;
+    }
 }
 
 void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
-    sink->remove_buffer(*it->second.buffer);
+    if (auto s = sink.lock())
+        s->remove_buffer(*it->second.buffer);
     buffers.erase(it); 
 }
 
@@ -72,7 +82,8 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
         auto buffer = it->second.buffer;
         it->second.owner = Owner::client;
         lk.unlock();
-        sink->update_buffer(*buffer);
+        if (auto s = sink.lock())
+            s->update_buffer(*buffer);
     }
 }
 

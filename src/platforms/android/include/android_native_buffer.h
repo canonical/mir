@@ -32,7 +32,7 @@ namespace android
 {
 class Fence;
 
-struct AndroidNativeBuffer : public graphics::NativeBuffer
+struct AndroidNativeBuffer : public NativeBuffer
 {
     AndroidNativeBuffer(
         std::shared_ptr<ANativeWindowBuffer> const& handle,
@@ -45,7 +45,9 @@ struct AndroidNativeBuffer : public graphics::NativeBuffer
     NativeFence copy_fence() const;
 
     void ensure_available_for(BufferAccess);
+    bool ensure_available_for(android::BufferAccess intent, std::chrono::milliseconds timeout);
     void update_usage(NativeFence& merge_fd, BufferAccess);
+    void reset_fence();
 
     void lock_for_gpu();
     void wait_for_unlock_by_gpu();

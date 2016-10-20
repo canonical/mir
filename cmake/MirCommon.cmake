@@ -29,6 +29,7 @@ if(ENABLE_MEMCHECK_OPTION)
     set(VALGRIND_CMD ${VALGRIND_CMD} "--num-callers=128")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_generic")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_glibc_2.23")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_libhybris")
     if (TARGET_ARCH STREQUAL "arm-linux-gnueabihf")
       set(VALGRIND_CMD ${VALGRIND_CMD} "--suppressions=${CMAKE_SOURCE_DIR}/tools/valgrind_suppressions_armhf")
     endif()
@@ -117,10 +118,10 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   list_to_string("${test_cmd_no_memcheck}" "" discover_cmd_no_memcheck)
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name} -- ${discover_cmd}\n")
   if (test_no_memcheck_filter)
     file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} -- ${discover_cmd_no_memcheck}\n")
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name}_no_memcheck -- ${discover_cmd_no_memcheck}\n")
   endif()
 endfunction ()
 
@@ -169,11 +170,7 @@ function (mir_precompiled_header TARGET HEADER)
     set(TARGET_COMPILE_DEFINITIONS "$<$<BOOL:${TARGET_COMPILE_DEFINITIONS}>:-D$<JOIN:${TARGET_COMPILE_DEFINITIONS},\n-D>\n>")
 
     foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
-      if (${dir} MATCHES "usr/include")
-        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -isystem ${dir}")
-      else()
-        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
-      endif()
+      set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
     endforeach()
 
     # So.
@@ -303,22 +300,4 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
     VERBATIM
   )
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
-endfunction()
-
-function (mir_add_library_with_symbols TARGET TYPE SYMBOLS_FILE)
-  # Bask in the majesty of CMake!
-  #
-  # You can't just depend on an arbitary file. Oh, no!
-  #
-  # Instead, we add a custom command to generate an empty C++ source
-  # file, depending on the symbols file, and then add that empty C++
-  # source to the library.
-  set(HACK_OUTPUT ${TARGET}_abysmal_hack.cpp)
-
-  add_custom_command(OUTPUT ${HACK_OUTPUT}
-    COMMAND touch ${HACK_OUTPUT}
-    DEPENDS ${SYMBOLS_FILE}
-  )
-
-  add_library(${TARGET} ${TYPE} ${HACK_OUTPUT} ${ARGN})
 endfunction()

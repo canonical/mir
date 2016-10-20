@@ -37,7 +37,7 @@ namespace mt = mir::test;
 
 namespace
 {
-std::chrono::seconds const timeout{10};
+std::chrono::seconds const timeout{20};
 }
 
 mtf::AsyncServerRunner::AsyncServerRunner()

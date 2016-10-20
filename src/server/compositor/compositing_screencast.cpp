@@ -24,7 +24,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"

@@ -127,7 +127,7 @@ private:
     std::string error_message;
 
     std::shared_ptr<ClientBuffer> current_buffer;
-    int32_t current_buffer_id;
+    int32_t current_buffer_id = -1;
 };
 
 }

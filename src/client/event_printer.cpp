@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -17,6 +17,8 @@
  */
 
 #include "mir/event_printer.h"
+
+#include "mir/events/surface_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
@@ -216,7 +218,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
                 << mir_keyboard_event_action(key_event)
                 << ", code=" << mir_keyboard_event_key_code(key_event)
                 << ", scan=" << mir_keyboard_event_scan_code(key_event) << ", modifiers=" << std::hex
-                << mir_keyboard_event_modifiers(key_event) << ')';
+                << mir_keyboard_event_modifiers(key_event) << std::dec << ')';
         }
     case mir_input_event_type_touch:
         {
@@ -321,6 +323,45 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceEvent const& event)
     return out << ')';
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirSurfacePlacementEvent const& event)
+{
+    auto const& placement = event.placement();
+    return out << "surface_placement_event({"
+               << placement.left << ", "
+               << placement.top << ", "
+               << placement.width << ", "
+               << placement.height << "})";
+}
+
+std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const& event)
+{
+    out << "input_device_state(ts="
+        << mir_input_device_state_event_time(&event)
+        << ", mod=" << MirInputEventModifier(mir_input_device_state_event_modifiers(&event))
+        << ", btns=" << mir_input_device_state_event_pointer_buttons(&event)
+        << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_x)
+        << ", y=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_y)
+        << " [";
+
+    for (size_t size = mir_input_device_state_event_device_count(&event), index = 0; index != size; ++index)
+    {
+        out << mir_input_device_state_event_device_id(&event, index) 
+            << " btns=" << mir_input_device_state_event_device_pointer_buttons(&event, index)
+            << " pressed=(";
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(&event, index);
+        for (uint32_t i = 0; i < key_count; i++)
+        {
+            out << mir_input_device_state_event_device_pressed_keys_for_index(&event, index, i);
+            if (i + 1 < key_count)
+                out << ", ";
+        }
+        out << ")";
+        if (index + 1 < size)
+            out << ", ";
+    }
+    return out << "]";
+}
+
 #define PRINT_EVENT(type) case mir_event_type_ ## type : return out << *mir_event_get_ ## type ## _event(&event);
 
 std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
@@ -336,7 +377,9 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(close_surface);
 #pragma GCC diagnostic pop
         PRINT_EVENT(input);
+        PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
+        PRINT_EVENT(surface_placement);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:

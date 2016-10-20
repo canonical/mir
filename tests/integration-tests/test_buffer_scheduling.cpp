@@ -19,6 +19,7 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/buffer_factory.h"
@@ -42,6 +43,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mrs = mir::renderer::software;
 using namespace testing;
 
 namespace
@@ -211,9 +213,11 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
+    void error_buffer(mg::BufferProperties const&, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
+    void handle_error(mir::ClientVisibleError const&) {}
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
     void send_ping(int32_t) {}
 
@@ -273,7 +277,7 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(mcl::Buffer& buffer)
+    void submit_buffer(mcl::MirBuffer& buffer)
     {
         mp::Buffer buffer_req;
         buffer_req.set_buffer_id(buffer.rpc_id());
@@ -313,7 +317,7 @@ struct ScheduledProducer : ProducerSystem
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
                 auto& ipc_buffer = request.buffer();
-                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                std::shared_ptr<mcl::MirBuffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }
@@ -329,6 +333,10 @@ struct ScheduledProducer : ProducerSystem
         {
             vault.set_size(sz);
         });
+    }
+    ~ScheduledProducer()
+    {
+        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
     }
 
     bool can_produce()
@@ -462,9 +470,8 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     BufferScheduling()
     {
         ipc = std::make_shared<StubIpcSystem>();
-        map = std::make_shared<mc::BufferMap>(
-                std::make_shared<StubEventSink>(ipc),
-                std::make_shared<mtd::StubBufferAllocator>());
+        sink = std::make_shared<StubEventSink>(ipc);
+        map = std::make_shared<mc::BufferMap>(sink, std::make_shared<mtd::StubBufferAllocator>());
         auto submit_stream = std::make_shared<mc::Stream>(
             drop_policy,
             map,
@@ -521,6 +528,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
 
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mf::BufferSink> sink;
     std::unique_ptr<ProducerSystem> producer;
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -122,6 +122,11 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(state);
     SERIALIZE_OPTION_IF_SET(pref_orientation);
     SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(placement_hints);
+    SERIALIZE_OPTION_IF_SET(surface_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_x);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_y);
     SERIALIZE_OPTION_IF_SET(min_width);
     SERIALIZE_OPTION_IF_SET(min_height);
     SERIALIZE_OPTION_IF_SET(max_width);
@@ -129,6 +134,7 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(width_inc);
     SERIALIZE_OPTION_IF_SET(height_inc);
     SERIALIZE_OPTION_IF_SET(shell_chrome);
+    SERIALIZE_OPTION_IF_SET(confine_pointer);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -284,6 +290,7 @@ MirConnection::MirConnection(
         input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
+        error_handler{conf.the_error_handler()},
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
@@ -363,8 +370,6 @@ mf::SurfaceId MirConnection::next_error_id(std::unique_lock<std::mutex> const&)
 void MirConnection::surface_created(SurfaceCreationRequest* request)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    std::shared_ptr<MirSurface> surf {nullptr};
-    std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
     //make sure this request actually was made.
     auto request_it = std::find_if(surface_requests.begin(), surface_requests.end(),
         [&request](std::shared_ptr<MirConnection::SurfaceCreationRequest> r){ return request == r.get(); });
@@ -375,32 +380,32 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     auto callback = request->cb;
     auto context = request->context;
     auto const& spec = request->spec;
+    std::string name{spec.surface_name.is_set() ?
+                     spec.surface_name.value() : ""};
 
-    try
+    std::shared_ptr<mcl::ClientBufferStream> default_stream {nullptr};
+    if (surface_proto->buffer_stream().has_id())
     {
-        std::string name{spec.surface_name.is_set() ?
-                         spec.surface_name.value() : ""};
-
-        if (surface_proto->has_buffer_stream())
+        try
         {
-            stream = std::make_shared<mcl::BufferStream>(
+            default_stream = std::make_shared<mcl::BufferStream>(
                 this, request->wh, server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
                 mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+            surface_map->insert(default_stream->rpc_id(), default_stream);
+        }
+        catch (std::exception const& error)
+        {
+            if (!surface_proto->has_error())
+                surface_proto->set_error(error.what());
+            // Clean up surface_proto's direct fds; BufferStream has cleaned up any owned by
+            // surface_proto->buffer_stream()
+            for (auto i = 0; i < surface_proto->fd_size(); i++)
+                ::close(surface_proto->fd(i));
         }
     }
-    catch (std::exception const& error)
-    {
-        if (!surface_proto->has_error())
-            surface_proto->set_error(error.what());
-        // failed to create buffer_stream, so clean up FDs it doesn't own
-        for (auto i = 0; i < surface_proto->fd_size(); i++)
-            ::close(surface_proto->fd(i));
-        if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
-            for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
-                ::close(surface_proto->buffer_stream().buffer().fd(i));
-    }
 
+    std::shared_ptr<MirSurface> surf {nullptr};
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
         std::string reason;
@@ -417,12 +422,8 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     else
     {
         surf = std::make_shared<MirSurface>(
-            this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
-
+            this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-
-        if (stream)
-            surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
     }
 
     callback(surf.get(), context);
@@ -479,13 +480,6 @@ void MirConnection::released(StreamRelease data)
 
 void MirConnection::released(SurfaceRelease data)
 {
-    // releasing this surface from surface_map means that it will no longer receive events
-    // If it's still focused, send an unfocused event before we kill it entirely
-    if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
-    {
-        auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
-        data.surface->handle_event(*unfocus);
-    }
     data.callback(data.surface, data.context);
     data.handle->result_received();
     surface_map->erase(mf::BufferStreamId(data.surface->id()));
@@ -843,9 +837,6 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     }
     catch (std::exception const& error)
     {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
         stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
             request);
@@ -932,7 +923,7 @@ void MirConnection::register_ping_event_callback(mir_ping_event_callback callbac
 
 void MirConnection::register_error_callback(mir_error_callback callback, void* context)
 {
-    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
+    error_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)
@@ -1052,10 +1043,30 @@ void MirConnection::preview_base_display_configuration(
         MirError const error{
             static_cast<MirErrorDomain>(message.structured_error().domain()),
             message.structured_error().code()};
-        error_handler(&error);
+        (*error_handler)(&error);
     };
 
     server.preview_base_display_configuration(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::cancel_base_display_configuration_preview()
+{
+    mp::Void request;
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        (*error_handler)(&error);
+    };
+
+    server.cancel_base_display_configuration_preview(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
@@ -1213,7 +1224,7 @@ void MirConnection::chain_error(
 void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 {
     auto id = chain->rpc_id();
-    if (id > 0)
+    if (id >= 0)
     {
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
         mp::BufferStreamId buffer_stream_id;
@@ -1249,10 +1260,16 @@ void MirConnection::allocate_buffer(
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-void MirConnection::release_buffer(int buffer_id)
+void MirConnection::release_buffer(mcl::MirBuffer* buffer)
 {
+    if (!buffer->valid())
+    {
+        surface_map->erase(buffer->rpc_id());
+        return;
+    }
+
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
-    released_buffer->set_buffer_id(buffer_id);
+    released_buffer->set_buffer_id(buffer->rpc_id());
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }

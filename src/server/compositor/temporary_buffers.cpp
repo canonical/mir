@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "buffer_bundle.h"
+#include "buffer_acquisition.h"
 #include "temporary_buffers.h"
 
 #include <boost/throw_exception.hpp>
@@ -60,11 +60,6 @@ geom::Size mc::TemporaryBuffer::size() const
     return buffer->size();
 }
 
-geom::Stride mc::TemporaryBuffer::stride() const
-{
-    return buffer->stride();
-}
-
 MirPixelFormat mc::TemporaryBuffer::pixel_format() const
 {
     return buffer->pixel_format();
@@ -78,17 +73,6 @@ mg::BufferID mc::TemporaryBuffer::id() const
 std::shared_ptr<mg::NativeBuffer> mc::TemporaryBuffer::native_buffer_handle() const
 {
     return buffer->native_buffer_handle();
-}
-
-void mc::TemporaryBuffer::write(unsigned char const*, size_t)
-{
-    BOOST_THROW_EXCEPTION(
-        std::runtime_error("Write to temporary buffer snapshot is ill advised and indicates programmer error"));
-}
-
-void mc::TemporaryBuffer::read(std::function<void(unsigned char const*)> const& exec)
-{
-    buffer->read(exec);
 }
 
 mg::NativeBufferBase* mc::TemporaryBuffer::native_buffer_base()

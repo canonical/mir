@@ -42,7 +42,9 @@ extern char const* const legacy_input_report_opt;
 extern char const* const connector_report_opt;
 extern char const* const scene_report_opt;
 extern char const* const input_report_opt;
+extern char const* const seat_report_opt;
 extern char const* const host_socket_opt;
+extern char const* const nested_passthrough_opt;
 extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
 extern char const* const fatal_except_opt;
@@ -52,7 +54,6 @@ extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
 
 extern char const* const name_opt;
-extern char const* const offscreen_opt;
 
 extern char const* const enable_key_repeat_opt;
 

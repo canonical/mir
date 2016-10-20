@@ -49,6 +49,7 @@ public:
                         std::string const& variant, std::string const& options) override;
     void renamed(char const*) override;
     void cursor_image_removed() override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 
 private:
     std::function<void()> const notify_scene_change;

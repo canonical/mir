@@ -18,10 +18,18 @@
 
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
+#include "host_stream.h"
+#include "host_chain.h"
+#include "host_surface_spec.h"
+#include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
@@ -35,9 +43,11 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <condition_variable>
 
 #include <cstring>
 
+namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mi = mir::input;
@@ -45,78 +55,10 @@ namespace mf = mir::frontend;
 
 namespace
 {
-
-mgn::UniqueInputConfig make_empty_config()
-{
-    return mgn::UniqueInputConfig(nullptr, [](MirInputConfig const*){});
-}
-
 mgn::UniqueInputConfig make_input_config(MirConnection* con)
 {
     return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_destroy);
 }
-
-class NestedDevice : public mi::Device
-{
-public:
-    NestedDevice(MirInputDevice const* dev)
-    {
-        update(dev);
-    }
-
-    void update(MirInputDevice const* dev)
-    {
-        device_id = mir_input_device_get_id(dev);
-        device_name = mir_input_device_get_name(dev);
-        unique_device_id = mir_input_device_get_unique_id(dev);
-        caps = mi::DeviceCapabilities(mir_input_device_get_capabilities(dev));
-    }
-
-    MirInputDeviceId id() const
-    {
-        return device_id;
-    }
-
-    mi::DeviceCapabilities capabilities() const
-    {
-        return caps;
-    }
-
-    std::string name() const
-    {
-        return device_name;
-    }
-    std::string unique_id() const
-    {
-        return unique_device_id;
-    }
-
-    mir::optional_value<mi::PointerConfiguration> pointer_configuration() const
-    {
-        return pointer_conf;
-    }
-    void apply_pointer_configuration(mi::PointerConfiguration const&)
-    {
-        // TODO requires c api support
-    }
-
-    mir::optional_value<mi::TouchpadConfiguration> touchpad_configuration() const
-    {
-        return touchpad_conf;
-    }
-    void apply_touchpad_configuration(mi::TouchpadConfiguration const&)
-    {
-        // TODO requires c api support
-    }
-private:
-    MirInputDeviceId device_id;
-    std::string device_name;
-    std::string unique_device_id;
-    mi::DeviceCapabilities caps;
-    mir::optional_value<mi::PointerConfiguration> pointer_conf;
-    mir::optional_value<mi::TouchpadConfiguration> touchpad_conf;
-};
-
 
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 {
@@ -179,6 +121,11 @@ public:
         mir_surface_release_sync(mir_surface);
     }
 
+    void apply_spec(mgn::HostSurfaceSpec& spec) override
+    {
+        mir_surface_apply_spec(mir_surface, spec.handle());
+    }
+
     EGLNativeWindowType egl_native_window() override
     {
         return reinterpret_cast<EGLNativeWindowType>(
@@ -194,6 +141,12 @@ public:
     {
         auto const image_width = image.size().width.as_int();
         auto const image_height = image.size().height.as_int();
+
+        if ((image_width <= 0) || (image_height <= 0))
+        {
+            hide_cursor();
+            return;
+        }
 
         MirGraphicsRegion g;
 
@@ -254,6 +207,35 @@ private:
     mir::geometry::Displacement cursor_hotspot;
 };
 
+class MirClientHostStream : public mgn::HostStream
+{
+public:
+    MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
+        stream(mir_connection_create_buffer_stream_sync(connection,
+            properties.size.width.as_int(), properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
+    {
+    }
+
+    ~MirClientHostStream()
+    {
+        mir_buffer_stream_release_sync(stream);
+    }
+
+    EGLNativeWindowType egl_native_window() const override
+    {
+        return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
+    }
+
+    MirBufferStream* handle() const override
+    {
+        return stream;
+    }
+private:
+    MirBufferStream* const stream;
+};
+
 }
 
 void const* mgn::MirClientHostConnection::NestedCursorImage::as_argb_8888() const
@@ -292,15 +274,11 @@ mgn::MirClientHostConnection::NestedCursorImage& mgn::MirClientHostConnection::N
 mgn::MirClientHostConnection::MirClientHostConnection(
     std::string const& host_socket,
     std::string const& name,
-    std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener,
-    std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<mir::ServerActionQueue> const& input_observer_queue)
+    std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener)
     : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
       conf_change_callback{[]{}},
       host_lifecycle_event_listener{host_lifecycle_event_listener},
-      sink{sink},
-      observer_queue{input_observer_queue},
-      config{make_empty_config()}
+      event_callback{[](MirEvent const&, mir::geometry::Rectangle const&){}}
 {
     if (!mir_connection_is_valid(mir_connection))
     {
@@ -318,14 +296,14 @@ mgn::MirClientHostConnection::MirClientHostConnection(
 
     mir_connection_set_input_config_change_callback(
         mir_connection,
-        [](MirConnection*, void* context)
+        [](MirConnection* connection, void* context)
         {
             auto obj = static_cast<MirClientHostConnection*>(context);
-            obj->update_input_devices();
+            RecursiveReadLock lock{obj->input_config_callback_mutex};
+            if (obj->input_config_callback)
+                obj->input_config_callback(make_input_config(connection));
         },
         this);
-
-    update_input_devices();
 }
 
 mgn::MirClientHostConnection::~MirClientHostConnection()
@@ -373,17 +351,28 @@ void mgn::MirClientHostConnection::apply_display_config(
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
-    int width, int height, MirPixelFormat pf, char const* name,
-    MirBufferUsage usage, uint32_t output_id)
+    std::shared_ptr<HostStream> const& stream,
+    mir::geometry::Displacement displacement,
+    mg::BufferProperties properties,
+    char const* name, uint32_t output_id)
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_connection_create_spec_for_normal_surface(mir_connection, width, height, pf),
+        mir_connection_create_spec_for_normal_surface(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format),
         mir_surface_spec_release);
+
+    MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
+        mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
     mir_surface_spec_set_name(spec.get(), name);
     mir_surface_spec_set_buffer_usage(spec.get(), usage);
     mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
+    MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
+    mir_surface_spec_set_streams(spec.get(), &info, 1);
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, spec.get()),
@@ -466,92 +455,227 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
     return properties.filename;
 }
 
-void mgn::MirClientHostConnection::update_input_devices()
+mgn::UniqueInputConfig mgn::MirClientHostConnection::create_input_device_config()
 {
-    std::lock_guard<std::mutex> lock(devices_guard);
-    config = make_input_config(mir_connection);
+    return make_input_config(mir_connection);
+}
 
-    auto deleted = std::move(devices);
-    std::vector<std::shared_ptr<mi::Device>> new_devs;
-    auto config_ptr = config.get();
-    for (size_t i = 0, e = mir_input_config_device_count(config_ptr); i!=e; ++i)
+void mgn::MirClientHostConnection::set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb)
+{
+    RecursiveWriteLock lock{input_config_callback_mutex};
+    input_config_callback = cb;
+}
+
+void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb)
+{
+    RecursiveWriteLock lock{event_callback_mutex};
+    event_callback = cb;
+}
+
+void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
+{
+    RecursiveReadLock lock{event_callback_mutex};
+    if (event_callback)
+        event_callback(event, source_frame);
+}
+
+std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
+    mg::BufferProperties const& properties) const
+{
+    return std::make_unique<MirClientHostStream>(mir_connection, properties);
+}
+
+struct Chain : mgn::HostChain
+{
+    Chain(MirConnection* connection) :
+        chain(mir_connection_create_presentation_chain_sync(connection))
     {
-        auto dev = mir_input_config_get_device(config_ptr, i);
-        auto it = std::find_if(
-            begin(deleted),
-            end(deleted),
-            [id = mir_input_device_get_id(dev)](auto const& dev)
-            {
-                return id == dev->id();
-            });
-        if (it != end(deleted))
-        {
-           std::static_pointer_cast<NestedDevice>(*it)->update(dev);
-           devices.push_back(*it);
-           deleted.erase(it);
-        }
-        else
-        {
-           devices.push_back(std::make_shared<NestedDevice>(dev));
-           new_devs.push_back(devices.back());
-        }
+    }
+    ~Chain()
+    {
+        mir_presentation_chain_release(chain);
     }
 
-    sink->handle_input_device_change(devices);
-
-    if ((deleted.empty() && new_devs.empty()) || observers.empty())
-        return;
-
-    observer_queue->enqueue(
-        this,
-        [this, new_devs = std::move(new_devs), deleted = std::move(deleted)]
-        {
-            std::lock_guard<std::mutex> lock(devices_guard);
-            for (auto const observer : observers)
-            {
-                for (auto const& item : new_devs)
-                    observer->device_added(item);
-                for (auto const& item : deleted)
-                    observer->device_removed(item);
-                observer->changes_complete();
-            }
-        });
-}
-
-void mgn::MirClientHostConnection::add_observer(std::shared_ptr<mi::InputDeviceObserver> const& observer)
-{
-    observer_queue->enqueue(
-        this,
-        [observer,this]
-        {
-            std::lock_guard<std::mutex> lock(devices_guard);
-            observers.push_back(observer);
-            for (auto const& item : devices)
-            {
-                observer->device_added(item);
-            }
-            observer->changes_complete();
-        }
-        );
-}
-
-void mgn::MirClientHostConnection::remove_observer(std::weak_ptr<mi::InputDeviceObserver> const& element)
-{
-    auto observer = element.lock();
-
-    observer_queue->enqueue(this,
-                            [observer, this]
-                            {
-                                observers.erase(remove(begin(observers), end(observers), observer), end(observers));
-                            });
-}
-
-void mgn::MirClientHostConnection::for_each_input_device(std::function<void(mi::Device const& device)> const& callback)
-{
-    std::lock_guard<std::mutex> lock(devices_guard);
-    for (auto const& item : devices)
+    void submit_buffer(mgn::NativeBuffer& buffer)
     {
-        callback(*item);
+        mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
 
+    MirPresentationChain* handle()
+    {
+        return chain;
+    }
+private:
+    MirPresentationChain* chain;
+};
+
+std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
+{
+    return std::make_unique<Chain>(mir_connection);
+}
+
+namespace
+{
+class HostBuffer : public mgn::NativeBuffer
+{
+public:
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
+    {
+        mir_connection_allocate_buffer(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
+        {
+            mir_buffer_release(handle);
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+    }
+    ~HostBuffer()
+    {
+        mir_buffer_release(handle);
+    }
+
+    void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
+    {
+        mir_buffer_wait_for_access(handle, access, ns.count());
+    }
+
+    MirBuffer* client_handle() const override
+    {
+        return handle;
+    }
+
+    MirGraphicsRegion get_graphics_region() override
+    {
+        return mir_buffer_get_graphics_region(handle, mir_read_write);
+    }
+
+    geom::Size size() const override
+    {
+        return { mir_buffer_get_width(handle), mir_buffer_get_height(handle) };
+    }
+
+    MirPixelFormat format() const override
+    {
+        return mir_buffer_get_pixel_format(handle);
+    }
+
+    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
+    {
+        EGLenum type;
+        EGLClientBuffer client_buffer = nullptr;;
+        EGLint* attrs = nullptr;
+        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        
+        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
+    }
+
+    static void buffer_available(MirBuffer* buffer, void* context)
+    {
+        auto host_buffer = static_cast<HostBuffer*>(context);
+        host_buffer->available(buffer);
+    }
+
+    void available(MirBuffer* buffer)
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        if (!handle)
+        {
+            handle = buffer;
+            cv.notify_all();
+        }
+
+        auto g = f;
+        lk.unlock();
+        if (g)
+            g();
+    }
+
+    void on_ownership_notification(std::function<void()> const& fn) override
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        f = fn;
+    }
+
+    MirBufferPackage* package() const override
+    {
+       return mir_buffer_get_buffer_package(handle);
+    }
+
+    void set_fence(mir::Fd fd) override
+    {
+        mir_buffer_associate_fence(handle, fd, mir_read_write);
+    }
+
+    mir::Fd fence() const override
+    {
+        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
+    }
+
+private:
+    std::function<void()> f;
+    MirBuffer* handle = nullptr;
+    std::mutex mut;
+    std::condition_variable cv;
+};
+
+class SurfaceSpec : public mgn::HostSurfaceSpec
+{
+public:
+    SurfaceSpec(MirConnection* connection) :
+        spec(mir_connection_create_spec_for_changes(connection))
+    {
+    }
+
+    ~SurfaceSpec()
+    {
+        mir_surface_spec_release(spec);
+    }
+
+    void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
+    {
+        mir_surface_spec_add_presentation_chain(
+            spec, size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int(), chain.handle());
+    }
+
+    void add_stream(mgn::HostStream& stream, geom::Displacement disp) override
+    {
+        mir_surface_spec_add_buffer_stream(spec, disp.dx.as_int(), disp.dy.as_int(), stream.handle());
+    }
+
+    MirSurfaceSpec* handle() override
+    {
+        return spec;
+    }
+private:
+    MirSurfaceSpec* spec;
+};
+}
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const& properties)
+{
+    return std::make_shared<HostBuffer>(mir_connection, properties);
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
+{
+    return std::make_unique<SurfaceSpec>(mir_connection);
+}
+
+bool mgn::MirClientHostConnection::supports_passthrough()
+{
+    auto buffer = create_buffer(mg::BufferProperties(geom::Size{1, 1} , mir_pixel_format_abgr_8888, mg::BufferUsage::software));
+
+    auto hints = buffer->egl_image_creation_hints();
+    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
+        return false;
+    return true;
 }

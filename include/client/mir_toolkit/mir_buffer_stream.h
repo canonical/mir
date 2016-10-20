@@ -47,7 +47,7 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
  *                        invalid stream, or the empty string "" if the
  *                        connection is valid.
  */
-char const *mir_buffer_stream_get_error_message(MirBufferStream *surface);
+char const *mir_buffer_stream_get_error_message(MirBufferStream *buffer_stream);
 
 /**
  * Create a new buffer stream. 
@@ -59,6 +59,7 @@ char const *mir_buffer_stream_get_error_message(MirBufferStream *surface);
  * \param [in] connection     A valid connection
  * \param [in] width          Requested buffer width
  * \param [in] height         Requested buffer height
+ * \param [in] format         Requested pixel format
  * \param [in] buffer_usage   Requested buffer usage, use 
  *                            mir_buffer_usage_software for cursor image streams
  * \param [in] callback       Callback to be invoked when the request completes
@@ -85,7 +86,8 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
  * \param [in] connection       A valid connection
  * \param [in] width            Requested buffer width
  * \param [in] height           Requested buffer height
- * \param [in] buffer_usage     Requested buffer usage, use 
+ * \param [in] format         Requested pixel format
+ * \param [in] buffer_usage     Requested buffer usage, use
  *                              mir_buffer_usage_software for cursor image streams
  *
  * \return                      The new buffer stream. This is guaranteed non-null, 
@@ -102,11 +104,11 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
- *   \param [in] stream      The stream
- *   \param [in] callback     Callback function to be invoked when the request
- *                            completes
- *   \param [in,out] context  User data passed to the callback function
- *   \return                  A handle that can be passed to mir_wait_for
+ *   \param [in] buffer_stream  The stream
+ *   \param [in] callback       Callback function to be invoked when the request
+ *                              completes
+ *   \param [in,out] context    User data passed to the callback function
+ *   \return                    A handle that can be passed to mir_wait_for
  */
 MirWaitHandle *mir_buffer_stream_release(
     MirBufferStream * buffer_stream,
@@ -116,7 +118,7 @@ MirWaitHandle *mir_buffer_stream_release(
 /**
  * Release the specified buffer stream like in mir,_buffer_stream_release(), 
  * but also wait for the operation to complete.
- *   \param [in] buffer stream  The buffer stream to be released
+ *   \param [in] buffer_stream  The buffer stream to be released
  */
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
 
@@ -133,18 +135,20 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  *
  * \todo This should be removed from the public API at the next API break.
  *
- *   \pre                     The surface is valid
- *   \param [in] surface      The surface
+ *   \pre                     The stream is valid
+ *   \param [in] stream      The stream
  *   \return                  One of mir_platform_type_android or 
  *                            mir_platform_type_gbm
  */
+/// @cond
 __attribute__ ((deprecated))
+/// @endcond
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 
 /**
  * Retrieve the current buffer in "raw" representation.
  *   \pre                         The buffer stream is valid
- *   \param [in] surface          The buffer stream
+ *   \param [in]  buffer_stream   The buffer stream
  *   \param [out] buffer_package  Structure to be populated
  */
 void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
@@ -171,7 +175,7 @@ MirWaitHandle *mir_buffer_stream_swap_buffers(
 /**
  * Advance a buffer stream's buffer as in mir_buffer stream_swap_buffers(), 
  * but also wait for the operation to complete.
- *   \param [in] buffer stream  The buffer stream whose buffer to advance
+ *   \param [in] buffer_stream  The buffer stream whose buffer to advance
  */
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
 
@@ -181,7 +185,7 @@ void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
  *            time its called. The region remains mapped until
  *            mir_buffer_stream_swap_buffers().
  *   \pre                          The buffer stream is valid
- *   \param [in] buffer stream     The buffer stream
+ *   \param [in] buffer_stream     The buffer stream
  *   \param [out] graphics_region  Structure to be populated
  */
 void mir_buffer_stream_get_graphics_region(
@@ -201,7 +205,7 @@ MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *
  * \param [in] scale         The scale
  * \return                  A handle that can be passed to mir_wait_for
  */
-MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* stream, float scale);
+MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale);
 
 /**
  * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
@@ -209,7 +213,28 @@ MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* stream, float scale)
  * \param [in] buffer_stream The buffer stream
  * \param [in] scale         The scale
  */
-void mir_buffer_stream_set_scale_sync(MirBufferStream* stream, float scale);
+void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale);
+
+/**
+ * Set the swapinterval for the stream.
+ *   \warning EGL users should use eglSwapInterval directly.
+ *   \warning Only swapinterval of 0 or 1 is supported.
+ *   \param [in] stream   The buffer stream
+ *   \param [in] interval The number of vblank signals that
+ *                        mir_buffer_stream_swap_buffers will wait for
+ *   \return              A wait handle that can be passed to mir_wait_for,
+ *                        or NULL if the interval could not be supported
+ */
+MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int interval);
+
+/**
+ * Query the swapinterval that the stream is operating with.
+ * The default interval is 1.
+ *   \param [in] stream   The buffer stream
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if stream is invalid.
+ */
+int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
 
 #ifdef __cplusplus
 }

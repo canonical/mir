@@ -26,7 +26,6 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/buffer_stream_factory.h"
@@ -36,6 +35,8 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -91,6 +92,14 @@ std::atomic<bool> created{false};
 static const float min_alpha = 0.3f;
 
 char const* const surfaces_to_render = "surfaces-to-render";
+
+auto as_context_source(mg::Display* display)
+{
+    auto ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display->native_display());
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+    return ctx;
+}
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -220,6 +229,8 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         virtual void paused() override {}
         virtual void resumed() override {}
         virtual void started() override {callback(); callback = []{}; }
+        virtual void ready_for_user_input() override {}
+        virtual void stop_receiving_input() override {}
 
         std::function<void()> callback;
     };
@@ -230,6 +241,7 @@ void callback_when_started(mir::Server& server, std::function<void()> callback)
         });
 }
 
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
 {
 public:
@@ -267,6 +279,7 @@ private:
     std::vector<Moveable>& moveables;
     uint32_t frames;
 };
+///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
 class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -343,7 +356,7 @@ public:
         auto const buffer_stream_factory = the_buffer_stream_factory();
         auto const surface_factory = the_surface_factory();
         auto const surface_stack = the_surface_stack();
-        auto const gl_context = the_display()->create_gl_context();
+        auto const gl_context = as_context_source(the_display().get())->create_gl_context();
 
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
@@ -377,6 +390,7 @@ public:
                 void add_buffer(mg::Buffer&) override {}
                 void remove_buffer(mg::Buffer&) override {}
                 void update_buffer(mg::Buffer&) override {}
+                void error_buffer(mg::BufferProperties const&, std::string const&) override {}
             };
 
             auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
@@ -450,6 +464,7 @@ try
     render_surfaces.run();
 
     return render_surfaces.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    ///\internal [main_tag]
 }
 catch (...)
 {

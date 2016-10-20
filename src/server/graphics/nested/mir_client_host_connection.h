@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <string>
 #include <vector>
@@ -51,24 +52,25 @@ namespace graphics
 namespace nested
 {
 
-using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
-
-class MirClientHostConnection : public HostConnection, public input::InputDeviceHub
+class MirClientHostConnection : public HostConnection
 {
 public:
     MirClientHostConnection(std::string const& host_socket,
                             std::string const& name,
-                            std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener,
-                            std::shared_ptr<frontend::EventSink> const& sink,
-                            std::shared_ptr<ServerActionQueue> const& observer_queue);
+                            std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
     ~MirClientHostConnection();
 
     std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
     std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
+    std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
+    std::unique_ptr<HostChain> create_chain() const override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
     std::shared_ptr<HostSurface> create_surface(
-        int width, int height, MirPixelFormat pf, char const* name,
-        MirBufferUsage usage, uint32_t output_id) override;
+        std::shared_ptr<HostStream> const& stream,
+        geometry::Displacement stream_displacement,
+        graphics::BufferProperties properties,
+        char const* name, uint32_t output_id) override;
     void set_display_config_change_callback(std::function<void()> const& cb) override;
     void apply_display_config(MirDisplayConfiguration&) override;
 
@@ -79,13 +81,15 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
-    // InputDeviceHub
-    void add_observer(std::shared_ptr<input::InputDeviceObserver> const&) override;
-    void remove_observer(std::weak_ptr<input::InputDeviceObserver> const&) override;
-    void for_each_input_device(std::function<void(input::Device const& device)> const& callback) override;
+    UniqueInputConfig create_input_device_config() override;
+    void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) override;
+    void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
+    void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
+    std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
+    bool supports_passthrough() override;
 
 private:
-    void update_input_devices();
+    void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;
 
     MirConnection* const mir_connection;
@@ -94,12 +98,10 @@ private:
 
     std::vector<HostSurface*> surfaces;
 
-    std::shared_ptr<frontend::EventSink> const sink;
-    std::shared_ptr<mir::ServerActionQueue> const observer_queue;
-    std::vector<std::shared_ptr<input::InputDeviceObserver>> observers;
-    std::mutex devices_guard;
-    std::vector<std::shared_ptr<input::Device>> devices;
-    UniqueInputConfig config;
+    RecursiveReadWriteMutex input_config_callback_mutex;
+    std::function<void(UniqueInputConfig)> input_config_callback;
+    RecursiveReadWriteMutex event_callback_mutex;
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
 
     struct NestedCursorImage : graphics::CursorImage
     {

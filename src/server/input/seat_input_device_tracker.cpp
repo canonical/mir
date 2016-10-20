@@ -22,8 +22,11 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
+#include "mir/input/key_mapper.h"
+#include "mir/input/seat_report.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
+#include "mir/time/clock.h"
 
 #include "input_modifier_utils.h"
 
@@ -36,19 +39,24 @@
 
 namespace mi = mir::input;
 namespace mev = mir::events;
+namespace geom = mir::geometry;
 
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
-                                                   std::shared_ptr<InputRegion> const& input_region)
+                                                   std::shared_ptr<InputRegion> const& input_region,
+                                                   std::shared_ptr<KeyMapper> const& key_mapper,
+                                                   std::shared_ptr<time::Clock> const& clock,
+                                                   std::shared_ptr<SeatReport> const& report)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, modifier{0}, buttons{0}
+      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, report{report}, buttons{0}
 {
 }
 
 void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
 {
     device_data[id];
+    report->seat_add_device(id);
 }
 
 void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
@@ -58,48 +66,58 @@ void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
     if (stored_data == end(device_data))
         BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device changed"));
 
-    bool state_update_needed = stored_data->second.mod != mir_input_event_modifier_none ||
-        stored_data->second.buttons != 0;
+    bool state_update_needed = stored_data->second.buttons != 0;
     bool spot_update_needed = !stored_data->second.spots.empty();
 
     device_data.erase(stored_data);
+    key_mapper->clear_keymap_for_device(id);
 
     if (state_update_needed)
         update_states();
     if (spot_update_needed)
         update_spots();
+
+    report->seat_remove_device(id);
 }
 
 void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
 {
-    auto input_event = mir_event_get_input_event(&event);
-    update_seat_properties(input_event);
-
-    if (mir_input_event_type_key  == mir_input_event_get_type(input_event))
-        mev::set_modifier(event, event_modifier(mir_input_event_get_device_id(input_event)));
-    else
-        mev::set_modifier(event, event_modifier());
-
-    if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
+    if (mir_event_get_type(&event) == mir_event_type_input)
     {
-        mev::set_cursor_position(event, cursor_position());
-        mev::set_button_state(event, button_state());
+        auto input_event = mir_event_get_input_event(&event);
+
+        if (filter_input_event(input_event))
+            return;
+
+        update_seat_properties(input_event);
+
+        key_mapper->map_event(event);
+
+        if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
+        {
+            mev::set_cursor_position(event, cursor_x, cursor_y);
+            mev::set_button_state(event, button_state());
+        }
     }
 
     dispatcher->dispatch(event);
+    report->seat_dispatch_event(event);
 }
 
-MirInputEventModifiers mi::SeatInputDeviceTracker::event_modifier() const
+bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)
 {
-    return expand_modifiers(modifier);
-}
+    auto device_id = mir_input_event_get_device_id(event);
+    auto type = mir_input_event_get_type(event);
+    if (type == mir_input_event_type_key)
+    {
+        auto stored_data = device_data.find(device_id);
 
-MirInputEventModifiers mi::SeatInputDeviceTracker::event_modifier(MirInputDeviceId id) const
-{
-    auto stored_data = device_data.find(id);
-    if (stored_data == end(device_data))
-        BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device requested"));
-    return expand_modifiers(stored_data->second.mod);
+        if (stored_data == end(device_data))
+            return true;
+
+        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));
+    }
+    return false;
 }
 
 void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* event)
@@ -114,13 +132,8 @@ void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* eve
     switch(mir_input_event_get_type(event))
     {
     case mir_input_event_type_key:
-        {
-            auto const* key = mir_input_event_get_keyboard_event(event);
-            if (stored_data->second.update_modifier(mir_keyboard_event_action(key),
-                                                    mir_keyboard_event_scan_code(key)))
-                update_states();
-            break;
-        }
+        stored_data->second.update_scan_codes(mir_input_event_get_keyboard_event(event));
+        break;
     case mir_input_event_type_touch:
         if (stored_data->second.update_spots(mir_input_event_get_touch_event(event)))
             update_spots();
@@ -136,21 +149,6 @@ void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* eve
     default:
         break;
     }
-}
-
-bool mi::SeatInputDeviceTracker::DeviceData::update_modifier(MirKeyboardAction key_action, int scan_code)
-{
-    auto mod_change = to_modifiers(scan_code);
-
-    if (mod_change == 0 || key_action == mir_keyboard_action_repeat)
-        return false;
-
-    if (key_action == mir_keyboard_action_down)
-        mod |= mod_change;
-    else if (key_action == mir_keyboard_action_up)
-        mod &= ~mod_change;
-
-    return true;
 }
 
 bool mi::SeatInputDeviceTracker::DeviceData::update_button_state(MirPointerButtons button_state)
@@ -188,14 +186,10 @@ void mi::SeatInputDeviceTracker::update_spots()
 
 void mi::SeatInputDeviceTracker::update_states()
 {
-    std::tie(modifier, buttons) =
-        std::accumulate(begin(device_data),
-                        end(device_data),
-                        std::make_pair(MirInputEventModifiers{0}, MirPointerButtons{0}),
-                        [](auto const& acc, auto const& item)
-                        {
-                            return std::make_pair(acc.first | item.second.mod, acc.second | item.second.buttons);
-                        });
+    buttons = std::accumulate(begin(device_data),
+                              end(device_data),
+                              MirPointerButtons{0},
+                              [](auto const& acc, auto const& item) { return acc | item.second.buttons; });
 }
 
 mir::geometry::Point mi::SeatInputDeviceTracker::cursor_position() const
@@ -208,16 +202,110 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
     return buttons;
 }
 
+void mi::SeatInputDeviceTracker::set_confinement_regions(geometry::Rectangles const& regions)
+{
+    std::lock_guard<std::mutex> lg(region_mutex);
+    confined_region = regions;
+    report->seat_set_confinement_region_called(regions);
+}
+
+void mi::SeatInputDeviceTracker::reset_confinement_regions()
+{
+    std::lock_guard<std::mutex> lg(region_mutex);
+    confined_region.clear();
+    report->seat_reset_confinement_regions();
+}
+
+void mi::SeatInputDeviceTracker::confine_function(mir::geometry::Point& p) const
+{
+    std::lock_guard<std::mutex> lg(region_mutex);
+    input_region->confine(p);
+    confined_region.confine(p);
+}
+
+void mi::SeatInputDeviceTracker::confine_pointer()
+{
+    mir::geometry::Point const old{cursor_x, cursor_y};
+    auto confined = old;
+    confine_function(confined);
+    if (confined.x != old.x) cursor_x = confined.x.as_int();
+    if (confined.y != old.y) cursor_y = confined.y.as_int();
+}
+
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
     cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
     cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
 
-    mir::geometry::Point const old{cursor_x, cursor_y};
-    auto confined = old;
-    input_region->confine(confined);
-    if (confined.x != old.x) cursor_x = confined.x.as_int();
-    if (confined.y != old.y) cursor_y = confined.y.as_int();
+    confine_pointer();
 
     cursor_listener->cursor_moved_to(cursor_x, cursor_y);
+}
+
+mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
+{
+    std::vector<mev::InputDeviceState> devices;
+    devices.reserve(device_data.size());
+    for (auto const& item : device_data)
+        devices.push_back({item.first, item.second.scan_codes, item.second.buttons});
+
+    auto out_ev = mev::make_event(
+        clock->now().time_since_epoch(),
+        buttons,
+        key_mapper->modifiers(),
+        cursor_x,
+        cursor_y,
+        std::move(devices));
+
+    return out_ev;
+}
+
+void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent const* event)
+{
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    if (action == mir_keyboard_action_down)
+        scan_codes.push_back(scan_code);
+    else if (action == mir_keyboard_action_up)
+        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code), end(scan_codes));
+}
+
+void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes)
+{
+    key_mapper->set_key_state(id, scan_codes);
+
+    auto device = device_data.find(id);
+
+    if (device != end(device_data))
+        device->second.scan_codes = scan_codes;
+
+    report->seat_set_key_state(id, scan_codes);
+}
+
+void mi::SeatInputDeviceTracker::set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons)
+{
+    auto device = device_data.find(id);
+
+    if (device != end(device_data))
+        device->second.update_button_state(buttons);
+
+    report->seat_set_pointer_state(id, buttons);
+}
+
+void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
+{
+    cursor_x = x;
+    cursor_y = y;
+
+    report->seat_set_cursor_position(x, y);
+}
+
+bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const
+{
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    bool found = find(begin(scan_codes), end(scan_codes), scan_code) != end(scan_codes);
+
+    return (action == mir_keyboard_action_down && !found)
+        || (action != mir_keyboard_action_down && found);
 }

@@ -32,21 +32,28 @@ namespace android
 {
 class AndroidDriverInterpreter;
 class SyncFileOps;
+class NativeWindowReport;
 
 class MirNativeWindow : public ANativeWindow
 {
 public:
-    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
+    explicit MirNativeWindow(
+        std::shared_ptr<AndroidDriverInterpreter> const& interpreter,
+        std::shared_ptr<NativeWindowReport> const& report);
 
     int query(int key, int* value) const;
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer, int* fence);
     int dequeueBufferAndWait(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer, int fence);
+    int queueBufferDeprecated(struct ANativeWindowBuffer* buffer);
     int cancelBuffer(struct ANativeWindowBuffer* buffer, int fence);
+    int cancelBufferDeprecated(struct ANativeWindowBuffer* buffer);
     int setSwapInterval(int interval);
+    void use_native_surface(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
 private:
-    std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
+    std::shared_ptr<AndroidDriverInterpreter> driver_interpreter;
+    std::shared_ptr<NativeWindowReport> const report;
     std::shared_ptr<SyncFileOps> const sync_ops;
     std::vector<struct ANativeWindowBuffer*> cancelled_buffers;
 };

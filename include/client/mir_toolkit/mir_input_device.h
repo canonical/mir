@@ -197,5 +197,5 @@ char const* mir_input_device_get_unique_id(MirInputDevice const* device);
 #ifdef __cplusplus
 }
 #endif
-
+/**@}*/
 #endif

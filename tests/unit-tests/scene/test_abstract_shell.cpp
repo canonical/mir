@@ -41,8 +41,10 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/mock_input_seat.h"
 
 #include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,10 +55,12 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace mev = mir::events;
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 using namespace ::testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -108,6 +112,7 @@ struct AbstractShell : Test
     NiceMock<MockSessionContainer> session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<MockSurfaceFactory> surface_factory;
+    NiceMock<mtd::MockInputSeat> seat;
     mtd::StubDisplay display{3};
 
     NiceMock<MockSessionManager> session_manager{
@@ -131,7 +136,8 @@ struct AbstractShell : Test
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
-        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); }};
+        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
+        mt::fake_shared(seat)};
 
     void SetUp() override
     {
@@ -142,6 +148,13 @@ struct AbstractShell : Test
             .WillByDefault(Return(geom::Size{}));
         ON_CALL(surface_factory, create_surface(_,_))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
+        ON_CALL(seat, create_device_state())
+            .WillByDefault(Invoke(
+                    []()
+                    {
+                        return mev::make_event(0ns, 0, mir_input_event_modifier_none, 0.0f, 0.0f,
+                                               std::vector<mev::InputDeviceState>());
+                    }));
     }
 
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
@@ -531,9 +544,9 @@ TEST_F(AbstractShell,
     session->destroy_surface(surface_id);
 
     EXPECT_CALL(session_container, successor_of(session)).
-        WillOnce(Return(session1));
+        WillRepeatedly(Return(session1));
     EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session));
+        WillRepeatedly(Return(session));
 
     EXPECT_CALL(session_event_sink, handle_no_focus());
 
@@ -576,6 +589,30 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
     shell.modify_surface(session, surface, stream_modification);
 }
 
+// lp:1625401
+TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_doesnt_loop_endlessly)
+{
+    std::shared_ptr<ms::Session> empty_session =
+        shell.open_session(__LINE__, "empty_session", std::shared_ptr<mf::EventSink>());
+
+    {
+        std::shared_ptr<ms::Session> another_session =
+            shell.open_session(__LINE__, "another_session", std::shared_ptr<mf::EventSink>());
+
+        auto creation_params = ms::a_surface()
+            .with_buffer_stream(another_session->create_buffer_stream(properties));
+        auto surface_id = shell.create_surface(another_session, creation_params, nullptr);
+
+        shell.set_focus_to(another_session, another_session->surface(surface_id));
+
+        shell.close_session(another_session);
+    }
+
+    ON_CALL(session_container, successor_of(_)).WillByDefault(Return(empty_session));
+
+    shell.focus_next_session();
+}
+
 namespace mir
 {
 namespace scene
@@ -599,4 +636,18 @@ TEST_F(AbstractShell, as_focus_controller_delegates_raise_to_surface_stack)
     msh::FocusController& focus_controller = shell;
 
     focus_controller.raise(surfaces);
+}
+
+TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focus_change)
+{
+    EXPECT_CALL(mock_surface, consume(mt::InputDeviceStateEvent())).Times(1);
+
+    auto session = shell.open_session(__LINE__, "some", std::shared_ptr<mf::EventSink>());
+    auto creation_params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surface_id = shell.create_surface(session, creation_params, nullptr);
+    auto surface = session->surface(surface_id);
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(session, surface);
 }

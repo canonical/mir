@@ -18,8 +18,8 @@
 #ifndef MIR_TOOLKIT_MIR_BUFFER_H_
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
-#include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/mir_native_buffer.h>
 
 #ifdef __cplusplus
 /**
@@ -50,6 +50,33 @@ void mir_connection_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
+/** Test for a valid buffer
+ *   \param [in] buffer    The buffer
+ *   \return               True if the buffer is valid, or false otherwise.
+ **/
+bool mir_buffer_is_valid(MirBuffer* buffer);
+
+/** Retrieve a text description an error associated with a MirBuffer.
+ *  The returned string is owned by the library and remains valid until the
+ *  buffer or the associated connection has been released.
+ *   \param [in] buffer    The buffer
+ *   \return               A text description of any error resulting in an
+ *                         invalid buffer, or the empty string "" if the
+ *                         connection is valid.
+ **/
+char const *mir_buffer_get_error_message(MirBuffer* buffer);
+
+/** Reassign the callback that the MirBuffer will call when the buffer is
+ *  available for use again
+ *  \param [in] buffer      The buffer
+ *  \param [in] available_callback    The callback called when the buffer
+ *                                     is available
+ *  \param [in] available_context     The context for the available_callback
+ */
+void mir_buffer_set_callback(
+    MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context);
+
 /** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.
@@ -60,19 +87,13 @@ void mir_connection_allocate_buffer(
  * can only be used when the buffer is not submitted to the server.
  *  @{ */
 
-/** Access the native buffer associated with MirBuffer for a given purpose.
- *  This will synchronize the buffer for the given purpose.
+/**
+ * Access the MirBufferPackage
  *
  *   \param [in] buffer    The buffer
- *   \param [in] access    The access that is needed for the native buffers content.
- *   \return               The platform-defined native buffer associated with buffer
- *   \warning              The returned native buffer has the same lifetime as the MirBuffer.
- *                         It must not be deleted or past the lifetime of the buffer.
- *   \warning              If mir_none is designated as access, this function will not
- *                         wait for the fence. The user must wait for the fence explicitly
- *                         before using the contents of the buffer.
- **/
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access);
+ *   \return               The MirBufferPackage representing buffer 
+ */
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* buffer);
 
 /** Access a CPU-mapped region associated with a given buffer for the given purpose.
  *  This will synchronize the buffer for the given purpose.
@@ -92,26 +113,29 @@ MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAcc
 /**
  * Retrieve the native fence associated with this buffer
  *
- *   \param [in] buffer     The buffer
- *   \return                The fence associated with buffer 
+ *   \warning           Take care not to close the fd, the Mir client api
+ *                      retains ownership of the fence fd.
+ *   \param [in] buffer The buffer.
+ *   \return            The fd representing the fence associated with buffer.
  *
  **/
-MirNativeFence* mir_buffer_get_fence(MirBuffer*);
+int mir_buffer_get_fence(MirBuffer*);
 
 /**
  * Protect the buffer's contents by associating a native fence with it.
  *
  *   \warning                 any fence currently associated with buffer will be replaced in favor
- *                            of native_fence without waiting for the replaced fence to clear
+ *                            of fence without waiting for the replaced fence to clear
+ *   \warning                 The Mir client api assumes ownership of the fence fd. 
  *   \param [in] buffer       The buffer
- *   \param [in] native_fence The fence that will be associated with buffer. If nullptr, this will
- *                            remove the fence associated with this buffer.
- *   \param [in] access       The ongoing access that is represented by native_fence.
+ *   \param [in] fence        The fence that will be associated with buffer. If negative,
+ *                            this will remove the fence associated with this buffer.
+ *   \param [in] access       The ongoing access that is represented by fence.
  *                            If mir_none is set, this will remove the fence protecting the buffer content.
  **/
 void mir_buffer_associate_fence(
     MirBuffer* buffer,
-    MirNativeFence* native_fence,
+    int fence,
     MirBufferAccess access);
 
 /** Wait for the fence associated with the buffer to signal. After returning,

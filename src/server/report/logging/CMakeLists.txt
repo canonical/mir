@@ -10,6 +10,7 @@ set(
   input_report.cpp
   compositor_report.cpp
   scene_report.cpp
+  seat_report.cpp
   shell_report.cpp
   shell_report.h
   logging_report_factory.cpp

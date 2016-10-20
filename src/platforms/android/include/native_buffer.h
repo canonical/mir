@@ -19,8 +19,10 @@
 #ifndef MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_NATIVE_BUFFER_H_
 
+#include "mir/graphics/native_buffer.h"
 #include "fence.h"
 #include <system/window.h>
+#include <memory>
 
 namespace mir
 {
@@ -29,19 +31,13 @@ namespace graphics
 
 namespace android
 {
-enum class BufferFlag
-{
-    unfenced = 0,
-    fenced
-};
 enum class BufferAccess
 {
     read,
     write
 };
-}
 
-class NativeBuffer
+class NativeBuffer : public graphics::NativeBuffer
 {
 public:
     virtual ~NativeBuffer() = default;
@@ -51,7 +47,9 @@ public:
     virtual android::NativeFence copy_fence() const = 0;
 
     virtual void ensure_available_for(android::BufferAccess intent) = 0;
+    virtual bool ensure_available_for(android::BufferAccess intent, std::chrono::milliseconds timeout) = 0;
     virtual void update_usage(android::NativeFence& fence, android::BufferAccess current_usage) = 0;
+    virtual void reset_fence() = 0;
 
     virtual void lock_for_gpu() = 0;
     virtual void wait_for_unlock_by_gpu() = 0;
@@ -62,6 +60,12 @@ protected:
     NativeBuffer& operator=(NativeBuffer const&) = delete;
 };
 
+android::NativeBuffer* to_native_buffer_checked(graphics::NativeBuffer* buffer);
+std::shared_ptr<android::NativeBuffer> to_native_buffer_checked(
+    std::shared_ptr<graphics::NativeBuffer> const& buffer);
+
+
+}
 }
 }
 

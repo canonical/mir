@@ -21,11 +21,16 @@
 
 #include "mir/shell/shell.h"
 #include "mir/shell/window_manager_builder.h"
+#include "mir/scene/surface_observer.h"
 
 #include <mutex>
 
 namespace mir
 {
+namespace input
+{
+class Seat;
+}
 namespace shell
 {
 class ShellReport;
@@ -41,7 +46,8 @@ public:
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
-        WindowManagerBuilder const& wm_builder);
+        WindowManagerBuilder const& wm_builder,
+        std::shared_ptr<input::Seat> const& seat);
 
     ~AbstractShell() noexcept;
 
@@ -116,12 +122,15 @@ public:
 
     bool handle(MirEvent const& event) override;
 
+    void update_focused_surface_confined_region();
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<WindowManager> const window_manager;
+    std::shared_ptr<input::Seat> const seat;
 
 private:
     std::shared_ptr<ShellReport> const report;
@@ -129,6 +138,7 @@ private:
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
+    std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
 
     void set_focus_to_locked(
         std::unique_lock<std::mutex> const& lock,

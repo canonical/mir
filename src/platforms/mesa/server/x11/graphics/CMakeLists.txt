@@ -7,7 +7,6 @@ include_directories(
 
 include_directories(
     ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
@@ -20,9 +19,8 @@ add_library(
   guest_platform.cpp
   display.cpp
   display_configuration.cpp
-  gl_context.cpp
-  display_group.cpp
   display_buffer.cpp
+  egl_helper.cpp
 )
 
 add_library(

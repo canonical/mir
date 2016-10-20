@@ -73,9 +73,19 @@ void MirInputDeviceStateEvent::set_when(std::chrono::nanoseconds const& when)
     when_ = when;
 }
 
-void MirInputDeviceStateEvent::add_device(MirInputDeviceId id, std::vector<uint32_t> && pressed_keys, MirPointerButtons pointer_buttons)
+MirInputEventModifiers MirInputDeviceStateEvent::modifiers() const
 {
-    devices.emplace_back(id, std::move(pressed_keys), pointer_buttons);
+    return modifiers_;
+}
+
+void MirInputDeviceStateEvent::set_modifiers(MirInputEventModifiers modifiers)
+{
+    modifiers_ = modifiers;
+}
+
+void MirInputDeviceStateEvent::set_device_states(std::vector<mir::events::InputDeviceState> const& device_states)
+{
+    devices = device_states;
 }
 
 uint32_t MirInputDeviceStateEvent::device_count() const
@@ -88,9 +98,9 @@ MirInputDeviceId MirInputDeviceStateEvent::device_id(size_t index) const
     return devices[index].id;
 }
 
-uint32_t const* MirInputDeviceStateEvent::device_pressed_keys(size_t index) const
+uint32_t MirInputDeviceStateEvent::device_pressed_keys_for_index(size_t index, size_t pressed_index) const
 {
-    return devices[index].pressed_keys.data();
+    return devices[index].pressed_keys[pressed_index];
 }
 
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
@@ -100,7 +110,7 @@ uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
 
 MirPointerButtons MirInputDeviceStateEvent::device_pointer_buttons(size_t index) const
 {
-    return devices[index].pointer_buttons;
+    return devices[index].buttons;
 }
 
 namespace
@@ -122,19 +132,21 @@ mir::EventUPtr MirInputDeviceStateEvent::deserialize(std::string const& bytes)
 
     MirEventType type;
     std::chrono::nanoseconds when;
+    MirInputEventModifiers modifiers;
     MirPointerButtons pointer_buttons;
     float pointer_x;
     float pointer_y;
     uint32_t count;
 
-    auto minimal_event_size =
-        sizeof type + sizeof when + sizeof pointer_buttons + sizeof pointer_x + sizeof pointer_y + sizeof count;
+    auto minimal_event_size = sizeof type + sizeof when + sizeof modifiers + sizeof pointer_buttons + sizeof pointer_x +
+                              sizeof pointer_y + sizeof count;
 
     if (stream_size < minimal_event_size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
 
     char const* pos = mir::event::consume(bytes.data(), type);
     pos = mir::event::consume(pos, when);
+    pos = mir::event::consume(pos, modifiers);
     pos = mir::event::consume(pos, pointer_buttons);
     pos = mir::event::consume(pos, pointer_x);
     pos = mir::event::consume(pos, pointer_y);
@@ -142,10 +154,12 @@ mir::EventUPtr MirInputDeviceStateEvent::deserialize(std::string const& bytes)
 
     auto new_event = new MirInputDeviceStateEvent;
     new_event->set_when(when);
+    new_event->set_modifiers(modifiers);
     new_event->set_pointer_buttons(pointer_buttons);
     new_event->set_pointer_axis(mir_pointer_axis_x, pointer_x);
     new_event->set_pointer_axis(mir_pointer_axis_y, pointer_y);
 
+    std::vector<mir::events::InputDeviceState> states;
     for (size_t i = 0; i != count; ++i)
     {
         uint32_t pressed_count = 0;
@@ -159,8 +173,9 @@ mir::EventUPtr MirInputDeviceStateEvent::deserialize(std::string const& bytes)
         for (size_t j = 0;j != pressed_count; ++j)
             pos = mir::event::consume(pos, pressed_keys[j]);
 
-        new_event->add_device(id, std::move(pressed_keys), pointer_buttons);
+        states.push_back({id, std::move(pressed_keys), pointer_buttons});
     }
+    new_event->set_device_states(states);
 
     return mir::EventUPtr(new_event, delete_input_device_state_event);
 }
@@ -171,6 +186,7 @@ std::string MirInputDeviceStateEvent::serialize(MirEvent const* event)
     auto input_state = event->to_input_device_state();
     encoded.reserve(sizeof event->type() +
                     sizeof input_state->when() +
+                    sizeof input_state->modifiers() +
                     sizeof input_state->pointer_buttons() +
                     sizeof input_state->pointer_axis(mir_pointer_axis_x) +
                     sizeof input_state->pointer_axis(mir_pointer_axis_y) +
@@ -184,6 +200,7 @@ std::string MirInputDeviceStateEvent::serialize(MirEvent const* event)
                     );
     encode(encoded, event->type());
     encode(encoded, input_state->when());
+    encode(encoded, input_state->modifiers());
     encode(encoded, input_state->pointer_buttons());
     encode(encoded, input_state->pointer_axis(mir_pointer_axis_x));
     encode(encoded, input_state->pointer_axis(mir_pointer_axis_y));
@@ -191,7 +208,7 @@ std::string MirInputDeviceStateEvent::serialize(MirEvent const* event)
     for (auto const& dev : input_state->devices)
     {
         encode(encoded, dev.id);
-        encode(encoded, dev.pointer_buttons);
+        encode(encoded, dev.buttons);
         encode(encoded, uint32_t(dev.pressed_keys.size()));
         for (auto const& key : dev.pressed_keys)
             encode(encoded, key);

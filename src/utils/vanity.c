@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <linux/input.h>
 #include <linux/videodev2.h>
 #include <unistd.h>
 #include <string.h>
@@ -77,6 +78,7 @@ typedef struct  // Things shared between threads
     Time display_frame_time;
     Buffer const* preview;
     int expected_direction;
+    bool reset;
 } State;
 
 static Time now()
@@ -121,6 +123,19 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
+        {
+            MirInputEvent const* ievent = mir_event_get_input_event(event);
+            if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
+            {
+                MirKeyboardEvent const* kevent =
+                    mir_input_event_get_keyboard_event(ievent);
+                if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up
+                    && mir_keyboard_event_scan_code(kevent) == KEY_R)
+                {
+                    state->reset = true;
+                }
+            }
+        }
         break;
     case mir_event_type_resize:
         state->resized = true;
@@ -441,6 +456,13 @@ static void* capture_thread_func(void* arg)
         Buffer const* buf = acquire_frame(cam);
         pthread_mutex_lock(&state->mutex);
 
+        if (state->reset)
+        {
+            nhistory = 0;
+            state->reset = false;
+            printf("\n\nMeasurements reset.\n");
+        }
+
         // Note using the buffer timestamp from the kernel means we're
         // free to allocate multiple camera buffers without it adversely
         // affecting the latency measurement (in fact it will improve it).
@@ -463,6 +485,7 @@ static void* capture_thread_func(void* arg)
             state->expected_direction = 0;
 
             if (latency < 10*one_second &&
+                (nhistory || latency > 10*one_millisecond) &&
                 frame_time &&
                 state->display_frame_time)
             {
@@ -604,18 +627,25 @@ int main(int argc, char* argv[])
 
     char const* const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera* cam = open_camera("/dev/video0", camera_pref_speed, 3);
+    // Default to fullscreen to get minimal latency (predictive bypass)
+    unsigned int win_width = 0;
+    unsigned int win_height = 0;
+
+    char const* dev_video = "/dev/video0";
+    struct mir_eglapp_arg custom_args[] =
+    {
+        {"-d <path>", "=", &dev_video, "Path to camera device"},
+        {NULL, NULL, NULL, NULL},
+    };
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
+        return 1;
+
+    Camera* cam = open_camera(dev_video, camera_pref_speed, 3);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return 0;  // Alan needs this to be success
     }
-
-    // Default to fullscreen to get minimal latency (predictive bypass)
-    unsigned int win_width = 0;
-    unsigned int win_height = 0;
-    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
-        return 1;
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
@@ -672,7 +702,8 @@ int main(int argc, char* argv[])
         0,
         0,
         NULL,
-        0
+        0,
+        false
     };
     MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);

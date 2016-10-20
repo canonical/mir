@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -29,11 +29,13 @@
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
 #include "../protobuf_to_native_buffer.h"
+#include "../mir_error.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 #include "mir/events/serialization.h"
+#include "mir/events/surface_placement_event.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -52,11 +54,6 @@ namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
 namespace mp = mir::protobuf;
 
-namespace
-{
-std::chrono::milliseconds const timeout(200);
-}
-
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
@@ -66,6 +63,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
     std::shared_ptr<PingHandler> const& ping_handler,
+    std::shared_ptr<ErrorHandler> const& error_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
@@ -75,6 +73,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     input_devices(input_devices),
     lifecycle_control(lifecycle_control),
     ping_handler{ping_handler},
+    error_handler{error_handler},
     event_sink(event_sink),
     disconnected(false),
     transport{std::move(transport)},
@@ -292,6 +291,15 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         (*ping_handler)(seq.ping_event().serial());
     }
 
+    if (seq.has_structured_error())
+    {
+        auto const error = MirError{
+            static_cast<MirErrorDomain>(seq.structured_error().domain()),
+            seq.structured_error().code()
+        };
+        (*error_handler)(&error);
+    }
+
     if (seq.has_buffer_request())
     {
         std::array<char, 1> dummy;
@@ -321,7 +329,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();
-                    std::shared_ptr<mcl::Buffer> buffer;
+                    std::shared_ptr<mcl::MirBuffer> buffer;
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:
@@ -403,6 +411,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         if (auto map = surface_map.lock())
                             map->with_surface_do(mf::SurfaceId(e->to_surface_output()->surface_id()), send_e);
                         break;
+                    case mir_event_type_surface_placement:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->to_surface_placement()->id()), send_e);
+                        break;
+
                     default:
                         event_sink->handle_event(*e);
                     }

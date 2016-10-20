@@ -59,6 +59,7 @@ public:
     std::shared_ptr<DisplayConfiguration> the_display_configuration() override;
     std::shared_ptr<LifecycleControl> the_lifecycle_control() override;
     std::shared_ptr<PingHandler> the_ping_handler() override;
+    std::shared_ptr<ErrorHandler> the_error_handler() override;
     std::shared_ptr<EventSink> the_event_sink() override;
     std::shared_ptr<EventHandlerRegister> the_event_handler_register() override;
     std::shared_ptr<mir::SharedLibraryProberReport> the_shared_library_prober_report();
@@ -78,6 +79,7 @@ protected:
     CachedPtr<DisplayConfiguration> display_configuration;
     CachedPtr<LifecycleControl> lifecycle_control;
     CachedPtr<PingHandler> ping_handler;
+    CachedPtr<ErrorHandler> error_handler;
     CachedPtr<EventDistributor> event_distributor;
 
     CachedPtr<rpc::RpcReport> rpc_report;

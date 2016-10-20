@@ -18,6 +18,7 @@
 
 #include <condition_variable>
 #include <boost/throw_exception.hpp>
+#include <unordered_set>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -31,6 +32,7 @@
 #include "mir/server_action_queue.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
+#include "mir/client_visible_error.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -41,6 +43,63 @@ namespace mt = mir::time;
 
 namespace
 {
+
+class DisplayConfigurationInProgressError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationInProgressError()
+        : ClientVisibleError("Base display configuration already in progress")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return mir_display_configuration_error_in_progress;
+    }
+};
+
+class DisplayConfigurationNotInProgressError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationNotInProgressError()
+        : ClientVisibleError("No base display configuration preview in progress")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return mir_display_configuration_error_no_preview_in_progress;
+    }
+};
+
+class DisplayConfigurationFailedError : public mir::ClientVisibleError
+{
+public:
+    DisplayConfigurationFailedError()
+        : ClientVisibleError("Display configuration falied")
+    {
+    }
+
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_display_configuration;
+    }
+
+    uint32_t code() const noexcept override
+    {
+        return mir_display_configuration_error_rejected_by_hardware;
+    }
+};
 
 class ApplyNowAndRevertOnScopeExit
 {
@@ -149,7 +208,16 @@ void ms::MediatingDisplayChanger::configure(
 
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
-                    apply_config(conf, PauseResumeSystem);
+                {
+                    try
+                    {
+                        apply_config(conf);
+                    }
+                    catch (std::exception const&)
+                    {
+                        session->send_error(DisplayConfigurationFailedError{});
+                    }
+                }
             }
         });
 }
@@ -166,7 +234,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         if (preview_configuration_timeout)
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error{"Another client is currently changing base configuration"});
+                DisplayConfigurationInProgressError());
         }
 
         preview_configuration_timeout = alarm_factory->create_alarm(
@@ -174,10 +242,12 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                 {
                     if (auto live_session = session.lock())
                     {
-                        apply_base_config(PauseResumeSystem);
+                        apply_base_config();
                         live_session->send_display_config(*base_configuration());
                     }
                 });
+        preview_configuration_timeout->reschedule_in(timeout);
+        currently_previewing_session = session;
     }
 
     server_action_queue->enqueue(
@@ -186,13 +256,15 @@ ms::MediatingDisplayChanger::preview_base_configuration(
         {
             if (auto live_session = session.lock())
             {
+                try
                 {
-                    std::lock_guard<std::mutex> lock{configuration_mutex};
-                    preview_configuration_timeout->reschedule_in(timeout);
+                    apply_config(conf);
+                    live_session->send_display_config(*conf);
                 }
-
-                apply_config(conf, PauseResumeSystem);
-                live_session->send_display_config(*conf);
+                catch (std::runtime_error const&)
+                {
+                    live_session->send_error(DisplayConfigurationFailedError{});
+                }
             }
         });
 }
@@ -205,8 +277,50 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
     {
         std::lock_guard<std::mutex> lock{configuration_mutex};
         preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
+        currently_previewing_session = std::weak_ptr<frontend::Session>{};
     }
     set_base_configuration(confirmed_conf);
+}
+
+void
+ms::MediatingDisplayChanger::cancel_base_configuration_preview(
+    std::shared_ptr<mir::frontend::Session> const& session)
+{
+    std::unique_ptr<mt::Alarm> previously_set_alarm;
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+        if (!preview_configuration_timeout || (currently_previewing_session.lock() != session))
+        {
+            BOOST_THROW_EXCEPTION(DisplayConfigurationNotInProgressError());
+        }
+        /* We transfer the alarm out of the lock, because the alarm's callback may try
+         * to *take* the configuration_mutex lock.
+         *
+         * Since cancel() blocks until the callback will definitely not be entered,
+         * we need to call cancel() outside the configuration_mutex lock to avoid possible
+         * deadlocks
+         */
+        previously_set_alarm = std::move(preview_configuration_timeout);
+        preview_configuration_timeout = nullptr;
+        currently_previewing_session = std::weak_ptr<frontend::Session>{};
+    }
+
+    if (previously_set_alarm->cancel())
+    {
+        // We cancelled the alarm, which means it had not already been triggered.
+        // Therefore we need to queue up a switch back to the base display configuration and
+        // send a notification.
+        server_action_queue->enqueue(
+            this,
+            [this, weak_session = std::weak_ptr<mir::frontend::Session>(session)]()
+            {
+                if (auto live_session = weak_session.lock())
+                {
+                    apply_base_config();
+                    live_session->send_display_config(*base_configuration());
+                }
+            });
+    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -218,19 +332,30 @@ ms::MediatingDisplayChanger::base_configuration()
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-    SystemStateHandling pause_resume_system)
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     server_action_queue->enqueue(
         this,
-        [this, conf, pause_resume_system]
+        [this, conf]
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            auto existing_configuration = base_configuration_;
 
             display_configuration_policy->apply_to(*conf);
             base_configuration_ = conf;
             if (base_configuration_applied)
-                apply_base_config(pause_resume_system);
+            {
+                try
+                {
+                    apply_base_config();
+                }
+                catch (std::exception const&)
+                {
+                    // TODO: Notify someone.
+                    base_configuration_ = existing_configuration;
+                }
+            }
 
             /*
              * Clear all the per-session configurations, since they may have become
@@ -239,7 +364,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
             config_map.clear();
 
             /* Send the new configuration to all the sessions */
-            send_config_to_all_sessions(conf);
+            send_config_to_all_sessions(base_configuration_);
         });
 }
 
@@ -253,32 +378,81 @@ void ms::MediatingDisplayChanger::resume_display_config_processing()
     server_action_queue->resume_processing_for(this);
 }
 
-void ms::MediatingDisplayChanger::apply_config(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-    SystemStateHandling pause_resume_system)
+namespace
 {
-    report->new_configuration(*conf);
-    if (pause_resume_system)
-    {
-        ApplyNowAndRevertOnScopeExit comp{
-            [this] { compositor->stop(); },
-            [this] { compositor->start(); }};
-
-        display->configure(*conf);
-    }
-    else
-    {
-        display->configure(*conf);
-    }
-    update_input_rectangles(*conf);
-
-    base_configuration_applied = false;
+bool configuration_has_new_outputs_enabled(
+    mg::DisplayConfiguration const& existing,
+    mg::DisplayConfiguration const& updated)
+{
+    std::unordered_set<mg::DisplayConfigurationOutputId> currently_enabled_outputs;
+    existing.for_each_output(
+        [&currently_enabled_outputs](auto const& output)
+        {
+            if (output.used)
+            {
+                currently_enabled_outputs.insert(output.id);
+            }
+        });
+    bool has_new_output{false};
+    updated.for_each_output(
+        [&currently_enabled_outputs, &has_new_output](auto const& output)
+        {
+            if (output.used)
+            {
+                has_new_output |= (currently_enabled_outputs.count(output.id) == 0);
+            }
+        });
+    return has_new_output;
+}
 }
 
-void ms::MediatingDisplayChanger::apply_base_config(
-    SystemStateHandling pause_resume_system)
+void ms::MediatingDisplayChanger::apply_config(
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
-    apply_config(base_configuration_, pause_resume_system);
+    report->new_configuration(*conf);
+
+    auto existing_configuration = display->configuration();
+    try
+    {
+        if (configuration_has_new_outputs_enabled(*display->configuration(), *conf) ||
+            !display->apply_if_configuration_preserves_display_buffers(*conf))
+        {
+            ApplyNowAndRevertOnScopeExit comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+            display->configure(*conf);
+        }
+
+        update_input_rectangles(*conf);
+        base_configuration_applied = false;
+    }
+    catch (...)
+    {
+        try
+        {
+            /*
+             * Reapply the previous configuration.
+             *
+             * We know that the previous configuration worked at some point - either it
+             * was one that has been successfully display->configure()d, or it was the
+             * configuration that existed at Mir startup. Which presumably worked!
+             */
+            ApplyNowAndRevertOnScopeExit comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+            display->configure(*existing_configuration);
+        }
+        catch (...)
+        {
+            // OMG WHY HAS EVERYTHING EXPLODED?
+        }
+        throw;
+    }
+}
+
+void ms::MediatingDisplayChanger::apply_base_config()
+{
+    apply_config(base_configuration_);
     base_configuration_applied = true;
 }
 
@@ -307,11 +481,19 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     auto const it = config_map.find(session);
     if (it != config_map.end())
     {
-        apply_config(it->second, PauseResumeSystem);
+        try
+        {
+            apply_config(it->second);
+        }
+        catch (std::exception const&)
+        {
+            session->send_error(DisplayConfigurationFailedError{});
+        }
     }
     else if (!base_configuration_applied)
     {
-        apply_base_config(PauseResumeSystem);
+        // TODO: What happens if this fails?
+        apply_base_config();
     }
 }
 
@@ -322,7 +504,7 @@ void ms::MediatingDisplayChanger::no_focus_handler()
     focused_session.reset();
     if (!base_configuration_applied)
     {
-        apply_base_config(PauseResumeSystem);
+        apply_base_config();
     }
 }
 
@@ -344,7 +526,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
             base_configuration_ = conf;
             if (base_configuration_applied)
-                apply_base_config(PauseResumeSystem);
+                apply_base_config();
 
             send_config_to_all_sessions(conf);
         });

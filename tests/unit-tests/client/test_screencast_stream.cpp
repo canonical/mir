@@ -157,6 +157,8 @@ TEST_F(ScreencastStream, advances_current_buffer)
 
 TEST_F(ScreencastStream, exception_does_not_leave_wait_handle_hanging)
 {
+    ON_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
+        .WillByDefault(mtd::RunProtobufClosure());
     struct FailingBufferFactory : mcl::ClientBufferFactory
     {
         std::shared_ptr<mcl::ClientBuffer> create_buffer(
