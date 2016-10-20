@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
         return 1;
 
     // By default we prefer high resolution and low CPU usage but if you
-    // ask for ultrafast mode expect low resultion and high CPU usage...
+    // ask for ultrafast mode expect low resolution and high CPU usage...
     enum CameraPref pref = camera_pref_resolution;
     if (ultrafast)
     {
