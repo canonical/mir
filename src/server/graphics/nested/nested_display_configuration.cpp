@@ -205,7 +205,7 @@ mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
 
     LocalOutputConfig const default_values {1.0f, mir_form_factor_monitor,
                                             mir_subpixel_arrangement_unknown,
-                                            {}, mir_output_gamma_unsupported};
+                                            {}, false};
 
     bool inserted;
     decltype(local_config)::iterator keypair;

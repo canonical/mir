@@ -92,7 +92,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
             mir_form_factor_monitor,
             subpixel_arrangement,
             {},
-            mir_output_gamma_unsupported
+            false
         }
 {
 }
@@ -120,7 +120,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
         mir_form_factor_monitor,
         mir_subpixel_arrangement_unknown,
         {},
-        mir_output_gamma_unsupported
+        false
     }
 {
     if (modes.empty())
@@ -224,7 +224,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            false
         };
 
         outputs.push_back(output);
@@ -256,7 +256,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const
                 mir_form_factor_monitor,
                 mir_subpixel_arrangement_unknown,
                 {},
-                mir_output_gamma_unsupported
+                false
             };
 
         outputs.push_back(output);
