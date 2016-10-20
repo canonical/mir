@@ -38,7 +38,9 @@ MIR_COMMON_0.25 {
     mir::graphics::NativeBuffer::NativeBuffer*;
     mir::graphics::NativeBuffer::operator*;
     mir::input::Keymap::Keymap*;
+    mir::libraries_for_path*;
     mir::log*;
+    mir::logging::DumbConsoleLogger::log*;
     mir::logging::log*;
     mir::logging::Logger::log*;
     mir::logging::Logger::?Logger*;
@@ -55,7 +57,11 @@ MIR_COMMON_0.25 {
     mir::PosixRWMutex::try_lock_shared*;
     mir::PosixRWMutex::unlock*;
     mir::PosixRWMutex::unlock_shared*;
+    mir::select_libraries_for_path*;
     mir::SharedLibrary::load_symbol*;
+    mir::SharedLibraryProberReport::operator*;
+    mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
+    mir::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
     non-virtual?thunk?to?mir::dispatch::ActionQueue::dispatch*;
@@ -70,8 +76,10 @@ MIR_COMMON_0.25 {
     non-virtual?thunk?to?mir::dispatch::ReadableFd::relevant_events*;
     non-virtual?thunk?to?mir::dispatch::ReadableFd::watch_fd*;
     non-virtual?thunk?to?mir::graphics::NativeBuffer::?NativeBuffer*;
+    non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::Logger::?Logger*;
+    non-virtual?thunk?to?mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     typeinfo?for?mir::detail::RefCountedLibrary;
     typeinfo?for?mir::dispatch::ActionQueue;
     typeinfo?for?mir::dispatch::Dispatchable;
@@ -84,9 +92,12 @@ MIR_COMMON_0.25 {
     typeinfo?for?mir::graphics::NativeBuffer;
     typeinfo?for?mir::input::Keymap;
     typeinfo?for?mir::IntOwnedFd;
+    typeinfo?for?mir::logging::DumbConsoleLogger;
     typeinfo?for?mir::logging::Logger;
+    typeinfo?for?mir::logging::NullSharedLibraryProberReport;
     typeinfo?for?mir::PosixRWMutex;
     typeinfo?for?mir::SharedLibrary;
+    typeinfo?for?mir::SharedLibraryProberReport;
     typeinfo?for?mir::time::PosixTimestamp;
     vtable?for?mir::detail::RefCountedLibrary;
     vtable?for?mir::dispatch::ActionQueue;
@@ -100,17 +111,18 @@ MIR_COMMON_0.25 {
     vtable?for?mir::graphics::NativeBuffer;
     vtable?for?mir::input::Keymap;
     vtable?for?mir::IntOwnedFd;
+    vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::logging::Logger;
+    vtable?for?mir::logging::NullSharedLibraryProberReport;
     vtable?for?mir::PosixRWMutex;
     vtable?for?mir::SharedLibrary;
+    vtable?for?mir::SharedLibraryProberReport;
     vtable?for?mir::time::PosixTimestamp;
 
     # These symbols are supposed to be "private" (they're under src/include)
     # but they are used by libmirplatform, libmirclient or libmirserver
     mir::default_server_socket;
-    mir::libraries_for_path*;
     mir::logging::input_timestamp*;
-    mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
     mir::RecursiveReadWriteMutex::read_lock*;
@@ -120,7 +132,6 @@ MIR_COMMON_0.25 {
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
-    vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
 
@@ -193,16 +204,9 @@ MIR_COMMON_0.25_PRIVATE {
 # New functions in Mir 0.19.0
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
-      typeinfo?for?mir::logging::SharedLibraryProberReport;
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
-      typeinfo?for?mir::logging::DumbConsoleLogger;
       mir::detail::libname_impl*;
-
-# New functions in Mir 0.19.1
-      # These symbols are supposed to be "private" (they're under src/include)
-      # but they are used by libmirplatform, libmirclient or libmirserver
-      mir::select_libraries_for_path*;
 
 # New functions in Mir 0.22
       # These symbols are supposed to be "private" (they're under src/include)
