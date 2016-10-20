@@ -261,11 +261,11 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                 }
             },
             i,
-            [&]()
+            [&, current_id = i]()
             {
                 {
                     std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
-                    reader_to_run = (reader_to_run + 1) % readers.size();
+                    reader_to_run = (current_id + 1) % readers.size();
                 }
                 reader_changed.notify_all();
             }};
