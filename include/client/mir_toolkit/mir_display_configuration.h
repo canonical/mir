@@ -477,7 +477,7 @@ MirFormFactor mir_output_get_form_factor(MirOutput const* output);
 /** Gets if the platform supports gamma correction
  *
  * \param [in]  output  The MirOutput to query
- * \returns     ture if gamma is supported on the hardwise, otherwise not supported
+ * \returns     true if gamma is supported on the hardware, otherwise not supported
  */
 bool mir_output_is_gamma_supported(MirOutput const* client_output);
 
