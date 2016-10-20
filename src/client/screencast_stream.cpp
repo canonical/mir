@@ -89,7 +89,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
         for (int i = 0; i < buffer.fd_size(); i++)
             ::close(buffer.fd(i));
         if (screencast_wait_handle.is_pending())
-            screencast_wait_handle.expect_result();
+            screencast_wait_handle.result_received();
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
     }
 
@@ -114,7 +114,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
             std::string{"Error processing buffer stream creating response:"} +
             boost::diagnostic_information(error));
         if (screencast_wait_handle.is_pending())
-            screencast_wait_handle.expect_result();
+            screencast_wait_handle.result_received();
         throw error;
     }
 }
