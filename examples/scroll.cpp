@@ -39,7 +39,7 @@ try
         gl_animation.step();
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
     return 0;
 }
 catch(std::exception& e)

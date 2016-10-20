@@ -87,6 +87,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     State *state = (State*)context;
+    bool handled = true;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
@@ -95,21 +96,19 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
     switch (mir_event_get_type(event))
     {
-    case mir_event_type_input:
-        break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
+
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -563,7 +562,7 @@ int main(int argc, char *argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
     close_camera(cam);
 
     return 0;

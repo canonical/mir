@@ -110,8 +110,33 @@ static GLuint load_shader(char const* src, GLenum type)
     return shader;
 }
 
+static bool on_key_event(MirKeyboardEvent const* kevent, State* state)
+{
+    if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up)
+    {
+        switch (mir_keyboard_event_scan_code(kevent))
+        {
+        case KEY_R:
+            state->reset = true;
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
+static bool on_input_event(MirInputEvent const* ievent, State* state)
+{
+    if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
+        return on_key_event(mir_input_event_get_keyboard_event(ievent), state);
+    return false;
+}
+
 static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
+    bool handled = true;
+
     (void)surface;
     State* state = (State*)context;
 
@@ -123,33 +148,20 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
-        {
-            MirInputEvent const* ievent = mir_event_get_input_event(event);
-            if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
-            {
-                MirKeyboardEvent const* kevent =
-                    mir_input_event_get_keyboard_event(ievent);
-                if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up
-                    && mir_keyboard_event_scan_code(kevent) == KEY_R)
-                {
-                    state->reset = true;
-                }
-            }
-        }
+        handled = on_input_event(mir_event_get_input_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -829,7 +841,7 @@ int main(int argc, char* argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);
     close_camera(cam);
