@@ -167,7 +167,7 @@ void mircv::XKBMapper::update_modifier()
         MirInputEventModifiers new_modifier = 0;
         for (auto const& mapping_state : device_mapping)
         {
-            new_modifier |= mapping_state.second.modifier_state;
+            new_modifier |= mapping_state.second->modifier_state;
         }
 
         modifier_state = new_modifier;
@@ -209,14 +209,17 @@ mircv::XKBMapper::XkbMappingState* mircv::XKBMapper::get_keymapping_state(MirInp
 
     if (dev_keymap != end(device_mapping))
     {
-        return &dev_keymap->second;
+        return dev_keymap->second.get();
     }
     if (default_keymap)
     {
-        return
-            &device_mapping.emplace(std::piecewise_construct,
-                                    std::forward_as_tuple(id),
-                                    std::forward_as_tuple(default_keymap)).first->second;
+        decltype(device_mapping.begin()) insertion_pos;
+        std::tie(insertion_pos, std::ignore) =
+            device_mapping.emplace(std::piecewise_construct,
+                                   std::forward_as_tuple(id),
+                                   std::forward_as_tuple(std::make_unique<XkbMappingState>(default_keymap)));
+
+        return insertion_pos->second.get();
     }
     return nullptr;
 }
@@ -255,7 +258,7 @@ void mircv::XKBMapper::set_keymap(MirInputDeviceId id, XKBKeymapPtr new_keymap)
     device_mapping.erase(id);
     device_mapping.emplace(std::piecewise_construct,
                            std::forward_as_tuple(id),
-                           std::forward_as_tuple(std::move(new_keymap)));
+                           std::forward_as_tuple(std::make_unique<XkbMappingState>(std::move(new_keymap))));
 }
 
 void mircv::XKBMapper::clear_all_keymaps()
@@ -336,14 +339,17 @@ mircv::XKBMapper::ComposeState* mircv::XKBMapper::get_compose_state(MirInputDevi
 
     if (dev_compose_state != end(device_composing))
     {
-        return &dev_compose_state->second;
+        return dev_compose_state->second.get();
     }
     if (compose_table)
     {
-        return
-            &device_composing.emplace(std::piecewise_construct,
-                                      std::forward_as_tuple(id),
-                                      std::forward_as_tuple(compose_table)).first->second;
+        decltype(device_composing.begin()) insertion_pos;
+        std::tie(insertion_pos, std::ignore) =
+            device_composing.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(id),
+                                     std::forward_as_tuple(std::make_unique<ComposeState>(compose_table)));
+
+        return insertion_pos->second.get();
     }
     return nullptr;
 }

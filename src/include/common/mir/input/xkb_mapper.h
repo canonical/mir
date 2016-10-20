@@ -104,8 +104,8 @@ private:
     XKBComposeTablePtr compose_table;
 
     mir::optional_value<MirInputEventModifiers> modifier_state;
-    std::unordered_map<MirInputDeviceId, XkbMappingState> device_mapping;
-    std::unordered_map<MirInputDeviceId, ComposeState> device_composing;
+    std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
+    std::unordered_map<MirInputDeviceId, std::unique_ptr<ComposeState>> device_composing;
 };
 }
 }
