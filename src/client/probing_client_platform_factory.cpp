@@ -12,10 +12,12 @@ namespace mcl = mir::client;
 mcl::ProbingClientPlatformFactory::ProbingClientPlatformFactory(
     std::shared_ptr<mir::SharedLibraryProberReport> const& rep,
     StringList const& force_libs,
-    StringList const& lib_paths)
+    StringList const& lib_paths,
+    std::shared_ptr<mir::logging::Logger> const& logger)
     : shared_library_prober_report{rep},
       platform_overrides{force_libs},
-      platform_paths{lib_paths}
+      platform_paths{lib_paths},
+      logger{logger}
 {
     if (platform_overrides.empty() && platform_paths.empty())
     {
@@ -69,7 +71,7 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
     for (auto& module : platform_modules)
     {
         auto factory = module->load_function<CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
-        return factory(context, nullptr);
+        return factory(context, logger);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate client platform module found"});
