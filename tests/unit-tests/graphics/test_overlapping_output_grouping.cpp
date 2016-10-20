@@ -99,7 +99,7 @@ public:
                 mir_form_factor_monitor,
                 mir_subpixel_arrangement_unknown,
                 {},
-                false
+                mir_output_gamma_unsupported
             };
 
             f(output);
