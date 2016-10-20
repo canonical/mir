@@ -23,6 +23,7 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
+#include <sstream>
 #include <boost/throw_exception.hpp>
 
 namespace mi = mir::input;
@@ -117,6 +118,8 @@ mi::XKBContextPtr mi::make_unique_context()
 
 mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, mi::Keymap const& map)
 {
+    std::stringstream error;
+    error << "Illegal keymap configuration evdev-" << map;
     xkb_rule_names keymap_names
     {
         "evdev",
@@ -125,13 +128,20 @@ mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, mi::Keymap const& 
         map.variant.c_str(),
         map.options.c_str()
     };
-    return {xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0)), &xkb_keymap_unref};
+    auto keymap_ptr = xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0));
+
+    if (!keymap_ptr)
+        BOOST_THROW_EXCEPTION(std::invalid_argument(error.str().c_str()));
+    return {keymap_ptr, &xkb_keymap_unref};
 }
 
 mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, char const* buffer, size_t size)
 {
-    return {xkb_keymap_new_from_buffer(context, buffer, size, XKB_KEYMAP_FORMAT_TEXT_V1, xkb_keymap_compile_flags(0)),
-            &xkb_keymap_unref};
+    auto keymap_ptr = xkb_keymap_new_from_buffer(context, buffer, size, XKB_KEYMAP_FORMAT_TEXT_V1, xkb_keymap_compile_flags(0));
+    if (!keymap_ptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("failed to create keymap from buffer."));
+
+    return {keymap_ptr, &xkb_keymap_unref};
 }
 
 mircv::XKBMapper::XKBMapper() :
