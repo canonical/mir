@@ -53,6 +53,7 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(format, MirPixelFormat());
     MOCK_METHOD2(sync, void(MirBufferAccess, std::chrono::nanoseconds));
+    MOCK_METHOD1(on_ownership_notification, void(std::function<void()> const&));
     MOCK_CONST_METHOD0(package, MirBufferPackage*());
     MOCK_CONST_METHOD0(fence, mir::Fd());
     MOCK_METHOD1(set_fence, void(mir::Fd));
@@ -207,6 +208,7 @@ TEST_F(NestedBuffer, binds_to_texture)
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay());
     EXPECT_CALL(mock_egl, eglGetCurrentContext());
+    EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_));
     EXPECT_CALL(*client_buffer, sync(mir_read, _));
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _));
 

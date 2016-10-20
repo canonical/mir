@@ -328,6 +328,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
                     surface.first,
                     output_properties->dpi,
                     output_properties->scale,
+                    output_properties->refresh_rate,
                     output_properties->form_factor,
                     static_cast<uint32_t>(output_properties->id.as_value())
                     ));

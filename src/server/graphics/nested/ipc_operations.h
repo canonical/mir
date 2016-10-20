@@ -33,8 +33,8 @@ class IpcOperations : public PlatformIpcOperations
 public:
     IpcOperations(std::shared_ptr<graphics::PlatformIpcOperations> const& host_operations);
 
-    void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
-    void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
+    void pack_buffer(BufferIpcMessage& message, graphics::Buffer const& buffer, BufferIpcMsgType msg_type) const override;
+    void unpack_buffer(BufferIpcMessage& message, graphics::Buffer const& buffer) const override;
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
     PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) override;

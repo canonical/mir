@@ -4,6 +4,11 @@ include_directories(
   ${ANDROID_HEADERS_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/src/platforms/android/include
 )
+
+set(
+  ANDROID_UNIT_TEST_SOURCES
+)
+
 add_subdirectory("server")
 add_subdirectory("client")
 

@@ -1,0 +1,3 @@
+usr/include/mircore
+usr/lib/*/libmircore.so
+usr/lib/*/pkgconfig/mircore.pc

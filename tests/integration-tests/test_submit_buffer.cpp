@@ -32,8 +32,6 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
-#include "src/server/compositor/buffer_bundle.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -75,9 +73,13 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
         mf::BufferStreamId i, std::shared_ptr<mf::ClientBuffers> const& s,
         int, mg::BufferProperties const& p) override
-    { return create_buffer_stream(i, s, p); }
+    {
+        return create_buffer_stream(i, s, p);
+    }
+
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink, mg::BufferProperties const& properties) override
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink,
+        mg::BufferProperties const& properties) override
     {
         return std::make_shared<mc::Stream>(factory, sink, properties.size, properties.format);
     }
@@ -161,7 +163,9 @@ struct StubStreamFactory : public msc::BufferStreamFactory
         };
         return std::make_shared<BufferMap>(sink, buffer_id_seq);
     }
+
     std::vector<mg::BufferID> const buffer_id_seq;
+    mtd::StubFrameDroppingPolicyFactory factory;
 };
 
 struct StubBufferPacker : public mg::PlatformIpcOperations

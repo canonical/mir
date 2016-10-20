@@ -3,8 +3,8 @@
 # This ABI is much smaller than the full libmirplatform ABI.
 #
 # TODO: Add an extra driver-ABI check target.
-set(MIR_SERVER_INPUT_PLATFORM_ABI 5)
-set(MIR_SERVER_INPUT_PLATFORM_STANZA_VERSION 0.19)
+set(MIR_SERVER_INPUT_PLATFORM_ABI 6)
+set(MIR_SERVER_INPUT_PLATFORM_STANZA_VERSION 0.25)
 set(MIR_SERVER_INPUT_PLATFORM_ABI ${MIR_SERVER_INPUT_PLATFORM_ABI} PARENT_SCOPE)
 set(MIR_SERVER_INPUT_PLATFORM_VERSION "MIR_INPUT_PLATFORM_${MIR_SERVER_INPUT_PLATFORM_STANZA_VERSION}")
 set(MIR_SERVER_INPUT_PLATFORM_VERSION ${MIR_SERVER_INPUT_PLATFORM_VERSION} PARENT_SCOPE)
@@ -44,7 +44,6 @@ set(server_common_include_dirs
 set(server_common_include_dirs
   ${server_common_include_dirs}
   ${CMAKE_CURRENT_SOURCE_DIR}/common/server
-  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 

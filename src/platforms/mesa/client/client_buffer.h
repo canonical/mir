@@ -25,6 +25,7 @@
 #include "mir/geometry/rectangle.h"
 #include "native_buffer.h"
 
+#include <vector>
 #include <memory>
 
 namespace mir
@@ -64,6 +65,7 @@ private:
     std::shared_ptr<graphics::mesa::NativeBuffer> const creation_package;
     geometry::Rectangle const rect;
     MirPixelFormat const buffer_pf;
+    std::vector<EGLint> egl_image_attrs;
 };
 
 }

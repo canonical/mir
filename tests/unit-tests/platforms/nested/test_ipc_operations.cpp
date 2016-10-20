@@ -47,7 +47,6 @@ struct StubNestedBuffer : mgn::NativeBuffer
 public:
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
     MirBuffer* client_handle() const override { return nullptr; }
-    MirNativeBuffer* get_native_handle() override { return nullptr; }
     MirGraphicsRegion get_graphics_region() override
     {
         return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
@@ -57,6 +56,7 @@ public:
     MirBufferPackage* package() const override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd(); }
     void set_fence(mir::Fd) override {}
+    void on_ownership_notification(std::function<void()> const&) override {}
     std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
     {
         return {};

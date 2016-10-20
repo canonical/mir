@@ -127,6 +127,7 @@ mir::EventUPtr mev::make_event(
     mf::SurfaceId const& surface_id,
     int dpi,
     float scale,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t output_id)
 {
@@ -135,6 +136,7 @@ mir::EventUPtr mev::make_event(
     e->set_surface_id(surface_id.as_value());
     e->set_dpi(dpi);
     e->set_scale(scale);
+    e->set_refresh_rate(refresh_rate);
     e->set_form_factor(form_factor);
     e->set_output_id(output_id);
 
@@ -234,6 +236,18 @@ void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
 
     event.to_input()->to_motion()->set_x(0, pos.x.as_int());
     event.to_input()->to_motion()->set_y(0, pos.y.as_int());
+}
+
+void mev::set_cursor_position(MirEvent& event, float x, float y)
+{
+    if (event.type() != mir_event_type_motion &&
+        event.to_input()->to_motion()->source_id() != AINPUT_SOURCE_MOUSE &&
+        event.to_input()->to_motion()->pointer_count() == 1)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
+
+    auto motion = event.to_input()->to_motion();
+    motion->set_x(0, x);
+    motion->set_y(0, y);
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -439,8 +453,59 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
     e->set_pointer_buttons(pointer_buttons);
     e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
     e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
-    for (auto& dev : device_states)
-        e->add_device(dev.id, std::move(dev.pressed_keys), dev.buttons);
+    e->set_device_states(device_states);
 
     return make_uptr_event(e);
 }
+
+mir::EventUPtr mev::clone_event(MirEvent const& event)
+{
+    return make_uptr_event(event.clone());
+}
+
+void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)
+{
+    if (event.type() == mir_event_type_motion)
+    {
+        auto mev = event.to_input()->to_motion();
+        for (unsigned i = 0; i < mev->pointer_count(); i++)
+        {
+            auto x = mev->x(i);
+            auto y = mev->y(i);
+            mev->set_x(i, x - movement.dx.as_int());
+            mev->set_y(i, y - movement.dy.as_int());
+        }
+    }
+}
+
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+                               std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+                               std::vector<mev::ContactState> const& contacts)
+{
+    auto e = new_event<MirMotionEvent>();
+
+    e->set_device_id(device_id);
+    e->set_event_time(timestamp);
+    e->set_cookie(vector_to_cookie_as_blob(mac));
+    e->set_modifiers(modifiers);
+    e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
+    e->set_pointer_count(contacts.size());
+
+    size_t current_index = 0;
+    for (auto const& contact : contacts)
+    {
+        e->set_id(current_index, contact.touch_id);
+        e->set_tool_type(current_index, contact.tooltype);
+        e->set_x(current_index, contact.x);
+        e->set_y(current_index, contact.y);
+        e->set_pressure(current_index, contact.pressure);
+        e->set_touch_major(current_index, contact.touch_major);
+        e->set_touch_minor(current_index, contact.touch_minor);
+        e->set_size(current_index, contact.touch_major);
+        e->set_action(current_index, contact.action);
+        ++current_index;
+    }
+
+    return make_uptr_event(e);
+}
+

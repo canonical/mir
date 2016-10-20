@@ -19,11 +19,17 @@
 #include "mir_client_host_connection.h"
 #include "host_surface.h"
 #include "host_stream.h"
+#include "host_chain.h"
+#include "host_surface_spec.h"
+#include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
@@ -37,9 +43,11 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <condition_variable>
 
 #include <cstring>
 
+namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mi = mir::input;
@@ -111,6 +119,11 @@ public:
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
         mir_surface_release_sync(mir_surface);
+    }
+
+    void apply_spec(mgn::HostSurfaceSpec& spec) override
+    {
+        mir_surface_apply_spec(mir_surface, spec.handle());
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -286,6 +299,7 @@ mgn::MirClientHostConnection::MirClientHostConnection(
         [](MirConnection* connection, void* context)
         {
             auto obj = static_cast<MirClientHostConnection*>(context);
+            RecursiveReadLock lock{obj->input_config_callback_mutex};
             if (obj->input_config_callback)
                 obj->input_config_callback(make_input_config(connection));
         },
@@ -448,27 +462,220 @@ mgn::UniqueInputConfig mgn::MirClientHostConnection::create_input_device_config(
 
 void mgn::MirClientHostConnection::set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb)
 {
+    RecursiveWriteLock lock{input_config_callback_mutex};
     input_config_callback = cb;
 }
 
 void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb)
 {
+    RecursiveWriteLock lock{event_callback_mutex};
     event_callback = cb;
 }
 
 void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
 {
-    event_callback(event, source_frame);
+    RecursiveReadLock lock{event_callback_mutex};
+    if (event_callback)
+        event_callback(event, source_frame);
 }
 
 std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
-    mg::BufferProperties const& properties)
+    mg::BufferProperties const& properties) const
 {
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
-std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferProperties const&)
+struct Chain : mgn::HostChain
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not implemented yet"));
+    Chain(MirConnection* connection) :
+        chain(mir_connection_create_presentation_chain_sync(connection))
+    {
+    }
+    ~Chain()
+    {
+        mir_presentation_chain_release(chain);
+    }
+
+    void submit_buffer(mgn::NativeBuffer& buffer)
+    {
+        mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
+    }
+
+    MirPresentationChain* handle()
+    {
+        return chain;
+    }
+private:
+    MirPresentationChain* chain;
+};
+
+std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
+{
+    return std::make_unique<Chain>(mir_connection);
+}
+
+namespace
+{
+class HostBuffer : public mgn::NativeBuffer
+{
+public:
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
+    {
+        mir_connection_allocate_buffer(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
+        {
+            mir_buffer_release(handle);
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+    }
+    ~HostBuffer()
+    {
+        mir_buffer_release(handle);
+    }
+
+    void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
+    {
+        mir_buffer_wait_for_access(handle, access, ns.count());
+    }
+
+    MirBuffer* client_handle() const override
+    {
+        return handle;
+    }
+
+    MirGraphicsRegion get_graphics_region() override
+    {
+        return mir_buffer_get_graphics_region(handle, mir_read_write);
+    }
+
+    geom::Size size() const override
+    {
+        return { mir_buffer_get_width(handle), mir_buffer_get_height(handle) };
+    }
+
+    MirPixelFormat format() const override
+    {
+        return mir_buffer_get_pixel_format(handle);
+    }
+
+    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
+    {
+        EGLenum type;
+        EGLClientBuffer client_buffer = nullptr;;
+        EGLint* attrs = nullptr;
+        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        
+        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
+    }
+
+    static void buffer_available(MirBuffer* buffer, void* context)
+    {
+        auto host_buffer = static_cast<HostBuffer*>(context);
+        host_buffer->available(buffer);
+    }
+
+    void available(MirBuffer* buffer)
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        if (!handle)
+        {
+            handle = buffer;
+            cv.notify_all();
+        }
+
+        auto g = f;
+        lk.unlock();
+        if (g)
+            g();
+    }
+
+    void on_ownership_notification(std::function<void()> const& fn) override
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        f = fn;
+    }
+
+    MirBufferPackage* package() const override
+    {
+       return mir_buffer_get_buffer_package(handle);
+    }
+
+    void set_fence(mir::Fd fd) override
+    {
+        mir_buffer_associate_fence(handle, fd, mir_read_write);
+    }
+
+    mir::Fd fence() const override
+    {
+        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
+    }
+
+private:
+    std::function<void()> f;
+    MirBuffer* handle = nullptr;
+    std::mutex mut;
+    std::condition_variable cv;
+};
+
+class SurfaceSpec : public mgn::HostSurfaceSpec
+{
+public:
+    SurfaceSpec(MirConnection* connection) :
+        spec(mir_connection_create_spec_for_changes(connection))
+    {
+    }
+
+    ~SurfaceSpec()
+    {
+        mir_surface_spec_release(spec);
+    }
+
+    void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
+    {
+        mir_surface_spec_add_presentation_chain(
+            spec, size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int(), chain.handle());
+    }
+
+    void add_stream(mgn::HostStream& stream, geom::Displacement disp) override
+    {
+        mir_surface_spec_add_buffer_stream(spec, disp.dx.as_int(), disp.dy.as_int(), stream.handle());
+    }
+
+    MirSurfaceSpec* handle() override
+    {
+        return spec;
+    }
+private:
+    MirSurfaceSpec* spec;
+};
+}
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const& properties)
+{
+    return std::make_shared<HostBuffer>(mir_connection, properties);
+}
+
+std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
+{
+    return std::make_unique<SurfaceSpec>(mir_connection);
+}
+
+bool mgn::MirClientHostConnection::supports_passthrough()
+{
+    auto buffer = create_buffer(mg::BufferProperties(geom::Size{1, 1} , mir_pixel_format_abgr_8888, mg::BufferUsage::software));
+
+    auto hints = buffer->egl_image_creation_hints();
+    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
+        return false;
+    return true;
 }

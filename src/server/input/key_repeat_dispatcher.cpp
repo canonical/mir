@@ -22,16 +22,17 @@
 #include "mir/input/input_device_hub.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
-#include "mir/events/event_private.h"
+#include "mir/events/event_builders.h"
 #include "mir/cookie/authority.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
 #include <stdexcept>
-#include <string.h>
+#include <chrono>
 
 namespace mi = mir::input;
+namespace mev = mir::events;
 
 namespace
 {
@@ -155,28 +156,36 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
     case mir_keyboard_action_down:
     {
-        MirKeyboardEvent new_kev = *kev;
-        new_kev.set_action(mir_keyboard_action_repeat);
+        auto clone_event = [scan_code, id, this,
+             key_code = mir_keyboard_event_key_code(kev),
+             modifiers = mir_keyboard_event_modifiers(kev)]()
+             {
+                 auto const now = std::chrono::steady_clock::now().time_since_epoch();
+                 auto const cookie = cookie_authority->make_cookie(now.count());
+                 auto new_event = mev::make_event(
+                     id,
+                     now,
+                     cookie->serialize(),
+                     mir_keyboard_action_repeat,
+                     key_code,
+                     scan_code,
+                     modifiers);
+                 next_dispatcher->dispatch(*new_event);
+             };
 
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it != device_state.repeat_alarms_by_scancode.end())
         {
             // When we receive a duplicated down we just replace the action
-            next_dispatcher->dispatch(new_kev);
+            clone_event();
             return true;
         }
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
-        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, new_kev]() mutable
+        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm(
+            [this, clone_event, &capture_alarm]() mutable
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
-
-                new_kev.set_event_time(std::chrono::steady_clock::now().time_since_epoch());
-                auto const cookie = cookie_authority->make_cookie(new_kev.event_time().count());
-                auto const serialized_cookie = cookie->serialize();
-                mir::cookie::Blob event_cookie;
-                std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
-                new_kev.set_cookie(event_cookie);
-                next_dispatcher->dispatch(new_kev);
+                clone_event();
 
                 capture_alarm->reschedule_in(repeat_delay);
             });
@@ -200,8 +209,8 @@ void mi::KeyRepeatDispatcher::start()
 void mi::KeyRepeatDispatcher::stop()
 {
     std::lock_guard<std::mutex> lg(repeat_state_mutex);
-    
+
     repeat_state_by_device.clear();
-        
+
     next_dispatcher->stop();
 }

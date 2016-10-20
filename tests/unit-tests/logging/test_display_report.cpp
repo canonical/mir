@@ -17,9 +17,9 @@
  */
 
 #include "src/server/report/logging/display_report.h"
+#include "mir/graphics/frame.h"
 #include "mir/logging/logger.h"
 #include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,7 +40,6 @@ public:
 
 struct DisplayReport : public testing::Test
 {
-    std::shared_ptr<mtd::AdvanceableClock> const clock{std::make_shared<mtd::AdvanceableClock>()};
     std::shared_ptr<MockLogger> logger{std::make_shared<MockLogger>()};
     mtd::MockEGL mock_egl;
 };
@@ -116,29 +115,71 @@ TEST_F(DisplayReport, eglconfig)
             component));
     }
 
-    mrl::DisplayReport report(logger, clock);
+    mrl::DisplayReport report(logger);
     report.report_egl_configuration(disp, config);
 }
 
 TEST_F(DisplayReport, reports_vsync)
 {
-    std::chrono::milliseconds interval(1500);
+    using namespace testing;
+    std::chrono::nanoseconds const nanos_per_frame{16666666};
+    std::string const interval_str{"interval 16.666ms"};
     unsigned int display1_id {1223};
     unsigned int display2_id {4492};
-    std::string display1_name(std::to_string(display1_id));
-    std::string display2_name(std::to_string(display2_id));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        "2 vsync events on [" + display1_name + "] over " + std::to_string(interval.count()) + "ms",
+        AllOf(StartsWith("vsync on "+std::to_string(display1_id)),
+              HasSubstr(interval_str)),
         component));
     EXPECT_CALL(*logger, log(
         ml::Severity::informational,
-        "1 vsync events on [" + display2_name + "] over " + std::to_string(interval.count()) + "ms",
+        AllOf(StartsWith("vsync on "+std::to_string(display2_id)),
+              HasSubstr(interval_str)),
         component));
-    mrl::DisplayReport report(logger, clock);
+    mrl::DisplayReport report(logger);
 
-    report.report_vsync(display1_id);
-    report.report_vsync(display2_id);
-    clock->advance_by(interval);
-    report.report_vsync(display1_id);
+    mir::graphics::Frame frame;
+    report.report_vsync(display1_id, frame);
+    report.report_vsync(display2_id, frame);
+    frame.msc++;
+    frame.ust.nanoseconds += nanos_per_frame;
+    report.report_vsync(display1_id, frame);
+    report.report_vsync(display2_id, frame);
+}
+
+TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
+{
+    using namespace testing;
+    int const hz = 60;
+    std::string const interval_str{"interval 16.666ms (60.00Hz)"};
+    unsigned const id{123};
+    int const d1 = 456;
+    int const d2 = 789;
+
+    InSequence seq;
+
+    auto const id_str = std::to_string(id);
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational,
+        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1)+","),
+              HasSubstr(interval_str)),
+        component));
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational,
+        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1+d2)+","),
+              HasSubstr(interval_str)),
+        component));
+
+    mrl::DisplayReport report(logger);
+    mir::graphics::Frame frame;
+
+    std::chrono::nanoseconds const nanos_per_frame{1000000000LL/hz};
+
+    report.report_vsync(id, frame);
+    frame.msc += d1;
+    frame.ust.nanoseconds += d1 * nanos_per_frame;
+    report.report_vsync(id, frame);
+    frame.msc += d2;
+    frame.ust.nanoseconds += d2 * nanos_per_frame;
+    report.report_vsync(id, frame);
 }

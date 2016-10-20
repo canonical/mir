@@ -29,6 +29,8 @@ namespace mir
 {
 class EmergencyCleanupRegistry;
 
+namespace logging { class Logger; }
+
 namespace frontend
 {
 class Surface;
@@ -114,7 +116,8 @@ enum PlatformPriority : uint32_t
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
@@ -154,7 +157,7 @@ extern "C"
 mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report, std::shared_ptr<mir::logging::Logger> const& logger);
 
 /**
  * Function prototype used to return a new guest graphics platform. The guest graphics platform

@@ -588,9 +588,8 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     BufferScheduling()
     {
         ipc = std::make_shared<StubIpcSystem>();
-        map = std::make_shared<mc::BufferMap>(
-                std::make_shared<StubEventSink>(ipc),
-                std::make_shared<mtd::StubBufferAllocator>());
+        sink = std::make_shared<StubEventSink>(ipc);
+        map = std::make_shared<mc::BufferMap>(sink, std::make_shared<mtd::StubBufferAllocator>());
         auto submit_stream = std::make_shared<mc::Stream>(
             drop_policy,
             map,
@@ -648,6 +647,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mf::BufferSink> sink;
     std::unique_ptr<ProducerSystem> producer;
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
