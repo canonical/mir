@@ -165,7 +165,6 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     }
 
     std::vector<mg::BufferID> const buffer_id_seq;
-    mtd::StubFrameDroppingPolicyFactory factory;
 };
 
 struct StubBufferPacker : public mg::PlatformIpcOperations
