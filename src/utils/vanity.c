@@ -516,7 +516,7 @@ static void* capture_thread_func(void* arg)
 
                 printf("INTERVALS: camera %llu.%1llums (%lluHz), "
                        "display %llu.%1llums (%lluHz), "
-                       "expected vary %llu.%1llums\n",
+                       "expected range %llu.%1llums\n",
                        frame_time / one_millisecond,
                        (frame_time % one_millisecond) / 100000,
                        one_second / frame_time,
@@ -531,7 +531,7 @@ static void* capture_thread_func(void* arg)
                        "max %llu.%1llums, "
                        "avg %llu.%1llums, "
                        "last %llu.%1llums, "
-                       "vary %llu.%1llums\n",
+                       "observed range %llu.%1llums\n",
                        min / one_millisecond,
                        (min % one_millisecond) / 100000,
                        max / one_millisecond,
