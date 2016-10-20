@@ -26,7 +26,6 @@ namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
 class EGLNativeDisplayContainer;
 
 namespace mesa
