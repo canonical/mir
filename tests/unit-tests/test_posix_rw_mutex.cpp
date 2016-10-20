@@ -231,8 +231,18 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
     {
         readers[i] = mt::AutoUnblockThread{
             [&shutdown_readers]() { shutdown_readers = true; },
-            [&](int id, std::function<void()> const& trigger_next_reader)
+            [&](int id)
             {
+                auto const trigger_next_reader =
+                    [&]()
+                    {
+                        {
+                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
+                            reader_to_run = (id + 1) % readers.size();
+                        }
+                        reader_changed.notify_all();
+                    };
+
                 while (!shutdown_readers)
                 {
                     if (auto lock = std::shared_lock<decltype(mutex)>{mutex, std::try_to_lock})
@@ -246,7 +256,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                             }
                         }
 
-                        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+                        std::this_thread::yield();
 
                         trigger_next_reader();
                     }
@@ -260,26 +270,18 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                     }
                 }
             },
-            i,
-            [&, current_id = i]()
-            {
-                {
-                    std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
-                    reader_to_run = (current_id + 1) % readers.size();
-                }
-                reader_changed.notify_all();
-            }};
+            i};
     }
 
     mt::AutoJoinThread watchdog{
         [&]()
         {
             using namespace std::chrono_literals;
-            auto timeout = std::chrono::steady_clock::now() + 10s;
+            auto timeout = std::chrono::steady_clock::now() + 1min;
 
             while (!shutdown_readers && (std::chrono::steady_clock::now() < timeout))
             {
-                std::this_thread::sleep_for(1ms);
+                std::this_thread::yield();
             }
 
             if (!shutdown_readers)
