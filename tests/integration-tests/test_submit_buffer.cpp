@@ -84,7 +84,6 @@ struct StubStreamFactory : public msc::BufferStreamFactory
         return std::make_shared<mc::Stream>(factory, sink, properties.size, properties.format);
     }
 
-    mtd::StubFrameDroppingPolicyFactory factory;
     std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const& sink) override
     {
         struct BufferMap : mf::ClientBuffers
@@ -165,6 +164,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     }
 
     std::vector<mg::BufferID> const buffer_id_seq;
+    mtd::StubFrameDroppingPolicyFactory factory;
 };
 
 struct StubBufferPacker : public mg::PlatformIpcOperations
