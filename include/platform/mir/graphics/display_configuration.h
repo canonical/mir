@@ -123,7 +123,7 @@ struct DisplayConfigurationOutput
 
     /** The current gamma for the display */
     GammaCurves gamma;
-    MirOutputGammaSupported gamma_supported;
+    bool gamma_supported;
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
@@ -155,7 +155,7 @@ struct UserDisplayConfigurationOutput
     MirFormFactor& form_factor;
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
-    MirOutputGammaSupported const& gamma_supported;
+    bool const& gamma_supported;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
