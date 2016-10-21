@@ -48,6 +48,10 @@ class NullDisplay : public graphics::Display,
             new NullDisplayConfiguration
         );
     }
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) const override
+    {
+        return false;
+    }
     void configure(graphics::DisplayConfiguration const&)  override{}
     void register_configuration_change_handler(
         graphics::EventHandlerRegister&,
@@ -77,6 +81,10 @@ class NullDisplay : public graphics::Display,
     std::unique_ptr<renderer::gl::Context> create_gl_context() override
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};
+    }
+    graphics::Frame last_frame_on(unsigned) const override
+    {
+        return {};
     }
     NullDisplaySyncGroup group;
 };

@@ -825,6 +825,11 @@ public:
     ~SurfaceSnapshot()
     {
     }
+
+    unsigned int swap_interval() const override
+    {
+        return underlying_buffer_stream->framedropping() ? 0 : 1;
+    }
  
     std::shared_ptr<mg::Buffer> buffer() const override
     {

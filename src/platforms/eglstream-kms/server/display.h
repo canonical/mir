@@ -49,6 +49,8 @@ public:
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
 
+    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const override;
+
     void configure(DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(EventHandlerRegister& handlers,
@@ -68,6 +70,7 @@ public:
     NativeDisplay* native_display() override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+    Frame last_frame_on(unsigned output_id) const override;
 
 private:
     mir::Fd const drm_node;

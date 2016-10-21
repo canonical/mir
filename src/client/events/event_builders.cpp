@@ -110,6 +110,7 @@ mir::EventUPtr mev::make_event(
     mf::SurfaceId const& surface_id,
     int dpi,
     float scale,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t output_id)
 {
@@ -118,6 +119,7 @@ mir::EventUPtr mev::make_event(
     e->set_surface_id(surface_id.as_value());
     e->set_dpi(dpi);
     e->set_scale(scale);
+    e->set_refresh_rate(refresh_rate);
     e->set_form_factor(form_factor);
     e->set_output_id(output_id);
 
@@ -359,17 +361,63 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
     return make_uptr_event(e);
 }
 
-void mev::move_origin(MirPointerEvent& ptr, geom::Displacement const& origin)
+mir::EventUPtr mev::clone_event(MirEvent const& event)
 {
-    ptr.set_x(ptr.x() - origin.dx.as_int());
-    ptr.set_y(ptr.y() - origin.dy.as_int());
+    return make_uptr_event(event.clone());
 }
 
-void mev::move_origin(MirTouchEvent& ptr, geom::Displacement const& origin)
+void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)
 {
-    for (size_t i = 0, end = ptr.pointer_count();i != end; ++i)
+    if (event.type() == mir_event_type_input)
     {
-        ptr.set_x(i, ptr.x(i) - origin.dx.as_int());
-        ptr.set_y(i, ptr.y(i) - origin.dy.as_int());
+        auto const input_type = event.to_input()->input_type();
+        if (input_type == mir_input_event_type_pointer)
+        {
+            auto pev = event.to_input()->to_pointer();
+            pev->set_x(pev->x() - movement.dx.as_int());
+            pev->set_y(pev->y() - movement.dy.as_int());
+        }
+        else if (input_type == mir_input_event_type_touch)
+        {
+            auto tev = event.to_input()->to_touch();
+            for (unsigned i = 0; i < tev->pointer_count(); i++)
+            {
+                auto x = tev->x(i);
+                auto y = tev->y(i);
+                tev->set_x(i, x - movement.dx.as_int());
+                tev->set_y(i, y - movement.dy.as_int());
+            }
+        }
     }
 }
+
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+                               std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+                               std::vector<mev::ContactState> const& contacts)
+{
+    auto e = new_event<MirTouchEvent>();
+
+    e->set_device_id(device_id);
+    e->set_event_time(timestamp);
+    e->set_cookie(mac);
+    e->set_modifiers(modifiers);
+    e->set_pointer_count(contacts.size());
+
+    size_t current_index = 0;
+    for (auto const& contact : contacts)
+    {
+        e->set_id(current_index, contact.touch_id);
+        e->set_tool_type(current_index, contact.tooltype);
+        e->set_x(current_index, contact.x);
+        e->set_y(current_index, contact.y);
+        e->set_pressure(current_index, contact.pressure);
+        e->set_touch_major(current_index, contact.touch_major);
+        e->set_touch_minor(current_index, contact.touch_minor);
+        e->set_orientation(current_index, contact.orientation);
+        e->set_action(current_index, contact.action);
+        ++current_index;
+    }
+
+    return make_uptr_event(e);
+}
+

@@ -32,6 +32,7 @@
 #include "mir_image.h"
 #include "as_render_target.h"
 #include "mir/logging/null_shared_library_prober_report.h"
+#include "mir/logging/dumb_console_logger.h"
 #include "GLES2/gl2.h"
 #include <chrono>
 #include <csignal>
@@ -117,7 +118,7 @@ public:
 private:
     int compute_update_value()
     {
-        float const update_ratio{3.90625}; //this will give an update of 256 in 1s  
+        float const update_ratio{3.90625}; //this will give an update of 256 in 1s
         auto current_tick = std::chrono::high_resolution_clock::now();
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
             current_tick - last_tick).count();
@@ -140,6 +141,11 @@ public:
         : client(client),
           position(rect)
     {
+    }
+
+    unsigned int swap_interval() const override
+    {
+        return 1u;
     }
 
     ID id() const override
@@ -226,14 +232,14 @@ struct GLConfig : mg::GLConfig
     int stencil_buffer_bits() const override { return 0; }
 };
 
-struct DisplayReport : mg::DisplayReport 
+struct DisplayReport : mg::DisplayReport
 {
     void report_successful_setup_of_native_resources() override {}
     void report_successful_egl_make_current_on_construction() override {}
     void report_successful_egl_buffer_swap_on_construction() override {}
     void report_successful_display_construction() override {}
     void report_egl_configuration(EGLDisplay, EGLConfig) override {}
-    void report_vsync(unsigned int) override {}
+    void report_vsync(unsigned int, mg::Frame const&) override {}
     void report_successful_drm_mode_set_crtc_on_construction() override {}
     void report_drm_master_failure(int) override {}
     void report_vt_switch_away_failure() override {}
@@ -245,6 +251,7 @@ int main(int argc, char const** argv)
 try
 {
     mir::logging::NullSharedLibraryProberReport null_report;
+    auto const logger = std::make_shared<mir::logging::DumbConsoleLogger>();
     auto config = std::make_unique<mo::DefaultConfiguration>(argc, argv);
     auto options = static_cast<mo::Configuration*>(config.get())->the_options();
     auto const& path = options->get<std::string>(mo::platform_path);
@@ -265,7 +272,7 @@ try
 
     auto platform_fn = platform_library->load_function<mg::CreateHostPlatform>(
         "create_host_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-    auto platform = platform_fn(options, nullptr, std::make_shared<DisplayReport>());
+    auto platform = platform_fn(options, nullptr, std::make_shared<DisplayReport>(), logger);
 
     //Strange issues going on here with dlopen() + hybris (which uses gnu_indirect_functions)
     //https://github.com/libhybris/libhybris/issues/315

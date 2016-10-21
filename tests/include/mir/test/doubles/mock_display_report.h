@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_
 
 #include "mir/graphics/display_report.h"
-
+#include "mir/graphics/frame.h"  // GMock can't live with just forward decls
 #include <gmock/gmock.h>
 
 namespace mir
@@ -42,7 +42,7 @@ public:
     MOCK_METHOD0(report_vt_switch_away_failure, void());
     MOCK_METHOD0(report_vt_switch_back_failure, void());
     MOCK_METHOD2(report_egl_configuration, void(EGLDisplay,EGLConfig));
-    MOCK_METHOD1(report_vsync, void(unsigned int));
+    MOCK_METHOD2(report_vsync, void(unsigned int, graphics::Frame const&));
 };
 
 }

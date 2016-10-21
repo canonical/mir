@@ -42,8 +42,9 @@ char const* x11_displays_option_name{"x11-displays"};
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mg::DisplayReport> const& report)
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     if (!x11_resources.get_conn())

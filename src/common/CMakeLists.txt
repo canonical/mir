@@ -4,7 +4,6 @@ set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
 add_subdirectory(fd)
-add_subdirectory(geometry)
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
@@ -13,16 +12,16 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
-add_subdirectory(fatal)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirevents>
   $<TARGET_OBJECTS:mirtime>
-  $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
+  posix_rw_mutex.cpp
 )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -44,7 +43,7 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
-  mircapnproto
+  mircore
   ${MIR_COMMON_REFERENCES}
 )
 
@@ -61,6 +60,6 @@ set_target_properties(mircommon
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
   DESTINATION "include/mircommon"
 )

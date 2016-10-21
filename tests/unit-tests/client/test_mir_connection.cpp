@@ -206,6 +206,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_CONST_METHOD0(platform_type, MirPlatformType());
     MOCK_METHOD1(platform_operation, MirPlatformMessage*(MirPlatformMessage const*));
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
+    MOCK_METHOD2(use_egl_native_window, void(std::shared_ptr<void>, mcl::EGLNativeSurface*));
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<void>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
     MOCK_CONST_METHOD2(get_egl_pixel_format,
@@ -820,7 +821,7 @@ TEST_F(MirConnectionTest, release_chain_calls_server)
         static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
 
     EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
-        .Times(0);
+        .Times(1);
 
     connection->release_presentation_chain(callback.resulting_chain);
 }

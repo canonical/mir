@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <linux/input.h>
 #include <linux/videodev2.h>
 #include <unistd.h>
 #include <string.h>
@@ -77,6 +78,7 @@ typedef struct  // Things shared between threads
     Time display_frame_time;
     Buffer const* preview;
     int expected_direction;
+    bool reset;
 } State;
 
 static Time now()
@@ -108,8 +110,33 @@ static GLuint load_shader(char const* src, GLenum type)
     return shader;
 }
 
+static bool on_key_event(MirKeyboardEvent const* kevent, State* state)
+{
+    if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up)
+    {
+        switch (mir_keyboard_event_scan_code(kevent))
+        {
+        case KEY_R:
+            state->reset = true;
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
+static bool on_input_event(MirInputEvent const* ievent, State* state)
+{
+    if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
+        return on_key_event(mir_input_event_get_keyboard_event(ievent), state);
+    return false;
+}
+
 static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
+    bool handled = true;
+
     (void)surface;
     State* state = (State*)context;
 
@@ -121,20 +148,20 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
+        handled = on_input_event(mir_event_get_input_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -441,6 +468,13 @@ static void* capture_thread_func(void* arg)
         Buffer const* buf = acquire_frame(cam);
         pthread_mutex_lock(&state->mutex);
 
+        if (state->reset)
+        {
+            nhistory = 0;
+            state->reset = false;
+            printf("\n\nMeasurements reset.\n");
+        }
+
         // Note using the buffer timestamp from the kernel means we're
         // free to allocate multiple camera buffers without it adversely
         // affecting the latency measurement (in fact it will improve it).
@@ -494,7 +528,7 @@ static void* capture_thread_func(void* arg)
 
                 printf("INTERVALS: camera %llu.%1llums (%lluHz), "
                        "display %llu.%1llums (%lluHz), "
-                       "expected vary %llu.%1llums\n",
+                       "expected range %llu.%1llums\n",
                        frame_time / one_millisecond,
                        (frame_time % one_millisecond) / 100000,
                        one_second / frame_time,
@@ -509,7 +543,7 @@ static void* capture_thread_func(void* arg)
                        "max %llu.%1llums, "
                        "avg %llu.%1llums, "
                        "last %llu.%1llums, "
-                       "vary %llu.%1llums\n",
+                       "observed range %llu.%1llums\n",
                        min / one_millisecond,
                        (min % one_millisecond) / 100000,
                        max / one_millisecond,
@@ -605,18 +639,25 @@ int main(int argc, char* argv[])
 
     char const* const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera* cam = open_camera("/dev/video0", camera_pref_speed, 3);
+    // Default to fullscreen to get minimal latency (predictive bypass)
+    unsigned int win_width = 0;
+    unsigned int win_height = 0;
+
+    char const* dev_video = "/dev/video0";
+    struct mir_eglapp_arg custom_args[] =
+    {
+        {"-d <path>", "=", &dev_video, "Path to camera device"},
+        {NULL, NULL, NULL, NULL},
+    };
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
+        return 1;
+
+    Camera* cam = open_camera(dev_video, camera_pref_speed, 3);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return 0;  // Alan needs this to be success
     }
-
-    // Default to fullscreen to get minimal latency (predictive bypass)
-    unsigned int win_width = 0;
-    unsigned int win_height = 0;
-    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
-        return 1;
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
@@ -673,7 +714,8 @@ int main(int argc, char* argv[])
         0,
         0,
         NULL,
-        0
+        0,
+        false
     };
     MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -799,7 +841,7 @@ int main(int argc, char* argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);
     close_camera(cam);

@@ -27,6 +27,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/events/input_device_state.h"
+#include "mir/events/contact_state.h"
 
 #include <memory>
 #include <functional>
@@ -57,6 +58,7 @@ EventUPtr make_event(
     frontend::SurfaceId const& surface_id,
     int dpi,
     float scale,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t id);
 
@@ -148,8 +150,13 @@ EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);
 
-void move_origin(MirPointerEvent &ev, mir::geometry::Displacement const& origin);
-void move_origin(MirTouchEvent &ev, mir::geometry::Displacement const& origin);
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+    std::vector<ContactState> const& contacts);
+
+EventUPtr clone_event(MirEvent const& event);
+void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+
 }
 }
 

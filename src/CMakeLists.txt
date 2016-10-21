@@ -10,7 +10,8 @@ set(MIR_CLIENT_PLATFORM_PATH
   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/client-platform
 )
 
-# Add the platform implementations before exposing any private APIs
+# Add the core and platform implementations before exposing any private APIs
+add_subdirectory(core)
 add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation

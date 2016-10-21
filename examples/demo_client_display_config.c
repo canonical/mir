@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 {
     unsigned int width = 256, height = 256;
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
     {
         printf("A demo client that allows changing the display configuration. While the client\n"
                "has the focus, use the following keys to change and get information about the\n"
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }

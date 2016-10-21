@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 #include "mir/events/event.h"
-#include "mir/events/input_device_state.h"
+#include "mir/events/input_device_state_event.h"
 
 struct MirInputDeviceStateEvent : MirEvent
 {
@@ -45,9 +45,6 @@ struct MirInputDeviceStateEvent : MirEvent
     uint32_t device_count() const;
     MirInputDeviceId device_id(size_t index) const;
     MirPointerButtons device_pointer_buttons(size_t index) const;
-
-    // Public API deprecated remove this once it has been removed
-    std::vector<uint32_t> device_pressed_keys(size_t index);
 
     uint32_t device_pressed_keys_for_index(size_t index, size_t pressed_index) const;
     uint32_t device_pressed_keys_count(size_t index) const;

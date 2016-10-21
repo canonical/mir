@@ -96,20 +96,7 @@ uint32_t mir_input_device_state_event_device_count(
 MirInputDeviceId mir_input_device_state_event_device_id(
     MirInputDeviceStateEvent const* ev, uint32_t index);
 
-/**
- * Retrieve an array of pressed keys on the device identified by the \a index.
- * The keys are encoded as scan codes.
- *
- * \deprecated  Use mir_input_device_state_event_device_pressed_keys_for_index() instead
- * \param[in] ev The input device state event
- * \param[in] index The index of the input device
- * \return    An array of pressed keys
- */
-__attribute__ ((deprecated))
-uint32_t const* mir_input_device_state_event_device_pressed_keys(
-    MirInputDeviceStateEvent const* ev, uint32_t index);
-
-/**
+/*
  * Retrieve a pressed key on the device identified by the \a index.
  * The key is encoded as a scan code.
  *

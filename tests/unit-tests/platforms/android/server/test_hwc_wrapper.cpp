@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
 
@@ -314,7 +315,7 @@ TEST_F(HwcWrapper, can_dish_out_notifications)
     auto vsync_call_count = 0u;
     auto hotplug_call_count = 0u;
     wrapper.subscribe_to_events(this,
-        [&](mga::DisplayName, std::chrono::nanoseconds){vsync_call_count++;},
+        [&](mga::DisplayName, mg::Frame::Timestamp){vsync_call_count++;},
         [&](mga::DisplayName, bool){hotplug_call_count++;},
         [&](){invalidate_call_count++;});
 
@@ -349,7 +350,7 @@ TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destru
         mga::RealHwcWrapper wrapper(mock_device, mock_report);
         wrapper.subscribe_to_events(
             this,
-            [&](mga::DisplayName, std::chrono::nanoseconds){ call_count++; },
+            [&](mga::DisplayName, mg::Frame::Timestamp){ call_count++; },
             [](mga::DisplayName, bool){},
             []{});
 

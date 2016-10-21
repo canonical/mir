@@ -180,11 +180,13 @@ mgn::Display::Display(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config) :
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    PassthroughOption passthrough_option) :
     platform{platform},
     connection{connection},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
+    passthrough_option(passthrough_option),
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
@@ -303,7 +305,8 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,
                         best_output,
-                        connection));
+                        connection,
+                        passthrough_option));
             }
         });
 
@@ -365,4 +368,15 @@ mg::NativeDisplay* mgn::Display::native_display()
 std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 {
     return egl_display.create_gl_context();
+}
+
+bool mgn::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
+}
+
+mg::Frame mgn::Display::last_frame_on(unsigned) const
+{
+    return {}; // TODO after the client API exists for us to get it
 }

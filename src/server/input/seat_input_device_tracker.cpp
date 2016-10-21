@@ -26,7 +26,6 @@
 #include "mir/input/seat_report.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
-#include "mir/events/event_private.h"
 #include "mir/time/clock.h"
 
 #include "input_modifier_utils.h"

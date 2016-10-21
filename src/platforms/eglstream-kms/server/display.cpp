@@ -367,3 +367,18 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
     return std::make_unique<GLContext>(display, context);
 }
 
+bool mge::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/) const
+{
+    return false;
+}
+
+mg::Frame mge::Display::last_frame_on(unsigned) const
+{
+    /*
+     * TODO: Implement this later when we have the hardware + driver to test on.
+     *       If no proper hardware counters are available, just call
+     *       AtomicFrame.increment_now() in post() above.
+     */
+    return {};
+}

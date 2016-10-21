@@ -23,7 +23,6 @@
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
-#include "client_buffer_depository.h"
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
@@ -67,7 +66,7 @@ class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
-class ServerBufferSemantics;
+class BufferDepository;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -160,7 +159,7 @@ private:
 
     std::shared_ptr<MemoryRegion> secured_region;
 
-    std::unique_ptr<ServerBufferSemantics> buffer_depository;
+    std::unique_ptr<BufferDepository> buffer_depository;
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;
     std::string error_message;
