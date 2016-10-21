@@ -17,7 +17,6 @@
  */
 
 #include <boost/throw_exception.hpp>
-
 #include "mir/events/touch_event.h"
 
 MirTouchEvent::MirTouchEvent()
@@ -25,6 +24,39 @@ MirTouchEvent::MirTouchEvent()
     event.initInput();
     event.getInput().initTouch();
     event.getInput().getTouch().initContacts(mir::capnp::TouchScreenEvent::MAX_COUNT);
+}
+
+MirTouchEvent::MirTouchEvent(MirInputDeviceId id,
+                             std::chrono::nanoseconds timestamp,
+                             std::vector<uint8_t> const& cookie,
+                             MirInputEventModifiers modifiers,
+                             std::vector<mir::events::ContactState> const& contacts)
+    : MirInputEvent(id,timestamp, modifiers, cookie)
+{
+    event.getInput().initTouch();
+
+    auto tev = event.getInput().getTouch();
+    tev.initContacts(mir::capnp::TouchScreenEvent::MAX_COUNT);
+    tev.setCount(contacts.size());
+
+    for (size_t i = 0; i < contacts.size(); ++i)
+    {
+        using ContactType = mir::capnp::TouchScreenEvent::Contact;
+        auto& contact = contacts[i];
+        auto event_contact = tev.getContacts()[i];
+        event_contact.setId(contact.touch_id);
+        event_contact.setX(contact.x);
+        event_contact.setY(contact.y);
+        event_contact.setPressure(contact.pressure);
+        event_contact.setTouchMajor(contact.touch_major);
+        event_contact.setTouchMinor(contact.touch_minor);
+        event_contact.setOrientation(contact.orientation);
+        auto const action = static_cast<ContactType::TouchAction>(contact.action);
+        event_contact.setAction(action);
+
+        auto capnp_tool_type = static_cast<ContactType::ToolType>(contact.tooltype);
+        event_contact.setToolType(capnp_tool_type);
+    }
 }
 
 size_t MirTouchEvent::pointer_count() const

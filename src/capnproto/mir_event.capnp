@@ -75,7 +75,6 @@ struct TouchScreenEvent
             down @1;
             change @2;
         }
-
         enum ToolType
         {
             unknown @0;
@@ -208,7 +207,7 @@ struct SurfaceOutputEvent
     scale @2 :Float32;
     formFactor @3 :FormFactor;
     outputId @4 :UInt32;
-    refreshRate @5 :Float32;
+    refreshRate @5 :Float64;
 
     enum FormFactor
     {

@@ -27,22 +27,6 @@
 
 #include <cstring>
 
-// Only MirPointerEvent and MirTouchEvent are typedefed in the public API
-typedef struct MirMotionEvent MirMotionEvent;
-
-namespace mir
-{
-namespace event
-{
-/* Evil hack to keep data around for the lifetime of an event.
- * The reference will go down when the event it self goes out of scope.
- * TODO: Remove this once we can remove this public function:
- * uint32_t const* mir_input_device_state_event_device_pressed_keys
- */
-void* store_data_for_lifetime_of_event(MirEvent const* ev, std::shared_ptr<void> const& data);
-}
-}
-
 struct MirEvent
 {
     MirEvent(MirEvent const& event);
@@ -81,8 +65,6 @@ struct MirEvent
     MirInputDeviceStateEvent const* to_input_device_state() const;
 
     MirSurfacePlacementEvent const* to_surface_placement() const;
-
-    MirEvent* clone() const;
 
     static mir::EventUPtr deserialize(std::string const& bytes);
     static std::string serialize(MirEvent const* event);

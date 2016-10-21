@@ -27,6 +27,11 @@
 struct MirTouchEvent : MirInputEvent
 {
     MirTouchEvent();
+    MirTouchEvent(MirInputDeviceId id,
+                  std::chrono::nanoseconds timestamp,
+                  std::vector<uint8_t> const& cookie,
+                  MirInputEventModifiers modifiers,
+                  std::vector<mir::events::ContactState> const& contacts);
 
     size_t pointer_count() const;
     void set_pointer_count(size_t count);
@@ -63,4 +68,4 @@ private:
 
 };
 
-#endif /* MIR_COMMON_MOTION_EVENT_H_ */
+#endif /* MIR_COMMON_TOUCH_EVENT_H */

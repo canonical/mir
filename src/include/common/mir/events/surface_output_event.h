@@ -46,7 +46,6 @@ struct MirSurfaceOutputEvent : MirEvent
 
     uint32_t output_id() const;
     void set_output_id(uint32_t id);
-
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */

@@ -43,6 +43,7 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
+  mircapnproto
   mircore
   ${MIR_COMMON_REFERENCES}
 )
