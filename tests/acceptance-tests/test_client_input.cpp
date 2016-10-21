@@ -587,7 +587,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     first_client.all_events_received.wait_for(2s);
 }
 
-// Will be re-enabled in next branch
+// Will be re-enabled when we get capnproto serialization in
 TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
 {
     positions[first] = screen_geometry;
