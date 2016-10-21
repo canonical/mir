@@ -182,9 +182,14 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
  * type mir_event_type_input_configuration. The event signifies that the
  * input device configuration has changed.
  *
+ * \deprecated Input devices and changes to the input devices are indicated
+ * via the mir_input_config_change_callback
  * \param [in] event The event
  * \return           The associated MirInputConfigurationEvent
  */
+/// @cond
+__attribute__((deprecated))
+/// @endcond
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
 
 /**
