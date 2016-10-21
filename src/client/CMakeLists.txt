@@ -60,7 +60,7 @@ add_library(mirclientobjects OBJECT
   logging/input_receiver_report.cpp
   logging/perf_report.cpp
   default_connection_configuration.cpp
-  surface_map.cpp
+  connection_surface_map.cpp
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
@@ -79,6 +79,8 @@ add_library(mirclientobjects OBJECT
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp
+  mir_render_surface_api.cpp
+  render_surface.cpp
   presentation_chain.cpp
   mir_presentation_chain_api.cpp
   mir_buffer_api.cpp

@@ -26,7 +26,9 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "presentation_chain.h"
+#include "render_surface.h"
 #include "error_connections.h"
+#include "connection_surface_map.h"
 #include "mir/uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -620,6 +622,30 @@ try
         spec->streams.value().push_back(info);
     else
         spec->streams = std::vector<ContentInfo>{info}; 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
+    int /*logical_width*/, int /*logical_height*/,
+    int displacement_x, int displacement_y)
+try
+{
+    mir::require(spec && render_surface);
+    auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
+
+    if (rs->stream_id().as_value() < 0)
+        BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
+    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(), {}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
 }
 catch (std::exception const& ex)
 {

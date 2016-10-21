@@ -228,8 +228,23 @@ struct BufferDepository
 }
 }
 
+// Needed to create an ErrorBufferStream through the MirConnection API
+// TODO: remove once streams can only be created through MirRenderSurface API
+mcl::BufferStream::BufferStream(
+    mir::client::rpc::DisplayServer& server,
+    std::weak_ptr<mcl::SurfaceMap> const& map)
+        : display_server{server},
+          client_platform{nullptr},
+          perf_report{nullptr},
+          nbuffers{0},
+          map{map},
+          factory{nullptr}
+{
+}
+
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    MirRenderSurface* render_surface,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
@@ -251,7 +266,8 @@ mcl::BufferStream::BufferStream(
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
       map(map),
-      factory(factory)
+      factory(factory),
+      render_surface_(render_surface)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())
@@ -571,4 +587,9 @@ char const * mcl::BufferStream::get_error_message() const
 MirConnection* mcl::BufferStream::connection() const
 {
     return connection_;
+}
+
+MirRenderSurface* mcl::BufferStream::render_surface() const
+{
+    return render_surface_;
 }
