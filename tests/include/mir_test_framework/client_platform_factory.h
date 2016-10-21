@@ -56,7 +56,7 @@ std::shared_ptr<mir::client::ClientPlatform> create_android_client_platform()
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("android"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
 
-    return wrap_in_platform_library_cleanup(platform_factory(&ctx));
+    return wrap_in_platform_library_cleanup(platform_factory(&ctx, nullptr));
 }
 
 std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
@@ -66,7 +66,7 @@ std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("mesa"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
 
-    return wrap_in_platform_library_cleanup(platform_factory(client_context));
+    return wrap_in_platform_library_cleanup(platform_factory(client_context, nullptr));
 }
 
 std::shared_ptr<mir::SharedLibrary>
