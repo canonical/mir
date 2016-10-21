@@ -1309,10 +1309,7 @@ MirRenderSurface* MirConnection::create_render_surface()
     auto native_window = platform->create_egl_native_window(nullptr);
 
     std::shared_ptr<MirRenderSurface> rs {nullptr};
-    rs = std::make_shared<mcl::RenderSurface>(
-        this,
-        native_window,
-        platform);
+    rs = std::make_shared<mcl::RenderSurface>(this, native_window, platform);
     surface_map->insert(native_window.get(), rs);
 
     return static_cast<MirRenderSurface*>(native_window.get());

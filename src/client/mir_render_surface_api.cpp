@@ -103,7 +103,7 @@ try
     mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    if (rs->stream_id() >= 0)
+    if (rs->stream_id().as_value() >= 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Render surface still holds content"));
 
     connection_map.erase(static_cast<void*>(render_surface));
@@ -126,7 +126,7 @@ try
     mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    return rs->create_client_buffer_stream(
+    return rs->create_buffer_stream(
         width, height,
         format,
         usage,
@@ -144,6 +144,7 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage usage)
+try
 {
     MirBufferStream* stream = nullptr;
     auto wh = mir_render_surface_create_buffer_stream(
@@ -158,4 +159,9 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
         wh->wait_for_all();
 
     return stream;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }

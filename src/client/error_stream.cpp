@@ -21,19 +21,19 @@
 namespace mcl = mir::client;
 
 mcl::ErrorBufferStream::ErrorBufferStream(
-        MirRenderSurface* const rs,
-        mir::client::rpc::DisplayServer& server,
-        std::weak_ptr<SurfaceMap> const& map,
-        std::string const& error_msg,
-        MirConnection* conn,
-        frontend::BufferStreamId id,
-        std::shared_ptr<MirWaitHandle> const& wh)
-            : BufferStream(server, map),
-              rs(rs),
-              error(error_msg),
-              connection_(conn),
-              id(id),
-              wh(wh)
+    MirRenderSurface* const rs,
+    mir::client::rpc::DisplayServer& server,
+    std::weak_ptr<SurfaceMap> const& map,
+    std::string const& error_msg,
+    MirConnection* conn,
+    frontend::BufferStreamId id,
+    std::shared_ptr<MirWaitHandle> const& wh) :
+        BufferStream(server, map),
+        rs(rs),
+        error(error_msg),
+        connection_(conn),
+        id(id),
+        wh(wh)
 {
 }
 

@@ -21,6 +21,7 @@
 #define MIR_CLIENT_MIR_RENDER_SURFACE_H
 
 #include "mir_toolkit/mir_render_surface.h"
+#include "mir/frontend/buffer_stream_id.h"
 
 namespace mir
 {
@@ -34,8 +35,8 @@ class MirRenderSurface
 {
 public:
     virtual MirConnection* connection() const = 0;
-    virtual int stream_id() = 0;
-    virtual MirWaitHandle* create_client_buffer_stream(
+    virtual mir::frontend::BufferStreamId stream_id() = 0;
+    virtual MirWaitHandle* create_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,

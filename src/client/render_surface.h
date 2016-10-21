@@ -45,13 +45,13 @@ public:
                   std::shared_ptr<void> native_window,
                   std::shared_ptr<ClientPlatform> client_platform);
     MirConnection* connection() const override;
-    MirWaitHandle* create_client_buffer_stream(
+    MirWaitHandle* create_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage usage,
         mir_buffer_stream_callback callback,
         void *context) override;
-    int stream_id() override;
+    mir::frontend::BufferStreamId stream_id() override;
 
     MirWaitHandle* release_buffer_stream(
         mir_buffer_stream_callback callback,

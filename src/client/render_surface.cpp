@@ -93,12 +93,15 @@ MirConnection* mcl::RenderSurface::connection() const
     return connection_;
 }
 
-int mcl::RenderSurface::stream_id()
+mir::frontend::BufferStreamId mcl::RenderSurface::stream_id()
 {
-    return (stream_ ? stream_->rpc_id().as_value() : -1);
+    if (stream_)
+        return stream_->rpc_id();
+    else
+        return mir::frontend::BufferStreamId{-1};
 }
 
-MirWaitHandle* mcl::RenderSurface::create_client_buffer_stream(
+MirWaitHandle* mcl::RenderSurface::create_buffer_stream(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage usage,

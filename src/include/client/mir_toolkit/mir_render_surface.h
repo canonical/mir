@@ -32,7 +32,7 @@ extern "C" {
 
 /** Create a render surface.
  *
- * \warning: This call is always synchronous as there is no actual rendering
+ * \warning: This call is always non-blocking as there is no actual rendering
  *           construct backing the surface yet. In case of error, the call
  *           will succeed but an error render surface will be returned.
  *
@@ -67,6 +67,10 @@ void mir_render_surface_release(
 
 /**
  * Create a new buffer stream, backing the given render surface, asynchronously.
+ *
+ * \warning: The buffer stream is currently not owned by the render surface in the
+ *           sense that it needs to be released - i.e. releasing the render surface
+ *           will not release the buffer stream.
  *
  * \param [in] render_surface    The render surface
  * \param [in] width             Requested width
@@ -116,9 +120,9 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
  *
  * \param spec             The surface_spec to be updated
  * \param render_surface   The render surface containing the content to be displayed
- * \param scaled_width     The width that the content will be displayed at
+ * \param logical_width    The width that the content will be displayed at
  *                         (Ignored for buffer streams)
- * \param scaled_height    The height that the content will be displayed at
+ * \param logical_height   The height that the content will be displayed at
  *                         (Ignored for buffer streams)
  * \param displacement_x   The x displacement from the top-left corner of the MirSurface
  * \param displacement_y   The y displacement from the top-left corner of the MirSurface
@@ -126,7 +130,7 @@ MirBufferStream* mir_render_surface_create_buffer_stream_sync(
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     MirRenderSurface* render_surface,
-    int scaled_width, int scaled_height,
+    int logical_width, int logical_height,
     int displacement_x, int displacement_y);
 
 #ifdef __cplusplus

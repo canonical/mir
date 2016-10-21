@@ -911,7 +911,7 @@ TEST_F(MirConnectionTest, render_surface_returns_negative_stream_id_with_no_cont
 
     mcl::RenderSurface rs(
         conn, nullptr, nullptr);
-    EXPECT_THAT(rs.stream_id(), Lt(0));
+    EXPECT_THAT(rs.stream_id().as_value(), Lt(0));
 }
 
 TEST_F(MirConnectionTest, render_surface_release_of_buffer_stream_without_creation_first_results_in_exception)
@@ -938,14 +938,14 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_more_than_onc
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(_,_));
 
-    wh = rs.create_client_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,  nullptr, nullptr);
 
     ASSERT_THAT(wh, Ne(nullptr));
     wh->wait_for_all();
 
     EXPECT_THROW(
-        {rs.create_client_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+        {rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware,  nullptr, nullptr);}, std::logic_error);
 }
 
@@ -960,7 +960,7 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_hardware
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
 
-    wh = rs.create_client_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,  nullptr, nullptr);
 
     ASSERT_THAT(wh, Ne(nullptr));
@@ -978,7 +978,7 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_software
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(_,_)).Times(0);
 
-    wh = rs.create_client_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_software,  nullptr, nullptr);
 
     ASSERT_THAT(wh, Ne(nullptr));
