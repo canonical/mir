@@ -277,10 +277,10 @@ int main(int argc, char* argv[])
         fill_stream_with(*top, 0, topColour, 0, 128);
 
         mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
-        mir_surface_apply_spec(surface, spec);
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);
+        mir_surface_apply_spec(surface, spec);
     }
     mir_surface_spec_release(spec);
     close(signal_watch);
