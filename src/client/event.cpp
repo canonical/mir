@@ -42,7 +42,7 @@ namespace ml = mir::logging;
 namespace
 {
 template <typename EventType>
-void expect_event_type(EventType const* ev, MirEventType t) HANDLE_EVENT_EXCEPTION(
+void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto type = ev->type();
     if (type != t)
@@ -91,7 +91,7 @@ std::string mir::event_type_to_string(MirEventType t)
 }
 
 
-MirEventType mir_event_get_type(MirEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirEventType mir_event_get_type(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto type = ev->type();
     switch (type)
@@ -104,7 +104,7 @@ MirEventType mir_event_get_type(MirEvent const* ev) HANDLE_EVENT_EXCEPTION(
     }
 })
 
-MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto type = ev->type();
     if (type != mir_event_type_key && type != mir_event_type_motion)
@@ -182,14 +182,14 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
 
 /* Surface event accessors */
 
-MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface);
 
     return ev->attrib();
 })
 
-int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface);
 
@@ -198,13 +198,13 @@ int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) HANDLE_EVEN
 
 /* Resize event accessors */
 
-int mir_resize_event_get_width(MirResizeEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int mir_resize_event_get_width(MirResizeEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_resize);
     return ev->width();
 })
 
-int mir_resize_event_get_height(MirResizeEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int mir_resize_event_get_height(MirResizeEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_resize);
     return ev->height();
@@ -212,7 +212,7 @@ int mir_resize_event_get_height(MirResizeEvent const* ev) HANDLE_EVENT_EXCEPTION
 
 /* Prompt session event accessors */
 
-MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
     return ev->new_state();
@@ -220,7 +220,7 @@ MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent c
 
 /* Orientation event accessors */
 
-MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_orientation);
     return ev->direction();
@@ -228,7 +228,7 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 
 /* Keymap event accessors */
 
-void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** buffer, size_t* length) HANDLE_EVENT_EXCEPTION(
+void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** buffer, size_t* length) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_keymap);
 
@@ -236,7 +236,7 @@ void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** b
     *length = ev->size();
 })
 
-MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_keymap);
 
@@ -245,19 +245,19 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) HANDLE
 
 /* Input configuration event accessors */
 
-MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->action();
 })
 
-int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->when().count();
 })
 
-MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id();
@@ -265,67 +265,67 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 
 /* Surface output event accessors */
 
-int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->dpi();
 })
 
-MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->form_factor();
 })
 
-float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev) HANDLE_EVENT_EXCEPTION(
+float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->scale();
 })
 
-double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev) HANDLE_EVENT_EXCEPTION(
+double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->refresh_rate();
 })
 
-uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev) HANDLE_EVENT_EXCEPTION(
+uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->output_id();
 })
 
-MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->pointer_buttons();
 })
 
-float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis) HANDLE_EVENT_EXCEPTION(
+float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->pointer_axis(axis);
 })
 
-int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev) HANDLE_EVENT_EXCEPTION(
+int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->when().count();
 })
 
-MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->modifiers();
 })
 
-uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev) HANDLE_EVENT_EXCEPTION(
+uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     return ev->device_count();
 })
 
-MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index) HANDLE_EVENT_EXCEPTION(
+MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
@@ -334,40 +334,40 @@ MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent
 
 uint32_t mir_input_device_state_event_device_pressed_keys_for_index(MirInputDeviceStateEvent const* ev,
                                                                     uint32_t index,
-                                                                    uint32_t pressed_index) HANDLE_EVENT_EXCEPTION(
+                                                                    uint32_t pressed_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pressed_keys_for_index(index, pressed_index);
 })
 
-uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index) HANDLE_EVENT_EXCEPTION(
+uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pressed_keys_count(index);
 })
 
-MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDeviceStateEvent const* ev, uint32_t index) HANDLE_EVENT_EXCEPTION(
+MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDeviceStateEvent const* ev, uint32_t index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pointer_buttons(index);
 })
 
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) HANDLE_EVENT_EXCEPTION(
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return event->to_surface_placement();
 })
 
-MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event) HANDLE_EVENT_EXCEPTION(
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return event->placement();
 })
 
 // TODO: Until we opaquify the MirEvent structure and add
 // a ref count ref is implemented as copy.
-MirEvent const* mir_event_ref(MirEvent const* ev) HANDLE_EVENT_EXCEPTION(
+MirEvent const* mir_event_ref(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return new MirEvent(*ev);
 })
