@@ -157,7 +157,8 @@ extern "C"
 mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report, std::shared_ptr<mir::logging::Logger> const& logger);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
 
 /**
  * Function prototype used to return a new guest graphics platform. The guest graphics platform

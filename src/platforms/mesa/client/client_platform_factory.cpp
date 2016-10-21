@@ -78,7 +78,9 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 
 }
 
-mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
+mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(
+    mcl::ClientContext* context,
+    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
     ensure_loaded_with_rtld_global_mesa_client();

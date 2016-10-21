@@ -45,7 +45,7 @@ static volatile sig_atomic_t running = 0;
         return 0; \
     }
 
-void mir_eglapp_shutdown(void)
+void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
@@ -55,11 +55,16 @@ void mir_eglapp_shutdown(void)
     connection = NULL;
 }
 
+void mir_eglapp_quit(void)
+{
+    running = 0;
+}
+
 static void shutdown(int signum)
 {
     if (running)
     {
-        running = 0;
+        mir_eglapp_quit();
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -138,10 +143,10 @@ static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
            mir_surface_output_event_get_refresh_rate(out));
 }
 
-static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
+void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* unused)
 {
     (void) surface;
-    (void) context;
+    (void) unused;
     
     switch (mir_event_get_type(ev))
     {

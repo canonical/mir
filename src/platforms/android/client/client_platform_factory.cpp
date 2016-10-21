@@ -30,7 +30,8 @@ namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
 mir::UniqueModulePtr<mcl::ClientPlatform>
-create_client_platform(mcl::ClientContext* context)
+create_client_platform(mcl::ClientContext* context,
+                       std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
     MirPlatformPackage platform;
@@ -39,7 +40,7 @@ create_client_platform(mcl::ClientContext* context)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Android client platform on non-Android server"}));
     }
-    return mir::make_module_ptr<mcla::AndroidClientPlatform>(context);
+    return mir::make_module_ptr<mcla::AndroidClientPlatform>(context, logger);
 }
 
 bool
