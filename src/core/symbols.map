@@ -30,6 +30,7 @@ MIR_CORE_0.25 {
     mir::geometry::Rectangle::top_right*;
     mir::geometry::Size::operator*;
     mir::geometry::Size::Size*;
+    typeinfo?for?MirBufferPackage;
     typeinfo?for?mir::FatalErrorStrategy;
     typeinfo?for?mir::geometry::Displacement;
     typeinfo?for?mir::geometry::Length;
@@ -37,6 +38,7 @@ MIR_CORE_0.25 {
     typeinfo?for?mir::geometry::Rectangle;
     typeinfo?for?mir::geometry::Rectangles;
     typeinfo?for?mir::geometry::Size;
+    vtable?for?MirBufferPackage;
     vtable?for?mir::FatalErrorStrategy;
     vtable?for?mir::geometry::Displacement;
     vtable?for?mir::geometry::Length;

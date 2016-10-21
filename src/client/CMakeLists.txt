@@ -43,7 +43,6 @@ add_subdirectory(input)
 
 add_library(mirclientobjects OBJECT
 
-  client_buffer_depository.cpp
   display_configuration.cpp
   error_connections.cpp
   event.cpp

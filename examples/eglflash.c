@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }

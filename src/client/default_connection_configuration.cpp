@@ -109,7 +109,8 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
             return std::make_shared<mcl::ProbingClientPlatformFactory>(
                                          the_shared_library_prober_report(),
                                          libs,
-                                         paths
+                                         paths,
+                                         the_logger()
                                          );
         });
 }

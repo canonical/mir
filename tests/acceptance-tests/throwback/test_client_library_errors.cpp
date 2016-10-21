@@ -75,7 +75,7 @@ public:
     {
         mir::SharedLibrary dummy_client_module{mtf::client_platform("dummy.so")};
         stub_platform =
-            dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context);
+            dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context, nullptr);
     }
 
     void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*surface*/) override

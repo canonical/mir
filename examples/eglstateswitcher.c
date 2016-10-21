@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         toggle_surface_state(surface, &state);
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }
