@@ -404,8 +404,10 @@ int main(int argc, char *argv[])
         MirConnection* connection = mir_eglapp_native_connection();
         MirSurfaceSpec* changes =
             mir_connection_create_spec_for_changes(connection);
-        mir_surface_spec_set_width(changes, cam->pix.width);
-        mir_surface_spec_set_height(changes, cam->pix.height);
+        win_width = cam->pix.width;
+        win_height = cam->pix.height;
+        mir_surface_spec_set_width(changes, win_width);
+        mir_surface_spec_set_height(changes, win_height);
         mir_surface_apply_spec(surface, changes);
         mir_surface_spec_release(changes);
     }
