@@ -57,8 +57,11 @@ MirEvent* MirEvent::clone() const
         return mir::event::deep_copy<MirOrientationEvent>(this);
     case mir_event_type_close_surface:
         return mir::event::deep_copy<MirCloseSurfaceEvent>(this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     case mir_event_type_input_configuration:
         return mir::event::deep_copy<MirInputConfigurationEvent>(this);
+#pragma GCC diagnostic pop
     case mir_event_type_surface_output:
         return mir::event::deep_copy<MirSurfaceOutputEvent>(this);
     case mir_event_type_keymap:
@@ -100,8 +103,11 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
         return mir::event::deserialize_from<MirOrientationEvent>(bytes);
     case mir_event_type_close_surface:
         return mir::event::deserialize_from<MirCloseSurfaceEvent>(bytes);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     case mir_event_type_input_configuration:
         return mir::event::deserialize_from<MirInputConfigurationEvent>(bytes);
+#pragma GCC diagnostic pop
     case mir_event_type_surface_output:
         return mir::event::deserialize_from<MirSurfaceOutputEvent>(bytes);
     case mir_event_type_keymap:
@@ -135,8 +141,11 @@ std::string MirEvent::serialize(MirEvent const* event)
         return mir::event::serialize_from<MirOrientationEvent>(event);
     case mir_event_type_close_surface:
         return mir::event::serialize_from<MirCloseSurfaceEvent>(event);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     case mir_event_type_input_configuration:
         return mir::event::serialize_from<MirInputConfigurationEvent>(event);
+#pragma GCC diagnostic pop
     case mir_event_type_surface_output:
         return mir::event::serialize_from<MirSurfaceOutputEvent>(event);
     case mir_event_type_keymap:
@@ -167,6 +176,8 @@ MirInputEvent const* MirEvent::to_input() const
     return static_cast<MirInputEvent const*>(this);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirInputConfigurationEvent* MirEvent::to_input_configuration()
 {
     return static_cast<MirInputConfigurationEvent*>(this);
@@ -176,6 +187,7 @@ MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
 {
     return static_cast<MirInputConfigurationEvent const*>(this);
 }
+#pragma GCC diagnostic pop
 
 MirSurfaceEvent* MirEvent::to_surface()
 {
