@@ -431,7 +431,6 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_output_get_gamma;
     mir_output_set_gamma;
     mir_connection_cancel_base_display_configuration_preview;
-    mir_input_device_state_event_device_pressed_keys_for_index;
     mir_surface_placement_get_relative_position;
     mir_display_output_type_name;
     mir_output_type_name;

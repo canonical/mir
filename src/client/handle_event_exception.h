@@ -18,13 +18,13 @@
 
 #include "mir/log.h"
 
-#define HANDLE_EVENT_EXCEPTION(expr) \
-    try                              \
-    {                                \
-        expr;                        \
-    }                                \
-    catch(std::exception const& e)   \
-    {                                \
-        mir::log_critical(e.what()); \
-        abort();                     \
+#define MIR_HANDLE_EVENT_EXCEPTION(expr) \
+    try                                  \
+    {                                    \
+        expr;                            \
+    }                                    \
+    catch(std::exception const& e)       \
+    {                                    \
+        mir::log_critical(e.what());     \
+        abort();                         \
     }
