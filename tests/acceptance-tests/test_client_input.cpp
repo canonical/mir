@@ -588,7 +588,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
 }
 
 // Will be re-enabled when we get capnproto serialization in
-TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
+TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 {
     positions[first] = screen_geometry;
     Client first_client(new_connection(), first);
@@ -600,6 +600,7 @@ TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
     int const inputs_per_frame = input_rate / frame_rate;
     int const ninputs = nframes * inputs_per_frame;
     auto const frame_time = 1000ms / frame_rate;
+    auto const input_time = 1000ms / input_rate;
 
     int received_input_events = 0;
 
@@ -621,26 +622,37 @@ TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
 
     auto start_time = std::chrono::steady_clock::now();
 
-    for (int i = 0; i < ninputs; ++i)
+    auto emit_event = [this](int i)
     {
-        /*
-         * Sleep until the correct time for the frame. We use sleep_until
-         * so that even on a very slow system it will catch up to the
-         * correct real time for the frame and not drift out causing
-         * test failures.
-         */
-        int frame_no = i / inputs_per_frame;
-        std::this_thread::sleep_until(start_time + frame_no*frame_time);
-
-        int const x = i;
-        int const y = 2 * i;
+        auto const x = i;
+        auto const y = 2*i;
         fake_touch_screen->emit_event(mis::a_touch_event()
                                       .with_action(mis::TouchParameters::Action::Move)
                                       .at_position({x,y}));
+    };
 
-        // Valgrind is apparently quite bad at concurrency so give it a
-        // fighting chance:
-        std::this_thread::yield();
+    auto yield_if_ahead_of_input_rate = [start_time,input_rate](int i)
+    {
+        auto now = std::chrono::steady_clock::now();
+        int num_events = std::chrono::duration<double>(now - start_time).count() * input_rate;
+
+        std:: cout << " i " << i << "  req by now:" << num_events << "\n";
+
+        if (i > num_events)
+        {
+            std:: cout << " yielding  \n";
+            // Valgrind is apparently quite bad at concurrency so give it a
+            // fighting chance:
+            std::this_thread::yield();
+        }
+    };
+
+    for (int i = 0; i != ninputs; ++i)
+    {
+        std::this_thread::sleep_until(start_time + i*input_time);
+
+        emit_event(i);
+        yield_if_ahead_of_input_rate(i);
     }
 
     // Wait for the expected minimum number of events (should be quick but
@@ -653,6 +665,8 @@ TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
 
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
+
+    std::cout << " received_input_events : " << received_input_events << std::endl;
 
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
