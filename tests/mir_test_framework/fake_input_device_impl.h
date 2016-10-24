@@ -46,6 +46,9 @@ public:
     void emit_event(mir::input::synthesis::ButtonParameters const& button) override;
     void emit_event(mir::input::synthesis::MotionParameters const& motion) override;
     void emit_event(mir::input::synthesis::TouchParameters const& touch) override;
+    void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
+                             int count,
+                             std::chrono::duration<double> delay) override;
 
 private:
     class InputDevice : public mir::input::InputDevice

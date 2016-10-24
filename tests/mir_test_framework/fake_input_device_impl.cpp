@@ -34,6 +34,8 @@
 #include "mir/events/event_builders.h"
 
 #include <chrono>
+#include <thread>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -91,6 +93,40 @@ void mtf::FakeInputDeviceImpl::emit_event(synthesis::TouchParameters const& touc
                        device->synthesize_events(touch);
                    });
 }
+
+void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
+                                                   int count,
+                                                   std::chrono::duration<double> delay)
+{
+    queue->enqueue(
+        [this, event_generator, count, delay]()
+        {
+            auto start = std::chrono::steady_clock::now();
+            auto yield_if_ahead_of_input_rate = [start,delay](int i)
+            {
+                auto now = std::chrono::steady_clock::now();
+                int num_events = std::chrono::duration<double>(now - start).count() / delay.count();
+
+                std:: cout << " i " << i << "  req by now:" << num_events << "\n";
+
+                if (i > num_events)
+                {
+                    std:: cout << " yielding  \n";
+                    // Valgrind is apparently quite bad at concurrency so give it a
+                    // fighting chance:
+                    std::this_thread::yield();
+                }
+            };
+            for (int i = 0; i!= count; ++i)
+            {
+                std::this_thread::sleep_until(start + i*delay);
+                device->synthesize_events(event_generator(i));
+
+                yield_if_ahead_of_input_rate(i);
+            }
+        });
+}
+
 
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
