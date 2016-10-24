@@ -102,22 +102,25 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
         [this, event_generator, count, delay]()
         {
             auto start = std::chrono::steady_clock::now();
-            auto yield_if_ahead_of_input_rate = [start,delay](int i)
+            int i = 0;
+            while (i < count)
             {
                 auto now = std::chrono::steady_clock::now();
                 int num_events = std::chrono::duration<double>(now - start).count() / delay.count();
 
-                std:: cout << (now - start).count() << " i " << i << "  req by now:" << num_events << "\n";
-
                 if (i > num_events)
+                {
+                    std:: cout << " just yield now \n";
                     std::this_thread::yield();
-            };
-            for (int i = 0; i!= count; ++i)
-            {
-                std::this_thread::sleep_until(start + i*delay);
-                device->synthesize_events(event_generator(i));
-
-                yield_if_ahead_of_input_rate(i);
+                }
+                else
+                {
+                    while (i < std::min(num_events, count))
+                    {
+                        std:: cout << (now - start).count() << " i " << i << "  req by now:" << num_events << " -> send event \n";
+                        device->synthesize_events(event_generator(i++));
+                    }
+                }
             }
         });
 }
