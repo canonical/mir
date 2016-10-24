@@ -107,15 +107,10 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
                 auto now = std::chrono::steady_clock::now();
                 int num_events = std::chrono::duration<double>(now - start).count() / delay.count();
 
-                std:: cout << " i " << i << "  req by now:" << num_events << "\n";
+                std:: cout << (now - start).count() << " i " << i << "  req by now:" << num_events << "\n";
 
                 if (i > num_events)
-                {
-                    std:: cout << " yielding  \n";
-                    // Valgrind is apparently quite bad at concurrency so give it a
-                    // fighting chance:
                     std::this_thread::yield();
-                }
             };
             for (int i = 0; i!= count; ++i)
             {
