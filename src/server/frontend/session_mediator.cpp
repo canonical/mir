@@ -55,8 +55,6 @@
 #include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
-#include "buffer_stream_tracker.h"
-#include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
 #include "mir_toolkit/client_types.h"
@@ -120,8 +118,7 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    hub(hub),
-    buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
+    hub(hub)
 {
 }
 
@@ -191,23 +188,6 @@ void mf::SessionMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     done->Run();
-}
-
-void mf::SessionMediator::advance_buffer(
-    BufferStreamId stream_id,
-    BufferStream& stream,
-    graphics::Buffer* old_buffer,
-    std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
-{
-    stream.swap_buffers(
-        old_buffer,
-        [this, stream_id, complete](mg::Buffer* new_buffer)
-        {
-            if (!new_buffer || buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-        });
 }
 
 namespace
@@ -375,30 +355,14 @@ void mf::SessionMediator::create_surface(
 
     if (legacy_stream)
     {
-        buffer_stream_tracker.set_default_stream(surf_id, buffer_stream_id);
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         response->mutable_buffer_stream()->set_pixel_format(legacy_stream->pixel_format());
         response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
-
-        advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
-            [this, buffering_sender, response, done, session]
-            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-            {
-                if (client_buffer)
-                    pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
-
-                // Send the create_surface reply first...
-                done->Run();
-
-                // ...then uncork the message sender, sending all buffered surface events.
-                buffering_sender->uncork();
-            });
+        legacy_default_stream_map[surf_id] = buffer_stream_id;
     }
-    else
-    {
-        done->Run();
-        buffering_sender->uncork();
-    }
+    done->Run();
+    // ...then uncork the message sender, sending all buffered surface events.
+    buffering_sender->uncork();
 }
 
 void mf::SessionMediator::submit_buffer(
@@ -415,26 +379,10 @@ void mf::SessionMediator::submit_buffer(
     auto stream = session->get_buffer_stream(stream_id);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    if (auto* buffer = buffer_stream_tracker.last_buffer(stream_id))
-    {
-        ipc_operations->unpack_buffer(request_msg, *buffer);
-        stream->swap_buffers(buffer,
-            [this, stream_id](mg::Buffer* new_buffer)
-            {
-                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-                else
-                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
-            });
-    }
-    else
-    {
-        auto b = session->get_buffer(buffer_id);
-        ipc_operations->unpack_buffer(request_msg, *b);
+    auto b = session->get_buffer(buffer_id);
+    ipc_operations->unpack_buffer(request_msg, *b);
 
-        auto stream = session->get_buffer_stream(stream_id);
-        stream->swap_buffers(b.get(), [](mg::Buffer*) {});
-    }
+    stream->swap_buffers(b.get(), [](mg::Buffer*) {});
 
     done->Run();
 }
@@ -517,12 +465,11 @@ void mf::SessionMediator::release_surface(
 
     shell->destroy_surface(session, id);
 
-    auto default_stream = buffer_stream_tracker.default_stream(id);
-    if (default_stream.is_set())
+    auto it = legacy_default_stream_map.find(id);
+    if (it != legacy_default_stream_map.end())
     {
-        session->destroy_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_default_stream(id);
+        session->destroy_buffer_stream(it->second);
+        legacy_default_stream_map.erase(it);
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -868,16 +815,7 @@ void mf::SessionMediator::create_buffer_stream(
 
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
-
-    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
-        [this, response, done, session]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            if (client_buffer)
-                pack_protobuf_buffer(*response->mutable_buffer(), client_buffer, msg_type);
-
-            done->Run();
-        });
+    done->Run();
 }
 
 void mf::SessionMediator::release_buffer_stream(
@@ -895,7 +833,6 @@ void mf::SessionMediator::release_buffer_stream(
     auto const id = BufferStreamId(request->value());
 
     session->destroy_buffer_stream(id);
-    buffer_stream_tracker.remove_buffer_stream(id);
 
     done->Run();
 }
