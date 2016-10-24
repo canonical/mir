@@ -644,8 +644,6 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
 
-    std::cout << " received_input_events : " << received_input_events << std::endl;
-
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
     EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
