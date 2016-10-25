@@ -35,6 +35,7 @@
 
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -113,6 +114,7 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
                 }
                 else
                 {
+                    std::cout << (now-start).count() <<" " << i << " to " << num_events << "\n";
                     while (i < std::min(num_events, count))
                         device->synthesize_events(event_generator(i++));
                 }

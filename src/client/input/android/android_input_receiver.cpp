@@ -31,6 +31,7 @@
 #include <sys/eventfd.h>
 #include <system_error>
 #include <cstdlib>
+#include <iostream>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -174,6 +175,7 @@ void mircva::InputReceiver::process_and_maybe_send_event()
                                           &android_event);
     if (result == droidinput::OK)
     {
+        std::cout << "handle mirevent ";
         auto ev = mia::Lexicon::translate(android_event);
         map_key_event(xkb_mapper, *ev);
         report->received_event(*ev);
@@ -195,6 +197,7 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         //
         // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
+        std::cout << "wake ";
     }
     else if (input_consumer->hasPendingBatch())
     {
@@ -207,6 +210,7 @@ void mircva::InputReceiver::process_and_maybe_send_event()
             { 0, 0 },
             { 0, duration_cast<nanoseconds>(1ms).count() }
         };
+        std::cout << "1ms ";
         if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
         {
             BOOST_THROW_EXCEPTION((std::system_error{errno,

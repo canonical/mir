@@ -639,7 +639,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 
     // The main thing we're testing for is that too many events don't arrive
     // so we wait a little to check the cooked event stream has stopped:
-    std::this_thread::sleep_for(100 * frame_time);
+    std::this_thread::sleep_for(200 * frame_time);
 
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
