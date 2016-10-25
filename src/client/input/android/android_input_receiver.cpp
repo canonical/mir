@@ -79,6 +79,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     dispatcher.add_watch(timer_fd, [this]()
     {
         consume_wake_notification(timer_fd);
+        std::cout << "woke on timer";
         process_and_maybe_send_event();
     });
 
@@ -197,7 +198,6 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         //
         // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
-        std::cout << "wake ";
     }
     else if (input_consumer->hasPendingBatch())
     {
@@ -208,9 +208,8 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         using namespace std::literals::chrono_literals;
         struct itimerspec const msec_delay = {
             { 0, 0 },
-            { 0, duration_cast<nanoseconds>(1ms).count() }
+            { 0, duration_cast<nanoseconds>(4ms).count() } // resampling latency
         };
-        std::cout << "1ms ";
         if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
         {
             BOOST_THROW_EXCEPTION((std::system_error{errno,

@@ -255,7 +255,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
 
-    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 1ms));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 5ms));
     handler_called = false;
     receiver.dispatch(md::FdEvent::readable);
     // We've processed the data, but no new event has been generated.

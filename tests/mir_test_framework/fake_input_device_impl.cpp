@@ -108,7 +108,7 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
                 auto now = std::chrono::steady_clock::now();
                 int num_events = std::chrono::duration<double>(now - start).count() / delay.count();
 
-                if (i > num_events)
+                if (i >= num_events)
                 {
                     std::this_thread::yield();
                 }
