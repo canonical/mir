@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
@@ -368,7 +369,6 @@ TEST_F(BufferStreamArrangement, can_set_stream_logical_and_physical_size)
     geom::Size logical_size { 233, 111 };
     geom::Size physical_size { 133, 222 };
     Stream stream(connection, physical_size, { {0, 0}, logical_size } );
-    MirBufferStreamInfo info { stream.handle(), 0, 0 };
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
