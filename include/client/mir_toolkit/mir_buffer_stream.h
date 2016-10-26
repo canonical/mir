@@ -250,7 +250,7 @@ int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
 void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height);
 
 /**
- * Get the physical size of the buffers provided by the buffer stream.
+ * Get the physical size of the next buffer that will be provided by the stream.
  *
  * \param [in]  stream   The buffer stream
  * \param [out] width    The physical width of the stream
