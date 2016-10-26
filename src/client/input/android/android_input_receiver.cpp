@@ -215,7 +215,7 @@ void mircva::InputReceiver::process_and_maybe_send_event()
             auto const delay_to_next_frame = next_frame - now;
             struct itimerspec const msec_delay = {
                 { 0, 0 },
-                { 0, duration_cast<nanoseconds>(delay_to_next_frame).count() }
+                { 0, duration_cast<duration<long,std::nano>>(delay_to_next_frame).count() }
             };
             if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
             {

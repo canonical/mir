@@ -600,7 +600,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     int const inputs_per_frame = input_rate / frame_rate;
     int const ninputs = nframes * inputs_per_frame;
     auto const frame_time = 1000ms / frame_rate;
-    auto const input_interval = std::chrono::duration<double>(1000ms) / input_rate;
+    auto const input_interval = std::chrono::duration<double>(1s) / input_rate;
 
     int received_input_events = 0;
 
