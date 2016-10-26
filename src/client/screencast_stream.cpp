@@ -269,6 +269,11 @@ void mcl::ScreencastStream::set_size(geom::Size)
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set size on screencast is invalid"));
 }
 
+geom::Size mcl::ScreencastStream::size() const
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to get size on screencast is invalid"));
+}
+
 MirWaitHandle* mcl::ScreencastStream::set_scale(float)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set scale on screencast is invalid"));

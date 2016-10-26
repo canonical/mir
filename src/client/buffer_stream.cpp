@@ -182,7 +182,6 @@ struct BufferDepository
 
     void set_size(geom::Size size)
     {
-        printf("SET SIZE!!!!! %i %i \n", size.width.as_int(), size.height.as_int());
         {
             std::unique_lock<std::mutex> lk(mutex);
             size_ = size;
@@ -566,6 +565,11 @@ void mcl::BufferStream::buffer_unavailable()
 void mcl::BufferStream::set_size(geom::Size sz)
 {
     buffer_depository->set_size(sz);
+}
+
+geom::Size mcl::BufferStream::size() const
+{
+    return buffer_depository->size();
 }
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)

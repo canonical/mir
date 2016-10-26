@@ -172,7 +172,6 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
     auto future = promise.get_future();
     if (it != buffers.end())
     {
-        printf("IMMEDIATE\n");
         it->second = Owner::ContentProducer;
         promise.set_value(checked_buffer_from_map(it->first));
         lk.unlock();
@@ -180,7 +179,6 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
     else
     {
         promises.emplace_back(std::move(promise));
-        printf("NO SUITABLE\n");
 
         auto s = size;
         bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
