@@ -240,7 +240,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
                                    }};
     TestingInputProducer producer(channel.server_fd());
 
-    nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 60;
+    nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 59;
 
     producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
@@ -252,28 +252,11 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_TRUE(handler_called);
     ASSERT_EQ(mir_event_type_key, ev->type());
 
-    // The motion is still too new. Won't be reported yet, but is batched.
-    auto start = high_resolution_clock::now();
-
-    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 5ms));
-    handler_called = false;
-    receiver.dispatch(md::FdEvent::readable);
-    // We've processed the data, but no new event has been generated.
-    EXPECT_FALSE(handler_called);
-
-    auto end = high_resolution_clock::now();
-    auto duration = end - start;
-
-    // Verify we timed out in under a frame (LP: #1372300)
-    // Sadly using real time as droidinput::Looper doesn't use a mocked clock.
-    ASSERT_LT(duration, one_frame);
-
-    // Verify we don't use all the CPU by not sleeping (LP: #1373809)
-    EXPECT_GT(duration, 1ms);
-
-    // But later in a frame or so, the motion will be reported:
     t += 2 * one_frame;  // Account for the slower 59Hz event rate
-    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
+    // The motion is still too new. Won't be reported yet, but is batched.
+    // and since batching is locked to the event rate android_input_receiver
+    // will wake up in one frame..
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 2 * one_frame));
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_TRUE(handler_called);

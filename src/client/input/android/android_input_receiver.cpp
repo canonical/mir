@@ -79,7 +79,6 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     dispatcher.add_watch(timer_fd, [this]()
     {
         consume_wake_notification(timer_fd);
-        std::cout << "woke on timer";
         process_and_maybe_send_event();
     });
 
@@ -161,11 +160,12 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      */
 
     auto frame_time = std::chrono::nanoseconds(-1);
+
     if (event_rate_hz > 0)
     {
+        auto one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
         std::chrono::nanoseconds const
-            now = android_clock(SYSTEM_TIME_MONOTONIC),
-            one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
+            now = android_clock(SYSTEM_TIME_MONOTONIC);
         frame_time = (now / one_frame) * one_frame;
     }
 
@@ -176,7 +176,6 @@ void mircva::InputReceiver::process_and_maybe_send_event()
                                           &android_event);
     if (result == droidinput::OK)
     {
-        std::cout << "handle mirevent ";
         auto ev = mia::Lexicon::translate(android_event);
         map_key_event(xkb_mapper, *ev);
         report->received_event(*ev);
@@ -199,22 +198,31 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
     }
-    else if (input_consumer->hasPendingBatch())
+    else if (input_consumer->hasPendingBatch() && event_rate_hz > 0)
     {
-        /* TODO: Feed in vsync-ish events (or work out when consume() would
-         *       actually generate an event) rather than polling at 1000Hz
-         */
         using namespace std::chrono;
-        using namespace std::literals::chrono_literals;
-        struct itimerspec const msec_delay = {
-            { 0, 0 },
-            { 0, duration_cast<nanoseconds>(4ms).count() } // resampling latency
-        };
-        if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
+        // If we batch according to a fixed event rate - we wait until the next "frame" occurs.
+        auto one_frame = nanoseconds(1000000000ULL / event_rate_hz);
+        auto now = android_clock(SYSTEM_TIME_MONOTONIC);
+        auto next_frame = frame_time + one_frame;
+
+        if (next_frame < now)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                     std::system_category(),
-                                                     "Failed to arm timer"}));
+            wake();
+        }
+        else
+        {
+            auto const delay_to_next_frame = next_frame - now;
+            struct itimerspec const msec_delay = {
+                { 0, 0 },
+                { 0, duration_cast<nanoseconds>(delay_to_next_frame).count() }
+            };
+            if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                       std::system_category(),
+                                       "Failed to arm timer"}));
+            }
         }
     }
 }
