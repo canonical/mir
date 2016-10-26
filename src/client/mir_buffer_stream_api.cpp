@@ -258,3 +258,13 @@ catch (std::exception const& ex)
     return -1;
 }
 
+void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height)
+try
+{
+    if (auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream))
+        return buffer_stream->set_size(mir::geometry::Size{width, height});
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}

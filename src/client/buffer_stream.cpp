@@ -182,6 +182,7 @@ struct BufferDepository
 
     void set_size(geom::Size size)
     {
+        printf("SET SIZE!!!!! %i %i \n", size.width.as_int(), size.height.as_int());
         {
             std::unique_lock<std::mutex> lk(mutex);
             size_ = size;
