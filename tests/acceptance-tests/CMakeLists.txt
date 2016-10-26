@@ -2,6 +2,8 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  #staging area for client API
+  ${PROJECT_SOURCE_DIR}/src/include/client
 )
 
 set(
@@ -61,6 +63,8 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
+  test_presentation_chain.cpp
+  test_render_surface.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
