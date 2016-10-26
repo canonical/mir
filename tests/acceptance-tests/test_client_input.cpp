@@ -633,13 +633,13 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
         input_interval
         );
 
-    // Wait for the expected minimum number of events (should be quick but
-    // some CI runs are actually incredibly slow to finish)
-    ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
-
     // The main thing we're testing for is that too many events don't arrive
     // so we wait a little to check the cooked event stream has stopped:
     std::this_thread::sleep_for(200 * frame_time);
+
+    // Wait for the expected minimum number of events (should be quick but
+    // some CI runs are actually incredibly slow to finish)
+    ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
 
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
