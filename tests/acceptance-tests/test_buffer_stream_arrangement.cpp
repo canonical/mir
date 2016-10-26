@@ -149,6 +149,12 @@ struct Ordering
     printf("------------>\n");
         for (auto const& element : sequence)
         {
+            printf("LOGICAL %i %i vs Phys %i %i\n",
+                element->renderable()->screen_position().size.width.as_int(),
+                element->renderable()->screen_position().size.height.as_int(),
+                element->renderable()->buffer()->size().width.as_int(),
+                element->renderable()->buffer()->size().height.as_int());
+
             position.emplace_back(
                 element->renderable()->screen_position().top_left - first_position,
                 element->renderable()->screen_position().size,
@@ -309,7 +315,6 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
 }
-#if 0
 
 //LP: #1577967
 TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
@@ -362,11 +367,11 @@ TEST_F(BufferStreamArrangement, can_set_stream_logical_and_physical_size)
 
     geom::Size logical_size { 233, 111 };
     geom::Size physical_size { 133, 222 };
-    Stream stream(connection, { {0, 0}, physical_size } );
+    Stream stream(connection, physical_size, { {0, 0}, logical_size } );
     MirBufferStreamInfo info { stream.handle(), 0, 0 };
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, &info, 1);
+    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 /*
@@ -378,8 +383,7 @@ TEST_F(BufferStreamArrangement, can_set_stream_logical_and_physical_size)
     printf("DONE SWAPPING\n");
 */
 
-    std::vector<RelativeRectangle> positions { { {0,0}, logical_size } };
+    std::vector<RelativeRectangle> positions { { {0,0}, logical_size, physical_size } };
     EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
 }
-#endif
