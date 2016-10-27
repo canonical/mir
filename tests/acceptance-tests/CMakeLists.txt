@@ -2,8 +2,6 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  #staging area for client API
-  ${PROJECT_SOURCE_DIR}/src/include/client
 )
 
 set(
@@ -63,8 +61,6 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
-  test_presentation_chain.cpp
-  test_render_surface.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -72,12 +68,14 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
 endif()
 
 add_subdirectory(throwback)
+add_subdirectory(staging)
 
 mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
   $<TARGET_OBJECTS:acceptance-test-throwback>
+  $<TARGET_OBJECTS:acceptance-test-staging>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)

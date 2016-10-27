@@ -17,54 +17,24 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/display_buffer_compositor_factory.h"
-#include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/buffer.h"
-#include "mir/geometry/displacement.h"
+#include "mir/compositor/scene_element.h"
+#include "buffer_stream_arrangement.h"
 
-#include <mutex>
-#include <condition_variable>
 #include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 using namespace std::literals::chrono_literals;
 using namespace testing;
-namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace
 {
-
-struct RelativeRectangle
-{
-    RelativeRectangle() = default;
-
-    RelativeRectangle(
-        geom::Displacement const& displacement,
-        geom::Size const& logical_size,
-        geom::Size const& physical_size)
-        : displacement{displacement}, logical_size{logical_size}, physical_size{physical_size}
-    {
-    }
-
-    geom::Displacement displacement;
-    geom::Size logical_size;
-    geom::Size physical_size;
-};
-bool operator==(RelativeRectangle const& a, RelativeRectangle const& b)
-{
-    return (a.displacement == b.displacement) &&
-        (a.logical_size == b.logical_size) &&
-        (a.physical_size == b.physical_size);
-}
-
 MirPixelFormat an_available_format(MirConnection* connection)
 {
     MirPixelFormat format{mir_pixel_format_invalid};
@@ -72,184 +42,150 @@ MirPixelFormat an_available_format(MirConnection* connection)
     mir_connection_get_available_surface_formats(connection, &format, 1, &valid_formats);
     return format;
 }
-
-struct Stream
-{
-    Stream(MirConnection* connection,
-        geom::Size physical_size,
-        geom::Rectangle position) :
-        stream(mir_connection_create_buffer_stream_sync(
-            connection,
-            physical_size.width.as_int(),
-            physical_size.height.as_int(),
-            an_available_format(connection),
-            mir_buffer_usage_hardware)),
-        position_{position},
-        needs_release{true}
-    {
-        swap_buffers();
-    }
-
-    ~Stream()
-    {
-        if (needs_release)
-            mir_buffer_stream_release_sync(stream);
-    }
-
-    MirBufferStream* handle() const
-    {
-        return stream;
-    }
-
-    geom::Point position()
-    {
-        return position_.top_left;
-    }
-
-    geom::Size logical_size()
-    {
-        return position_.size;
-    }
-
-    geom::Size physical_size()
-    {
-        int width = -1;
-        int height = -1;
-        mir_buffer_stream_get_size(stream, &width, &height);    
-        return { width, height };
-    }
-
-    void set_size(geom::Size size)
-    {
-        mir_buffer_stream_set_size(stream, size.width.as_int(), size.height.as_int());
-    }
-
-    void swap_buffers()
-    {
-        mir_buffer_stream_swap_buffers_sync(stream);
-    }
-
-    Stream(Stream const&) = delete;
-    Stream& operator=(Stream const&) = delete;
-private:
-    MirBufferStream* stream;
-    geom::Rectangle const position_;
-    bool const needs_release;
-};
-
-struct Ordering
-{
-    void note_scene_element_sequence(mc::SceneElementSequence& sequence)
-    {
-        if (sequence.empty())
-            return;
-
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        std::vector<RelativeRectangle> position;
-        auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
-        for (auto const& element : sequence)
-        {
-            position.emplace_back(
-                element->renderable()->screen_position().top_left - first_position,
-                element->renderable()->screen_position().size,
-                element->renderable()->buffer()->size());
-        }
-        positions.push_back(position);
-        cv.notify_all();
-    }
-
-    template<typename T, typename S>
-    bool wait_for_positions_within(
-        std::vector<RelativeRectangle> const& awaited_positions,
-        std::chrono::duration<T,S> duration)
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return cv.wait_for(lk, duration, [this, awaited_positions] {
-            for (auto& position : positions)
-                if (position == awaited_positions) return true;
-            positions.clear();
-            return false;
-        });
-    }
-
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    std::vector<std::vector<RelativeRectangle>> positions;
-};
-
-struct OrderTrackingDBC : mc::DisplayBufferCompositor
-{
-    OrderTrackingDBC(
-        std::shared_ptr<Ordering> const& ordering) :
-        ordering(ordering)
-    {
-    }
-
-    void composite(mc::SceneElementSequence&& scene_sequence) override
-    {
-        ordering->note_scene_element_sequence(scene_sequence);
-    }
-
-    std::shared_ptr<Ordering> const ordering;
-};
-
-struct OrderTrackingDBCFactory : mc::DisplayBufferCompositorFactory
-{
-    OrderTrackingDBCFactory(
-        std::shared_ptr<Ordering> const& ordering) :
-        ordering(ordering)
-    {
-    }
-
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&) override
-    {
-        return std::make_unique<OrderTrackingDBC>(ordering);
-    }
-
-    std::shared_ptr<OrderTrackingDBC> last_dbc{nullptr};
-    std::shared_ptr<mc::DisplayBufferCompositorFactory> const wrapped;
-    std::shared_ptr<Ordering> const ordering;
-};
-
-struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
-{
-    void SetUp() override
-    {
-        ordering = std::make_shared<Ordering>();
-        server.override_the_display_buffer_compositor_factory(
-            [this]()
-            {
-                order_tracker = std::make_shared<OrderTrackingDBCFactory>(ordering);
-                return order_tracker;
-            });
-
-        ConnectedClientWithASurface::SetUp();
-        server.the_cursor()->hide();
-
-        streams.emplace_back(
-            std::make_unique<Stream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
-        int const additional_streams{3};
-        for (auto i = 0; i < additional_streams; i++)
-        {
-            geom::Size size{30 * i + 1, 40* i + 1};
-            geom::Point position{i * 2, i * 3};
-            streams.emplace_back(std::make_unique<Stream>(connection, size, geom::Rectangle{position, size}));
-        }
-    }
-
-    void TearDown() override
-    {
-        streams.clear();
-        ConnectedClientWithASurface::TearDown();
-    }
-
-    std::shared_ptr<Ordering> ordering;
-    std::shared_ptr<OrderTrackingDBCFactory> order_tracker{nullptr};
-    std::vector<std::unique_ptr<Stream>> streams;
-};
 }
 
+mt::RelativeRectangle::RelativeRectangle(
+    geom::Displacement const& displacement,
+    geom::Size const& logical_size,
+    geom::Size const& physical_size) : 
+    displacement{displacement},
+    logical_size{logical_size},
+    physical_size{physical_size}
+{
+}
+
+bool mt::operator==(mt::RelativeRectangle const& a, mt::RelativeRectangle const& b)
+{
+    return (a.displacement == b.displacement) &&
+        (a.logical_size == b.logical_size) &&
+        (a.physical_size == b.physical_size);
+}
+
+mt::Stream::Stream(MirConnection* connection,
+    geom::Size physical_size,
+    geom::Rectangle position) :
+    stream(mir_connection_create_buffer_stream_sync(
+        connection,
+        physical_size.width.as_int(),
+        physical_size.height.as_int(),
+        an_available_format(connection),
+        mir_buffer_usage_hardware)),
+    position_{position}
+{
+    swap_buffers();
+}
+
+mt::Stream::~Stream()
+{
+    mir_buffer_stream_release_sync(stream);
+}
+
+MirBufferStream* mt::Stream::handle() const
+{
+    return stream;
+}
+
+geom::Point mt::Stream::position()
+{
+    return position_.top_left;
+}
+
+geom::Size mt::Stream::logical_size()
+{
+    return position_.size;
+}
+
+geom::Size mt::Stream::physical_size()
+{
+    int width = -1;
+    int height = -1;
+    mir_buffer_stream_get_size(stream, &width, &height);    
+    return { width, height };
+}
+
+void mt::Stream::set_size(geom::Size size)
+{
+    mir_buffer_stream_set_size(stream, size.width.as_int(), size.height.as_int());
+}
+
+void mt::Stream::swap_buffers()
+{
+    mir_buffer_stream_swap_buffers_sync(stream);
+}
+
+void mt::Ordering::note_scene_element_sequence(mc::SceneElementSequence& sequence)
+{
+    if (sequence.empty())
+        return;
+
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    std::vector<mt::RelativeRectangle> position;
+    auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
+    for (auto const& element : sequence)
+    {
+        position.emplace_back(
+            element->renderable()->screen_position().top_left - first_position,
+            element->renderable()->screen_position().size,
+            element->renderable()->buffer()->size());
+    }
+    positions.push_back(position);
+    cv.notify_all();
+}
+
+mt::OrderTrackingDBC::OrderTrackingDBC(
+    std::shared_ptr<Ordering> const& ordering) :
+    ordering(ordering)
+{
+}
+
+void mt::OrderTrackingDBC::composite(mc::SceneElementSequence&& scene_sequence)
+{
+    ordering->note_scene_element_sequence(scene_sequence);
+}
+
+mt::OrderTrackingDBCFactory::OrderTrackingDBCFactory(
+    std::shared_ptr<Ordering> const& ordering) :
+    ordering(ordering)
+{
+}
+
+std::unique_ptr<mc::DisplayBufferCompositor> mt::OrderTrackingDBCFactory::create_compositor_for(
+    mg::DisplayBuffer&)
+{
+    return std::make_unique<OrderTrackingDBC>(ordering);
+}
+
+void mt::BufferStreamArrangementBase::SetUp()
+{
+    ordering = std::make_shared<Ordering>();
+    server.override_the_display_buffer_compositor_factory(
+        [this]()
+        {
+            order_tracker = std::make_shared<OrderTrackingDBCFactory>(ordering);
+            return order_tracker;
+        });
+
+    ConnectedClientWithASurface::SetUp();
+    server.the_cursor()->hide();
+
+    streams.emplace_back(
+        std::make_unique<Stream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
+    int const additional_streams{3};
+    for (auto i = 0; i < additional_streams; i++)
+    {
+        geom::Size size{30 * i + 1, 40* i + 1};
+        geom::Point position{i * 2, i * 3};
+        streams.emplace_back(std::make_unique<Stream>(connection, size, geom::Rectangle{position, size}));
+    }
+}
+
+void mt::BufferStreamArrangementBase::TearDown()
+{
+    streams.clear();
+    ConnectedClientWithASurface::TearDown();
+}
+
+typedef mt::BufferStreamArrangementBase BufferStreamArrangement;
 TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
 {
     std::vector<MirBufferStreamInfo> infos(streams.size());
@@ -275,6 +211,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
     EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
 }
 
+
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     std::vector<MirBufferStreamInfo> infos(streams.size());
@@ -292,7 +229,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
-    std::vector<RelativeRectangle> positions;
+    std::vector<mt::RelativeRectangle> positions;
     i = 0;
     for (auto& info : infos)
     {
@@ -348,62 +285,4 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
     mir_surface_spec_release(change_spec);
 
     EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
-}
-
-TEST_F(BufferStreamArrangement, can_set_stream_logical_and_physical_size)
-{
-    geom::Size logical_size { 233, 111 };
-    geom::Size physical_size { 133, 222 };
-    Stream stream(connection, physical_size, { {0, 0}, logical_size } );
-
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
-
-    std::vector<RelativeRectangle> positions { { {0,0}, logical_size, physical_size } };
-    EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
-         << "timed out waiting to see the compositor post the streams in the right arrangement";
-}
-
-TEST_F(BufferStreamArrangement, can_setting_stream_physical_size_doesnt_affect_logical)
-{
-    geom::Size logical_size { 233, 111 };
-    geom::Size original_physical_size { 133, 222 };
-    geom::Size changed_physical_size { 133, 222 };
-    Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
-
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
-
-    stream.set_size(changed_physical_size);
-    //submits the original_buffer_size buffer, getting changed_physical_size buffer as current
-    stream.swap_buffers();
-    //submits the changed_buffer_size buffer so server can see
-    stream.swap_buffers();
-
-    std::vector<RelativeRectangle> positions { { {0,0}, logical_size, changed_physical_size } };
-    EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
-         << "timed out waiting to see the compositor post the streams in the right arrangement";
-}
-
-TEST_F(BufferStreamArrangement, stream_size_reflects_current_buffer_physical_size)
-{
-    geom::Size logical_size { 233, 111 };
-    geom::Size original_physical_size { 133, 222 };
-    geom::Size changed_physical_size { 133, 222 };
-    Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
-
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
-
-    EXPECT_THAT(stream.physical_size(), Eq(original_physical_size));
-    streams.back()->set_size(changed_physical_size);
-    EXPECT_THAT(stream.physical_size(), Eq(changed_physical_size));
-    streams.back()->swap_buffers();
-    EXPECT_THAT(stream.physical_size(), Eq(changed_physical_size));
 }
