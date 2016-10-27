@@ -35,7 +35,6 @@
 
 #include <chrono>
 #include <thread>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
