@@ -221,7 +221,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings c
 mir::optional_value<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
 {
     mir::optional_value<mi::TouchpadSettings> ret;
-    if (contains(info.capabilities, mi::DeviceCapability::pointer))
+    if (contains(info.capabilities, mi::DeviceCapability::touchpad))
         ret = mi::TouchpadSettings();
 
     return ret;

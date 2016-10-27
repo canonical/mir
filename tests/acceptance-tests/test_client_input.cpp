@@ -19,6 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/input/touchpad_configuration.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -30,6 +31,8 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
 
+#include "mir/input/input_device_observer.h"
+#include "mir/input/input_device_hub.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/events/event_builders.h"
 
@@ -49,6 +52,8 @@ namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
+using namespace std::chrono_literals;
+using namespace testing;
 using namespace std::chrono_literals;
 
 namespace
@@ -155,6 +160,29 @@ struct Client
     bool focused = false;
 };
 
+struct DeviceCounter : mi::InputDeviceObserver
+{
+    DeviceCounter(std::function<void(size_t)> const& callback)
+        : callback{callback}
+    {}
+    void device_added(std::shared_ptr<mi::Device> const&) override
+    {
+        ++count_devices;
+    }
+    void device_changed(std::shared_ptr<mi::Device> const&) override
+    {}
+    void device_removed(std::shared_ptr<mi::Device> const&) override
+    {
+        --count_devices;
+    }
+    void changes_complete()
+    {
+        callback(count_devices);
+    }
+    std::function<void(size_t)> const callback;
+    int count_devices{0};
+};
+
 struct TestClientInput : mtf::HeadlessInProcessServer
 {
     void SetUp() override
@@ -194,12 +222,52 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     mtf::ClientPositions positions;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
+    mt::Signal devices_available;
+
+    void wait_for_input_devices(int expected_number_of_input_devices = 3)
+    {
+        // The fake input devices are registered from within the input thread, as soon as the
+        // input manager starts. So clients may connect to the server before those additions
+        // have been processed.
+        auto counter = std::make_shared<DeviceCounter>(
+            [&](int count)
+            {
+                if (count == expected_number_of_input_devices)
+                    devices_available.raise();
+            });
+
+        server.the_input_device_hub()->add_observer(counter);
+
+        devices_available.wait_for(5s);
+        ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
+
+        server.the_input_device_hub()->remove_observer(counter);
+    }
+
+    MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
+    {
+        for (size_t i = 0; i != mir_input_config_device_count(config); ++i)
+        {
+            auto dev = mir_input_config_get_device(config, i);
+            if (caps == mir_input_device_get_capabilities(dev))
+                return dev;
+        }
+        return nullptr;
+    }
+
+    MirInputDevice* get_mutable_device_with_capabilities(MirInputConfig* config, MirInputDeviceCapabilities caps)
+    {
+        for (size_t i = 0; i != mir_input_config_device_count(config); ++i)
+        {
+            auto dev = mir_input_config_get_mutable_device(config, i);
+            if (caps == mir_input_device_get_capabilities(dev))
+                return dev;
+        }
+        return nullptr;
+    }
 };
 
 }
-
-using namespace ::testing;
-using namespace std::chrono_literals;
 
 TEST_F(TestClientInput, clients_receive_keys)
 {
@@ -263,8 +331,6 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 {
-    using namespace ::testing;
-
     mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
     
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
@@ -784,8 +850,6 @@ struct TestClientInputKeyRepeat : public TestClientInput
 
 TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
 
     InSequence seq;
@@ -802,8 +866,6 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
 
 TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
 {
-    using namespace testing;
-
     positions[first] = {{0, 0}, {10, 10}};
     
     Client client(new_connection(), first);
@@ -846,22 +908,22 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
     return one_of_the_devices_matched;
 }
 
-//Poll for the expected config to fix lp: #1555708. Client can't expect synchronization
-//with the server on the input config.
 TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
+    wait_for_input_devices();
+
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);
     int limit = 10;
     int num_devices = 0;
     int expected_devices = 3;
- 
+
     for(auto i = 0; i < limit; i++)
     {
         num_devices = mir_input_config_device_count(config);
         if (num_devices == expected_devices)
             break;
- 
+
         std::this_thread::sleep_for(10ms);
         mir_input_config_destroy(config);
         config = mir_connection_create_input_config(con);
@@ -932,3 +994,120 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     EXPECT_THAT(mir_input_config_device_count(config), Eq(2));
     mir_input_config_destroy(config);
 }
+
+TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
+    ASSERT_THAT(mouse, Ne(nullptr));
+
+    auto pointer_config = mir_input_device_get_pointer_configuration(mouse);
+
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_none));
+    EXPECT_THAT(mir_pointer_configuration_get_vertical_scroll_scale(pointer_config), Eq(1.0));
+    EXPECT_THAT(mir_pointer_configuration_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
+
+    mir_input_config_destroy(config);
+}
+
+TEST_F(TestClientInput, no_touchpad_configuration_on_mouse)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
+
+    EXPECT_THAT(mir_input_device_get_touchpad_configuration(mouse), Eq(nullptr));
+    mir_input_config_destroy(config);
+}
+
+TEST_F(TestClientInput, pointer_configuration_is_mutable)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+
+    mir_pointer_configuration_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+    mir_pointer_configuration_set_acceleration_bias(pointer_config, 1.0);
+    mir_pointer_configuration_set_horizontal_scroll_scale(pointer_config, 1.2);
+    mir_pointer_configuration_set_vertical_scroll_scale(pointer_config, 1.4);
+
+    EXPECT_THAT(mir_pointer_configuration_get_vertical_scroll_scale(pointer_config), Eq(1.4));
+    EXPECT_THAT(mir_pointer_configuration_get_horizontal_scroll_scale(pointer_config), Eq(1.2));
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration_bias(pointer_config), Eq(1.0));
+
+    mir_input_config_destroy(config);
+}
+
+TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
+{
+    mi::TouchpadConfiguration const default_configuration;
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"tpd", "tpd-id",
+                            mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
+
+    wait_for_input_devices(4);
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchpad = get_device_with_capabilities(config,
+                                                 mir_input_device_capability_pointer|
+                                                 mir_input_device_capability_touchpad);
+    ASSERT_THAT(touchpad, Ne(nullptr));
+
+    auto touchpad_config = mir_input_device_get_touchpad_configuration(touchpad);
+
+    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(default_configuration.click_mode));
+    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode));
+    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button));
+    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click));
+    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing));
+
+    mir_input_config_destroy(config);
+}
+
+TEST_F(TestClientInput, touchpad_configuration_is_mutable)
+{
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"tpd", "tpd-id",
+                            mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchpad = get_mutable_device_with_capabilities(config,
+                                                 mir_input_device_capability_pointer|
+                                                 mir_input_device_capability_touchpad);
+    ASSERT_THAT(touchpad, Ne(nullptr));
+
+    auto touchpad_config = mir_input_device_get_mutable_touchpad_configuration(touchpad);
+
+    mir_touchpad_configuration_set_click_modes(touchpad_config, mir_touchpad_click_mode_area_to_click);
+    mir_touchpad_configuration_set_scroll_modes(touchpad_config, mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll);
+    mir_touchpad_configuration_set_button_down_scroll_button(touchpad_config, 10);
+    mir_touchpad_configuration_set_tap_to_click(touchpad_config, true);
+    mir_touchpad_configuration_set_middle_mouse_button_emulation(touchpad_config, true);
+    mir_touchpad_configuration_set_disable_with_mouse(touchpad_config, true);
+    mir_touchpad_configuration_set_disable_while_typing(touchpad_config, false);
+
+    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(mir_touchpad_click_mode_area_to_click));
+    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll));
+    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(10));
+    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(false));
+
+    mir_input_config_destroy(config);
+}
+
+

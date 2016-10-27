@@ -56,6 +56,7 @@
 
 #include "mir/geometry/rectangles.h"
 #include "protobuf_buffer_packer.h"
+#include "protobuf_input_converter.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -172,14 +173,12 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
+    auto input_devices = response->mutable_input_devices();
     hub->for_each_input_device(
-        [response](auto const& dev)
+        [input_devices](auto const& dev)
         {
-            auto dev_info = response->add_input_devices();
-            dev_info->set_name(dev.name());
-            dev_info->set_id(dev.id());
-            dev_info->set_unique_id(dev.unique_id());
-            dev_info->set_capabilities(dev.capabilities().value());
+            auto dev_info = input_devices->add_device_info();
+            detail::pack_protobuf_input_device_info(*dev_info, dev);
         });
 
     for (auto pf : surface_pixel_formats)

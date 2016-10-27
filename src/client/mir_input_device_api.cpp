@@ -19,116 +19,300 @@
 #include "mir/input/input_devices.h"
 #include "mir/require.h"
 
+namespace mi = mir::input;
+namespace mp = mir::protobuf;
+
 namespace
 {
-inline std::vector<mir::input::DeviceData>const& as_vector(MirInputConfig const* config)
+inline auto as_device_infos(MirInputConfig const* config)
 {
     mir::require(config);
-    return *reinterpret_cast<std::vector<mir::input::DeviceData>const*>(config);
+    return reinterpret_cast<mp::InputDevices const*>(config);
 }
 
-inline std::vector<mir::input::DeviceData>& as_vector(MirInputConfig* config)
+inline auto as_device_infos(MirInputConfig* config)
 {
     mir::require(config);
-    return *reinterpret_cast<std::vector<mir::input::DeviceData>*>(config);
+    return reinterpret_cast<mp::InputDevices*>(config);
 }
 
-inline auto as_device(mir::input::DeviceData* data)
+inline auto as_device(mp::InputDeviceInfo* data)
 {
     mir::require(data);
     return reinterpret_cast<MirInputDevice*>(data);
 }
 
-inline auto as_device(mir::input::DeviceData const* data)
+inline auto as_device(mp::InputDeviceInfo const* data)
 {
     mir::require(data);
     return reinterpret_cast<MirInputDevice const*>(data);
 }
 
-inline auto as_data(MirInputDevice const* device)
+inline auto as_device_info(MirInputDevice const* device)
 {
     mir::require(device);
-    return reinterpret_cast<mir::input::DeviceData const*>(device);
+    return reinterpret_cast<mp::InputDeviceInfo const*>(device);
 }
 
-}
-
-size_t mir_input_configuration_count(MirInputConfig const* config)
+inline auto as_device_info(MirInputDevice* device)
 {
-    auto& device_vector = as_vector(config);
-
-    return device_vector.size();
+    mir::require(device);
+    return reinterpret_cast<mp::InputDeviceInfo*>(device);
 }
 
-size_t mir_input_config_device_count(MirInputConfig const* devices)
-{
-    auto& device_vector = as_vector(devices);
-
-    return device_vector.size();
-}
-
-MirInputDevice* mir_input_config_get_mutable_device(MirInputConfig* config, size_t index)
-{
-    auto& device_vector = as_vector(config);
-
-    mir::require(index < device_vector.size());
-    return as_device(&device_vector[index]);
-}
-
-MirInputDevice* mir_input_config_get_mutable_device_by_id(MirInputConfig* config, MirInputDeviceId id)
+inline auto as_pointer_config(MirPointerConfiguration const* config)
 {
     mir::require(config);
+    return reinterpret_cast<mp::PointerConfiguration const*>(config);
+}
 
-    auto& device_vector = as_vector(config);
-    for (auto& dev : device_vector)
-        if (dev.id == id)
+inline auto as_pointer_config(MirPointerConfiguration* config)
+{
+    mir::require(config);
+    return reinterpret_cast<mp::PointerConfiguration*>(config);
+}
+
+inline auto as_touchpad_config(MirTouchpadConfiguration const* config)
+{
+    mir::require(config);
+    return reinterpret_cast<mp::TouchpadConfiguration const*>(config);
+}
+
+inline auto as_touchpad_config(MirTouchpadConfiguration* config)
+{
+    mir::require(config);
+    return reinterpret_cast<mp::TouchpadConfiguration*>(config);
+}
+}
+
+size_t mir_input_config_device_count(MirInputConfig const* input_config)
+{
+    mir::require(input_config);
+    auto device_infos = as_device_infos(input_config);
+
+    return device_infos->device_info_size();
+}
+
+MirInputDevice* mir_input_config_get_mutable_device(MirInputConfig* input_config, size_t index)
+{
+    mir::require(input_config);
+    auto device_infos = as_device_infos(input_config);
+
+    mir::require(int(index) < device_infos->device_info_size());
+    return as_device(device_infos->mutable_device_info(index));
+}
+
+MirInputDevice* mir_input_config_get_mutable_device_by_id(MirInputConfig* input_config, MirInputDeviceId id)
+{
+    mir::require(input_config);
+
+    auto device_infos = as_device_infos(input_config);
+    for (auto& dev : *device_infos->mutable_device_info())
+        if (dev.id() == id)
             return as_device(&dev);
     return nullptr;
 }
 
-MirInputDevice const* mir_input_config_get_device(MirInputConfig const* config, size_t index)
+MirInputDevice const* mir_input_config_get_device(MirInputConfig const* input_config, size_t index)
 {
-    auto& device_vector = as_vector(config);
+    mir::require(input_config);
+    auto device_infos = as_device_infos(input_config);
 
-    mir::require(index < device_vector.size());
-    return as_device(&device_vector[index]);
+    mir::require(int(index) < device_infos->device_info_size());
+    return as_device(&device_infos->device_info(index));
 }
 
-MirInputDevice const* mir_input_config_get_device_by_id(MirInputConfig const* config, MirInputDeviceId id)
+MirInputDevice const* mir_input_config_get_device_by_id(MirInputConfig const* input_config, MirInputDeviceId id)
 {
-    mir::require(config);
+    mir::require(input_config);
 
-    auto& device_vector = as_vector(config);
-    for (auto const& dev : device_vector)
-        if (dev.id == id)
+    auto device_infos = as_device_infos(input_config);
+    for (auto const& dev : device_infos->device_info())
+        if (dev.id() == id)
             return as_device(&dev);
     return nullptr;
 }
 
 uint32_t mir_input_device_get_capabilities(MirInputDevice const* device)
 {
-    mir::require(device);
-    auto data = as_data(device);
-    return data->caps;
+    return as_device_info(device)->capabilities();
 }
 
 MirInputDeviceId mir_input_device_get_id(MirInputDevice const* device)
 {
-    mir::require(device);
-    auto data = as_data(device);
-    return data->id;
+    return as_device_info(device)->id();
 }
 
 char const* mir_input_device_get_name(MirInputDevice const* device)
 {
-    mir::require(device);
-    auto data = as_data(device);
-    return data->name.c_str();
+    return as_device_info(device)->name().c_str();
 }
 
 char const* mir_input_device_get_unique_id(MirInputDevice const* device)
 {
-    mir::require(device);
-    auto data = as_data(device);
-    return data->unique_id.c_str();
+    auto device_info = as_device_info(device);
+    return device_info->unique_id().c_str();
+}
+
+MirPointerConfiguration const* mir_input_device_get_pointer_configuration(MirInputDevice const* device)
+{
+    auto device_info = as_device_info(device);
+    if (device_info->has_pointer_configuration())
+        return reinterpret_cast<MirPointerConfiguration const*>(&device_info->pointer_configuration());
+
+    return nullptr;
+}
+
+MirPointerAcceleration mir_pointer_configuration_get_acceleration(MirPointerConfiguration const* conf)
+{
+    return static_cast<MirPointerAcceleration>(as_pointer_config(conf)->acceleration());
+}
+
+double mir_pointer_configuration_get_acceleration_bias(MirPointerConfiguration const* conf)
+{
+    return as_pointer_config(conf)->acceleration_bias();
+}
+
+double mir_pointer_configuration_get_horizontal_scroll_scale(MirPointerConfiguration const* conf)
+{
+    return as_pointer_config(conf)->horizontal_scroll_scale();
+}
+
+double mir_pointer_configuration_get_vertical_scroll_scale(MirPointerConfiguration const* conf)
+{
+    return as_pointer_config(conf)->vertical_scroll_scale();
+}
+
+MirPointerHandedness mir_pointer_configuration_get_handedness(MirPointerConfiguration const* conf)
+{
+    if (as_pointer_config(conf)->handedness() == mir_pointer_handedness_left)
+        return mir_pointer_handedness_left;
+    else
+        return mir_pointer_handedness_right;
+}
+
+MirPointerConfiguration* mir_input_device_get_mutable_pointer_configuration(MirInputDevice* device)
+{
+    auto device_info = as_device_info(device);
+
+    if (device_info->has_pointer_configuration())
+        return reinterpret_cast<MirPointerConfiguration*>(device_info->mutable_pointer_configuration());
+    return nullptr;
+}
+
+void mir_pointer_configuration_set_acceleration(MirPointerConfiguration* conf, MirPointerAcceleration acceleration)
+{
+    as_pointer_config(conf)->set_acceleration(acceleration);
+}
+
+void mir_pointer_configuration_set_acceleration_bias(MirPointerConfiguration* conf, double acceleration_bias)
+{
+    as_pointer_config(conf)->set_acceleration_bias(acceleration_bias);
+}
+
+void mir_pointer_configuration_set_horizontal_scroll_scale(MirPointerConfiguration* conf,
+                                                           double horizontal_scroll_scale)
+{
+    as_pointer_config(conf)->set_horizontal_scroll_scale(horizontal_scroll_scale);
+}
+
+void mir_pointer_configuration_set_vertical_scroll_scale(MirPointerConfiguration* conf, double vertical_scroll_scale)
+{
+    as_pointer_config(conf)->set_vertical_scroll_scale(vertical_scroll_scale);
+}
+
+void mir_pointer_configuration_set_handedness(MirPointerConfiguration* conf, MirPointerHandedness handedness)
+{
+    as_pointer_config(conf)->set_handedness(handedness);
+}
+
+MirTouchpadConfiguration const* mir_input_device_get_touchpad_configuration(MirInputDevice const* device)
+{
+    auto device_info = as_device_info(device);
+
+    if (device_info->has_touchpad_configuration())
+        return reinterpret_cast<MirTouchpadConfiguration const*>(&device_info->touchpad_configuration());
+    return nullptr;
+}
+
+MirTouchpadClickModes mir_touchpad_configuration_get_click_modes(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->click_modes();
+}
+
+MirTouchpadScrollModes mir_touchpad_configuration_get_scroll_modes(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->scroll_modes();
+}
+
+int mir_touchpad_configuration_get_button_down_scroll_button(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->button_down_scroll_button();
+}
+
+bool mir_touchpad_configuration_get_tap_to_click(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->tap_to_click();
+}
+
+bool mir_touchpad_configuration_get_middle_mouse_button_emulation(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->middle_mouse_button_emulation();
+}
+
+bool mir_touchpad_configuration_get_disable_with_mouse(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->disable_with_mouse();
+}
+
+bool mir_touchpad_configuration_get_disable_while_typing(MirTouchpadConfiguration const* conf)
+{
+    return as_touchpad_config(conf)->disable_while_typing();
+}
+
+MirTouchpadConfiguration* mir_input_device_get_mutable_touchpad_configuration(MirInputDevice* device)
+{
+    auto device_info = as_device_info(device);
+
+    if (device_info->has_touchpad_configuration())
+        return reinterpret_cast<MirTouchpadConfiguration*>(device_info->mutable_touchpad_configuration());
+    return nullptr;
+}
+
+void mir_touchpad_configuration_set_click_modes(MirTouchpadConfiguration* conf, MirTouchpadClickModes modes)
+{
+    as_touchpad_config(conf)->set_click_modes(modes);
+}
+
+void mir_touchpad_configuration_set_scroll_modes(MirTouchpadConfiguration* conf, MirTouchpadScrollModes modes)
+{
+    as_touchpad_config(conf)->set_scroll_modes(modes);
+}
+
+void mir_touchpad_configuration_set_button_down_scroll_button(MirTouchpadConfiguration* conf, int button)
+{
+    as_touchpad_config(conf)->set_button_down_scroll_button(button);
+}
+
+void mir_touchpad_configuration_set_tap_to_click(MirTouchpadConfiguration* conf, bool tap_to_click)
+{
+    as_touchpad_config(conf)->set_tap_to_click(tap_to_click);
+}
+
+void mir_touchpad_configuration_set_middle_mouse_button_emulation(MirTouchpadConfiguration* conf, bool middle_emulation)
+{
+    auto touchpad_info = as_touchpad_config(conf);
+    touchpad_info->set_middle_mouse_button_emulation(middle_emulation);
+}
+
+void mir_touchpad_configuration_set_disable_with_mouse(MirTouchpadConfiguration* conf, bool active)
+{
+    auto touchpad_info = as_touchpad_config(conf);
+    touchpad_info->set_disable_with_mouse(active);
+}
+
+void mir_touchpad_configuration_set_disable_while_typing(MirTouchpadConfiguration* conf, bool active)
+{
+    auto touchpad_info = as_touchpad_config(conf);
+    touchpad_info->set_disable_while_typing(active);
 }

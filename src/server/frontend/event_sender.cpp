@@ -24,6 +24,7 @@
 #include "mir/events/serialization.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
+#include "protobuf_input_converter.h"
 
 #include "mir/graphics/buffer.h"
 #include "mir/client_visible_error.h"
@@ -95,13 +96,12 @@ void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mi
 {
     mp::EventSequence seq;
 
+    auto protobuf_devices = seq.mutable_input_devices();
+
     for(const auto & dev : devices)
     {
-        auto dev_info = seq.add_input_devices();
-        dev_info->set_name(dev->name());
-        dev_info->set_id(dev->id());
-        dev_info->set_unique_id(dev->unique_id());
-        dev_info->set_capabilities(dev->capabilities().value());
+        auto dev_info = protobuf_devices->add_device_info();
+        detail::pack_protobuf_input_device_info(*dev_info, *dev);
     }
     send_event_sequence(seq, {});
 }

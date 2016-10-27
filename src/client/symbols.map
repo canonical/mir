@@ -427,22 +427,50 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
 
 MIR_CLIENT_0.25 {  # New functions in Mir 0.25
   global:
+    mir_buffer_stream_set_swapinterval;
+    mir_connection_cancel_base_display_configuration_preview;
     mir_connection_create_spec_for_tip;
+    mir_display_output_type_name;
     mir_event_get_surface_placement_event;
+    mir_input_device_get_mutable_pointer_configuration;
+    mir_input_device_get_mutable_touchpad_configuration;
+    mir_input_device_get_pointer_configuration;
+    mir_input_device_get_touchpad_configuration;
+    mir_input_device_state_event_device_pressed_keys_for_index;
     mir_output_get_current_mode_index;
+    mir_output_get_gamma;
+    mir_output_get_gamma_size;
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
-    mir_output_get_gamma_size;
     mir_output_is_gamma_supported;
-    mir_output_get_gamma;
     mir_output_set_gamma;
-    mir_connection_cancel_base_display_configuration_preview;
-    mir_surface_placement_get_relative_position;
-    mir_display_output_type_name;
     mir_output_type_name;
+    mir_pointer_configuration_get_acceleration;
+    mir_pointer_configuration_get_acceleration_bias;
+    mir_pointer_configuration_get_handedness;
+    mir_pointer_configuration_get_horizontal_scroll_scale;
+    mir_pointer_configuration_get_vertical_scroll_scale;
+    mir_pointer_configuration_set_acceleration;
+    mir_pointer_configuration_set_acceleration_bias;
+    mir_pointer_configuration_set_handedness;
+    mir_pointer_configuration_set_horizontal_scroll_scale;
+    mir_pointer_configuration_set_vertical_scroll_scale;
     mir_surface_output_event_get_refresh_rate;
-    mir_input_device_state_event_device_pressed_keys_for_index;
-    mir_buffer_stream_set_swapinterval;
+    mir_surface_placement_get_relative_position;
+    mir_touchpad_configuration_get_button_down_scroll_button;
+    mir_touchpad_configuration_get_click_modes;
+    mir_touchpad_configuration_get_disable_while_typing;
+    mir_touchpad_configuration_get_disable_with_mouse;
+    mir_touchpad_configuration_get_middle_mouse_button_emulation;
+    mir_touchpad_configuration_get_scroll_modes;
+    mir_touchpad_configuration_get_tap_to_click;
+    mir_touchpad_configuration_set_button_down_scroll_button;
+    mir_touchpad_configuration_set_click_modes;
+    mir_touchpad_configuration_set_disable_while_typing;
+    mir_touchpad_configuration_set_disable_with_mouse;
+    mir_touchpad_configuration_set_middle_mouse_button_emulation;
+    mir_touchpad_configuration_set_scroll_modes;
+    mir_touchpad_configuration_set_tap_to_click;
     mir_buffer_stream_get_swapinterval;
 } MIR_CLIENT_0.24;
 

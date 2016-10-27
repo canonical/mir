@@ -19,10 +19,8 @@
 #ifndef MIR_INPUT_INPUT_DEVICES_H_
 #define MIR_INPUT_INPUT_DEVICES_H_
 
-#include "mir_toolkit/mir_input_device.h"
-#include "mir_toolkit/client_types.h"
+#include "mir_protobuf.pb.h"
 
-#include <vector>
 #include <mutex>
 #include <string>
 
@@ -30,29 +28,20 @@ namespace mir
 {
 namespace input
 {
-struct DeviceData
-{
-    DeviceData() = default;
-    DeviceData(MirInputDeviceId id, uint32_t caps, std::string const& name, std::string const& unique_id)
-        : id(id), caps(caps), name(name), unique_id(unique_id)
-    {
-    }
-    MirInputDeviceId id;
-    uint32_t caps;
-    std::string name;
-    std::string unique_id;
-};
+
+using DeviceInfo = ::mir::protobuf::InputDeviceInfo;
+using ProtobufDeviceInfos = ::mir::protobuf::InputDevices;
 
 class InputDevices
 {
 public:
     InputDevices() = default;
-    void update_devices(std::vector<DeviceData> && data);
-    std::vector<DeviceData> copy_devices();
+    void update_devices(protobuf::InputDevices const& new_devices);
+    protobuf::InputDevices* clone_devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
     std::mutex devices_access;
-    std::vector<DeviceData> devices;
+    protobuf::InputDevices devices;
     std::function<void()> callback;
 };
 

@@ -269,16 +269,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         display_configuration->update_configuration(seq.display_configuration());
     }
 
-    if (seq.input_devices_size())
+    if (seq.has_input_devices())
     {
-        std::vector<mir::input::DeviceData> devices;
-
-        devices.reserve(seq.input_devices_size());
-
-        for (auto const& dev : seq.input_devices())
-            devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
-
-        input_devices->update_devices(std::move(devices));
+        input_devices->update_devices(seq.input_devices());
     }
 
     if (seq.has_lifecycle_event())
