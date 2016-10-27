@@ -74,6 +74,7 @@ typedef struct  // Things shared between threads
     bool resized;
     Camera* camera;
     Time last_change_time;
+    Time last_change_time_error;
     Time last_change_seen_time;
     Time display_frame_time;
     Buffer const* preview;
@@ -492,6 +493,11 @@ static void* capture_thread_func(void* arg)
            )
         {
             Time latency = acquire_time - state->last_change_time;
+
+            // Correct for swap interval zero dropping buffers the camera
+            // will never see:
+            latency -= state->last_change_time_error;
+
             last_seen_value = see;
             state->last_change_seen_time = acquire_time;
             state->expected_direction = 0;
@@ -713,6 +719,7 @@ int main(int argc, char* argv[])
         0,
         0,
         0,
+        0,
         NULL,
         0,
         false
@@ -835,11 +842,24 @@ int main(int argc, char* argv[])
 
         double display_hz = mir_eglapp_display_hz();
         Time swap_time = now();
+        Time measured_swap_interval = swap_time - last_swap_time;
         pthread_mutex_lock(&state.mutex);
         if (display_hz > 0.0)  // More steady and works with all intervals:
+        {
             state.display_frame_time = one_second / display_hz;
+
+            // Correct last_change_time for framedropping mode(s) where
+            // we actually render many frames per display frame:
+            if (measured_swap_interval < state.display_frame_time)
+                state.last_change_time_error = state.display_frame_time -
+                                               measured_swap_interval;
+            else
+                state.last_change_time_error = 0;
+        }
         else
-            state.display_frame_time = swap_time - last_swap_time;
+        {
+            state.display_frame_time = measured_swap_interval;
+        }
         pthread_mutex_unlock(&state.mutex);
         last_swap_time = swap_time;
     }
