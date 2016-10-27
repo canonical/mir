@@ -833,9 +833,13 @@ int main(int argc, char* argv[])
         }
         mir_eglapp_swap_buffers();
 
+        double display_hz = mir_eglapp_display_hz();
         Time swap_time = now();
         pthread_mutex_lock(&state.mutex);
-        state.display_frame_time = swap_time - last_swap_time;
+        if (display_hz > 0.0)  // More steady and works with all intervals:
+            state.display_frame_time = one_second / display_hz;
+        else
+            state.display_frame_time = swap_time - last_swap_time;
         pthread_mutex_unlock(&state.mutex);
         last_swap_time = swap_time;
     }
