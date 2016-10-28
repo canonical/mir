@@ -92,7 +92,6 @@ int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
 
 void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 { 
-    printf("DIRVER REQUESTED SWAPINTERVAL\n");
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
 }
 

@@ -16,7 +16,7 @@
  * Author: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_eglplatform_driver_code.h"
+#include "mir_egl_platform_shim.h"
 #include "mir_toolkit/mir_client_library.h"
 #include <stdlib.h>
 #include <string.h>
@@ -52,7 +52,6 @@ EGLSurface future_driver_eglCreateWindowSurface(
     MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
     //this particular [silly] driver has chosen the buffer stream as the way it wants to post
     //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
-    //FIXME: We don't have to match this create call with a free call?
     info->stream = mir_render_surface_create_buffer_stream_sync(
         surface,
         info->current_physical_width, info->current_physical_height,
@@ -96,6 +95,10 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
 EGLBoolean future_driver_eglTerminate(EGLDisplay display)
 {
     if (info)
+    {
+        if (info->stream)
+            mir_buffer_stream_release_sync(info->stream);
         free(info);
+    }
     return eglTerminate(display);
 }

@@ -16,8 +16,8 @@
  * Author: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLAYGROUND_MIR_EGLPLATFORM_DRIVER_CODE_H_
-#define MIR_PLAYGROUND_MIR_EGLPLATFORM_DRIVER_CODE_H_
+#ifndef MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_
+#define MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_
 
 #include <EGL/egl.h>
 #include "mir_toolkit/mir_render_surface.h"
@@ -34,4 +34,4 @@ EGLSurface future_driver_eglCreateWindowSurface(
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface);
 
-#endif /* MIR_PLAYGROUND_MIR_EGLPLATFORM_DRIVER_CODE_H_*/
+#endif /* MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_*/

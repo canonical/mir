@@ -392,7 +392,6 @@ void mf::SessionMediator::allocate_buffers(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    printf("ALLOCATE BUFFER\n");
     auto session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));

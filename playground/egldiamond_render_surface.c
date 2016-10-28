@@ -15,11 +15,12 @@
  *
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ *         Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
-#include "mir_eglplatform_driver_code.h"
+#include "mir_egl_platform_shim.h"
 #include "diamond.h"
 
 #include <assert.h>
