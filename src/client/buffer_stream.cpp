@@ -116,9 +116,14 @@ private:
 mir::optional_value<int> parse_env_for_swap_interval()
 {
     if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+    {
+        mir::log_info("overriding swapinterval setting because of presence of MIR_CLIENT_FORCE_SWAP_INTERVAL");
         return {atoi(env)};
+    }
     else
+    {
         return {};
+    }
 }
 }
 
