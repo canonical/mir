@@ -54,8 +54,10 @@ typedef struct Color
     }
 
 void resize_callback(
-    MirSurface*, MirEvent const* event, void* context)
+    MirSurface* surface, MirEvent const* event, void* context)
 {
+    (void) surface;
+
     MirEventType type = mir_event_get_type(event);
     if (type == mir_event_type_resize)
     {
@@ -63,18 +65,20 @@ void resize_callback(
         int width = mir_resize_event_get_width(resize_event);
         int height = mir_resize_event_get_height(resize_event);
         MirRenderSurface* rs = (MirRenderSurface*) context;
-        mir_render_surface_set_logical(rs, width, height);
+        mir_render_surface_set_logical_size(rs, width, height);
     }
 }
 
-struct DriverInfo
+//Information the driver will have to maintain
+typedef struct
 {
-    MirConnection* connection;
-    MirRenderSurface* surface;
-    MirBufferStream* stream;
-    int current_width;
-    int current_height;
-};
+    MirConnection* connection;      //EGLNativeDisplayType
+    MirRenderSurface* surface;      //EGLNativeWindowType
+    MirBufferStream* stream;        //the internal semantics a driver might want to use...
+                                    //could be MirPresentationChain as well
+    int current_physical_width;     //The driver is in charge of the physical width
+    int current_physical_height;    //The driver is in charge of the physical height
+} DriverInfo;
 
 //note that this function only has information available to the driver at the time
 //that eglCreateWindowSurface will be called.
@@ -88,32 +92,35 @@ EGLSurface future_driver_eglCreateWindowSurface(
     MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
     info->surface = surface;
 
-    int width = -1;
-    int height = -1;
-    mir_render_surface_logical_size(surface, info->current_width, info->current_height);
+    mir_render_surface_logical_size(surface,
+        &info->current_physical_width, &info->current_physical_height);
 
     printf("The driver chose pixel format %d.\n", pixel_format);
     //this particular [silly] driver has chosen the buffer stream as the way it wants to post
     //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
     info->stream = mir_render_surface_create_buffer_stream_sync(
         surface,
-        info->current_width, info->current_height,
+        info->current_physical_width, info->current_physical_height,
         pixel_format,
         mir_buffer_usage_hardware);
 
+     
+    printf("INFO STREAM %X\n", (int)(long) info->stream);
+    printf("CREATING WINDOW SURFACE\n");
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
 }
 
-void future_driver_eglSwapBuffers(DriverInfo* info, EGLDisplay display, EGLSurface surface)
+void future_driver_eglSwapBuffers(DriverInfo* info,
+    EGLDisplay display, EGLSurface surface) //parameters given to swapbuffers
 {
     int width = -1;
     int height = -1;
-    mir_render_surface_get_logical_size(info.surface, &width, &height);
-    if (width != info->current_width || height != info->current_height)
+    mir_render_surface_logical_size(info->surface, &width, &height);
+    if (width != info->current_physical_width || height != info->current_physical_height)
     {
-        mir_buffer_stream_set_size(info->size, width, height);
-        info->current_width = width;
-        info->current_height = height;
+        mir_buffer_stream_set_size(info->stream, width, height);
+        info->current_physical_width = width;
+        info->current_physical_height = height;
     } 
     eglSwapBuffers(display, surface);
 }
@@ -172,6 +179,15 @@ int main(int argc, char *argv[])
     CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
 
+    render_surface = mir_connection_create_render_surface(connection, width, height);
+    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
+
+    //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
+    //       Current code requires creation of egl window before mir surface.
+    DriverInfo info;
+    info.connection = connection;
+    eglsurface = future_driver_eglCreateWindowSurface(&info, egldisplay, eglconfig, render_surface);
+
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
     //once default streams are deprecated. 
@@ -183,17 +199,13 @@ int main(int argc, char *argv[])
     CHECK(spec, "Can't create a surface spec");
     mir_surface_spec_set_name(spec, appname);
 
-    render_surface = mir_connection_create_render_surface(connection, width, height);
-    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
-    mir_surface_spec_set_event_handler(spec, event_callback, render_surface);
+    mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);
 
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    eglsurface = future_driver_eglCreateWindowSurface(
-        connection, egldisplay, eglconfig, render_surface);
 
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
@@ -201,6 +213,7 @@ int main(int argc, char *argv[])
                               ctxattribs);
     CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
+    printf("HERE\n");
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
@@ -211,19 +224,22 @@ int main(int argc, char *argv[])
     running = 1;
     while (running)
     {
+        printf("RED\n");
         glClearColor(red.r, red.g, red.b, red.a);
         glClear(GL_COLOR_BUFFER_BIT);
-        future_driver_eglSwapBuffers(egldisplay, eglsurface, render_surface);
+        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
         sleep(1);
 
+        printf("GREEN\n");
         glClearColor(green.r, green.g, green.b, green.a);
         glClear(GL_COLOR_BUFFER_BIT);
-        future_driver_eglSwapBuffers(egldisplay, eglsurface, render_surface);
+        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
         sleep(1);
 
+        printf("BLUE\n");
         glClearColor(blue.r, blue.g, blue.b, blue.a);
         glClear(GL_COLOR_BUFFER_BIT);
-        future_driver_eglSwapBuffers(egldisplay, eglsurface, render_surface);
+        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
         sleep(1);
     }
 

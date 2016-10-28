@@ -474,6 +474,7 @@ void mcl::BufferStream::on_swap_interval_set(int interval)
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
 {
+    printf("CONFIGURING\n");
     std::unique_lock<decltype(mutex)> lock(mutex);
     if (attrib != mir_surface_attrib_swapinterval)
     {
