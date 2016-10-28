@@ -42,18 +42,12 @@ static void shutdown(int signum)
     }
 }
 
-typedef struct Color
-{
-    GLfloat r, g, b, a;
-} Color;
-
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
     { \
        printf("%s\n", (_err)); \
        return -1; \
     }
-
 
 //The client arranges the scene in the subscene
 void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
@@ -157,7 +151,7 @@ int main(int argc, char *argv[])
     CHECK(ok, "Can't eglMakeCurrent");
 
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-    DiamondInfo diamond = setup_diamond(width, height);
+    Diamond diamond = setup_diamond(width, height);
 
     running = 1;
     while (running)
