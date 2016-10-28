@@ -27,6 +27,11 @@
 struct MirMotionEvent : MirInputEvent
 {
     MirMotionEvent();
+    MirMotionEvent(MirInputDeviceId id,
+                   std::chrono::nanoseconds timestamp,
+                   std::vector<uint8_t> const& cookie,
+                   MirInputEventModifiers modifiers,
+                   std::vector<mir::events::ContactState> const& contacts);
 
     int32_t device_id() const;
     void set_device_id(int32_t id);
