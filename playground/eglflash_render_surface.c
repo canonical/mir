@@ -1,6 +1,4 @@
 /*
- * Trivial GL demo; flashes the screen with colors using a MirRenderSurface.
- *
  * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,6 +19,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
+#include "mir_eglplatform_driver_code.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -172,6 +171,15 @@ static const GLfloat colors[] =
     return info;
 }
 
+void destroy_render(RenderInfo* info)
+{
+    glDisableVertexAttribArray(info->pos);
+    glDisableVertexAttribArray(info->color);
+    glDeleteShader(info->vertex_shader);
+    glDeleteShader(info->fragment_shader);
+    glDeleteProgram(info->program);
+}
+
 //The client arranges the scene in the subscene
 void resize_callback(
     MirSurface* surface, MirEvent const* event, void* context)
@@ -188,60 +196,6 @@ void resize_callback(
         MirRenderSurface* rs = (MirRenderSurface*) context;
         mir_render_surface_set_logical_size(rs, width, height);
     }
-}
-
-//Information the driver will have to maintain
-typedef struct
-{
-    MirConnection* connection;      //EGLNativeDisplayType
-    MirRenderSurface* surface;      //EGLNativeWindowType
-    MirBufferStream* stream;        //the internal semantics a driver might want to use...
-                                    //could be MirPresentationChain as well
-    int current_physical_width;     //The driver is in charge of the physical width
-    int current_physical_height;    //The driver is in charge of the physical height
-} DriverInfo;
-
-//note that this function only has information available to the driver at the time
-//that eglCreateWindowSurface will be called.
-EGLSurface future_driver_eglCreateWindowSurface(
-    DriverInfo* info,
-    EGLDisplay display, EGLConfig config, MirRenderSurface* surface) //available from signature of EGLCreateWindowSurface
-{
-    //TODO: the driver needs to be selecting a pixel format that's acceptable based on
-    //      the EGLConfig. mir_connection_get_egl_pixel_format
-    //      needs to be deprecated once the drivers support the Mir EGL platform.
-    MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
-    info->surface = surface;
-
-    mir_render_surface_logical_size(surface,
-        &info->current_physical_width, &info->current_physical_height);
-
-    printf("The driver chose pixel format %d.\n", pixel_format);
-    //this particular [silly] driver has chosen the buffer stream as the way it wants to post
-    //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
-    info->stream = mir_render_surface_create_buffer_stream_sync(
-        surface,
-        info->current_physical_width, info->current_physical_height,
-        pixel_format,
-        mir_buffer_usage_hardware);
-
-    return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
-}
-
-void future_driver_eglSwapBuffers(DriverInfo* info,
-    EGLDisplay display, EGLSurface surface) //parameters given to swapbuffers
-{
-    int width = -1;
-    int height = -1;
-    mir_render_surface_logical_size(info->surface, &width, &height);
-    printf("LOGICAL SIZE %i %i\n", width, height);
-    if (width != info->current_physical_width || height != info->current_physical_height)
-    {
-        mir_buffer_stream_set_size(info->stream, width, height);
-        info->current_physical_width = width;
-        info->current_physical_height = height;
-    } 
-    eglSwapBuffers(display, surface);
 }
 
 int main(int argc, char *argv[])
@@ -273,10 +227,7 @@ int main(int argc, char *argv[])
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    //FIXME: this should be:
-    //egldislay = eglGetDisplay(connection);
-    egldisplay = eglGetDisplay(
-                    mir_connection_get_egl_native_display(connection));
+    egldisplay = future_driver_eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
@@ -303,9 +254,7 @@ int main(int argc, char *argv[])
 
     //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
     //       Current code requires creation of egl window before mir surface.
-    DriverInfo info;
-    info.connection = connection;
-    eglsurface = future_driver_eglCreateWindowSurface(&info, egldisplay, eglconfig, render_surface);
+    eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
 
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
@@ -326,7 +275,6 @@ int main(int argc, char *argv[])
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
@@ -336,7 +284,6 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
-
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     RenderInfo render_info = setup_render(width, height);
     (void)render_info;
@@ -345,11 +292,12 @@ int main(int argc, char *argv[])
     while (running)
     {
         render(&render_info, egldisplay, eglsurface);
-        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
+        future_driver_eglSwapBuffers(egldisplay, eglsurface);
     }
 
+    destroy_render(&render_info);
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglTerminate(egldisplay);
+    future_driver_eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

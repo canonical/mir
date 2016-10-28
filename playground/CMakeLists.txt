@@ -49,6 +49,7 @@ target_link_libraries(mir_demo_client_render_surface
 
 mir_add_wrapped_executable(mir_demo_client_eglflash_render_surface
     eglflash_render_surface.c
+    mir_eglplatform_driver_code.c
 )
 
 target_link_libraries(mir_demo_client_eglflash_render_surface
