@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include <boost/program_options.hpp>
@@ -24,12 +25,9 @@
 #include <poll.h>
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_render_surface.h"
 
 #include "client_helpers.h"
-
-#include <memory>
-
-namespace po = boost::program_options;
 
 namespace me = mir::examples;
 
@@ -130,7 +128,8 @@ public:
     Pixel operator*() const
     {
         return Pixel{
-            buffer.vaddr + (x * MIR_BYTES_PER_PIXEL(buffer.pixel_format))  + (y * buffer.stride), buffer.pixel_format};
+            buffer.vaddr + (x * MIR_BYTES_PER_PIXEL(buffer.pixel_format))
+                         + (y * buffer.stride), buffer.pixel_format};
     }
 
     bool operator==(pixel_iterator const& rhs)
@@ -180,66 +179,48 @@ void bounce_position(int& position, int& delta, int min, int max)
     position += delta;
 }
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
-    po::options_description desc("Mir multi-bufferstream example:");
-    desc.add_options()
-        ("help", "this help message")
-        ("socket", po::value<std::string>(), "Server socket to connect to");
-
-    po::variables_map options;
-    po::store(po::parse_command_line(argc, argv, desc), options);
-    po::notify(options);
-
-    if (options.count("help"))
-    {
-        std::cout << desc << std::endl;
-        return 0;
-    }
-
     char const* socket = nullptr;
-    if (options.count("socket"))
-    {
-        socket = options["socket"].as<std::string>().c_str();
-    }
-
-    me::Connection connection{socket, "Multiple MirBufferStream example"};
-
-    me::NormalSurface surface{connection, 200, 200, true, false};
-    MirBufferStream* surface_stream = mir_surface_get_buffer_stream(surface);
-    int topSize = 100, dTopSize = 2;
-    auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-    me::BufferStream bottom(connection, 50, 50, true, false);
-
-    fill_stream_with(surface_stream, 255, 0, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(surface_stream);
-    fill_stream_with(*top, 0, 255, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(*top);
-    fill_stream_with(bottom, 0, 0, 255, 128);
-    mir_buffer_stream_swap_buffers_sync(bottom);
-
-    std::array<MirBufferStreamInfo, 3> arrangement;
-
-    arrangement[0].displacement_x = 0;
-    arrangement[0].displacement_y = 0;
-    arrangement[0].stream = surface_stream;
-
-    arrangement[1].displacement_x = 50;
-    arrangement[1].displacement_y = 50;
-    arrangement[1].stream = bottom;
-
-    arrangement[2].displacement_x = -40;
-    arrangement[2].displacement_y = -10;
-    arrangement[2].stream = *top;
-
-    int top_dx{1}, top_dy{2};
-    int bottom_dx{2}, bottom_dy{-1};
-
-    auto spec = mir_connection_create_spec_for_changes(connection);
-
+    int const width = 200;
+    int const height = 200;
     int baseColour = 255, dbase = 1;
-    int topColour = 255, dtop = 1;
-    int bottomColour = 255, dbottom = 1;
+    unsigned int nformats{0};
+    MirPixelFormat pixel_format;
+
+    me::Connection connection{socket, "MirRenderSurface example"};
+
+    mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &nformats);
+    if (nformats == 0)
+        throw std::runtime_error("no pixel formats for buffer stream");
+    printf("Mir selected pixel format %d\n", pixel_format);
+
+    auto render_surface = mir_connection_create_render_surface(connection);
+
+    if (!mir_render_surface_is_valid(render_surface))
+        throw std::runtime_error(std::string("could not create render surface"));
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        width, height,
+        pixel_format);
+
+    mir_surface_spec_set_name(spec, "Stream");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+
+    auto buffer_stream =
+        mir_render_surface_create_buffer_stream_sync(render_surface,
+                                                     width, height,
+                                                     pixel_format,
+                                                     mir_buffer_usage_software);
+
+    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    fill_stream_with(buffer_stream, 255, 0, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     sigset_t halt_signals;
     sigemptyset(&halt_signals);
@@ -258,33 +239,17 @@ int main(int argc, char* argv[])
 
     while (poll(&signal_poll, 1, 0) <= 0)
     {
-        bounce_position(arrangement[1].displacement_x, bottom_dx, -100, 300);
-        bounce_position(arrangement[1].displacement_y, bottom_dy, -100, 300);
-        bounce_position(arrangement[2].displacement_x, top_dx, -100, 300);
-        bounce_position(arrangement[2].displacement_y, top_dy, -100, 300);
-
         bounce_position(baseColour, dbase, 128, 255);
-        bounce_position(topColour, dtop, 200, 255);
-        bounce_position(bottomColour, dbottom, 100, 255);
 
-        bounce_position(topSize, dTopSize, 70, 120);
+        fill_stream_with(buffer_stream, baseColour, 0, 0, 128);
 
-        top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-        arrangement[2].stream = *top;
-
-        fill_stream_with(surface_stream, baseColour, 0, 0, 128);
-        fill_stream_with(bottom, 0, 0, bottomColour, 128);
-        fill_stream_with(*top, 0, topColour, 0, 128);
-
-        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
-        mir_buffer_stream_swap_buffers_sync(surface_stream);
-        mir_buffer_stream_swap_buffers_sync(bottom);
-        mir_buffer_stream_swap_buffers_sync(*top);
-        mir_surface_apply_spec(surface, spec);
+        mir_buffer_stream_swap_buffers_sync(buffer_stream);
     }
-    mir_surface_spec_release(spec);
+
+    mir_buffer_stream_release_sync(buffer_stream);
+    mir_render_surface_release(render_surface);
+    mir_surface_release_sync(surface);
     close(signal_watch);
 
-    std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
 }
