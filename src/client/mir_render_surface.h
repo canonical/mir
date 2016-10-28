@@ -22,6 +22,7 @@
 
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir/frontend/buffer_stream_id.h"
+#include "mir/geometry/size.h"
 
 namespace mir
 {
@@ -35,7 +36,10 @@ class MirRenderSurface
 {
 public:
     virtual MirConnection* connection() const = 0;
-    virtual mir::frontend::BufferStreamId stream_id() = 0;
+    virtual mir::frontend::BufferStreamId stream_id() const = 0;
+    virtual mir::geometry::Size logical_size() const = 0;
+    virtual void set_logical_size(mir::geometry::Size) = 0;
+
     virtual MirWaitHandle* create_buffer_stream(
         int width, int height,
         MirPixelFormat format,

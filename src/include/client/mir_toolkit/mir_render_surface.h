@@ -37,11 +37,18 @@ extern "C" {
  *           will succeed but an error render surface will be returned.
  *
  * \param [in] connection       A valid connection
- *
+ * \param [in] width            The logical width in pixels at which the render surface
+ *                              will be displayed
+ * \param [in] height           The logical height in pixels at which the render surface will
+ *                              be displayed
  * \return                      The newly created render surface
  */
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection);
+    MirConnection* connection, int width, int height);
+
+
+void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* width, int* height);
+void mir_render_surface_set_logical_size(MirRenderSurface* render_surface, int width, int height);
 
 /**
  * Test for a valid render surface.

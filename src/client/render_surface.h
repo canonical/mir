@@ -43,15 +43,18 @@ class RenderSurface : public MirRenderSurface
 public:
     RenderSurface(MirConnection* const connection,
                   std::shared_ptr<void> native_window,
-                  std::shared_ptr<ClientPlatform> client_platform);
+                  std::shared_ptr<ClientPlatform> client_platform,
+                  geometry::Size logical_size);
     MirConnection* connection() const override;
+    mir::geometry::Size logical_size() const override;
+    void set_logical_size(mir::geometry::Size) override;
     MirWaitHandle* create_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage usage,
         mir_buffer_stream_callback callback,
         void *context) override;
-    mir::frontend::BufferStreamId stream_id() override;
+    mir::frontend::BufferStreamId stream_id() const override;
 
     MirWaitHandle* release_buffer_stream(
         mir_buffer_stream_callback callback,
@@ -103,6 +106,9 @@ private:
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
     std::shared_timed_mutex guard;
+
+    std::mutex mutable size_mutex;
+    geometry::Size desired_logical_size;
 };
 }
 }
