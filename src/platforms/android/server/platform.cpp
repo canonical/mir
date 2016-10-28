@@ -39,7 +39,6 @@
 #include "mir/abnormal_exit.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -72,13 +71,14 @@ std::shared_ptr<mga::HwcReport> make_hwc_report(mo::Option const& options)
                     mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
 }
 
-std::shared_ptr<mga::NativeWindowReport> make_native_window_report(mo::Option const& options)
+std::shared_ptr<mga::NativeWindowReport> make_native_window_report(
+    mo::Option const& options,
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     if (options.is_set(fb_native_window_report_opt) &&
         options.get<std::string>(fb_native_window_report_opt) == mo::log_opt_value)
-        return std::make_shared<mga::ConsoleNativeWindowReport>(
-            std::make_shared<mir::logging::DumbConsoleLogger>());
-    else 
+        return std::make_shared<mga::ConsoleNativeWindowReport>(logger);
+    else
         return std::make_shared<mga::NullNativeWindowReport>();
 }
 
@@ -153,8 +153,9 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, *options);
@@ -169,7 +170,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     return mir::make_module_ptr<mga::Platform>(
         component_factory->the_buffer_allocator(),
         component_factory, display_report,
-        make_native_window_report(*options),
+        make_native_window_report(*options, logger),
         overlay_option, quirks);
 }
 
@@ -192,7 +193,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
     return mir::make_module_ptr<mga::Platform>(
         buffer_allocator, nullptr, display_report,
-        std::make_shared<mga::NullNativeWindowReport>(), 
+        std::make_shared<mga::NullNativeWindowReport>(),
         mga::OverlayOptimization::disabled, quirks);
 }
 

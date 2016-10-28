@@ -25,7 +25,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/shell_wrapper.h"
 #include "src/client/mir_surface.h"
-#include "src/include/common/mir/raii.h"
+#include "include/common/mir/raii.h"
 
 #include <gmock/gmock.h>
 

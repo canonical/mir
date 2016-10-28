@@ -66,6 +66,7 @@ class DisplayConfiguration;
 class EventHandlerRegister;
 class AsyncBufferFactory;
 class MirBuffer;
+class BufferStream;
 
 namespace rpc
 {
@@ -148,11 +149,15 @@ public:
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs);
 
+    typedef void (*buffer_stream_callback)(mir::client::BufferStream* stream, void* context);
+
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
-        mir_buffer_stream_callback callback,
+        MirRenderSurface* render_surface,
+        mir_buffer_stream_callback mbs_callback,
+        buffer_stream_callback bs_callback,
         void *context);
     MirWaitHandle* release_buffer_stream(
         mir::client::ClientBufferStream*,
@@ -197,19 +202,27 @@ public:
         return input_devices;
     }
 
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> const& connection_surface_map() const
+    {
+        return surface_map;
+    }
+
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
+    MirRenderSurface* create_render_surface();
+    void release_render_surface(void* render_surface);
+
 private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
+        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirSurfaceSpec const& spec) :
             cb(cb), context(context), spec(spec),
-            response(std::make_shared<mir::protobuf::Surface>()),
-            wh(std::make_shared<MirWaitHandle>())
+              response(std::make_shared<mir::protobuf::Surface>()),
+              wh(std::make_shared<MirWaitHandle>())
         {
         }
         mir_surface_callback cb;
@@ -224,12 +237,23 @@ private:
     struct StreamCreationRequest
     {
         StreamCreationRequest(
-            mir_buffer_stream_callback cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
-            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
-            wh(std::make_shared<MirWaitHandle>())
+            MirRenderSurface* rs,
+            mir_buffer_stream_callback mbs_cb,
+            buffer_stream_callback bs_cb,
+            void* context,
+            mir::protobuf::BufferStreamParameters const& params)
+            : rs(rs),
+              mbs_callback(mbs_cb),
+              bs_callback(bs_cb),
+              context(context),
+              parameters(params),
+              response(std::make_shared<mir::protobuf::BufferStream>()),
+              wh(std::make_shared<MirWaitHandle>())
         {
         }
-        mir_buffer_stream_callback callback;
+        MirRenderSurface* rs;
+        mir_buffer_stream_callback mbs_callback;
+        buffer_stream_callback bs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;

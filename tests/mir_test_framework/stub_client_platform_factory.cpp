@@ -77,7 +77,7 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
-    return std::shared_ptr<void>{surface, [](void*){}};
+    return std::shared_ptr<void>{surface ? surface : reinterpret_cast<void*>(0xBEEFBABE), [](void*){}};
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
