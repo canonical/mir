@@ -101,7 +101,7 @@ void mgn::detail::DisplayBuffer::swap_buffers()
     if (content != BackingContent::stream)
     {
         auto spec = host_connection->create_surface_spec();
-        spec->add_stream(*host_stream, geom::Displacement{0,0});
+        spec->add_stream(*host_stream, geom::Displacement{0,0}, area.size);
         content = BackingContent::stream;
         host_surface->apply_spec(*spec);
         //if the host_chain is not released, a buffer of the passthrough surface might get caught
