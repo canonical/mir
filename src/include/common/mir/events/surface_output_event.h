@@ -20,12 +20,9 @@
 #define MIR_COMMON_SURFACE_OUTPUT_EVENT_H_
 
 #include <cstdint>
-#include <limits>
 
 #include "mir/events/event.h"
 
-// XXX This is a private structure so why are its members kept private?
-//     What's the point in having all the getters and setters?
 struct MirSurfaceOutputEvent : MirEvent
 {
     MirSurfaceOutputEvent();
@@ -47,14 +44,6 @@ struct MirSurfaceOutputEvent : MirEvent
 
     uint32_t output_id() const;
     void set_output_id(uint32_t id);
-
-private:
-    int surface_id_{-1};
-    int dpi_{0};
-    float scale_{0.0f};
-    MirFormFactor form_factor_;
-    uint32_t output_id_{std::numeric_limits<uint32_t>::max()};
-    double refresh_rate_{0.0};
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */
