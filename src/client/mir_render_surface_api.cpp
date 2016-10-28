@@ -172,7 +172,7 @@ void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* widt
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     auto size = rs->logical_size();
     *width = size.width.as_int();
-    *height = size.width.as_int();
+    *height = size.height.as_int();
 }
 
 void mir_render_surface_set_logical_size(MirRenderSurface* render_surface, int width, int height)

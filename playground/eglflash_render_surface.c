@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -53,6 +54,125 @@ typedef struct Color
        return -1; \
     }
 
+static GLuint load_shader(const char *src, GLenum type)
+{
+    GLuint shader = glCreateShader(type);
+    if (shader)
+    {
+        GLint compiled;
+        glShaderSource(shader, 1, &src, NULL);
+        glCompileShader(shader);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        if (!compiled)
+        {
+            GLchar log[1024];
+            glGetShaderInfoLog(shader, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            printf("load_shader compile failed: %s\n", log);
+            glDeleteShader(shader);
+            shader = 0;
+        }
+    }
+    return shader;
+}
+
+typedef struct
+{
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    GLuint pos;
+    GLuint color;
+    int width;
+    int height;
+    GLfloat const* vertices;
+    GLfloat const* colors;
+} RenderInfo;
+
+void render(RenderInfo* info, EGLDisplay egldisplay, EGLSurface eglsurface)
+{
+    printf("WH %i x %i\n", info->width, info->height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    EGLint width, height;
+    if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
+        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
+    {
+        printf("VIEWPORT %i %i\n", width, height);
+        glViewport(0, 0, width, height);
+    }
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+RenderInfo setup_render(int width, int height)
+{
+    const char vertex_shader_src[] =
+        "attribute vec2 pos;                                \n"
+        "attribute vec4 color;                              \n"
+        "varying   vec4 dest_color;                         \n"
+        "void main()                                        \n"
+        "{                                                  \n"
+        "    dest_color = color;                            \n"
+        "    gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);    \n"
+        "}                                                  \n";
+    const char fragment_shader_src[] =
+        "precision mediump float;             \n"
+        "varying   vec4 dest_color;           \n"
+        "void main()                          \n"
+        "{                                    \n"
+        "    gl_FragColor = dest_color;       \n"
+        "}                                    \n";
+static const GLfloat vertices[] =
+    {
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        0.0f, -1.0f,
+        -1.0f, 0.0f,
+    };
+static const GLfloat colors[] =
+    {
+        1.0f, 0.2f, 0.2f, 1.0f,
+        0.2f, 1.0f, 0.2f, 1.0f,
+        0.2f, 0.2f, 1.0f, 1.0f,
+        0.2f, 0.2f, 0.2f, 1.0f,
+    };
+
+    GLint linked;
+    RenderInfo info;
+    info.width = width;
+    info.height = height;
+
+    info.vertex_shader = load_shader(vertex_shader_src, GL_VERTEX_SHADER);
+    assert(info.vertex_shader);
+    info.fragment_shader = load_shader(fragment_shader_src, GL_FRAGMENT_SHADER);
+    assert(info.fragment_shader);
+    info.program = glCreateProgram();
+    assert(info.program);
+    glAttachShader(info.program, info.vertex_shader);
+    glAttachShader(info.program, info.fragment_shader);
+    glLinkProgram(info.program);
+    glGetProgramiv(info.program, GL_LINK_STATUS, &linked);
+    if (!linked)
+    {
+        GLchar log[1024];
+        glGetProgramInfoLog(info.program, sizeof log - 1, NULL, log);
+        log[sizeof log - 1] = '\0';
+        printf("Link failed: %s\n", log);
+        assert(-1);
+    }
+
+    glUseProgram(info.program);
+    info.pos = glGetAttribLocation(info.program, "pos");
+    info.color = glGetAttribLocation(info.program, "color");
+    glVertexAttribPointer(info.pos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+    glVertexAttribPointer(info.color, 4, GL_FLOAT, GL_FALSE, 0, colors);
+    glEnableVertexAttribArray(info.pos);
+    glEnableVertexAttribArray(info.color);
+    return info;
+}
+
+//The client arranges the scene in the subscene
 void resize_callback(
     MirSurface* surface, MirEvent const* event, void* context)
 {
@@ -64,6 +184,7 @@ void resize_callback(
         MirResizeEvent const* resize_event = mir_event_get_resize_event(event);
         int width = mir_resize_event_get_width(resize_event);
         int height = mir_resize_event_get_height(resize_event);
+        printf("RESIZE to! %i %i\n", width, height);
         MirRenderSurface* rs = (MirRenderSurface*) context;
         mir_render_surface_set_logical_size(rs, width, height);
     }
@@ -104,9 +225,6 @@ EGLSurface future_driver_eglCreateWindowSurface(
         pixel_format,
         mir_buffer_usage_hardware);
 
-     
-    printf("INFO STREAM %X\n", (int)(long) info->stream);
-    printf("CREATING WINDOW SURFACE\n");
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
 }
 
@@ -116,6 +234,7 @@ void future_driver_eglSwapBuffers(DriverInfo* info,
     int width = -1;
     int height = -1;
     mir_render_surface_logical_size(info->surface, &width, &height);
+    printf("LOGICAL SIZE %i %i\n", width, height);
     if (width != info->current_physical_width || height != info->current_physical_height)
     {
         mir_buffer_stream_set_size(info->stream, width, height);
@@ -130,8 +249,8 @@ int main(int argc, char *argv[])
     (void) argc;
     (void) argv;
     const char* appname = "EGL Render Surface Demo";
-    int width = 100;
-    int height = 100;
+    int width = 300;
+    int height = 300;
     EGLDisplay egldisplay;
     EGLSurface eglsurface;
     EGLint ctxattribs[] =
@@ -190,7 +309,8 @@ int main(int argc, char *argv[])
 
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
-    //once default streams are deprecated. 
+    //once default streams are deprecated.
+    //width and height are the logical width the user wants the surface to be
     MirSurfaceSpec *spec =
         mir_connection_create_spec_for_normal_surface(
             connection, width, height,
@@ -213,34 +333,19 @@ int main(int argc, char *argv[])
                               ctxattribs);
     CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
-    printf("HERE\n");
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
-    Color red = {1.0f, 0.0f, 0.0f, 1.0f};
-    Color green = {0.0f, 1.0f, 0.0f, 1.0f};
-    Color blue = {0.0f, 0.0f, 1.0f, 1.0f};
+
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    RenderInfo render_info = setup_render(width, height);
+    (void)render_info;
 
     running = 1;
     while (running)
     {
-        printf("RED\n");
-        glClearColor(red.r, red.g, red.b, red.a);
-        glClear(GL_COLOR_BUFFER_BIT);
+        render(&render_info, egldisplay, eglsurface);
         future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
-        sleep(1);
-
-        printf("GREEN\n");
-        glClearColor(green.r, green.g, green.b, green.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
-        sleep(1);
-
-        printf("BLUE\n");
-        glClearColor(blue.r, blue.g, blue.b, blue.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-        future_driver_eglSwapBuffers(&info, egldisplay, eglsurface);
-        sleep(1);
     }
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
