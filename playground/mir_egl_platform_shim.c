@@ -62,8 +62,7 @@ EGLSurface future_driver_eglCreateWindowSurface(
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
 }
 
-EGLBoolean future_driver_eglSwapBuffers(
-    EGLDisplay display, EGLSurface surface) //parameters given to swapbuffers
+EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
 {
     int width = -1;
     int height = -1;
