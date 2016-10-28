@@ -18,7 +18,6 @@
 #ifndef MIR_CLIENT_MIR_SURFACE_H_
 #define MIR_CLIENT_MIR_SURFACE_H_
 
-#include "client_buffer_depository.h"
 #include "client_buffer_stream.h"
 #include "mir_wait_handle.h"
 #include "rpc/mir_display_server.h"

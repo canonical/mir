@@ -122,6 +122,7 @@ MIRPLATFORM_0.25 {
     mir::options::glog_stderrthreshold*;
     mir::options::platform_path*;
     mir::options::host_socket_opt*;
+    mir::options::nested_passthrough_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
     mir::options::seat_report_opt*;

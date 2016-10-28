@@ -22,17 +22,18 @@
 
 namespace mir
 {
+namespace logging { class Logger; }
 namespace client
 {
 
-class ClientBufferDepository;
 namespace android
 {
 
 class AndroidClientPlatform : public ClientPlatform
 {
 public:
-    AndroidClientPlatform(ClientContext* const context);
+    AndroidClientPlatform(ClientContext* const context,
+                          std::shared_ptr<logging::Logger> const& logger);
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const* request) override;
@@ -45,6 +46,7 @@ public:
 
 private:
     ClientContext* const context;
+    std::shared_ptr<logging::Logger> const logger;
 };
 
 }

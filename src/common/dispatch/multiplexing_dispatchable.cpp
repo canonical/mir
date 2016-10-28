@@ -19,8 +19,10 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "utils.h"
 #include "mir/raii.h"
+#include "mir/posix_rw_mutex.h"
 
 #include <boost/throw_exception.hpp>
+#include <shared_mutex>
 
 #include <sys/epoll.h>
 #include <poll.h>
@@ -67,55 +69,11 @@ private:
     std::function<void()> const handler;
 };
 
-class ReadLock
-{
-public:
-    ReadLock(pthread_rwlock_t& lock)
-        : mutex{&lock}
-    {
-        auto err = pthread_rwlock_rdlock(mutex);
-        if (err != 0)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                     std::system_category(),
-                                                     "Failed to acquire read lock"}));
-        }
-    }
-
-    ~ReadLock() noexcept
-    {
-        pthread_rwlock_unlock(mutex);
-    }
-private:
-    pthread_rwlock_t* mutex;
-};
-
-class WriteLock
-{
-public:
-    WriteLock(pthread_rwlock_t& lock)
-        : mutex{&lock}
-    {
-        auto err = pthread_rwlock_wrlock(mutex);
-        if (err != 0)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                     std::system_category(),
-                                                     "Failed to acquire write lock"}));
-        }
-    }
-
-    ~WriteLock() noexcept
-    {
-        pthread_rwlock_unlock(mutex);
-    }
-private:
-    pthread_rwlock_t* mutex;
-};
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable()
-    : epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
+    : lifetime_mutex{PosixRWMutex::Type::PreferWriterNonRecursive},
+      epoll_fd{mir::Fd{::epoll_create1(EPOLL_CLOEXEC)}}
 {
     if (epoll_fd == mir::Fd::invalid)
     {
@@ -123,38 +81,10 @@ md::MultiplexingDispatchable::MultiplexingDispatchable()
                                                  std::system_category(),
                                                  "Failed to create epoll monitor"}));
     }
-
-    pthread_rwlockattr_t attr;
-    int err;
-    err = pthread_rwlockattr_init(&attr);
-    if (err != 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                 std::system_category(),
-                                                 "Failed to init pthread attrs"}));
-    }
-    // Set writer preference; otherwise remove_watch could block indefinitely
-    err = pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
-    if (err != 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                 std::system_category(),
-                                                 "Failed to set preferred rw-lock mode"}));
-    }
-    err = pthread_rwlock_init(&lifetime_mutex, &attr);
-    if (err != 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{err,
-                                                 std::system_category(),
-                                                 "Failed to init rw-lock"}));
-    }
-
-    pthread_rwlockattr_destroy(&attr);
 }
 
 md::MultiplexingDispatchable::~MultiplexingDispatchable() noexcept
 {
-    pthread_rwlock_destroy(&lifetime_mutex);
 }
 
 md::MultiplexingDispatchable::MultiplexingDispatchable(std::initializer_list<std::shared_ptr<Dispatchable>> dispatchees)
@@ -183,7 +113,7 @@ bool md::MultiplexingDispatchable::dispatch(md::FdEvents events)
     epoll_event event;
 
     {
-        ReadLock lock{lifetime_mutex};
+        std::shared_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
 
         auto result = epoll_wait(epoll_fd, &event, 1, 0);
 
@@ -235,7 +165,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
 {
     decltype(dispatchee_holder)::iterator new_holder;
     {
-        WriteLock lock{lifetime_mutex};
+        std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
         new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
                                                dispatchee,
                                                reentrancy == DispatchReentrancy::sequential);
@@ -252,7 +182,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     e.data.ptr = static_cast<void*>(&(*new_holder));
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
-        WriteLock lock{lifetime_mutex};
+        std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
         dispatchee_holder.erase(new_holder);
         if (errno == EEXIST)
         {
@@ -292,7 +222,7 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
                                                  "Failed to remove fd monitor"}));
     }
 
-    WriteLock lock{lifetime_mutex};
+    std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
     dispatchee_holder.remove_if([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
     {
         return candidate.first->watch_fd() == fd;

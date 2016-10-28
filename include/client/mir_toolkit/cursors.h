@@ -18,6 +18,8 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
+/* XXX Deprecate this header? Tell people to just use CSS cursor names. */
+
 #ifndef MIR_CURSORS_H_
 #define MIR_CURSORS_H_
 
@@ -87,12 +89,12 @@ extern char const* const mir_horizontal_resize_cursor_name;
 extern char const* const mir_vertical_resize_cursor_name;
 
 /**
- * The cursor used to indicate diagonal resize from top-right and bottom-left corners.
+ * The cursor used to indicate diagonal resizing a top right corner.
  */
 extern char const* const mir_diagonal_resize_bottom_to_top_cursor_name;
 
 /**
- * The cursor used to indicate diagonal resize from bottom-left and top-right corners.
+ * The cursor used to indicate diagonal resizing a bottom right corner.
  */
 extern char const* const mir_diagonal_resize_top_to_bottom_cursor_name;
 

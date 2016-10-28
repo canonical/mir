@@ -24,7 +24,6 @@
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
 #include "native_window_report.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include "mir/weak_egl.h"
 #include <EGL/egl.h>
@@ -36,8 +35,10 @@ namespace mcla=mir::client::android;
 namespace mga=mir::graphics::android;
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
-    ClientContext* const context)
-    : context{context}
+    ClientContext* const context,
+    std::shared_ptr<logging::Logger> const& logger)
+    : context{context},
+      logger{logger}
 {
 }
 
@@ -69,8 +70,7 @@ std::shared_ptr<void> mcla::AndroidClientPlatform::create_egl_native_window(EGLN
     std::shared_ptr<mga::NativeWindowReport> report;
     char const* on_val = "log";
     if (log && !strncmp(log, on_val, strlen(on_val)))
-        report = std::make_shared<mga::ConsoleNativeWindowReport>(
-            std::make_shared<mir::logging::DumbConsoleLogger>());
+        report = std::make_shared<mga::ConsoleNativeWindowReport>(logger);
     else
         report = std::make_shared<mga::NullNativeWindowReport>();
 

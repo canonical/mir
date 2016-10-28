@@ -163,7 +163,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
     EXPECT_THROW(mir::client::ProbingClientPlatformFactory(
                      mir::report::null_shared_library_prober_report(),
-                     {}, {}),
+                     {}, {}, nullptr),
                  std::runtime_error);
 }
 
@@ -174,7 +174,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         all_available_modules(),
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     ON_CALL(context, populate_server_package(_))
@@ -213,7 +213,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakTheUsedDriverModuleOnShutdown)
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         {preferred_module},
-        {});
+        {}, nullptr);
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
     NiceMock<mtd::MockClientContext> context;
@@ -239,7 +239,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         modules,
-        {});
+        {}, nullptr);
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
     NiceMock<mtd::MockClientContext> context;
@@ -276,7 +276,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformOnMesaKMS)
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         all_available_modules(),
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     all_available_fixtures().at("mesa-kms").setup_context(context);
@@ -296,7 +296,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformOnMesaX11)
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         all_available_modules(),
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     all_available_fixtures().at("mesa-x11").setup_context(context);
@@ -316,7 +316,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesEglstreamPlatformOnEglstreamK
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         all_available_modules(),
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     all_available_fixtures().at("eglstream-kms").setup_context(context);
@@ -336,7 +336,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         all_available_modules(),
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     all_available_fixtures().at("android").setup_context(context);
@@ -357,7 +357,7 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         modules,
-        {});
+        {}, nullptr);
 
     NiceMock<mtd::MockClientContext> context;
     dummy_fixture().setup_context(context);
