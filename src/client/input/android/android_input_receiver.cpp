@@ -31,7 +31,6 @@
 #include <sys/eventfd.h>
 #include <system_error>
 #include <cstdlib>
-#include <iostream>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -206,18 +205,19 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         auto now = android_clock(SYSTEM_TIME_MONOTONIC);
         auto next_frame = frame_time + one_frame;
 
-        if (next_frame < now)
+        if (next_frame <= now)
         {
             wake();
         }
         else
         {
-            auto const delay_to_next_frame = next_frame - now;
-            struct itimerspec const msec_delay = {
+            auto full_sec = duration_cast<duration<long>>(next_frame);
+            auto nano_sec = duration_cast<duration<long,std::nano>>(next_frame - full_sec);
+            struct itimerspec const frame_timeout = {
                 { 0, 0 },
-                { 0, duration_cast<duration<long,std::nano>>(delay_to_next_frame).count() }
+                { full_sec.count(), nano_sec.count()}
             };
-            if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
+            if (timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &frame_timeout, NULL) < 0)
             {
                 BOOST_THROW_EXCEPTION((std::system_error{errno,
                                        std::system_category(),
