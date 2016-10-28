@@ -112,6 +112,14 @@ private:
     mp::Void protobuf_void;
     int stream_id;
 };
+
+mir::optional_value<int> parse_env_for_swap_interval()
+{
+    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+        return {atoi(env)};
+    else
+        return {};
+}
 }
 
 namespace mir
@@ -240,14 +248,6 @@ mcl::BufferStream::BufferStream(
           map{map},
           factory{nullptr}
 {
-}
-
-mir::optional_value<int> parse_env_for_swap_interval()
-{
-    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
-        return {atoi(env)};
-    else
-        return {};
 }
 
 mcl::BufferStream::BufferStream(
@@ -480,13 +480,10 @@ int mcl::BufferStream::swap_interval() const
     return interval_config.swap_interval();
 }
 
-MirWaitHandle* mcl::BufferStream::set_swap_interval(int i)
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    int interval;
     if (user_swap_interval.is_set())
         interval = user_swap_interval.value();
-    else
-        interval = i;
 
     buffer_depository->set_interval(interval);
     return interval_config.set_swap_interval(display_server, rpc_id(), interval);
