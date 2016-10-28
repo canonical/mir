@@ -20,21 +20,23 @@
 #ifndef MIR_CLIENT_MIR_COOKIE_H_
 #define MIR_CLIENT_MIR_COOKIE_H_
 
-#include "mir/cookie/blob.h"
+#include <cstdint>
+#include <cstdlib>
+#include <vector>
 
 class MirCookie
 {
 public:
     explicit MirCookie(void const* buffer, size_t size);
-    explicit MirCookie(mir::cookie::Blob const& blob);
+    explicit MirCookie(std::vector<uint8_t> const& cookie);
 
     void copy_to(void* buffer, size_t size) const;
     size_t size() const;
 
-    mir::cookie::Blob blob() const;
+    std::vector<uint8_t> cookie() const;
 
 private:
-    mir::cookie::Blob blob_;
+    std::vector<uint8_t> cookie_;
 };
 
 #endif // MIR_CLIENT_MIR_COOKIE_H_

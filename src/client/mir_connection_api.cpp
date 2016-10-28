@@ -295,11 +295,17 @@ MirWaitHandle* mir_connection_set_base_display_config(
 
 MirInputConfig* mir_connection_create_input_config(
     MirConnection* connection)
+try
 {
     mir::require(mir_connection_is_valid(connection));
 
     auto devices = connection->the_input_devices();
     return reinterpret_cast<MirInputConfig*>(devices->clone_devices());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void mir_connection_set_input_config_change_callback(
