@@ -31,6 +31,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/time/posix_timestamp.h"
 
 #include <memory>
 #include <functional>
@@ -248,7 +249,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
     std::chrono::nanoseconds vsync_interval{1000000000LL/60};
     // TODO: Move this into streams:
-    std::chrono::steady_clock::time_point last_target_vsync;
+    mir::time::PosixTimestamp last_target_vsync;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

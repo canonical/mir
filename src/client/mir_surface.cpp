@@ -31,6 +31,7 @@
 #include "mir/input/xkb_mapper.h"
 #include "mir/cookie/cookie.h"
 #include "mir_cookie.h"
+#include "mir/time/posix_timestamp.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -45,6 +46,7 @@ namespace mircv = mi::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
+using namespace mir::time;
 
 namespace
 {
@@ -488,14 +490,36 @@ void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
      */
 }
 
+// TODO: Move these to the header when complete:
+namespace {
+
+PosixTimestamp operator-(PosixTimestamp const& a,
+                         std::chrono::nanoseconds b)
+{
+    return PosixTimestamp(a.clock_id, a.nanoseconds - b);
+}
+
+PosixTimestamp operator+(PosixTimestamp const& a,
+                         std::chrono::nanoseconds b)
+{
+    return PosixTimestamp(a.clock_id, a.nanoseconds + b);
+}
+
+bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    if (a.clock_id != b.clock_id)
+        throw std::logic_error("Can't compare different time domains");
+    return a.nanoseconds > b.nanoseconds;
+}
+
+}
+
 void MirSurface::wait_for_vsync()
 {
     // TODO: Replace all of this fake_last_vsync with a real timestamp when
     //       available in future:
-    auto const now = std::chrono::steady_clock::now();
-    auto const now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            now.time_since_epoch()
-                        ).count();
+    auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
+    auto const now_ns = now.nanoseconds.count();
     auto const phase = std::chrono::nanoseconds(now_ns % vsync_interval.count());
     auto const fake_last_vsync = now - phase;
 
@@ -513,8 +537,8 @@ void MirSurface::wait_for_vsync()
     if (target_vsync > last_target_vsync)
     {
         last_target_vsync = target_vsync;
-        auto render_start = target_vsync - prerender_time;
-        std::this_thread::sleep_until(render_start);
+        //auto render_start = target_vsync - prerender_time;
+        //std::this_thread::sleep_until(render_start);
     }
 }
 
