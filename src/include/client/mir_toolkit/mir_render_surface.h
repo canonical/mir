@@ -30,24 +30,36 @@
 extern "C" {
 #endif
 
-/** Create a render surface.
+/**
+ * Create a render surface.
  *
- * \warning: This call is always non-blocking as there is no actual rendering
- *           construct backing the surface yet. In case of error, the call
- *           will succeed but an error render surface will be returned.
+ * \warning                     The returned MirRenderSurface will be non-null, but may be
+ *                              invalid in case of an error.
  *
  * \param [in] connection       A valid connection
- * \param [in] width            The logical width in pixels at which the render surface
- *                              will be displayed
- * \param [in] height           The logical height in pixels at which the render surface will
- *                              be displayed
- * \return                      The newly created render surface
+ * \param [in] width            The logical width in pixels
+ * \param [in] height           The logical height in pixels
+ * \return                      The render surface.
  */
 MirRenderSurface* mir_connection_create_render_surface(
     MirConnection* connection, int width, int height);
 
-
+/**
+ * Get the logical size of the MirRenderSurface
+ *
+ * \param [in] render_surface   The render surface
+ * \param [out] width           The width in pixels
+ * \param [out] height          The height in pixels
+ */ 
 void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* width, int* height);
+
+/**
+ * Set the logical size of the MirRenderSurface
+ *
+ * \param [in] render_surface   The render surface
+ * \param [in] width           The width in pixels
+ * \param [in] height          The height in pixels
+ */ 
 void mir_render_surface_set_logical_size(MirRenderSurface* render_surface, int width, int height);
 
 /**
