@@ -34,6 +34,7 @@
 #include "mir/events/event_builders.h"
 
 #include <chrono>
+#include <thread>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -91,6 +92,24 @@ void mtf::FakeInputDeviceImpl::emit_event(synthesis::TouchParameters const& touc
                        device->synthesize_events(touch);
                    });
 }
+
+void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
+                                                   int count,
+                                                   std::chrono::duration<double> delay)
+{
+    queue->enqueue(
+        [this, event_generator, count, delay]()
+        {
+            auto start = std::chrono::steady_clock::now();
+            for (int i = 0;i < count;++i)
+            {
+                std::this_thread::sleep_until(start + i * delay);
+                device->synthesize_events(event_generator(i++));
+                std::this_thread::yield();
+            }
+        });
+}
+
 
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)

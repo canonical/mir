@@ -587,8 +587,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     first_client.all_events_received.wait_for(2s);
 }
 
-// Will be re-enabled when we get capnproto serialization in
-TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
+TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 {
     positions[first] = screen_geometry;
     Client first_client(new_connection(), first);
@@ -600,6 +599,7 @@ TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
     int const inputs_per_frame = input_rate / frame_rate;
     int const ninputs = nframes * inputs_per_frame;
     auto const frame_time = 1000ms / frame_rate;
+    auto const input_interval = std::chrono::duration<double>(1s) / input_rate;
 
     int received_input_events = 0;
 
@@ -619,37 +619,26 @@ TEST_F(TestClientInput, DISABLED_receives_one_touch_event_per_frame)
     ASSERT_THAT(input_rate, Ge(2 * frame_rate));
     ASSERT_THAT(ninputs, Gt(2 * nframes));
 
-    auto start_time = std::chrono::steady_clock::now();
+    fake_touch_screen->emit_touch_sequence(
+        [this](int i)
+        {
+            auto const x = i;
+            auto const y = 2*i;
+            return mis::a_touch_event()
+                .with_action(mis::TouchParameters::Action::Move)
+                .at_position({x,y});
+        },
+        ninputs,
+        input_interval
+        );
 
-    for (int i = 0; i < ninputs; ++i)
-    {
-        /*
-         * Sleep until the correct time for the frame. We use sleep_until
-         * so that even on a very slow system it will catch up to the
-         * correct real time for the frame and not drift out causing
-         * test failures.
-         */
-        int frame_no = i / inputs_per_frame;
-        std::this_thread::sleep_until(start_time + frame_no*frame_time);
-
-        int const x = i;
-        int const y = 2 * i;
-        fake_touch_screen->emit_event(mis::a_touch_event()
-                                      .with_action(mis::TouchParameters::Action::Move)
-                                      .at_position({x,y}));
-
-        // Valgrind is apparently quite bad at concurrency so give it a
-        // fighting chance:
-        std::this_thread::yield();
-    }
+    // The main thing we're testing for is that too many events don't arrive
+    // so we wait a little to check the cooked event stream has stopped:
+    std::this_thread::sleep_for(200 * frame_time);
 
     // Wait for the expected minimum number of events (should be quick but
     // some CI runs are actually incredibly slow to finish)
     ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
-
-    // The main thing we're testing for is that too many events don't arrive
-    // so we wait a little to check the cooked event stream has stopped:
-    std::this_thread::sleep_for(100 * frame_time);
 
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
