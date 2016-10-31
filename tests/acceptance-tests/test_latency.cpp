@@ -347,7 +347,7 @@ TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
     } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
 
     auto max_latency = display.group.max_latency();
-    EXPECT_THAT(max_latency, Lt(0.1f));
+    EXPECT_THAT(max_latency, Lt(0.5f));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
