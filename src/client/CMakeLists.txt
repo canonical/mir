@@ -94,6 +94,8 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_display_configuration.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
+  mir_extension_core.cpp
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
 )
 
 # Ensure protobuf C++ headers have been produced before
