@@ -80,6 +80,7 @@ set(
   test_module_deleter.cpp
   test_mir_cookie.cpp
   test_posix_rw_mutex.cpp
+  test_observer_multiplexer.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
