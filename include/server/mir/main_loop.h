@@ -22,12 +22,16 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/server_action_queue.h"
+#include "mir/executor.h"
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister, public time::AlarmFactory,
-                 public ServerActionQueue
+class MainLoop :
+    public graphics::EventHandlerRegister,
+    public time::AlarmFactory,
+    public ServerActionQueue,
+    public Executor
 {
 public:
     virtual void run() = 0;

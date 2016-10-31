@@ -79,6 +79,7 @@ typedef struct  // Things shared between threads
     Buffer const* preview;
     int expected_direction;
     bool reset;
+    bool occluded;
 } State;
 
 static Time now()
@@ -133,6 +134,27 @@ static bool on_input_event(MirInputEvent const* ievent, State* state)
     return false;
 }
 
+static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
+{
+    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sevent);
+    int value = mir_surface_event_get_attribute_value(sevent);
+
+    if (attrib == mir_surface_attrib_visibility)
+    {
+        if (value == mir_surface_visibility_exposed)
+        {
+            state->reset = true;
+            state->occluded = false;
+        }
+        else
+        {
+            state->occluded = true;
+        }
+    }
+
+    return false;  // Let eglapp handle the same event. We are passive.
+}
+
 static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
     bool handled = true;
@@ -149,6 +171,9 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     {
     case mir_event_type_input:
         handled = on_input_event(mir_event_get_input_event(event), state);
+        break;
+    case mir_event_type_surface:
+        handled = on_surface_event(mir_event_get_surface_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;
@@ -485,6 +510,7 @@ static void* capture_thread_func(void* arg)
         int const resolution = 5;
         int see = resolution * interpret(cam, buf);
         if ( (see != last_seen_value) &&
+             !state->occluded && // Camera is likely seeing other things
              (acquire_time > state->last_change_time) &&
              ( (see > last_seen_value && state->expected_direction > 0) || 
                (see < last_seen_value && state->expected_direction < 0)
@@ -715,6 +741,7 @@ int main(int argc, char* argv[])
         0,
         NULL,
         0,
+        false,
         false
     };
     MirSurface* surface = mir_eglapp_native_surface();

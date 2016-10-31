@@ -45,6 +45,8 @@ Build-Depends: cmake,
                python3:any,
                dh-python,
                nettle-dev,
+               libcapnp-dev,
+               capnproto,
                libepoxy-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir

@@ -101,3 +101,18 @@ void mtd::TriggeredMainLoop::fire_all_alarms()
     for(auto const& callback : timeout_callbacks)
         callback();
 }
+
+void mtd::TriggeredMainLoop::spawn(std::function<void()>&& work)
+{
+    base::spawn(std::function<void()>{work});
+    this->work.emplace_back(std::move(work));
+}
+
+void mtd::TriggeredMainLoop::trigger_spawned_work()
+{
+    for (auto const& action : work)
+    {
+        action();
+    }
+    work.clear();
+}
