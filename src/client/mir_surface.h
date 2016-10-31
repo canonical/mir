@@ -249,7 +249,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
     std::chrono::nanoseconds vsync_interval{1000000000LL/60};
     // TODO: Move this into streams:
-    mir::time::PosixTimestamp last_target_vsync;
+    mir::time::PosixTimestamp last_target;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

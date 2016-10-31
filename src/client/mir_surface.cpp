@@ -505,41 +505,75 @@ PosixTimestamp operator+(PosixTimestamp const& a,
     return PosixTimestamp(a.clock_id, a.nanoseconds + b);
 }
 
-bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
+std::chrono::nanoseconds operator%(PosixTimestamp const& a,
+                                   std::chrono::nanoseconds b)
+{
+    return std::chrono::nanoseconds(a.nanoseconds.count() % b.count());
+}
+
+void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
 {
     if (a.clock_id != b.clock_id)
         throw std::logic_error("Can't compare different time domains");
+}
+
+/*
+bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
     return a.nanoseconds > b.nanoseconds;
+}
+*/
+
+bool operator<(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds < b.nanoseconds;
+}
+
+void sleep_until(PosixTimestamp const& t)
+{
+    long long ns = t.nanoseconds.count();
+    struct timespec ts = {ns / 1000000000LL, ns % 1000000000LL};
+    while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, NULL)) {}
 }
 
 }
 
 void MirSurface::wait_for_vsync()
 {
-    // TODO: Replace all of this fake_last_vsync with a real timestamp when
-    //       available in future:
+    // Safety net: Virtual machines might report zero(?). Throttle to 60Hz.
+    if (vsync_interval == std::chrono::nanoseconds::zero())
+        vsync_interval = std::chrono::nanoseconds(1000000000L / 60);
+
+    // { TODO: Replace this with the actual timestamp from the server in future.
+    //         Using a fake timestamp like this will work, but being out of
+    //         phase could make it up to one frame laggier than it should be.
     auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
-    auto const now_ns = now.nanoseconds.count();
-    auto const phase = std::chrono::nanoseconds(now_ns % vsync_interval.count());
-    auto const fake_last_vsync = now - phase;
+    auto const last_server_vsync = now - (now % vsync_interval);
+    // } TODO
 
-    auto const last_vsync = fake_last_vsync;
+    /*
+     * The period of each client frame should match vsync_interval, regardless
+     * of the delta of last_server_vsync. Because measuring deltas would be
+     * inaccurate on a variable framerate display. Whereas vsync_interval
+     * represents the theoretical maximum refresh rate of the display we should
+     * be aiming for.
+     *   The phase however comes from last_server_vsync. This may sound
+     * unnecessary but being out of phase with the server (physical display)
+     * could create almost one whole frame of extra lag. So it's worth getting
+     * in phase with the server regularly...
+     */
+    auto const server_phase = last_server_vsync % vsync_interval;
+    auto const last_phase = last_target % vsync_interval;
+    auto const phase_correction = server_phase - last_phase;
+    auto target = last_target + vsync_interval + phase_correction;
+    if (target < PosixTimestamp::now(target.clock_id))
+        target = last_server_vsync;
 
-    // TODO: Add client API to make this configurable:
-    auto const prerender_time = std::chrono::milliseconds(30);
-
-    auto const prerender_gap = vsync_interval - 
-        std::chrono::nanoseconds(prerender_time.count() % vsync_interval.count());
-    auto const prerender_whole_frames = prerender_time + prerender_gap;
-    auto const target_vsync = last_vsync + prerender_whole_frames;
-
-    // TODO: last_target_vsync should be per-stream
-    if (target_vsync > last_target_vsync)
-    {
-        last_target_vsync = target_vsync;
-        //auto render_start = target_vsync - prerender_time;
-        //std::this_thread::sleep_until(render_start);
-    }
+    // TODO: last_target should be per-stream
+    last_target = target;
+    sleep_until(target);
 }
 
 void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
