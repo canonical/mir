@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <stdexcept>
 
 namespace mir { namespace time {
 
@@ -53,6 +54,61 @@ struct PosixTimestamp
         return PosixTimestamp(clock_id, ts);
     }
 };
+
+inline void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    if (a.clock_id != b.clock_id)
+        throw std::logic_error("Can't compare different time domains");
+}
+
+inline bool operator==(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    return a.clock_id == b.clock_id && a.nanoseconds == b.nanoseconds;
+}
+
+inline PosixTimestamp operator-(PosixTimestamp const& a,
+                                std::chrono::nanoseconds b)
+{
+    return PosixTimestamp(a.clock_id, a.nanoseconds - b);
+}
+
+inline std::chrono::nanoseconds operator-(PosixTimestamp const& a,
+                                          PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds - b.nanoseconds;
+}
+
+inline PosixTimestamp operator+(PosixTimestamp const& a,
+                                std::chrono::nanoseconds b)
+{
+    return PosixTimestamp(a.clock_id, a.nanoseconds + b);
+}
+
+inline std::chrono::nanoseconds operator%(PosixTimestamp const& a,
+                                          std::chrono::nanoseconds b)
+{
+    return std::chrono::nanoseconds(a.nanoseconds.count() % b.count());
+}
+
+inline bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds > b.nanoseconds;
+}
+
+inline bool operator<(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds < b.nanoseconds;
+}
+
+inline void sleep_until(PosixTimestamp const& t)
+{
+    long long ns = t.nanoseconds.count();
+    struct timespec ts = {ns / 1000000000LL, ns % 1000000000LL};
+    while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, NULL)) {}
+}
 
 }} // namespace mir::time
 
