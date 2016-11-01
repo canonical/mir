@@ -21,6 +21,10 @@
 
 #include "mir_toolkit/mir_connection.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Request an extension interface thingy.
  *
@@ -34,4 +38,7 @@ void* mir_connection_request_interface(
     char const* interface,
     int version);
 
+#ifdef __cplusplus
+}
+#endif
 #endif //MIR_CLIENT_EXTENSION_CORE_H_
