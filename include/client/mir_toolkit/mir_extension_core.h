@@ -26,12 +26,14 @@ extern "C" {
 #endif
 
 /**
- * Request an extension interface thingy.
+ * Request a Mir extension
  *
- * \param [in] connection
- * \param [in] interface
- * \param [in] version
- * \return
+ * \param [in]  connection  A connection
+ * \param [in]  interface   The name of the interface.
+ * \param [in]  version     The version of the interface.
+ * \return      A pointer that can be cast to the object
+ *              provided by the interface or NULL if the
+ *              extension is not supported.
  */
 void* mir_connection_request_interface(
     MirConnection* connection,
