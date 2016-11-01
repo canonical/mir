@@ -64,7 +64,7 @@ private:
     std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
     std::shared_ptr<AsyncBufferFactory> const mir_buffer_factory;
 
-    IntervalConfig interval_config;
+    BufferStreamConfiguration interval_config;
 
     std::mutex mutex;
     std::vector<std::unique_ptr<Buffer>> buffers;

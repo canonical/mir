@@ -25,7 +25,7 @@
 #include "client_buffer_stream.h"
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
-#include "interval_config.h"
+#include "buffer_stream_configuration.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -154,7 +154,7 @@ private:
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
     optional_value<int> user_swap_interval;
-    IntervalConfig interval_config;
+    BufferStreamConfiguration interval_config;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;

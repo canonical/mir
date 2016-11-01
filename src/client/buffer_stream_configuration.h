@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INTERVAL_CONFIG_H_
-#define MIR_CLIENT_INTERVAL_CONFIG_H_
+#ifndef MIR_CLIENT_BUFFER_STREAM_CONFIGURATION_H_
+#define MIR_CLIENT_BUFFER_STREAM_CONFIGURATION_H_
 
 #include "mir_protobuf.pb.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -29,7 +29,7 @@ namespace mir
 namespace client
 {
 namespace rpc { class DisplayServer; }
-class IntervalConfig
+class BufferStreamConfiguration
 {
 public:
     void on_swap_interval_set(int interval);
@@ -45,4 +45,4 @@ private:
 
 }
 }
-#endif /* MIR_CLIENT_INTERVAL_CONFIG */
+#endif /* MIR_CLIENT_BUFFER_STREAM_CONFIGURATION */
