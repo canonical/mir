@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
     //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
-    //       Current code requires creation of egl window before mir surface.
+    //       Current code requires creation of content before creation of the surface.
     eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
 
     //The format field is only used for default-created streams.
