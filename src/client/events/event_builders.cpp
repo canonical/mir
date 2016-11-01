@@ -41,26 +41,10 @@ namespace geom = mir::geometry;
 
 namespace
 {
-    mir::cookie::Blob vector_to_cookie_as_blob(std::vector<uint8_t> const& vector)
-    {
-        mir::cookie::Blob blob{{}};
-
-        if (vector.size() > blob.size())
-        {
-            throw std::runtime_error("Vector size " + std::to_string(vector.size()) +
-                                     " is larger then array size: " +
-                                     std::to_string(blob.size()));
-        }
-
-        std::copy_n(vector.begin(), vector.size(), blob.begin());
-
-        return blob;
-    }
-
-template <class T>
-T* new_event()
+template <class T, class... Args>
+T* new_event(Args&&... args)
 {
-    T* t = new T;
+    T* t = new T(std::forward<Args>(args)...);
 
     return t;
 }
@@ -70,7 +54,6 @@ mir::EventUPtr make_uptr_event(T* e)
 {
     return mir::EventUPtr(e, ([](MirEvent* e) { delete reinterpret_cast<T*>(e); }));
 }
-
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
@@ -197,7 +180,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     e->set_device_id(device_id);
     e->set_source_id(AINPUT_SOURCE_KEYBOARD);
     e->set_event_time(timestamp);
-    e->set_cookie(vector_to_cookie_as_blob(cookie));
+    e->set_cookie(cookie);
     e->set_action(action);
     e->set_key_code(key_code);
     e->set_scan_code(scan_code);
@@ -283,7 +266,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
-    e->set_cookie(vector_to_cookie_as_blob(cookie));
+    e->set_cookie(cookie);
     e->set_modifiers(modifiers);
     e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
 
@@ -335,7 +318,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = *e->to_input()->to_motion();
     mev.set_device_id(device_id);
     mev.set_event_time(timestamp);
-    mev.set_cookie(vector_to_cookie_as_blob(cookie));
+    mev.set_cookie(cookie);
     mev.set_modifiers(modifiers);
     mev.set_source_id(AINPUT_SOURCE_MOUSE);
     mev.set_buttons(buttons_pressed);
@@ -404,15 +387,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
                                std::string const& layout, std::string const& variant, std::string const& options)
 {
     auto e = new_event<MirKeymapEvent>();
-    auto ep = mir::EventUPtr(e, [](MirEvent* e) {
-        // xkbcommon creates the keymap through malloc
-        if (e && e->type() == mir_event_type_keymap)
-        {
-            e->to_keymap()->free_buffer();
-        }
-
-        delete e;
-    });
+    auto ep = make_uptr_event(e);
 
     auto ctx = mi::make_unique_context();
     auto map = mi::make_unique_keymap(ctx.get(), mi::Keymap{model, layout, variant, options});
@@ -423,8 +398,9 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     e->set_surface_id(surface_id.as_value());
     e->set_device_id(id);
     // TODO consider caching compiled keymaps
-    e->set_buffer(xkb_keymap_get_as_string(map.get(), XKB_KEYMAP_FORMAT_TEXT_V1));
-    e->set_size(strlen(e->to_keymap()->buffer()));
+    auto buffer = xkb_keymap_get_as_string(map.get(), XKB_KEYMAP_FORMAT_TEXT_V1);
+    e->set_buffer(buffer);
+    std::free(buffer);
 
     return ep;
 }
@@ -460,7 +436,7 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
 
 mir::EventUPtr mev::clone_event(MirEvent const& event)
 {
-    return make_uptr_event(event.clone());
+    return make_uptr_event(new MirEvent(event));
 }
 
 void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)
@@ -479,32 +455,11 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-                               std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+                               std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers,
                                std::vector<mev::ContactState> const& contacts)
 {
-    auto e = new_event<MirMotionEvent>();
-
-    e->set_device_id(device_id);
-    e->set_event_time(timestamp);
-    e->set_cookie(vector_to_cookie_as_blob(mac));
-    e->set_modifiers(modifiers);
+    auto e = new_event<MirMotionEvent>(device_id, timestamp, cookie, modifiers, contacts);
     e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
-    e->set_pointer_count(contacts.size());
-
-    size_t current_index = 0;
-    for (auto const& contact : contacts)
-    {
-        e->set_id(current_index, contact.touch_id);
-        e->set_tool_type(current_index, contact.tooltype);
-        e->set_x(current_index, contact.x);
-        e->set_y(current_index, contact.y);
-        e->set_pressure(current_index, contact.pressure);
-        e->set_touch_major(current_index, contact.touch_major);
-        e->set_touch_minor(current_index, contact.touch_minor);
-        e->set_size(current_index, contact.touch_major);
-        e->set_action(current_index, contact.action);
-        ++current_index;
-    }
 
     return make_uptr_event(e);
 }

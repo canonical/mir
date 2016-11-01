@@ -31,10 +31,6 @@ struct MirSurfacePlacementEvent : MirEvent
 
     MirRectangle placement() const;
     void set_placement(MirRectangle const& placement);
-
-private:
-    int id_{0};
-    MirRectangle placement_;
 };
 
 #endif //MIR_SURFACE_PLACEMENT_EVENT_H

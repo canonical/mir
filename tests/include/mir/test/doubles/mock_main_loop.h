@@ -60,6 +60,8 @@ public:
     MOCK_METHOD1(pause_processing_for,void (void const*));
     MOCK_METHOD1(resume_processing_for,void (void const*));
 
+    MOCK_METHOD1(spawn, void(std::function<void()>&));
+
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(LockableCallback* callback));
 
@@ -81,6 +83,12 @@ public:
          mir::UniqueModulePtr<std::function<void(int)>> handler) override
     {
         register_fd_handler_module_ptr(fds, owner, *handler);
+    }
+
+    void spawn(std::function<void()>&& work) override
+    {
+        std::function<void()> work_copy{std::move(work)};
+        spawn(work_copy);
     }
 };
 

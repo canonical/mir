@@ -18,37 +18,37 @@
 
 #include "mir/events/resize_event.h"
 
-MirResizeEvent::MirResizeEvent() :
-    MirEvent(mir_event_type_resize)
+MirResizeEvent::MirResizeEvent()
 {
+    event.initResize();
 }
 
 int MirResizeEvent::surface_id() const
 {
-    return surface_id_;
+    return event.asReader().getResize().getSurfaceId();
 }
 
 void MirResizeEvent::set_surface_id(int id)
 {
-    surface_id_ = id;
+    event.getResize().setSurfaceId(id);
 }
 
 int MirResizeEvent::width() const
 {
-    return width_;
+    return event.asReader().getResize().getWidth();
 }
 
 void MirResizeEvent::set_width(int width)
 {
-    width_ = width;
+    event.getResize().setWidth(width);
 }
 
 int MirResizeEvent::height() const
 {
-    return height_;
+    return event.asReader().getResize().getHeight();
 }
 
 void MirResizeEvent::set_height(int height)
 {
-    height_ = height;
+    event.getResize().setHeight(height);
 }
