@@ -106,7 +106,9 @@ inline bool operator<(PosixTimestamp const& a, PosixTimestamp const& b)
 inline void sleep_until(PosixTimestamp const& t)
 {
     long long ns = t.nanoseconds.count();
-    struct timespec ts = {ns / 1000000000LL, ns % 1000000000LL};
+    struct timespec ts;
+    ts.tv_sec = ns / 1000000000LL;
+    ts.tv_nsec = ns % 1000000000LL;
     while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, NULL)) {}
 }
 
