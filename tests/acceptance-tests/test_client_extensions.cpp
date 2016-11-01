@@ -59,3 +59,14 @@ TEST_F(ClientExtensions, can_load_different_extensions)
     ASSERT_THAT(ext->animal_name, Ne(nullptr));
     EXPECT_THAT(ext->animal_name(), Ne("mushroom"));
 }
+
+TEST_F(ClientExtensions, gives_nullptr_on_errors)
+{
+    EXPECT_THAT(mir_connection_request_interface(
+        nullptr, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_ANIMAL_NAME_VERSION_9_1), Eq(nullptr));
+    EXPECT_THAT(mir_connection_request_interface(
+        connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+
+    EXPECT_THAT(mir_connection_request_interface(
+        connection, "pancake", MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+}
