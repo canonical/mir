@@ -567,6 +567,11 @@ void mcl::BufferStream::set_size(geom::Size sz)
     buffer_depository->set_size(sz);
 }
 
+geom::Size mcl::BufferStream::size() const
+{
+    return buffer_depository->size();
+}
+
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
     return buffer_depository->set_scale(scale, mf::BufferStreamId(protobuf_bs->id().value()));
