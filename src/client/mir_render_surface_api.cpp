@@ -170,7 +170,7 @@ void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, i
 {
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    auto size = rs->logical_size();
+    auto size = rs->size();
     *width = size.width.as_int();
     *height = size.height.as_int();
 }
@@ -179,5 +179,5 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
 {
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    rs->set_logical_size({width, height});
+    rs->set_size({width, height});
 }

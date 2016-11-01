@@ -80,14 +80,14 @@ mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
     std::shared_ptr<void> native_window,
     std::shared_ptr<ClientPlatform> client_platform,
-    geom::Size logical_size) :
+    geom::Size size) :
     connection_(connection),
     wrapped_native_window(native_window),
     platform(client_platform),
     stream_(nullptr),
     stream_creation_request(nullptr),
     stream_release_request(nullptr),
-    desired_logical_size{logical_size}
+    desired_size{size}
 {
 }
 
@@ -168,14 +168,14 @@ MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
         stream_release_request.get());
 }
 
-geom::Size mcl::RenderSurface::logical_size() const
+geom::Size mcl::RenderSurface::size() const
 {
     std::lock_guard<decltype(size_mutex)> lk(size_mutex);
-    return desired_logical_size;
+    return desired_size;
 }
 
-void mcl::RenderSurface::set_logical_size(mir::geometry::Size logical_size)
+void mcl::RenderSurface::set_size(mir::geometry::Size size)
 {
     std::lock_guard<decltype(size_mutex)> lk(size_mutex);
-    desired_logical_size = logical_size;
+    desired_size = size;
 }

@@ -37,15 +37,15 @@ extern "C" {
  *                              invalid in case of an error.
  *
  * \param [in] connection       A valid connection
- * \param [in] width            The logical width in pixels
- * \param [in] height           The logical height in pixels
+ * \param [in] width            The width in pixels
+ * \param [in] height           The height in pixels
  * \return                      The render surface.
  */
 MirRenderSurface* mir_connection_create_render_surface(
     MirConnection* connection, int width, int height);
 
 /**
- * Get the logical size of the MirRenderSurface
+ * Get the size of the MirRenderSurface
  *
  * \param [in] render_surface   The render surface
  * \param [out] width           The width in pixels
@@ -54,7 +54,7 @@ MirRenderSurface* mir_connection_create_render_surface(
 void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height);
 
 /**
- * Set the logical size of the MirRenderSurface
+ * Set the size of the MirRenderSurface
  *
  * \param [in] render_surface   The render surface
  * \param [in] width           The width in pixels
