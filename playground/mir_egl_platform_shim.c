@@ -43,7 +43,7 @@ EGLSurface future_driver_eglCreateWindowSurface(
     }
 
     info->surface = surface;
-    mir_render_surface_logical_size(surface,
+    mir_render_surface_get_size(surface,
         &info->current_physical_width, &info->current_physical_height);
 
     //TODO: the driver needs to be selecting a pixel format that's acceptable based on
@@ -66,7 +66,7 @@ EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
 {
     int width = -1;
     int height = -1;
-    mir_render_surface_logical_size(info->surface, &width, &height);
+    mir_render_surface_get_size(info->surface, &width, &height);
     if (width != info->current_physical_width || height != info->current_physical_height)
     {
         //note that this affects the next buffer that we get after swapbuffers.

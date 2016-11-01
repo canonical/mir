@@ -51,7 +51,7 @@ MirRenderSurface* mir_connection_create_render_surface(
  * \param [out] width           The width in pixels
  * \param [out] height          The height in pixels
  */ 
-void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* width, int* height);
+void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height);
 
 /**
  * Set the logical size of the MirRenderSurface
@@ -60,7 +60,7 @@ void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* widt
  * \param [in] width           The width in pixels
  * \param [in] height          The height in pixels
  */ 
-void mir_render_surface_set_logical_size(MirRenderSurface* render_surface, int width, int height);
+void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height);
 
 /**
  * Test for a valid render surface.

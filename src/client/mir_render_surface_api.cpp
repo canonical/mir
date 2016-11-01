@@ -166,7 +166,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* width, int* height)
+void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
 {
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
@@ -175,7 +175,7 @@ void mir_render_surface_logical_size(MirRenderSurface* render_surface, int* widt
     *height = size.height.as_int();
 }
 
-void mir_render_surface_set_logical_size(MirRenderSurface* render_surface, int width, int height)
+void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height)
 {
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);

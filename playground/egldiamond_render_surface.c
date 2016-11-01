@@ -61,7 +61,7 @@ void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
         int width = mir_resize_event_get_width(resize_event);
         int height = mir_resize_event_get_height(resize_event);
         MirRenderSurface* rs = (MirRenderSurface*) context;
-        mir_render_surface_set_logical_size(rs, width, height);
+        mir_render_surface_set_size(rs, width, height);
     }
 }
 

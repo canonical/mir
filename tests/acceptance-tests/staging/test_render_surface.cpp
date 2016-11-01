@@ -67,7 +67,7 @@ TEST_F(RenderSurfaceTest, creates_and_releases_buffer_streams)
     {
         int width = -1;
         int height = -1;
-        mir_render_surface_logical_size(rs, &width, &height);
+        mir_render_surface_get_size(rs, &width, &height);
         return {width, height};
     };
     auto physical_size = determine_physical_size(rs);
