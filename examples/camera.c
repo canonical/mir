@@ -87,6 +87,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     State *state = (State*)context;
+    bool handled = true;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
@@ -95,21 +96,19 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
     switch (mir_event_get_type(event))
     {
-    case mir_event_type_input:
-        break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
+
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -373,15 +372,25 @@ int main(int argc, char *argv[])
     unsigned int win_height = 1;
 
     char const* dev_video = "/dev/video0";
+    mir_eglapp_bool ultrafast = 0;
     struct mir_eglapp_arg custom_args[] =
     {
         {"-d <path>", "=", &dev_video, "Path to camera device"},
+        {"-u", "!", &ultrafast, "Ultra fast mode (low resolution)"},
         {NULL, NULL, NULL, NULL},
     };
     if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
         return 1;
 
-    Camera *cam = open_camera(dev_video, camera_pref_resolution, 1);
+    // By default we prefer high resolution and low CPU usage but if you
+    // ask for ultrafast mode expect low resolution and high CPU usage...
+    enum CameraPref pref = camera_pref_resolution;
+    if (ultrafast)
+    {
+        pref = camera_pref_speed;
+        mir_surface_set_swapinterval(mir_eglapp_native_surface(), 0);
+    }
+    Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
@@ -395,8 +404,10 @@ int main(int argc, char *argv[])
         MirConnection* connection = mir_eglapp_native_connection();
         MirSurfaceSpec* changes =
             mir_connection_create_spec_for_changes(connection);
-        mir_surface_spec_set_width(changes, cam->pix.width);
-        mir_surface_spec_set_height(changes, cam->pix.height);
+        win_width = cam->pix.width;
+        win_height = cam->pix.height;
+        mir_surface_spec_set_width(changes, win_width);
+        mir_surface_spec_set_height(changes, win_height);
         mir_surface_apply_spec(surface, changes);
         mir_surface_spec_release(changes);
     }
@@ -553,7 +564,7 @@ int main(int argc, char *argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
     close_camera(cam);
 
     return 0;

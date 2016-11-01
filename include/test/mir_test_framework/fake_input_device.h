@@ -21,6 +21,8 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/test/event_factory.h"
+#include <chrono>
+#include <functional>
 
 namespace mir_test_framework
 {
@@ -47,6 +49,9 @@ public:
     virtual void emit_event(mir::input::synthesis::ButtonParameters const& button) = 0;
     virtual void emit_event(mir::input::synthesis::MotionParameters const& motion) = 0;
     virtual void emit_event(mir::input::synthesis::TouchParameters const& touch) = 0;
+    virtual void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& generate_parameters,
+                                     int count,
+                                     std::chrono::duration<double> delay) = 0;
 
     FakeInputDevice(FakeInputDevice const&) = delete;
     FakeInputDevice& operator=(FakeInputDevice const&) = delete;

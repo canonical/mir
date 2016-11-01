@@ -17,25 +17,25 @@
  */
 
 #include "rpc/mir_display_server.h"
-#include "interval_config.h"
+#include "buffer_stream_configuration.h"
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
-void mcl::IntervalConfig::on_swap_interval_set(int interval)
+void mcl::BufferStreamConfiguration::on_swap_interval_set(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     swap_interval_ = interval;
     interval_wait_handle.result_received();
 }
 
-int mcl::IntervalConfig::swap_interval() const
+int mcl::BufferStreamConfiguration::swap_interval() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     return swap_interval_;
 }
 
-MirWaitHandle* mcl::IntervalConfig::set_swap_interval(
+MirWaitHandle* mcl::BufferStreamConfiguration::set_swap_interval(
     mclr::DisplayServer& server, mir::frontend::BufferStreamId id, int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -48,7 +48,7 @@ MirWaitHandle* mcl::IntervalConfig::set_swap_interval(
     configuration.set_swapinterval(interval);
     interval_wait_handle.expect_result();
     server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::IntervalConfig::on_swap_interval_set, interval));
+        google::protobuf::NewCallback(this, &mcl::BufferStreamConfiguration::on_swap_interval_set, interval));
 
     return &interval_wait_handle;
 }

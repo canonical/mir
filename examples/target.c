@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     pthread_join(shutdown_handler_thread, NULL);
     return 0;

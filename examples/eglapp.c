@@ -37,6 +37,7 @@ static MirSurface *surface;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
+static double refresh_rate = 0.0;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
@@ -45,7 +46,7 @@ static volatile sig_atomic_t running = 0;
         return 0; \
     }
 
-void mir_eglapp_shutdown(void)
+void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
@@ -55,11 +56,16 @@ void mir_eglapp_shutdown(void)
     connection = NULL;
 }
 
+void mir_eglapp_quit(void)
+{
+    running = 0;
+}
+
 static void shutdown(int signum)
 {
     if (running)
     {
-        running = 0;
+        mir_eglapp_quit();
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -130,18 +136,25 @@ static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
     unsigned ff = mir_surface_output_event_get_form_factor(out);
     char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
 
+    refresh_rate = mir_surface_output_event_get_refresh_rate(out);
+
     printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
            mir_surface_output_event_get_output_id(out),
            mir_surface_output_event_get_dpi(out),
            mir_surface_output_event_get_scale(out),
            form_factor,
-           mir_surface_output_event_get_refresh_rate(out));
+           refresh_rate);
 }
 
-static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
+double mir_eglapp_display_hz(void)
+{
+    return refresh_rate;
+}
+
+void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* unused)
 {
     (void) surface;
-    (void) context;
+    (void) unused;
     
     switch (mir_event_get_type(ev))
     {

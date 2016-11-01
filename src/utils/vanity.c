@@ -74,11 +74,13 @@ typedef struct  // Things shared between threads
     bool resized;
     Camera* camera;
     Time last_change_time;
+    Time last_change_time_error;
     Time last_change_seen_time;
     Time display_frame_time;
     Buffer const* preview;
     int expected_direction;
     bool reset;
+    bool occluded;
 } State;
 
 static Time now()
@@ -110,8 +112,54 @@ static GLuint load_shader(char const* src, GLenum type)
     return shader;
 }
 
+static bool on_key_event(MirKeyboardEvent const* kevent, State* state)
+{
+    if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up)
+    {
+        switch (mir_keyboard_event_scan_code(kevent))
+        {
+        case KEY_R:
+            state->reset = true;
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
+static bool on_input_event(MirInputEvent const* ievent, State* state)
+{
+    if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
+        return on_key_event(mir_input_event_get_keyboard_event(ievent), state);
+    return false;
+}
+
+static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
+{
+    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sevent);
+    int value = mir_surface_event_get_attribute_value(sevent);
+
+    if (attrib == mir_surface_attrib_visibility)
+    {
+        if (value == mir_surface_visibility_exposed)
+        {
+            state->reset = true;
+            state->occluded = false;
+        }
+        else
+        {
+            state->occluded = true;
+        }
+    }
+
+    return false;  // Let eglapp handle the same event. We are passive.
+}
+
 static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
+    bool handled = true;
+
     (void)surface;
     State* state = (State*)context;
 
@@ -123,33 +171,23 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     switch (mir_event_get_type(event))
     {
     case mir_event_type_input:
-        {
-            MirInputEvent const* ievent = mir_event_get_input_event(event);
-            if (mir_input_event_get_type(ievent) == mir_input_event_type_key)
-            {
-                MirKeyboardEvent const* kevent =
-                    mir_input_event_get_keyboard_event(ievent);
-                if (mir_keyboard_event_action(kevent) == mir_keyboard_action_up
-                    && mir_keyboard_event_scan_code(kevent) == KEY_R)
-                {
-                    state->reset = true;
-                }
-            }
-        }
+        handled = on_input_event(mir_event_get_input_event(event), state);
+        break;
+    case mir_event_type_surface:
+        handled = on_surface_event(mir_event_get_surface_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -473,6 +511,7 @@ static void* capture_thread_func(void* arg)
         int const resolution = 5;
         int see = resolution * interpret(cam, buf);
         if ( (see != last_seen_value) &&
+             !state->occluded && // Camera is likely seeing other things
              (acquire_time > state->last_change_time) &&
              ( (see > last_seen_value && state->expected_direction > 0) || 
                (see < last_seen_value && state->expected_direction < 0)
@@ -480,6 +519,11 @@ static void* capture_thread_func(void* arg)
            )
         {
             Time latency = acquire_time - state->last_change_time;
+
+            // Correct for swap interval zero dropping buffers the camera
+            // will never see:
+            latency -= state->last_change_time_error;
+
             last_seen_value = see;
             state->last_change_seen_time = acquire_time;
             state->expected_direction = 0;
@@ -516,7 +560,7 @@ static void* capture_thread_func(void* arg)
 
                 printf("INTERVALS: camera %llu.%1llums (%lluHz), "
                        "display %llu.%1llums (%lluHz), "
-                       "expected vary %llu.%1llums\n",
+                       "expected range %llu.%1llums\n",
                        frame_time / one_millisecond,
                        (frame_time % one_millisecond) / 100000,
                        one_second / frame_time,
@@ -531,7 +575,7 @@ static void* capture_thread_func(void* arg)
                        "max %llu.%1llums, "
                        "avg %llu.%1llums, "
                        "last %llu.%1llums, "
-                       "vary %llu.%1llums\n",
+                       "observed range %llu.%1llums\n",
                        min / one_millisecond,
                        (min % one_millisecond) / 100000,
                        max / one_millisecond,
@@ -701,8 +745,10 @@ int main(int argc, char* argv[])
         0,
         0,
         0,
+        0,
         NULL,
         0,
+        false,
         false
     };
     MirSurface* surface = mir_eglapp_native_surface();
@@ -821,15 +867,32 @@ int main(int argc, char* argv[])
         }
         mir_eglapp_swap_buffers();
 
+        double display_hz = mir_eglapp_display_hz();
         Time swap_time = now();
+        Time measured_swap_interval = swap_time - last_swap_time;
         pthread_mutex_lock(&state.mutex);
-        state.display_frame_time = swap_time - last_swap_time;
+        if (display_hz > 0.0)  // More steady and works with all intervals:
+        {
+            state.display_frame_time = one_second / display_hz;
+
+            // Correct last_change_time for framedropping mode(s) where
+            // we actually render many frames per display frame:
+            if (measured_swap_interval < state.display_frame_time)
+                state.last_change_time_error = state.display_frame_time -
+                                               measured_swap_interval;
+            else
+                state.last_change_time_error = 0;
+        }
+        else
+        {
+            state.display_frame_time = measured_swap_interval;
+        }
         pthread_mutex_unlock(&state.mutex);
         last_swap_time = swap_time;
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);
     close_camera(cam);

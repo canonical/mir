@@ -44,7 +44,6 @@ set(server_common_include_dirs
 set(server_common_include_dirs
   ${server_common_include_dirs}
   ${CMAKE_CURRENT_SOURCE_DIR}/common/server
-  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
@@ -59,7 +58,6 @@ set(client_common_include_dirs
 set(client_common_include_dirs
   ${client_common_include_dirs}
   ${PROJECT_SOURCE_DIR}/src/include/client
-  ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 add_subdirectory(common/)

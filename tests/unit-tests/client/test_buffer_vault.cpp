@@ -17,7 +17,6 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"

@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         animate_cursor(stream);
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }
