@@ -16,20 +16,15 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_COMMON_ORIENTATION_EVENT_H_
-#define MIR_COMMON_ORIENTATION_EVENT_H_
+#include "mir/log.h"
 
-#include "mir/events/event.h"
-
-struct MirOrientationEvent : MirEvent
-{
-    MirOrientationEvent();
-
-    int surface_id() const;
-    void set_surface_id(int id);
-
-    MirOrientation direction() const;
-    void set_direction(MirOrientation orientation);
-};
-
-#endif /* MIR_COMMON_ORIENTATION_EVENT_H_ */
+#define MIR_HANDLE_EVENT_EXCEPTION(expr) \
+    try                                  \
+    {                                    \
+        expr;                            \
+    }                                    \
+    catch(std::exception const& e)       \
+    {                                    \
+        mir::log_critical(e.what());     \
+        abort();                         \
+    }

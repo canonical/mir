@@ -31,7 +31,6 @@ struct MirInputEvent : MirEvent
 
 protected:
     MirInputEvent() = default;
-    explicit MirInputEvent(MirEventType type);
     MirInputEvent(MirInputEvent const& event) = default;
     MirInputEvent& operator=(MirInputEvent const& event) = default;
 };

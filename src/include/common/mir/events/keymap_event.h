@@ -20,7 +20,6 @@
 #define MIR_COMMON_KEYMAP_EVENT_H_
 
 #include <xkbcommon/xkbcommon.h>
-#include <limits>
 
 #include "mir/events/event.h"
 
@@ -35,26 +34,9 @@ struct MirKeymapEvent : MirEvent
     void set_device_id(MirInputDeviceId id);
 
     char const* buffer() const;
-    /* FIXME We takes over ownership of the buffer pointer, but we should not be.
-       Either user a unique_ptr here later (when we dont depend on is_trivially_copyable)
-       or copy it into a vector or do a deep copy.
-     */
     void set_buffer(char const* buffer);
-    void free_buffer();
 
     size_t size() const;
-    void set_size(size_t size);
-
-    /* FIXME Need to handle the special case of Keymap events due to char const* buffer */
-    static mir::EventUPtr deserialize(std::string const& bytes);
-    static std::string serialize(MirEvent const* event);
-    MirEvent* clone() const;
-
-private:
-    int surface_id_{-1};
-    MirInputDeviceId device_id_{std::numeric_limits<MirInputDeviceId>::max()};
-    char const* buffer_{nullptr};
-    size_t size_{0};
 };
 
 #endif /* MIR_COMMON_KEYMAP_EVENT_H_ */
