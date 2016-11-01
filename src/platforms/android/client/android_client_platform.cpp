@@ -125,3 +125,8 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 
     return mir_format;
 }
+
+void* mcla::AndroidClientPlatform::request_interface(char const*, int)
+{
+    return nullptr;
+}

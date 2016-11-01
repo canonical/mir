@@ -35,7 +35,7 @@ TEST_F(ClientExtensions, can_load_an_extension)
 
     auto ext = static_cast<MirExtensionFavoriteFlavor*>(ext_raw);
     ASSERT_THAT(ext->favorite_flavor, Ne(nullptr));
-    EXPECT_THAT(ext->favorite_flavor(), Eq("banana"));
+    EXPECT_THAT(ext->favorite_flavor(), StrEq("banana"));
 }
 
 TEST_F(ClientExtensions, can_load_an_extension_with_a_different_version)
@@ -45,8 +45,8 @@ TEST_F(ClientExtensions, can_load_an_extension_with_a_different_version)
     ASSERT_THAT(ext_raw, Ne(nullptr));
 
     auto ext = static_cast<MirExtensionFavoriteFlavor*>(ext_raw);
-    ASSERT_THAT(ext->favorite_flavor(), Ne(nullptr));
-    EXPECT_THAT(ext->favorite_flavor(), Eq("rhubarb"));
+    ASSERT_THAT(ext->favorite_flavor, Ne(nullptr));
+    EXPECT_THAT(ext->favorite_flavor(), StrEq("rhubarb"));
 }
 
 TEST_F(ClientExtensions, can_load_different_extensions)
@@ -57,16 +57,13 @@ TEST_F(ClientExtensions, can_load_different_extensions)
 
     auto ext = static_cast<MirExtensionAnimalNames*>(ext_raw);
     ASSERT_THAT(ext->animal_name, Ne(nullptr));
-    EXPECT_THAT(ext->animal_name(), Ne("mushroom"));
+    EXPECT_THAT(ext->animal_name(), Not(StrEq("mushroom")));
 }
 
 TEST_F(ClientExtensions, gives_nullptr_on_errors)
 {
     EXPECT_THAT(mir_connection_request_interface(
-        nullptr, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_ANIMAL_NAME_VERSION_9_1), Eq(nullptr));
-    EXPECT_THAT(mir_connection_request_interface(
         connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
-
     EXPECT_THAT(mir_connection_request_interface(
         connection, "pancake", MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
 }

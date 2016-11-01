@@ -14,14 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir_toolkit/mir_extension_core.h"
+#include "mir_connection.h"
+#include "mir/uncaught.h"
+#include "mir/require.h"
 
 void* mir_connection_request_interface(
-    MirConnection* /*connection*/,
-    char const* /*interface*/,
-    int /*version*/)
+    MirConnection* connection,
+    char const* interface,
+    int version)
+try
 {
+    mir::require(connection);
+    return connection->request_interface(interface, version);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
