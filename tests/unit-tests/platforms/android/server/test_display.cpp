@@ -1113,3 +1113,58 @@ TEST_F(Display, enabling_virtual_output_updates_display_configuration)
 
     EXPECT_TRUE(found_matching_size);
 }
+
+TEST_F(Display, does_not_invalidate_display_buffers_when_it_promised_not_to)
+{
+    using namespace testing;
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        null_anw_report,
+        mga::OverlayOptimization::disabled);
+
+    std::vector<mg::DisplayBuffer*> active_dbs;
+
+    display.for_each_display_sync_group(
+        [&active_dbs](auto& sync_group)
+        {
+            sync_group.for_each_display_buffer(
+                [&active_dbs](auto& db)
+                {
+                    active_dbs.push_back(&db);
+                });
+        });
+
+    auto virtual_output = display.create_virtual_output(1280, 720);
+
+    ASSERT_THAT(virtual_output, NotNull());
+    virtual_output->enable();
+
+    // We should be able to do everything except disable an external output.
+    auto config = display.configuration();
+    config->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.orientation =
+                output.orientation == mir_orientation_normal ? mir_orientation_inverted : mir_orientation_normal;
+            output.form_factor =
+                output.form_factor == mir_form_factor_projector ? mir_form_factor_tv : mir_form_factor_projector;
+            output.scale *= 2;
+
+            output.top_left = geom::Point{
+                output.top_left.x.as_int() + 10,
+                output.top_left.y.as_int() - 20
+            };
+        });
+
+    EXPECT_TRUE(display.apply_if_configuration_preserves_display_buffers(*config));
+
+    // Touch each of our saved display buffers, and let Valgrind tell us if we're accessing freed memory
+    for (auto const& db : active_dbs)
+    {
+        EXPECT_THAT(db->orientation(), AnyOf(Eq(mir_orientation_inverted), Eq(mir_orientation_normal)));
+    }
+}

@@ -114,6 +114,9 @@ private:
     OverlayOptimization const overlay_option;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
+    void configure_locked(
+        graphics::DisplayConfiguration const& new_configuration,
+        std::lock_guard<decltype(configuration_mutex)> const&);
 
     std::mutex mutable vsync_mutex;
     std::unordered_map<unsigned,AtomicFrame> last_frame;
