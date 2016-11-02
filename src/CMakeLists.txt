@@ -10,12 +10,14 @@ set(MIR_CLIENT_PLATFORM_PATH
   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/client-platform
 )
 
-# Add the platform implementations before exposing any private APIs
+# Add the core and platform implementations before exposing any private APIs
+add_subdirectory(core)
 add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+add_subdirectory(capnproto/)
 add_subdirectory(common/)
 add_subdirectory(protobuf/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})

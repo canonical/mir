@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_CONFIGURATION_OBSERVER_
 
 #include <exception>
+#include <memory>
 
 namespace mir
 {
@@ -37,7 +38,7 @@ public:
      *
      * \param [in] config   The initial configuration
      */
-    virtual void initial_configuration(DisplayConfiguration const& config) = 0;
+    virtual void initial_configuration(std::shared_ptr<DisplayConfiguration const> const& config) = 0;
 
     /**
      * Notification after every successful display configuration.
@@ -47,7 +48,7 @@ public:
      *
      * \param [in] config   The configuration that has just been applied.
      */
-    virtual void configuration_applied(DisplayConfiguration const& config) = 0;
+    virtual void configuration_applied(std::shared_ptr<DisplayConfiguration const> const& config) = 0;
 
     /**
      * Notification after every failed display configuration attempt.
@@ -61,7 +62,7 @@ public:
      * \param [in] error        The exception thrown by the graphics platform.
      */
     virtual void configuration_failed(
-        DisplayConfiguration const& attempted,
+        std::shared_ptr<DisplayConfiguration const> const& attempted,
         std::exception const& error) = 0;
 
     /**
@@ -82,7 +83,7 @@ public:
      * \param error                 The exception thrown by the graphics platform.
      */
     virtual void catastrophic_configuration_error(
-        DisplayConfiguration const& failed_fallback,
+        std::shared_ptr<DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) = 0;
 
 protected:

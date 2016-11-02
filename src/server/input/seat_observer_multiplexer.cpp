@@ -18,57 +18,63 @@
 
 #include "seat_observer_multiplexer.h"
 
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
+
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 void mi::SeatObserverMultiplexer::seat_add_device(uint64_t id)
 {
-    for_each_observer([id](auto& observer) { observer.seat_add_device(id); });
+    for_each_observer(&mi::SeatObserver::seat_add_device, id);
 }
 
 void mi::SeatObserverMultiplexer::seat_remove_device(uint64_t id)
 {
-    for_each_observer([id](auto& observer) { observer.seat_remove_device(id); });
+    for_each_observer(&mi::SeatObserver::seat_add_device, id);
 }
 
-void mi::SeatObserverMultiplexer::seat_dispatch_event(MirEvent const& event)
+void mi::SeatObserverMultiplexer::seat_dispatch_event(MirEvent const* event)
 {
-    for_each_observer([&event](auto& observer) { observer.seat_dispatch_event(event); });
+    for_each_observer(&mi::SeatObserver::seat_dispatch_event, event);
 }
 
 void mi::SeatObserverMultiplexer::seat_get_rectangle_for(
     uint64_t id,
     geom::Rectangle const& out_rect)
 {
-    for_each_observer([id, &out_rect](auto& observer) { observer.seat_get_rectangle_for(id, out_rect); });
+    for_each_observer(&mi::SeatObserver::seat_get_rectangle_for, id, out_rect);
 }
 
 void mi::SeatObserverMultiplexer::seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes)
 {
-    for_each_observer([id, &scan_codes](auto& observer) { observer.seat_set_key_state(id, scan_codes); });
+    for_each_observer(&mi::SeatObserver::seat_set_key_state, id, scan_codes);
 }
 
 void mi::SeatObserverMultiplexer::seat_set_pointer_state(uint64_t id, unsigned buttons)
 {
-    for_each_observer([id, buttons](auto& observer) { observer.seat_set_pointer_state(id, buttons); });
+    for_each_observer(&mi::SeatObserver::seat_set_pointer_state, id, buttons);
 }
 
 void mi::SeatObserverMultiplexer::seat_set_cursor_position(float cursor_x, float cursor_y)
 {
-    for_each_observer(
-        [cursor_x, cursor_y](auto& observer)
-        {
-            observer.seat_set_cursor_position(cursor_x, cursor_y);
-        });
+    for_each_observer(&mi::SeatObserver::seat_set_cursor_position, cursor_x, cursor_y);
 }
 
 void mi::SeatObserverMultiplexer::seat_set_confinement_region_called(
     geom::Rectangles const& regions)
 {
-    for_each_observer([&regions](auto& observer) { observer.seat_set_confinement_region_called(regions); });
+    for_each_observer(&mi::SeatObserver::seat_set_confinement_region_called, regions);
 }
 
 void mi::SeatObserverMultiplexer::seat_reset_confinement_regions()
 {
-    for_each_observer([](auto& observer) { observer.seat_reset_confinement_regions(); });
+    for_each_observer(&mi::SeatObserver::seat_reset_confinement_regions);
+}
+
+mi::SeatObserverMultiplexer::SeatObserverMultiplexer(
+    std::shared_ptr<mir::Executor> const& default_executor)
+    : ObserverMultiplexer(*default_executor),
+      executor{default_executor}
+{
 }

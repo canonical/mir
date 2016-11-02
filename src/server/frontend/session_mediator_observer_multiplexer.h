@@ -29,11 +29,11 @@ namespace frontend
 class SessionMediatorObserverMultiplexer : public ObserverMultiplexer<SessionMediatorObserver>
 {
 public:
+    SessionMediatorObserverMultiplexer(std::shared_ptr<Executor> const& default_executor);
+
     void session_connect_called(std::string const& app_name) override;
 
     void session_create_surface_called(std::string const& app_name) override;
-
-    void session_exchange_buffer_called(std::string const& app_name) override;
 
     void session_submit_buffer_called(std::string const& app_name) override;
 
@@ -66,6 +66,9 @@ public:
     void session_release_buffer_stream_called(std::string const& app_name) override;
 
     void session_error(std::string const& app_name, char const* method, std::string const& what) override;
+
+private:
+    std::shared_ptr<Executor> const executor;
 };
 }
 }

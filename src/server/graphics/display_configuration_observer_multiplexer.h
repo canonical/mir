@@ -30,15 +30,22 @@ namespace graphics
 class DisplayConfigurationObserverMultiplexer : public ObserverMultiplexer<DisplayConfigurationObserver>
 {
 public:
-    void initial_configuration(DisplayConfiguration const& config) override;
+    DisplayConfigurationObserverMultiplexer(std::shared_ptr<Executor> const& default_executor);
 
-    void configuration_applied(DisplayConfiguration const& config) override;
+    void initial_configuration(std::shared_ptr<DisplayConfiguration const> const& config) override;
 
-    void configuration_failed(DisplayConfiguration const& attempted, std::exception const& error) override;
+    void configuration_applied(std::shared_ptr<DisplayConfiguration const> const& config) override;
+
+    void configuration_failed(
+        std::shared_ptr<DisplayConfiguration const> const& attempted,
+        std::exception const& error) override;
 
     void catastrophic_configuration_error(
-        DisplayConfiguration const& failed_fallback,
+        std::shared_ptr<DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) override;
+
+private:
+    std::shared_ptr<Executor> const executor;
 };
 
 }

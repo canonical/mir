@@ -180,7 +180,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                 });
         });
 
-    observer->initial_configuration(*base_configuration_);
+    observer->initial_configuration(base_configuration_);
     update_input_rectangles(*base_configuration_);
 }
 
@@ -421,7 +421,7 @@ void ms::MediatingDisplayChanger::apply_config(
             display->configure(*conf);
         }
 
-        observer->configuration_applied(*conf);
+        observer->configuration_applied(conf);
         update_input_rectangles(*conf);
         base_configuration_applied = false;
     }
@@ -443,10 +443,10 @@ void ms::MediatingDisplayChanger::apply_config(
         }
         catch (std::exception const& e)
         {
-            observer->catastrophic_configuration_error(*existing_configuration, e);
+            observer->catastrophic_configuration_error(std::move(existing_configuration), e);
             throw;
         }
-        observer->configuration_failed(*conf, e);
+        observer->configuration_failed(conf, e);
         throw;
     }
 }

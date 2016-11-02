@@ -26,7 +26,6 @@
 #include "mir/input/seat_observer.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
-#include "mir/events/event_private.h"
 #include "mir/time/clock.h"
 
 #include "input_modifier_utils.h"
@@ -96,14 +95,13 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
 
         if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
         {
-            event.to_input()->to_motion()->set_x(0, cursor_x);
-            event.to_input()->to_motion()->set_y(0, cursor_y);
+            mev::set_cursor_position(event, cursor_x, cursor_y);
             mev::set_button_state(event, button_state());
         }
     }
 
     dispatcher->dispatch(event);
-    observer->seat_dispatch_event(event);
+    observer->seat_dispatch_event(&event);
 }
 
 bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)

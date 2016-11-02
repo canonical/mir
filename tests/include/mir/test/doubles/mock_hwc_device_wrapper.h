@@ -46,7 +46,7 @@ struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
     MOCK_CONST_METHOD1(display_on, void(graphics::android::DisplayName));
     MOCK_CONST_METHOD1(display_off, void(graphics::android::DisplayName));
     MOCK_METHOD4(subscribe_to_events, void(void const*,
-        std::function<void(graphics::android::DisplayName, std::chrono::nanoseconds)> const&,
+        std::function<void(graphics::android::DisplayName, mir::graphics::Frame::Timestamp)> const&,
         std::function<void(graphics::android::DisplayName, bool)> const&,
         std::function<void()> const&));
     MOCK_METHOD1(unsubscribe_from_events_, void(void const*));

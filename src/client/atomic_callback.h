@@ -44,20 +44,20 @@ public:
 
     void set_callback(std::function<void(Args...)> const& fn)
     {
-        std::lock_guard<std::mutex> lk(guard);
+        std::lock_guard<std::recursive_mutex> lk(guard);
 
         callback = fn;
     }
 
     void operator()(Args&&... args) const
     {
-        std::lock_guard<std::mutex> lk(guard);
+        std::lock_guard<std::recursive_mutex> lk(guard);
 
         callback(std::forward<Args>(args)...);
     }
 
 private:
-    std::mutex mutable guard;
+    std::recursive_mutex mutable guard;
     std::function<void(Args...)> callback;
 };
 }

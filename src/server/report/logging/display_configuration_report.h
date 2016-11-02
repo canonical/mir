@@ -37,14 +37,18 @@ public:
     DisplayConfigurationReport(std::shared_ptr<mir::logging::Logger> const& logger);
     ~DisplayConfigurationReport();
 
-    void configuration_applied(graphics::DisplayConfiguration const& config) override;
+    void configuration_applied(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
 
-    void configuration_failed(graphics::DisplayConfiguration const& attempted, std::exception const& error) override;
+    void configuration_failed(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& attempted,
+        std::exception const& error) override;
 
-    void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void initial_configuration(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& configuration) override;
 
     void catastrophic_configuration_error(
-        graphics::DisplayConfiguration const& failed_fallback,
+        std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) override;
 
 private:

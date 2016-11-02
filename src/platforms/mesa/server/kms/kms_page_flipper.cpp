@@ -25,18 +25,22 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <chrono>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
 namespace
 {
 
-void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
-                       unsigned int /*sec*/, unsigned int /*usec*/,
+void page_flip_handler(int /*fd*/, unsigned int seq,
+                       unsigned int sec, unsigned int usec,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id);
+    std::chrono::nanoseconds ns{sec*1000000000LL + usec*1000LL};
+    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id,
+                                              seq, ns);
 }
 
 }
@@ -49,6 +53,11 @@ mgm::KMSPageFlipper::KMSPageFlipper(
     pending_page_flips(),
     worker_tid()
 {
+    uint64_t mono = 0;
+    if (drmGetCap(drm_fd, DRM_CAP_TIMESTAMP_MONOTONIC, &mono) || !mono)
+        clock_id = CLOCK_REALTIME;
+    else
+        clock_id = CLOCK_MONOTONIC;
 }
 
 bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
@@ -72,7 +81,7 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
     return (ret == 0);
 }
 
-void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
+mg::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     static drmEventContext evctx =
     {
@@ -94,7 +103,7 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 
         /* If the page flip we are waiting for has arrived we are done. */
         if (page_flip_is_done(crtc_id))
-            return;
+            return completed_page_flips[crtc_id];
 
         /* ...otherwise we become the worker */
         worker_tid = std::this_thread::get_id();
@@ -144,6 +153,7 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
          */
         pf_cv.notify_all();
     }
+    return completed_page_flips[crtc_id];
 }
 
 std::thread::id mgm::KMSPageFlipper::debug_get_worker_tid()
@@ -159,12 +169,16 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }
 
-void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
+void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, int64_t msc,
+                                           std::chrono::nanoseconds ust)
 {
     auto pending = pending_page_flips.find(crtc_id);
     if (pending != pending_page_flips.end())
     {
-        report->report_vsync(pending->second.connector_id);
+        auto& frame = completed_page_flips[crtc_id];
+        frame.msc = msc;
+        frame.ust = {clock_id, ust};
+        report->report_vsync(pending->second.connector_id, frame);
         pending_page_flips.erase(pending);
     }
 }

@@ -89,7 +89,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     return std::make_shared<mgn::Platform>(
                         platform_library,
                         host_connection,
-                        the_display_report());
+                        the_display_report(),
+                        *the_options());
                 }
 
                 // fallback to standalone if host socket is unset
@@ -121,7 +122,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                               description->minor_version,
                               description->micro_version);
 
-                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report(), the_logger());
             }
             catch(...)
             {
@@ -257,14 +258,18 @@ std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>>
 mir::DefaultServerConfiguration::the_display_configuration_observer_registrar()
 {
     return display_configuration_observer_multiplexer(
-        [] { return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(); }
-    );
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
 }
 
 std::shared_ptr<mg::DisplayConfigurationObserver>
 mir::DefaultServerConfiguration::the_display_configuration_observer()
 {
     return display_configuration_observer_multiplexer(
-        [] { return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(); }
-    );
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
 }

@@ -23,7 +23,12 @@
 #include "mir/renderer/gl/render_target.h"
 #include "display.h"
 #include "host_surface.h"
+#include "passthrough_option.h"
+#include "host_chain.h"
+#include "mir_toolkit/client_types_nbs.h"
 
+#include <map>
+#include <glm/glm.hpp>
 #include <EGL/egl.h>
 
 namespace mir
@@ -34,7 +39,7 @@ namespace nested
 {
 class HostSurface;
 class HostStream;
-
+class Buffer;
 namespace detail
 {
 
@@ -46,7 +51,8 @@ public:
     DisplayBuffer(
         EGLDisplayHandle const& egl_display,
         DisplayConfigurationOutput best_output,
-        std::shared_ptr<HostConnection> const& host_connection);
+        std::shared_ptr<HostConnection> const& host_connection,
+        PassthroughOption option);
 
     ~DisplayBuffer() noexcept;
 
@@ -69,13 +75,29 @@ private:
     std::shared_ptr<HostStream> const host_stream;
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
+    std::unique_ptr<HostChain> host_chain;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
     EGLSurfaceHandle const egl_surface;
+    PassthroughOption const passthrough_option;
 
     static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
+
+    enum class BackingContent
+    {
+        stream,
+        chain
+    } content;
+    glm::mat4 const identity;
+
+    std::mutex mutex;
+    typedef std::tuple<MirBuffer*, MirPresentationChain*> SubmissionInfo;
+    std::map<SubmissionInfo, std::shared_ptr<graphics::Buffer>> submitted_buffers;
+    SubmissionInfo last_submitted { nullptr, nullptr };
+
+    void release_buffer(MirBuffer* b, MirPresentationChain* c);
 };
 }
 }

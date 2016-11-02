@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "display_server.h"
-#include "buffer_stream_tracker.h"
 #include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
@@ -35,6 +34,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 namespace mir
 {
@@ -64,7 +64,6 @@ class ApplicationNotRespondingDetector;
 /// processes and the core of the mir system.
 namespace frontend
 {
-class ClientBufferTracker;
 class Shell;
 class Session;
 class Surface;
@@ -197,10 +196,6 @@ public:
         mir::protobuf::Void const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void exchange_buffer(
-        mir::protobuf::BufferRequest const* request,
-        mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done) override;
     void submit_buffer(
         mir::protobuf::BufferRequest const* request,
         mir::protobuf::Void* response,
@@ -274,11 +269,12 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<input::InputDeviceHub> const hub;
 
-    BufferStreamTracker buffer_stream_tracker;
     ScreencastBufferTracker screencast_buffer_tracker;
 
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;
+
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> legacy_default_stream_map;
 };
 
 }

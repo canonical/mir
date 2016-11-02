@@ -383,9 +383,9 @@ std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
 std::shared_ptr<mi::SeatObserver> mir::DefaultServerConfiguration::the_seat_observer()
 {
     return seat_observer_multiplexer(
-        []()
+        [default_executor = the_main_loop()]()
         {
-            return std::make_shared<mi::SeatObserverMultiplexer>();
+            return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
 }
 
@@ -393,8 +393,8 @@ std::shared_ptr<mir::ObserverRegistrar<mi::SeatObserver>>
 mir::DefaultServerConfiguration::the_seat_observer_registrar()
 {
     return seat_observer_multiplexer(
-        []()
+        [default_executor = the_main_loop()]()
         {
-            return std::make_shared<mi::SeatObserverMultiplexer>();
+            return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
 }

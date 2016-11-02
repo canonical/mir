@@ -1,11 +1,9 @@
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
 add_subdirectory(fd)
-add_subdirectory(geometry)
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
@@ -14,12 +12,10 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
-add_subdirectory(fatal)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirevents>
   $<TARGET_OBJECTS:mirtime>
-  $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/output_type_names.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
@@ -39,7 +35,7 @@ set(
   PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 6)
+set(MIRCOMMON_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
@@ -47,8 +43,12 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
+  mircapnproto
+  mircore
   ${MIR_COMMON_REFERENCES}
 )
+
+add_dependencies(mircommon mircapnproto)
 
 set_target_properties(mircommon
 
@@ -61,6 +61,6 @@ set_target_properties(mircommon
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
   DESTINATION "include/mircommon"
 )

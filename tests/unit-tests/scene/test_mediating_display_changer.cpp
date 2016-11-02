@@ -170,11 +170,13 @@ struct MockServerActionQueue : mir::ServerActionQueue
 
 struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
-    void initial_configuration(mg::DisplayConfiguration const&) override {}
-    void configuration_applied(mg::DisplayConfiguration const&) override {}
-    void configuration_failed(mg::DisplayConfiguration const&, std::exception const&) override {}
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override {}
     void catastrophic_configuration_error(
-        mg::DisplayConfiguration const&,
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
         std::exception const&) override { }
 };
 

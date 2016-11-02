@@ -42,7 +42,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorObserver
 {
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
@@ -132,7 +131,7 @@ TEST_F(SessionMediatorReportTest, session_create_and_release_surface_called)
     testing::Mock::VerifyAndClearExpectations(report.get());
 }
 
-TEST_F(SessionMediatorReportTest, session_exchange_buffer_called)
+TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
 {
     EXPECT_CALL(*report, session_submit_buffer_called(_));
 

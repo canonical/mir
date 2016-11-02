@@ -164,9 +164,9 @@ std::shared_ptr<mf::SessionMediatorObserver>
 mir::DefaultServerConfiguration::the_session_mediator_observer()
 {
     return session_mediator_observer_multiplexer(
-        []()
+        [default_executor = the_main_loop()]()
         {
-            return std::make_shared<mf::SessionMediatorObserverMultiplexer>();
+            return std::make_shared<mf::SessionMediatorObserverMultiplexer>(default_executor);
         });
 }
 
@@ -174,8 +174,8 @@ std::shared_ptr<mir::ObserverRegistrar<mf::SessionMediatorObserver>>
 mir::DefaultServerConfiguration::the_session_mediator_observer_registrar()
 {
     return session_mediator_observer_multiplexer(
-        []()
+        [default_executor = the_main_loop()]()
         {
-            return std::make_shared<mf::SessionMediatorObserverMultiplexer>();
+            return std::make_shared<mf::SessionMediatorObserverMultiplexer>(default_executor);
         });
 }

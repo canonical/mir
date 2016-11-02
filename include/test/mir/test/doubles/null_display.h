@@ -82,6 +82,10 @@ class NullDisplay : public graphics::Display,
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};
     }
+    graphics::Frame last_frame_on(unsigned) const override
+    {
+        return {};
+    }
     NullDisplaySyncGroup group;
 };
 

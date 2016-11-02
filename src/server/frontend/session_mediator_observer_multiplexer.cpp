@@ -22,92 +22,71 @@ namespace mf = mir::frontend;
 
 void mf::SessionMediatorObserverMultiplexer::session_connect_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_connect_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_connect_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_create_surface_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_create_surface_called(app_name); });
-}
-
-void mf::SessionMediatorObserverMultiplexer::session_exchange_buffer_called(std::string const& app_name)
-{
-    for_each_observer([&app_name](auto& observer) { observer.session_exchange_buffer_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_create_surface_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_submit_buffer_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_submit_buffer_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_submit_buffer_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_allocate_buffers_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_allocate_buffers_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_allocate_buffers_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_release_buffers_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_release_buffers_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_release_buffers_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_release_surface_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_release_surface_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_release_surface_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_disconnect_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_disconnect_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_disconnect_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_configure_surface_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_configure_surface_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_configure_surface_called, app_name);
 }
 
 void
 mf::SessionMediatorObserverMultiplexer::session_configure_surface_cursor_called(std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_configure_surface_cursor_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_configure_surface_cursor_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_configure_display_called(std::string const& app_name)
 {
-    for_each_observer([&app_name](auto& observer) { observer.session_configure_display_called(app_name); });
+    for_each_observer(&mf::SessionMediatorObserver::session_configure_display_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_set_base_display_configuration_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_set_base_display_configuration_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_set_base_display_configuration_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_preview_base_display_configuration_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_preview_base_display_configuration_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_preview_base_display_configuration_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_confirm_base_display_configuration_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_confirm_base_display_configuration_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_confirm_base_display_configuration_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_start_prompt_session_called(
@@ -115,41 +94,28 @@ void mf::SessionMediatorObserverMultiplexer::session_start_prompt_session_called
     pid_t application_process)
 {
     for_each_observer(
-        [&app_name, application_process](auto& observer)
-        {
-            observer.session_start_prompt_session_called(app_name, application_process);
-        });
+        &mf::SessionMediatorObserver::session_start_prompt_session_called,
+        app_name,
+        application_process);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_stop_prompt_session_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_stop_prompt_session_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_stop_prompt_session_called, app_name);
 }
 
 void mf::SessionMediatorObserverMultiplexer::session_create_buffer_stream_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_create_buffer_stream_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_create_buffer_stream_called, app_name);
 }
 
 void
 mf::SessionMediatorObserverMultiplexer::session_release_buffer_stream_called(
     std::string const& app_name)
 {
-    for_each_observer(
-        [&app_name](auto& observer)
-        {
-            observer.session_release_buffer_stream_called(app_name);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_release_buffer_stream_called, app_name);
 }
 
 void mir::frontend::SessionMediatorObserverMultiplexer::session_error(
@@ -157,9 +123,12 @@ void mir::frontend::SessionMediatorObserverMultiplexer::session_error(
     char const* method,
     std::string const& what)
 {
-    for_each_observer(
-        [&app_name, method, &what](auto& observer)
-        {
-            observer.session_error(app_name, method, what);
-        });
+    for_each_observer(&mf::SessionMediatorObserver::session_error, app_name, method, what);
+}
+
+mir::frontend::SessionMediatorObserverMultiplexer::SessionMediatorObserverMultiplexer(
+    std::shared_ptr<mir::Executor> const& default_executor)
+    : ObserverMultiplexer(*default_executor),
+      executor{default_executor}
+{
 }

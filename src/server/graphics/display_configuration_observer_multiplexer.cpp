@@ -21,35 +21,34 @@
 namespace mg = mir::graphics;
 
 void mg::DisplayConfigurationObserverMultiplexer::initial_configuration(
-    mir::graphics::DisplayConfiguration const& config)
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
-    for_each_observer([&config](auto& observer) { observer.initial_configuration(config); });
+    for_each_observer(&mg::DisplayConfigurationObserver::initial_configuration, config);
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::configuration_applied(
-    mir::graphics::DisplayConfiguration const& config)
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
-    for_each_observer([&config](auto& observer) { observer.configuration_applied(config); });
+    for_each_observer(&mg::DisplayConfigurationObserver::configuration_applied, config);
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::configuration_failed(
-    mir::graphics::DisplayConfiguration const& attempted,
+    std::shared_ptr<mg::DisplayConfiguration const> const& attempted,
     std::exception const& error)
 {
-    for_each_observer(
-        [&attempted, &error](auto& observer)
-        {
-            observer.configuration_failed(attempted, error);
-        });
+    for_each_observer(&mg::DisplayConfigurationObserver::configuration_failed, attempted, error);
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::catastrophic_configuration_error(
-    mg::DisplayConfiguration const& failed_fallback,
+    std::shared_ptr<mg::DisplayConfiguration const> const& failed_fallback,
     std::exception const& error)
 {
-    for_each_observer(
-        [&failed_fallback, &error](auto& observer)
-        {
-            observer.catastrophic_configuration_error(failed_fallback, error);
-        });
+    for_each_observer(&mg::DisplayConfigurationObserver::catastrophic_configuration_error, failed_fallback, error);
+}
+
+mg::DisplayConfigurationObserverMultiplexer::DisplayConfigurationObserverMultiplexer(
+    std::shared_ptr<Executor> const& default_executor)
+    : ObserverMultiplexer(*default_executor),
+      executor{default_executor}
+{
 }

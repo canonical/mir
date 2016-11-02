@@ -31,11 +31,13 @@ namespace input
 class SeatObserverMultiplexer : public ObserverMultiplexer<SeatObserver>
 {
 public:
+    SeatObserverMultiplexer(std::shared_ptr<Executor> const& default_executor);
+
     void seat_add_device(uint64_t id) override;
 
     void seat_remove_device(uint64_t id) override;
 
-    void seat_dispatch_event(MirEvent const& event) override;
+    void seat_dispatch_event(MirEvent const* event) override;
 
     void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) override;
 
@@ -48,6 +50,9 @@ public:
     void seat_set_confinement_region_called(geometry::Rectangles const& regions) override;
 
     void seat_reset_confinement_regions() override;
+
+private:
+    std::shared_ptr<Executor> const executor;
 };
 
 }

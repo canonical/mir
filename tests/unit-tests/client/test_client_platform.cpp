@@ -163,21 +163,21 @@ INSTANTIATE_TEST_CASE_P(Dummy,
 
 TEST_P(ClientPlatformTest, platform_name)
 {
-    auto platform = create_client_platform(&context);
+    auto platform = create_client_platform(&context, nullptr);
 
     EXPECT_EQ(GetParam()->platform_type, platform->platform_type());
 }
 
 TEST_P(ClientPlatformTest, platform_creates)
 {
-    auto platform = create_client_platform(&context);
+    auto platform = create_client_platform(&context, nullptr);
     auto buffer_factory = platform->create_buffer_factory();
     EXPECT_NE(buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
 }
 
 TEST_P(ClientPlatformTest, platform_creates_native_window)
 {
-    auto platform = create_client_platform(&context);
+    auto platform = create_client_platform(&context, nullptr);
     auto mock_client_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
     EXPECT_THAT(native_window.get(), testing::Ne(nullptr));
@@ -185,7 +185,7 @@ TEST_P(ClientPlatformTest, platform_creates_native_window)
 
 TEST_P(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    auto platform = create_client_platform(&context);
+    auto platform = create_client_platform(&context, nullptr);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());
 }

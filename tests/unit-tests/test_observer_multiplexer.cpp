@@ -25,6 +25,7 @@
 #include <array>
 #include <thread>
 #include <atomic>
+#include <queue>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,21 +38,103 @@ class TestObserver
 {
 public:
     virtual ~TestObserver() = default;
+
     virtual void observation_made(std::string const& arg) = 0;
+    virtual void multi_argument_observation(std::string const& arg, int another_one, float third) = 0;
 };
 
 class MockObserver : public TestObserver
 {
 public:
     MOCK_METHOD1(observation_made, void(std::string const&));
+    MOCK_METHOD3(multi_argument_observation, void(std::string const&, int, float));
+};
+
+class ThreadedExecutor : public mir::Executor
+{
+public:
+    ThreadedExecutor()
+    {
+        worker = std::thread{
+            [this]()
+            {
+                while (running)
+                {
+                    std::function<void()> work{nullptr};
+                    {
+                        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+                        work_changed.wait(lock, [this]() { return (work_pending.size() > 0) || !running; });
+
+                        if (work_pending.size() > 0)
+                        {
+                            work = work_pending.front();
+                        }
+                    }
+
+                    if (work)
+                    {
+                        work();
+
+                        {
+                            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+                            work_pending.pop();
+                            work_changed.notify_all();
+                        }
+                        work_changed.notify_all();
+                    }
+                }
+            }
+        };
+    }
+
+    void drain_work()
+    {
+        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+        work_changed.wait(lock, [this]() { return work_pending.size() == 0; });
+    }
+
+    ~ThreadedExecutor()
+    {
+        drain_work();
+
+        running = false;
+        work_changed.notify_all();
+
+        worker.join();
+    }
+
+    void spawn(std::function<void()>&& work) override
+    {
+        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        work_pending.emplace(std::move(work));
+        work_changed.notify_all();
+    }
+
+private:
+    std::thread worker;
+    std::atomic<bool> running{true};
+
+    std::mutex work_mutex;
+    std::condition_variable work_changed;
+    std::queue<std::function<void()>> work_pending;
 };
 
 class TestObserverMultiplexer : public mir::ObserverMultiplexer<TestObserver>
 {
 public:
+    TestObserverMultiplexer(mir::Executor& executor)
+        : ObserverMultiplexer(executor)
+    {
+    }
+
     void observation_made(std::string const& arg) override
     {
-        for_each_observer([&arg](auto& observer) { observer.observation_made(arg); });
+        for_each_observer(&TestObserver::observation_made, arg);
+    }
+
+    void multi_argument_observation(std::string const& arg, int another_one, float third) override
+    {
+        for_each_observer(&TestObserver::multi_argument_observation, arg, another_one, third);
     }
 };
 }
@@ -59,7 +142,10 @@ public:
 TEST(ObserverMultiplexer, each_added_observer_recieves_observations)
 {
     using namespace testing;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
     std::string const value = "Hello, my name is Inigo Montoya.";
+
 
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
@@ -67,13 +153,14 @@ TEST(ObserverMultiplexer, each_added_observer_recieves_observations)
     EXPECT_CALL(*observer_one, observation_made(StrEq(value))).Times(2);
     EXPECT_CALL(*observer_two, observation_made(StrEq(value))).Times(1);
 
-    TestObserverMultiplexer multiplexer;
 
     multiplexer.register_interest(observer_one);
     multiplexer.observation_made(value);
 
     multiplexer.register_interest(observer_two);
     multiplexer.observation_made(value);
+
+    executor.drain_work();
 }
 
 TEST(ObserverMultiplexer, removed_observers_do_not_recieve_observations)
@@ -81,13 +168,14 @@ TEST(ObserverMultiplexer, removed_observers_do_not_recieve_observations)
     using namespace testing;
     std::string const value = "The girl of my dreams is giving me nightmares";
 
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value))).Times(2);
     EXPECT_CALL(*observer_two, observation_made(StrEq(value))).Times(1);
-
-    TestObserverMultiplexer multiplexer;
 
     multiplexer.register_interest(observer_one);
     multiplexer.register_interest(observer_two);
@@ -95,6 +183,8 @@ TEST(ObserverMultiplexer, removed_observers_do_not_recieve_observations)
 
     multiplexer.unregister_interest(*observer_two);
     multiplexer.observation_made(value);
+
+    executor.drain_work();
 }
 
 TEST(ObserverMultiplexer, can_remove_observer_from_callback)
@@ -105,13 +195,15 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback)
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
         .WillOnce(Invoke(
-            [observer_one = observer_one.get(), &multiplexer](auto)
+            [observer_one = observer_one.get(), &multiplexer, &value](auto)
             {
                 multiplexer.unregister_interest(*observer_one);
+                multiplexer.observation_made(value);
             }));
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(2);
@@ -120,7 +212,8 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback)
     multiplexer.register_interest(observer_two);
 
     multiplexer.observation_made(value);
-    multiplexer.observation_made(value);
+
+    executor.drain_work();
 }
 
 TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
@@ -149,7 +242,8 @@ TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
                     }
                 }));
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
     multiplexer.register_interest(observer);
 
     mt::Barrier threads_ready(values.size());
@@ -168,6 +262,7 @@ TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
     }
     observations_made.ready();
 
+    executor.drain_work();
 
     EXPECT_THAT(
         std::vector<bool>(values_seen.begin(), values_seen.end()),
@@ -178,10 +273,12 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
 {
     using namespace testing;
 
-    TestObserverMultiplexer multiplexer;
-
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
     ON_CALL(*observer_one, observation_made(_))
         .WillByDefault(
             Invoke(
@@ -229,13 +326,16 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
             });
     }
     threads_done.ready();
+
+    executor.drain_work();
 }
 
 TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
 {
     using namespace testing;
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
 
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
@@ -270,9 +370,13 @@ TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
     }
     threads_done.ready();
 
+    executor.drain_work();
+
     auto precount = call_count.load();
 
     multiplexer.observation_made("Banana");
+
+    executor.drain_work();
 
     EXPECT_THAT(call_count, Eq(precount + 1));
 }
@@ -293,7 +397,8 @@ TEST(ObserverMultiplexer, registering_is_threadsafe)
     std::array<mt::AutoJoinThread, observer_notified.size()> threads;
     mt::Barrier threads_done(threads.size() + 1);
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
@@ -307,6 +412,8 @@ TEST(ObserverMultiplexer, registering_is_threadsafe)
     threads_done.ready();
 
     multiplexer.observation_made("Foo");
+
+    executor.drain_work();
 
     EXPECT_THAT(
         std::vector<bool>(observer_notified.begin(), observer_notified.end()),
@@ -334,7 +441,8 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
     std::array<mt::AutoJoinThread, observer_notified.size()> threads;
     mt::Barrier threads_done(threads.size() + 1);
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
 
     for (auto observer : observers)
     {
@@ -354,6 +462,8 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
 
     multiplexer.observation_made("Foo");
 
+    executor.drain_work();
+
     EXPECT_THAT(
         std::vector<bool>(observer_notified.begin(), observer_notified.end()),
         ContainerEq(std::vector<bool>(observer_notified.size(), false)));
@@ -365,9 +475,11 @@ TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
     constexpr char const* first_observation = "Elementary, my dear Watson";
     constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
 
-    TestObserverMultiplexer multiplexer;
-
     auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
         .WillOnce(InvokeWithoutArgs([&multiplexer]() { multiplexer.observation_made(second_observation); }));
     EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
@@ -375,6 +487,8 @@ TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
     multiplexer.register_interest(observer);
 
     multiplexer.observation_made(first_observation);
+
+    executor.drain_work();
 }
 
 TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
@@ -383,7 +497,8 @@ TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
     constexpr char const* first_observation = "Rhythm & Blues Alibi";
     constexpr char const* second_observation = "Blue Moon Rising";
 
-    TestObserverMultiplexer multiplexer;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
 
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
@@ -403,4 +518,91 @@ TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
     multiplexer.register_interest(observer_one);
 
     multiplexer.observation_made(first_observation);
+
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, observations_can_be_delegated_to_specified_executor)
+{
+    using namespace testing;
+
+    class CountingExecutor : public mir::Executor
+    {
+    public:
+        void spawn(std::function<void()>&& work) override
+        {
+            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+            ++spawn_count;
+            work_queue.emplace(std::move(work));
+        }
+
+        void do_work()
+        {
+            std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+            while (!work_queue.empty())
+            {
+                auto work = work_queue.front();
+                work_queue.pop();
+                lock.unlock();
+
+                work();
+
+                lock.lock();
+            }
+        }
+
+        int work_spawned()
+        {
+            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+            return spawn_count;
+        }
+    private:
+        int spawn_count{0};
+
+        std::mutex work_mutex;
+        std::queue<std::function<void()>> work_queue;
+    } counting_executor;
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    EXPECT_CALL(*observer_one, observation_made(_));
+    EXPECT_CALL(*observer_two, observation_made(_));
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_interest(observer_two, counting_executor);
+
+    EXPECT_THAT(counting_executor.work_spawned(), Eq(0));
+
+    multiplexer.observation_made("Hello!");
+
+    EXPECT_THAT(counting_executor.work_spawned(), Eq(1));
+
+    counting_executor.do_work();
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, multi_argument_observations_work)
+{
+    using namespace testing;
+
+    std::string const a{"The Owls Go"};
+    constexpr int b{55};
+    constexpr float c{3.1415f};
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    multiplexer.register_interest(observer);
+
+    EXPECT_CALL(*observer, multi_argument_observation(a, b, c));
+
+    multiplexer.multi_argument_observation(a, b, c);
+
+    executor.drain_work();
 }

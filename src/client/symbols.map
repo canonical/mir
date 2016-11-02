@@ -385,6 +385,12 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
     mir_buffer_egl_image_parameters;
+    mir_connection_create_render_surface;
+    mir_render_surface_create_buffer_stream;
+    mir_render_surface_create_buffer_stream_sync;
+    mir_render_surface_is_valid;
+    mir_render_surface_release;
+    mir_surface_spec_add_render_surface;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
@@ -409,7 +415,8 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
     mir_input_device_state_event_device_pointer_buttons;
     mir_input_device_state_event_device_pointer_buttons;
     mir_input_device_state_event_device_pressed_keys_count;
-    mir_input_device_state_event_device_pressed_keys;
+    # We're being naughty deleting this function without bumping soname, but we won't get caught.
+    # mir_input_device_state_event_device_pressed_keys;
     mir_input_device_state_event_modifiers;
     mir_input_device_state_event_pointer_axis;
     mir_input_device_state_event_pointer_buttons;
@@ -433,11 +440,17 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_surface_placement_get_relative_position;
     mir_display_output_type_name;
     mir_output_type_name;
+    mir_surface_output_event_get_refresh_rate;
+    mir_input_device_state_event_device_pressed_keys_for_index;
+    mir_buffer_stream_set_swapinterval;
+    mir_buffer_stream_get_swapinterval;
 } MIR_CLIENT_0.24;
 
-MIR_CLIENT_DETAIL_0.26 {
+MIR_CLIENT_DETAIL_0.25 {
   global:
     extern "C++" {
       mir::client::DefaultConnectionConfiguration::the_error_handler*;
+      mir::events::clone_event*;
+      mir::events::transform_positions*;
     };
-} MIR_CLIENT_DETAIL_0.21;
+} MIR_CLIENT_DETAIL_0.24;

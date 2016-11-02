@@ -20,11 +20,9 @@
 #define MIR_CLIENT_SCREENCAST_STREAM_H
 
 #include "mir_wait_handle.h"
-#include "client_buffer_depository.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
-#include "client_buffer_depository.h"
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
@@ -99,6 +97,7 @@ public:
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+    MirRenderSurface* render_surface() const override;
 
 private:
     void process_buffer(protobuf::Buffer const& buffer);
@@ -126,7 +125,9 @@ private:
 
     geometry::Size buffer_size;
     std::string error_message;
-    ClientBufferDepository buffer_depository;
+
+    std::shared_ptr<ClientBuffer> current_buffer;
+    int32_t current_buffer_id = -1;
 };
 
 }

@@ -151,25 +151,23 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
 
     observer_loop.trigger_server_actions();
 
-    auto touch_event_1 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_1 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_2 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f,
-                       15.0f, 5.0f, 4.0f);
-    builder->add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_2 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_3 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
-    builder->add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f,
-                       15.0f, 5.0f, 4.0f);
+    auto touch_event_3 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_4 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_4 = builder->touch_event(
+        arbitrary_timestamp,
+        {{1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
 
     using Spot = mi::TouchVisualizer::Spot;

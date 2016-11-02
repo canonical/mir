@@ -24,6 +24,7 @@
 #include "shm_buffer.h"
 #include "display_helpers.h"
 #include "software_buffer.h"
+#include "gbm_format_conversions.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"

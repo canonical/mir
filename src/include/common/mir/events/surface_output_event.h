@@ -20,7 +20,6 @@
 #define MIR_COMMON_SURFACE_OUTPUT_EVENT_H_
 
 #include <cstdint>
-#include <limits>
 
 #include "mir/events/event.h"
 
@@ -37,18 +36,14 @@ struct MirSurfaceOutputEvent : MirEvent
     float scale() const;
     void set_scale(float scale);
 
+    double refresh_rate() const;
+    void set_refresh_rate(double);
+
     MirFormFactor form_factor() const;
     void set_form_factor(MirFormFactor factor);
 
     uint32_t output_id() const;
     void set_output_id(uint32_t id);
-
-private:
-    int surface_id_{-1};
-    int dpi_{0};
-    float scale_{0.0f};
-    MirFormFactor form_factor_;
-    uint32_t output_id_{std::numeric_limits<uint32_t>::max()};
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */

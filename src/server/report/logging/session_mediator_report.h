@@ -45,8 +45,6 @@ public:
 
     virtual void session_create_surface_called(std::string const& app_name) override;
 
-    virtual void session_exchange_buffer_called(std::string const& app_name) override;
-
     virtual void session_submit_buffer_called(std::string const& app_name) override;
 
     virtual void session_allocate_buffers_called(std::string const& app_name) override;
