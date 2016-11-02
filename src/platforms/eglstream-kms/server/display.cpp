@@ -368,7 +368,7 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
 }
 
 bool mge::Display::apply_if_configuration_preserves_display_buffers(
-    mg::DisplayConfiguration const& /*conf*/) const
+    mg::DisplayConfiguration const& /*conf*/)
 {
     return false;
 }
