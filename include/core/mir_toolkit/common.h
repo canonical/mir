@@ -123,8 +123,9 @@ typedef enum MirOutputType
     mir_output_type_hdmib       = 12, /* DRM_MODE_CONNECTOR_HDMIB       */
     mir_output_type_tv          = 13, /* DRM_MODE_CONNECTOR_TV          */
     mir_output_type_edp         = 14, /* DRM_MODE_CONNECTOR_eDP         */
-    mir_output_type_virtual     = 15  /* DRM_MODE_CONNECTOR_VIRTUAL     */
-/*  TODO                        = 16     DRM_MODE_CONNECTOR_DSI         */
+    mir_output_type_virtual     = 15, /* DRM_MODE_CONNECTOR_VIRTUAL     */
+    mir_output_type_dsi         = 16, /* DRM_MODE_CONNECTOR_DSI         */
+    mir_output_type_dpi         = 17, /* DRM_MODE_CONNECTOR_DPI         */
 } MirOutputType;
 
 typedef enum MirPromptSessionState
