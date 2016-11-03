@@ -17,6 +17,7 @@
  */
 
 #include "diamond.h"
+#include "mir_egl_platform_shim.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -30,12 +31,12 @@ GLfloat const vertices[] =
     -1.0f, 0.0f,
 };
 
-GLfloat const colors[] =
+GLfloat const texcoords[] =
 {
-    1.0f, 0.2f, 0.2f, 1.0f,
-    0.2f, 1.0f, 0.2f, 1.0f,
-    0.2f, 0.2f, 1.0f, 1.0f,
-    0.2f, 0.2f, 0.2f, 1.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    1.0f, 0.0f,
 };
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -73,24 +74,26 @@ void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, info->num_vertices);
 }
 
-Diamond setup_diamond()
+Diamond setup_diamond(EGLDisplay disp, EGLContext context, MirBuffer* buffer)
 {
+    (void)context;
     char const vertex_shader_src[] =
         "attribute vec2 pos;                                \n"
-        "attribute vec4 color;                              \n"
-        "varying   vec4 dest_color;                         \n"
+        "attribute vec2 texcoord;                           \n"
+        "varying vec2 v_texcoord;                           \n"
         "void main()                                        \n"
         "{                                                  \n"
-        "    dest_color = color;                            \n"
         "    gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);    \n"
+        "    v_texcoord = texcoord;                         \n"
         "}                                                  \n";
     char const fragment_shader_src[] =
-        "precision mediump float;             \n"
-        "varying   vec4 dest_color;           \n"
-        "void main()                          \n"
-        "{                                    \n"
-        "    gl_FragColor = dest_color;       \n"
-        "}                                    \n";
+        "precision mediump float;                       \n"
+        "varying vec2 v_texcoord;                       \n"
+        "uniform sampler2D tex;                         \n"
+        "void main()                                    \n"
+        "{                                              \n"
+        "   gl_FragColor = texture2D(tex, v_texcoord);  \n"
+        "}                                              \n";
 
     GLint linked = 0;
     Diamond info;
@@ -115,19 +118,30 @@ Diamond setup_diamond()
 
     glUseProgram(info.program);
     info.pos = glGetAttribLocation(info.program, "pos");
-    info.color = glGetAttribLocation(info.program, "color");
+    info.texuniform = glGetUniformLocation(info.program, "tex");
+    info.texcoord = glGetAttribLocation(info.program, "texcoord");
     info.num_vertices = num_vertices;
+    glUniform1i(info.pos, 0);
     glVertexAttribPointer(info.pos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-    glVertexAttribPointer(info.color, 4, GL_FLOAT, GL_FALSE, 0, colors);
+    glVertexAttribPointer(info.texcoord, 2, GL_FLOAT, GL_FALSE, 0, texcoords);
+
+    glActiveTexture(GL_TEXTURE0);
+
+    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    info.img = future_driver_eglCreateImageKHR(
+        disp, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+    egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, info.img);
+
     glEnableVertexAttribArray(info.pos);
-    glEnableVertexAttribArray(info.color);
+    glEnableVertexAttribArray(info.texcoord);
     return info;
 }
 
-void destroy_diamond(Diamond* info)
+void destroy_diamond(Diamond* info, EGLDisplay disp)
 {
+    future_driver_eglDestroyImageKHR(disp, info->img);
     glDisableVertexAttribArray(info->pos);
-    glDisableVertexAttribArray(info->color);
+    glDisableVertexAttribArray(info->texcoord);
     glDeleteShader(info->vertex_shader);
     glDeleteShader(info->fragment_shader);
     glDeleteProgram(info->program);

@@ -101,3 +101,21 @@ EGLBoolean future_driver_eglTerminate(EGLDisplay display)
     }
     return eglTerminate(display);
 }
+
+EGLImageKHR future_driver_eglCreateImageKHR(
+    EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+{
+    (void) ctx;
+    if (target != EGL_NATIVE_PIXMAP_KHR)
+        return EGL_NO_IMAGE_KHR;
+
+    PFNEGLCREATEIMAGEKHRPROC c = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
+    auto anw = to_anw(buffer);
+    return c(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, anw, attrib_list);
+}
+
+EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
+{
+    PFNEGLDESTROYIMAGEKHRPROC d = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
+    return d(dpy, img);
+}

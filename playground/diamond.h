@@ -20,6 +20,8 @@
 #define PLAYGROUND_DIAMOND_H_
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include "mir_toolkit/mir_buffer.h"
 
 typedef struct
 {
@@ -27,14 +29,16 @@ typedef struct
     GLuint fragment_shader;
     GLuint program;
     GLuint pos;
-    GLuint color;
+    GLuint texuniform;
+    GLuint texcoord;
     GLfloat const* vertices;
     GLfloat const* colors;
+    EGLImageKHR img;
     int num_vertices;
 } Diamond;
 
-Diamond setup_diamond();
-void destroy_diamond(Diamond* info);
+Diamond setup_diamond(EGLDisplay disp, EGLContext context, MirBuffer* texture);
+void destroy_diamond(Diamond* info, EGLDisplay disp);
 void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface);
 
 #endif /* PLAYGROUND_DIAMOND_H_ */

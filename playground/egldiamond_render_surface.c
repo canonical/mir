@@ -20,6 +20,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir_egl_platform_shim.h"
 #include "diamond.h"
 
@@ -31,6 +32,7 @@
 #include <pthread.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
+#include <pthread.h>
 
 static volatile sig_atomic_t running = 0;
 
@@ -65,6 +67,36 @@ void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
     }
 }
 
+typedef struct
+{
+    pthread_mutex_t* mut;
+    pthread_cond_t* cond;
+    MirBuffer** buffer;
+} Wait;
+
+void wait_buffer(MirBuffer* b, void* context)
+{
+    Wait* w = (Wait*) context;
+    pthread_mutex_lock(w->mut);
+    *w->buffer = b;
+    pthread_cond_broadcast(w->cond);
+    pthread_mutex_unlock(w->mut);
+}
+
+void fill_buffer(MirBuffer* buffer)
+{
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    unsigned int *data = (unsigned int*) region.vaddr;
+    printf("MK %i %i\n", region.width, region.height);
+    for (int i = 0; i < region.width; i++)
+    {
+        for (int j = 0; j < region.height; j++)
+        {
+            data[ (i * (region.stride/4)) + j ] = 0xFF00FFFF;
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc;
@@ -94,11 +126,33 @@ int main(int argc, char *argv[])
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
+    Wait w; 
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+    MirBuffer* buffer = NULL;
+    w.mut = &mutex;
+    w.cond = &cond;
+    w.buffer = &buffer;
+
+    //FIXME: would be good to have some convenience functions 
+    mir_connection_allocate_buffer(
+        connection, 50, 75, mir_pixel_format_abgr_8888, mir_buffer_usage_software, wait_buffer, &w);
+
+    pthread_mutex_lock(&mutex);
+    while (buffer == NULL)
+        pthread_cond_wait(&cond, &mutex);
+    pthread_mutex_unlock(&mutex);
+
+    printf("GOT A BUFFER %X\n", (int)(long)buffer);
+    fill_buffer(buffer);
+
     egldisplay = future_driver_eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
-    ok = eglInitialize(egldisplay, NULL, NULL);
+    int maj =0; int min = 0;
+    ok = eglInitialize(egldisplay, &maj, &min);
+    printf("MAJ MIN %i %i\n", maj, min);
     CHECK(ok, "Can't eglInitialize");
 
     const EGLint attribs[] =
@@ -152,7 +206,7 @@ int main(int argc, char *argv[])
     CHECK(ok, "Can't eglMakeCurrent");
 
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-    Diamond diamond = setup_diamond(width, height);
+    Diamond diamond = setup_diamond(egldisplay, eglctx, buffer);
 
     running = 1;
     while (running)
@@ -161,7 +215,7 @@ int main(int argc, char *argv[])
         future_driver_eglSwapBuffers(egldisplay, eglsurface);
     }
 
-    destroy_diamond(&diamond);
+    destroy_diamond(&diamond, egldisplay);
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     future_driver_eglTerminate(egldisplay);
