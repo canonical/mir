@@ -371,7 +371,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_presentation_chain_submit_buffer(chain, context.buffer());
 
     spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_buffer_stream(spec, 0, 0, stream);
+    mir_surface_spec_add_buffer_stream(spec, 0, 0, size.width.as_int(), size.height.as_int(), stream);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
     mir_presentation_chain_release(chain);

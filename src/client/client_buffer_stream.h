@@ -90,6 +90,7 @@ public:
     
     virtual bool valid() const = 0;
     virtual void set_size(geometry::Size) = 0;
+    virtual geometry::Size size() const = 0;
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;
     virtual MirConnection* connection() const = 0;

@@ -264,7 +264,7 @@ TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
     FakeKeyboard keyboard;
     auto event = keyboard.press();
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(ByRef(*event)))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
 
     dispatcher.start();
 

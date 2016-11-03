@@ -1,7 +1,6 @@
 set(
   FRONTEND_SOURCES
 
-  client_buffer_tracker.cpp
   connection_context.cpp
   no_prompt_shell.cpp
   session_mediator.cpp
@@ -15,7 +14,6 @@ set(
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
-  buffer_stream_tracker.cpp
   authorizing_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
