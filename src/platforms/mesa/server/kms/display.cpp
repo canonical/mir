@@ -417,8 +417,14 @@ std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
 }
 
 bool mgm::Display::apply_if_configuration_preserves_display_buffers(
-    mg::DisplayConfiguration const& /*conf*/)
+    mg::DisplayConfiguration const& conf)
 {
+    auto const& new_kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
+    if (compatible(current_display_configuration, new_kms_conf))
+    {
+        configure(conf);
+        return true;
+    }
     return false;
 }
 
