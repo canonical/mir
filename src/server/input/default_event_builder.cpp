@@ -59,11 +59,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
-mir::EventUPtr mi::DefaultEventBuilder::configuration_event(Timestamp timestamp, MirInputConfigurationAction action)
-{
-    return me::make_event(action, device_id, timestamp);
-}
-
 mir::EventUPtr mi::DefaultEventBuilder::device_state_event(float cursor_x, float cursor_y)
 {
     seat->set_cursor_position(cursor_x, cursor_y);
