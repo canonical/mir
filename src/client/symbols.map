@@ -446,6 +446,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_input_device_state_event_device_pressed_keys_for_index;
     mir_buffer_stream_set_swapinterval;
     mir_buffer_stream_get_swapinterval;
+    mir_connection_request_interface;
     mir_buffer_stream_set_size;
     mir_buffer_stream_get_size;
 } MIR_CLIENT_0.24;
