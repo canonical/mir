@@ -21,7 +21,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 
 class MirPresentationChain
 {

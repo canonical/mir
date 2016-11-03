@@ -19,6 +19,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/android_egl.h"
 
 namespace mir
 {
@@ -28,6 +29,14 @@ namespace client
 
 namespace android
 {
+
+class AndroidClientPlatform;
+struct MirEGLExtension : MirExtensionAndroidEGL
+{
+    MirEGLExtension(AndroidClientPlatform*);
+private:
+    AndroidClientPlatform* const platform;
+};
 
 class AndroidClientPlatform : public ClientPlatform
 {
@@ -45,9 +54,13 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
 
+    void* egl_native_display(MirConnection*) const;
 private:
     ClientContext* const context;
     std::shared_ptr<logging::Logger> const logger;
+
+    std::shared_ptr<EGLNativeDisplayType> const native_display;
+    MirEGLExtension extension;
 };
 
 }
