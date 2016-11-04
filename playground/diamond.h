@@ -37,12 +37,10 @@ typedef struct
     GLfloat const* vertices;
     GLfloat const* colors;
     int num_vertices;
-
-    EGLImageKHR img;
 } Diamond;
 
-Diamond setup_diamond(EGLDisplay disp, MirBuffer* texture);
-void destroy_diamond(Diamond* info, EGLDisplay disp);
-void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface, MirBuffer* buffer);
+Diamond setup_diamond(EGLImageKHR img);
+void destroy_diamond(Diamond* info);
+void render_diamond(Diamond* info, int width, int height);
 
 #endif /* PLAYGROUND_DIAMOND_H_ */

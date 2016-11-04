@@ -61,24 +61,16 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface, MirBuffer* buffer)
+void render_diamond(Diamond* info, int width, int height)
 {
-    (void)buffer;
-    EGLint width = -1;
-    EGLint height = -1;
     glClear(GL_COLOR_BUFFER_BIT);
-
-
-    if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
-        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
-    {
-        glViewport(0, 0, width, height);
-    }
+    glViewport(0, 0, width, height);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, info->num_vertices);
 }
 
-Diamond setup_diamond(EGLDisplay disp, MirBuffer* buffer)
+Diamond setup_diamond(EGLImageKHR img)
 {
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     char const vertex_shader_src[] =
         "attribute vec2 pos;                                \n"
         "attribute vec2 texcoord;                           \n"
@@ -140,25 +132,15 @@ Diamond setup_diamond(EGLDisplay disp, MirBuffer* buffer)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-    info.img = future_driver_eglCreateImageKHR(
-        disp, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
-
-    if (info.img == EGL_NO_IMAGE_KHR)
-    {
-        printf("Could not create EGLImage\n");
-        assert(-1);
-    }
-
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEglImageTargetTexture2DOES = 
         (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-    glEglImageTargetTexture2DOES(GL_TEXTURE_2D, info.img);
+    glEglImageTargetTexture2DOES(GL_TEXTURE_2D, img);
     return info;
 }
 
-void destroy_diamond(Diamond* info, EGLDisplay disp)
+void destroy_diamond(Diamond* info)
 {
-    future_driver_eglDestroyImageKHR(disp, info->img);
+    glDeleteTextures(1, &info->texid);
     glDisableVertexAttribArray(info->pos);
     glDisableVertexAttribArray(info->texcoord);
     glDeleteShader(info->vertex_shader);

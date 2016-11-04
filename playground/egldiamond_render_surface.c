@@ -206,22 +206,28 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
-    printf("EXTENSION %s\n", eglQueryString(egldisplay, EGL_EXTENSIONS));
+    //should check extensions
+    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    EGLImageKHR image = future_driver_eglCreateImageKHR(
+        egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+    CHECK(image, "Could not create EGLImage\n");
 
-    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-    Diamond diamond = setup_diamond(egldisplay, buffer);
+    Diamond diamond = setup_diamond(image);
 
+    EGLint viewport_width = -1;
+    EGLint viewport_height = -1;
     running = 1;
     while (running)
     {
-        render_diamond(&diamond, egldisplay, eglsurface, buffer);
+        eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width);
+        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height);
+        render_diamond(&diamond, viewport_width, viewport_height);
         future_driver_eglSwapBuffers(egldisplay, eglsurface);
-    sleep(3);
     }
 
-    destroy_diamond(&diamond, egldisplay);
-
+    destroy_diamond(&diamond);
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    future_driver_eglDestroyImageKHR(egldisplay, image);
     future_driver_eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
