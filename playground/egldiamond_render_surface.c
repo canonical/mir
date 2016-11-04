@@ -72,11 +72,11 @@ typedef struct
     pthread_mutex_t* mut;
     pthread_cond_t* cond;
     MirBuffer** buffer;
-} Wait;
+} BufferWait;
 
 void wait_buffer(MirBuffer* b, void* context)
 {
-    Wait* w = (Wait*) context;
+    BufferWait* w = (BufferWait*) context;
     pthread_mutex_lock(w->mut);
     *w->buffer = b;
     pthread_cond_broadcast(w->cond);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    Wait w; 
+    BufferWait w; 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
     MirBuffer* buffer = NULL;
