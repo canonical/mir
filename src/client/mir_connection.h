@@ -212,7 +212,7 @@ public:
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
-    MirRenderSurface* create_render_surface();
+    MirRenderSurface* create_render_surface(mir::geometry::Size logical_size);
     void release_render_surface(void* render_surface);
 
     void* request_interface(char const* name, int version);
