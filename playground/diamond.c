@@ -132,9 +132,7 @@ Diamond setup_diamond(EGLImageKHR img)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEglImageTargetTexture2DOES = 
-        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-    glEglImageTargetTexture2DOES(GL_TEXTURE_2D, img);
+    future_driver_glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
     return info;
 }
 

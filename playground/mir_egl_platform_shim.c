@@ -34,8 +34,20 @@ typedef struct
                                     //could be MirPresentationChain as well
     int current_physical_width;     //The driver is in charge of the physical width
     int current_physical_height;    //The driver is in charge of the physical height
+
+    struct MirExtensionAndroidEGL* ext;
+    PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
+    PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES; 
+ 
 } DriverInfo;
 static DriverInfo* info = NULL;
+
+typedef struct
+{
+    struct ANativeWindowBuffer *buffer;    
+    EGLImageKHR img;
+} ShimEGLImageKHR;
 
 EGLSurface future_driver_eglCreateWindowSurface(
     EGLDisplay display, EGLConfig config, MirRenderSurface* surface)
@@ -92,6 +104,23 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     info = malloc(sizeof(DriverInfo));
     memset(info, 0, sizeof(*info));
     info->connection = connection;
+
+    info->ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
+        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_0_1);
+    info->eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
+    info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
+    info->glEGLImageTargetTexture2DOES =
+        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    if ( !info->ext ||
+         !info->eglCreateImageKHR ||
+         !info->eglDestroyImageKHR ||
+         !info->glEGLImageTargetTexture2DOES )
+    {
+        free(info);
+        info = NULL;
+        return EGL_NO_DISPLAY;
+    }
+
     return eglGetDisplay(mir_connection_get_egl_native_display(connection));
 }
 
@@ -109,28 +138,40 @@ EGLBoolean future_driver_eglTerminate(EGLDisplay display)
 EGLImageKHR future_driver_eglCreateImageKHR(
     EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
-    (void) ctx; (void)target; (void)attrib_list;
-    if (target != EGL_NATIVE_PIXMAP_KHR)
+    //bit pedantic, but we should validate the parameters we require from the extension
+    if ( (target != EGL_NATIVE_PIXMAP_KHR) || (ctx != EGL_NO_CONTEXT) || !info || !info->ext )
         return EGL_NO_IMAGE_KHR;
-    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    static EGLint const expected_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    int i = 0;
+    while ( (attrib_list[i] != EGL_NONE) && (expected_attrs[i] != EGL_NONE) )
+    {
+        if (attrib_list[i] != expected_attrs[i])
+            return EGL_NO_IMAGE_KHR;
+        i++;
+    }
 
-    struct MirExtensionAndroidEGL* ext = NULL;
-    ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
-        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_0_1);
-
-    if (!ext)
-        return EGL_NO_IMAGE_KHR;
-
-    PFNEGLCREATEIMAGEKHRPROC c = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
-
-    struct ANativeWindowBuffer* anwb = ext->create_buffer(buffer);
-    EGLImageKHR img = c(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, anwb, image_attrs);
-    printf("EGLIMAG %X %X\n", (int)(long)img, (int)(long) EGL_NO_IMAGE_KHR);
-    return img;
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) malloc(sizeof(ShimEGLImageKHR));
+    img->buffer = info->ext->create_buffer(buffer);
+    img->img = info->eglCreateImageKHR(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+        img->buffer, attrib_list);
+    return (EGLImageKHR) img;
 }
 
 EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
-    PFNEGLDESTROYIMAGEKHRPROC d = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
-    return d(dpy, image);
+    if (!info)
+        return EGL_FALSE;
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) image;
+
+    EGLBoolean rc = info->eglDestroyImageKHR(dpy, image);
+    info->ext->destroy_buffer(img->buffer);
+    return rc;
+}
+
+void future_driver_glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
+{
+    if (!info)
+        return;
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) image;
+    info->glEGLImageTargetTexture2DOES(target, img->img);
 }
