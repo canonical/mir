@@ -18,8 +18,16 @@
 
 #include "mir_egl_platform_shim.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/android_egl.h"
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <stdlib.h>
 #include <string.h>
+#include <system/window.h>
+#include <system/graphics.h>
+#include <hardware/gralloc.h>
+
 
 //Information the driver will have to maintain
 typedef struct
@@ -105,17 +113,35 @@ EGLBoolean future_driver_eglTerminate(EGLDisplay display)
 EGLImageKHR future_driver_eglCreateImageKHR(
     EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
-    (void) ctx;
-    if (target != EGL_NATIVE_PIXMAP_KHR)
-        return EGL_NO_IMAGE_KHR;
+    (void) ctx; (void)target; (void)attrib_list;
+//    if (target != EGL_NATIVE_PIXMAP_KHR)
+//        return EGL_NO_IMAGE_KHR;
+    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
 
+    struct MirExtensionAndroidEGL* ext = NULL;
+    ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
+        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_0_1);
+
+//    if (!ext)
+//        return EGL_NO_IMAGE_KHR;
+//    dpy = eglGetCurrentDisplay();
+//
     PFNEGLCREATEIMAGEKHRPROC c = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
-    auto anw = to_anw(buffer);
-    return c(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, anw, attrib_list);
+
+//    int blah = 1869771365;
+//    struct ANativeWindowBuffer* anwb = ext->create_buffer(buffer);
+    struct ANativeWindowBuffer* anwb = ext->create_buffer(buffer);
+//    anwb->format =  1;
+//    anwb->usage = anwb->usage | GRALLOC_USAGE_HW_TEXTURE;
+
+    printf("YEp, created %i %i %i %i %i\n", anwb->width, anwb->height, anwb->stride, anwb->format, anwb->usage);
+    EGLImageKHR img = c(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, anwb, image_attrs);
+    printf("EGLIMAG %X %X\n", (int)(long)img, (int)(long) EGL_NO_IMAGE_KHR);
+    return img;
 }
 
 EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     PFNEGLDESTROYIMAGEKHRPROC d = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
-    return d(dpy, img);
+    return d(dpy, image);
 }

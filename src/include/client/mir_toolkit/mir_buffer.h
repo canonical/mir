@@ -187,6 +187,7 @@ MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
  *   \param [in] buffer              The buffer to be released
  **/
 void mir_buffer_release(MirBuffer* buffer);
+void mir_buffer_flush(MirBuffer* buffer);
 
 #ifdef __cplusplus
 }

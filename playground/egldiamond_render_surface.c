@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_egl_platform_shim.h"
 #include "diamond.h"
 
@@ -35,7 +36,6 @@
 #include <pthread.h>
 
 static volatile sig_atomic_t running = 0;
-
 static void shutdown(int signum)
 {
     if (running)
@@ -95,6 +95,8 @@ void fill_buffer(MirBuffer* buffer)
             data[ (i * (region.stride/4)) + j ] = 0xFF00FFFF;
         }
     }
+    //FIXME: need a flush
+    mir_buffer_get_graphics_region(buffer, mir_read_write);
 }
 
 int main(int argc, char *argv[])
@@ -136,7 +138,7 @@ int main(int argc, char *argv[])
 
     //FIXME: would be good to have some convenience functions 
     mir_connection_allocate_buffer(
-        connection, 50, 75, mir_pixel_format_abgr_8888, mir_buffer_usage_software, wait_buffer, &w);
+        connection, 512, 512, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
 
     pthread_mutex_lock(&mutex);
     while (buffer == NULL)
@@ -188,7 +190,6 @@ int main(int argc, char *argv[])
 
     CHECK(spec, "Can't create a surface spec");
     mir_surface_spec_set_name(spec, appname);
-
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
     mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);
@@ -205,14 +206,17 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
+    printf("EXTENSION %s\n", eglQueryString(egldisplay, EGL_EXTENSIONS));
+
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     Diamond diamond = setup_diamond(egldisplay, eglctx, buffer);
 
     running = 1;
     while (running)
     {
-        render_diamond(&diamond, egldisplay, eglsurface);
+        render_diamond(&diamond, egldisplay, eglsurface, buffer);
         future_driver_eglSwapBuffers(egldisplay, eglsurface);
+    sleep(3);
     }
 
     destroy_diamond(&diamond, egldisplay);
@@ -222,6 +226,5 @@ int main(int argc, char *argv[])
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
-
     return 0;
 }

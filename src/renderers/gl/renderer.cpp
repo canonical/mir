@@ -27,6 +27,7 @@
 #include "mir/gl/tessellation_helpers.h"
 #include "mir/gl/texture_cache.h"
 #include "mir/gl/texture.h"
+#include "mir/renderer/gl/texture_source.h"
 #include "mir/log.h"
 #include "mir/report_exception.h"
 
@@ -42,6 +43,7 @@
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
+namespace mrgl = mir::renderer::gl;
 namespace geom = mir::geometry;
 
 namespace
@@ -267,7 +269,6 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
                            glm::value_ptr(screen_to_gl_coords));
     }
 
-    glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
     GLfloat centrex = rect.top_left.x.as_int() +
@@ -291,7 +292,6 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     // if we fail to load the texture, we need to carry on (part of lp:1629275)
     try
     {
-        auto surface_tex = texture_cache->load(renderable);
 
         typedef struct  // Represents parameters of glBlendFuncSeparate()
         {
@@ -320,21 +320,27 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
             glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
         }
 
+//        auto surface_tex = texture_cache->load(renderable);
         for (auto const& p : primitives)
         {
-            BlendSeparate blend;
+            auto blend = client_blend;
 
-            if (p.tex_id == 0)   // The client surface texture
-            {
-                blend = client_blend;
-                surface_tex->bind();
-            }
-            else   // Some other texture from the shell (e.g. decorations) which
-            {      // is always RGBA (valid SRC_ALPHA).
-                blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                         GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
-                glBindTexture(GL_TEXTURE_2D, p.tex_id);
-            }
+            printf("EVERYTIME\n");
+            glActiveTexture(GL_TEXTURE0);
+
+            GLuint id;
+            glGenTextures(1, &id);
+            glBindTexture(GL_TEXTURE_2D, id);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+//            mgl::Texture texture;
+            auto const texture_source = dynamic_cast<mrgl::TextureSource*>(renderable.buffer()->native_buffer_base());
+            if (!texture_source)
+                BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+            texture_source->gl_bind_to_texture();
 
             glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),
@@ -355,6 +361,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
             }
 
             glDrawArrays(p.type, 0, p.nvertices);
+            glDeleteTextures(1, &id);
         }
     }
     catch (std::exception const& ex)

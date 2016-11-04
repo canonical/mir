@@ -1,4 +1,5 @@
 
+include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/platform
@@ -12,6 +13,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/examples/
+
 )
 
 add_library(playgroundserverconfig STATIC

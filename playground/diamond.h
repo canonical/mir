@@ -39,6 +39,6 @@ typedef struct
 
 Diamond setup_diamond(EGLDisplay disp, EGLContext context, MirBuffer* texture);
 void destroy_diamond(Diamond* info, EGLDisplay disp);
-void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface);
+void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface, MirBuffer* buffer);
 
 #endif /* PLAYGROUND_DIAMOND_H_ */
