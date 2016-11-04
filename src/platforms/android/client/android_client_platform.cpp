@@ -62,13 +62,6 @@ catch (std::exception& ex)
 void destroy_anwb(ANativeWindowBuffer*) noexcept
 {
 }
-
-}
-
-mcla::MirEGLExtension::MirEGLExtension(AndroidClientPlatform* platform) :
-    MirExtensionAndroidEGL{native_display_type, nullptr, nullptr, create_anwb, destroy_anwb},
-    platform(platform)
-{
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -77,7 +70,7 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    extension(this)
+    extension{native_display_type, nullptr, nullptr, create_anwb, destroy_anwb}
 {
 }
 
@@ -126,11 +119,6 @@ std::shared_ptr<EGLNativeDisplayType>
 mcla::AndroidClientPlatform::create_egl_native_display()
 {
     return native_display;
-}
-
-void* mcla::AndroidClientPlatform::egl_native_display(MirConnection*) const
-{
-    return native_display.get();
 }
 
 MirPlatformType mcla::AndroidClientPlatform::platform_type() const

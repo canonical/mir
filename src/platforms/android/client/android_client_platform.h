@@ -30,14 +30,6 @@ namespace client
 namespace android
 {
 
-class AndroidClientPlatform;
-struct MirEGLExtension : MirExtensionAndroidEGL
-{
-    MirEGLExtension(AndroidClientPlatform*);
-private:
-    AndroidClientPlatform* const platform;
-};
-
 class AndroidClientPlatform : public ClientPlatform
 {
 public:
@@ -54,13 +46,12 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
 
-    void* egl_native_display(MirConnection*) const;
 private:
     ClientContext* const context;
     std::shared_ptr<logging::Logger> const logger;
 
     std::shared_ptr<EGLNativeDisplayType> const native_display;
-    MirEGLExtension extension;
+    MirExtensionAndroidEGL extension;
 };
 
 }

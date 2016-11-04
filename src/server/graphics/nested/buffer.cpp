@@ -88,7 +88,6 @@ public:
             image = *(it->second);
         }
 
-    printf("BINDING NESTED BUFFER\n");
         extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     }
 
