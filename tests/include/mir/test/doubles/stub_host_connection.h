@@ -22,10 +22,14 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
 #include "src/server/graphics/nested/host_stream.h"
+#include "src/server/graphics/nested/host_chain.h"
+#include "src/server/graphics/nested/host_surface_spec.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
 #include "mir_toolkit/mir_connection.h"
+#include <gmock/gmock.h>
+#include "mir/test/gmock_fixes.h"
 
 namespace mir
 {
@@ -101,7 +105,8 @@ public:
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
     }
-    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&)
+
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) const override
     {
         struct NullStream : graphics::nested::HostStream
         {
@@ -111,11 +116,22 @@ public:
         return std::make_unique<NullStream>();
     }
 
+    std::unique_ptr<graphics::nested::HostChain> create_chain() const override
+    {
+        struct NullHostChain : graphics::nested::HostChain
+        {
+            void submit_buffer(graphics::nested::NativeBuffer&) override {}
+            MirPresentationChain* handle() override { return nullptr; }
+        };
+        return std::make_unique<NullHostChain>();
+    }
+
     class NullHostSurface : public graphics::nested::HostSurface
     {
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
         void set_event_handler(mir_surface_event_callback, void*) override {}
+        void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     
@@ -133,8 +149,51 @@ public:
     {
         return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
     }
+
+    std::unique_ptr<graphics::nested::HostSurfaceSpec> create_surface_spec()
+    {
+        struct NullSpec : graphics::nested::HostSurfaceSpec
+        {
+            void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
+            void add_stream(graphics::nested::HostStream&, geometry::Displacement, geometry::Size) override {}
+            MirSurfaceSpec* handle() { return nullptr; }
+        }; 
+        return std::make_unique<NullSpec>();
+    }
+    bool supports_passthrough()
+    {
+        return true;
+    }
 };
 
+struct MockHostConnection : StubHostConnection
+{
+    MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(graphics::nested::UniqueInputConfig)> const&));
+    MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
+    MOCK_CONST_METHOD0(create_chain, std::unique_ptr<graphics::nested::HostChain>());
+    MOCK_CONST_METHOD1(create_stream, std::unique_ptr<graphics::nested::HostStream>(graphics::BufferProperties const&));
+    MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
+        (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+         graphics::BufferProperties, char const*, uint32_t));
+
+    void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
+    {
+        if (event_callback)
+            event_callback(event, source_frame);
+    }
+
+    MockHostConnection()
+    {
+        using namespace testing;
+        ON_CALL(*this, set_input_device_change_callback(_))
+            .WillByDefault(SaveArg<0>(&device_change_callback));
+        ON_CALL(*this, set_input_event_callback(_))
+            .WillByDefault(SaveArg<0>(&event_callback));
+    }
+
+    std::function<void(graphics::nested::UniqueInputConfig)> device_change_callback;
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
+};
 
 }
 }

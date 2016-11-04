@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
@@ -271,8 +272,8 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
 {
     using namespace testing;
     std::function<void(mga::DisplayName, bool)> hotplug_fn([](mga::DisplayName, bool){});
-    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_fn(
-        [](mga::DisplayName, std::chrono::nanoseconds){});
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> vsync_fn(
+        [](mga::DisplayName, mg::Frame::Timestamp){});
     EXPECT_CALL(*mock_hwc_wrapper, subscribe_to_events(_,_,_,_))
         .WillOnce(DoAll(SaveArg<1>(&vsync_fn), SaveArg<2>(&hotplug_fn)));
     EXPECT_CALL(*mock_hwc_wrapper, unsubscribe_from_events_(_));
@@ -280,10 +281,11 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
     unsigned int hotplug_call_count{0};
     unsigned int vsync_call_count{0};
     auto subscription = config.subscribe_to_config_changes(
-        [&]{ hotplug_call_count++; }, [&](mga::DisplayName){ vsync_call_count++; });
+        [&]{ hotplug_call_count++; }, [&](mga::DisplayName, mg::Frame::Timestamp){ vsync_call_count++; });
     hotplug_fn(mga::DisplayName::primary, true);
     hotplug_fn(mga::DisplayName::primary, true);
-    vsync_fn(mga::DisplayName::primary, std::chrono::nanoseconds(33));
+    using namespace std::literals::chrono_literals;
+    vsync_fn(mga::DisplayName::primary, mg::Frame::Timestamp{CLOCK_MONOTONIC,123ns});
     EXPECT_THAT(hotplug_call_count, Eq(2));
     EXPECT_THAT(vsync_call_count, Eq(1));
 }

@@ -22,11 +22,13 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 #include "buffer_stream.h"
+#include "render_surface.h"
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/client_buffer.h"
 
 #include "mir/uncaught.h"
+#include "mir/require.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -56,7 +58,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
 try
 {
     return connection->create_client_buffer_stream(
-        width, height, format, buffer_usage, callback, context);
+        width, height, format, buffer_usage, nullptr, callback, nullptr, context);
 }
 catch (std::exception const& ex)
 {
@@ -87,8 +89,16 @@ MirWaitHandle* mir_buffer_stream_release(
     void* context)
 {
     auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto connection = bs->connection();
-    return connection->release_buffer_stream(bs, callback, context);
+    auto render_surface = bs->render_surface();
+    if (render_surface)
+    {
+        return render_surface->release_buffer_stream(callback, context);
+    }
+    else
+    {
+        auto connection = bs->connection();
+        return connection->release_buffer_stream(bs, callback, context);
+    }
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
@@ -214,4 +224,74 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 {
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->get_error_message();
+}
+
+MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int interval)
+try
+{
+    if ((interval < 0) || (interval > 1))
+        return nullptr;
+
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    if (!buffer_stream)
+        return nullptr;
+
+    return buffer_stream->set_swap_interval(interval);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+int mir_buffer_stream_get_swapinterval(MirBufferStream* stream)
+try
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    if (buffer_stream)
+        return buffer_stream->swap_interval();
+    else
+        return -1;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
+}
+
+void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height)
+try
+{
+    mir::require(stream);
+    if (auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream))
+        return buffer_stream->set_size(mir::geometry::Size{width, height});
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_buffer_stream_get_size(MirBufferStream* stream, int* width, int* height)
+try
+{
+    mir::require(stream);
+    mir::require(width);
+    mir::require(height);
+    if (auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream))
+    {
+        auto size = buffer_stream->size();
+        *width = size.width.as_int();
+        *height = size.height.as_int();
+    }
+    else
+    {
+        *width = -1;
+        *height = -1;
+    }
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    *width = -1;
+    *height = -1;
 }

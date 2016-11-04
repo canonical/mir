@@ -21,16 +21,14 @@
 #include <EGL/eglext.h>
 #include <sstream>
 #include <cstring>
+#include <cstdlib>
 
 namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 
 mrl::DisplayReport::DisplayReport(
-    std::shared_ptr<ml::Logger> const& logger,
-    std::shared_ptr<time::Clock> const& clock) :
-    logger(logger),
-    clock(clock),
-    last_report(clock->now())
+    std::shared_ptr<ml::Logger> const& logger)
+    : logger(logger)
 {
 }
 
@@ -147,22 +145,33 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     }
 }
 
-void mrl::DisplayReport::report_vsync(unsigned int output_id)
+void mrl::DisplayReport::report_vsync(unsigned int output_id,
+                                      graphics::Frame const& frame)
 {
-    using namespace std::chrono;
-    seconds const static report_interval{1};
-    std::unique_lock<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
-    auto now = clock->now();
-    event_map[output_id]++;
-    if (now > last_report + report_interval)
+    std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
+    auto prev = prev_frame.find(output_id);
+    if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {
-        for(auto const& event : event_map)
-            logger->log(ml::Severity::informational,
-                std::to_string(event.second) + " vsync events on [" +
-                std::to_string(event.first) + "] over " +
-                std::to_string(duration_cast<milliseconds>(now - last_report).count()) + "ms",
-                component());
-        event_map.clear();
-        last_report = now;
+        auto const now = graphics::Frame::Timestamp::now(frame.ust.clock_id);
+        auto const age_ns = now.nanoseconds - frame.ust.nanoseconds;
+        auto const delta_ns = frame.ust.nanoseconds -
+                              prev->second.ust.nanoseconds;
+
+        // long long to match printf format on all architectures
+        const long long msc = frame.msc,
+                        age_us = age_ns.count() / 1000,
+                        interval_us = delta_ns.count() /
+                                      (1000*(frame.msc - prev->second.msc)),
+                        hz100 = 100000000LL / interval_us;
+
+        logger->log(component(), ml::Severity::informational,
+            "vsync on %u: #%lld, %lld.%03lldms %s, interval %lld.%03lldms (%lld.%02lldHz)",
+            output_id,
+            msc,
+            llabs(age_us/1000), llabs(age_us%1000),
+            age_us>=0 ? "ago" : "from now",
+            interval_us/1000, interval_us%1000,
+            hz100/100, hz100%100);
     }
+    prev_frame[output_id] = frame;
 }

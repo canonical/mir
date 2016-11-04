@@ -527,34 +527,18 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         if (num_required_keys != key_count)
             continue;
 
-        auto pressed_keys = mir_input_device_state_event_device_pressed_keys(device_state, index);
-        if (!std::equal(it_keys, end_keys, pressed_keys))
+        std::vector<uint32_t> pressed_keys;
+        for (uint32_t i = 0; i < key_count; i++)
+        {
+            pressed_keys.push_back(
+                mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+        }
+
+        if (!std::equal(it_keys, end_keys, std::begin(pressed_keys)))
             continue;
         return true;
     }
     return false;
-}
-
-MATCHER(InputDeviceConfigurationChangedEvent, "")
-{
-    auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
-        return false;
-    auto idev = mir_event_get_input_configuration_event(as_address);
-    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_configuration_changed)
-        return false;
-    return true;
-}
-
-MATCHER(InputDeviceResetEvent, "")
-{
-    auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
-        return false;
-    auto idev = mir_event_get_input_configuration_event(as_address);
-    if (mir_input_configuration_event_get_action(idev) != mir_input_configuration_action_device_reset)
-        return false;
-    return true;
 }
 
 }

@@ -50,8 +50,9 @@ public:
     int cancelBuffer(struct ANativeWindowBuffer* buffer, int fence);
     int cancelBufferDeprecated(struct ANativeWindowBuffer* buffer);
     int setSwapInterval(int interval);
+    void use_native_surface(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
 private:
-    std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
+    std::shared_ptr<AndroidDriverInterpreter> driver_interpreter;
     std::shared_ptr<NativeWindowReport> const report;
     std::shared_ptr<SyncFileOps> const sync_ops;
     std::vector<struct ANativeWindowBuffer*> cancelled_buffers;

@@ -73,6 +73,22 @@ protected:
 
 }
 
+TEST_F(AndroidNativeWindowTest, use_native_surface_call_replaces_existing_interpreter)
+{
+    std::shared_ptr<MockAndroidDriverInterpreter> const new_driver_interpreter =
+        std::make_shared<NiceMock<MockAndroidDriverInterpreter>>();
+
+    // Test that the call goes to the new interpreter instead of the old one
+    EXPECT_CALL(*mock_driver_interpreter, sync_to_display(true))
+        .Times(0);
+
+    EXPECT_CALL(*new_driver_interpreter, sync_to_display(true))
+        .Times(1);
+
+    mir_native_window.use_native_surface(new_driver_interpreter);
+    window.setSwapInterval(&window, 1);
+}
+
 TEST_F(AndroidNativeWindowTest, native_window_swapinterval)
 {
     ASSERT_NE(nullptr, window.setSwapInterval);

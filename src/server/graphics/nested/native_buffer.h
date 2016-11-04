@@ -29,6 +29,7 @@
 #include <EGL/eglext.h>
 #include <tuple>
 #include <chrono>
+#include <functional>
 
 namespace mir
 {
@@ -42,10 +43,10 @@ public:
     virtual ~NativeBuffer() = default;
     virtual void sync(MirBufferAccess, std::chrono::nanoseconds) = 0;
     virtual MirBuffer* client_handle() const = 0;
-    virtual MirNativeBuffer* get_native_handle() = 0;
     virtual MirGraphicsRegion get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
+    virtual void on_ownership_notification(std::function<void()> const& fn) = 0;
     virtual MirBufferPackage* package() const = 0;
     virtual Fd fence() const = 0;
     virtual void set_fence(Fd) = 0;

@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
 #define MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
 
+#include "mir/graphics/frame.h"
 #include <cstdint>
 
 namespace mir
@@ -34,7 +35,7 @@ public:
     virtual ~PageFlipper() {}
 
     virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id, uint32_t connector_id) = 0;
-    virtual void wait_for_flip(uint32_t crtc_id) = 0;
+    virtual Frame wait_for_flip(uint32_t crtc_id) = 0;
 
 protected:
     PageFlipper() = default;

@@ -20,7 +20,6 @@
 #define MIR_COMMON_INPUT_CONFIGURATION_EVENT_H_
 
 #include <chrono>
-#include <limits>
 
 #include "mir/events/event.h"
 
@@ -36,11 +35,7 @@ struct MirInputConfigurationEvent : MirEvent
 
     MirInputDeviceId id() const;
     void set_id(MirInputDeviceId id);
-
-private:
-    MirInputConfigurationAction action_;
-    std::chrono::nanoseconds when_{0};
-    MirInputDeviceId id_{std::numeric_limits<MirInputDeviceId>::max()};
-};
+}
+ __attribute__((deprecated));
 
 #endif /* MIR_COMMON_INPUT_CONFIGURATION_EVENT_H_ */

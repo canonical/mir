@@ -105,7 +105,8 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mg::DisplayReport> const& report)
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure mesa finds the mesa mir-platform symbols

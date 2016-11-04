@@ -64,7 +64,7 @@ public:
             else
             {
                 auto socket_env = getenv("MIR_SOCKET");
-                if (socket_env)
+                if (socket_env && socket_env[0])
                     sock = socket_env;
                 else
                     sock = mir::default_server_socket;

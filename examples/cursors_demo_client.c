@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         usleep(100000);
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }

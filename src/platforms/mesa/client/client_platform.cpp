@@ -76,9 +76,15 @@ std::shared_ptr<mcl::ClientBufferFactory> mclm::ClientPlatform::create_buffer_fa
     return std::make_shared<mclm::ClientBufferFactory>(buffer_file_ops);
 }
 
+void mclm::ClientPlatform::use_egl_native_window(std::shared_ptr<void> native_window, EGLNativeSurface* surface)
+{
+    auto mnw = std::static_pointer_cast<NativeSurface>(native_window);
+    mnw->use_native_surface(surface);
+}
+
 std::shared_ptr<void> mclm::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)
 {
-    return std::make_shared<NativeSurface>(*client_surface);
+    return std::make_shared<NativeSurface>(client_surface);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()

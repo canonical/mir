@@ -17,7 +17,6 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"
@@ -450,7 +449,7 @@ TEST_F(StartedBufferVault, can_increase_allocation_count)
 {
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(1);
-    vault.increase_buffer_count();
+    vault.set_interval(0);
 
     Mock::VerifyAndClearExpectations(&mock_requests);
     //no buffers
@@ -460,7 +459,8 @@ TEST_F(StartedBufferVault, cannot_decrease_allocation_count_below_initial)
 {
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(0);
-    vault.decrease_buffer_count();
+    vault.set_interval(1);
+    vault.set_interval(1);
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
@@ -470,8 +470,8 @@ TEST_F(StartedBufferVault, can_decrease_allocation_count)
         .Times(1);
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1);
-    vault.increase_buffer_count();
-    vault.decrease_buffer_count();
+    vault.set_interval(0);
+    vault.set_interval(1);
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
@@ -494,7 +494,7 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()))
         .Times(1);
 
-    vault.increase_buffer_count();
+    vault.set_interval(0);
     vault.wire_transfer_inbound(requested_buffer.buffer_id());
     auto b = vault.withdraw().get();
     vault.deposit(b);
@@ -512,7 +512,7 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     vault.deposit(b);
     vault.wire_transfer_outbound(b, []{});
 
-    vault.decrease_buffer_count();
+    vault.set_interval(1);
     vault.wire_transfer_inbound(package.buffer_id());
     vault.wire_transfer_inbound(package2.buffer_id());
     Mock::VerifyAndClearExpectations(&mock_requests);
@@ -637,7 +637,7 @@ TEST_F(StartedBufferVault, can_increase_count_after_resize)
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(num_allocations);
 
-    vault.increase_buffer_count();
+    vault.set_interval(0);
     vault.set_size(new_size);
 
     for(auto i = 0u; i < num_allocations + 1; i++)

@@ -34,6 +34,7 @@
 #include "mir/events/event_builders.h"
 
 #include <chrono>
+#include <thread>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -91,6 +92,24 @@ void mtf::FakeInputDeviceImpl::emit_event(synthesis::TouchParameters const& touc
                        device->synthesize_events(touch);
                    });
 }
+
+void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
+                                                   int count,
+                                                   std::chrono::duration<double> delay)
+{
+    queue->enqueue(
+        [this, event_generator, count, delay]()
+        {
+            auto start = std::chrono::steady_clock::now();
+            for (int i = 0;i < count;++i)
+            {
+                std::this_thread::sleep_until(start + i * delay);
+                device->synthesize_events(event_generator(i++));
+                std::this_thread::yield();
+            }
+        });
+}
+
 
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
@@ -180,10 +199,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now().time_since_epoch());
-
-    auto touch_event = builder->touch_event(event_time);
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)
@@ -191,27 +208,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     else if (touch.action == synthesis::TouchParameters::Action::Move)
         touch_action = mir_touch_action_change;
 
-    MirTouchId touch_id = 1;
-    float pressure = 1.0f;
-
     float abs_x = touch.abs_x;
     float abs_y = touch.abs_y;
     map_touch_coordinates(abs_x, abs_y);
     // those values would need scaling too as soon as they can be controlled by the caller
-    float touch_major = 5.0f;
-    float touch_minor = 8.0f;
-    float size_value = 8.0f;
 
-    builder->add_touch(*touch_event,
-                       touch_id,
-                       touch_action,
-                       mir_touch_tooltype_finger,
-                       abs_x,
-                       abs_y,
-                       pressure,
-                       touch_major,
-                       touch_minor,
-                       size_value);
+    auto touch_event = builder->touch_event(
+        event_time,
+        {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
 
     sink->handle_input(*touch_event);
 }

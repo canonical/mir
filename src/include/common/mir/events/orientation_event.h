@@ -30,10 +30,6 @@ struct MirOrientationEvent : MirEvent
 
     MirOrientation direction() const;
     void set_direction(MirOrientation orientation);
-
-private:
-    int surface_id_{-1};
-    MirOrientation direction_;
 };
 
 #endif /* MIR_COMMON_ORIENTATION_EVENT_H_ */

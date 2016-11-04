@@ -52,6 +52,12 @@ public:
     }
 
 // mg::Renderable
+
+    unsigned int swap_interval() const override
+    {
+        return 1;
+    }
+
     mg::Renderable::ID id() const override
     {
         return this;

@@ -56,6 +56,7 @@ public:
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
+    bool framedropping() const override;
     void drop_outstanding_requests() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;

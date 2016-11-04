@@ -36,6 +36,8 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+using namespace ::testing;
+
 namespace
 {
 
@@ -43,14 +45,14 @@ class NullPageFlipper : public mgm::PageFlipper
 {
 public:
     bool schedule_flip(uint32_t,uint32_t,uint32_t) override { return true; }
-    void wait_for_flip(uint32_t) override { }
+    mg::Frame wait_for_flip(uint32_t) override { return {}; }
 };
 
 class MockPageFlipper : public mgm::PageFlipper
 {
 public:
     MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
-    MOCK_METHOD1(wait_for_flip, void(uint32_t));
+    MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
 };
 
 class RealKMSOutputTest : public ::testing::Test
@@ -62,6 +64,8 @@ public:
           possible_encoder_ids1{encoder_ids[0]},
           possible_encoder_ids2{encoder_ids[0], encoder_ids[1]}
     {
+        ON_CALL(mock_page_flipper, wait_for_flip(_))
+            .WillByDefault(Return(mg::Frame{}));
     }
 
     void setup_outputs_connected_crtc()
@@ -392,4 +396,29 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
 
     EXPECT_TRUE(output.set_crtc(fb_id));
     output.set_gamma(gamma);
+}
+
+TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
+{   // Regression test for LP: #1638220
+    using namespace testing;
+
+    uint32_t const fb_id{67};
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    mg::GammaCurves gamma{{1}, {2}, {3}};
+
+    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
+                                              gamma.red.size(),
+                                              const_cast<uint16_t*>(gamma.red.data()),
+                                              const_cast<uint16_t*>(gamma.green.data()),
+                                              const_cast<uint16_t*>(gamma.blue.data())))
+        .WillOnce(Return(-ENOSYS));
+
+    EXPECT_TRUE(output.set_crtc(fb_id));
+
+    EXPECT_NO_THROW(output.set_gamma(gamma););
 }

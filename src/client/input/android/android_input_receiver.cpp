@@ -159,11 +159,12 @@ void mircva::InputReceiver::process_and_maybe_send_event()
      */
 
     auto frame_time = std::chrono::nanoseconds(-1);
+
     if (event_rate_hz > 0)
     {
+        auto one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
         std::chrono::nanoseconds const
-            now = android_clock(SYSTEM_TIME_MONOTONIC),
-            one_frame = std::chrono::nanoseconds(1000000000ULL / event_rate_hz);
+            now = android_clock(SYSTEM_TIME_MONOTONIC);
         frame_time = (now / one_frame) * one_frame;
     }
 
@@ -196,22 +197,32 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
     }
-    else if (input_consumer->hasPendingBatch())
+    else if (input_consumer->hasPendingBatch() && event_rate_hz > 0)
     {
-        /* TODO: Feed in vsync-ish events (or work out when consume() would
-         *       actually generate an event) rather than polling at 1000Hz
-         */
         using namespace std::chrono;
-        using namespace std::literals::chrono_literals;
-        struct itimerspec const msec_delay = {
-            { 0, 0 },
-            { 0, duration_cast<nanoseconds>(1ms).count() }
-        };
-        if (timerfd_settime(timer_fd, 0, &msec_delay, NULL) < 0)
+        // If we batch according to a fixed event rate - we wait until the next "frame" occurs.
+        auto one_frame = nanoseconds(1000000000ULL / event_rate_hz);
+        auto now = android_clock(SYSTEM_TIME_MONOTONIC);
+        auto next_frame = frame_time + one_frame;
+
+        if (next_frame <= now)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                     std::system_category(),
-                                                     "Failed to arm timer"}));
+            wake();
+        }
+        else
+        {
+            auto full_sec = duration_cast<duration<long>>(next_frame);
+            auto nano_sec = duration_cast<duration<long,std::nano>>(next_frame - full_sec);
+            struct itimerspec const frame_timeout = {
+                { 0, 0 },
+                { full_sec.count(), nano_sec.count()}
+            };
+            if (timerfd_settime(timer_fd, TFD_TIMER_ABSTIME, &frame_timeout, NULL) < 0)
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                       std::system_category(),
+                                       "Failed to arm timer"}));
+            }
         }
     }
 }

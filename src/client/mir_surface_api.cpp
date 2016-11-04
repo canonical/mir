@@ -26,7 +26,9 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "presentation_chain.h"
+#include "render_surface.h"
 #include "error_connections.h"
+#include "connection_surface_map.h"
 #include "mir/uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -82,13 +84,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection
                                                        MirSurface* parent,
                                                        MirRectangle* rect)
 {
-    mir::require(mir_surface_is_valid(parent));
-    mir::require(rect != nullptr);
-
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_tip;
-    spec->parent = parent;
-    return spec;
+    return mir_connection_create_spec_for_tip(connection, width, height, format, parent, rect, mir_edge_attachment_any);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
@@ -615,17 +611,42 @@ catch (std::exception const& ex)
 void mir_surface_spec_add_buffer_stream(
     MirSurfaceSpec* spec,
     int displacement_x, int displacement_y,
+    int width, int height,
     MirBufferStream* stream)
 try
 {
     mir::require(spec && stream);
     auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), {}};
+    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), mir::geometry::Size{width, height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);
     else
         spec->streams = std::vector<ContentInfo>{info}; 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
+    int /*logical_width*/, int /*logical_height*/,
+    int displacement_x, int displacement_y)
+try
+{
+    mir::require(spec && render_surface);
+    auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
+
+    if (rs->stream_id().as_value() < 0)
+        BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
+    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(), {}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
 }
 catch (std::exception const& ex)
 {
