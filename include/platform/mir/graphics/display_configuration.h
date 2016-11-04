@@ -68,7 +68,9 @@ enum class DisplayConfigurationOutputType
     hdmib       = mir_output_type_hdmib,
     tv          = mir_output_type_tv,
     edp         = mir_output_type_edp,
-    virt        = mir_output_type_virtual
+    virt        = mir_output_type_virtual,
+    dsi         = mir_output_type_dsi,
+    dpi         = mir_output_type_dpi,
 };
 
 /**
