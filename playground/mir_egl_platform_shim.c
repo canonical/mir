@@ -141,6 +141,11 @@ EGLImageKHR future_driver_eglCreateImageKHR(
     //bit pedantic, but we should validate the parameters we require from the extension
     if ( (target != EGL_NATIVE_PIXMAP_KHR) || (ctx != EGL_NO_CONTEXT) || !info || !info->ext )
         return EGL_NO_IMAGE_KHR;
+
+    //check we have subloaded extension available.
+    if(!strstr(eglQueryString(dpy, EGL_EXTENSIONS), "EGL_ANDROID_image_native_buffer"))
+        return EGL_NO_IMAGE_KHR;
+
     static EGLint const expected_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
     int i = 0;
     while ( (attrib_list[i] != EGL_NONE) && (expected_attrs[i] != EGL_NONE) )
@@ -165,6 +170,7 @@ EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 
     EGLBoolean rc = info->eglDestroyImageKHR(dpy, image);
     info->ext->destroy_buffer(img->buffer);
+    free(img);
     return rc;
 }
 

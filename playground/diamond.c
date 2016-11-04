@@ -34,9 +34,9 @@ GLfloat const vertices[] =
 GLfloat const texcoords[] =
 {
     0.0f, 0.0f,
+    1.0f, 0.0f,
     0.0f, 1.0f,
     1.0f, 1.0f,
-    1.0f, 0.0f,
 };
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -68,7 +68,7 @@ void render_diamond(Diamond* info, int width, int height)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, info->num_vertices);
 }
 
-Diamond setup_diamond(EGLImageKHR img)
+Diamond setup_diamond_common()
 {
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     char const vertex_shader_src[] =
@@ -129,11 +129,34 @@ Diamond setup_diamond(EGLImageKHR img)
     glBindTexture(GL_TEXTURE_2D, info.texid);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    return info;
+}
+
+Diamond setup_diamond_import(EGLImageKHR img)
+{
+    Diamond diamond = setup_diamond_common();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     future_driver_glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
-    return info;
+    return diamond;
+}
+
+Diamond setup_diamond()
+{
+    Diamond diamond = setup_diamond_common();
+    static unsigned int data[] = {
+        0xFFFFFFFF,
+        0xFF0000FF,
+        0xFF0000FF,
+        0xFFFFFFFF};
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        2, 2, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE,
+        data);
+    return diamond;
 }
 
 void destroy_diamond(Diamond* info)

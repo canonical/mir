@@ -91,7 +91,11 @@ void fill_buffer(MirBuffer* buffer)
     {
         for (int j = 0; j < region.height; j++)
         {
-            data[ (i * (region.stride/4)) + j ] = 0xFF00FFFF;
+            int idx = (i * (region.stride/4)) + j;
+            if (idx % 32 > 16)
+                data[ idx ] = 0xFF00FFFF;
+            else
+                data[ idx ] = 0xFFFF0000;
         }
     }
     //FIXME: need a flush
@@ -205,16 +209,27 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
+    EGLImageKHR image = EGL_NO_IMAGE_KHR;
     char const* extensions = eglQueryString(egldisplay, EGL_EXTENSIONS);
     printf("EGL extensions %s\n", extensions);
-    CHECK(strstr(extensions, "EGL_KHR_image_pixmap"), "EGL_KHR_image_pixmap not supported");
+    if (strstr(extensions, "EGL_KHR_image_pixmap"))
+    {
+        static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+        image = future_driver_eglCreateImageKHR(
+            egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+    }
 
-    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-    EGLImageKHR image = future_driver_eglCreateImageKHR(
-        egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
-    CHECK(image, "Could not create EGLImage\n");
-
-    Diamond diamond = setup_diamond(image);
+    Diamond diamond;
+    if (image == EGL_NO_IMAGE_KHR)
+    {
+        printf("MirBuffer import not supported by driver. Should see red/white checker\n");
+        diamond = setup_diamond();
+    }
+    else
+    {
+        printf("MirBuffer import supported by driver. Should see yellow/blue stripes\n");
+        diamond = setup_diamond_import(image);
+    }
 
     EGLint viewport_width = -1;
     EGLint viewport_height = -1;
@@ -229,7 +244,8 @@ int main(int argc, char *argv[])
 
     destroy_diamond(&diamond);
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    future_driver_eglDestroyImageKHR(egldisplay, image);
+    if (image)
+        future_driver_eglDestroyImageKHR(egldisplay, image);
     future_driver_eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
