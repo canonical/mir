@@ -87,7 +87,6 @@ void fill_buffer(MirBuffer* buffer)
 {
     MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
     unsigned int *data = (unsigned int*) region.vaddr;
-    printf("MK %i %i\n", region.width, region.height);
     for (int i = 0; i < region.width; i++)
     {
         for (int j = 0; j < region.height; j++)
@@ -138,24 +137,24 @@ int main(int argc, char *argv[])
 
     //FIXME: would be good to have some convenience functions 
     mir_connection_allocate_buffer(
-        connection, 512, 512, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
+        connection, 256, 256, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
 
     pthread_mutex_lock(&mutex);
     while (buffer == NULL)
         pthread_cond_wait(&cond, &mutex);
     pthread_mutex_unlock(&mutex);
 
-    printf("GOT A BUFFER %X\n", (int)(long)buffer);
     fill_buffer(buffer);
 
     egldisplay = future_driver_eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
-    int maj =0; int min = 0;
+    int maj =0;
+    int min = 0;
     ok = eglInitialize(egldisplay, &maj, &min);
-    printf("MAJ MIN %i %i\n", maj, min);
     CHECK(ok, "Can't eglInitialize");
+    printf("EGL version %i.%i\n", maj, min);
 
     const EGLint attribs[] =
     {
@@ -206,7 +205,10 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
-    //should check extensions
+    char const* extensions = eglQueryString(egldisplay, EGL_EXTENSIONS);
+    printf("EGL extensions %s\n", extensions);
+    CHECK(strstr(extensions, "EGL_KHR_image_pixmap"), "EGL_KHR_image_pixmap not supported");
+
     static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
     EGLImageKHR image = future_driver_eglCreateImageKHR(
         egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
