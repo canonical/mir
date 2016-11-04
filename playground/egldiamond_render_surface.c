@@ -119,8 +119,6 @@ int main(int argc, char *argv[])
     render_surface = mir_connection_create_render_surface_with_content_sync(connection, width, height);
 //    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
-    eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
-
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
     //once default streams are deprecated.
@@ -142,6 +140,7 @@ int main(int argc, char *argv[])
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
+    eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
