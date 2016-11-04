@@ -111,16 +111,6 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
     info->glEGLImageTargetTexture2DOES =
         (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-    if ( !info->ext ||
-         !info->eglCreateImageKHR ||
-         !info->eglDestroyImageKHR ||
-         !info->glEGLImageTargetTexture2DOES )
-    {
-        free(info);
-        info = NULL;
-        return EGL_NO_DISPLAY;
-    }
-
     return eglGetDisplay(mir_connection_get_egl_native_display(connection));
 }
 
