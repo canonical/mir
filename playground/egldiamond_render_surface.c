@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
     printf("EXTENSION %s\n", eglQueryString(egldisplay, EGL_EXTENSIONS));
 
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-    Diamond diamond = setup_diamond(egldisplay, eglctx, buffer);
+    Diamond diamond = setup_diamond(egldisplay, buffer);
 
     running = 1;
     while (running)

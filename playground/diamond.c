@@ -22,8 +22,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <GLES2/gl2ext.h>
-
 int const num_vertices = 4; 
 GLfloat const vertices[] =
 {
@@ -65,40 +63,11 @@ static GLuint load_shader(const char *src, GLenum type)
 
 void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface, MirBuffer* buffer)
 {
+    (void)buffer;
     EGLint width = -1;
     EGLint height = -1;
     glClear(GL_COLOR_BUFFER_BIT);
 
-    (void)buffer;
-#if 1
-    GLuint texture;
-    glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    printf("TEXTURE ID %i\n", texture);
-
-    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
-    info->img = future_driver_eglCreateImageKHR(
-        egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
-    printf("HMM????\n");
-    if (info->img == EGL_NO_IMAGE_KHR)
-        printf("BAD BAD\n");
-
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g = 
-        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-    printf("BEFORE GLGETERROR %X\n", glGetError());
-    g(GL_TEXTURE_2D, info->img);
-    printf("GLGETERROR %X\n", glGetError());
-#else
-    printf("TRY TO LOAD\n");
-    static unsigned int  c= 0xFF0000FF;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &c);
-#endif
 
     if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
         eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
@@ -108,10 +77,8 @@ void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface,
     glDrawArrays(GL_TRIANGLE_STRIP, 0, info->num_vertices);
 }
 
-Diamond setup_diamond(EGLDisplay disp, EGLContext context, MirBuffer* buffer)
+Diamond setup_diamond(EGLDisplay disp, MirBuffer* buffer)
 {
-    (void)disp; (void)context; (void)buffer;
-    (void)context;
     char const vertex_shader_src[] =
         "attribute vec2 pos;                                \n"
         "attribute vec2 texcoord;                           \n"
@@ -165,6 +132,27 @@ Diamond setup_diamond(EGLDisplay disp, EGLContext context, MirBuffer* buffer)
     glEnableVertexAttribArray(info.pos);
     glEnableVertexAttribArray(info.texcoord);
 
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &info.texid);
+    glBindTexture(GL_TEXTURE_2D, info.texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    info.img = future_driver_eglCreateImageKHR(
+        disp, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+
+    if (info.img == EGL_NO_IMAGE_KHR)
+    {
+        printf("Could not create EGLImage\n");
+        assert(-1);
+    }
+
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEglImageTargetTexture2DOES = 
+        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    glEglImageTargetTexture2DOES(GL_TEXTURE_2D, info.img);
     return info;
 }
 
