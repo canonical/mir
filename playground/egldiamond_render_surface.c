@@ -115,12 +115,9 @@ int main(int argc, char *argv[])
     ok = eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs);
     CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
-#if 0
-    render_surface = mir_connection_create_render_surface_with_content_sync(connection);
+
+    render_surface = mir_connection_create_render_surface_with_content_sync(connection, width, height);
 //    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
-#endif
-    render_surface = mir_connection_create_render_surface(connection, width, height);
-    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
     eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
 

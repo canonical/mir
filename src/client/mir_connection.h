@@ -221,6 +221,7 @@ public:
     MirRenderSurface* create_render_surface(mir::geometry::Size logical_size);
     void release_render_surface(void* render_surface);
     MirWaitHandle* create_render_surface_with_content(
+        mir::geometry::Size logical_size,
         mir_render_surface_callback callback,
         void* context,
         void** native_window);
@@ -291,11 +292,13 @@ private:
         RenderSurfaceCreationRequest(
             mir_render_surface_callback cb,
             void* context,
-            std::shared_ptr<void> native_window) :
+            std::shared_ptr<void> native_window,
+            mir::geometry::Size size) :
                 callback(cb), context(context),
                 response(std::make_shared<mir::protobuf::BufferStream>()),
                 wh(std::make_shared<MirWaitHandle>()),
-                native_window(native_window)
+                native_window(native_window),
+                logical_size(size)
         {
         }
 
@@ -304,6 +307,7 @@ private:
         std::shared_ptr<mir::protobuf::BufferStream> response;
         std::shared_ptr<MirWaitHandle> const wh;
         std::shared_ptr<void> native_window;
+        mir::geometry::Size logical_size;
     };
 
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;

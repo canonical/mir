@@ -899,7 +899,7 @@ std::shared_ptr<mir::client::BufferStream> MirConnection::create_client_buffer_s
     mir::protobuf::BufferStream const& a_protobuf_bs)
 {
     auto stream = std::make_shared<mcl::BufferStream>(
-        this, render_surface, server, platform, surface_map, buffer_factory,
+        this, render_surface, nullptr, server, platform, surface_map, buffer_factory,
         a_protobuf_bs, make_perf_report(logger), std::string{},
         mir::geometry::Size{width, height}, nbuffers);
     return stream;
@@ -1368,7 +1368,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     try
     {
         std::shared_ptr<MirRenderSurface> rs {nullptr};
-        rs = std::make_shared<mcl::RenderSurface>(this, request->native_window, platform, protobuf_bs);
+        rs = std::make_shared<mcl::RenderSurface>(this, request->native_window, platform, protobuf_bs, request->logical_size);
         surface_map->insert(request->native_window.get(), rs);
 
         if (request->callback)
@@ -1387,19 +1387,19 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
 }
 
 MirWaitHandle* MirConnection::create_render_surface_with_content(
+    mir::geometry::Size logical_size,
     mir_render_surface_callback callback,
     void* context,
     void** native_window)
 {
     mir::protobuf::BufferStreamParameters params;
-    // all these are "required" protobuf fields.
-    params.set_height(-1);
-    params.set_width(-1);
+    params.set_width(logical_size.width.as_int());
+    params.set_height(logical_size.height.as_int());
     params.set_pixel_format(-1);
     params.set_buffer_usage(-1);
 
     auto nw = platform->create_egl_native_window(nullptr);
-    auto request = std::make_shared<RenderSurfaceCreationRequest>(callback, context, nw);
+    auto request = std::make_shared<RenderSurfaceCreationRequest>(callback, context, nw, logical_size);
 
     request->wh->expect_result();
 

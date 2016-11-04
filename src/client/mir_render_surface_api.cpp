@@ -67,13 +67,14 @@ RenderSurfaceToConnectionMap connection_map;
 
 MirWaitHandle* mir_connection_create_render_surface_with_content(
     MirConnection* connection,
+    int width, int height,
     mir_render_surface_callback callback,
     void* context)
 try
 {
     mir::require(connection);
     void* rs = nullptr;
-    auto wh = connection->create_render_surface_with_content(callback, context, &rs);
+    auto wh = connection->create_render_surface_with_content(mir::geometry::Size{width, height}, callback, context, &rs);
     if (!rs)
         BOOST_THROW_EXCEPTION(std::runtime_error("Error creating native window"));
     connection_map.insert(rs, connection);
@@ -86,12 +87,14 @@ catch (std::exception const& ex)
 }
 
 MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
-    MirConnection* connection)
+    MirConnection* connection,
+    int width, int height)
 try
 {
     MirRenderSurface* render_surface = nullptr;
     auto wh = mir_connection_create_render_surface_with_content(
         connection,
+        width, height,
         reinterpret_cast<mir_render_surface_callback>(assign_result),
         &render_surface);
 

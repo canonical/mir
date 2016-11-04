@@ -140,7 +140,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_with_content_can_be_added_to_spec)
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
-
+#if 0
 TEST_F(RenderSurfaceTest, content_can_be_added_after_surface_creation)
 {
     int const width{800}, height{600};
@@ -172,3 +172,4 @@ TEST_F(RenderSurfaceTest, content_can_be_added_after_surface_creation)
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
+#endif

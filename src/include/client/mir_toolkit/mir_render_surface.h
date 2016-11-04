@@ -32,11 +32,13 @@ extern "C" {
 
 MirWaitHandle* mir_connection_create_render_surface_with_content(
     MirConnection* connection,
+    int width, int height,
     mir_render_surface_callback callback,
     void* context);
 
 MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
-    MirConnection* connection);
+    MirConnection* connection,
+    int width, int height);
 
 bool mir_render_surface_with_content_is_valid(
         MirRenderSurface* render_surface);
