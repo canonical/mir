@@ -115,12 +115,13 @@ int main(int argc, char *argv[])
     ok = eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs);
     CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
-
+#if 0
+    render_surface = mir_connection_create_render_surface_with_content_sync(connection);
+//    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
+#endif
     render_surface = mir_connection_create_render_surface(connection, width, height);
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
-    //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
-    //       Current code requires creation of content before creation of the surface.
     eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
 
     //The format field is only used for default-created streams.
@@ -134,6 +135,8 @@ int main(int argc, char *argv[])
 
     CHECK(spec, "Can't create a surface spec");
     mir_surface_spec_set_name(spec, appname);
+
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 

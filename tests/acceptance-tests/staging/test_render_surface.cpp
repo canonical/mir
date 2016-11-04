@@ -134,6 +134,39 @@ TEST_F(RenderSurfaceTest, render_surfaces_with_content_can_be_added_to_spec)
 
     EXPECT_THAT(surface, IsValid());
 
+    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+    mir_buffer_stream_release_sync(bs);
+    mir_render_surface_release(rs);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(RenderSurfaceTest, content_can_be_added_after_surface_creation)
+{
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_abgr_8888};
+    MirBufferUsage const usage{mir_buffer_usage_software};
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto rs = mir_connection_create_render_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                              width, height,
+                                                              format);
+
+    mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    auto bs = mir_render_surface_create_buffer_stream_sync(rs,
+                                                           640, 480,
+                                                           format,
+                                                           usage);
+
+    EXPECT_THAT(surface, IsValid());
+
+    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
     mir_buffer_stream_release_sync(bs);
     mir_render_surface_release(rs);
     mir_surface_release_sync(surface);

@@ -46,6 +46,10 @@ public:
         MirBufferUsage buffer_usage,
         mir_buffer_stream_callback callback,
         void* context) = 0;
+    virtual MirBufferStream* create_buffer_stream_from_id(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage) = 0;
     virtual MirWaitHandle* release_buffer_stream(
         mir_buffer_stream_callback callback,
         void* context) = 0;

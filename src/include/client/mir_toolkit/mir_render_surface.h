@@ -30,6 +30,26 @@
 extern "C" {
 #endif
 
+MirWaitHandle* mir_connection_create_render_surface_with_content(
+    MirConnection* connection,
+    mir_render_surface_callback callback,
+    void* context);
+
+MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
+    MirConnection* connection);
+
+bool mir_render_surface_with_content_is_valid(
+        MirRenderSurface* render_surface);
+
+void mir_render_surface_with_content_release(
+        MirRenderSurface* render_surface);
+
+MirBufferStream* mir_render_surface_with_content_create_buffer_stream(
+    MirRenderSurface* render_surface,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage);
+
 /**
  * Create a render surface.
  *

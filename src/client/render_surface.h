@@ -31,6 +31,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class BufferStream;
+}
 namespace client
 {
 class ClientPlatform;
@@ -44,6 +48,7 @@ public:
     RenderSurface(MirConnection* const connection,
                   std::shared_ptr<void> native_window,
                   std::shared_ptr<ClientPlatform> client_platform,
+                  std::shared_ptr<mir::protobuf::BufferStream> protobuf_bs,
                   geometry::Size size);
     MirConnection* connection() const override;
     mir::geometry::Size size() const override;
@@ -55,6 +60,11 @@ public:
         mir_buffer_stream_callback callback,
         void *context) override;
     mir::frontend::BufferStreamId stream_id() const override;
+
+    MirBufferStream* create_buffer_stream_from_id(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage) override;
 
     MirWaitHandle* release_buffer_stream(
         mir_buffer_stream_callback callback,
@@ -102,7 +112,9 @@ private:
     MirConnection* const connection_;
     std::shared_ptr<void> wrapped_native_window;
     std::shared_ptr<ClientPlatform> platform;
+    std::shared_ptr<mir::protobuf::BufferStream> protobuf_bs;
     ClientBufferStream* stream_;
+    std::shared_ptr<BufferStream> stream_from_id;
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
     std::shared_timed_mutex guard;

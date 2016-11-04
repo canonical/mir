@@ -159,6 +159,12 @@ public:
         mir_buffer_stream_callback mbs_callback,
         buffer_stream_callback bs_callback,
         void *context);
+    std::shared_ptr<mir::client::BufferStream> create_client_buffer_stream_with_id(
+        int width, int height,
+        MirPixelFormat format,
+        MirBufferUsage buffer_usage,
+        MirRenderSurface* render_surface,
+        mir::protobuf::BufferStream const& a_protobuf_bs);
     MirWaitHandle* release_buffer_stream(
         mir::client::ClientBufferStream*,
         mir_buffer_stream_callback callback,
@@ -214,6 +220,10 @@ public:
 
     MirRenderSurface* create_render_surface(mir::geometry::Size logical_size);
     void release_render_surface(void* render_surface);
+    MirWaitHandle* create_render_surface_with_content(
+        mir_render_surface_callback callback,
+        void* context,
+        void** native_window);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -275,8 +285,31 @@ private:
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
     };
+
+    struct RenderSurfaceCreationRequest
+    {
+        RenderSurfaceCreationRequest(
+            mir_render_surface_callback cb,
+            void* context,
+            std::shared_ptr<void> native_window) :
+                callback(cb), context(context),
+                response(std::make_shared<mir::protobuf::BufferStream>()),
+                wh(std::make_shared<MirWaitHandle>()),
+                native_window(native_window)
+        {
+        }
+
+        mir_render_surface_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+        std::shared_ptr<void> native_window;
+    };
+
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
+    std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
     void context_created(ChainCreationRequest*);
+    void render_surface_created(RenderSurfaceCreationRequest*);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;

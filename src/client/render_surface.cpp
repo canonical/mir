@@ -29,6 +29,8 @@
 namespace mcl = mir::client;
 namespace mclr = mcl::rpc;
 namespace geom = mir::geometry;
+namespace mp = mir::protobuf;
+namespace mf = mir::frontend;
 
 namespace mir
 {
@@ -80,10 +82,12 @@ mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
     std::shared_ptr<void> native_window,
     std::shared_ptr<ClientPlatform> client_platform,
+    std::shared_ptr<mp::BufferStream> protobuf_bs,
     geom::Size size) :
     connection_(connection),
     wrapped_native_window(native_window),
     platform(client_platform),
+	protobuf_bs(protobuf_bs),
     stream_(nullptr),
     stream_creation_request(nullptr),
     stream_release_request(nullptr),
@@ -96,12 +100,14 @@ MirConnection* mcl::RenderSurface::connection() const
     return connection_;
 }
 
-mir::frontend::BufferStreamId mcl::RenderSurface::stream_id() const
+mf::BufferStreamId mcl::RenderSurface::stream_id() const
 {
-    if (stream_)
+    return mf::BufferStreamId(protobuf_bs->id().value());
+/*    if (stream_)
         return stream_->rpc_id();
     else
         return mir::frontend::BufferStreamId{-1};
+*/
 }
 
 MirWaitHandle* mcl::RenderSurface::create_buffer_stream(
@@ -136,6 +142,29 @@ MirWaitHandle* mcl::RenderSurface::create_buffer_stream(
         width, height, format, usage, this, nullptr,
         render_surface_buffer_stream_create_callback,
         stream_creation_request.get());
+}
+
+MirBufferStream* mcl::RenderSurface::create_buffer_stream_from_id(
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage)
+{
+    protobuf_bs->set_pixel_format(format);
+    protobuf_bs->set_buffer_usage(buffer_usage);
+    stream_from_id = connection_->create_client_buffer_stream_with_id(width,
+                                                                      height,
+                                                                      format,
+                                                                      buffer_usage,
+                                                                      this,
+                                                                      *protobuf_bs);
+    if (buffer_usage == mir_buffer_usage_hardware)
+    {
+        platform->use_egl_native_window(
+            wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
+    }
+
+    return reinterpret_cast<MirBufferStream*>(
+        dynamic_cast<ClientBufferStream*>(stream_from_id.get()));
 }
 
 MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
