@@ -296,15 +296,17 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
             std::invalid_argument("set_gamma: mismatch gamma LUT sizes"));
     }
 
-    if (drmModeCrtcSetGamma(
+    int ret = drmModeCrtcSetGamma(
         drm_fd,
         current_crtc->crtc_id,
         gamma.red.size(),
         const_cast<uint16_t*>(gamma.red.data()),
         const_cast<uint16_t*>(gamma.green.data()),
-        const_cast<uint16_t*>(gamma.blue.data())) != 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "drmModeCrtcSetGamma Failed"));
-    }
+        const_cast<uint16_t*>(gamma.blue.data()));
+
+    int err = -ret;
+    if (err)
+        mir::log_warning("drmModeCrtcSetGamma failed: %s", strerror(err));
+
+    // TODO: return bool in future? Then do what with it?
 }
