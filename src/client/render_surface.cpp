@@ -28,6 +28,7 @@
 
 namespace mcl = mir::client;
 namespace mclr = mcl::rpc;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -78,13 +79,15 @@ void render_surface_buffer_stream_release_callback(MirBufferStream* stream, void
 mcl::RenderSurface::RenderSurface(
     MirConnection* const connection,
     std::shared_ptr<void> native_window,
-    std::shared_ptr<ClientPlatform> client_platform) :
-        connection_(connection),
-        wrapped_native_window(native_window),
-        platform(client_platform),
-        stream_(nullptr),
-        stream_creation_request(nullptr),
-        stream_release_request(nullptr)
+    std::shared_ptr<ClientPlatform> client_platform,
+    geom::Size size) :
+    connection_(connection),
+    wrapped_native_window(native_window),
+    platform(client_platform),
+    stream_(nullptr),
+    stream_creation_request(nullptr),
+    stream_release_request(nullptr),
+    desired_size{size}
 {
 }
 
@@ -93,7 +96,7 @@ MirConnection* mcl::RenderSurface::connection() const
     return connection_;
 }
 
-mir::frontend::BufferStreamId mcl::RenderSurface::stream_id()
+mir::frontend::BufferStreamId mcl::RenderSurface::stream_id() const
 {
     if (stream_)
         return stream_->rpc_id();
@@ -163,4 +166,16 @@ MirWaitHandle* mcl::RenderSurface::release_buffer_stream(
     return connection_->release_buffer_stream(
         stream_, render_surface_buffer_stream_release_callback,
         stream_release_request.get());
+}
+
+geom::Size mcl::RenderSurface::size() const
+{
+    std::lock_guard<decltype(size_mutex)> lk(size_mutex);
+    return desired_size;
+}
+
+void mcl::RenderSurface::set_size(mir::geometry::Size size)
+{
+    std::lock_guard<decltype(size_mutex)> lk(size_mutex);
+    desired_size = size;
 }

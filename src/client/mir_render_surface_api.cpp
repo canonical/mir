@@ -66,11 +66,11 @@ RenderSurfaceToConnectionMap connection_map;
 }
 
 MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection)
+    MirConnection* connection, int width, int height)
 try
 {
     mir::require(connection);
-    auto rs = connection->create_render_surface();
+    auto rs = connection->create_render_surface({width, height});
     connection_map.insert(static_cast<void*>(rs), connection);
     return rs;
 }
@@ -164,4 +164,20 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
+}
+
+void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
+{
+    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    auto size = rs->size();
+    *width = size.width.as_int();
+    *height = size.height.as_int();
+}
+
+void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height)
+{
+    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    rs->set_size({width, height});
 }
