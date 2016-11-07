@@ -143,7 +143,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirBufferStream* mir_render_surface_with_content_create_buffer_stream(
+MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format,

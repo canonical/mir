@@ -46,7 +46,7 @@ bool mir_render_surface_with_content_is_valid(
 void mir_render_surface_with_content_release(
         MirRenderSurface* render_surface);
 
-MirBufferStream* mir_render_surface_with_content_create_buffer_stream(
+MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format,

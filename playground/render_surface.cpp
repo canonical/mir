@@ -207,7 +207,7 @@ int main(int /*argc*/, char* /*argv*/[])
     if (nformats == 0)
         throw std::runtime_error("no pixel formats for buffer stream");
     printf("Software Driver selected pixel format %d\n", pixel_format);
-    auto buffer_stream = mir_render_surface_with_content_create_buffer_stream(render_surface,
+    auto buffer_stream = mir_render_surface_with_content_get_buffer_stream(render_surface,
                                                          width, height,
                                                          pixel_format,
                                                          mir_buffer_usage_software);
@@ -242,7 +242,6 @@ int main(int /*argc*/, char* /*argv*/[])
         mir_buffer_stream_swap_buffers_sync(buffer_stream);
     }
 
-    mir_buffer_stream_release_sync(buffer_stream);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     close(signal_watch);
