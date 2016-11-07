@@ -142,19 +142,19 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
 void* mtf::StubClientPlatform::request_interface(char const* name, int version)
 {
     if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
-        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_0_1))
+        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_1))
     {
         return &flavor_ext_0_1;
     }
 
     if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
-        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2_2))
+        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2))
     {
         return &flavor_ext_2_2;
     }
 
     if (!strcmp(name, MIR_EXTENSION_ANIMAL_NAME) &&
-        (version == MIR_EXTENSION_ANIMAL_NAME_VERSION_9_1))
+        (version == MIR_EXTENSION_ANIMAL_NAME_VERSION_9))
     {
         return &animal_ext;
     }
