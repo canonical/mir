@@ -62,8 +62,9 @@ TEST_F(ClientExtensions, can_load_different_extensions)
 
 TEST_F(ClientExtensions, gives_nullptr_on_errors)
 {
+    int made_up_version = 10101;
     EXPECT_THAT(mir_connection_request_interface(
-        connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+        connection, MIR_EXTENSION_ANIMAL_NAME, made_up_version), Eq(nullptr));
     EXPECT_THAT(mir_connection_request_interface(
-        connection, "pancake", MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+        connection, "pancake", MIR_EXTENSION_ANIMAL_NAME_VERSION_9), Eq(nullptr));
 }
