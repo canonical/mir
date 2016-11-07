@@ -94,6 +94,7 @@ public:
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
     void set_size(geometry::Size) override;
+    geometry::Size size() const override;
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;

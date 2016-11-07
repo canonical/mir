@@ -42,9 +42,12 @@ public:
     std::unique_ptr<mir::time::Alarm> create_alarm(callback const& call) override;
     void enqueue(void const* owner, ServerAction const& action) override;
 
+    void spawn(std::function<void()>&& work) override;
+
     void trigger_pending_fds();
     void fire_all_alarms();
     void trigger_server_actions();
+    void trigger_spawned_work();
 
 private:
     std::vector<callback> timeout_callbacks;
@@ -57,6 +60,7 @@ private:
     };
     std::vector<Item> fd_callbacks;
     std::vector<ServerAction> actions;
+    std::vector<std::function<void()>> work;
 };
 
 }
