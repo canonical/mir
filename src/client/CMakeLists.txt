@@ -173,11 +173,6 @@ set_target_properties(
 )
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/debug
-  DESTINATION "include/mirclient/mir_toolkit/debug"
-)
-
-install(
   TARGETS mirclient-debug-extension
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

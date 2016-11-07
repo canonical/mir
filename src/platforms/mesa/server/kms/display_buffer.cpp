@@ -22,6 +22,7 @@
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
+#include "mir/log.h"
 #include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -247,8 +248,17 @@ void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
 {
     for (auto& output : outputs)
     {
+        /*
+         * Note that failure to set the CRTC is not a fatal error. This can
+         * happen under normal conditions when resizing VirtualBox (which
+         * actually removes and replaces the virtual output each time so
+         * sometimes it's really not there). Xorg often reports similar
+         * errors, and it's not fatal.
+         */
         if (!output->set_crtc(forced_frame->get_drm_fb_id()))
-            fatal_error("Failed to set DRM CRTC");
+            mir::log_error("Failed to set DRM CRTC. "
+                "Screen contents may be incomplete. "
+                "Try plugging the monitor in again.");
     }
 }
 
@@ -275,19 +285,17 @@ void mgm::DisplayBuffer::post()
     }
 
     /*
-     * Schedule the current front buffer object for display, and wait
-     * for it to be actually displayed (flipped).
-     *
-     * If the flip fails, release the buffer object to make it available
-     * for future rendering.
+     * Try to schedule a page flip as first preference to avoid tearing.
+     * [will complete in a background thread]
      */
     if (!needs_set_crtc && !schedule_page_flip(bufobj))
-    {
-        if (!bypass_buf)
-            bufobj->release();
-        fatal_error("Failed to schedule page flip");
-    }
-    else if (needs_set_crtc)
+        needs_set_crtc = true;
+
+    /*
+     * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
+     * to need to do this on every frame. [will complete in this thread]
+     */
+    if (needs_set_crtc)
     {
         set_crtc(bufobj);
         needs_set_crtc = false;
