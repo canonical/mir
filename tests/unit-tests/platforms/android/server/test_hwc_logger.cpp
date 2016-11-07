@@ -34,7 +34,7 @@ struct HwcLogger : public ::testing::Test
 
         display_list->hwLayers[0].compositionType = HWC_OVERLAY;
         display_list->hwLayers[0].flags = 0; 
-        display_list->hwLayers[0].handle = &native_handle1; 
+        display_list->hwLayers[0].handle = native_handle1.get(); 
         display_list->hwLayers[0].transform = HWC_TRANSFORM_ROT_90;
         display_list->hwLayers[0].blending = HWC_BLENDING_NONE;
         display_list->hwLayers[0].displayFrame = {1, 1, 2, 1}; 
@@ -44,7 +44,7 @@ struct HwcLogger : public ::testing::Test
 
         display_list->hwLayers[1].compositionType = HWC_FRAMEBUFFER; 
         display_list->hwLayers[1].flags = 0;
-        display_list->hwLayers[1].handle = &native_handle2;
+        display_list->hwLayers[1].handle = native_handle2.get();
         display_list->hwLayers[1].transform = HWC_TRANSFORM_ROT_180;
         display_list->hwLayers[1].blending = HWC_BLENDING_PREMULT;
         display_list->hwLayers[1].displayFrame = {8, 5, 13, 8}; 
@@ -54,7 +54,7 @@ struct HwcLogger : public ::testing::Test
 
         display_list->hwLayers[2].compositionType = HWC_FRAMEBUFFER; 
         display_list->hwLayers[2].flags = HWC_SKIP_LAYER;
-        display_list->hwLayers[2].handle = &native_handle3; 
+        display_list->hwLayers[2].handle = native_handle3.get(); 
         display_list->hwLayers[2].transform = HWC_TRANSFORM_ROT_270;
         display_list->hwLayers[2].blending = HWC_BLENDING_COVERAGE; 
         display_list->hwLayers[2].displayFrame = {55, 34, 89, 55};  
@@ -64,7 +64,7 @@ struct HwcLogger : public ::testing::Test
 
         display_list->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET; 
         display_list->hwLayers[3].flags = 0; 
-        display_list->hwLayers[3].handle = &native_handle4; 
+        display_list->hwLayers[3].handle = native_handle4.get(); 
         display_list->hwLayers[3].transform = 0;
         display_list->hwLayers[3].blending = HWC_BLENDING_NONE; 
         display_list->hwLayers[3].displayFrame = {377, 233, 610, 337}; 
@@ -104,10 +104,14 @@ struct HwcLogger : public ::testing::Test
     std::shared_ptr<hwc_display_contents_1_t> const external_list;
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> display_list;
     std::array<int, 8> const fake_fence{ {4,5,6,7,8,9,10,11} };
-    native_handle_t native_handle1;
-    native_handle_t native_handle2;
-    native_handle_t native_handle3;
-    native_handle_t native_handle4;
+    std::unique_ptr<native_handle_t> native_handle1 =
+        std::make_unique<native_handle_t>();
+    std::unique_ptr<native_handle_t> native_handle2 =
+        std::make_unique<native_handle_t>();
+    std::unique_ptr<native_handle_t> native_handle3 =
+        std::make_unique<native_handle_t>();
+    std::unique_ptr<native_handle_t> native_handle4 =
+        std::make_unique<native_handle_t>();
 };
 }
 
@@ -153,14 +157,14 @@ TEST_F(HwcLogger, report_set)
     std::stringstream str;
     str << "set list():" << std::endl
         << " # | display  | Type      | handle | acquireFenceFd" << std::endl
-        << " 0 | primary  | OVERLAY   | " << &native_handle1 << " | " << fake_fence[0] << std::endl
-        << " 1 | primary  | GL_RENDER | " << &native_handle2 << " | " << fake_fence[2] << std::endl
-        << " 2 | primary  | FORCE_GL  | " << &native_handle3 << " | " << fake_fence[4] << std::endl
-        << " 3 | primary  | FB_TARGET | " << &native_handle4 << " | " << fake_fence[6] << std::endl
-        << " 0 | external | OVERLAY   | " << &native_handle1 << " | " << fake_fence[0] << std::endl
-        << " 1 | external | GL_RENDER | " << &native_handle2 << " | " << fake_fence[2] << std::endl
-        << " 2 | external | FORCE_GL  | " << &native_handle3 << " | " << fake_fence[4] << std::endl
-        << " 3 | external | FB_TARGET | " << &native_handle4 << " | " << fake_fence[6] << std::endl;
+        << " 0 | primary  | OVERLAY   | " << native_handle1.get() << " | " << fake_fence[0] << std::endl
+        << " 1 | primary  | GL_RENDER | " << native_handle2.get() << " | " << fake_fence[2] << std::endl
+        << " 2 | primary  | FORCE_GL  | " << native_handle3.get() << " | " << fake_fence[4] << std::endl
+        << " 3 | primary  | FB_TARGET | " << native_handle4.get() << " | " << fake_fence[6] << std::endl
+        << " 0 | external | OVERLAY   | " << native_handle1.get() << " | " << fake_fence[0] << std::endl
+        << " 1 | external | GL_RENDER | " << native_handle2.get() << " | " << fake_fence[2] << std::endl
+        << " 2 | external | FORCE_GL  | " << native_handle3.get() << " | " << fake_fence[4] << std::endl
+        << " 3 | external | FB_TARGET | " << native_handle4.get() << " | " << fake_fence[6] << std::endl;
 
     mga::HwcFormattedLogger logger;
     logger.report_set_list(display_list);

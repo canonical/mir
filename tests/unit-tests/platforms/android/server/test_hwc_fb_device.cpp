@@ -65,7 +65,7 @@ protected:
         skip_layer.compositionType = HWC_FRAMEBUFFER;
         skip_layer.hints = 0;
         skip_layer.flags = HWC_SKIP_LAYER;
-        skip_layer.handle = &stub_native_buffer->native_handle;
+        skip_layer.handle = stub_native_buffer->native_handle.get();
         skip_layer.transform = 0;
         skip_layer.blending = HWC_BLENDING_NONE;
         skip_layer.sourceCrop = region;
@@ -175,7 +175,7 @@ TEST_F(HwcFbDevice, hwc10_post)
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .InSequence(seq)
         .WillOnce(Return(stub_native_buffer));
-    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &stub_native_buffer->native_handle))
+    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), stub_native_buffer->native_handle.get()))
         .InSequence(seq);
 
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
