@@ -90,6 +90,12 @@ MirGraphicsRegion mcl::Buffer::map_region()
     };
 }
 
+void mcl::Buffer::unmap_region()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    mapped_region = nullptr;
+}
+
 void mcl::Buffer::set_fence(mir::Fd native_fence, MirBufferAccess access)
 {
     buffer->set_fence(native_fence, access);

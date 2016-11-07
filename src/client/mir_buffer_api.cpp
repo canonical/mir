@@ -103,20 +103,33 @@ catch (std::exception const& ex)
     return -1;
 }
 
-MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
+void mir_buffer_mmap(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {
     mir::require(b);
+    mir::require(region);
+    mir::require(layout);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-
-    return buffer->map_region();
+    *layout = mir_buffer_layout_linear;
+    *region = buffer->map_region();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
+    *region = MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
+    *layout = mir_buffer_layout_unknown;
+}
+
+void mir_buffer_munmap(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    buffer->unmap_region();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 unsigned int mir_buffer_get_width(MirBuffer* b)
