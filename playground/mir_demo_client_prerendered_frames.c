@@ -63,6 +63,7 @@ void fill_buffer_with_centered_circle_abgr(
         }
         vaddr += region.stride; 
     }
+    mir_buffer_munmap(buffer);
 }
 
 typedef struct SubmissionInfo
