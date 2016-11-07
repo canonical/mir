@@ -106,7 +106,7 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     info->connection = connection;
 
     info->ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
-        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_0_1);
+        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_1);
     info->eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
     info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
     info->glEGLImageTargetTexture2DOES =

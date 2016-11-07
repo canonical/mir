@@ -20,9 +20,7 @@
 #define MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
 
 #define MIR_EXTENSION_ANDROID_EGL "817e4327-bdd7-495a-9d3c-b5ac7a8a831f"
-#define MIR_EXTENSION_ANDROID_EGL_VERSION(maj, min) (((maj) << 16) | (min))
-#define MIR_EXTENSION_VERSION(maj, min) (((maj) << 16) | (min))
-#define MIR_EXTENSION_ANDROID_EGL_VERSION_0_1 MIR_EXTENSION_VERSION(0,1)
+#define MIR_EXTENSION_ANDROID_EGL_VERSION_1 1
 
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_render_surface.h"

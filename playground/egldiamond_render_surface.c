@@ -236,8 +236,8 @@ int main(int argc, char *argv[])
     running = 1;
     while (running)
     {
-        eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width);
-        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height);
+        eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &viewport_width);
+        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &viewport_height);
         render_diamond(&diamond, viewport_width, viewport_height);
         future_driver_eglSwapBuffers(egldisplay, eglsurface);
     }
