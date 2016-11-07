@@ -97,25 +97,6 @@ std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_framebuffer(
         egl_extensions);
 }
 
-std::unique_ptr<mg::Buffer> mga::GraphicBufferAllocator::reconstruct_from(
-    ANativeWindowBuffer* anwb, MirPixelFormat)
-{
-    if (!anwb->common.incRef || !anwb->common.decRef)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Could not claim a reference (incRef or decRef was null)"));
-    std::shared_ptr<ANativeWindowBuffer> native_window_buffer(anwb,
-        [](ANativeWindowBuffer* buffer){ buffer->common.decRef(&buffer->common); });
-    anwb->common.incRef(&anwb->common);
-
-    //TODO: we should have an android platform function for accessing the fence.
-    auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(
-        native_window_buffer,
-        cmdstream_sync_factory->create_command_stream_sync(),
-        std::make_shared<mga::SyncFence>(std::make_shared<mga::RealSyncFileOps>(), mir::Fd()),
-        mga::BufferAccess::read);
-    return std::make_unique<Buffer>(
-        reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
-}
-
 std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats()
 {
     static std::vector<MirPixelFormat> const pixel_formats{

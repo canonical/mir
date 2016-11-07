@@ -131,7 +131,7 @@ public:
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
 
-    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const override;
+    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) override;
 
     void configure(DisplayConfiguration const&) override;
 

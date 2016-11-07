@@ -78,7 +78,7 @@ public:
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
 
-    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) const override;
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) override;
 
     void configure(graphics::DisplayConfiguration const&) override;
 
