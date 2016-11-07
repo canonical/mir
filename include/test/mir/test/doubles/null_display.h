@@ -48,7 +48,7 @@ class NullDisplay : public graphics::Display,
             new NullDisplayConfiguration
         );
     }
-    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) const override
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) override
     {
         return false;
     }
