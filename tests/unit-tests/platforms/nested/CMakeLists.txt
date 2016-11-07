@@ -1,7 +1,6 @@
 mir_add_wrapped_executable(mir_unit_tests_nested
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_display_configuration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_display.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_display_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mir_display_configuration_builder.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_cursor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer.cpp
