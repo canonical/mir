@@ -111,8 +111,17 @@ catch (std::exception const& ex)
 
 bool mir_render_surface_with_content_is_valid(
         MirRenderSurface* render_surface)
+try
 {
     mir::require(render_surface);
+    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = conn->connection_surface_map()->render_surface(render_surface);
+    mir::require(rs != nullptr);
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return false;
 }
 

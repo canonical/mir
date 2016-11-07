@@ -191,8 +191,8 @@ int main(int /*argc*/, char* /*argv*/[])
     me::Connection connection{socket, "MirRenderSurface example"};
 
     auto render_surface = mir_connection_create_render_surface_with_content_sync(connection, width, height);
-//    if (!mir_render_surface_is_valid(render_surface))
-//        throw std::runtime_error(std::string("could not create render surface"));
+    if (!mir_render_surface_with_content_is_valid(render_surface))
+        throw std::runtime_error(std::string("could not create render surface"));
 
     auto spec = mir_connection_create_spec_for_normal_surface(
         connection,

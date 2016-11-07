@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     CHECK(neglconfigs > 0, "No EGL config available");
 
     render_surface = mir_connection_create_render_surface_with_content_sync(connection, width, height);
-//    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
+    CHECK(mir_render_surface_with_content_is_valid(render_surface), "could not create render surface");
 
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
