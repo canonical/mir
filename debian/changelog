@@ -1,8 +1,94 @@
 mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * TODO
+  * New upstream release 0.25.0 (https://launchpad.net/mir/+milestone/0.25.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 42
+      . mircommon ABI bumped to 7
+      . mirplatform ABI bumped to 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI bumped to 6
+      . mircore ABI added. current version is 1
+    - Enhancements:
+      . Replaced mir event structures with capnproto structures
+      . Added pointer confinement and an example
+      . Added support for rasberry pi outputs
+      . Added dead key and compose key support
+      . Added gamma support for kms hardware
+      . Yakkety gcc-6 support
+      . Added passthrough support for nest servers
+      . Added libmircore
+      . Implemented mir render surface
+    - Bugs fixed:
+      . FTBFS On Zesty: invalid use of
+        'struct native_handle' (LP: #1638774)
+      . libmirclient-debug-extension-dev install debug/surface.h
+        twice (LP: #1639153)
+      . Mir crashes on virtual box drmModeCrtcSetGamma
+        Function not implemented (LP: #1638220)
+      . Flickering in mir_demo_client_multistream (LP: #1635273)
+      . Camera apps (camera & vanity) never exit (LP: #1635010)
+      . Clients cannot connect when MIR_SOCKET="" (LP: #1634508)
+      . mirtest-dev packaging fails to sepcify boost depends (LP: #1633537)
+      . cursor.h is unclear about mir_diagonal_resize_* (LP: #1626924)
+      . Inconsistent underscores in cursor names (LP: #1632617)
+      . [performance] Android overlays don't honour eglSwapInterval 0
+        (LP: #1369763)
+      . [regression] Accidental libmircommon.so.6 break (LP: #1617865)
+      . [regression] mir demo server fails to start with mx4 (LP: #1615703)
+      . [regression] Trust prompt now shown when starting camera (LP: #1612256)
+      . [regression] make abi-check fails to build (LP: #1626866)
+      . Nested servers prevent overlays or fullscreen bypass (LP: #1262116)
+      . Failed to get PRIME fd from gbm bo (LP: #1607812)
+      . Mir-on-X is difficult to use on 1366x768 laptop (LP: #1590959)
+      . Remove useless message 'Surface 0 DPI' in demos (LP: #1559831)
+      . Mir fails to cross-build with newer sbuild (LP: #1628507)
+      . Infinite loop in AbstractShell::focus_next_session (LP: #1625401)
+      . Destroying a presentation chain doesn't trigger ownership
+        notification to client (LP: #1626503)
+      . Keyboard layout not applied on the shell (LP: #1626435)
+      . Warning, No syntax specified for the proto file (LP: #1624971)
+      . display-report=log reports vsync on non-existent output number
+        (LP: #1621352)
+      . libmirserver-dev missing uuid-dev depends (LP: #1617435)
+      . debian/control missing epoxy (LP: #1617256)
+      . Downstreams need to disable clang diagnostic "-Wreturn-type-clinkage"
+        to build against public headers (LP: #1615587)
+      . mirtest-dev: mock_display_configuration.h uses mg namespace without
+        using it (LP: #1614983)
+      . FTBFS using clang (LP: #1609612)
+      . mesa-kms doesn't fall back to using software cursor if hardware
+        cursor is unavailable (LP: #1610054)
+      . StubGraphicsPlatform::create_display() leaves a dubious state
+        (LP: #1611337)
+      . Mir build/tests fail with gcc-6 and LTO (LP: #1610215)
+      . Cross compiling on xenial fails (LP: #1609329)
+      . Building with -DMIR_PLATFORM=anroid fails (LP: #1609916)
+      . unity-system-compositor crashes on start-up with "Mir fatal error:
+        Failed to schedule page flip" (LP: #1584894)
+      . mir_connection_create_spec_for_tooltip doesn't meet requirements
+        (LP: #1603922)
+      . Updating surface size/location needs to update the pointer confinement
+        (LP: #1604673)
+      . ServerConfigurationOption is not ptest safe (LP: #1607351)
+      . HWC's vsync_signal_on is never called when using HWC 1.0 (LP: #1613373)
+      . mir_connection_create_spec_for_tooltip does not set aux_rect
+        (LP: #1632335)
+      . VMware virtual connector recognized by Mir as "unknown" (LP: #1248072)
+      . Test timeout MesaDisplayConfigurationTests.* (LP: #1613352)
+      . Tests fail when built against lp:mir (LP: #1621917)
+      . CI failure PointerConfinement.* (LP: #1606418)
+      . CI failure MultiThreadedCompositor (LP: #1595940)
+      . CI failure in DisplayConfiguration (LP: #1563210)
+      . CI failure  NestedServer.given_client_set_display_configuration*
+        (LP: #1617036)
+      . CI failure on krillin in NestedServer.* testes (LP: #1628828)
+      . CI failure: PosixRWMutex hangs (LP: #1633920)
+      . CI failure in TestClientInput.* (LP: #1570698)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 22 Aug 2016 13:32:46 +0800
+ -- Brandon Schaefer <brandon.schaefer@canonical.com>  Mon, 07 Nov 2016 13:32:11 -0800
 
 mir (0.24.1+16.10.20160928-0ubuntu1) yakkety; urgency=medium
 
