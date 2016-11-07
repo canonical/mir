@@ -30,7 +30,7 @@ struct ClientExtensions : mtf::ConnectedClientHeadlessServer
 TEST_F(ClientExtensions, can_load_an_extension)
 {
     auto ext_raw = mir_connection_request_interface(
-        connection, MIR_EXTENSION_FAVORITE_FLAVOR, MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_0_1);
+        connection, MIR_EXTENSION_FAVORITE_FLAVOR, MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_1);
     ASSERT_THAT(ext_raw, Ne(nullptr));
 
     auto ext = static_cast<MirExtensionFavoriteFlavor*>(ext_raw);
@@ -41,7 +41,7 @@ TEST_F(ClientExtensions, can_load_an_extension)
 TEST_F(ClientExtensions, can_load_an_extension_with_a_different_version)
 {
     auto ext_raw = mir_connection_request_interface(
-        connection, MIR_EXTENSION_FAVORITE_FLAVOR, MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2_2);
+        connection, MIR_EXTENSION_FAVORITE_FLAVOR, MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2);
     ASSERT_THAT(ext_raw, Ne(nullptr));
 
     auto ext = static_cast<MirExtensionFavoriteFlavor*>(ext_raw);
@@ -52,7 +52,7 @@ TEST_F(ClientExtensions, can_load_an_extension_with_a_different_version)
 TEST_F(ClientExtensions, can_load_different_extensions)
 {
     auto ext_raw = mir_connection_request_interface(
-        connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_ANIMAL_NAME_VERSION_9_1);
+        connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_ANIMAL_NAME_VERSION_9);
     ASSERT_THAT(ext_raw, Ne(nullptr));
 
     auto ext = static_cast<MirExtensionAnimalNames*>(ext_raw);
@@ -62,8 +62,9 @@ TEST_F(ClientExtensions, can_load_different_extensions)
 
 TEST_F(ClientExtensions, gives_nullptr_on_errors)
 {
+    int made_up_version = 10101;
     EXPECT_THAT(mir_connection_request_interface(
-        connection, MIR_EXTENSION_ANIMAL_NAME, MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+        connection, MIR_EXTENSION_ANIMAL_NAME, made_up_version), Eq(nullptr));
     EXPECT_THAT(mir_connection_request_interface(
-        connection, "pancake", MIR_EXTENSION_VERSION(1,0)), Eq(nullptr));
+        connection, "pancake", MIR_EXTENSION_ANIMAL_NAME_VERSION_9), Eq(nullptr));
 }

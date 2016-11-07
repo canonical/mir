@@ -126,7 +126,7 @@ public:
      * \param conf [in] Configuration to possibly apply.
      * \return      \c true if \p conf has been applied as the new output configuration.
      */
-    virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const = 0;
+    virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) = 0;
 
     /**
      * Sets a new output configuration.

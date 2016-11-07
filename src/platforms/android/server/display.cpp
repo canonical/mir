@@ -245,50 +245,9 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    using namespace geometry;
-    if (!new_configuration.valid())
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
-
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
-        displays.add(mga::DisplayName::external,
-            create_display_buffer(
-                display_device,
-                mga::DisplayName::external,
-                *display_buffer_builder,
-                config.external(),
-                gl_program_factory,
-                gl_context,
-                config.external().top_left - origin,
-                native_window_report,
-                overlay_option));
-    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
-        displays.remove(mga::DisplayName::external);
-
-    new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output)
-    {
-        if (output.current_format != config[output.id].current_format)
-            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
-
-        config[output.id].orientation = output.orientation;
-        config[output.id].form_factor = output.form_factor;
-        config[output.id].scale = output.scale;
-
-        geom::Displacement offset(output.top_left - origin);
-        config[output.id].top_left = output.top_left;
-
-        if (config.primary().id == output.id)
-        {
-            power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
-        }
-        else if (config.external().id == output.id && config.external().connected)
-        {
-            power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
-        }
-    });
+    configure_locked(new_configuration, lock);
 }
 
 //NOTE: We avoid calling back to hwc from within the hotplug callback. Only arrange for an update.
@@ -386,7 +345,73 @@ std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
 }
 
 bool mga::Display::apply_if_configuration_preserves_display_buffers(
-    mg::DisplayConfiguration const& /*conf*/) const
+    mg::DisplayConfiguration const& conf)
 {
+    /*
+     * We never invalidate display buffers based on the configuration to apply.
+     *
+     * The only way we invalidate a display buffer is if we detect that a previously-connected
+     * external display has been removed. In that case, regardless of whether or not it's enabled
+     * in the configuration, we destroy the display.
+     *
+     * Take the configuration lock to ensure consistency between our checking for external
+     * connections and configure's checking.
+     */
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (!config.external().connected || displays.display_present(mga::DisplayName::external))
+    {
+        configure_locked(conf, lock);
+        return true;
+    }
     return false;
+}
+
+void mga::Display::configure_locked(
+    mir::graphics::DisplayConfiguration const& new_configuration,
+    std::lock_guard<decltype(configuration_mutex)> const&)
+{
+    using namespace geometry;
+    if (!new_configuration.valid())
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
+
+    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
+        displays.add(
+            mga::DisplayName::external,
+            create_display_buffer(
+                display_device,
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                config.external(),
+                gl_program_factory,
+                gl_context,
+                config.external().top_left - origin,
+                native_window_report,
+                overlay_option));
+    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
+        displays.remove(mga::DisplayName::external);
+
+    new_configuration.for_each_output(
+        [this](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.current_format != config[output.id].current_format)
+                BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
+
+            config[output.id].orientation = output.orientation;
+            config[output.id].form_factor = output.form_factor;
+            config[output.id].scale = output.scale;
+
+            geom::Displacement offset(output.top_left - origin);
+            config[output.id].top_left = output.top_left;
+
+            if (config.primary().id == output.id)
+            {
+                power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
+                displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
+            }
+            else if (config.external().id == output.id && config.external().connected)
+            {
+                power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
+                displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
+            }
+        });
 }

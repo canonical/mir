@@ -51,8 +51,6 @@ public:
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
 
-    std::unique_ptr<graphics::Buffer> reconstruct_from(MirNativeBuffer* anwb, MirPixelFormat);
-
     std::shared_ptr<graphics::Buffer> alloc_framebuffer(
         geometry::Size sz, MirPixelFormat pf);
 
