@@ -144,11 +144,12 @@ Diamond setup_diamond_import(EGLImageKHR img)
 Diamond setup_diamond()
 {
     Diamond diamond = setup_diamond_common();
-    static unsigned int data[] = {
-        0xFFFFFFFF,
-        0xFF0000FF,
-        0xFF0000FF,
-        0xFFFFFFFF};
+    static unsigned char data[] = {
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0x00, 0x00, 0xFF,
+        0xFF, 0x00, 0x00, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF
+    };
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(
