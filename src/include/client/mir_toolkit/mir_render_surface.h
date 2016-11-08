@@ -30,46 +30,40 @@
 extern "C" {
 #endif
 
-MirWaitHandle* mir_connection_create_render_surface_with_content(
+/**
+ * Create a render surface
+ *
+ * \param [in] connection                       A valid connection
+ * \param [in] width                            The width in pixels
+ * \param [in] height                           The height in pixels
+ * \param [in] mir_render_surface_callback      Callback to be invoked when the request completes.
+ *                                              The callback is guaranteed to be called and called
+ *                                              with a non-null MirRenderSurface*, but the render
+ *                                              surface may be invalid in case of error.
+ * \param [in,out] context                      User data to pass to callback function
+ *
+ * \return                                      A handle that can be supplied to mir_wait_for
+ *                                              to get notified when the request is complete
+ */
+MirWaitHandle* mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
     mir_render_surface_callback callback,
     void* context);
-
-MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
-    MirConnection* connection,
-    int width, int height);
-
-bool mir_render_surface_with_content_is_valid(
-        MirRenderSurface* render_surface);
-
-MirWaitHandle* mir_render_surface_with_content_release(
-    MirRenderSurface* render_surface,
-    mir_render_surface_callback callback,
-    void* context);
-
-void mir_render_surface_with_content_release_sync(
-    MirRenderSurface* render_surface);
-
-MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
-    MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage);
 
 /**
- * Create a render surface.
- *
- * \warning                     The returned MirRenderSurface will be non-null, but may be
- *                              invalid in case of an error.
+ * Create a render surface and wait for the result
  *
  * \param [in] connection       A valid connection
  * \param [in] width            The width in pixels
  * \param [in] height           The height in pixels
- * \return                      The render surface.
+ *
+ * \return                      The new render surface, guaranteed to be
+ *                              non-null, but may be invalid in case of error
  */
-MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection, int width, int height);
+MirRenderSurface* mir_connection_create_render_surface_sync(
+    MirConnection* connection,
+    int width, int height);
 
 /**
  * Get the size of the MirRenderSurface
@@ -78,7 +72,9 @@ MirRenderSurface* mir_connection_create_render_surface(
  * \param [out] width           The width in pixels
  * \param [out] height          The height in pixels
  */ 
-void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height);
+void mir_render_surface_get_size(
+    MirRenderSurface* render_surface,
+    int* width, int* height);
 
 /**
  * Set the size of the MirRenderSurface
@@ -87,59 +83,46 @@ void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, i
  * \param [in] width           The width in pixels
  * \param [in] height          The height in pixels
  */ 
-void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height);
+void mir_render_surface_set_size(
+    MirRenderSurface* render_surface,
+    int width, int height);
 
 /**
- * Test for a valid render surface.
+ * Test for a valid render surface
  *
  * \param [in] render_surface  The render surface
  *
- * \return                     True if the supplied render_surface is valid,
+ * \return                     True if the supplied render surface is valid,
  *                             or false otherwise
  */
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface);
 
 /**
- * Release the specified render surface.
+ * Release the specified render surface
  *
- * \warning: This will not release the content. It's an error to release
- *           the render surface without releasing the content first.
+ * \param [in] render_surface                   The render surface to be released
+ * \param [in] mir_render_surface_callback      Callback to be invoked when the request completes
+ * \param [in,out] context                      User data to pass to callback function
  *
- * \param [in] render_surface    The render surface to be released
+ * \return                                      A handle that can be supplied to mir_wait_for
+ *                                              to get notified when the request is complete,
  */
-void mir_render_surface_release(
+MirWaitHandle* mir_render_surface_release(
+    MirRenderSurface* render_surface,
+    mir_render_surface_callback callback,
+    void* context);
+
+/**
+ * Release the specified render surface and wait for the request to complete
+ *
+ * \param [in] render_surface                   The render surface to be released
+ */
+void mir_render_surface_release_sync(
     MirRenderSurface* render_surface);
 
 /**
- * Create a new buffer stream, backing the given render surface, asynchronously.
- *
- * \warning: The buffer stream is currently not owned by the render surface in the
- *           sense that it needs to be released - i.e. releasing the render surface
- *           will not release the buffer stream.
- *
- * \param [in] render_surface    The render surface
- * \param [in] width             Requested width
- * \param [in] height            Requested height
- * \param [in] format            Requested pixel format
- * \param [in] usage             Requested buffer usage
- * \param [in] callback          Callback function to be invoked when request
- *                               completes
- * \param [in] context           User data passed to the callback function
- *
- * \return                       A handle that can be supplied to mir_wait_for
- *                               to get notified when the request is complete
- */
-MirWaitHandle* mir_render_surface_create_buffer_stream(
-        MirRenderSurface* render_surface,
-        int width, int height,
-        MirPixelFormat format,
-        MirBufferUsage usage,
-        mir_buffer_stream_callback callback,
-        void* context);
-
-/**
- * Create a new buffer stream, backing the given render surface, synchronously.
+ * Obtain the buffer stream backing a given render surface
  *
  * \param [in] render_surface    The render surface
  * \param [in] width             Requested width
@@ -147,9 +130,9 @@ MirWaitHandle* mir_render_surface_create_buffer_stream(
  * \param [in] format            Requested pixel format
  * \param [in] usage             Requested buffer usage
  *
- * \return                       The newly created buffer stream
+ * \return                       The buffer stream contained in the given render surface
  */
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
+MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format,

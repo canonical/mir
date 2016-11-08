@@ -65,7 +65,7 @@ private:
 RenderSurfaceToConnectionMap connection_map;
 }
 
-MirWaitHandle* mir_connection_create_render_surface_with_content(
+MirWaitHandle* mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
     mir_render_surface_callback callback,
@@ -86,13 +86,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
+MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
     int width, int height)
 try
 {
     MirRenderSurface* render_surface = nullptr;
-    auto wh = mir_connection_create_render_surface_with_content(
+    auto wh = mir_connection_create_render_surface(
         connection,
         width, height,
         reinterpret_cast<mir_render_surface_callback>(assign_result),
@@ -109,7 +109,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-bool mir_render_surface_with_content_is_valid(
+bool mir_render_surface_is_valid(
         MirRenderSurface* render_surface)
 try
 {
@@ -125,7 +125,7 @@ catch (std::exception const& ex)
     return false;
 }
 
-MirWaitHandle* mir_render_surface_with_content_release(
+MirWaitHandle* mir_render_surface_release(
     MirRenderSurface* render_surface,
     mir_render_surface_callback callback,
     void* context)
@@ -142,13 +142,13 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_render_surface_with_content_release_sync(
+void mir_render_surface_release_sync(
     MirRenderSurface* render_surface)
 {
-    mir_render_surface_with_content_release(render_surface, nullptr, nullptr)->wait_for_all();
+    mir_render_surface_release(render_surface, nullptr, nullptr)->wait_for_all();
 }
 
-MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
+MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format,
@@ -159,107 +159,6 @@ try
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     return rs->create_buffer_stream_from_id(width, height, format, usage);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection, int width, int height)
-try
-{
-    mir::require(connection);
-    auto rs = connection->create_render_surface({width, height});
-    connection_map.insert(static_cast<void*>(rs), connection);
-    return rs;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-bool mir_render_surface_is_valid(
-    MirRenderSurface* render_surface)
-try
-{
-    mir::require(render_surface);
-    auto conn = connection_map.connection(static_cast<void*>(render_surface));
-    auto rs = conn->connection_surface_map()->render_surface(render_surface);
-    mir::require(rs != nullptr);
-    return true;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return false;
-}
-
-void mir_render_surface_release(
-    MirRenderSurface* render_surface)
-try
-{
-    mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
-    auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    if (rs->stream_id().as_value() >= 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Render surface still holds content"));
-
-    connection_map.erase(static_cast<void*>(render_surface));
-    connection->release_render_surface(render_surface);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-MirWaitHandle* mir_render_surface_create_buffer_stream(
-        MirRenderSurface* render_surface,
-        int width, int height,
-        MirPixelFormat format,
-        MirBufferUsage usage,
-        mir_buffer_stream_callback callback,
-        void* context)
-try
-{
-    mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
-    auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    return rs->create_buffer_stream(
-        width, height,
-        format,
-        usage,
-        callback,
-        context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
-    MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage)
-try
-{
-    MirBufferStream* stream = nullptr;
-    auto wh = mir_render_surface_create_buffer_stream(
-        render_surface,
-        width, height,
-        format,
-        usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        &stream);
-
-    if (wh)
-        wh->wait_for_all();
-
-    return stream;
 }
 catch (std::exception const& ex)
 {
