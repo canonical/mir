@@ -113,43 +113,6 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
 }
 
-#if 0
-TEST_F(MirBufferTest, sets_client_buffers_fence)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-    auto access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, access));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fakefence, access);
-}
-
-TEST_F(MirBufferTest, gets_fence_from_client_buffer)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-
-    EXPECT_CALL(*mock_client_buffer, get_fence())
-        .WillOnce(Return(fakefence));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    EXPECT_THAT(fakefence, Eq(buffer.get_fence()));
-}
-
-TEST_F(MirBufferTest, waits_for_proper_access)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-    auto current_access = MirBufferAccess::mir_read;
-    auto needed_access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, current_access));
-    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout))
-        .WillOnce(Return(true));
-
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fakefence, current_access);
-    EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
-}
-#endif
-
 TEST_F(MirBufferTest, callback_called_when_available_from_creation)
 {
     int call_count = 0;
