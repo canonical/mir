@@ -95,20 +95,22 @@ void mir_buffer_set_callback(
  */
 MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* buffer);
 
-/** Access a CPU-mapped region associated with a given buffer for the given purpose.
- *  This will synchronize the buffer for the given purpose.
+/** Access a CPU-mapped region associated with a given buffer.
  *
  *   \param [in] buffer    The buffer
- *   \param [in] type      The type of fence to clear before returning.
- *   \return     region   The graphics region associated with the buffer.
- *   \warning  The returned region is only valid until the MirBuffer is
- *             submitted to the server. When the buffer is available again,
- *             this function must be called before accessing the region again.
- *   \warning  If mir_none is designated as access, this function will not
- *             wait for the fence. The user must wait for the fence explicitly
- *             before using the contents of the buffer.
+ *   \param [out] region   The mapped region
+ *   \param [out] layout   The memory layout of the region
+ *   \warning The buffer should be flushed via mir_buffer_munmap() before
+ *            submitting the buffer to the server. 
  **/
-MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAccess access);
+void mir_buffer_mmap(MirBuffer* buffer, MirGraphicsRegion* region, MirBufferLayout* layout);
+
+/** Flush the CPU caches for the buffer.
+ *
+ *  \post MirGraphicsRegions that are associated with the buffer will be invalid.
+ *  \param [in] buffer    The buffer
+ **/ 
+void mir_buffer_munmap(MirBuffer* buffer);
 
 /**
  * Retrieve the native fence associated with this buffer

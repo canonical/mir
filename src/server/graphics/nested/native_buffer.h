@@ -37,13 +37,23 @@ namespace graphics
 {
 namespace nested
 {
+
+struct GraphicsRegion : MirGraphicsRegion
+{
+    GraphicsRegion();
+    GraphicsRegion(MirBuffer*);
+    ~GraphicsRegion();
+    MirBufferLayout layout;
+    MirBuffer* const handle;
+};
+
 class NativeBuffer : public graphics::NativeBuffer
 {
 public:
     virtual ~NativeBuffer() = default;
     virtual void sync(MirBufferAccess, std::chrono::nanoseconds) = 0;
     virtual MirBuffer* client_handle() const = 0;
-    virtual MirGraphicsRegion get_graphics_region() = 0;
+    virtual std::unique_ptr<GraphicsRegion> get_graphics_region() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat format() const = 0;
     virtual void on_ownership_notification(std::function<void()> const& fn) = 0;
