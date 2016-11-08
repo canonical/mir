@@ -19,6 +19,7 @@
 #include "mir_native_window.h"
 #include "android_format_conversion-inl.h"
 #include "mir/client_context.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
@@ -36,9 +37,10 @@ namespace mga=mir::graphics::android;
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
     ClientContext* const context,
-    std::shared_ptr<logging::Logger> const& logger)
-    : context{context},
-      logger{logger}
+    std::shared_ptr<logging::Logger> const& logger) :
+    context{context},
+    logger{logger},
+    fence_extension{nullptr, nullptr, nullptr}
 {
 }
 
@@ -126,7 +128,10 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
     return mir_format;
 }
 
-void* mcla::AndroidClientPlatform::request_interface(char const*, int)
+void* mcla::AndroidClientPlatform::request_interface(char const* name, int version)
 {
+    if (!strcmp(name, MIR_EXTENSION_FENCED_BUFFERS) && version == MIR_EXTENSION_FENCED_BUFFERS_VERSION_1)
+        return &fence_extension;
+
     return nullptr;
 }

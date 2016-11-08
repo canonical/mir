@@ -64,6 +64,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+#if 0
 int mir_buffer_get_fence(MirBuffer* b)
 try
 {
@@ -102,7 +103,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return -1;
 }
-
+#endif
 void mir_buffer_mmap(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {

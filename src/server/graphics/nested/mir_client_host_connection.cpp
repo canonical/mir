@@ -560,7 +560,8 @@ public:
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {
-        mir_buffer_wait_for_access(handle, access, ns.count());
+        (void)access; (void)ns;
+//        mir_buffer_wait_for_access(handle, access, ns.count());
     }
 
     MirBuffer* client_handle() const override
@@ -627,12 +628,13 @@ public:
 
     void set_fence(mir::Fd fd) override
     {
-        mir_buffer_associate_fence(handle, fd, mir_read_write);
+        (void)fd;
+        //mir_buffer_associate_fence(handle, fd, mir_read_write);
     }
 
     mir::Fd fence() const override
     {
-        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
+        return mir::Fd{};//return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
     }
 
 private:
