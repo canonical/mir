@@ -251,6 +251,36 @@ long area_of(geom::Rectangle const& rect)
 {
     return static_cast<long>(rect.size.width.as_int())*rect.size.height.as_int();
 }
+
+std::vector<mg::DisplayConfigurationOutput> calculate_best_outputs(
+    mg::DisplayConfiguration const& conf)
+{
+    std::vector<mg::DisplayConfigurationOutput> result;
+
+    mg::OverlappingOutputGrouping unique_outputs{conf};
+
+    unique_outputs.for_each_group(
+        [&](mg::OverlappingOutputGroup const& group)
+        {
+            geom::Rectangle const area = group.bounding_rectangle();
+
+            long max_overlap_area = 0;
+            mg::DisplayConfigurationOutput best_output;
+
+            group.for_each_output(
+                [&](mg::DisplayConfigurationOutput const& output)
+                {
+                    if (area_of(area.intersection_with(output.extents())) > max_overlap_area)
+                    {
+                        max_overlap_area = area_of(area.intersection_with(output.extents()));
+                        best_output = output;
+                    }
+                });
+            result.push_back(best_output);
+        });
+
+    return result;
+}
 }
 
 void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
@@ -261,54 +291,37 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     }
 
     decltype(outputs) result;
-    OverlappingOutputGrouping unique_outputs{configuration};
+    for (auto const& best_output : calculate_best_outputs(configuration))
+    {
+        auto const& egl_config_format = best_output.current_format;
+        geometry::Rectangle const& extents = best_output.extents();
 
-    unique_outputs.for_each_group(
-        [&](mg::OverlappingOutputGroup const& group)
+        auto& display_buffer = result[best_output.id];
+
         {
-            geometry::Rectangle const area = group.bounding_rectangle();
+            std::unique_lock<std::mutex> lock(outputs_mutex);
+            display_buffer = outputs[best_output.id];
+        }
 
-            long max_overlap_area = 0;
-            mg::DisplayConfigurationOutput best_output;
+        if (display_buffer)
+        {
+            if (display_buffer->view_area() != extents)
+                display_buffer.reset();
+        }
 
-            group.for_each_output([&](mg::DisplayConfigurationOutput const& output)
-                {
-                    if (area_of(area.intersection_with(output.extents())) > max_overlap_area)
-                    {
-                        max_overlap_area = area_of(area.intersection_with(output.extents()));
-                        best_output = output;
-                    }
-                });
+        if (!display_buffer)
+        {
+            complete_display_initialization(egl_config_format);
 
-            auto const& egl_config_format = best_output.current_format;
-            geometry::Rectangle const& extents = best_output.extents();
-
-            auto& display_buffer = result[best_output.id];
-
-            {
-                std::unique_lock<std::mutex> lock(outputs_mutex);
-                display_buffer = outputs[best_output.id];
-            }
-
-            if (display_buffer)
-            {
-                if (display_buffer->view_area() != extents)
-                    display_buffer.reset();
-            }
-
-            if (!display_buffer)
-            {
-                complete_display_initialization(egl_config_format);
-
-                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
-                display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
-                    std::make_shared<mgn::detail::DisplayBuffer>(
-                        egl_display,
-                        best_output,
-                        connection,
-                        passthrough_option));
-            }
-        });
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
+                std::make_shared<mgn::detail::DisplayBuffer>(
+                    egl_display,
+                    best_output,
+                    connection,
+                    passthrough_option));
+        }
+    }
 
     {
         std::unique_lock<std::mutex> lock(outputs_mutex);
