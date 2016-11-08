@@ -29,7 +29,30 @@
 #include <sys/eventfd.h>
 
 namespace mtd = mir::test::doubles;
+namespace mg = mir::graphics;
 
+namespace
+{
+bool compatible(mtd::StubDisplayConfig const& conf1, mtd::StubDisplayConfig const& conf2)
+{
+    auto compatible =
+        conf1.cards == conf2.cards &&
+        conf1.outputs.size() == conf2.outputs.size() &&
+        std::equal(begin(conf1.outputs), end(conf1.outputs),
+                             begin(conf2.outputs),
+                             [] (mg::DisplayConfigurationOutput const& output1, mg::DisplayConfigurationOutput const& output2)
+                             {
+                                 // ignore difference in orientation, scale factor, form factor, subpixel arrangement
+                                 auto clone = output2;
+                                 clone.orientation = output1.orientation;
+                                 clone.subpixel_arrangement = output1.subpixel_arrangement;
+                                 clone.scale = output1.scale;
+                                 clone.form_factor = output1.form_factor;
+                                 return clone == output1;
+                             });
+    return compatible;
+}
+}
 
 mtd::FakeDisplay::FakeDisplay()
     : config{std::make_shared<StubDisplayConfig>()},
@@ -88,6 +111,19 @@ void mtd::FakeDisplay::register_configuration_change_handler(
                     handler_called = true;
                 }
             });
+}
+
+bool mtd::FakeDisplay::apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& new_config)
+{
+    auto new_configuration = std::make_shared<StubDisplayConfig>(new_config);
+
+    if (compatible(*config, *new_configuration))
+    {
+        std::swap(config, new_configuration);
+        return true;
+    }
+
+    return false;
 }
 
 void mtd::FakeDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
