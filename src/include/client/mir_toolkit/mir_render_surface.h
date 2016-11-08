@@ -43,8 +43,13 @@ MirRenderSurface* mir_connection_create_render_surface_with_content_sync(
 bool mir_render_surface_with_content_is_valid(
         MirRenderSurface* render_surface);
 
-void mir_render_surface_with_content_release(
-        MirRenderSurface* render_surface);
+MirWaitHandle* mir_render_surface_with_content_release(
+    MirRenderSurface* render_surface,
+    mir_render_surface_callback callback,
+    void* context);
+
+void mir_render_surface_with_content_release_sync(
+    MirRenderSurface* render_surface);
 
 MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
     MirRenderSurface* render_surface,

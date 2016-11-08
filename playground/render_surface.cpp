@@ -242,7 +242,7 @@ int main(int /*argc*/, char* /*argv*/[])
         mir_buffer_stream_swap_buffers_sync(buffer_stream);
     }
 
-    mir_render_surface_release(render_surface);
+    mir_render_surface_with_content_release_sync(render_surface);
     mir_surface_release_sync(surface);
     close(signal_watch);
 

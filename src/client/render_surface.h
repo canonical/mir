@@ -38,6 +38,7 @@ class BufferStream;
 namespace client
 {
 class ClientPlatform;
+class BufferStream;
 namespace rpc
 {
 class DisplayServer;
@@ -60,6 +61,7 @@ public:
         mir_buffer_stream_callback callback,
         void *context) override;
     mir::frontend::BufferStreamId stream_id() const override;
+    std::shared_ptr<mir::client::BufferStream> buffer_stream() override;
 
     MirBufferStream* create_buffer_stream_from_id(
         int width, int height,
@@ -114,7 +116,7 @@ private:
     std::shared_ptr<ClientPlatform> platform;
     std::shared_ptr<mir::protobuf::BufferStream> protobuf_bs;
     ClientBufferStream* stream_;
-    std::shared_ptr<BufferStream> stream_from_id;
+    std::shared_ptr<mir::client::BufferStream> stream_from_id;
     std::shared_ptr<StreamCreationRequest> stream_creation_request;
     std::shared_ptr<StreamReleaseRequest> stream_release_request;
     std::shared_timed_mutex guard;

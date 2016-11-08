@@ -110,6 +110,11 @@ mf::BufferStreamId mcl::RenderSurface::stream_id() const
 */
 }
 
+std::shared_ptr<mcl::BufferStream> mcl::RenderSurface::buffer_stream()
+{
+    return stream_from_id;
+}
+
 MirWaitHandle* mcl::RenderSurface::create_buffer_stream(
     int width, int height,
     MirPixelFormat format,

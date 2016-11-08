@@ -389,6 +389,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_render_surface_with_content_get_buffer_stream;
     mir_connection_create_render_surface_with_content_sync;
     mir_render_surface_with_content_is_valid;
+    mir_render_surface_with_content_release;
+    mir_render_surface_with_content_release_sync;
     mir_render_surface_create_buffer_stream;
     mir_render_surface_create_buffer_stream_sync;
     mir_render_surface_is_valid;

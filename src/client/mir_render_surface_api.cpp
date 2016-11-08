@@ -125,22 +125,27 @@ catch (std::exception const& ex)
     return false;
 }
 
-void mir_render_surface_with_content_release(
-        MirRenderSurface* render_surface)
+MirWaitHandle* mir_render_surface_with_content_release(
+    MirRenderSurface* render_surface,
+    mir_render_surface_callback callback,
+    void* context)
 try
 {
     mir::require(render_surface);
-/*    auto connection = connection_map.connection(static_cast<void*>(render_surface));
-    auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    if (rs->stream_id().as_value() >= 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Render surface still holds content"));
-
+    auto connection = connection_map.connection(static_cast<void*>(render_surface));
     connection_map.erase(static_cast<void*>(render_surface));
-    connection->release_render_surface(render_surface);*/
+    return connection->release_render_surface_with_content(render_surface, callback, context);
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+void mir_render_surface_with_content_release_sync(
+    MirRenderSurface* render_surface)
+{
+    mir_render_surface_with_content_release(render_surface, nullptr, nullptr)->wait_for_all();
 }
 
 MirBufferStream* mir_render_surface_with_content_get_buffer_stream(
