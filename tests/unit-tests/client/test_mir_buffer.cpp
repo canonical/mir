@@ -113,6 +113,7 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
 }
 
+#if 0
 TEST_F(MirBufferTest, sets_client_buffers_fence)
 {
     mir::Fd fakefence { mir::IntOwnedFd{19} };
@@ -147,6 +148,7 @@ TEST_F(MirBufferTest, waits_for_proper_access)
     buffer.set_fence(fakefence, current_access);
     EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
 }
+#endif
 
 TEST_F(MirBufferTest, callback_called_when_available_from_creation)
 {

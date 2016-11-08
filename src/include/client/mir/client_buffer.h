@@ -74,9 +74,6 @@ public:
     virtual void fill_update_msg(MirBufferPackage& message) = 0;
     virtual MirBufferPackage* package() const = 0;
 
-    virtual void set_fence(Fd, MirBufferAccess) = 0;
-    virtual Fd get_fence() const = 0;
-    virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) = 0;
     virtual void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) = 0;
 
 protected:

@@ -134,6 +134,7 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
     EXPECT_THAT(msg.fd_items, Eq(0));
 }
 
+#if 0
 TEST_F(AndroidClientBuffer, can_update_fences)
 {
     int fake_fence = 8482;
@@ -204,3 +205,4 @@ TEST_F(AndroidClientBuffer, can_wait_fence)
     EXPECT_TRUE(buffer.wait_fence(mir_read_write, 10999999ns));
     EXPECT_TRUE(buffer.wait_fence(mir_read_write, 11000001ns));
 }
+#endif

@@ -46,10 +46,6 @@ public:
     virtual MirGraphicsRegion map_region() = 0;
     virtual void unmap_region() = 0;
 
-    virtual void set_fence(Fd, MirBufferAccess) = 0;
-    virtual Fd get_fence() const = 0;
-    virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) = 0;
-
     virtual MirBufferUsage buffer_usage() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
     virtual geometry::Size size() const = 0;

@@ -20,6 +20,7 @@
 
 #include "mir/client_platform.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
+#include "mir_toolkit/extensions/android_egl.h"
 
 namespace mir
 {
@@ -49,6 +50,9 @@ public:
 private:
     ClientContext* const context;
     std::shared_ptr<logging::Logger> const logger;
+
+    std::shared_ptr<EGLNativeDisplayType> const native_display;
+    MirExtensionAndroidEGL android_types_extension;
     MirExtensionFencedBuffers fence_extension;
 };
 

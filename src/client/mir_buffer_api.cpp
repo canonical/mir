@@ -64,46 +64,6 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-#if 0
-int mir_buffer_get_fence(MirBuffer* b)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->get_fence();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return mir::Fd::invalid;
-}
-
-void mir_buffer_associate_fence(MirBuffer* b, int fence, MirBufferAccess access)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    buffer->set_fence(mir::Fd(fence), access);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-int mir_buffer_wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-     
-    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout)) ? 0 : -1;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return -1;
-}
-#endif
 void mir_buffer_mmap(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {

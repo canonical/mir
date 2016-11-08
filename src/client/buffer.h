@@ -23,7 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 #include "atomic_callback.h"
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -53,10 +53,6 @@ public:
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
     void unmap_region() override;
-
-    void set_fence(Fd, MirBufferAccess) override;
-    Fd get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
 
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
