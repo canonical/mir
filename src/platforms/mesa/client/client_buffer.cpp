@@ -159,20 +159,6 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-void mclm::ClientBuffer::set_fence(mir::Fd, MirBufferAccess)
-{
-}
-
-mir::Fd mclm::ClientBuffer::get_fence() const
-{
-    return mir::Fd(mir::Fd::invalid);
-}
-
-bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
-{
-    return true;
-}
-
 MirBufferPackage* mclm::ClientBuffer::package() const
 {
     if (auto native = dynamic_cast<mir::graphics::mesa::NativeBuffer*>(native_buffer_handle().get()))

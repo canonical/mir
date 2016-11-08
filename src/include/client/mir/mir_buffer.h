@@ -21,7 +21,6 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_native_buffer.h"
-#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 #include <memory>
