@@ -229,6 +229,12 @@ typedef struct MirModuleProperties
     char const *filename;
 } MirModuleProperties;
 
+typedef enum MirBufferLayout
+{
+    mir_buffer_layout_unknown = 0,
+    mir_buffer_layout_linear  = 1,
+} MirBufferLayout;
+
 /**
  * Retrieved information about a MirSurface. This is most useful for learning
  * how and where to write to a 'mir_buffer_usage_software' surface.
