@@ -175,76 +175,6 @@ geom::Rectangle mgn::detail::DisplaySyncGroup::view_area() const
     return output->view_area();
 }
 
-mgn::Display::Display(
-    std::shared_ptr<mg::Platform> const& platform,
-    std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config,
-    PassthroughOption passthrough_option) :
-    platform{platform},
-    connection{connection},
-    display_report{display_report},
-    egl_display{connection->egl_native_display(), gl_config},
-    passthrough_option(passthrough_option),
-    outputs{},
-    current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
-{
-    decltype(current_configuration) conf{dynamic_cast<NestedDisplayConfiguration*>(current_configuration->clone().release())};
-
-    initial_conf_policy->apply_to(*conf);
-
-    if (*current_configuration != *conf)
-    {
-        connection->apply_display_config(**conf);
-        swap(current_configuration, conf);
-    }
-
-    create_surfaces(*current_configuration);
-}
-
-mgn::Display::~Display() noexcept
-{
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
-    if (eglGetCurrentContext() == egl_display.egl_context())
-        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-}
-
-void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
-{
-    std::unique_lock<std::mutex> lock(outputs_mutex);
-    for (auto& i : outputs)
-        f(*i.second);
-}
-
-std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
-{
-    std::lock_guard<std::mutex> lock(configuration_mutex);
-    return current_configuration->clone();
-}
-
-void mgn::Display::complete_display_initialization(MirPixelFormat format)
-{
-    if (egl_display.egl_context() != EGL_NO_CONTEXT)  return;
-
-    egl_display.initialize(format);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
-}
-
-void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
-{
-    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
-
-    {
-        std::lock_guard<std::mutex> lock(configuration_mutex);
-
-        swap(current_configuration, new_config);
-        create_surfaces(*current_configuration);
-    }
-
-    connection->apply_display_config(**current_configuration);
-}
-
 namespace
 {
 long area_of(geom::Rectangle const& rect)
@@ -283,24 +213,94 @@ std::vector<mg::DisplayConfigurationOutput> calculate_best_outputs(
 }
 }
 
-void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
+mgn::Display::Display(
+    std::shared_ptr<mg::Platform> const& platform,
+    std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    PassthroughOption passthrough_option) :
+    platform{platform},
+    connection{connection},
+    display_report{display_report},
+    egl_display{connection->egl_native_display(), gl_config},
+    passthrough_option(passthrough_option),
+    outputs{},
+    current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
+{
+    decltype(current_configuration) conf{dynamic_cast<NestedDisplayConfiguration*>(current_configuration->clone().release())};
+
+    initial_conf_policy->apply_to(*conf);
+
+    if (*current_configuration != *conf)
+    {
+        connection->apply_display_config(**conf);
+        swap(current_configuration, conf);
+    }
+
+    create_surfaces(calculate_best_outputs(*current_configuration));
+}
+
+mgn::Display::~Display() noexcept
+{
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    if (eglGetCurrentContext() == egl_display.egl_context())
+        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
+{
+    std::unique_lock<std::mutex> lock(outputs_mutex);
+    for (auto& i : outputs)
+        f(*i.second);
+}
+
+std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
+{
+    std::lock_guard<std::mutex> lock(configuration_mutex);
+    return current_configuration->clone();
+}
+
+void mgn::Display::complete_display_initialization(MirPixelFormat format)
+{
+    if (egl_display.egl_context() != EGL_NO_CONTEXT)  return;
+
+    egl_display.initialize(format);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
+}
+
+void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
     if (!configuration.valid())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
     }
 
-    decltype(outputs) result;
-    for (auto const& best_output : calculate_best_outputs(configuration))
-    {
-        auto const& egl_config_format = best_output.current_format;
-        geometry::Rectangle const& extents = best_output.extents();
+    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
 
-        auto& display_buffer = result[best_output.id];
+    {
+        std::lock_guard<std::mutex> lock(configuration_mutex);
+
+        swap(current_configuration, new_config);
+        create_surfaces(calculate_best_outputs(*current_configuration));
+    }
+
+    connection->apply_display_config(**current_configuration);
+}
+
+void mgn::Display::create_surfaces(std::vector<mg::DisplayConfigurationOutput> const& output_list)
+{
+    decltype(outputs) result;
+    for (auto const& output : output_list)
+    {
+        auto const& egl_config_format = output.current_format;
+        geometry::Rectangle const& extents = output.extents();
+
+        auto& display_buffer = result[output.id];
 
         {
             std::unique_lock<std::mutex> lock(outputs_mutex);
-            display_buffer = outputs[best_output.id];
+            display_buffer = outputs[output.id];
         }
 
         if (display_buffer)
@@ -317,7 +317,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
             display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                 std::make_shared<mgn::detail::DisplayBuffer>(
                     egl_display,
-                    best_output,
+                    output,
                     connection,
                     passthrough_option));
         }
