@@ -87,6 +87,7 @@ MIR_COMMON_0.25 {
     typeinfo?for?mir::dispatch::ReadableFd;
     typeinfo?for?mir::dispatch::ThreadedDispatcher;
     typeinfo?for?mir::events::ContactState;
+    typeinfo?for?mir::events::InputDeviceState;
     typeinfo?for?mir::Fd;
     typeinfo?for?mir::graphics::NativeBuffer;
     typeinfo?for?mir::input::Keymap;
@@ -105,6 +106,7 @@ MIR_COMMON_0.25 {
     vtable?for?mir::dispatch::ReadableFd;
     vtable?for?mir::dispatch::ThreadedDispatcher;
     vtable?for?mir::events::ContactState;
+    vtable?for?mir::events::InputDeviceState;
     vtable?for?mir::Fd;
     vtable?for?mir::graphics::NativeBuffer;
     vtable?for?mir::input::Keymap;

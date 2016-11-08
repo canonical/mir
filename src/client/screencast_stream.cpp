@@ -244,6 +244,11 @@ MirConnection* mcl::ScreencastStream::connection() const
     return connection_;
 }
 
+MirRenderSurface* mcl::ScreencastStream::render_surface() const
+{
+    return nullptr;
+}
+
 void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set cache size on screencast is invalid"));
@@ -262,6 +267,11 @@ MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
 void mcl::ScreencastStream::set_size(geom::Size)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set size on screencast is invalid"));
+}
+
+geom::Size mcl::ScreencastStream::size() const
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to get size on screencast is invalid"));
 }
 
 MirWaitHandle* mcl::ScreencastStream::set_scale(float)

@@ -69,7 +69,7 @@ public:
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
-    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) const override;
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) override;
     void configure(graphics::DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
@@ -114,6 +114,9 @@ private:
     OverlayOptimization const overlay_option;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
+    void configure_locked(
+        graphics::DisplayConfiguration const& new_configuration,
+        std::lock_guard<decltype(configuration_mutex)> const&);
 
     std::mutex mutable vsync_mutex;
     std::unordered_map<unsigned,AtomicFrame> last_frame;

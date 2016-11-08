@@ -236,6 +236,28 @@ MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int i
  */
 int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
 
+/**
+ * Set the physical size of the buffers provided by the buffer stream.
+ *
+ * \warning: This does not affect the size of the current buffer.
+ *           The next buffer after calling mir_buffer_stream_swap_buffers
+ *           will have the designated size.
+ *
+ * \param [in] stream   The buffer stream
+ * \param [in] width    The desired physical width
+ * \param [in] height   The desired physical height
+ */
+void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height);
+
+/**
+ * Get the physical size of the next buffer that will be provided by the stream.
+ *
+ * \param [in]  stream   The buffer stream
+ * \param [out] width    The physical width of the stream
+ * \param [out] height   The physical height of the stream
+ */
+void mir_buffer_stream_get_size(MirBufferStream* stream, int* width, int* height);
+
 #ifdef __cplusplus
 }
 /**@}*/

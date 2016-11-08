@@ -23,6 +23,7 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/event_matchers.h"
 #include <xkbcommon/xkbcommon-keysyms.h>
 #include <xkbcommon/xkbcommon.h>
@@ -36,12 +37,27 @@ namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mircv = mi::receiver;
 namespace mev = mir::events;
+namespace mtf = mir_test_framework;
 
 using namespace ::testing;
 
 struct XKBMapper : Test
 {
+    // en_US.UTF-8 is the fallback used by libxkbcommon - setting this avoids
+    // tests failing on systems with a locale that points to a working but 
+    // different set of compose sequences
+    mir_test_framework::TemporaryEnvironmentValue lc_all{"LC_ALL", "en_US.UTF-8"};
+    int const xkb_new_unicode_symbols_offset = 0x1000000;
     mircv::XKBMapper mapper;
+
+    int map_key(mircv::XKBMapper &keymapper, MirInputDeviceId dev, MirKeyboardAction action, int scan_code)
+    {
+        auto ev = mev::make_event(dev, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, action,
+                                  0, scan_code, mir_input_event_modifier_none);
+
+        keymapper.map_event(*ev);
+        return ev->to_input()->to_keyboard()->key_code();
+    }
 
     int map_key(MirKeyboardAction action, int scan_code)
     {
@@ -333,4 +349,92 @@ TEST_F(XKBMapper, setting_keymap_again_overwrites_keymap)
     EXPECT_EQ(XKB_KEY_y, map_key(keyboard, mir_keyboard_action_down, KEY_Y));
     mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "de", "",""});
     EXPECT_EQ(XKB_KEY_y, map_key(keyboard, mir_keyboard_action_down, KEY_Z));
+}
+
+TEST_F(XKBMapper, composes_keys_on_deadkey_keymap)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl",""});
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_down, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_up, KEY_U));
+}
+
+TEST_F(XKBMapper, release_of_compose_sequence_keys_after_completion_still_yields_dead_keys)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl",""});
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Udiaeresis, map_key(keyboard, mir_keyboard_action_down, KEY_U));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Udiaeresis, map_key(keyboard, mir_keyboard_action_up, KEY_U));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+}
+
+TEST_F(XKBMapper, repeated_key_that_completed_the_sequence_yields_a_repeated_completion_key)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl",""});
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_down, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+    EXPECT_EQ(XKB_KEY_udiaeresis, map_key(keyboard, mir_keyboard_action_repeat, KEY_U));
+}
+
+TEST_F(XKBMapper, compose_key_option_activates_multi_key_based_sequences)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl","compose:ralt"});
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTALT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTALT));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_COMMA));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_COMMA));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+    auto const black_heart = xkb_new_unicode_symbols_offset + 0x2665;
+    EXPECT_EQ(black_heart, map_key(keyboard, mir_keyboard_action_down, KEY_3));
+}
+
+TEST_F(XKBMapper, breaking_a_compose_sequence_yields_no_keysym)
+{
+    auto keyboard = MirInputDeviceId{3};
+    mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl",""});
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_down, KEY_N));
+    EXPECT_EQ(XKB_KEY_NoSymbol, map_key(keyboard, mir_keyboard_action_up, KEY_N));
+
+    EXPECT_EQ(XKB_KEY_u, map_key(keyboard, mir_keyboard_action_down, KEY_U));
+    EXPECT_EQ(XKB_KEY_u, map_key(keyboard, mir_keyboard_action_up, KEY_U));
+}
+
+TEST_F(XKBMapper, no_key_composition_when_no_compose_file_is_found)
+{
+    mtf::TemporaryEnvironmentValue compose_file_path{"XCOMPOSEFILE", "/foo/bogus/path/Compose"};
+    mtf::TemporaryEnvironmentValue home_path{"HOME", "/not/your/home"};
+    mtf::TemporaryEnvironmentValue localedir{"XLOCALEDIR", "/not/your/home"};
+    mircv::XKBMapper local_mapper;
+
+    auto keyboard = MirInputDeviceId{3};
+    local_mapper.set_keymap_for_device(keyboard, mi::Keymap{"pc105", "us", "intl",""});
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(local_mapper, keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_dead_diaeresis, map_key(local_mapper, keyboard, mir_keyboard_action_down, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_dead_diaeresis, map_key(local_mapper, keyboard, mir_keyboard_action_up, KEY_APOSTROPHE));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(local_mapper, keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_u, map_key(local_mapper, keyboard, mir_keyboard_action_down, KEY_U));
+    EXPECT_EQ(XKB_KEY_u, map_key(local_mapper, keyboard, mir_keyboard_action_up, KEY_U));
 }

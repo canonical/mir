@@ -47,6 +47,7 @@ void            mir_eglapp_quit(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_cleanup(void);
 void            mir_eglapp_handle_event(struct MirSurface* surface, struct MirEvent const* ev, void* unused);
+double          mir_eglapp_display_hz(void);
 
 struct MirConnection* mir_eglapp_native_connection();
 struct MirSurface*    mir_eglapp_native_surface();

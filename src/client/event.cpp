@@ -151,12 +151,15 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) MIR_HANDLE_
     return ev->to_keymap();
 })
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
 
     return ev->to_input_configuration();
 })
+#pragma GCC diagnostic pop
 
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
@@ -235,8 +238,9 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) MIR_HA
     return ev->device_id();
 })
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /* Input configuration event accessors */
-
 MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
@@ -254,6 +258,7 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id();
 })
+#pragma GCC diagnostic pop
 
 /* Surface output event accessors */
 

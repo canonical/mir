@@ -24,6 +24,8 @@
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
+#include "buffer_stream_configuration.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -71,7 +73,11 @@ class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
     BufferStream(
+        mir::client::rpc::DisplayServer& server,
+        std::weak_ptr<SurfaceMap> const& map);
+    BufferStream(
         MirConnection* connection,
+        MirRenderSurface* render_surface,
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
@@ -123,9 +129,11 @@ public:
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
     void set_size(geometry::Size) override;
+    geometry::Size size() const override;
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+    MirRenderSurface* render_surface() const override;
 
 protected:
     BufferStream(BufferStream const&) = delete;
@@ -134,7 +142,6 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
@@ -147,14 +154,13 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool fixed_swap_interval;
-    int swap_interval_;
+    optional_value<int> user_swap_interval;
+    BufferStreamConfiguration interval_config;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     std::shared_ptr<void> egl_native_window_;
 
-    MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     std::shared_ptr<MemoryRegion> secured_region;
@@ -166,6 +172,7 @@ private:
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
+    MirRenderSurface* render_surface_;
 };
 
 }

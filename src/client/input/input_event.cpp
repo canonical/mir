@@ -18,6 +18,7 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+
 // TODO Remove me once we use capnproto for input platform serialization
 #include "mir/cookie/blob.h"
 
@@ -34,6 +35,7 @@
 #include <string.h>
 
 namespace ml = mir::logging;
+
 
 namespace
 {
@@ -53,7 +55,7 @@ std::string input_event_type_to_string(MirInputEventType input_event_type)
 }
 
 template <typename EventType>
-void expect_event_type(EventType const* ev, MirEventType t) try
+void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (ev->type() != t)
     {
@@ -61,12 +63,7 @@ void expect_event_type(EventType const* ev, MirEventType t) try
             mir::event_type_to_string(ev->type()));
         abort();
     }
-} catch (std::exception const& e)
-{
-    mir::log_critical(e.what());
-    abort();
-}
-
+})
 }
 
 MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
@@ -171,6 +168,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) MI
         abort();
     }
     return event->id(touch_index);
+
 })
 
 MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(

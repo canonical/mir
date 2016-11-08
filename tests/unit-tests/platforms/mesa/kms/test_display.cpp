@@ -458,10 +458,23 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
     setup_post_update_expectations();
 
+    // clear_crtc happens at some stage. Not interesting.
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                         crtc_id, 0,
+                                         _, _, _, _, _))
+        .WillOnce(Return(0));
+
     {
         InSequence s;
 
-        /* New FB flip failure */
+        // DisplayBuffer construction paints an empty screen.
+        // That's probably less than ideal but we've always had it that way.
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                             crtc_id, fake.fb_id1,
+                                             _, _, _, _, _))
+            .WillOnce(Return(0));
+
+        // New FB flip failure
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_id,
                                               fake.fb_id2,
@@ -469,16 +482,22 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             .Times(Exactly(1))
             .WillOnce(Return(-1));
 
-        /* Release failed bufobj */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
+        // Expect fallback to blitting
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                             crtc_id, fake.fb_id2,
+                                             _, _, _, _, _))
+            .WillOnce(Return(0));
+
+        // Release all buffer objects
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
 
-        /* Release scheduled_bufobj (at destruction time) */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }
 
-    EXPECT_THROW(
+    // drmModePageFlip is allowed to fail (e.g. on VirtualBox)
+    EXPECT_NO_THROW(
     {
         auto display = create_display(create_platform());
         display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
@@ -487,7 +506,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             });
             group.post();
         });
-    }, std::runtime_error);
+    });
 }
 
 TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)

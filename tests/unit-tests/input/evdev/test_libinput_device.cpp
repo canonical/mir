@@ -102,11 +102,6 @@ struct MockEventBuilder : mi::EventBuilder
                                       return builder.pointer_event(time, action, buttons, hscroll, vscroll,
                                                                    relative_x, relative_y);
                                   }));
-        ON_CALL(*this, configuration_event(_,_))
-            .WillByDefault(Invoke([this](Timestamp time, MirInputConfigurationAction action)
-                                  {
-                                        return builder.configuration_event(time, action);
-                                  }));
         ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _))
             .WillByDefault(Invoke([this](Timestamp time, MirPointerAction action, MirPointerButtons buttons, float x,
                                          float y, float hscroll, float vscroll, float relative_x, float relative_y)
@@ -124,7 +119,6 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD9(
         pointer_event,
         mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
-    MOCK_METHOD2(configuration_event, mir::EventUPtr(Timestamp, MirInputConfigurationAction));
     mir::EventUPtr device_state_event(float, float) override
     {
         return {nullptr,[](MirEvent*){}};

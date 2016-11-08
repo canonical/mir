@@ -50,9 +50,11 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD1(buffer_available, void(mir::protobuf::Buffer const&));
     MOCK_METHOD0(buffer_unavailable, void());
     MOCK_METHOD1(set_size, void(geometry::Size));
+    MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_METHOD1(set_scale, MirWaitHandle*(float));
     MOCK_CONST_METHOD0(get_error_message, char const*(void));
     MOCK_CONST_METHOD0(connection, MirConnection*());
+    MOCK_CONST_METHOD0(render_surface, MirRenderSurface*());
 };
 
 }
