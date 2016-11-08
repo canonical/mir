@@ -24,8 +24,10 @@
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -536,7 +538,10 @@ namespace
 class HostBuffer : public mgn::NativeBuffer
 {
 public:
-    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
+        fence_extensions(static_cast<MirExtensionFencedBuffers*>(
+            mir_connection_request_interface(mir_connection, 
+                MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1)))
     {
         mir_connection_allocate_buffer(
             mir_connection,
@@ -560,8 +565,8 @@ public:
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {
-        (void)access; (void)ns;
-//        mir_buffer_wait_for_access(handle, access, ns.count());
+        if (fence_extensions && fence_extensions->wait_for_access)
+            fence_extensions->wait_for_access(handle, access, ns.count());
     }
 
     MirBuffer* client_handle() const override
@@ -628,16 +633,21 @@ public:
 
     void set_fence(mir::Fd fd) override
     {
-        (void)fd;
-        //mir_buffer_associate_fence(handle, fd, mir_read_write);
+        if (fence_extensions && fence_extensions->associate_fence)
+            fence_extensions->associate_fence(handle, fd, mir_read_write);
     }
 
     mir::Fd fence() const override
     {
-        return mir::Fd{};//return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
+        if (fence_extensions && fence_extensions->get_fence)
+            return mir::Fd{fence_extensions->get_fence(handle)};
+        else
+            return mir::Fd{mir::Fd::invalid};
     }
 
 private:
+    MirExtensionFencedBuffers* fence_extensions = nullptr;
+
     std::function<void()> f;
     MirBuffer* handle = nullptr;
     std::mutex mut;
