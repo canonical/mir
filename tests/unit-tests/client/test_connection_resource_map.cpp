@@ -45,7 +45,7 @@ struct ConnectionResourceMap : testing::Test
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };
     std::shared_ptr<MirRenderSurface> render_surface { std::make_shared<mcl::RenderSurface>(
-        nullptr, nullptr, nullptr) };
+        nullptr, nullptr, nullptr, mir::geometry::Size{0, 0}) };
 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};

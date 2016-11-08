@@ -40,7 +40,9 @@ char const* output_type_name(unsigned output_type)
         "HDMI-B",
         "TV",
         "eDP",
-        "Virtual"
+        "Virtual",
+        "DSI",
+        "DPI",
     };
     if (output_type < sizeof(name)/sizeof(name[0]))
         return name[output_type];

@@ -384,13 +384,20 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
-    mir_buffer_egl_image_parameters;
     mir_connection_create_render_surface;
     mir_render_surface_create_buffer_stream;
     mir_render_surface_create_buffer_stream_sync;
     mir_render_surface_is_valid;
     mir_render_surface_release;
+    mir_render_surface_get_size;
+    mir_render_surface_set_size;
     mir_surface_spec_add_render_surface;
+
+    #private functions needed temporarily by nested passthrough
+    #should not be published along with the rest of the NBS symbols
+    mir_buffer_egl_image_parameters;
+    mir_presentation_chain_set_queueing_mode;
+    mir_presentation_chain_set_dropping_mode;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
@@ -472,6 +479,8 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_touchpad_configuration_set_scroll_modes;
     mir_touchpad_configuration_set_tap_to_click;
     mir_buffer_stream_get_swapinterval;
+    mir_buffer_stream_set_size;
+    mir_buffer_stream_get_size;
 } MIR_CLIENT_0.24;
 
 MIR_CLIENT_DETAIL_0.25 {

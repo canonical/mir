@@ -90,6 +90,7 @@ add_library(mirclientobjects OBJECT
   mir_error.cpp
   mir_error.h
   mir_error_api.cpp
+  buffer_stream_configuration.cpp
   error_handler.h
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
@@ -168,11 +169,6 @@ set_target_properties(
   SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${debug_symbol_map}"
   LINK_DEPENDS ${debug_symbol_map}
-)
-
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/debug
-  DESTINATION "include/mirclient/mir_toolkit/debug"
 )
 
 install(

@@ -26,6 +26,42 @@ MirMotionEvent::MirMotionEvent()
     event.getMotionSet().initMotions(mir::capnp::MotionSetEvent::MAX_COUNT);
 }
 
+MirMotionEvent::MirMotionEvent(MirInputDeviceId id,
+                               std::chrono::nanoseconds timestamp,
+                               std::vector<uint8_t> const& cookie,
+                               MirInputEventModifiers modifiers,
+                               std::vector<mir::events::ContactState> const& contacts)
+{
+    event.initMotionSet();
+
+    auto mev = event.getMotionSet();
+    mev.initMotions(mir::capnp::MotionSetEvent::MAX_COUNT);
+    mev.getDeviceId().setId(id);
+    mev.getEventTime().setCount(timestamp.count());
+    mev.setModifiers(modifiers);
+    mev.setCount(contacts.size());
+
+    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
+    mev.setCookie(cookie_data);
+
+    for (size_t i = 0; i < contacts.size(); ++i)
+    {
+        auto& contact = contacts[i];
+        auto motion   = mev.getMotions()[i];
+        motion.setId(contact.touch_id);
+        motion.setX(contact.x);
+        motion.setY(contact.y);
+        motion.setPressure(contact.pressure);
+        motion.setTouchMajor(contact.touch_major);
+        motion.setTouchMinor(contact.touch_minor);
+        motion.setSize(contact.touch_major);
+        motion.setAction(contact.action);
+
+        auto capnp_tool_type = static_cast<mir::capnp::MotionSetEvent::Motion::ToolType>(contact.tooltype);
+        motion.setToolType(capnp_tool_type);
+    }
+}
+
 int32_t MirMotionEvent::device_id() const
 {
     return event.asReader().getMotionSet().getDeviceId().getId();

@@ -51,3 +51,13 @@ void mcl::ErrorChain::submit_buffer(MirBuffer*)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot submit: invalid MirPresentationChain"));
 }
+
+void mcl::ErrorChain::set_queueing_mode()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot set mode: invalid MirPresentationChain"));
+}
+
+void mcl::ErrorChain::set_dropping_mode()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot set mode: invalid MirPresentationChain"));
+}

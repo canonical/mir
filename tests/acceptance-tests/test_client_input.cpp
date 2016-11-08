@@ -800,7 +800,7 @@ TEST_F(TestClientInput, sends_no_wrong_keymaps_to_clients)
 
     EXPECT_THROW(
         {server.the_shell()->focused_surface()->set_keymap(id, model, layout, "", "");},
-        std::runtime_error);
+        std::invalid_argument);
 }
 
 TEST_F(TestClientInput, event_filter_may_consume_events)
