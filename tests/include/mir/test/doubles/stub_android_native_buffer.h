@@ -41,7 +41,7 @@ struct StubAndroidNativeBuffer : public graphics::android::NativeBuffer
     }
 
     auto anwb() const -> ANativeWindowBuffer* override { return const_cast<ANativeWindowBuffer*>(&stub_anwb); }
-    auto handle() const -> buffer_handle_t override { return &native_handle; }
+    auto handle() const -> buffer_handle_t override { return native_handle.get(); }
     auto copy_fence() const -> graphics::android::NativeFence override { return -1; }
 
     void ensure_available_for(graphics::android::BufferAccess) {}
@@ -53,7 +53,8 @@ struct StubAndroidNativeBuffer : public graphics::android::NativeBuffer
     void wait_for_unlock_by_gpu() {};
 
     ANativeWindowBuffer stub_anwb;
-    native_handle_t native_handle;
+    std::unique_ptr<native_handle_t> native_handle =
+        std::make_unique<native_handle_t>();
 };
 }
 }

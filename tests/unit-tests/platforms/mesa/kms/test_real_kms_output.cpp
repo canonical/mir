@@ -237,10 +237,10 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
-    EXPECT_THROW({
-        output.schedule_page_flip(fb_id);
-    }, std::runtime_error);
-    EXPECT_THROW({
+    EXPECT_NO_THROW({
+        EXPECT_FALSE(output.schedule_page_flip(fb_id));
+    });
+    EXPECT_THROW({  // schedule failed. It's programmer error if you then wait.
         output.wait_for_page_flip();
     }, std::runtime_error);
 }
