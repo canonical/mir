@@ -12,15 +12,26 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirinputplatform ABI bumped to 6
       . mircore ABI added. current version is 1
     - Enhancements:
-      . Replaced mir event structures with capnproto structures
-      . Added pointer confinement and an example
-      . Added support for rasberry pi outputs
+      . Added pointer confinement support
+      . Identify Raspberry Pi output types correctly
       . Added dead key and compose key support
-      . Added gamma support for kms hardware
-      . Yakkety gcc-6 support
-      . Added passthrough support for nest servers
-      . Added libmircore
-      . Implemented mir render surface
+      . Added gamma support for KMS hardware
+      . Added yakkety and zesty gcc-6 support
+      . Added surface passthrough support for fullscreen clients of nested
+        servers
+      . Introduced a new library `libmircore'
+      . Began migrating from Protobuf to Cap'n Proto starting with events
+      . Began support for VirtualBox (servers now start instead of crashing
+        but full support for GL clients is still missing)
+      . Began support for high precision frame timing, implemented for the
+        KMS, Android and X11 backends so far
+      . Added --display-report support for the X11 backend
+      . Improved reliability of `mirvanity' latency test tool
+      . Moved to using the CSS cursor naming scheme internally, although
+        the old symbolic indentifiers remain unchanged and still work
+      . Added refresh rate to MirSurfaceOutputEvent
+      . Many improvements to automated test quality and coverage
+      . Smoother desktop zoom using mir_proving_server (Super + two fingers)
     - Bugs fixed:
       . FTBFS On Zesty: invalid use of
         'struct native_handle' (LP: #1638774)
