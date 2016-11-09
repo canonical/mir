@@ -54,8 +54,6 @@ public:
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
-    std::unique_ptr<Buffer> reconstruct_from(MirBufferPackage* package, MirPixelFormat format);
-
 private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);

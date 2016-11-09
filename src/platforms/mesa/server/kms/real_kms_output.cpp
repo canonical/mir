@@ -112,8 +112,9 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
     {
-        fatal_error("Output %s has no associated CRTC to set a framebuffer on",
-                    mgk::connector_name(connector).c_str());
+        mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
+                       mgk::connector_name(connector).c_str());
+        return false;
     }
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
@@ -165,8 +166,9 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
         return true;
     if (!current_crtc)
     {
-        fatal_error("Output %s has no associated CRTC to schedule page flips on",
-                   mgk::connector_name(connector).c_str());
+        mir::log_error("Output %s has no associated CRTC to schedule page flips on",
+                       mgk::connector_name(connector).c_str());
+        return false;
     }
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id, connector_id);
 }
@@ -285,8 +287,9 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 {
     if (!ensure_crtc())
     {
-        fatal_error("Output %s has no associated CRTC to set gamma on",
-                    mgk::connector_name(connector).c_str());
+        mir::log_warning("Output %s has no associated CRTC to set gamma on",
+                         mgk::connector_name(connector).c_str());
+        return;
     }
 
     if (gamma.red.size() != gamma.green.size() ||

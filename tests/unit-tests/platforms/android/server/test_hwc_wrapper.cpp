@@ -55,13 +55,14 @@ struct HwcWrapper : public ::testing::Test
         return 0;
     }
 
-    hwc_display_contents_1_t primary_list;
-    hwc_display_contents_1_t external_list;
-    hwc_display_contents_1_t virtual_list;
+    std::unique_ptr<hwc_display_contents_1_t> primary_list =
+        std::make_unique<hwc_display_contents_1_t>();
+    std::unique_ptr<hwc_display_contents_1_t> external_list =
+        std::make_unique<hwc_display_contents_1_t>();
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> primary_displays{{
-        &primary_list, nullptr, nullptr}};
+        primary_list.get(), nullptr, nullptr}};
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> both_displays{{
-        &primary_list, &external_list, nullptr}};
+        primary_list.get(), external_list.get(), nullptr}};
     
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
     std::shared_ptr<mtd::MockHwcReport> const mock_report;
@@ -85,7 +86,7 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters)
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
     wrapper.prepare(primary_displays);
 
-    EXPECT_EQ(&primary_list, primary_display);
+    EXPECT_EQ(primary_list.get(), primary_display);
     EXPECT_EQ(nullptr, virtual_display);
     EXPECT_EQ(nullptr, external_display);
 }
@@ -105,8 +106,8 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters_with_external_display)
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
     wrapper.prepare(both_displays);
 
-    EXPECT_EQ(&primary_list, primary_display);
-    EXPECT_EQ(&external_list, external_display);
+    EXPECT_EQ(primary_list.get(), primary_display);
+    EXPECT_EQ(external_list.get(), external_display);
     EXPECT_EQ(nullptr, virtual_display);
 }
 
@@ -140,8 +141,8 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
     wrapper.set(both_displays);
 
-    EXPECT_EQ(&primary_list, primary_display);
-    EXPECT_EQ(&external_list, external_display);
+    EXPECT_EQ(primary_list.get(), primary_display);
+    EXPECT_EQ(external_list.get(), external_display);
     EXPECT_EQ(nullptr, virtual_display);
 }
 
