@@ -37,7 +37,6 @@ class MirRenderSurface
 public:
     virtual MirConnection* connection() const = 0;
     virtual mir::frontend::BufferStreamId stream_id() const = 0;
-    virtual std::shared_ptr<mir::client::BufferStream> buffer_stream() = 0;
     virtual mir::geometry::Size size() const = 0;
     virtual void set_size(mir::geometry::Size) = 0;
 

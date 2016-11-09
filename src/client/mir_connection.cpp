@@ -1346,18 +1346,17 @@ MirWaitHandle* MirConnection::release_render_surface_with_content(
 {
     auto new_wait_handle = new MirWaitHandle;
     auto rs = surface_map->render_surface(render_surface);
-    auto stream = rs->buffer_stream();
 
-    StreamRelease stream_release{dynamic_cast<mcl::ClientBufferStream*>(stream.get()),
+    StreamRelease stream_release{nullptr,
                                  new_wait_handle,
                                  nullptr,
                                  callback,
                                  context,
-                                 stream->rpc_id().as_value(),
+                                 rs->stream_id().as_value(),
                                  render_surface};
 
     mp::BufferStreamId buffer_stream_id;
-    buffer_stream_id.set_value(stream->rpc_id().as_value());
+    buffer_stream_id.set_value(rs->stream_id().as_value());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
@@ -1406,7 +1405,11 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     try
     {
         std::shared_ptr<MirRenderSurface> rs {nullptr};
-        rs = std::make_shared<mcl::RenderSurface>(this, request->native_window, platform, protobuf_bs, request->logical_size);
+        rs = std::make_shared<mcl::RenderSurface>(this,
+                                                  request->native_window,
+                                                  platform,
+                                                  protobuf_bs,
+                                                  request->logical_size);
         surface_map->insert(request->native_window.get(), rs);
 
         if (request->callback)
@@ -1437,7 +1440,8 @@ MirWaitHandle* MirConnection::create_render_surface_with_content(
     params.set_buffer_usage(-1);
 
     auto nw = platform->create_egl_native_window(nullptr);
-    auto request = std::make_shared<RenderSurfaceCreationRequest>(callback, context, nw, logical_size);
+    auto request = std::make_shared<RenderSurfaceCreationRequest>(
+        callback, context, nw, logical_size);
 
     request->wh->expect_result();
 

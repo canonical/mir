@@ -103,16 +103,6 @@ MirConnection* mcl::RenderSurface::connection() const
 mf::BufferStreamId mcl::RenderSurface::stream_id() const
 {
     return mf::BufferStreamId(protobuf_bs->id().value());
-/*    if (stream_)
-        return stream_->rpc_id();
-    else
-        return mir::frontend::BufferStreamId{-1};
-*/
-}
-
-std::shared_ptr<mcl::BufferStream> mcl::RenderSurface::buffer_stream()
-{
-    return stream_from_id;
 }
 
 MirWaitHandle* mcl::RenderSurface::create_buffer_stream(

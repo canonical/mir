@@ -61,7 +61,6 @@ public:
         mir_buffer_stream_callback callback,
         void *context) override;
     mir::frontend::BufferStreamId stream_id() const override;
-    std::shared_ptr<mir::client::BufferStream> buffer_stream() override;
 
     MirBufferStream* create_buffer_stream_from_id(
         int width, int height,

@@ -74,7 +74,8 @@ try
 {
     mir::require(connection);
     void* rs = nullptr;
-    auto wh = connection->create_render_surface_with_content(mir::geometry::Size{width, height}, callback, context, &rs);
+    auto wh = connection->create_render_surface_with_content(
+        mir::geometry::Size{width, height}, callback, context, &rs);
     if (!rs)
         BOOST_THROW_EXCEPTION(std::runtime_error("Error creating native window"));
     connection_map.insert(rs, connection);
@@ -145,7 +146,9 @@ catch (std::exception const& ex)
 void mir_render_surface_release_sync(
     MirRenderSurface* render_surface)
 {
-    mir_render_surface_release(render_surface, nullptr, nullptr)->wait_for_all();
+    auto wh = mir_render_surface_release(render_surface, nullptr, nullptr);
+    if (wh)
+        wh->wait_for_all();
 }
 
 MirBufferStream* mir_render_surface_get_buffer_stream(
@@ -168,6 +171,7 @@ catch (std::exception const& ex)
 
 void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
 {
+    mir::require(render_surface && width && height);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     auto size = rs->size();
@@ -177,6 +181,7 @@ void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, i
 
 void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height)
 {
+    mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     rs->set_size({width, height});
