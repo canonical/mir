@@ -118,6 +118,14 @@ struct NestedInput : public mtf::HeadlessInProcessServer
         std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
 };
 
+struct NestedInputWithMouse : NestedInput
+{
+    std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+    };
+    MockEventFilter nested_event_filter;
+};
+
 struct ExposedSurface
 {
 public:
@@ -300,4 +308,47 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
 
     client_to_nested_event_received.wait_for(2s);
     client_to_host_event_received.wait_for(2s);
+}
+
+TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accumulated)
+{
+    mt::Signal devices_ready;
+    mt::Signal event_received;
+    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
+        .WillByDefault(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+
+    EXPECT_CALL(nested_event_filter,
+                handle(AllOf(mt::PointerEventWithPosition(30, 30), mt::PointerEventWithDiff(30, 30))))
+        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+
+    NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
+    ExposedSurface client_to_nested_mir(nested_mir.new_connection());
+    client_to_nested_mir.ready_to_accept_events.wait_for(1s);
+
+    devices_ready.wait_for(2s);
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(30, 30));
+    event_received.wait_for(2s);
+}
+
+TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_stay_in_sync)
+{
+    mt::Signal devices_ready;
+    mt::Signal event_received;
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(30, 30));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-10, 100));
+
+    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
+        .WillByDefault(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+    EXPECT_CALL(nested_event_filter,
+                handle(AllOf(mt::PointerEventWithPosition(30,160), mt::PointerEventWithDiff(10, 50))))
+        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+
+    NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
+    ExposedSurface client_to_nested_mir(nested_mir.new_connection());
+    client_to_nested_mir.ready_to_accept_events.wait_for(1s);
+    devices_ready.wait_for(2s);
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(10, 50));
+    event_received.wait_for(2s);
 }
