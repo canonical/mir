@@ -1270,6 +1270,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
+    /* We need to attach a painted client before attempting to set the display mode,
+     * otherwise the nested server will not have rendered anything, so won't be focused,
+     * so the host server won't apply any set configuration
+     */
+    ClientWithAPaintedSurface client(nested_mir);
+
     {
         std::shared_ptr<mg::DisplayConfiguration> const initial_config{nested_mir.server.the_display()->configuration()};
         initial_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -1287,8 +1293,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
-
-    ClientWithAPaintedSurface client(nested_mir);
 
     auto const expect_config = hw_display_config_for_unplug();
 
@@ -1371,6 +1375,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
+    /* We need to attach a painted client before attempting to set the display mode,
+     * otherwise the nested server will not have rendered anything, so won't be focused,
+     * so the host server won't apply any set configuration
+     */
+    ClientWithAPaintedSurface client(nested_mir);
+
     {
         std::shared_ptr<mg::DisplayConfiguration> const initial_config{nested_mir.server.the_display()->configuration()};
         initial_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -1388,8 +1398,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
-
-    ClientWithAPaintedSurface client(nested_mir);
 
     auto const new_config = hw_display_config_for_plugin();
 
