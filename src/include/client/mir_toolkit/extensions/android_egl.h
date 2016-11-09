@@ -20,9 +20,7 @@
 #define MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
 
 #define MIR_EXTENSION_ANDROID_EGL "817e4327-bdd7-495a-9d3c-b5ac7a8a831f"
-#define MIR_EXTENSION_ANDROID_EGL_VERSION(maj, min) (((maj) << 16) | (min))
-#define MIR_EXTENSION_VERSION(maj, min) (((maj) << 16) | (min))
-#define MIR_EXTENSION_ANDROID_EGL_VERSION_0_1 MIR_EXTENSION_VERSION(0,1)
+#define MIR_EXTENSION_ANDROID_EGL_VERSION_1 1
 
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_render_surface.h"
@@ -35,10 +33,10 @@ extern "C" {
 struct ANativeWindow;
 struct ANativeWindowBuffer;
 typedef void* (*mir_extension_to_native_display_type)(MirConnection*);
-typedef ANativeWindow* (*mir_extension_create_anw)(MirBufferStream*);
-typedef void (*mir_extension_destroy_anw)(ANativeWindow*);
-typedef ANativeWindowBuffer* (*mir_extension_create_anwb)(MirBuffer*);
-typedef void (*mir_extension_destroy_anwb)(ANativeWindowBuffer*);
+typedef struct ANativeWindow* (*mir_extension_create_anw)(MirBufferStream*);
+typedef void (*mir_extension_destroy_anw)(struct ANativeWindow*);
+typedef struct ANativeWindowBuffer* (*mir_extension_create_anwb)(MirBuffer*);
+typedef void (*mir_extension_destroy_anwb)(struct ANativeWindowBuffer*);
 
 struct MirExtensionAndroidEGL
 {

@@ -74,13 +74,6 @@ ANativeWindow* create_anw(MirBufferStream* buffer_stream)
 void destroy_anw(ANativeWindow*)
 {
 }
-
-}
-
-mcla::MirEGLExtension::MirEGLExtension(AndroidClientPlatform* platform) :
-    MirExtensionAndroidEGL{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
-    platform(platform)
-{
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -89,7 +82,7 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    extension(this)
+    extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb}
 {
 }
 
@@ -140,11 +133,6 @@ mcla::AndroidClientPlatform::create_egl_native_display()
     return native_display;
 }
 
-void* mcla::AndroidClientPlatform::egl_native_display(MirConnection*) const
-{
-    return native_display.get();
-}
-
 MirPlatformType mcla::AndroidClientPlatform::platform_type() const
 {
     return mir_platform_type_android;
@@ -182,7 +170,7 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 
 void* mcla::AndroidClientPlatform::request_interface(char const* name, int version)
 {
-    if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_0_1))
+    if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_1))
         return &extension;
     return nullptr;
 }

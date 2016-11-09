@@ -18,6 +18,10 @@
 
 #include "mir_egl_platform_shim.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/android_egl.h"
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,11 +34,23 @@ typedef struct
                                     //could be MirPresentationChain as well
     int current_physical_width;     //The driver is in charge of the physical width
     int current_physical_height;    //The driver is in charge of the physical height
+
+    struct MirExtensionAndroidEGL* ext;
+    PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
+    PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES; 
+ 
 } DriverInfo;
 static DriverInfo* info = NULL;
 
+typedef struct
+{
+    struct ANativeWindowBuffer *buffer;    
+    EGLImageKHR img;
+} ShimEGLImageKHR;
+
 EGLSurface future_driver_eglCreateWindowSurface(
-    EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint * attr)
+    EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint* attr)
 {
     if (info->surface)
     {
@@ -88,6 +104,13 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     info = malloc(sizeof(DriverInfo));
     memset(info, 0, sizeof(*info));
     info->connection = connection;
+
+    info->ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
+        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_1);
+    info->eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
+    info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
+    info->glEGLImageTargetTexture2DOES =
+        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
     return eglGetDisplay(mir_connection_get_egl_native_display(connection));
 }
 
@@ -100,4 +123,51 @@ EGLBoolean future_driver_eglTerminate(EGLDisplay display)
         free(info);
     }
     return eglTerminate(display);
+}
+
+EGLImageKHR future_driver_eglCreateImageKHR(
+    EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+{
+    //bit pedantic, but we should validate the parameters we require from the extension
+    if ( (target != EGL_NATIVE_PIXMAP_KHR) || (ctx != EGL_NO_CONTEXT) || !info || !info->ext )
+        return EGL_NO_IMAGE_KHR;
+
+    //check we have subloaded extension available.
+    if(!strstr(eglQueryString(dpy, EGL_EXTENSIONS), "EGL_ANDROID_image_native_buffer"))
+        return EGL_NO_IMAGE_KHR;
+
+    static EGLint const expected_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+    int i = 0;
+    while ( (attrib_list[i] != EGL_NONE) && (expected_attrs[i] != EGL_NONE) )
+    {
+        if (attrib_list[i] != expected_attrs[i])
+            return EGL_NO_IMAGE_KHR;
+        i++;
+    }
+
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) malloc(sizeof(ShimEGLImageKHR));
+    img->buffer = info->ext->create_buffer(buffer);
+    img->img = info->eglCreateImageKHR(dpy, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+        img->buffer, attrib_list);
+    return (EGLImageKHR) img;
+}
+
+EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
+{
+    if (!info)
+        return EGL_FALSE;
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) image;
+
+    EGLBoolean rc = info->eglDestroyImageKHR(dpy, image);
+    info->ext->destroy_buffer(img->buffer);
+    free(img);
+    return rc;
+}
+
+void future_driver_glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
+{
+    if (!info)
+        return;
+    ShimEGLImageKHR* img = (ShimEGLImageKHR*) image;
+    info->glEGLImageTargetTexture2DOES(target, img->img);
 }

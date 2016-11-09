@@ -99,7 +99,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const float y_axis = 200.0;
     const float touch_minor = 300.0;
     const float touch_major = 400.0;
-    const float size = 500.0;
+    const float size = 400.0;
     const float pressure = 600.0;
     const float orientation = 700.0;
 
@@ -175,7 +175,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     const float y_axis[2] = {200.0, 2000.0};
     const float touch_minor[2] = {300.0, 3000.0};
     const float touch_major[2] = {400.0, 4000.0};
-    const float size[2] = {500.0, 5000.0};
+    const float size[2] = {400.0, 4000.0};
     const float pressure[2] = {600.0, 6000.0};
     const float orientation[2] = {700.0, 7000.0};
 
