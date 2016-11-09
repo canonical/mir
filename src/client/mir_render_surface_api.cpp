@@ -135,7 +135,9 @@ try
     mir::require(render_surface);
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     connection_map.erase(static_cast<void*>(render_surface));
-    return connection->release_render_surface_with_content(render_surface, callback, context);
+    return connection->release_render_surface_with_content(render_surface,
+                                                           callback,
+                                                           context);
 }
 catch (std::exception const& ex)
 {
