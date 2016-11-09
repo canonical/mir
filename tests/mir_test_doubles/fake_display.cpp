@@ -117,6 +117,7 @@ bool mtd::FakeDisplay::apply_if_configuration_preserves_display_buffers(graphics
 {
     auto new_configuration = std::make_shared<StubDisplayConfig>(new_config);
 
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     if (compatible(*config, *new_configuration))
     {
         std::swap(config, new_configuration);
