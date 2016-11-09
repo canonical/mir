@@ -36,6 +36,7 @@
 
 namespace ml = mir::logging;
 
+
 namespace
 {
 std::string input_event_type_to_string(MirInputEventType input_event_type)
@@ -46,111 +47,44 @@ std::string input_event_type_to_string(MirInputEventType input_event_type)
             return "mir_input_event_type_key";
         case mir_input_event_type_touch:
             return "mir_input_event_type_touch";
+        case mir_input_event_type_pointer:
+            return "mir_input_event_type_pointer";
         default:
             abort();
     }
 }
 
-// Never exposed in old event, so lets avoid leaking it in to a header now.
-enum 
+template <typename EventType>
+void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    AINPUT_SOURCE_CLASS_MASK = 0x000000ff,
-
-    AINPUT_SOURCE_CLASS_BUTTON = 0x00000001,
-    AINPUT_SOURCE_CLASS_POINTER = 0x00000002,
-    AINPUT_SOURCE_CLASS_NAVIGATION = 0x00000004,
-    AINPUT_SOURCE_CLASS_POSITION = 0x00000008,
-    AINPUT_SOURCE_CLASS_JOYSTICK = 0x00000010
-};
-enum 
-{
-    AINPUT_SOURCE_UNKNOWN = 0x00000000,
-
-    AINPUT_SOURCE_KEYBOARD = 0x00000100 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_DPAD = 0x00000200 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_GAMEPAD = 0x00000400 | AINPUT_SOURCE_CLASS_BUTTON,
-    AINPUT_SOURCE_TOUCHSCREEN = 0x00001000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_MOUSE = 0x00002000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_STYLUS = 0x00004000 | AINPUT_SOURCE_CLASS_POINTER,
-    AINPUT_SOURCE_TRACKBALL = 0x00010000 | AINPUT_SOURCE_CLASS_NAVIGATION,
-    AINPUT_SOURCE_TOUCHPAD = 0x00100000 | AINPUT_SOURCE_CLASS_POSITION,
-    AINPUT_SOURCE_JOYSTICK = 0x01000000 | AINPUT_SOURCE_CLASS_JOYSTICK,
-
-    AINPUT_SOURCE_ANY = 0xffffff00
-};
-
-// Differentiate between MirTouchEvents and MirPointerEvents based on old device class
-MirInputEventType type_from_device_class(int32_t source_class)
-{
-    switch (source_class)
+    if (ev->type() != t)
     {
-    case AINPUT_SOURCE_MOUSE:
-    case AINPUT_SOURCE_TRACKBALL:
-    case AINPUT_SOURCE_TOUCHPAD:
-        return mir_input_event_type_pointer;
-    // Realistically touch events should only come from Stylus and Touchscreen
-    // device classes...practically its not clear this is a safe assumption.
-    default:
-        return mir_input_event_type_touch;
+        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
+            mir::event_type_to_string(ev->type()));
+        abort();
     }
-}
+})
 }
 
 MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if (ev->type() != mir_event_type_key && ev->type() != mir_event_type_motion)
-    {
-        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(ev->type()));
-        abort();
-    }
+    expect_event_type(ev, mir_event_type_input);
 
-    switch (ev->type())
-    {
-    case mir_event_type_key:
-        return mir_input_event_type_key;
-    case mir_event_type_motion:
-        return type_from_device_class(ev->to_motion()->source_id());
-    default:
-        abort();
-    }
+    return ev->input_type();
 })
 
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(mir_event_get_type(ev) != mir_event_type_input)
-    {
-        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(ev->type()));
-        abort();
-    }
+    expect_event_type(ev, mir_event_type_input);
 
-    switch (ev->type())
-    {
-    case mir_event_type_motion:
-        return ev->to_motion()->device_id();
-    case mir_event_type_key:
-        return ev->to_keyboard()->device_id();
-    default:
-        abort();
-    }
+    return ev->device_id();
 })
 
 int64_t mir_input_event_get_event_time(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(mir_event_get_type(ev) != mir_event_type_input)
-    {
-        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(ev->type()));
-        abort();
-    }
+    expect_event_type(ev, mir_event_type_input);
 
-    switch (ev->type())
-    {
-    case mir_event_type_motion:
-        return ev->to_motion()->event_time().count();
-    case mir_event_type_key:
-        return ev->to_keyboard()->event_time().count();
-    default:
-        abort();
-    }
+    return ev->event_time().count();
 })
 
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
@@ -172,13 +106,13 @@ MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event)
 
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev)
 {
-    if (mir_input_event_get_type(ev) != mir_input_event_type_key)
+    if (ev->input_type() != mir_input_event_type_key)
     {
         mir::log_critical("expected key input event but event was of type " +
-            input_event_type_to_string(mir_input_event_get_type(ev)));
+            input_event_type_to_string(ev->input_type()));
         abort();
     }
-    
+
     return reinterpret_cast<MirKeyboardEvent const*>(ev);
 }
 
@@ -198,22 +132,23 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_E
 })
 
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
-{    
+{
     return kev->modifiers();
 })
+
 /* Touch event accessors */
 
 MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) MIR_HANDLE_EVENT_EXCEPTION(
-{    
-    return tev->to_motion()->modifiers();
+{
+    return tev->modifiers();
 })
 
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
+    if(ev->input_type() != mir_input_event_type_touch)
     {
         mir::log_critical("expected touch input event but event was of type " +
-            input_event_type_to_string(mir_input_event_get_type(ev)));
+            input_event_type_to_string(ev->input_type()));
         abort();
     }
 
@@ -222,67 +157,68 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) MI
 
 unsigned int mir_touch_event_point_count(MirTouchEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return event->to_motion()->pointer_count();
+    return event->pointer_count();
 })
 
 MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if (touch_index >= event->to_motion()->pointer_count())
+    if (touch_index >= event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
     }
+    return event->id(touch_index);
 
-    return event->to_motion()->id(touch_index);
 })
 
 MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(touch_index > event->to_motion()->pointer_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
     }
-    
-    return static_cast<MirTouchAction>(event->to_motion()->action(touch_index));
+
+    return static_cast<MirTouchAction>(event->action(touch_index));
 })
 
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(touch_index > event->to_motion()->pointer_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
     }
 
-    return event->to_motion()->tool_type(touch_index);
+    return event->tool_type(touch_index);
 })
 
 float mir_touch_event_axis_value(MirTouchEvent const* event,
     size_t touch_index, MirTouchAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(touch_index > event->to_motion()->pointer_count())
+    if(touch_index > event->pointer_count())
     {
         mir::log_critical("touch index is greater than pointer count");
         abort();
     }
 
-    auto mev = event->to_motion();
     switch (axis)
     {
     case mir_touch_axis_x:
-        return mev->x(touch_index);
+        return event->x(touch_index);
     case mir_touch_axis_y:
-        return mev->y(touch_index);
+        return event->y(touch_index);
     case mir_touch_axis_pressure:
-        return mev->pressure(touch_index);
+        return event->pressure(touch_index);
     case mir_touch_axis_touch_major:
-        return mev->touch_major(touch_index);
+        return event->touch_major(touch_index);
     case mir_touch_axis_touch_minor:
-        return mev->touch_minor(touch_index);
+        return event->touch_minor(touch_index);
     case mir_touch_axis_size:
-        return mev->size(touch_index);
+        return std::max(
+            event->touch_major(touch_index),
+            event->touch_minor(touch_index));
     default:
         return -1;
     }
@@ -292,10 +228,10 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
 
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    if(mir_input_event_get_type(ev) != mir_input_event_type_pointer)
+    if(ev->input_type() != mir_input_event_type_pointer)
     {
         mir::log_critical("expected pointer input event but event was of type " +
-            input_event_type_to_string(mir_input_event_get_type(ev)));
+            input_event_type_to_string(ev->input_type()));
         abort();
     }
 
@@ -303,43 +239,42 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 })
 
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
-{    
-    return pev->to_motion()->modifiers();
+{
+    return pev->modifiers();
 })
 
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
-{    
-    return static_cast<MirPointerAction>(pev->to_motion()->action(0));
+{
+    return pev->action();
 })
 
 bool mir_pointer_event_button_state(MirPointerEvent const* pev,
     MirPointerButton button) MIR_HANDLE_EVENT_EXCEPTION(
 {
-   return pev->to_motion()->buttons() & button;
+   return pev->buttons() & button;
 })
 
 MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-   return pev->to_motion()->buttons();
+   return pev->buttons();
 })
 
 float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
 {
-   auto mev = pev->to_motion();
    switch (axis)
    {
    case mir_pointer_axis_x:
-       return mev->x(0);
+       return pev->x();
    case mir_pointer_axis_y:
-       return mev->y(0);
+       return pev->y();
    case mir_pointer_axis_relative_x:
-       return mev->dx(0);
+       return pev->dx();
    case mir_pointer_axis_relative_y:
-       return mev->dy(0);
+       return pev->dy();
    case mir_pointer_axis_vscroll:
-       return mev->vscroll(0);
+       return pev->vscroll();
    case mir_pointer_axis_hscroll:
-       return mev->hscroll(0);
+       return pev->hscroll();
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
@@ -348,7 +283,7 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
 
 bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    switch (mir_input_event_get_type(ev))
+    switch (ev->input_type())
     {
         case mir_input_event_type_key:
             return true;
@@ -389,17 +324,14 @@ size_t mir_cookie_buffer_size(MirCookie const* cookie) MIR_HANDLE_EVENT_EXCEPTIO
 
 MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    switch (iev->type())
+    if (iev->type() == mir_event_type_input)
     {
-    case mir_event_type_motion:
-        return new MirCookie(iev->to_motion()->cookie());
-    case mir_event_type_key:
-        return new MirCookie(iev->to_keyboard()->cookie());
-    default:
+        return new MirCookie(iev->cookie());
+    }
+    else
     {
         mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(iev->type()));
         abort();
-    }
     }
 })
 

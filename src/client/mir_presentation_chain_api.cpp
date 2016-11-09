@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
 #include "mir_connection.h"
 #include "buffer.h"
 #include "mir_presentation_chain.h"
@@ -120,6 +121,28 @@ try
 {
     mir::require(chain);
     chain->connection()->release_presentation_chain(chain);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_presentation_chain_set_queueing_mode(MirPresentationChain* chain)
+try
+{
+    mir::require(chain);
+    chain->set_queueing_mode();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_presentation_chain_set_dropping_mode(MirPresentationChain* chain)
+try
+{
+    mir::require(chain);
+    chain->set_dropping_mode();
 }
 catch (std::exception const& ex)
 {

@@ -23,13 +23,34 @@
 
 struct MirInputEvent : MirEvent
 {
+    MirInputEventType input_type() const;
+    MirInputDeviceId device_id() const;
+    void set_device_id(MirInputDeviceId id);
+
+    std::chrono::nanoseconds event_time() const;
+    void set_event_time(std::chrono::nanoseconds const& event_time);
+
+    std::vector<uint8_t> cookie() const;
+    void set_cookie(std::vector<uint8_t> const& cookie);
+
+    MirInputEventModifiers modifiers() const;
+    void set_modifiers(MirInputEventModifiers mods);
+
     MirKeyboardEvent* to_keyboard();
     MirKeyboardEvent const* to_keyboard() const;
 
-    MirMotionEvent* to_motion();
-    MirMotionEvent const* to_motion() const;
+    MirPointerEvent* to_pointer();
+    MirPointerEvent const* to_pointer() const;
+
+    MirTouchEvent* to_touch();
+    MirTouchEvent const* to_touch() const;
 
 protected:
+    MirInputEvent(MirInputDeviceId dev,
+                  std::chrono::nanoseconds et,
+                  MirInputEventModifiers mods,
+                  std::vector<uint8_t> const& cookie);
+
     MirInputEvent() = default;
     MirInputEvent(MirInputEvent const& event) = default;
     MirInputEvent& operator=(MirInputEvent const& event) = default;

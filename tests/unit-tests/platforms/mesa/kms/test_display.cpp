@@ -857,3 +857,43 @@ TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
         mir::test::fake_shared(stub_gl_config),
         null_report};
 }
+
+TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_display_buffers)
+{
+    using namespace testing;
+
+    auto display = create_display(create_platform());
+
+    auto config = display->configuration();
+
+    std::vector<mg::DisplayBuffer*> initial_display_buffer_references;
+
+    display->for_each_display_sync_group(
+        [&initial_display_buffer_references](auto& group)
+        {
+            group.for_each_display_buffer(
+                [&initial_display_buffer_references](mg::DisplayBuffer& db)
+                {
+                    initial_display_buffer_references.push_back(&db);
+                });
+        });
+
+    bool has_active_display{false};
+    config->for_each_output(
+        [&has_active_display](mg::UserDisplayConfigurationOutput& output)
+        {
+            has_active_display |= output.used;
+
+            output.form_factor = mir_form_factor_projector;
+            output.scale = 3.1415f;
+            output.subpixel_arrangement = mir_subpixel_arrangement_vertical_bgr;
+            output.orientation = mir_orientation_inverted;
+        });
+
+    EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(*config));
+
+    for (auto display_buffer : initial_display_buffer_references)
+    {
+        EXPECT_THAT(display_buffer->orientation(), Eq(mir_orientation_inverted));
+    }
+}
