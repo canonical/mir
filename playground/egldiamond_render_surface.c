@@ -67,12 +67,14 @@ void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
 
 int main(int argc, char *argv[])
 {
+    printf("SSz\n");
     //once full transition to Mir platform has been made, internal shim will be removed,
     //and the examples/ will use MirConnection/MirRenderSurface/MirBuffer as their egl types.
     int use_shim = 1;
+    int swapinterval = 1;
     char* socket = NULL; 
     int c;
-    while ((c = getopt(argc, argv, "shm:")) != -1)
+    while ((c = getopt(argc, argv, "shnm:")) != -1)
     {
         switch (c)
         {
@@ -82,14 +84,23 @@ int main(int argc, char *argv[])
             case 's':
                 use_shim = 0;
                 break;
+            case 'n':
+                printf("SWAPO\n");
+                swapinterval = 0;
+                break;
             case 'h':
             default:
-                printf("Usage:\n\t-m mir_socket\t-s disable shim usage\t-h this message\n");
+                printf(
+                    "Usage:\n"
+                    "\t-m mir_socket\n"
+                    "\t-s disable shim usage\n"
+                    "\t-h this message\n"
+                    "\t-n use swapinterval 0");
                 return -1;
         }
     }
 
-
+    printf("SOCKET %s\n", socket);
     const char* appname = "EGL Render Surface Demo";
     int width = 300;
     int height = 300;
@@ -123,7 +134,10 @@ int main(int argc, char *argv[])
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
     else
+    {
+        printf("RAW %X\n", (int)(long)connection);
         egldisplay = eglGetDisplay(connection);
+    }
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
@@ -183,8 +197,11 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
+    eglSwapInterval(egldisplay, swapinterval);
+
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     Diamond diamond = setup_diamond(width, height);
+
 
     running = 1;
     while (running)

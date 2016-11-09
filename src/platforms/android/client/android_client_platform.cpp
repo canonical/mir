@@ -22,6 +22,7 @@
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
 #include "mir/client_buffer.h"
+#include "mir/client_buffer_stream.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
@@ -63,10 +64,21 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 {
 }
 
+ANativeWindow* create_anw(MirBufferStream* buffer_stream)
+{
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    printf("ANW MAKER\n");
+    return static_cast<ANativeWindow*>(bs->egl_native_window());
+}
+
+void destroy_anw(ANativeWindow*)
+{
+}
+
 }
 
 mcla::MirEGLExtension::MirEGLExtension(AndroidClientPlatform* platform) :
-    MirExtensionAndroidEGL{native_display_type, nullptr, nullptr, create_anwb, destroy_anwb},
+    MirExtensionAndroidEGL{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
     platform(platform)
 {
 }

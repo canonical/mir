@@ -146,6 +146,7 @@ mga::MirNativeWindow::MirNativeWindow(
     ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_deprecated_static;
     ANativeWindow::cancelBuffer = &cancelBuffer_static;
 
+//    ANativeWindow::common.magic = ANDROID_NATIVE_WINDOW_MAGIC; 
     ANativeWindow::common.incRef = &incRef;
     ANativeWindow::common.decRef = &incRef;
 
