@@ -87,7 +87,7 @@ mcl::RenderSurface::RenderSurface(
     connection_(connection),
     wrapped_native_window(native_window),
     platform(client_platform),
-	protobuf_bs(protobuf_bs),
+    protobuf_bs(protobuf_bs),
     stream_(nullptr),
     stream_creation_request(nullptr),
     stream_release_request(nullptr),
@@ -158,8 +158,6 @@ MirBufferStream* mcl::RenderSurface::create_buffer_stream_from_id(
     protobuf_bs->set_buffer_usage(buffer_usage);
     stream_from_id = connection_->create_client_buffer_stream_with_id(width,
                                                                       height,
-                                                                      format,
-                                                                      buffer_usage,
                                                                       this,
                                                                       *protobuf_bs);
     if (buffer_usage == mir_buffer_usage_hardware)

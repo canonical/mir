@@ -208,9 +208,9 @@ int main(int /*argc*/, char* /*argv*/[])
         throw std::runtime_error("no pixel formats for buffer stream");
     printf("Software Driver selected pixel format %d\n", pixel_format);
     auto buffer_stream = mir_render_surface_get_buffer_stream(render_surface,
-                                                         width, height,
-                                                         pixel_format,
-                                                         mir_buffer_usage_software);
+                                                              width, height,
+                                                              pixel_format,
+                                                              mir_buffer_usage_software);
 
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);

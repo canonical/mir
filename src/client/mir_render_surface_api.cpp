@@ -110,7 +110,7 @@ catch (std::exception const& ex)
 }
 
 bool mir_render_surface_is_valid(
-        MirRenderSurface* render_surface)
+    MirRenderSurface* render_surface)
 try
 {
     mir::require(render_surface);

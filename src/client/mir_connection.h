@@ -161,8 +161,6 @@ public:
         void *context);
     std::shared_ptr<mir::client::BufferStream> create_client_buffer_stream_with_id(
         int width, int height,
-        MirPixelFormat format,
-        MirBufferUsage buffer_usage,
         MirRenderSurface* render_surface,
         mir::protobuf::BufferStream const& a_protobuf_bs);
     MirWaitHandle* release_buffer_stream(

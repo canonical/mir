@@ -66,7 +66,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
 void ignore()
 {
 }
@@ -468,7 +467,6 @@ struct MirConnection::StreamRelease
     MirWaitHandle* handle;
     mir_buffer_stream_callback callback;
     mir_render_surface_callback rs_callback;
-
     void* context;
     int rpc_id;
     void* rs;
@@ -902,8 +900,6 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
 
 std::shared_ptr<mir::client::BufferStream> MirConnection::create_client_buffer_stream_with_id(
     int width, int height,
-    MirPixelFormat /*format*/,
-    MirBufferUsage /*buffer_usage*/,
     MirRenderSurface* render_surface,
     mir::protobuf::BufferStream const& a_protobuf_bs)
 {
@@ -1403,8 +1399,8 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
             ::close(protobuf_bs->buffer().fd(i));
 /*        stream_error(
             std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
-            request);
-*/        return;
+            request);*/
+        return;
     }
 
     try
@@ -1424,8 +1420,8 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     {
 /*        stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
-            request);
-*/    }
+            request);*/
+    }
 }
 
 MirWaitHandle* MirConnection::create_render_surface_with_content(

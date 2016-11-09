@@ -641,8 +641,7 @@ try
 
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y},
-                     rs->stream_id().as_value(),{}};
+    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);
