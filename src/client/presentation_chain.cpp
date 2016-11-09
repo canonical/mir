@@ -83,3 +83,13 @@ char const* mcl::PresentationChain::error_msg() const
 {
     return "";
 }
+
+void mcl::PresentationChain::set_dropping_mode()
+{
+    mir_wait_for(interval_config.set_swap_interval(server, mir::frontend::BufferStreamId{stream_id}, 0));
+}
+
+void mcl::PresentationChain::set_queueing_mode()
+{
+    mir_wait_for(interval_config.set_swap_interval(server, mir::frontend::BufferStreamId{stream_id}, 1));
+}

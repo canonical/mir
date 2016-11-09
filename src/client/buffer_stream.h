@@ -24,6 +24,8 @@
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
+#include "buffer_stream_configuration.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -140,7 +142,6 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
@@ -153,14 +154,13 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool fixed_swap_interval;
-    int swap_interval_;
+    optional_value<int> user_swap_interval;
+    BufferStreamConfiguration interval_config;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     std::shared_ptr<void> egl_native_window_;
 
-    MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     std::shared_ptr<MemoryRegion> secured_region;
