@@ -30,7 +30,7 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection*);
 EGLBoolean future_driver_eglTerminate(EGLDisplay);
 
 EGLSurface future_driver_eglCreateWindowSurface(
-    EGLDisplay display, EGLConfig config, MirRenderSurface* surface);
+    EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint *);
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface);
 

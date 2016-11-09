@@ -67,8 +67,29 @@ void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
 
 int main(int argc, char *argv[])
 {
-    (void) argc;
-    (void) argv;
+    //once full transition to Mir platform has been made, internal shim will be removed,
+    //and the examples/ will use MirConnection/MirRenderSurface/MirBuffer as their egl types.
+    int use_shim = 1;
+    char* socket = NULL; 
+    int c;
+    while ((c = getopt(argc, argv, "shm:")) != -1)
+    {
+        switch (c)
+        {
+            case 'm':
+                socket = optarg;
+                break;
+            case 's':
+                use_shim = 0;
+                break;
+            case 'h':
+            default:
+                printf("Usage:\n\t-m mir_socket\t-s disable shim usage\t-h this message\n");
+                return -1;
+        }
+    }
+
+
     const char* appname = "EGL Render Surface Demo";
     int width = 300;
     int height = 300;
@@ -91,10 +112,18 @@ int main(int argc, char *argv[])
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    connection = mir_connect_sync(NULL, appname);
+    if (use_shim)
+        printf("internal EGL driver shim in use\n");
+    else
+        printf("using EGL driver directly\n");
+
+    connection = mir_connect_sync(socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    egldisplay = future_driver_eglGetDisplay(connection);
+    if (use_shim)
+        egldisplay = future_driver_eglGetDisplay(connection);
+    else
+        egldisplay = eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
@@ -121,7 +150,10 @@ int main(int argc, char *argv[])
 
     //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
     //       Current code requires creation of content before creation of the surface.
-    eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
+    if (use_shim)
+        eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
+    else
+        eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
 
     //The format field is only used for default-created streams.
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
@@ -158,13 +190,20 @@ int main(int argc, char *argv[])
     while (running)
     {
         render_diamond(&diamond, egldisplay, eglsurface);
-        future_driver_eglSwapBuffers(egldisplay, eglsurface);
+        if (use_shim)
+            future_driver_eglSwapBuffers(egldisplay, eglsurface);
+        else
+            eglSwapBuffers(egldisplay, eglsurface);
     }
 
     destroy_diamond(&diamond);
 
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    future_driver_eglTerminate(egldisplay);
+    if (use_shim)
+        future_driver_eglTerminate(egldisplay);
+    else
+        eglTerminate(egldisplay);
+
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
