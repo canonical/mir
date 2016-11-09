@@ -24,14 +24,6 @@
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 
-namespace mir
-{
-namespace client
-{
-class BufferStream;
-}
-}
-
 class MirRenderSurface
 {
 public:

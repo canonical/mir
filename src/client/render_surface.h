@@ -39,10 +39,6 @@ namespace client
 {
 class ClientPlatform;
 class BufferStream;
-namespace rpc
-{
-class DisplayServer;
-}
 class RenderSurface : public MirRenderSurface
 {
 public:
