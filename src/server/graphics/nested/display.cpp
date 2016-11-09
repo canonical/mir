@@ -384,9 +384,48 @@ std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 }
 
 bool mgn::Display::apply_if_configuration_preserves_display_buffers(
-    mg::DisplayConfiguration const& /*conf*/)
+    mg::DisplayConfiguration const& conf)
 {
-    return false;
+    auto new_outputs = calculate_best_outputs(conf);
+
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+
+    {
+        std::lock_guard<decltype(outputs_mutex)> outputs_lock{outputs_mutex};
+        if (outputs.size() > new_outputs.size())
+        {
+            // If we're disabling an output then we're definitely destroying its DisplayBuffer
+            return false;
+        }
+
+        for (auto const& output : new_outputs)
+        {
+            auto existing_output = outputs.find(output.id);
+
+            /*
+             * If there's no existing output associated with this ID then we can't be
+             * invalidating its DisplayBuffer.
+             *
+             * If there *is* an existing output associated with this ID then
+             * create_surfaces() will invalidate its DisplayBuffer if and only if
+             * the viewport doesn't exactly match.
+             */
+            if (existing_output != outputs.end() &&
+                existing_output->second->view_area() != output.extents())
+            {
+                return false;
+            }
+        }
+    }
+
+    current_configuration =
+        decltype(current_configuration){dynamic_cast<NestedDisplayConfiguration*>(conf.clone().release())};
+
+    create_surfaces(new_outputs);
+
+    connection->apply_display_config(**current_configuration);
+
+    return true;
 }
 
 mg::Frame mgn::Display::last_frame_on(unsigned) const
