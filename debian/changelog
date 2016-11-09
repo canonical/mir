@@ -10,7 +10,7 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirplatformgraphics ABI bumped to 11
       . mirclientplatform ABI unchanged at 5
       . mirinputplatform ABI bumped to 6
-      . mircore ABI added. current version is 1
+      . mircore ABI added, at version 1
     - Enhancements:
       . Added pointer confinement support
       . Identify Raspberry Pi output types correctly
