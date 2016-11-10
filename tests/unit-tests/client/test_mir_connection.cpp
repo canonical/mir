@@ -35,6 +35,7 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
+#include "mir/test/fake_shared.h"
 #include "mir/test/test_protobuf_server.h"
 #include "mir/test/stub_server_tool.h"
 #include "mir/test/doubles/mock_mir_buffer.h"
@@ -55,7 +56,8 @@ namespace mp = mir::protobuf;
 namespace mev = mir::events;
 namespace md = mir::dispatch;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 using namespace testing;
 
 namespace
@@ -916,8 +918,6 @@ TEST_F(MirConnectionTest, render_surface_can_be_created_and_released)
 
 TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
 {
-    using namespace testing;
-
     connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
 
     EXPECT_CALL(*mock_platform, create_egl_native_window(nullptr));
@@ -928,7 +928,7 @@ TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
         nullptr,
         nullptr,
         &nw);
-    EXPECT_THAT(nw, Ne(nullptr));
+    EXPECT_THAT(nw, NotNull());
 }
 
 TEST_F(MirConnectionTest, render_surface_returns_connection)
@@ -938,4 +938,119 @@ TEST_F(MirConnectionTest, render_surface_returns_connection)
     mcl::RenderSurface rs(
         conn, nullptr, nullptr, nullptr, {});
     EXPECT_THAT(rs.connection(), Eq(conn));
+}
+
+TEST_F(MirConnectionTest, render_surface_has_correct_id_before_content_creation)
+{
+    MirConnection* conn{ reinterpret_cast<MirConnection*>(0x12345678) };
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    mcl::RenderSurface rs(
+        conn, nullptr, nullptr, mt::fake_shared(protobuf_bs), {});
+    EXPECT_THAT(rs.stream_id().as_value(), Eq(id));
+}
+
+TEST_F(MirConnectionTest, render_surface_can_create_buffer_stream)
+{
+    connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, nullptr, mt::fake_shared(protobuf_bs), {});
+
+    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_software);
+
+    EXPECT_THAT(bs, NotNull());
+}
+
+TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_more_than_once_returns_same_object)
+{
+    connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, mock_platform, mt::fake_shared(protobuf_bs), {});
+
+    EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
+
+    auto bs1 = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware);
+
+    auto bs2 = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware);
+
+    EXPECT_THAT(bs1, NotNull());
+    EXPECT_THAT(bs2, NotNull());
+    EXPECT_THAT(bs1, Eq(bs2));
+}
+
+TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_hardware_usage_installs_new_native_window)
+{
+    connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, mock_platform, mt::fake_shared(protobuf_bs), {});
+
+    EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
+
+    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware);
+
+    EXPECT_THAT(bs, NotNull());
+}
+
+TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_software_usage_does_not_install_new_native_window)
+{
+    connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, mock_platform, mt::fake_shared(protobuf_bs), {});
+
+    EXPECT_CALL(*mock_platform, use_egl_native_window(_,_)).Times(0);
+
+    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_software);
+
+    EXPECT_THAT(bs, NotNull());
 }

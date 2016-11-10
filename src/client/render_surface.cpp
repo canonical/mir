@@ -61,16 +61,19 @@ MirBufferStream* mcl::RenderSurface::create_buffer_stream_from_id(
     MirPixelFormat format,
     MirBufferUsage buffer_usage)
 {
-    protobuf_bs->set_pixel_format(format);
-    protobuf_bs->set_buffer_usage(buffer_usage);
-    stream_from_id = connection_->create_client_buffer_stream_with_id(width,
-                                                                      height,
-                                                                      this,
-                                                                      *protobuf_bs);
-    if (buffer_usage == mir_buffer_usage_hardware)
+    if (!stream_from_id)
     {
-        platform->use_egl_native_window(
-            wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
+        protobuf_bs->set_pixel_format(format);
+        protobuf_bs->set_buffer_usage(buffer_usage);
+        stream_from_id = connection_->create_client_buffer_stream_with_id(width,
+                                                                          height,
+                                                                          this,
+                                                                          *protobuf_bs);
+        if (buffer_usage == mir_buffer_usage_hardware)
+        {
+            platform->use_egl_native_window(
+                wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
+        }
     }
 
     return reinterpret_cast<MirBufferStream*>(
