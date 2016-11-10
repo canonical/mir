@@ -216,17 +216,15 @@ public:
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
-    MirRenderSurface* create_render_surface(mir::geometry::Size logical_size);
-    MirWaitHandle* release_render_surface_with_content(
-        void* render_surface,
-        mir_render_surface_callback callback,
-        void* context);
-    void release_render_surface(void* render_surface);
     MirWaitHandle* create_render_surface_with_content(
         mir::geometry::Size logical_size,
         mir_render_surface_callback callback,
         void* context,
         void** native_window);
+    MirWaitHandle* release_render_surface_with_content(
+        void* render_surface,
+        mir_render_surface_callback callback,
+        void* context);
 
 private:
     //google cant have callbacks with more than 2 args

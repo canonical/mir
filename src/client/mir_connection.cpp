@@ -1323,22 +1323,6 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-MirRenderSurface* MirConnection::create_render_surface(geom::Size logical_size)
-{
-    auto native_window = platform->create_egl_native_window(nullptr);
-
-    std::shared_ptr<MirRenderSurface> rs {nullptr};
-    rs = std::make_shared<mcl::RenderSurface>(this, native_window, platform, nullptr, logical_size);
-    surface_map->insert(native_window.get(), rs);
-
-    return static_cast<MirRenderSurface*>(native_window.get());
-}
-
-void MirConnection::release_render_surface(void* render_surface)
-{
-    surface_map->erase(static_cast<void*>(render_surface));
-}
-
 MirWaitHandle* MirConnection::release_render_surface_with_content(
     void* render_surface,
     mir_render_surface_callback callback,

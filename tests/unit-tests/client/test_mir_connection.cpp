@@ -61,6 +61,12 @@ using namespace testing;
 namespace
 {
 
+void assign_result(void* result, void** context)
+{
+    if (context)
+        *context = result;
+}
+
 struct BufferStreamCallback
 {
     static void created(MirBufferStream* stream, void *client_context)
@@ -183,12 +189,15 @@ struct MockClientPlatform : public mcl::ClientPlatform
         auto native_display = std::make_shared<EGLNativeDisplayType>();
         *native_display = reinterpret_cast<EGLNativeDisplayType>(0x0);
 
+        auto native_window = std::make_shared<EGLNativeWindowType>();
+        *native_window = reinterpret_cast<EGLNativeWindowType>(0x12345678);
+
         ON_CALL(*this, create_egl_native_display())
             .WillByDefault(Return(native_display));
         ON_CALL(*this, create_buffer_factory())
             .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
         ON_CALL(*this, create_egl_native_window(_))
-            .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
+            .WillByDefault(Return(native_window));
         ON_CALL(*this, platform_operation(_))
             .WillByDefault(Return(nullptr));
     }
@@ -882,6 +891,29 @@ TEST_F(MirConnectionTest, can_release_buffer_from_connection)
     connection->release_buffer(&mock_buffer);
 }
 
+TEST_F(MirConnectionTest, render_surface_can_be_created_and_released)
+{
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& stream, google::protobuf::Closure*)
+        {
+            stream.mutable_id()->set_value(1);
+        }));
+
+    connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
+
+    void* nw = nullptr;
+    MirRenderSurface* render_surface = nullptr;
+    connection->create_render_surface_with_content(
+        {10, 10},
+        reinterpret_cast<mir_render_surface_callback>(assign_result),
+        &render_surface,
+        &nw);
+    EXPECT_THAT(render_surface, NotNull());
+    EXPECT_THAT(nw, NotNull());
+    EXPECT_THAT(render_surface, Eq(nw));
+    EXPECT_NO_THROW(connection->release_render_surface_with_content(nw, nullptr, nullptr));
+}
+
 TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
 {
     using namespace testing;
@@ -890,10 +922,13 @@ TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
 
     EXPECT_CALL(*mock_platform, create_egl_native_window(nullptr));
 
-    // We must release here to prevent resource leak as ref to render surface
-    // is held in surface_map
-    connection->release_render_surface(
-        connection->create_render_surface({10, 10}));
+    void* nw = nullptr;
+    connection->create_render_surface_with_content(
+        {10, 10},
+        nullptr,
+        nullptr,
+        &nw);
+    EXPECT_THAT(nw, Ne(nullptr));
 }
 
 TEST_F(MirConnectionTest, render_surface_returns_connection)
@@ -901,86 +936,6 @@ TEST_F(MirConnectionTest, render_surface_returns_connection)
     MirConnection* conn{ reinterpret_cast<MirConnection*>(0x12345678) };
 
     mcl::RenderSurface rs(
-        conn, nullptr, nullptr, {});
+        conn, nullptr, nullptr, nullptr, {});
     EXPECT_THAT(rs.connection(), Eq(conn));
-}
-
-TEST_F(MirConnectionTest, render_surface_returns_negative_stream_id_with_no_content)
-{
-    MirConnection* conn{ reinterpret_cast<MirConnection*>(0x12345678) };
-
-    mcl::RenderSurface rs(
-        conn, nullptr, nullptr, {});
-    EXPECT_THAT(rs.stream_id().as_value(), Lt(0));
-}
-
-TEST_F(MirConnectionTest, render_surface_release_of_buffer_stream_without_creation_first_results_in_exception)
-{
-    auto wh = connection->connect("RenderSurfaceTest", connected_callback, 0);
-    wh->wait_for_all();
-
-    auto native_window = mock_platform->create_egl_native_window(nullptr);
-
-    mcl::RenderSurface rs(connection.get(), native_window, mock_platform, {});
-
-    EXPECT_THROW(
-        {rs.release_buffer_stream(nullptr, nullptr);}, std::logic_error);
-}
-
-TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_more_than_once_results_in_exception)
-{
-    auto wh = connection->connect("RenderSurfaceTest", connected_callback, 0);
-    wh->wait_for_all();
-
-    auto native_window = mock_platform->create_egl_native_window(nullptr);
-
-    mcl::RenderSurface rs(connection.get(), native_window, mock_platform, {});
-
-    EXPECT_CALL(*mock_platform, use_egl_native_window(_,_));
-
-    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,  nullptr, nullptr);
-
-    ASSERT_THAT(wh, Ne(nullptr));
-    wh->wait_for_all();
-
-    EXPECT_THROW(
-        {rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,  nullptr, nullptr);}, std::logic_error);
-}
-
-TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_hardware_usage_installs_new_native_window)
-{
-    auto wh = connection->connect("RenderSurfaceTest", connected_callback, 0);
-    wh->wait_for_all();
-
-    auto native_window = mock_platform->create_egl_native_window(nullptr);
-
-    mcl::RenderSurface rs(connection.get(), native_window, mock_platform, {});
-
-    EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
-
-    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,  nullptr, nullptr);
-
-    ASSERT_THAT(wh, Ne(nullptr));
-    wh->wait_for_all();
-}
-
-TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_software_usage_does_not_install_new_native_window)
-{
-    auto wh = connection->connect("RenderSurfaceTest", connected_callback, 0);
-    wh->wait_for_all();
-
-    auto native_window = mock_platform->create_egl_native_window(nullptr);
-
-    mcl::RenderSurface rs(connection.get(), native_window, mock_platform, {});
-
-    EXPECT_CALL(*mock_platform, use_egl_native_window(_,_)).Times(0);
-
-    wh = rs.create_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_software,  nullptr, nullptr);
-
-    ASSERT_THAT(wh, Ne(nullptr));
-    wh->wait_for_all();
 }
