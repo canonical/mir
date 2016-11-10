@@ -69,8 +69,7 @@ struct MockEventFilter : public mi::EventFilter
 
 std::vector<mir::geometry::Rectangle> const display_geometry
 {
-    {{  0, 0}, { 640,  480}},
-    {{480, 0}, {1920, 1080}}
+    {{  0, 0}, {1920, 1080}}
 };
     
 struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
@@ -312,13 +311,19 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
 
 TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accumulated)
 {
+    auto const initial_movement_x = 30;
+    auto const initial_movement_y = 30;
+    auto const second_movement_x = 5;
+    auto const second_movement_y = -2;
+
     mt::Signal devices_ready;
     mt::Signal event_received;
-    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillByDefault(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+    EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
+        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
 
     EXPECT_CALL(nested_event_filter,
-                handle(AllOf(mt::PointerEventWithPosition(30, 30), mt::PointerEventWithDiff(30, 30))))
+                handle(AllOf(mt::PointerEventWithPosition(initial_movement_x, initial_movement_y),
+                             mt::PointerEventWithDiff(initial_movement_x, initial_movement_y))))
         .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
@@ -327,21 +332,40 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
 
     devices_ready.wait_for(2s);
 
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(30, 30));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(initial_movement_x, initial_movement_y));
+    event_received.wait_for(2s);
+
+    event_received.reset();
+
+    EXPECT_CALL(nested_event_filter,
+                handle(AllOf(mt::PointerEventWithPosition(initial_movement_x + second_movement_x, initial_movement_y + second_movement_y),
+                             mt::PointerEventWithDiff(second_movement_x, second_movement_y))))
+        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(second_movement_x, second_movement_y));
     event_received.wait_for(2s);
 }
 
-TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_stay_in_sync)
+TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 {
+    int const x[] = {30, -10, 10};
+    int const y[] = {30, 100, 50};
+    int const initial_x = x[0] + x[1];
+    int const initial_y = y[0] + y[1];
+    int const final_x = initial_x + x[2];
+    int const final_y = initial_y + y[2];
+
     mt::Signal devices_ready;
     mt::Signal event_received;
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(30, 30));
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(-10, 100));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(x[0], y[0]));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(x[1], y[1]));
 
-    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillByDefault(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+    EXPECT_CALL(nested_event_filter, handle(
+            mt::DeviceStateWithPosition(initial_x, initial_y)))
+        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
     EXPECT_CALL(nested_event_filter,
-                handle(AllOf(mt::PointerEventWithPosition(30,160), mt::PointerEventWithDiff(10, 50))))
+                handle(AllOf(mt::PointerEventWithPosition(final_x, final_y),
+                             mt::PointerEventWithDiff(x[2], y[2]))))
         .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
@@ -349,6 +373,6 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_stay_in_sync)
     client_to_nested_mir.ready_to_accept_events.wait_for(1s);
     devices_ready.wait_for(2s);
 
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(10, 50));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(x[2], y[2]));
     event_received.wait_for(2s);
 }
