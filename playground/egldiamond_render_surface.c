@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
     else
     {
         printf("MirBuffer import supported by driver. Should see yellow/blue stripes\n");
-        diamond = setup_diamond_import(image);
+        diamond = setup_diamond_import(image, use_shim);
     }
 
     EGLint viewport_width = -1;
