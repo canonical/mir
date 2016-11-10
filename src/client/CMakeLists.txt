@@ -76,6 +76,7 @@ add_library(mirclientobjects OBJECT
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
+  error_render_surface.cpp
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp

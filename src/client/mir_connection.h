@@ -314,6 +314,7 @@ private:
     std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
     void context_created(ChainCreationRequest*);
     void render_surface_created(RenderSurfaceCreationRequest*);
+    void render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
