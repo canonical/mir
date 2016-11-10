@@ -26,6 +26,7 @@
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/mesa_auth.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -39,36 +40,17 @@ namespace mgm = mg::mesa;
 
 namespace
 {
-
-void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev)
+//TODO: construction for mclm::ClientPlatform is roundabout/2-step.
+//      Might be better for the extension to be a different way to allocate
+//      MirConnection, but beyond scope of work.
+void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
 {
-    MirMesaSetGBMDeviceRequest const request{gbm_dev};
-    mg::PlatformOperationMessage request_msg;
-    request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
-    std::memcpy(request_msg.data.data(), &request, sizeof(request));
-
-    auto const response_msg = nested_context.platform_operation(
-        MirMesaPlatformOperation::set_gbm_device,
-        request_msg);
-
-    if (response_msg.data.size() == sizeof(MirMesaSetGBMDeviceResponse))
-    {
-        static int const success{0};
-        MirMesaSetGBMDeviceResponse response{-1};
-        std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
-        if (response.status != success)
-        {
-            std::string const msg{"Nested Mir failed to set the gbm device."};
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(std::runtime_error(msg))
-                    << boost::errinfo_errno(response.status));
-        }
-    }
-    else
-    {
-        std::string const msg{"Nested Mir failed to set the gbm device: Invalid response."};
+    std::string const msg{"Nested Mir failed to set the gbm device."};
+    auto ext = static_cast<MirExtensionMesaAuth*>(nested_context.request_interface(
+        MIR_EXTENSION_MESA_AUTH, MIR_EXTENSION_MESA_AUTH_VERSION_1));
+    if (!ext || !ext->set_gbm_device)
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    }
+    ext->set_gbm_device(device, ext->context);
 }
 }
 
@@ -83,6 +65,7 @@ mgm::GuestPlatform::GuestPlatform(
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
+    printf("BALLOC %X\n", (int)(long) gbm.device);
     return mir::make_module_ptr<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 

@@ -58,6 +58,17 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 {
     return ((a - 1) / b) + 1;
 }
+void set_device(gbm_device* device, void* context)
+{
+    auto platform = reinterpret_cast<mclm::ClientPlatform*>(context);
+    platform->set_gbm_device(device);
+}
+}
+
+void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
+{
+    printf("SET DEV\n"); (void)device;
+    //gbm_dev = device;
 }
 
 mclm::ClientPlatform::ClientPlatform(
@@ -67,7 +78,8 @@ mclm::ClientPlatform::ClientPlatform(
     : context{context},
       buffer_file_ops{buffer_file_ops},
       display_container(display_container),
-      gbm_dev{nullptr}
+      gbm_dev{nullptr},
+      mesa_auth{set_device, this}
 {
 }
 
@@ -105,6 +117,7 @@ void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
 {
     size_t constexpr pointer_size_in_ints = division_ceiling(sizeof(gbm_dev), sizeof(int));
 
+    printf("POPULATE\n");
     context->populate_server_package(package);
 
     auto const total_data_size = package.data_items + pointer_size_in_ints;
@@ -115,6 +128,11 @@ void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
 
         for (auto i : gbm_ptr)
             package.data[package.data_items++] = i;
+        printf("YEWP\n");
+    }
+    else
+    {
+        printf("NEWP\n");
     }
 }
 
@@ -185,7 +203,9 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
     return mir_format;
 }
 
-void* mclm::ClientPlatform::request_interface(char const*, int)
+void* mclm::ClientPlatform::request_interface(char const* name, int version)
 {
+    if (!strcmp(name, MIR_EXTENSION_MESA_AUTH) && (version == MIR_EXTENSION_MESA_AUTH_VERSION_1))
+        return &mesa_auth;
     return nullptr;
 }

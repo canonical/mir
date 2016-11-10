@@ -19,6 +19,7 @@
 #define MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/mesa_auth.h"
 
 struct gbm_device;
 
@@ -50,12 +51,14 @@ public:
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
+    void set_gbm_device(gbm_device*);
 
 private:
     ClientContext* const context;
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
     gbm_device* gbm_dev;
+    MirExtensionMesaAuth mesa_auth;
 };
 
 }
