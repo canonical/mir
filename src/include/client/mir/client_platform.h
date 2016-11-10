@@ -61,8 +61,12 @@ public:
      */
     virtual MirPlatformMessage* platform_operation(MirPlatformMessage const* request) = 0;
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
+
+    virtual void* request_interface(char const* name, int version) = 0;
+
     // EGLNativeWindowType differs between platforms, so can't reasonably be used in the
     // platform-independent interface.
+    // The following will be deprecated soon in favor of request_interface
     virtual std::shared_ptr<void> create_egl_native_window(EGLNativeSurface* surface) = 0;
     virtual void use_egl_native_window(std::shared_ptr<void> native_window, EGLNativeSurface* surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
