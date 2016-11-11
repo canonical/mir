@@ -525,10 +525,12 @@ void MirSurface::wait_for_vsync()
     if (target < PosixTimestamp::now(target.clock_id))
         target = last_server_vsync;
 
-#if 0
+#if 1
     auto delta = target - last_target;
     long usec = delta.count() / 1000;
     fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
+    fprintf(stderr, "Phase correction %ldus\n",
+        (long)(phase_correction.count() / 1000));
 #endif
 
     // TODO: last_target should be per-stream??
