@@ -1044,7 +1044,7 @@ MIR_PROTOBUF_0.22 {  # New symbols in Mir 0.22
   };
 } MIR_PROTOBUF_3v19;
 
-MIR_PROTOBUF_0.25 {
+MIR_PROTOBUF_0.26 {
  global:
   extern "C++" {
     mir::protobuf::InputDeviceInfo::MergeFrom*;
