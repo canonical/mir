@@ -478,8 +478,11 @@ void MirSurface::handle_event(MirEvent const& e)
 void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
 {
     output_id = mir_surface_output_event_get_output_id(soevent);
-    long long ns = 1000000000LL /
-                   mir_surface_output_event_get_refresh_rate(soevent);
+
+    // TODO: Consider replacing mir_surface_output_event_get_refresh_rate with
+    //       a more precise mir_surface_output_event_get_vsync_interval...
+    auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+    long long ns = rate ? 1000000000LL / rate : 0;
     vsync_interval = std::chrono::nanoseconds(ns);
     /*
      * TODO: Notify streams of rate change
