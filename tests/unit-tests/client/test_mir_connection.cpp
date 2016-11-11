@@ -914,6 +914,8 @@ TEST_F(MirConnectionTest, render_surface_can_be_created_and_released)
     EXPECT_THAT(nw, NotNull());
     EXPECT_THAT(render_surface, Eq(nw));
     EXPECT_NO_THROW(connection->release_render_surface_with_content(nw, nullptr, nullptr));
+
+    connection->disconnect();
 }
 
 TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
