@@ -20,6 +20,7 @@
 
 #include "client_buffer_stream.h"
 #include "mir_wait_handle.h"
+#include "throttle.h"
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
@@ -247,9 +248,7 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
     MirOrientation orientation = mir_orientation_normal;
-    std::chrono::nanoseconds vsync_interval{1000000000LL/60};
-    // TODO: Move this into streams:
-    mir::time::PosixTimestamp last_target;
+    mir::Throttle throttle;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

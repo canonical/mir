@@ -482,11 +482,10 @@ void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
     // TODO: Consider replacing mir_surface_output_event_get_refresh_rate with
     //       a more precise mir_surface_output_event_get_vsync_interval...
     auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+    throttle.set_speed(rate);
     fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
-    long long ns = rate ? 1000000000LL / rate : 0;
-    vsync_interval = std::chrono::nanoseconds(ns);
+
     /*
-     * TODO: Notify streams of rate change
      * TODO: Notify the input receiver of the rate change AFTER the server
      *       has been modified to always use frame dropping. If we do it
      *       before then the input receiver using the precise vsync rate
@@ -496,45 +495,15 @@ void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
 
 void MirSurface::wait_for_vsync()
 {
-    // Safety net: Virtual machines might report zero(?). Throttle to 60Hz.
-    if (vsync_interval == std::chrono::nanoseconds::zero())
-        vsync_interval = std::chrono::nanoseconds(1000000000L / 60);
-
     // { TODO: Replace this with the actual timestamp from the server in future.
     //         Using a fake timestamp like this will work, but being out of
     //         phase could make it up to one frame laggier than it should be.
     auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
-    auto const last_server_vsync = now - (now % vsync_interval);
+    auto const last_server_vsync = now - (now % throttle.get_interval());
+    throttle.set_phase(last_server_vsync);
     // } TODO
 
-    /*
-     * The period of each client frame should match vsync_interval, regardless
-     * of the delta of last_server_vsync. Because measuring deltas would be
-     * inaccurate on a variable framerate display. Whereas vsync_interval
-     * represents the theoretical maximum refresh rate of the display we should
-     * be aiming for.
-     *   The phase however comes from last_server_vsync. This may sound
-     * unnecessary but being out of phase with the server (physical display)
-     * could create almost one whole frame of extra lag. So it's worth getting
-     * in phase with the server regularly...
-     */
-    auto const server_phase = last_server_vsync % vsync_interval;
-    auto const last_phase = last_target % vsync_interval;
-    auto const phase_correction = server_phase - last_phase;
-    auto target = last_target + vsync_interval + phase_correction;
-    if (target < PosixTimestamp::now(target.clock_id))
-        target = last_server_vsync;
-
-#if 1
-    auto delta = target - last_target;
-    long usec = delta.count() / 1000;
-    fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
-    fprintf(stderr, "Phase correction %ldus\n",
-        (long)(phase_correction.count() / 1000));
-#endif
-
-    // TODO: last_target should be per-stream??
-    last_target = target;
+    auto target = throttle.next_frame();
     sleep_until(target);
 }
 

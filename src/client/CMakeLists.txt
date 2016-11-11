@@ -62,6 +62,7 @@ add_library(mirclientobjects OBJECT
   default_connection_configuration.cpp
   connection_surface_map.cpp
   private.cpp
+  throttle.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
