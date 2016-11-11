@@ -67,7 +67,8 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        mir::optional_value<unsigned int> latency;
+        mir::optional_value<float> latency;
+        int buffers_within_one_frame = 0;
 
         for (auto i = submissions.begin(); i != submissions.end();)
         {
@@ -80,7 +81,11 @@ public:
                 if (i != submissions.begin())
                     i = submissions.erase(submissions.begin(), i);
 
-                latency = visible_frame - i->visible_frame_when_submitted;
+                unsigned frames = visible_frame - i->visible_frame_when_submitted;
+                latency = frames;
+                if (frames == 1)
+                    ++buffers_within_one_frame;
+
                 i = submissions.erase(i);
                 if (swap_interval > 0)
                     break;
@@ -91,6 +96,10 @@ public:
                 i++;
             }
         }
+
+        if (buffers_within_one_frame > 1)
+            latency = latency.value() -
+                      (1.0f - (1.0f / buffers_within_one_frame));
 
         return latency;
     }
@@ -189,11 +198,11 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        unsigned int sum {0};
+        float sum = 0.0f;
         for(auto& s : latency_list)
             sum += s;
 
-        return static_cast<float>(sum) / latency_list.size();
+        return sum / latency_list.size();
     }
 
     void dump_latency()
@@ -203,13 +212,13 @@ public:
         unsigned const size = latency_list.size();
         unsigned const cols = 10u;
 
-        fprintf(file, "%s%u frames sampled, averaging %.1f frames latency\n",
+        fprintf(file, "%s%u frames sampled, averaging %.3f frames latency\n",
                 prefix, size, average_latency());
         for (unsigned i = 0; i < size; ++i)
         {
             if ((i % cols) == 0)
                 fprintf(file, "%s%2u:", prefix, i);
-            fprintf(file, " %2d", latency_list[i]);
+            fprintf(file, " %5.2f", latency_list[i]);
             if ((i % cols) == cols-1)
                 fprintf(file, "\n");
         }
@@ -217,15 +226,15 @@ public:
             fprintf(file, "\n");
     }
 
-    unsigned int max_latency() const
+    float max_latency() const
     {
         return max;
     }
 
 private:
     std::mutex mutex;
-    std::vector<unsigned int> latency_list;
-    unsigned int max = 0;
+    std::vector<float> latency_list;
+    float max = 0;
     Stats& stats;
     IdCollectingDB db;
 };
@@ -322,7 +331,7 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
 }
 
-TEST_F(ClientLatency, dropping_latency_is_limited_to_one)
+TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
 {
     using namespace testing;
 
@@ -338,7 +347,7 @@ TEST_F(ClientLatency, dropping_latency_is_limited_to_one)
     } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
 
     auto max_latency = display.group.max_latency();
-    EXPECT_THAT(max_latency, Le(1u));
+    EXPECT_THAT(max_latency, Lt(0.5f));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
