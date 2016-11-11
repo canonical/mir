@@ -17,8 +17,8 @@
  */
 
 #include "unsupported_coordinate_translator.h"
-#include "mir/frontend/unsupported_feature_exception.h"
 
+#include <exception>
 #include <boost/exception/all.hpp>
 
 namespace mg = mir::geometry;
@@ -29,5 +29,5 @@ mg::Point ms::UnsupportedCoordinateTranslator::surface_to_screen(
         std::shared_ptr<mf::Surface> /*surface*/,
         int32_t /*x*/, int32_t /*y*/)
 {
-    BOOST_THROW_EXCEPTION(mf::unsupported_feature());
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Unsupported feature requested"});
 }
