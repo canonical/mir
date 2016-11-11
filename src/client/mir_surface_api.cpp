@@ -611,12 +611,13 @@ catch (std::exception const& ex)
 void mir_surface_spec_add_buffer_stream(
     MirSurfaceSpec* spec,
     int displacement_x, int displacement_y,
+    int width, int height,
     MirBufferStream* stream)
 try
 {
     mir::require(spec && stream);
     auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), {}};
+    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), mir::geometry::Size{width, height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);

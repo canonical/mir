@@ -71,6 +71,12 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
 
     pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, connector_id, this};
 
+    /*
+     * It appears we can't tell the difference between flipping being
+     * unsupported or failing for other reasons. On VirtualBox this always
+     * fails with -22 (Invalid argument) despite the arguments being
+     * apparently valid.
+     */
     auto ret = drmModePageFlip(drm_fd, crtc_id, fb_id,
                                DRM_MODE_PAGE_FLIP_EVENT,
                                &pending_page_flips[crtc_id]);

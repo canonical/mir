@@ -29,29 +29,14 @@ struct MirKeyboardEvent : MirInputEvent
 {
     MirKeyboardEvent();
 
-    int32_t device_id() const;
-    void set_device_id(int32_t id);
-
-    int32_t source_id() const;
-    void set_source_id(int32_t id);
-
     MirKeyboardAction action() const;
     void set_action(MirKeyboardAction action);
-
-    MirInputEventModifiers modifiers() const;
-    void set_modifiers(MirInputEventModifiers modifiers);
 
     int32_t key_code() const;
     void set_key_code(int32_t key_code);
 
     int32_t scan_code() const;
     void set_scan_code(int32_t scan_code);
-
-    std::chrono::nanoseconds event_time() const;
-    void set_event_time(std::chrono::nanoseconds const& event_time);
-
-    std::vector<uint8_t> cookie() const;
-    void set_cookie(std::vector<uint8_t> const& cookie);
 };
 
 #endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */

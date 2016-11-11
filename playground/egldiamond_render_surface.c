@@ -1,6 +1,4 @@
 /*
- * Trivial GL demo; flashes the screen with colors using a MirRenderSurface.
- *
  * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,11 +15,15 @@
  *
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ *         Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_render_surface.h"
+#include "mir_egl_platform_shim.h"
+#include "diamond.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -41,11 +43,6 @@ static void shutdown(int signum)
     }
 }
 
-typedef struct Color
-{
-    GLfloat r, g, b, a;
-} Color;
-
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
     { \
@@ -53,13 +50,28 @@ typedef struct Color
        return -1; \
     }
 
+//The client arranges the scene in the subscene
+void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
+{
+    (void) surface;
+    MirEventType type = mir_event_get_type(event);
+    if (type == mir_event_type_resize)
+    {
+        MirResizeEvent const* resize_event = mir_event_get_resize_event(event);
+        int width = mir_resize_event_get_width(resize_event);
+        int height = mir_resize_event_get_height(resize_event);
+        MirRenderSurface* rs = (MirRenderSurface*) context;
+        mir_render_surface_set_size(rs, width, height);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc;
     (void) argv;
     const char* appname = "EGL Render Surface Demo";
-    int width = 100;
-    int height = 100;
+    int width = 300;
+    int height = 300;
     EGLDisplay egldisplay;
     EGLSurface eglsurface;
     EGLint ctxattribs[] =
@@ -82,8 +94,8 @@ int main(int argc, char *argv[])
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    egldisplay = eglGetDisplay(
-                    mir_connection_get_egl_native_display(connection));
+    egldisplay = future_driver_eglGetDisplay(connection);
+
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
     ok = eglInitialize(egldisplay, NULL, NULL);
@@ -104,35 +116,32 @@ int main(int argc, char *argv[])
     CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
 
-    MirPixelFormat pixel_format =
-        mir_connection_get_egl_pixel_format(connection, egldisplay, eglconfig);
-
-    printf("Mir chose pixel format %d.\n", pixel_format);
-
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, width, height, pixel_format);
-    CHECK(spec, "Can't create a surface spec");
-
-    mir_surface_spec_set_name(spec, appname);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-
-    render_surface = mir_connection_create_render_surface(connection);
+    render_surface = mir_connection_create_render_surface(connection, width, height);
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
 
-    MirBufferStream* buffer_stream =
-        mir_render_surface_create_buffer_stream_sync(render_surface,
-                                                     width, height,
-                                                     pixel_format,
-                                                     mir_buffer_usage_hardware);
+    //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
+    //       Current code requires creation of content before creation of the surface.
+    eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface);
+
+    //The format field is only used for default-created streams.
+    //We can safely set invalid as the pixel format, and the field needs to be deprecated
+    //once default streams are deprecated.
+    //width and height are the logical width the user wants the surface to be
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(
+            connection, width, height,
+            mir_pixel_format_invalid);
+
+    CHECK(spec, "Can't create a surface spec");
+    mir_surface_spec_set_name(spec, appname);
 
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
-    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);
 
+    surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-        (EGLNativeWindowType)render_surface, NULL);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
@@ -142,32 +151,20 @@ int main(int argc, char *argv[])
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
-    Color red = {1.0f, 0.0f, 0.0f, 1.0f};
-    Color green = {0.0f, 1.0f, 0.0f, 1.0f};
-    Color blue = {0.0f, 0.0f, 1.0f, 1.0f};
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    Diamond diamond = setup_diamond(width, height);
 
     running = 1;
     while (running)
     {
-        glClearColor(red.r, red.g, red.b, red.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(egldisplay, eglsurface);
-        sleep(1);
-
-        glClearColor(green.r, green.g, green.b, green.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(egldisplay, eglsurface);
-        sleep(1);
-
-        glClearColor(blue.r, blue.g, blue.b, blue.a);
-        glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(egldisplay, eglsurface);
-        sleep(1);
+        render_diamond(&diamond, egldisplay, eglsurface);
+        future_driver_eglSwapBuffers(egldisplay, eglsurface);
     }
 
+    destroy_diamond(&diamond);
+
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglTerminate(egldisplay);
-    mir_buffer_stream_release_sync(buffer_stream);
+    future_driver_eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

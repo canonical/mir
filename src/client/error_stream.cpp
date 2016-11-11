@@ -123,6 +123,11 @@ MirWaitHandle* mcl::ErrorBufferStream::set_scale(float)
     throw std::runtime_error(error);
 }
 
+mir::geometry::Size mcl::ErrorBufferStream::size() const
+{
+    throw std::runtime_error(error);
+}
+
 void mcl::ErrorBufferStream::buffer_available(mir::protobuf::Buffer const&) {}
 void mcl::ErrorBufferStream::buffer_unavailable() {}
 void mcl::ErrorBufferStream::set_size(geometry::Size) {}
@@ -208,6 +213,11 @@ MirWaitHandle* mcl::ErrorStream::set_scale(float)
     throw std::runtime_error(error);
 }
 
+mir::geometry::Size mcl::ErrorStream::size() const
+{
+    throw std::runtime_error(error);
+}
+
 void mcl::ErrorStream::buffer_available(mir::protobuf::Buffer const&) {}
 void mcl::ErrorStream::buffer_unavailable() {}
-void mcl::ErrorStream::set_size(geometry::Size) {}
+void mcl::ErrorStream::set_size(mir::geometry::Size) {}

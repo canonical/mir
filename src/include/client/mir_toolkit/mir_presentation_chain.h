@@ -143,6 +143,7 @@ void mir_surface_spec_add_presentation_chain(
  */
 void mir_surface_spec_add_buffer_stream(
     MirSurfaceSpec* spec,
+    int width, int height,
     int displacement_x, int displacement_y,
     MirBufferStream* stream);
 

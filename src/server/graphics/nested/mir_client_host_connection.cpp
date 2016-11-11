@@ -571,7 +571,8 @@ public:
         EGLenum type;
         EGLClientBuffer client_buffer = nullptr;;
         EGLint* attrs = nullptr;
-        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        // TODO: check return value
+        mir_buffer_get_egl_image_parameters(handle, &type, &client_buffer, &attrs);
         
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }
@@ -645,9 +646,11 @@ public:
             disp.dx.as_int(), disp.dy.as_int(), chain.handle());
     }
 
-    void add_stream(mgn::HostStream& stream, geom::Displacement disp) override
+    void add_stream(mgn::HostStream& stream, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_buffer_stream(spec, disp.dx.as_int(), disp.dy.as_int(), stream.handle());
+        mir_surface_spec_add_buffer_stream(spec,
+            disp.dx.as_int(), disp.dy.as_int(),
+            size.width.as_int(), size.height.as_int(), stream.handle());
     }
 
     MirSurfaceSpec* handle() override

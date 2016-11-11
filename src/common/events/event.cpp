@@ -25,7 +25,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/keymap_event.h"
-#include "mir/events/motion_event.h"
+#include "mir/events/touch_event.h"
 #include "mir/events/orientation_event.h"
 #include "mir/events/prompt_session_event.h"
 #include "mir/events/resize_event.h"
@@ -69,8 +69,8 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 
 std::string MirEvent::serialize(MirEvent const* event)
 {
-	std::string output;
-	auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
+    std::string output;
+    auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
 
     return {reinterpret_cast<char*>(flat_event.asBytes().begin()), flat_event.asBytes().size()};
 }
@@ -79,10 +79,8 @@ MirEventType MirEvent::type() const
 {
     switch (event.asReader().which())
     {
-    case mir::capnp::Event::Which::KEY:
-        return mir_event_type_key;
-    case mir::capnp::Event::Which::MOTION_SET:
-        return mir_event_type_motion;
+    case mir::capnp::Event::Which::INPUT:
+        return mir_event_type_input;
     case mir::capnp::Event::Which::SURFACE:
         return mir_event_type_surface;
     case mir::capnp::Event::Which::RESIZE:
@@ -95,8 +93,11 @@ MirEventType MirEvent::type() const
         return mir_event_type_close_surface;
     case mir::capnp::Event::Which::KEYMAP:
         return mir_event_type_keymap;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     case mir::capnp::Event::Which::INPUT_CONFIGURATION:
         return mir_event_type_input_configuration;
+#pragma GCC diagnostic pop
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
         return mir_event_type_surface_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:
@@ -119,6 +120,8 @@ MirInputEvent const* MirEvent::to_input() const
     return static_cast<MirInputEvent const*>(this);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirInputConfigurationEvent* MirEvent::to_input_configuration()
 {
     return static_cast<MirInputConfigurationEvent*>(this);
@@ -128,6 +131,7 @@ MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
 {
     return static_cast<MirInputConfigurationEvent const*>(this);
 }
+#pragma GCC diagnostic pop
 
 MirSurfaceEvent* MirEvent::to_surface()
 {

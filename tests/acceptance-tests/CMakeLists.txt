@@ -61,6 +61,7 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
+  test_client_extensions.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")

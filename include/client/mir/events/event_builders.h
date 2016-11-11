@@ -141,7 +141,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
-    MirInputDeviceId id, std::chrono::nanoseconds time);
+    MirInputDeviceId id, std::chrono::nanoseconds time) __attribute__((deprecated));
 
 EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      MirPointerButtons pointer_buttons,
