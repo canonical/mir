@@ -126,6 +126,10 @@ public:
     {
         return stub_platform->get_egl_pixel_format(dpy, config);
     }
+    void* request_interface(char const*, int) override
+    {
+        return nullptr;
+    }
 
 private:
     mir::UniqueModulePtr<mcl::ClientPlatform> stub_platform;

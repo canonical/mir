@@ -80,3 +80,8 @@ MirPixelFormat mcle::ClientPlatform::get_egl_pixel_format(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error{"EGL support unimplemented"});
 }
+
+void* mcle::ClientPlatform::request_interface(char const*, int)
+{
+    return nullptr;
+}
