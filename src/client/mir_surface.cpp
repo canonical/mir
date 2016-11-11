@@ -490,56 +490,6 @@ void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
      */
 }
 
-// TODO: Move these to the header when complete:
-namespace {
-
-PosixTimestamp operator-(PosixTimestamp const& a,
-                         std::chrono::nanoseconds b)
-{
-    return PosixTimestamp(a.clock_id, a.nanoseconds - b);
-}
-
-PosixTimestamp operator+(PosixTimestamp const& a,
-                         std::chrono::nanoseconds b)
-{
-    return PosixTimestamp(a.clock_id, a.nanoseconds + b);
-}
-
-std::chrono::nanoseconds operator%(PosixTimestamp const& a,
-                                   std::chrono::nanoseconds b)
-{
-    return std::chrono::nanoseconds(a.nanoseconds.count() % b.count());
-}
-
-void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
-{
-    if (a.clock_id != b.clock_id)
-        throw std::logic_error("Can't compare different time domains");
-}
-
-/*
-bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
-{
-    assert_same_clock(a, b);
-    return a.nanoseconds > b.nanoseconds;
-}
-*/
-
-bool operator<(PosixTimestamp const& a, PosixTimestamp const& b)
-{
-    assert_same_clock(a, b);
-    return a.nanoseconds < b.nanoseconds;
-}
-
-void sleep_until(PosixTimestamp const& t)
-{
-    long long ns = t.nanoseconds.count();
-    struct timespec ts = {ns / 1000000000LL, ns % 1000000000LL};
-    while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, NULL)) {}
-}
-
-}
-
 void MirSurface::wait_for_vsync()
 {
     // Safety net: Virtual machines might report zero(?). Throttle to 60Hz.
