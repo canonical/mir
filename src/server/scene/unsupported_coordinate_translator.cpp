@@ -18,8 +18,9 @@
 
 #include "unsupported_coordinate_translator.h"
 
-#include <exception>
 #include <boost/exception/all.hpp>
+
+#include <stdexcept>
 
 namespace mg = mir::geometry;
 namespace mf = mir::frontend;
