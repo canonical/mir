@@ -482,6 +482,7 @@ void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
     // TODO: Consider replacing mir_surface_output_event_get_refresh_rate with
     //       a more precise mir_surface_output_event_get_vsync_interval...
     auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+    fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
     long long ns = rate ? 1000000000LL / rate : 0;
     vsync_interval = std::chrono::nanoseconds(ns);
     /*
@@ -524,7 +525,13 @@ void MirSurface::wait_for_vsync()
     if (target < PosixTimestamp::now(target.clock_id))
         target = last_server_vsync;
 
-    // TODO: last_target should be per-stream
+#if 0
+    auto delta = target - last_target;
+    long usec = delta.count() / 1000;
+    fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
+#endif
+
+    // TODO: last_target should be per-stream??
     last_target = target;
     sleep_until(target);
 }

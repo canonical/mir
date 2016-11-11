@@ -95,6 +95,8 @@ void mir_eglapp_swap_buffers(void)
     {
         glViewport(0, 0, width, height);
     }
+
+    mir_surface_wait_for_vsync(surface);
 }
 
 static void mir_eglapp_handle_input_event(MirInputEvent const* event)
@@ -507,7 +509,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    eglSwapInterval(egldisplay, swapinterval);
+    (void)swapinterval;
+    eglSwapInterval(egldisplay, 0);
 
     running = 1;
 
