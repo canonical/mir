@@ -298,3 +298,81 @@ TEST_F(NestedDisplay, preserves_framebuffers_for_metadata_changes)
         EXPECT_THAT(db->native_display_buffer(), NotNull());
     }
 }
+
+TEST_F(NestedDisplay, changing_output_does_not_preserve_framebuffers)
+{
+    using namespace testing;
+
+    class MultiDisplayHostConnection : public mtd::StubHostConnection
+    {
+    public:
+        std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+        {
+            // This builds a 3-monitor configuration...
+            return mt::build_non_trivial_configuration();
+        }
+    };
+
+
+    auto display = std::make_unique<mgn::Display>(
+        null_platform,
+        std::make_shared<MultiDisplayHostConnection>(),
+        mt::fake_shared(null_display_report),
+        mt::fake_shared(default_conf_policy),
+        mt::fake_shared(stub_gl_config),
+        mgn::PassthroughOption::disabled);
+
+    auto conf = display->configuration();
+
+    // Enable the first and second displays, have the third disabled.
+    conf->for_each_output(
+        [counter = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            switch (counter)
+            {
+                case 0:
+                    output.used = true;
+                    output.top_left = {0, 0};
+                    break;
+                case 1:
+                    output.used = true;
+                    output.top_left = {2000, 2000};
+                    break;
+                case 2:
+                    output.used = false;
+                    break;
+            }
+            ++counter;
+        });
+
+    display->configure(*conf);
+
+    conf = display->configuration();
+
+    // Enable the first and third displays, have the second disabled.
+    conf->for_each_output(
+        [counter = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            switch (counter)
+            {
+                case 0:
+                    output.used = true;
+                    output.top_left = {0, 0};
+                    break;
+                case 1:
+                    output.used = false;
+                    break;
+                case 2:
+                    output.used = true;
+                    output.top_left = {2000, 2000};
+                    break;
+            }
+            ++counter;
+        });
+
+    /*
+     * This tests an implementation detail; it should be perfectly possible to preserve
+     * display buffers in this case, but we don't, so we shouldn't pretend to.
+     */
+    EXPECT_FALSE(display->apply_if_configuration_preserves_display_buffers(*conf));
+}

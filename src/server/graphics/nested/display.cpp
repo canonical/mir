@@ -36,6 +36,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -392,10 +393,17 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
 
     {
         std::lock_guard<decltype(outputs_mutex)> outputs_lock{outputs_mutex};
-        if (outputs.size() > new_outputs.size())
+        for (auto const existing_output : outputs)
         {
-            // If we're disabling an output then we're definitely destroying its DisplayBuffer
-            return false;
+            // O(n²) here, but n < 10 and this is isn't a hot path.
+            if (!std::any_of(
+                new_outputs.begin(),
+                new_outputs.end(),
+                [id = existing_output.first](auto const& output) { return output.id == id; }))
+            {
+                // At least one of the existing outputs isn't used in the ne
+                return false;
+            }
         }
 
         for (auto const& output : new_outputs)
