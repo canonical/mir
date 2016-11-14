@@ -21,11 +21,14 @@
 #include "nested_authentication.h"
 
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/mesa_drm.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <cstring>
+#include <mutex>
+#include <condition_variable>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -94,8 +97,10 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
     auto const response_msg = nested_context->platform_operation(
         MirMesaPlatformOperation::auth_fd, request_msg);
 
-    int auth_fd{-1};
 
+#if 0
+    int auth_fd{-1};
+    printf("PASSIn\n"); 
     if (response_msg.fds.size() == 1)
     {
         auth_fd = response_msg.fds[0];
@@ -106,6 +111,44 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
             std::runtime_error(
                 "Nested server failed to get authenticated DRM fd"));
     }
+#else
+    auto ext = static_cast<MirExtensionMesaDRM*>(nested_context->request_interface(
+        MIR_EXTENSION_MESA_DRM, MIR_EXTENSION_MESA_DRM_VERSION_1));
+    if (!ext || !ext->drm_auth_fd)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Nested server failed to get authenticated DRM fd"));
 
-    return mir::Fd(IntOwnedFd{auth_fd});
+    struct Sync
+    {
+        static void cb(int fd, void* ctxt)
+        {
+            auto c = static_cast<Sync*>(ctxt);
+            c->received(fd);
+        }
+
+        void received(int f)
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            fd = f;
+            cv.notify_all();
+        }
+
+        int wait_for_auth_fd()
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            cv.wait(lk, [this]{ return fd >= 0; });
+            return fd;
+        }
+
+        std::mutex mut;
+        std::condition_variable cv;
+        int fd = -1; 
+    } sync;
+
+    ext->drm_auth_fd(nested_context->connection(), Sync::cb, &sync);
+
+    printf("USING EXTENSION\n");
+#endif
+    return mir::Fd(IntOwnedFd{sync.wait_for_auth_fd()});
 }

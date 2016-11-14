@@ -22,6 +22,7 @@
 #include <vector>
 
 struct gbm_device;
+struct MirConnection;
 
 namespace mir
 {
@@ -34,6 +35,8 @@ class NestedContext
 public:
     virtual ~NestedContext() = default;
 
+    virtual void* request_interface(char const* name, int version) = 0;
+    virtual MirConnection* connection() = 0;
     virtual std::vector<int> platform_fd_items() = 0;
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) = 0;
