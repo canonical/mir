@@ -26,7 +26,7 @@
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
-#include "mir_toolkit/extensions/mesa_auth.h"
+#include "mir_toolkit/extensions/set_gbm_device.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -46,8 +46,8 @@ namespace
 void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
 {
     std::string const msg{"Nested Mir failed to set the gbm device."};
-    auto ext = static_cast<MirExtensionMesaAuth*>(nested_context.request_interface(
-        MIR_EXTENSION_MESA_AUTH, MIR_EXTENSION_MESA_AUTH_VERSION_1));
+    auto ext = static_cast<MirExtensionSetGbmDevice*>(nested_context.request_interface(
+        MIR_EXTENSION_SET_GBM_DEVICE, MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1));
     if (!ext || !ext->set_gbm_device)
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     ext->set_gbm_device(device, ext->context);
@@ -65,7 +65,6 @@ mgm::GuestPlatform::GuestPlatform(
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
-    printf("BALLOC %X\n", (int)(long) gbm.device);
     return mir::make_module_ptr<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 

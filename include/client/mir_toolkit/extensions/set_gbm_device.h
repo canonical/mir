@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_EXTENSIONS_MESA_AUTH_H_
-#define MIR_CLIENT_EXTENSIONS_MESA_AUTH_H_
+#ifndef MIR_CLIENT_EXTENSIONS_SET_GBM_DEVICE_H_
+#define MIR_CLIENT_EXTENSIONS_SET_GBM_DEVICE_H_
 
-#define MIR_EXTENSION_MESA_AUTH "6d38bfa6-1257-4b31-8e6d-910e7769093d"
-#define MIR_EXTENSION_MESA_AUTH_VERSION_1 1
+#define MIR_EXTENSION_SET_GBM_DEVICE "6d38bfa6-1257-4b31-8e6d-910e7769093d"
+#define MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1 1
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,17 +28,17 @@ extern "C" {
 
 struct gbm_device;
 
-//Get the gbm device used by the client
+//Set the gbm device used by the client
 //  \param [in] device    The gbm_device, or nullptr on failure. Sets errno on failure.
 //  \param [context] device    The gbm_device, or nullptr on failure. Sets errno on failure.
-typedef void (*_set_gbm_device)(struct gbm_device*, void* context);
-struct MirExtensionMesaAuth
+typedef void (*_set_gbm_device)(struct gbm_device*, void* const context);
+struct MirExtensionSetGbmDevice
 {
     _set_gbm_device set_gbm_device;
-    void* context;
+    void* const context;
 };
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* MIR_CLIENT_EXTENSIONS_MESA_AUTH_H_ */
+#endif /* MIR_CLIENT_EXTENSIONS_SET_GBM_DEVICE_H_ */
