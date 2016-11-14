@@ -19,7 +19,10 @@
 #ifndef MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_
 #define MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include "mir_toolkit/mir_render_surface.h"
 
 //Note that these have the same signatures as the proper EGL functions,
@@ -33,5 +36,12 @@ EGLSurface future_driver_eglCreateWindowSurface(
     EGLDisplay display, EGLConfig config, MirRenderSurface* surface);
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface);
+
+EGLImageKHR future_driver_eglCreateImageKHR(
+    EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
+
+EGLBoolean future_driver_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image);
+
+void future_driver_glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image);
 
 #endif /* MIR_PLAYGROUND_MIR_EGL_PLATFORM_SHIM_H_*/
