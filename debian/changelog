@@ -88,6 +88,8 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
       . mir_connection_create_spec_for_tooltip does not set aux_rect
         (LP: #1632335)
       . VMware virtual connector recognized by Mir as "unknown" (LP: #1248072)
+      . Fix code to match the documentation of CoordinateTranslator - vis "It is
+        acceptable ...[to] throw a std::runtime_error" (LP: #1641166)
       . Test timeout MesaDisplayConfigurationTests.* (LP: #1613352)
       . Tests fail when built against lp:mir (LP: #1621917)
       . CI failure PointerConfinement.* (LP: #1606418)
