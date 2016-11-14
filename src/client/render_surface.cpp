@@ -56,7 +56,7 @@ mf::BufferStreamId mcl::RenderSurface::stream_id() const
     return mf::BufferStreamId(protobuf_bs->id().value());
 }
 
-MirBufferStream* mcl::RenderSurface::create_buffer_stream_from_id(
+MirBufferStream* mcl::RenderSurface::get_buffer_stream(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage)

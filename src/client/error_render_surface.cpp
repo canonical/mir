@@ -47,7 +47,7 @@ void mcl::ErrorRenderSurface::set_size(mir::geometry::Size)
     throw std::runtime_error(error);
 }
 
-MirBufferStream* mcl::ErrorRenderSurface::create_buffer_stream_from_id(
+MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
     int /*width*/, int /*height*/,
     MirPixelFormat /*format*/,
     MirBufferUsage /*buffer_usage*/)

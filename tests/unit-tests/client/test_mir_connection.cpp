@@ -975,7 +975,7 @@ TEST_F(MirConnectionTest, render_surface_can_create_buffer_stream)
     mcl::RenderSurface rs(
         connection.get(), native_window, nullptr, mt::fake_shared(protobuf_bs), {});
 
-    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+    auto bs = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_software);
 
     EXPECT_THAT(bs, NotNull());
@@ -999,10 +999,10 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_more_than_onc
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
 
-    auto bs1 = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+    auto bs1 = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware);
 
-    auto bs2 = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+    auto bs2 = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware);
 
     EXPECT_THAT(bs1, NotNull());
@@ -1028,7 +1028,7 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_hardware
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
 
-    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+    auto bs = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware);
 
     EXPECT_THAT(bs, NotNull());
@@ -1052,7 +1052,7 @@ TEST_F(MirConnectionTest, render_surface_creation_of_buffer_stream_with_software
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(_,_)).Times(0);
 
-    auto bs = rs.create_buffer_stream_from_id(2, 2, mir_pixel_format_abgr_8888,
+    auto bs = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_software);
 
     EXPECT_THAT(bs, NotNull());

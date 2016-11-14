@@ -35,7 +35,7 @@ public:
     mir::frontend::BufferStreamId stream_id() const override;
     mir::geometry::Size size() const override;
     void set_size(mir::geometry::Size) override;
-    MirBufferStream* create_buffer_stream_from_id(
+    MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage) override;

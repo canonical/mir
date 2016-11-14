@@ -31,7 +31,7 @@ public:
     virtual mir::frontend::BufferStreamId stream_id() const = 0;
     virtual mir::geometry::Size size() const = 0;
     virtual void set_size(mir::geometry::Size) = 0;
-    virtual MirBufferStream* create_buffer_stream_from_id(
+    virtual MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage) = 0;
