@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_protobuf.pb.h"

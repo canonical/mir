@@ -23,7 +23,6 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
-#include "mir/mir_connection.h"
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
@@ -80,11 +79,12 @@ void auth_fd_cb(
     delete ctx;
 }
 
-void auth_fd_ext(MirConnection* connection, mir_auth_fd_callback cb, void* context)
+void auth_fd_ext(MirConnection* c, mir_auth_fd_callback cb, void* context)
 {
+    auto conn = reinterpret_cast<mcl::ClientContext*>(c);
     auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
     CBContext* ctx = new CBContext{cb, context};
-    connection->platform_operation(msg, auth_fd_cb, ctx);
+    conn->platform_operation(msg, auth_fd_cb, ctx);
     mir_platform_message_release(msg);
 }
 
