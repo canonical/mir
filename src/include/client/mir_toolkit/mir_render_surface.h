@@ -41,11 +41,8 @@ extern "C" {
  *                                              with a non-null MirRenderSurface*, but the render
  *                                              surface may be invalid in case of error.
  * \param [in,out] context                      User data to pass to callback function
- *
- * \return                                      A handle that can be supplied to mir_wait_for
- *                                              to get notified when the request is complete
  */
-MirWaitHandle* mir_connection_create_render_surface(
+void mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
     mir_render_surface_callback callback,
@@ -102,23 +99,8 @@ bool mir_render_surface_is_valid(
  * Release the specified render surface
  *
  * \param [in] render_surface                   The render surface to be released
- * \param [in] mir_render_surface_callback      Callback to be invoked when the request completes
- * \param [in,out] context                      User data to pass to callback function
- *
- * \return                                      A handle that can be supplied to mir_wait_for
- *                                              to get notified when the request is complete,
  */
-MirWaitHandle* mir_render_surface_release(
-    MirRenderSurface* render_surface,
-    mir_render_surface_callback callback,
-    void* context);
-
-/**
- * Release the specified render surface and wait for the request to complete
- *
- * \param [in] render_surface                   The render surface to be released
- */
-void mir_render_surface_release_sync(
+void mir_render_surface_release(
     MirRenderSurface* render_surface);
 
 /**

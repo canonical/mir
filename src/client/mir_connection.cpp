@@ -1341,10 +1341,8 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-MirWaitHandle* MirConnection::release_render_surface_with_content(
-    void* render_surface,
-    mir_render_surface_callback callback,
-    void* context)
+void MirConnection::release_render_surface_with_content(
+    void* render_surface)
 {
     auto new_wait_handle = new MirWaitHandle;
     auto rs = surface_map->render_surface(render_surface);
@@ -1352,8 +1350,8 @@ MirWaitHandle* MirConnection::release_render_surface_with_content(
     StreamRelease stream_release{nullptr,
                                  new_wait_handle,
                                  nullptr,
-                                 callback,
-                                 context,
+                                 nullptr,
+                                 nullptr,
                                  rs->stream_id().as_value(),
                                  render_surface};
 
@@ -1369,8 +1367,6 @@ MirWaitHandle* MirConnection::release_render_surface_with_content(
     server.release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
-
-    return new_wait_handle;
 }
 
 void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request_raw)
@@ -1429,7 +1425,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     }
 }
 
-MirWaitHandle* MirConnection::create_render_surface_with_content(
+void MirConnection::create_render_surface_with_content(
     mir::geometry::Size logical_size,
     mir_render_surface_callback callback,
     void* context,
@@ -1463,7 +1459,6 @@ MirWaitHandle* MirConnection::create_render_surface_with_content(
     }
 
     *native_window = nw.get();
-    return request->wh.get();
 }
 
 void* MirConnection::request_interface(char const* name, int version)

@@ -52,7 +52,7 @@ TEST_F(RenderSurfaceTest, creates_and_releases_render_surfaces)
     ASSERT_THAT(rs, NotNull());
     EXPECT_TRUE(mir_render_surface_is_valid(rs));
 
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
 
@@ -81,7 +81,7 @@ TEST_F(RenderSurfaceTest, can_hand_out_buffer_streams)
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
     EXPECT_THAT(mir_buffer_stream_get_error_message(bs), StrEq(""));
 
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
 
@@ -101,7 +101,7 @@ TEST_F(RenderSurfaceTest, dont_have_to_release_buffer_stream)
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
     EXPECT_THAT(mir_buffer_stream_get_error_message(bs), StrEq(""));
 
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
 
@@ -128,7 +128,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
     EXPECT_THAT(surface, IsValid());
 
     EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
@@ -161,7 +161,7 @@ TEST_F(RenderSurfaceTest, content_can_be_constructed_after_surface_creation)
 
     EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
-    mir_render_surface_release_sync(rs);
+    mir_render_surface_release(rs);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
