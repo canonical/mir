@@ -54,6 +54,7 @@
 #include <signal.h>
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace md = mir::dispatch;
@@ -1463,4 +1464,11 @@ MirWaitHandle* MirConnection::create_render_surface_with_content(
 
     *native_window = nw.get();
     return request->wh.get();
+}
+
+void* MirConnection::request_interface(char const* name, int version)
+{
+    if (!platform)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+    return platform->request_interface(name, version);
 }

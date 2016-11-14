@@ -13,30 +13,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMMON_KEYBOARD_EVENT_H_
-#define MIR_COMMON_KEYBOARD_EVENT_H_
+#include "mir_toolkit/mir_extension_core.h"
+#include "mir_connection.h"
+#include "mir/uncaught.h"
+#include "mir/require.h"
 
-#include <chrono>
-#include <cstdint>
-#include <vector>
-
-#include "mir/events/input_event.h"
-
-struct MirKeyboardEvent : MirInputEvent
+void* mir_connection_request_interface(
+    MirConnection* connection,
+    char const* interface,
+    int version)
+try
 {
-    MirKeyboardEvent();
-
-    MirKeyboardAction action() const;
-    void set_action(MirKeyboardAction action);
-
-    int32_t key_code() const;
-    void set_key_code(int32_t key_code);
-
-    int32_t scan_code() const;
-    void set_scan_code(int32_t scan_code);
-};
-
-#endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */
+    mir::require(connection);
+    return connection->request_interface(interface, version);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}

@@ -226,6 +226,8 @@ public:
         mir_render_surface_callback callback,
         void* context);
 
+    void* request_interface(char const* name, int version);
+
 private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest

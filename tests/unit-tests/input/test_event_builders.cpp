@@ -69,7 +69,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float pressure_values[] = {3, 9, 14.6};
     float touch_major_values[] = {11, 9, 14};
     float touch_minor_values[] = {13, 3, 9.13};
-    float size_values[] = {4, 9, 6};
+    float size_values[] = {13, 9, 14};
 
    auto ev = mev::make_event(device_id, timestamp,
        cookie, modifiers);
@@ -190,6 +190,7 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     auto const button_state = mir_pointer_button_primary|mir_pointer_button_secondary;
     auto const modifiers = mir_input_event_modifier_ctrl_right | mir_input_event_modifier_ctrl;
     std::vector<uint32_t> const pressed_keys = {KEY_LEFTALT, KEY_M};
+
     auto ev = mev::make_event(timestamp,
                               button_state,
                               modifiers,
@@ -276,6 +277,7 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(3));
     auto pressed_keys_count = mir_input_device_state_event_device_pressed_keys_count(ids_event, 2);
     EXPECT_THAT(pressed_keys_count, Eq(3));
+
     for (uint32_t i = 0; i < pressed_keys_count; i++)
     {
         EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(ids_event, 2, i), Eq(pressed_keys[i]));

@@ -23,7 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 #include "atomic_callback.h"
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>

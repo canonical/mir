@@ -116,6 +116,10 @@ private:
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 
+    void configure_locked(
+        RealKMSDisplayConfiguration const& conf,
+        std::lock_guard<decltype(configuration_mutex)> const&);
+
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
     std::shared_ptr<GLConfig> const gl_config;
