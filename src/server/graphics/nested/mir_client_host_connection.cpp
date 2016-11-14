@@ -688,21 +688,15 @@ bool mgn::MirClientHostConnection::supports_passthrough()
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>
 mgn::MirClientHostConnection::auth_extensions()
 {
-    printf("TRY EXTENS\n");
     auto ext = static_cast<MirExtensionMesaDRM*>(
         mir_connection_request_interface(mir_connection, 
         MIR_EXTENSION_MESA_DRM, MIR_EXTENSION_MESA_DRM_VERSION_1));
     if (!ext || !ext->drm_auth_fd)
         return {};
 
-
-//        BOOST_THROW_EXCEPTION(
-//            std::runtime_error(
-//                "Nested server failed to get authenticated DRM fd"));
-
-    printf("USING EXTENSION\n");
-    struct Sync : MesaAuthExtensions
+    class Sync : public MesaAuthExtensions
     {
+    public:
         Sync(
             MirConnection* connection,
             MirExtensionMesaDRM* ext) :
@@ -710,6 +704,7 @@ mgn::MirClientHostConnection::auth_extensions()
             extensions(ext)
         {
         }
+
         static void cb(int fd, void* ctxt)
         {
             auto c = static_cast<Sync*>(ctxt);
@@ -726,19 +721,19 @@ mgn::MirClientHostConnection::auth_extensions()
         mir::Fd auth_fd() override
         {
             extensions->drm_auth_fd(connection, Sync::cb, this);
-
             std::unique_lock<decltype(mut)> lk(mut);
             cv.wait(lk, [this]{ return fd >= 0; });
             return mir::Fd(IntOwnedFd{fd});
         }
 
+    private:
         MirConnection* const connection;
         MirExtensionMesaDRM* const extensions;
         std::mutex mut;
         std::condition_variable cv;
         int fd = -1; 
     };
-    return mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>(std::make_shared<Sync>(mir_connection, ext));
+    return { std::make_unique<Sync>(mir_connection, ext) };
 }
 
 #if 0
