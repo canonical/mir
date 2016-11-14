@@ -74,8 +74,7 @@ public:
 
         auto protobuf_void = std::make_shared<mp::Void>();
         server.allocate_buffers(&request, protobuf_void.get(),
-            google::protobuf::NewCallback(Requests::ignore_response,
-                                          protobuf_void));
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
@@ -86,8 +85,7 @@ public:
 
         auto protobuf_void = std::make_shared<mp::Void>();
         server.release_buffers(&request, protobuf_void.get(),
-            google::protobuf::NewCallback(Requests::ignore_response,
-                                          protobuf_void));
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void submit_buffer(mcl::MirBuffer& buffer) override
@@ -98,8 +96,7 @@ public:
 
         auto protobuf_void = std::make_shared<mp::Void>();
         server.submit_buffer(&request, protobuf_void.get(),
-            google::protobuf::NewCallback(Requests::ignore_response,
-                                          protobuf_void));
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     static void ignore_response(std::shared_ptr<mp::Void>)
