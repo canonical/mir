@@ -19,6 +19,7 @@
 #define MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/mesa_drm.h"
 
 struct gbm_device;
 
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
     gbm_device* gbm_dev;
+    MirExtensionMesaDRM drm_extensions;
 };
 
 }

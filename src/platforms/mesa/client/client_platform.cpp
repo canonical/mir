@@ -23,6 +23,7 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "mir/mir_connection.h"
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
@@ -58,6 +59,35 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 {
     return ((a - 1) / b) + 1;
 }
+
+struct CBContext
+{
+    mir_auth_fd_callback cb;
+    void* context;
+};
+
+void auth_fd_cb(
+    MirConnection*, MirPlatformMessage* reply, void* c)
+{
+    CBContext* ctx = reinterpret_cast<CBContext*>(c);
+    int auth_fd{-1};
+
+    MirPlatformMessageFds fds = mir_platform_message_get_fds(reply);
+
+    if (fds.num_fds == 1)
+        auth_fd = fds.fds[0];
+    ctx->cb(auth_fd, ctx->context);
+    delete ctx;
+}
+
+void auth_fd_ext(MirConnection* connection, mir_auth_fd_callback cb, void* context)
+{
+    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
+    CBContext* ctx = new CBContext{cb, context};
+    connection->platform_operation(msg, auth_fd_cb, ctx);
+    mir_platform_message_release(msg);
+}
+
 }
 
 mclm::ClientPlatform::ClientPlatform(
@@ -67,7 +97,8 @@ mclm::ClientPlatform::ClientPlatform(
     : context{context},
       buffer_file_ops{buffer_file_ops},
       display_container(display_container),
-      gbm_dev{nullptr}
+      gbm_dev{nullptr},
+      drm_extensions{auth_fd_ext}
 {
 }
 
@@ -185,7 +216,12 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
     return mir_format;
 }
 
-void* mclm::ClientPlatform::request_interface(char const*, int)
+void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
 {
+    if (!strcmp(MIR_EXTENSION_MESA_DRM, extension_name) &&
+        (MIR_EXTENSION_MESA_DRM_VERSION_1 == version))
+    {
+        return &drm_extensions;
+    }
     return nullptr;
 }
