@@ -45,7 +45,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-
 class MesaGuestPlatformTest : public ::testing::Test
 {
 public:
