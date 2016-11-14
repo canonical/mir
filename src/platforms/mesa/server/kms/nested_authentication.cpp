@@ -92,13 +92,11 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
+#if 0
     mg::PlatformOperationMessage request_msg;
-
     auto const response_msg = nested_context->platform_operation(
         MirMesaPlatformOperation::auth_fd, request_msg);
 
-
-#if 0
     int auth_fd{-1};
     printf("PASSIn\n"); 
     if (response_msg.fds.size() == 1)
@@ -112,43 +110,19 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
                 "Nested server failed to get authenticated DRM fd"));
     }
 #else
-    auto ext = static_cast<MirExtensionMesaDRM*>(nested_context->request_interface(
-        MIR_EXTENSION_MESA_DRM, MIR_EXTENSION_MESA_DRM_VERSION_1));
-    if (!ext || !ext->drm_auth_fd)
+
+    auto ext = nested_context->auth_extensions();
+    if (ext.is_set())
+    {
+        return (*ext.value()).auth_fd();
+    }
+    else
+    {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Nested server failed to get authenticated DRM fd"));
-
-    struct Sync
-    {
-        static void cb(int fd, void* ctxt)
-        {
-            auto c = static_cast<Sync*>(ctxt);
-            c->received(fd);
-        }
-
-        void received(int f)
-        {
-            std::unique_lock<decltype(mut)> lk(mut);
-            fd = f;
-            cv.notify_all();
-        }
-
-        int wait_for_auth_fd()
-        {
-            std::unique_lock<decltype(mut)> lk(mut);
-            cv.wait(lk, [this]{ return fd >= 0; });
-            return fd;
-        }
-
-        std::mutex mut;
-        std::condition_variable cv;
-        int fd = -1; 
-    } sync;
-
-    ext->drm_auth_fd(nested_context->connection(), Sync::cb, &sync);
-
-    printf("USING EXTENSION\n");
+    }
+//    virtual mir::optional_value<std::unique_ptr<MesaAuthExtensions>> auth_extensions() = 0;
 #endif
-    return mir::Fd(IntOwnedFd{sync.wait_for_auth_fd()});
+
 }

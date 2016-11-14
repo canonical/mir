@@ -24,6 +24,7 @@
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/mesa_drm.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -684,6 +685,63 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     return true;
 }
 
+mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>
+mgn::MirClientHostConnection::auth_extensions()
+{
+    printf("TRY EXTENS\n");
+    auto ext = static_cast<MirExtensionMesaDRM*>(
+        mir_connection_request_interface(mir_connection, 
+        MIR_EXTENSION_MESA_DRM, MIR_EXTENSION_MESA_DRM_VERSION_1));
+    if (!ext || !ext->drm_auth_fd)
+        return {};
+
+
+//        BOOST_THROW_EXCEPTION(
+//            std::runtime_error(
+//                "Nested server failed to get authenticated DRM fd"));
+
+    printf("USING EXTENSION\n");
+    struct Sync : MesaAuthExtensions
+    {
+        Sync(
+            MirConnection* connection,
+            MirExtensionMesaDRM* ext) :
+            connection(connection),
+            extensions(ext)
+        {
+        }
+        static void cb(int fd, void* ctxt)
+        {
+            auto c = static_cast<Sync*>(ctxt);
+            c->received(fd);
+        }
+
+        void received(int f)
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            fd = f;
+            cv.notify_all();
+        }
+
+        mir::Fd auth_fd() override
+        {
+            extensions->drm_auth_fd(connection, Sync::cb, this);
+
+            std::unique_lock<decltype(mut)> lk(mut);
+            cv.wait(lk, [this]{ return fd >= 0; });
+            return mir::Fd(IntOwnedFd{fd});
+        }
+
+        MirConnection* const connection;
+        MirExtensionMesaDRM* const extensions;
+        std::mutex mut;
+        std::condition_variable cv;
+        int fd = -1; 
+    };
+    return mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>(std::make_shared<Sync>(mir_connection, ext));
+}
+
+#if 0
 void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
 {
     return mir_connection_request_interface(mir_connection, name, version);    
@@ -693,3 +751,4 @@ MirConnection* mgn::MirClientHostConnection::connection()
 {
     return mir_connection;
 }
+#endif

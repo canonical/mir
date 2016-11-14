@@ -81,7 +81,7 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
-    void* request_interface(char const* name, int version) override;
+//    void* request_interface(char const* name, int version) override;
 
     UniqueInputConfig create_input_device_config() override;
     void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) override;
@@ -90,7 +90,7 @@ public:
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
     bool supports_passthrough() override;
 
-    MirConnection* connection() override;
+    optional_value<std::shared_ptr<MesaAuthExtensions>> auth_extensions() override;
 private:
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;

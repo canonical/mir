@@ -19,6 +19,9 @@
 #ifndef MIR_GRAPHICS_NESTED_CONTEXT_H_
 #define MIR_GRAPHICS_NESTED_CONTEXT_H_
 
+#include "mir/optional_value.h"
+#include "mir/fd.h"
+#include <memory>
 #include <vector>
 
 struct gbm_device;
@@ -30,13 +33,25 @@ namespace graphics
 {
 struct PlatformOperationMessage;
 
+class MesaAuthExtensions
+{
+public:
+    virtual ~MesaAuthExtensions() = default;
+    virtual mir::Fd auth_fd() = 0;
+protected:
+    MesaAuthExtensions() = default;
+    MesaAuthExtensions(MesaAuthExtensions const&) = delete;
+    MesaAuthExtensions& operator=(MesaAuthExtensions const&) = delete;
+};
+
 class NestedContext
 {
 public:
     virtual ~NestedContext() = default;
 
-    virtual void* request_interface(char const* name, int version) = 0;
-    virtual MirConnection* connection() = 0;
+    virtual mir::optional_value<std::shared_ptr<MesaAuthExtensions>> auth_extensions() = 0;
+//    virtual void* request_interface(char const* name, int version) = 0;
+//    virtual MirConnection* connection() = 0;
     virtual std::vector<int> platform_fd_items() = 0;
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) = 0;
