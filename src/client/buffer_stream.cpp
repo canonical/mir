@@ -72,10 +72,11 @@ public:
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.allocate_buffers(&request,  protobuf_void,
-            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.allocate_buffers(&request, protobuf_void.get(),
+            google::protobuf::NewCallback(Requests::ignore_response,
+                                          protobuf_void.get(),
+                                          protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
@@ -84,10 +85,11 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.release_buffers(&request, protobuf_void,
-            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.release_buffers(&request, protobuf_void.get(),
+            google::protobuf::NewCallback(Requests::ignore_response,
+                                          protobuf_void.get(),
+                                          protobuf_void));
     }
 
     void submit_buffer(mcl::MirBuffer& buffer) override
@@ -96,20 +98,19 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.submit_buffer(&request, protobuf_void,
-            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.submit_buffer(&request, protobuf_void.get(),
+            google::protobuf::NewCallback(Requests::ignore_response,
+                                          protobuf_void.get(),
+                                          protobuf_void));
     }
 
-    static void ignore_response(mp::Void* void_response)
+    static void ignore_response(mp::Void*, std::shared_ptr<mp::Void>)
     {
-        delete void_response;
     }
 
 private:
     mclr::DisplayServer& server;
-    mp::Void protobuf_void;
     int stream_id;
 };
 
