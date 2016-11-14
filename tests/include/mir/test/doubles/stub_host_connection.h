@@ -164,6 +164,7 @@ public:
     {
         return true;
     }
+    void* request_interface(char const*, int) { return nullptr; }
 };
 
 struct MockHostConnection : StubHostConnection
@@ -175,6 +176,7 @@ struct MockHostConnection : StubHostConnection
     MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
         (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
          graphics::BufferProperties, char const*, uint32_t));
+    MOCK_METHOD2(request_interface, void*(char const*, int));
 
     void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
     {
