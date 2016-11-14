@@ -24,7 +24,7 @@ using namespace mir::time;
 Throttle::Throttle()
 {
     // A sane default in case we never got told a real rate;
-    set_speed(59.9);
+    set_speed(60);
 }
 
 void Throttle::set_speed(double hz)
@@ -44,30 +44,20 @@ void Throttle::set_phase(PosixTimestamp const& last_known_vblank)
 
 PosixTimestamp Throttle::next_frame() const
 {
-    /*
-     * The period of each client frame should match interval, regardless
-     * of the delta of last_server_vsync. Because measuring deltas would be
-     * inaccurate on a variable framerate display. Whereas interval
-     * represents the theoretical maximum refresh rate of the display we should
-     * be aiming for.
-     *   The phase however comes from last_server_vsync. This may sound
-     * unnecessary but being out of phase with the server (physical display)
-     * could create almost one whole frame of extra lag. So it's worth getting
-     * in phase with the server regularly...
-     */
-    auto const server_phase = last_server_vsync % interval;
-    auto const last_phase = last_target % interval;
-    auto const phase_correction = server_phase - last_phase;
-    auto target = last_target + interval + phase_correction;
+    auto target = last_target + interval;
     if (target < PosixTimestamp::now(target.clock_id))
+    {   // The server got ahead of us. That's normal as most clients don't need
+        // to render constantly.
+
+        // TODO: Replace this with get_last_server_vsync, so finally we
+        //       have a means to avoid a round trip on most frames.
         target = last_server_vsync;
+    }
 
 #if 1
     auto delta = target - last_target;
     long usec = delta.count() / 1000;
     fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
-    fprintf(stderr, "Phase correction %ldus\n",
-        (long)(phase_correction.count() / 1000));
 #endif
 
     last_target = target;
