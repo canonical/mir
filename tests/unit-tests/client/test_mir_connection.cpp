@@ -686,7 +686,7 @@ TEST_F(MirConnectionTest, wait_handle_is_signalled_during_stream_creation_error)
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
         .WillOnce(Invoke([](mp::BufferStream& bs, google::protobuf::Closure*){ bs.set_error("danger will robertson"); }));
     EXPECT_FALSE(connection->create_client_buffer_stream(
-        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr, nullptr, nullptr)->is_pending());
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr, nullptr)->is_pending());
 }
 
 TEST_F(MirConnectionTest, wait_handle_is_signalled_during_creation_exception)
@@ -697,7 +697,7 @@ TEST_F(MirConnectionTest, wait_handle_is_signalled_during_creation_exception)
             Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
             Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
     auto wh = connection->create_client_buffer_stream(
-        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr, nullptr, nullptr);
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr, nullptr);
     ASSERT_THAT(wh, Ne(nullptr));
     EXPECT_FALSE(wh->is_pending()); 
 }
@@ -715,7 +715,7 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_error_and_err
 
     connection->create_client_buffer_stream(
         2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware,
-        nullptr, &BufferStreamCallback::created, nullptr, &callback);
+        nullptr, &BufferStreamCallback::created, &callback);
     EXPECT_TRUE(callback.invoked);
     ASSERT_TRUE(callback.resulting_stream);
     EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
@@ -733,7 +733,7 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
             Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
     connection->create_client_buffer_stream(
         2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr,
-        &BufferStreamCallback::created, nullptr, &callback);
+        &BufferStreamCallback::created, &callback);
 
     EXPECT_TRUE(callback.invoked);
     ASSERT_TRUE(callback.resulting_stream);
