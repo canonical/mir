@@ -53,6 +53,7 @@
 #include <signal.h>
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace md = mir::dispatch;
@@ -1311,4 +1312,11 @@ MirRenderSurface* MirConnection::create_render_surface(geom::Size logical_size)
 void MirConnection::release_render_surface(void* render_surface)
 {
     surface_map->erase(static_cast<void*>(render_surface));
+}
+
+void* MirConnection::request_interface(char const* name, int version)
+{
+    if (!platform)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+    return platform->request_interface(name, version);
 }

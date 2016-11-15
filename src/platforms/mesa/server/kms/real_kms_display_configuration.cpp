@@ -345,8 +345,11 @@ bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
             {
                 auto clone = conf2.outputs[i];
 
-                // ignore difference in orientation
+                // ignore difference in orientation, scale factor, form factor, subpixel arrangement
                 clone.orientation = conf1.outputs[i].orientation;
+                clone.subpixel_arrangement = conf1.outputs[i].subpixel_arrangement;
+                clone.scale = conf1.outputs[i].scale;
+                clone.form_factor = conf1.outputs[i].form_factor;
                 compatible &= (conf1.outputs[i] == clone);
             }
             else

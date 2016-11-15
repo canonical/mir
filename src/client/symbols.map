@@ -395,7 +395,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
 
     #private functions needed temporarily by nested passthrough
     #should not be published along with the rest of the NBS symbols
-    mir_buffer_egl_image_parameters;
+    mir_buffer_get_egl_image_parameters;
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
   local:
@@ -451,6 +451,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_surface_output_event_get_refresh_rate;
     mir_surface_placement_get_relative_position;
     mir_buffer_stream_get_swapinterval;
+    mir_connection_request_interface;
     mir_buffer_stream_set_size;
     mir_buffer_stream_get_size;
 } MIR_CLIENT_0.24;
