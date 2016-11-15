@@ -19,6 +19,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/android_egl.h"
 
 namespace mir
 {
@@ -48,6 +49,9 @@ public:
 private:
     ClientContext* const context;
     std::shared_ptr<logging::Logger> const logger;
+
+    std::shared_ptr<EGLNativeDisplayType> const native_display;
+    MirExtensionAndroidEGL extension;
 };
 
 }
