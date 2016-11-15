@@ -31,7 +31,7 @@ public:
     Throttle();
     void set_speed(double hz);
     void set_phase(time::PosixTimestamp const& last_known_vblank);
-    time::PosixTimestamp next_frame() const;
+    time::PosixTimestamp next_frame_after(time::PosixTimestamp prev) const;
 
     // TODO: remove when we have real server timestamps:
     std::chrono::nanoseconds get_interval() const { return interval; }
@@ -40,7 +40,6 @@ private:
     std::mutex mutex;
     std::chrono::nanoseconds interval;
     time::PosixTimestamp last_server_vsync;
-    mutable time::PosixTimestamp last_target;
 };
 
 } // namespace mir

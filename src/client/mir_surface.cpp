@@ -461,8 +461,19 @@ void MirSurface::handle_event(MirEvent const& e)
         break;
     }
     case mir_event_type_surface_output:
-        on_output_change(mir_event_get_surface_output_event(&e));
+    {
+        auto soevent = mir_event_get_surface_output_event(&e);
+        auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+        throttle.set_speed(rate);
+        fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
+        /*
+         * TODO: Notify the input receiver of the rate change AFTER the server
+         *       has been modified to always use frame dropping. If we do it
+         *       before then the input receiver using the precise vsync rate
+         *       could easily cause extra queuing and increased touch lag.
+         */
         break;
+    }
     default:
         break;
     };
@@ -475,23 +486,6 @@ void MirSurface::handle_event(MirEvent const& e)
     }
 }
 
-void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
-{
-    // TODO: Consider replacing mir_surface_output_event_get_refresh_rate with
-    //       a more precise mir_surface_output_event_get_vsync_interval ?
-
-    auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-    throttle.set_speed(rate);
-    fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
-
-    /*
-     * TODO: Notify the input receiver of the rate change AFTER the server
-     *       has been modified to always use frame dropping. If we do it
-     *       before then the input receiver using the precise vsync rate
-     *       could easily cause extra queuing and increased touch lag.
-     */
-}
-
 void MirSurface::wait_for_vsync()
 {
     // { TODO: Replace this with the actual timestamp from the server in future.
@@ -502,8 +496,22 @@ void MirSurface::wait_for_vsync()
     throttle.set_phase(last_server_vsync);
     // } TODO
 
-    auto target = throttle.next_frame();
+    mir::time::PosixTimestamp target;
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        target = throttle.next_frame_after(last_vsync);
+    }
     sleep_until(target);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        /*
+         * Note we record the target wakeup time and not the actual wakeup time
+         * so that the frame interval remains perfectly spaced even in the
+         * face of scheduling irregularities.
+         */
+        if (target > last_vsync)
+            last_vsync = target;
+    }
 }
 
 void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)

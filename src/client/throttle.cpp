@@ -42,9 +42,9 @@ void Throttle::set_phase(PosixTimestamp const& last_known_vblank)
     last_server_vsync = last_known_vblank;
 }
 
-PosixTimestamp Throttle::next_frame() const
+PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
 {
-    auto target = last_target + interval;
+    auto target = prev + interval;
     if (target < PosixTimestamp::now(target.clock_id))
     {   // The server got ahead of us. That's normal as most clients don't need
         // to render constantly.
@@ -55,11 +55,10 @@ PosixTimestamp Throttle::next_frame() const
     }
 
 #if 1
-    auto delta = target - last_target;
+    auto delta = target - prev;
     long usec = delta.count() / 1000;
     fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
 #endif
 
-    last_target = target;
     return target;
 }

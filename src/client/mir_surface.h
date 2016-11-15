@@ -214,7 +214,6 @@ public:
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
-    void on_output_change(MirSurfaceOutputEvent const*);
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
@@ -248,6 +247,8 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
     MirOrientation orientation = mir_orientation_normal;
+
+    mir::time::PosixTimestamp last_vsync;
     mir::Throttle throttle;
 
     std::function<void(MirEvent const*)> handle_event_callback;
