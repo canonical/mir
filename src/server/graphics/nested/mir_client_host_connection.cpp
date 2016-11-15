@@ -726,12 +726,39 @@ mgn::MirClientHostConnection::auth_extensions()
             return mir::Fd(IntOwnedFd{fd});
         }
 
+        static void cb_magic(int response, void* context)
+        {
+            auto c = static_cast<Sync*>(context);
+            c->received_magic(response);
+        }
+
+        void received_magic(int response)
+        {
+            std::unique_lock<decltype(mut)> lk(mut);
+            printf("RECEIVED AUTH MAGIC\n");
+            rc_set = true;
+            rc = response; 
+            cv.notify_all();
+        }
+
+        int auth_magic(unsigned int magic) override
+        {
+            printf("AUTH MAGIC\n");
+            extensions->drm_auth_magic(connection, magic, Sync::cb_magic, this);
+
+            std::unique_lock<decltype(mut)> lk(mut);
+            cv.wait(lk, [this]{ return rc_set; });
+            return rc;
+        }
+
     private:
         MirConnection* const connection;
         MirExtensionMesaDRM* const extensions;
         std::mutex mut;
         std::condition_variable cv;
-        int fd = -1; 
+        int fd = -1;
+        bool rc_set = false;
+        int rc = -1;
     };
     return { std::make_unique<Sync>(mir_connection, ext) };
 }

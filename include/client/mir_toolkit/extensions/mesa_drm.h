@@ -29,12 +29,16 @@ extern "C" {
 struct MirConnection;
 typedef void (*mir_auth_fd_callback)(
     int auth_fd, void* context);
-typedef void (*mir_extension_mesa_drm_auth_fd)(MirConnection*, mir_auth_fd_callback cb, void* context);
+typedef void (*mir_auth_magic_callback)(
+    int auth_fd, void* context);
 
+typedef void (*mir_extension_mesa_drm_auth_fd)(MirConnection*, mir_auth_fd_callback cb, void* context);
+typedef void (*mir_extension_mesa_drm_magic)(MirConnection*, int, mir_auth_magic_callback cb, void* context);
 
 struct MirExtensionMesaDRM
 {
     mir_extension_mesa_drm_auth_fd drm_auth_fd;
+    mir_extension_mesa_drm_magic drm_auth_magic;
 };
 
 #ifdef __cplusplus

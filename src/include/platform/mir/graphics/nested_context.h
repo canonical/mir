@@ -38,6 +38,7 @@ class MesaAuthExtensions
 public:
     virtual ~MesaAuthExtensions() = default;
     virtual mir::Fd auth_fd() = 0;
+    virtual int auth_magic(unsigned int) = 0;
 protected:
     MesaAuthExtensions() = default;
     MesaAuthExtensions(MesaAuthExtensions const&) = delete;

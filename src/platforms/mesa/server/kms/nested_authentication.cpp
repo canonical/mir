@@ -36,6 +36,7 @@ namespace mgm = mir::graphics::mesa;
 namespace
 {
 
+#if 0
 mg::PlatformOperationMessage make_auth_magic_request_message(drm_magic_t magic)
 {
     MirMesaAuthMagicRequest const request{magic};
@@ -59,7 +60,7 @@ MirMesaAuthMagicResponse auth_magic_response_from_message(
     BOOST_THROW_EXCEPTION(
         std::runtime_error("Nested server got invalid auth magic response"));
 }
-
+#endif
 }
 
 mgm::NestedAuthentication::NestedAuthentication(
@@ -72,6 +73,24 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 {
     static int const success{0};
 
+    int rc = -1;
+    auto ext = nested_context->auth_extensions();
+        printf("AUTH THE MAGIC\n");
+    if (ext.is_set())
+    {
+        rc = ext.value()->auth_magic(magic);
+    }
+
+    if (rc != success)
+    {
+        std::string const error_msg{
+            "Nested server failed to authenticate DRM device magic cookie"};
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(error_msg)) <<
+                    boost::errinfo_errno(rc));
+    }
+#if 0
     auto const request_msg = make_auth_magic_request_message(magic);
 
     auto const response_msg = nested_context->platform_operation(
@@ -80,18 +99,14 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
     auto const auth_magic_response = auth_magic_response_from_message(response_msg);
     if (auth_magic_response.status != success)
     {
-        std::string const error_msg{
-            "Nested server failed to authenticate DRM device magic cookie"};
 
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(error_msg)) <<
-                    boost::errinfo_errno(auth_magic_response.status));
     }
+#endif
 }
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
+    printf("AUTH THE FD\n");
 #if 0
     mg::PlatformOperationMessage request_msg;
     auto const response_msg = nested_context->platform_operation(
@@ -114,7 +129,7 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
     auto ext = nested_context->auth_extensions();
     if (ext.is_set())
     {
-        return (*ext.value()).auth_fd();
+        return ext.value()->auth_fd();
     }
     else
     {
