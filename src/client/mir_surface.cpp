@@ -477,10 +477,9 @@ void MirSurface::handle_event(MirEvent const& e)
 
 void MirSurface::on_output_change(MirSurfaceOutputEvent const* soevent)
 {
-    output_id = mir_surface_output_event_get_output_id(soevent);
-
     // TODO: Consider replacing mir_surface_output_event_get_refresh_rate with
-    //       a more precise mir_surface_output_event_get_vsync_interval...
+    //       a more precise mir_surface_output_event_get_vsync_interval ?
+
     auto rate = mir_surface_output_event_get_refresh_rate(soevent);
     throttle.set_speed(rate);
     fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
