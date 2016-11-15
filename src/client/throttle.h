@@ -54,6 +54,7 @@ public:
 private:
     time::PosixTimestamp fake_resync_callback() const;
 
+    mutable bool readjustment_required;
     std::chrono::nanoseconds interval;
     ResyncCallback resync_callback;
 };

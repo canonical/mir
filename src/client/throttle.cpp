@@ -23,18 +23,25 @@ using namespace mir;
 using namespace mir::time;
 
 Throttle::Throttle()
-    : resync_callback{std::bind(&Throttle::fake_resync_callback, this)}
+    : readjustment_required{false}
 {
-    // A sane default in case you don't or can't call set_speed:
     set_speed(60);
+    set_resync_callback(std::bind(&Throttle::fake_resync_callback, this));
 }
 
 void Throttle::set_speed(double hz)
 {
-    if (hz > 0.0)
-        interval = std::chrono::nanoseconds(static_cast<long>(1000000000L / hz));
-    else
+    if (hz <= 0.0)
         throw std::logic_error("Throttle::set_speed must be greater than zero");
+
+    interval = std::chrono::nanoseconds(static_cast<long>(1000000000L / hz));
+    readjustment_required = true;
+}
+
+void Throttle::set_resync_callback(ResyncCallback cb)
+{
+    resync_callback = cb;
+    readjustment_required = true;
 }
 
 PosixTimestamp Throttle::fake_resync_callback() const
@@ -56,8 +63,9 @@ PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
      * like this occasionally and not on every frame...
      */
     auto const now = PosixTimestamp::now(target.clock_id);
-    if (target < now)
+    if (target < now || readjustment_required)
     {
+        readjustment_required = false;
         auto const server_frame = resync_callback();
         auto const server_frame_phase = server_frame % interval;
         auto const now_phase = now % interval;
