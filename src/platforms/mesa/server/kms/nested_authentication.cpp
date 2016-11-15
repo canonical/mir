@@ -33,36 +33,6 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
-namespace
-{
-
-#if 0
-mg::PlatformOperationMessage make_auth_magic_request_message(drm_magic_t magic)
-{
-    MirMesaAuthMagicRequest const request{magic};
-    mg::PlatformOperationMessage request_msg;
-    request_msg.data.resize(sizeof(request));
-    std::memcpy(request_msg.data.data(), &request, sizeof(request));
-    return request_msg;
-}
-
-MirMesaAuthMagicResponse auth_magic_response_from_message(
-    mg::PlatformOperationMessage const& msg)
-{
-    if (msg.data.size() == sizeof(MirMesaAuthMagicResponse))
-    {
-        MirMesaAuthMagicResponse response{-1};
-        std::memcpy(&response, msg.data.data(), msg.data.size());
-
-        return response;
-    }
-
-    BOOST_THROW_EXCEPTION(
-        std::runtime_error("Nested server got invalid auth magic response"));
-}
-#endif
-}
-
 mgm::NestedAuthentication::NestedAuthentication(
     std::shared_ptr<NestedContext> const& nested_context)
     : nested_context{nested_context}
@@ -75,69 +45,23 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
     int rc = -1;
     auto ext = nested_context->auth_extensions();
-        printf("AUTH THE MAGIC\n");
     if (ext.is_set())
-    {
         rc = ext.value()->auth_magic(magic);
-    }
 
     if (rc != success)
     {
         std::string const error_msg{
             "Nested server failed to authenticate DRM device magic cookie"};
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(error_msg)) <<
-                    boost::errinfo_errno(rc));
+            boost::enable_error_info(std::runtime_error(error_msg)) << boost::errinfo_errno(rc));
     }
-#if 0
-    auto const request_msg = make_auth_magic_request_message(magic);
-
-    auto const response_msg = nested_context->platform_operation(
-        MirMesaPlatformOperation::auth_magic, request_msg);
-
-    auto const auth_magic_response = auth_magic_response_from_message(response_msg);
-    if (auth_magic_response.status != success)
-    {
-
-    }
-#endif
 }
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
-    printf("AUTH THE FD\n");
-#if 0
-    mg::PlatformOperationMessage request_msg;
-    auto const response_msg = nested_context->platform_operation(
-        MirMesaPlatformOperation::auth_fd, request_msg);
-
-    int auth_fd{-1};
-    printf("PASSIn\n"); 
-    if (response_msg.fds.size() == 1)
-    {
-        auth_fd = response_msg.fds[0];
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Nested server failed to get authenticated DRM fd"));
-    }
-#else
-
     auto ext = nested_context->auth_extensions();
     if (ext.is_set())
-    {
         return ext.value()->auth_fd();
-    }
     else
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Nested server failed to get authenticated DRM fd"));
-    }
-//    virtual mir::optional_value<std::unique_ptr<MesaAuthExtensions>> auth_extensions() = 0;
-#endif
-
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested server failed to get authenticated DRM fd"));
 }

@@ -27,18 +27,33 @@ extern "C" {
 #endif
 
 struct MirConnection;
+
 typedef void (*mir_auth_fd_callback)(
     int auth_fd, void* context);
-typedef void (*mir_auth_magic_callback)(
-    int auth_fd, void* context);
-
+/*
+ * Request authenticated FD from server.
+ * \param [in] connection   The connection
+ * \param [in] cb           The callback triggered on server response
+ * \param [in] context      The context for the callback
+ */
 typedef void (*mir_extension_mesa_drm_auth_fd)(MirConnection*, mir_auth_fd_callback cb, void* context);
-typedef void (*mir_extension_mesa_drm_magic)(MirConnection*, int, mir_auth_magic_callback cb, void* context);
+
+typedef void (*mir_auth_magic_callback)(
+    int response, void* context);
+/*
+ * Request magic cookie from server.
+ * \param [in] connection   The connection
+ * \param [in] magic        The magic
+ * \param [in] cb           The callback triggered on server response
+ * \param [in] context      The context for the callback
+ */
+typedef void (*mir_extension_mesa_drm_auth_magic)(
+    MirConnection* connection, int magic, mir_auth_magic_callback cb, void* context);
 
 struct MirExtensionMesaDRM
 {
     mir_extension_mesa_drm_auth_fd drm_auth_fd;
-    mir_extension_mesa_drm_magic drm_auth_magic;
+    mir_extension_mesa_drm_auth_magic drm_auth_magic;
 };
 
 #ifdef __cplusplus

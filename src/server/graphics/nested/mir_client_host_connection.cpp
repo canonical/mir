@@ -705,60 +705,60 @@ mgn::MirClientHostConnection::auth_extensions()
         {
         }
 
-        static void cb(int fd, void* ctxt)
+        static void cb(int fd, void* context)
         {
-            auto c = static_cast<Sync*>(ctxt);
-            c->received(fd);
-        }
-
-        void received(int f)
-        {
-            std::unique_lock<decltype(mut)> lk(mut);
-            fd = f;
-            cv.notify_all();
+            auto request = static_cast<AuthFdRequest*>(context);
+            std::unique_lock<decltype(request->mut)> lk(request->mut);
+            request->fd = fd;
+            request->cv.notify_all();
         }
 
         mir::Fd auth_fd() override
         {
-            extensions->drm_auth_fd(connection, Sync::cb, this);
-            std::unique_lock<decltype(mut)> lk(mut);
-            cv.wait(lk, [this]{ return fd >= 0; });
-            return mir::Fd(IntOwnedFd{fd});
+            auto req = std::make_unique<AuthFdRequest>();
+            extensions->drm_auth_fd(connection, Sync::cb, req.get());
+
+            std::unique_lock<decltype(req->mut)> lk(req->mut);
+            req->cv.wait(lk, [&]{ return req->fd >= 0; });
+            return mir::Fd(IntOwnedFd{req->fd});
         }
 
         static void cb_magic(int response, void* context)
         {
-            auto c = static_cast<Sync*>(context);
-            c->received_magic(response);
-        }
-
-        void received_magic(int response)
-        {
-            std::unique_lock<decltype(mut)> lk(mut);
-            printf("RECEIVED AUTH MAGIC\n");
-            rc_set = true;
-            rc = response; 
-            cv.notify_all();
+            auto request = static_cast<AuthMagicRequest*>(context);
+            std::unique_lock<decltype(request->mut)> lk(request->mut);
+            request->rc_set = true;
+            request->rc = response;
+            request->cv.notify_all();
         }
 
         int auth_magic(unsigned int magic) override
         {
-            printf("AUTH MAGIC\n");
-            extensions->drm_auth_magic(connection, magic, Sync::cb_magic, this);
+            auto req = std::make_unique<AuthMagicRequest>();
+            extensions->drm_auth_magic(connection, magic, Sync::cb_magic, req.get());
 
-            std::unique_lock<decltype(mut)> lk(mut);
-            cv.wait(lk, [this]{ return rc_set; });
-            return rc;
+            std::unique_lock<decltype(req->mut)> lk(req->mut);
+            req->cv.wait(lk, [&]{ return req->rc_set; });
+            return req->rc;
         }
 
     private:
         MirConnection* const connection;
         MirExtensionMesaDRM* const extensions;
-        std::mutex mut;
-        std::condition_variable cv;
-        int fd = -1;
-        bool rc_set = false;
-        int rc = -1;
+        struct AuthMagicRequest
+        {
+            std::mutex mut;
+            std::condition_variable cv;
+            bool rc_set = false;
+            int rc = -1;
+        };
+
+        struct AuthFdRequest
+        {
+            std::mutex mut;
+            std::condition_variable cv;
+            int fd = -1;
+        };
     };
     return { std::make_unique<Sync>(mir_connection, ext) };
 }

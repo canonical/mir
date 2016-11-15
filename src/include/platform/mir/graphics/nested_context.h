@@ -25,7 +25,6 @@
 #include <vector>
 
 struct gbm_device;
-struct MirConnection;
 
 namespace mir
 {

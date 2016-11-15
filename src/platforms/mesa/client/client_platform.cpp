@@ -59,56 +59,59 @@ constexpr size_t division_ceiling(size_t a, size_t b)
     return ((a - 1) / b) + 1;
 }
 
-struct CBContext
+struct AuthFdContext
 {
     mir_auth_fd_callback cb;
-    mir_auth_magic_callback auth_cb;
     void* context;
 };
 
 void auth_fd_cb(
-    MirConnection*, MirPlatformMessage* reply, void* c)
+    MirConnection*, MirPlatformMessage* reply, void* context)
 {
-    CBContext* ctx = reinterpret_cast<CBContext*>(c);
+    AuthFdContext* ctx = reinterpret_cast<AuthFdContext*>(context);
     int auth_fd{-1};
 
     MirPlatformMessageFds fds = mir_platform_message_get_fds(reply);
-
     if (fds.num_fds == 1)
         auth_fd = fds.fds[0];
     ctx->cb(auth_fd, ctx->context);
     delete ctx;
 }
 
-void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* c)
+void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 {
-    CBContext* ctx = reinterpret_cast<CBContext*>(c);
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
+    auto ctx = new AuthFdContext{cb, context};
+    connection->platform_operation(msg, auth_fd_cb, ctx);
+    mir_platform_message_release(msg);
+}
+
+struct AuthMagicContext
+{
+    mir_auth_magic_callback cb;
+    void* context;
+};
+
+void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    AuthMagicContext* ctx = reinterpret_cast<AuthMagicContext*>(context);
     int auth_magic_response{-1};
 
     MirPlatformMessageData data = mir_platform_message_get_data(reply);
-
     if (data.size == sizeof(auth_magic_response))
         memcpy(&auth_magic_response, data.data, sizeof(auth_magic_response));
     ctx->cb(auth_magic_response, ctx->context);
     delete ctx;
 }
 
-void auth_fd_ext(MirConnection* c, mir_auth_fd_callback cb, void* context)
+void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
 {
-    auto conn = reinterpret_cast<mcl::ClientContext*>(c);
-    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
-    CBContext* ctx = new CBContext{cb, nullptr, context};
-    conn->platform_operation(msg, auth_fd_cb, ctx);
-    mir_platform_message_release(msg);
-}
-
-void auth_magic_ext(MirConnection* c, int magic, mir_auth_magic_callback cb, void* context)
-{
-    auto conn = reinterpret_cast<mcl::ClientContext*>(c);
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
     mir_platform_message_set_data(msg, &magic, sizeof(magic));
-    CBContext* ctx = new CBContext{nullptr, cb, context};
-    conn->platform_operation(msg, auth_magic_cb, ctx);
+    auto ctx = new AuthMagicContext{cb, context};
+    connection->platform_operation(msg, auth_magic_cb, ctx);
     mir_platform_message_release(msg);
 }
 }
