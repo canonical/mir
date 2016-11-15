@@ -22,6 +22,7 @@
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_mesa_auth_extensions.h"
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 
@@ -31,53 +32,57 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
 namespace
 {
-struct NestedAuthentication : public ::testing::Test
+struct NestedAuthentication : ::testing::Test
 {
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtd::MockNestedContext mock_nested_context;
     mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
+    std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
 };
 }
 
 TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
 {
-    using namespace testing;
-
     unsigned int const magic{332211};
+    int const success_response{0};
 
-    MirMesaAuthMagicRequest const request{magic};
-    mg::PlatformOperationMessage msg;
-    msg.data.resize(sizeof(request));
-    std::memcpy(msg.data.data(), &request, sizeof(request));
-
-    MirMesaAuthMagicResponse const success_response{0};
-    mg::PlatformOperationMessage auth_magic_success_response;
-    auth_magic_success_response.data.resize(sizeof(success_response));
-    std::memcpy(auth_magic_success_response.data.data(), &success_response,
-                sizeof(success_response));
-
-    EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::auth_magic, msg))
-        .WillOnce(Return(auth_magic_success_response));
+    EXPECT_CALL(mock_nested_context, auth_extensions())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(*mock_ext, auth_magic(magic))
+        .WillOnce(Return(success_response));
 
     auth.auth_magic(magic);
 }
 
+TEST_F(NestedAuthentication, reports_errors_during_auth_magic)
+{
+    unsigned int const magic{332211};
+    int const error_response{-1};
+
+    EXPECT_CALL(mock_nested_context, auth_extensions())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{}))
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(*mock_ext, auth_magic(magic))
+        .WillOnce(Return(error_response));
+
+    EXPECT_THROW({
+        auth.auth_magic(magic);
+    }, std::runtime_error);
+    EXPECT_THROW({
+        auth.auth_magic(magic);
+    }, std::runtime_error);
+}
+
 TEST_F(NestedAuthentication, uses_nested_context_for_auth_fd)
 {
-    using namespace testing;
-
-    mg::PlatformOperationMessage msg;
-
     int const auth_fd{13};
-    mg::PlatformOperationMessage const response{{}, {auth_fd}};
-
-    EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::auth_fd, msg))
-        .WillOnce(Return(response));
-
+    EXPECT_CALL(mock_nested_context, auth_extensions())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(*mock_ext, auth_fd())
+        .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
     EXPECT_THAT(auth.authenticated_fd(), Eq(auth_fd));
 }

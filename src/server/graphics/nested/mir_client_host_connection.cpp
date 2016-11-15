@@ -685,6 +685,46 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     return true;
 }
 
+namespace
+{
+template<typename T>
+struct AuthRequest
+{
+    std::mutex mut;
+    std::condition_variable cv;
+    bool set = false;
+    T rc;
+};
+
+template<typename T>
+void cb(T rc, void* context)
+{
+    auto request = static_cast<AuthRequest<T>*>(context);
+    std::unique_lock<decltype(request->mut)> lk(request->mut);
+    request->set = true;
+    request->rc = rc;
+    request->cv.notify_all();
+}
+void cb_fd(int fd, void* context)
+{
+    cb<mir::Fd>(mir::Fd(mir::IntOwnedFd{fd}), context);
+}
+void cb_magic(int response, void* context)
+{
+    cb<int>(response, context);
+}
+
+template<typename T>
+T auth(std::function<void(AuthRequest<T>*)> const& f)
+{
+    auto req = std::make_unique<AuthRequest<T>>();
+    f(req.get());
+    std::unique_lock<decltype(req->mut)> lk(req->mut);
+    req->cv.wait(lk, [&]{ return req->set; });
+    return req->rc;
+}
+}
+
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>
 mgn::MirClientHostConnection::auth_extensions()
 {
@@ -694,10 +734,9 @@ mgn::MirClientHostConnection::auth_extensions()
     if (!ext || !ext->drm_auth_fd)
         return {};
 
-    class Sync : public MesaAuthExtensions
+    struct AuthExtensions : MesaAuthExtensions
     {
-    public:
-        Sync(
+        AuthExtensions(
             MirConnection* connection,
             MirExtensionMesaDRM* ext) :
             connection(connection),
@@ -705,72 +744,18 @@ mgn::MirClientHostConnection::auth_extensions()
         {
         }
 
-        static void cb(int fd, void* context)
-        {
-            auto request = static_cast<AuthFdRequest*>(context);
-            std::unique_lock<decltype(request->mut)> lk(request->mut);
-            request->fd = fd;
-            request->cv.notify_all();
-        }
-
         mir::Fd auth_fd() override
         {
-            auto req = std::make_unique<AuthFdRequest>();
-            extensions->drm_auth_fd(connection, Sync::cb, req.get());
-
-            std::unique_lock<decltype(req->mut)> lk(req->mut);
-            req->cv.wait(lk, [&]{ return req->fd >= 0; });
-            return mir::Fd(IntOwnedFd{req->fd});
-        }
-
-        static void cb_magic(int response, void* context)
-        {
-            auto request = static_cast<AuthMagicRequest*>(context);
-            std::unique_lock<decltype(request->mut)> lk(request->mut);
-            request->rc_set = true;
-            request->rc = response;
-            request->cv.notify_all();
+            return auth<mir::Fd>([this](auto req){ extensions->drm_auth_fd(connection, cb_fd, req); });
         }
 
         int auth_magic(unsigned int magic) override
         {
-            auto req = std::make_unique<AuthMagicRequest>();
-            extensions->drm_auth_magic(connection, magic, Sync::cb_magic, req.get());
-
-            std::unique_lock<decltype(req->mut)> lk(req->mut);
-            req->cv.wait(lk, [&]{ return req->rc_set; });
-            return req->rc;
+            return auth<int>([this, magic](auto req){ extensions->drm_auth_magic(connection, magic, cb_magic, req); });
         }
-
     private:
         MirConnection* const connection;
         MirExtensionMesaDRM* const extensions;
-        struct AuthMagicRequest
-        {
-            std::mutex mut;
-            std::condition_variable cv;
-            bool rc_set = false;
-            int rc = -1;
-        };
-
-        struct AuthFdRequest
-        {
-            std::mutex mut;
-            std::condition_variable cv;
-            int fd = -1;
-        };
     };
-    return { std::make_unique<Sync>(mir_connection, ext) };
+    return { std::make_unique<AuthExtensions>(mir_connection, ext) };
 }
-
-#if 0
-void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
-{
-    return mir_connection_request_interface(mir_connection, name, version);    
-}
-
-MirConnection* mgn::MirClientHostConnection::connection()
-{
-    return mir_connection;
-}
-#endif

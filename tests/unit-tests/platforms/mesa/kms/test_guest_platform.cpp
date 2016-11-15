@@ -29,6 +29,7 @@
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/doubles/fd_matcher.h"
 #include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_mesa_auth_extensions.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,6 +41,7 @@ namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -62,28 +64,27 @@ public:
         ON_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::set_gbm_device, _))
             .WillByDefault(Return(set_gbm_device_success_msg));
+        ON_CALL(mock_nested_context, auth_extensions())
+            .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
     }
 
 protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockNestedContext> mock_nested_context;
+    std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
 };
 
 }
 
 TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 {
-    using namespace testing;
-
     int const auth_fd{13};
-    mg::PlatformOperationMessage auth_fd_response{{},{auth_fd}};
-
     EXPECT_CALL(mock_nested_context,
                 platform_operation(MirMesaPlatformOperation::set_gbm_device, _));
-    EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::auth_fd, _))
-        .WillOnce(Return(auth_fd_response));
+    EXPECT_CALL(mock_nested_context, auth_extensions());
+    EXPECT_CALL(*mock_ext, auth_fd())
+        .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
 
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
     auto ipc_ops = native.make_ipc_operations();

@@ -164,6 +164,10 @@ public:
     {
         return true;
     }
+    optional_value<std::shared_ptr<graphics::MesaAuthExtensions>> auth_extensions()
+    {
+        return {};
+    }
 };
 
 struct MockHostConnection : StubHostConnection
