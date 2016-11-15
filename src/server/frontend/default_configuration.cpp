@@ -21,6 +21,7 @@
 
 #include "default_ipc_factory.h"
 #include "published_socket_connector.h"
+#include "session_mediator_observer_multiplexer.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -146,7 +147,7 @@ mir::DefaultServerConfiguration::new_ipc_factory(
 {
     return std::make_shared<mf::DefaultIpcFactory>(
                 the_frontend_shell(),
-                the_session_mediator_report(),
+                the_session_mediator_observer(),
                 the_graphics_platform()->make_ipc_operations(),
                 the_frontend_display_changer(),
                 the_buffer_allocator(),
@@ -157,4 +158,24 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_application_not_responding_detector(),
                 the_cookie_authority(),
                 the_input_device_hub());
+}
+
+std::shared_ptr<mf::SessionMediatorObserver>
+mir::DefaultServerConfiguration::the_session_mediator_observer()
+{
+    return session_mediator_observer_multiplexer(
+        [default_executor = the_main_loop()]()
+        {
+            return std::make_shared<mf::SessionMediatorObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mir::ObserverRegistrar<mf::SessionMediatorObserver>>
+mir::DefaultServerConfiguration::the_session_mediator_observer_registrar()
+{
+    return session_mediator_observer_multiplexer(
+        [default_executor = the_main_loop()]()
+        {
+            return std::make_shared<mf::SessionMediatorObserverMultiplexer>(default_executor);
+        });
 }

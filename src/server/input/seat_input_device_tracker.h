@@ -41,7 +41,7 @@ class CursorListener;
 class InputRegion;
 class InputDispatcher;
 class KeyMapper;
-class SeatReport;
+class SeatObserver;
 
 /*
  * The SeatInputDeviceTracker bundles the input device properties of a group of devices defined by a seat:
@@ -59,7 +59,7 @@ public:
                            std::shared_ptr<InputRegion> const& input_region,
                            std::shared_ptr<KeyMapper> const& key_mapper,
                            std::shared_ptr<time::Clock> const& clock,
-                           std::shared_ptr<SeatReport> const& report);
+                           std::shared_ptr<SeatObserver> const& observer);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -89,7 +89,7 @@ private:
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<time::Clock> const clock;
-    std::shared_ptr<SeatReport> const report;
+    std::shared_ptr<SeatObserver> const observer;
 
     struct DeviceData
     {

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_FRONTEND_SESSION_MEDIATOR_REPORT_H_
-#define MIR_FRONTEND_SESSION_MEDIATOR_REPORT_H_
+#ifndef MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_H_
+#define MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_H_
 
 #include <string>
 
@@ -29,10 +29,10 @@ namespace mir
 namespace frontend
 {
 // Interface for monitoring application activity
-class SessionMediatorReport
+class SessionMediatorObserver
 {
 public:
-    virtual ~SessionMediatorReport() = default;
+    virtual ~SessionMediatorObserver() = default;
 
     virtual void session_connect_called(std::string const& app_name) = 0;
 
@@ -78,4 +78,4 @@ public:
 }
 
 
-#endif /* MIR_FRONTEND_SESSION_MEDIATOR_REPORT_H_ */
+#endif /* MIR_FRONTEND_SESSION_MEDIATOR_OBSERVER_H_ */

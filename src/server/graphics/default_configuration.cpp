@@ -32,6 +32,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/platform_probe.h"
+#include "display_configuration_observer_multiplexer.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
@@ -250,5 +251,25 @@ mir::DefaultServerConfiguration::the_gl_config()
                 int stencil_buffer_bits() const override { return 0; }
             };
             return std::make_shared<NoGLConfig>();
+        });
+}
+
+std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>>
+mir::DefaultServerConfiguration::the_display_configuration_observer_registrar()
+{
+    return display_configuration_observer_multiplexer(
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mg::DisplayConfigurationObserver>
+mir::DefaultServerConfiguration::the_display_configuration_observer()
+{
+    return display_configuration_observer_multiplexer(
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
         });
 }
