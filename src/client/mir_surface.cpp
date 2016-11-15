@@ -488,14 +488,6 @@ void MirSurface::handle_event(MirEvent const& e)
 
 void MirSurface::wait_for_vsync()
 {
-    // { TODO: Replace this with the actual timestamp from the server in future.
-    //         Using a fake timestamp like this will work, but being out of
-    //         phase could make it up to one frame laggier than it should be.
-    auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
-    auto const last_server_vsync = now - (now % throttle.get_interval());
-    throttle.set_phase(last_server_vsync);
-    // } TODO
-
     mir::time::PosixTimestamp target;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);

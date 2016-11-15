@@ -21,25 +21,41 @@
 
 #include "mir/time/posix_timestamp.h"
 #include <chrono>
-#include <mutex>
+#include <functional>
 
 namespace mir {
 
 class Throttle
 {
 public:
+    typedef std::function<time::PosixTimestamp()> ResyncCallback;
+
     Throttle();
+
+    /**
+     * Set the precise speed of the throttle in Hertz.
+     */
     void set_speed(double hz);
-    void set_phase(time::PosixTimestamp const& last_known_vblank);
+
+    /**
+     * Optionally set a callback that queries the server to ask for the
+     * latest hardware vsync timestamp. This provides phase correction for
+     * increased precision but is not strictly required.
+     */
+    void set_resync_callback(ResyncCallback);
+
+    /**
+     * Return the next timestamp to sleep_until after the previous one
+     * that was slept until. On first frame just provide an uninitialized
+     * timestamp.
+     */
     time::PosixTimestamp next_frame_after(time::PosixTimestamp prev) const;
 
-    // TODO: remove when we have real server timestamps:
-    std::chrono::nanoseconds get_interval() const { return interval; }
-
 private:
-    std::mutex mutex;
+    time::PosixTimestamp fake_resync_callback() const;
+
     std::chrono::nanoseconds interval;
-    time::PosixTimestamp last_server_vsync;
+    ResyncCallback resync_callback;
 };
 
 } // namespace mir

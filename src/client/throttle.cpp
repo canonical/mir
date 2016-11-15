@@ -17,41 +17,53 @@
  */
 
 #include "throttle.h"
+#include <stdexcept>
 
 using namespace mir;
 using namespace mir::time;
 
 Throttle::Throttle()
+    : resync_callback{std::bind(&Throttle::fake_resync_callback, this)}
 {
-    // A sane default in case we never got told a real rate;
+    // A sane default in case you don't or can't call set_speed:
     set_speed(60);
 }
 
 void Throttle::set_speed(double hz)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     if (hz > 0.0)
         interval = std::chrono::nanoseconds(static_cast<long>(1000000000L / hz));
-    // else warning? Or don't bother because it will be common for virtual
-    // machines to report zero.
+    else
+        throw std::logic_error("Throttle::set_speed must be greater than zero");
 }
 
-void Throttle::set_phase(PosixTimestamp const& last_known_vblank)
+PosixTimestamp Throttle::fake_resync_callback() const
 {
-    std::lock_guard<std::mutex> lock(mutex);
-    last_server_vsync = last_known_vblank;
+    fprintf(stderr, "fake_resync_callback\n");
+    auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
+    return now - (now % interval);
 }
 
 PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
 {
     auto target = prev + interval;
-    if (target < PosixTimestamp::now(target.clock_id))
-    {   // The server got ahead of us. That's normal as most clients don't need
-        // to render constantly.
 
-        // TODO: Replace this with get_last_server_vsync, so finally we
-        //       have a means to avoid a round trip on most frames.
-        target = last_server_vsync;
+    /*
+     * On the first frame, and any resumption frame (after the client goes
+     * from idle to busy) this will trigger a query to the server (or virtual
+     * server) to ask for the latest hardware vsync timestamp. So we get
+     * in perfect sync with the display, but only need to query the server
+     * like this occasionally and not on every frame...
+     */
+    auto const now = PosixTimestamp::now(target.clock_id);
+    if (target < now)
+    {
+        auto const server_frame = resync_callback();
+        auto const server_frame_phase = server_frame % interval;
+        auto const now_phase = now % interval;
+
+        // Target the next future time that's in phase with the server's vsync:
+        target = now + (server_frame_phase - now_phase);
     }
 
 #if 1
