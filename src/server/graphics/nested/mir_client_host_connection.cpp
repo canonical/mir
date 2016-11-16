@@ -496,7 +496,7 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void submit_buffer(mgn::NativeBuffer& buffer)
+    void submit_buffer(mgn::NativeBuffer& buffer) override
     {
         mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
@@ -509,7 +509,7 @@ struct Chain : mgn::HostChain
             mir_presentation_chain_set_dropping_mode(chain);
     }
 
-    MirPresentationChain* handle()
+    MirPresentationChain* handle() override
     {
         return chain;
     }
