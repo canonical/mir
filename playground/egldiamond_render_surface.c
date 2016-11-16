@@ -110,14 +110,14 @@ int main(int argc, char *argv[])
     int swapinterval = 1;
     char* socket = NULL; 
     int c;
-    while ((c = getopt(argc, argv, "shnm:")) != -1)
+    while ((c = getopt(argc, argv, "ehnm:")) != -1)
     {
         switch (c)
         {
             case 'm':
                 socket = optarg;
                 break;
-            case 's':
+            case 'e':
                 use_shim = 0;
                 break;
             case 'n':
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
                 printf(
                     "Usage:\n"
                     "\t-m mir_socket\n"
-                    "\t-s disable shim usage\n"
+                    "\t-e use egl library directly, instead of using shim\n"
                     "\t-n use swapinterval 0\n"
                     "\t-h this message\n");
                 return -1;
