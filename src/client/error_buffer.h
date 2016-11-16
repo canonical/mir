@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ERROR_BUFFER_H
 #define MIR_CLIENT_ERROR_BUFFER_H
 
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 
 namespace mir
 {

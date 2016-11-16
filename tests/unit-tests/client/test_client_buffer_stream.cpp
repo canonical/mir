@@ -99,6 +99,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return mir_pixel_format_invalid;
     }
+    void* request_interface(char const*, int) override
+    {
+        return nullptr;
+    }
+
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
 };

@@ -47,7 +47,7 @@ class CoordinateTranslator;
 namespace frontend
 {
 class Shell;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
@@ -58,7 +58,7 @@ class DefaultIpcFactory : public ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<SessionMediatorReport> const& sm_report,
+        std::shared_ptr<SessionMediatorObserver> const& sm_observer,
         std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& display_changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
@@ -83,7 +83,7 @@ public:
         std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<SessionMediatorReport> const& sm_report,
+        std::shared_ptr<SessionMediatorObserver> const& sm_observer,
         std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<Screencast> const& effective_screencast,
@@ -93,7 +93,7 @@ public:
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<Shell> const no_prompt_shell;
-    std::shared_ptr<SessionMediatorReport> const sm_report;
+    std::shared_ptr<SessionMediatorObserver> const sm_observer;
     std::shared_ptr<ResourceCache> const cache;
     std::shared_ptr<graphics::PlatformIpcOperations> const platform_ipc_operations;
     std::shared_ptr<DisplayChanger> const display_changer;

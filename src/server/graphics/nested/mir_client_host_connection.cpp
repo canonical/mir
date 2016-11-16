@@ -588,7 +588,8 @@ public:
         EGLenum type;
         EGLClientBuffer client_buffer = nullptr;;
         EGLint* attrs = nullptr;
-        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        // TODO: check return value
+        mir_buffer_get_egl_image_parameters(handle, &type, &client_buffer, &attrs);
         
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }

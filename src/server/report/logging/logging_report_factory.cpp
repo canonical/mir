@@ -60,7 +60,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mr::LoggingReportFactory::create
     return std::make_shared<logging::ConnectorReport>(logger);
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mr::LoggingReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mr::LoggingReportFactory::create_session_mediator_report()
 {
     return std::make_shared<logging::SessionMediatorReport>(logger);
 }
@@ -75,7 +75,7 @@ std::shared_ptr<mir::input::InputReport> mr::LoggingReportFactory::create_input_
     return std::make_shared<logging::InputReport>(logger);
 }
 
-std::shared_ptr<mir::input::SeatReport> mr::LoggingReportFactory::create_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mr::LoggingReportFactory::create_seat_report()
 {
     return std::make_shared<logging::SeatReport>(logger);
 }
