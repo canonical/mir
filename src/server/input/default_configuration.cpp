@@ -34,6 +34,7 @@
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
+#include "seat_observer_multiplexer.h"
 #include "../graphics/nested/input_platform.h"
 
 #include "mir/input/touch_visualizer.h"
@@ -334,7 +335,7 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_region(),
                     the_key_mapper(),
                     the_clock(),
-                    the_seat_report());
+                    the_seat_observer());
         });
 }
 
@@ -377,4 +378,23 @@ std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
        {
            return std::make_shared<mi::receiver::XKBMapper>();
        });
+}
+
+std::shared_ptr<mi::SeatObserver> mir::DefaultServerConfiguration::the_seat_observer()
+{
+    return seat_observer_multiplexer(
+        [default_executor = the_main_loop()]()
+        {
+            return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mir::ObserverRegistrar<mi::SeatObserver>>
+mir::DefaultServerConfiguration::the_seat_observer_registrar()
+{
+    return seat_observer_multiplexer(
+        [default_executor = the_main_loop()]()
+        {
+            return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
+        });
 }

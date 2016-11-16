@@ -468,7 +468,6 @@ struct MirConnection::StreamRelease
     mcl::ClientBufferStream* stream;
     MirWaitHandle* handle;
     mir_buffer_stream_callback callback;
-    mir_render_surface_callback rs_callback;
     void* context;
     int rpc_id;
     void* rs;
@@ -478,14 +477,18 @@ void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
-    if (data.rs_callback)
-        data.rs_callback(reinterpret_cast<MirRenderSurface*>(data.rs), data.context);
     if (data.handle)
         data.handle->result_received();
-    if (data.rs)
-        surface_map->erase(data.rs);
-    else
-        surface_map->erase(mf::BufferStreamId(data.rpc_id));
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (!disconnecting)
+        {
+            if (data.rs)
+                surface_map->erase(data.rs);
+            else
+                surface_map->erase(mf::BufferStreamId(data.rpc_id));
+        }
+    }
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -1152,7 +1155,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 {
     auto new_wait_handle = new MirWaitHandle;
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, nullptr, context, stream->rpc_id().as_value(), nullptr };
+    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value(), nullptr };
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(stream->rpc_id().as_value());
@@ -1276,7 +1279,7 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     auto id = chain->rpc_id();
     if (id >= 0)
     {
-        StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, nullptr, chain->rpc_id(), nullptr};
+        StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id(), nullptr};
         mp::BufferStreamId buffer_stream_id;
         buffer_stream_id.set_value(chain->rpc_id());
         server.release_buffer_stream(
@@ -1327,11 +1330,9 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
 void MirConnection::release_render_surface_with_content(
     void* render_surface)
 {
-    auto new_wait_handle = new MirWaitHandle;
     auto rs = surface_map->render_surface(render_surface);
 
     StreamRelease stream_release{nullptr,
-                                 new_wait_handle,
                                  nullptr,
                                  nullptr,
                                  nullptr,
@@ -1341,12 +1342,6 @@ void MirConnection::release_render_surface_with_content(
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(rs->stream_id().as_value());
 
-    {
-        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
-    }
-
-    new_wait_handle->expect_result();
     server.release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));

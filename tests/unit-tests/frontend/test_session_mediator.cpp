@@ -308,7 +308,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
-    std::shared_ptr<mf::SessionMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorObserver> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
     std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
