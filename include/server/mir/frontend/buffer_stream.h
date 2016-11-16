@@ -44,7 +44,7 @@ class BufferStream
 public:
     virtual ~BufferStream() = default;
     
-    virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) = 0;
+    virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
 
     virtual void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;

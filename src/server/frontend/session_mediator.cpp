@@ -382,7 +382,7 @@ void mf::SessionMediator::submit_buffer(
     auto b = session->get_buffer(buffer_id);
     ipc_operations->unpack_buffer(request_msg, *b);
 
-    stream->swap_buffers(b.get(), [](mg::Buffer*) {});
+    stream->submit_buffer(b);
 
     done->Run();
 }
