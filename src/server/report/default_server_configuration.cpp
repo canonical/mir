@@ -19,12 +19,12 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/configuration.h"
 
+#include "reports.h"
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
 #include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
-#include "logging/display_configuration_report.h"
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
@@ -56,6 +56,11 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
     }
 }
 
+std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports()
+{
+    return std::make_unique<report::Reports>(*this, *the_options());
+}
+
 auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
 {
     return compositor_report(
@@ -71,15 +76,6 @@ auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<
         [this]()->std::shared_ptr<mf::ConnectorReport>
         {
             return report_factory(options::connector_report_opt)->create_connector_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shared_ptr<mf::SessionMediatorReport>
-{
-    return session_mediator_report(
-        [this]()->std::shared_ptr<mf::SessionMediatorReport>
-        {
-            return report_factory(options::session_mediator_report_opt)->create_session_mediator_report();
         });
 }
 
@@ -101,29 +97,12 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
         });
 }
 
-auto mir::DefaultServerConfiguration::the_display_configuration_report() -> std::shared_ptr<mg::DisplayConfigurationReport>
-{
-    return display_configuration_report([this]() -> std::shared_ptr<mg::DisplayConfigurationReport>
-        {
-            return std::make_shared<mir::report::logging::DisplayConfigurationReport>(the_logger());
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::InputReport>
 {
     return input_report(
         [this]()->std::shared_ptr<mi::InputReport>
         {
             return report_factory(options::input_report_opt)->create_input_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_seat_report() -> std::shared_ptr<mi::SeatReport>
-{
-    return seat_report(
-        [this]()->std::shared_ptr<mi::SeatReport>
-        {
-            return report_factory(options::seat_report_opt)->create_seat_report();
         });
 }
 

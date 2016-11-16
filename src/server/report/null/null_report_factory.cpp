@@ -49,7 +49,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::NullReportFactory::
     return std::make_shared<null::ConnectorReport>();
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::NullReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::NullReportFactory::create_session_mediator_report()
 {
     return std::make_shared<null::SessionMediatorReport>();
 }
@@ -64,7 +64,7 @@ std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_
     return std::make_shared<null::InputReport>();
 }
 
-std::shared_ptr<mir::input::SeatReport> mir::report::NullReportFactory::create_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mir::report::NullReportFactory::create_seat_report()
 {
     return std::make_shared<null::SeatReport>();
 }
@@ -101,7 +101,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_repo
 {
     return NullReportFactory{}.create_connector_report();
 }
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::null_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
 {
     return NullReportFactory{}.create_session_mediator_report();
 }
@@ -114,7 +114,7 @@ std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
     return NullReportFactory{}.create_input_report();
 }
 
-std::shared_ptr<mir::input::SeatReport> mir::report::null_seat_report()
+std::shared_ptr<mir::input::SeatObserver> mir::report::null_seat_report()
 {
     return NullReportFactory{}.create_seat_report();
 }

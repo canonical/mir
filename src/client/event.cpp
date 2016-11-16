@@ -93,21 +93,13 @@ std::string mir::event_type_to_string(MirEventType t)
 
 MirEventType mir_event_get_type(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    auto type = ev->type();
-    switch (type)
-    {
-    case mir_event_type_key:
-    case mir_event_type_motion:
-        return mir_event_type_input;
-    default:
-        return type;
-    }
+    return ev->type();
 })
 
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    auto type = ev->type();
-    if (type != mir_event_type_key && type != mir_event_type_motion)
+    auto const type = ev->type();
+    if (type != mir_event_type_input)
     {
         mir::log_critical("Expected input event but event is of type " +
             mir::event_type_to_string(type));
@@ -117,68 +109,71 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     return ev->to_input();
 })
 
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev)
+MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface);
-    
-    return ev->to_surface();
-}
 
-MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev)
+    return ev->to_surface();
+})
+
+MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_resize);
-    
-    return ev->to_resize();
-}
 
-MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev)
+    return ev->to_resize();
+})
+
+MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
-    
-    return ev->to_prompt_session();
-}
 
-MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev)
+    return ev->to_prompt_session();
+})
+
+MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_orientation);
 
     return ev->to_orientation();
-}
+})
 
-MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev)
+MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_close_surface);
 
     return ev->to_close_surface();
-}
+})
 
-MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev)
+MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_keymap);
 
     return ev->to_keymap();
-}
+})
 
-MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
 
     return ev->to_input_configuration();
-}
+})
+#pragma GCC diagnostic pop
 
-MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev)
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_surface_output);
 
     return ev->to_surface_output();
-}
+})
 
-MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev)
+MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
 
     return ev->to_input_device_state();
-}
+})
 
 /* Surface event accessors */
 
@@ -243,8 +238,9 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) MIR_HA
     return ev->device_id();
 })
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /* Input configuration event accessors */
-
 MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_configuration);
@@ -262,6 +258,7 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id();
 })
+#pragma GCC diagnostic pop
 
 /* Surface output event accessors */
 

@@ -13,6 +13,7 @@ set(
   overlapping_output_grouping.cpp
   platform_probe.cpp
   atomic_frame.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/display.h
 )
 
 add_library(mirplatformgraphicscommon OBJECT

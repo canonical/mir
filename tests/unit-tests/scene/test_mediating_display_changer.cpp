@@ -19,7 +19,7 @@
 #include "src/server/scene/mediating_display_changer.h"
 #include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/geometry/rectangles.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
@@ -168,10 +168,16 @@ struct MockServerActionQueue : mir::ServerActionQueue
     MOCK_METHOD1(resume_processing_for, void(void const*));
 };
 
-struct StubDisplayConfigurationReport : mg::DisplayConfigurationReport
+struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
-    void initial_configuration(mg::DisplayConfiguration const&) override {}
-    void new_configuration(mg::DisplayConfiguration const&) override {}
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override {}
+    void catastrophic_configuration_error(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override { }
 };
 
 
@@ -200,7 +206,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
-    StubDisplayConfigurationReport display_configuration_report;
+    StubDisplayConfigurationObserver display_configuration_report;
     testing::NiceMock<mtd::MockInputRegion> mock_input_region;
     mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;

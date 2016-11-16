@@ -47,9 +47,6 @@ struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
 
     void SetUp()
     {
-        using namespace ::testing;
-        EXPECT_CALL(input_dispatcher, dispatch(mt::InputDeviceConfigurationChangedEvent())).Times(AnyNumber());
-        EXPECT_CALL(input_dispatcher, dispatch(mt::InputDeviceResetEvent())).Times(AnyNumber());
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{

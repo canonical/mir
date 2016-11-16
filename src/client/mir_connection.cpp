@@ -53,6 +53,7 @@
 #include <signal.h>
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace md = mir::dispatch;
@@ -1304,12 +1305,12 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-MirRenderSurface* MirConnection::create_render_surface()
+MirRenderSurface* MirConnection::create_render_surface(geom::Size logical_size)
 {
     auto native_window = platform->create_egl_native_window(nullptr);
 
     std::shared_ptr<MirRenderSurface> rs {nullptr};
-    rs = std::make_shared<mcl::RenderSurface>(this, native_window, platform);
+    rs = std::make_shared<mcl::RenderSurface>(this, native_window, platform, logical_size);
     surface_map->insert(native_window.get(), rs);
 
     return static_cast<MirRenderSurface*>(native_window.get());
@@ -1318,4 +1319,11 @@ MirRenderSurface* MirConnection::create_render_surface()
 void MirConnection::release_render_surface(void* render_surface)
 {
     surface_map->erase(static_cast<void*>(render_surface));
+}
+
+void* MirConnection::request_interface(char const* name, int version)
+{
+    if (!platform)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+    return platform->request_interface(name, version);
 }

@@ -26,7 +26,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/fake_display.h"
 #include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/test/pipe.h"
@@ -62,7 +62,7 @@ struct WrappingDisplay : mg::Display
     {
         return display->configuration();
     }
-    bool apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const& /*conf*/) const override
+    bool apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const& /*conf*/) override
     {
         return false;
     }
@@ -258,7 +258,7 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
         return mir::make_module_ptr<WrappingDisplay>(temp);
     }
 
-    return mir::make_module_ptr<mtd::StubDisplay>(display_rects);
+    return mir::make_module_ptr<mtd::FakeDisplay>(display_rects);
 }
 
 namespace

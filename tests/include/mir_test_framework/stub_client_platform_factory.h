@@ -22,6 +22,7 @@
 #include "mir/client_platform_factory.h"
 #include "mir/client_platform.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_test_framework/stub_platform_extension.h"
 
 namespace mir_test_framework
 {
@@ -33,6 +34,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override;
+    void* request_interface(char const* name, int version) override;
     void use_egl_native_window(std::shared_ptr<void> native_window, mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
@@ -40,6 +42,10 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;
+
+    MirExtensionFavoriteFlavor flavor_ext_0_1;
+    MirExtensionFavoriteFlavor flavor_ext_2_2;
+    MirExtensionAnimalNames animal_ext;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

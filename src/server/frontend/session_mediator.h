@@ -68,7 +68,7 @@ class Shell;
 class Session;
 class Surface;
 class MessageResourceCache;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class EventSink;
 class EventSinkFactory;
 class MessageSender;
@@ -95,7 +95,7 @@ public:
         std::shared_ptr<graphics::PlatformIpcOperations> const& ipc_operations,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
-        std::shared_ptr<SessionMediatorReport> const& report,
+        std::shared_ptr<SessionMediatorObserver> const& observer,
         std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<MessageResourceCache> const& resource_cache,
@@ -256,7 +256,7 @@ private:
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
-    std::shared_ptr<SessionMediatorReport> const report;
+    std::shared_ptr<SessionMediatorObserver> const observer;
     std::shared_ptr<EventSinkFactory> const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<MessageSender> const message_sender;

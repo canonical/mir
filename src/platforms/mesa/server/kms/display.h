@@ -78,7 +78,7 @@ public:
         std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<DisplayConfiguration> configuration() const override;
-    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) const override;
+    bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) override;
     void configure(DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(
@@ -115,6 +115,10 @@ private:
     mutable RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
+
+    void configure_locked(
+        RealKMSDisplayConfiguration const& conf,
+        std::lock_guard<decltype(configuration_mutex)> const&);
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;

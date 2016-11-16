@@ -458,10 +458,23 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
     setup_post_update_expectations();
 
+    // clear_crtc happens at some stage. Not interesting.
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                         crtc_id, 0,
+                                         _, _, _, _, _))
+        .WillOnce(Return(0));
+
     {
         InSequence s;
 
-        /* New FB flip failure */
+        // DisplayBuffer construction paints an empty screen.
+        // That's probably less than ideal but we've always had it that way.
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                             crtc_id, fake.fb_id1,
+                                             _, _, _, _, _))
+            .WillOnce(Return(0));
+
+        // New FB flip failure
         EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
                                               crtc_id,
                                               fake.fb_id2,
@@ -469,16 +482,22 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             .Times(Exactly(1))
             .WillOnce(Return(-1));
 
-        /* Release failed bufobj */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
+        // Expect fallback to blitting
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                             crtc_id, fake.fb_id2,
+                                             _, _, _, _, _))
+            .WillOnce(Return(0));
+
+        // Release all buffer objects
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
 
-        /* Release scheduled_bufobj (at destruction time) */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
+        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }
 
-    EXPECT_THROW(
+    // drmModePageFlip is allowed to fail (e.g. on VirtualBox)
+    EXPECT_NO_THROW(
     {
         auto display = create_display(create_platform());
         display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
@@ -487,7 +506,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             });
             group.post();
         });
-    }, std::runtime_error);
+    });
 }
 
 TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)
@@ -837,4 +856,44 @@ TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(stub_gl_config),
         null_report};
+}
+
+TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_display_buffers)
+{
+    using namespace testing;
+
+    auto display = create_display(create_platform());
+
+    auto config = display->configuration();
+
+    std::vector<mg::DisplayBuffer*> initial_display_buffer_references;
+
+    display->for_each_display_sync_group(
+        [&initial_display_buffer_references](auto& group)
+        {
+            group.for_each_display_buffer(
+                [&initial_display_buffer_references](mg::DisplayBuffer& db)
+                {
+                    initial_display_buffer_references.push_back(&db);
+                });
+        });
+
+    bool has_active_display{false};
+    config->for_each_output(
+        [&has_active_display](mg::UserDisplayConfigurationOutput& output)
+        {
+            has_active_display |= output.used;
+
+            output.form_factor = mir_form_factor_projector;
+            output.scale = 3.1415f;
+            output.subpixel_arrangement = mir_subpixel_arrangement_vertical_bgr;
+            output.orientation = mir_orientation_inverted;
+        });
+
+    EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(*config));
+
+    for (auto display_buffer : initial_display_buffer_references)
+    {
+        EXPECT_THAT(display_buffer->orientation(), Eq(mir_orientation_inverted));
+    }
 }

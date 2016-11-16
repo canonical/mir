@@ -59,8 +59,9 @@ void mir_presentation_chain_set_dropping_mode(MirPresentationChain* chain);
  *   \param [out] target        The target to use
  *   \param [out] client_buffer The EGLClientBuffer to use 
  *   \param [out] attrs         The attributes to use
+ *   \returns                   True if valid parameters could be found
  **/
-void mir_buffer_egl_image_parameters(
+bool mir_buffer_get_egl_image_parameters(
     MirBuffer* buffer,
     EGLenum* target,
     EGLClientBuffer* client_buffer,

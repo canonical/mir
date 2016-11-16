@@ -38,7 +38,7 @@ struct MockAndroidNativeBuffer : public graphics::android::NativeBuffer
         ON_CALL(*this, anwb())
             .WillByDefault(Return(&stub_anwb));
         ON_CALL(*this, handle())
-            .WillByDefault(Return(&native_handle));
+            .WillByDefault(Return(native_handle.get()));
         ON_CALL(*this, copy_fence())
             .WillByDefault(Return(-1));
     }
@@ -62,7 +62,8 @@ struct MockAndroidNativeBuffer : public graphics::android::NativeBuffer
     MOCK_METHOD0(lock_for_gpu, void());
     MOCK_METHOD0(wait_for_unlock_by_gpu, void());
     ANativeWindowBuffer stub_anwb;
-    native_handle_t native_handle;
+    std::unique_ptr<native_handle_t> native_handle =
+        std::make_unique<native_handle_t>();
 };
 }
 }
