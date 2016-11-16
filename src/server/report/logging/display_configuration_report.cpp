@@ -21,6 +21,7 @@
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
 
 namespace mg = mir::graphics;
@@ -42,21 +43,35 @@ mrl::DisplayConfigurationReport::~DisplayConfigurationReport()
 {
 }
 
-void mrl::DisplayConfigurationReport::initial_configuration(mg::DisplayConfiguration const& configuration)
+void mrl::DisplayConfigurationReport::initial_configuration(
+    std::shared_ptr<mg::DisplayConfiguration const> const& configuration)
 {
     logger->log(component, severity, "Initial display configuration:");
-    log_configuration(configuration);
+    log_configuration(severity, *configuration);
 }
 
-void mrl::DisplayConfigurationReport::new_configuration(mg::DisplayConfiguration const& configuration)
+void mrl::DisplayConfigurationReport::configuration_applied(
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
     logger->log(component, severity, "New display configuration:");
-    log_configuration(configuration);
+    log_configuration(severity, *config);
 }
 
-void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration const& configuration) const
+void mrl::DisplayConfigurationReport::configuration_failed(
+    std::shared_ptr<mg::DisplayConfiguration const> const& attempted,
+    std::exception const& error)
 {
-    configuration.for_each_output([this](mg::DisplayConfigurationOutput const& out)
+    logger->log(component, ml::Severity::error, "Failed to apply display configuration:");
+    log_configuration(ml::Severity::error, *attempted);
+    logger->log(component, ml::Severity::error, "Error details:");
+    logger->log(component, ml::Severity::error, "%s", boost::diagnostic_information(error).c_str());
+}
+
+void mrl::DisplayConfigurationReport::log_configuration(
+    ml::Severity severity,
+    mg::DisplayConfiguration const& configuration) const
+{
+    configuration.for_each_output([this, severity](mg::DisplayConfigurationOutput const& out)
     {
         auto type = mir::output_type_name(static_cast<unsigned>(out.type));
         int out_id = out.id.as_value();
@@ -112,4 +127,15 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
             }
         }
     });
+}
+
+void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
+    std::shared_ptr<mg::DisplayConfiguration const> const& failed_fallback,
+    std::exception const& error)
+{
+    logger->log(component, ml::Severity::critical, "Failed to revert to safe display configuration!");
+    logger->log(component, ml::Severity::critical, "Attempted to fall back to configuration:");
+    log_configuration(ml::Severity::critical, *failed_fallback);
+    logger->log(component, ml::Severity::critical, "Error details:");
+    logger->log(component, ml::Severity::critical, "%s", boost::diagnostic_information(error).c_str());
 }

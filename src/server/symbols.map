@@ -42,7 +42,7 @@ MIR_SERVER_0.25 {
     mir::frontend::SessionCredentials::pid*;
     mir::frontend::SessionCredentials::SessionCredentials*;
     mir::frontend::SessionCredentials::uid*;
-    mir::frontend::SessionMediatorReport::?SessionMediatorReport*;
+    mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     mir::frontend::Session::operator*;
     mir::frontend::Session::?Session*;
     mir::frontend::Session::Session*;
@@ -177,7 +177,6 @@ MIR_SERVER_0.25 {
     mir::Server::override_the_logger*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
-    mir::Server::override_the_seat_report*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
@@ -213,9 +212,11 @@ MIR_SERVER_0.25 {
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
+    mir::Server::the_seat_observer_registrar*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
+    mir::Server::the_session_mediator_observer_registrar*;
     mir::Server::the_shell*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_factory*;
@@ -339,7 +340,7 @@ MIR_SERVER_0.25 {
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
-    non-virtual?thunk?to?mir::frontend::SessionMediatorReport::?SessionMediatorReport*;
+    non-virtual?thunk?to?mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
     non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::apply_to*;
@@ -468,7 +469,7 @@ MIR_SERVER_0.25 {
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
     typeinfo?for?mir::frontend::SessionCredentials;
-    typeinfo?for?mir::frontend::SessionMediatorReport;
+    typeinfo?for?mir::frontend::SessionMediatorObserver;
     typeinfo?for?mir::frontend::Surface;
     typeinfo?for?mir::graphics::CloneDisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::DisplayConfigurationReport;
@@ -547,7 +548,7 @@ MIR_SERVER_0.25 {
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
     vtable?for?mir::frontend::SessionCredentials;
-    vtable?for?mir::frontend::SessionMediatorReport;
+    vtable?for?mir::frontend::SessionMediatorObserver;
     vtable?for?mir::frontend::Surface;
     vtable?for?mir::graphics::CloneDisplayConfigurationPolicy;
     vtable?for?mir::graphics::DisplayConfigurationReport;
@@ -791,7 +792,7 @@ MIR_SERVER_0.25 {
     mir::DefaultServerConfiguration::the_session_event_handler_register*;
     mir::DefaultServerConfiguration::the_session_event_sink*;
     mir::DefaultServerConfiguration::the_session_listener*;
-    mir::DefaultServerConfiguration::the_session_mediator_report*;
+    mir::DefaultServerConfiguration::the_session_mediator_observer*;
     mir::DefaultServerConfiguration::the_shared_library_prober_report*;
     mir::DefaultServerConfiguration::the_shell*;
     mir::DefaultServerConfiguration::the_shell_display_layout*;
