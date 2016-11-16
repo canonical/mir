@@ -365,8 +365,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
     mir_buffer_wait_for_access;
-    mir_buffer_mmap;
-    mir_buffer_munmap;
+    mir_buffer_map;
+    mir_buffer_unmap;
     mir_buffer_set_callback;
     mir_buffer_release;
     mir_connection_create_presentation_chain_sync;

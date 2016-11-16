@@ -40,7 +40,7 @@ void fill_buffer_diagonal_stripes(
 {
     MirBufferLayout layout = mir_buffer_layout_unknown;
     MirGraphicsRegion region;
-    mir_buffer_mmap(buffer, &region, &layout);
+    mir_buffer_map(buffer, &region, &layout);
     if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888) || layout != mir_buffer_layout_linear)
         return;
 
@@ -59,7 +59,7 @@ void fill_buffer_diagonal_stripes(
         }
         vaddr += region.stride; 
     }
-    mir_buffer_munmap(buffer);
+    mir_buffer_unmap(buffer);
 }
 
 typedef struct SubmissionInfo

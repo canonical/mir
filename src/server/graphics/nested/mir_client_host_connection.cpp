@@ -522,13 +522,13 @@ mgn::GraphicsRegion::GraphicsRegion() :
 mgn::GraphicsRegion::GraphicsRegion(MirBuffer* handle) :
     handle(handle)
 {
-    mir_buffer_mmap(handle, this, &layout);
+    mir_buffer_map(handle, this, &layout);
 }
 
 mgn::GraphicsRegion::~GraphicsRegion()
 {
     if (handle)
-        mir_buffer_munmap(handle);
+        mir_buffer_unmap(handle);
 }
 
 namespace

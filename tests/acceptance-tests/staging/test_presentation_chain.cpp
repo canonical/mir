@@ -264,7 +264,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     EXPECT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();
     EXPECT_THAT(context.buffer(), Ne(nullptr));
-    mir_buffer_mmap(buffer, &region, &region_layout);
+    mir_buffer_map(buffer, &region, &region_layout);
     //cast to int so gtest doesn't try to print a char* that isn't a string
     EXPECT_THAT(reinterpret_cast<int*>(region.vaddr), Ne(nullptr));
     EXPECT_THAT(region.width, Eq(size.width.as_int()));
@@ -272,7 +272,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     EXPECT_THAT(region.stride, Eq(size.width.as_int() * MIR_BYTES_PER_PIXEL(pf)));
     EXPECT_THAT(region.pixel_format, Eq(pf));
     EXPECT_THAT(region_layout, Eq(mir_buffer_layout_linear));
-    mir_buffer_munmap(buffer);
+    mir_buffer_unmap(buffer);
 }
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback)
@@ -361,7 +361,7 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
     ASSERT_TRUE(context.wait_for_buffer(10s));
     ASSERT_THAT(context.buffer(), Ne(nullptr));
 
-    mir_buffer_munmap(context.buffer());
+    mir_buffer_unmap(context.buffer());
 }
 
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
