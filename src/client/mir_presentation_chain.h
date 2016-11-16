@@ -21,7 +21,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 
 class MirPresentationChain
 {
@@ -31,6 +31,10 @@ public:
     virtual MirConnection* connection() const = 0;
     virtual int rpc_id() const = 0;
     virtual char const* error_msg() const = 0;
+
+    //In the future, the only mode will be dropping
+    virtual void set_dropping_mode() = 0;
+    virtual void set_queueing_mode() = 0;
 
 protected:
     MirPresentationChain(MirPresentationChain const&) = delete;

@@ -22,6 +22,7 @@
 #include "mir/client_buffer.h"
 #include "mir/client_context.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
+#include "mir_test_framework/stub_platform_extension.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <unistd.h>
@@ -32,8 +33,30 @@ namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+char const* favorite_flavor_0_1()
+{
+    static char const* favorite = "banana";
+    return favorite;
+}
+char const* favorite_flavor_2_2()
+{
+    static char const* favorite = "rhubarb";
+    return favorite;
+}
+char const* animal_name()
+{
+    static char const* name = "bobcat";
+    return name;
+}
+}
+
 mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
-    context{context}
+    context{context},
+    flavor_ext_0_1{favorite_flavor_0_1},
+    flavor_ext_2_2{favorite_flavor_2_2},
+    animal_ext{animal_name}
 {
 }
 
@@ -116,9 +139,31 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
     return mir_pixel_format_argb_8888;
 }
 
+void* mtf::StubClientPlatform::request_interface(char const* name, int version)
+{
+    if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
+        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_1))
+    {
+        return &flavor_ext_0_1;
+    }
+
+    if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
+        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2))
+    {
+        return &flavor_ext_2_2;
+    }
+
+    if (!strcmp(name, MIR_EXTENSION_ANIMAL_NAME) &&
+        (version == MIR_EXTENSION_ANIMAL_NAME_VERSION_9))
+    {
+        return &animal_ext;
+    }
+    return nullptr;
+}
 
 std::shared_ptr<mcl::ClientPlatform>
 mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
     return std::make_shared<StubClientPlatform>(context);
 }
+

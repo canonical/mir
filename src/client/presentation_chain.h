@@ -20,6 +20,7 @@
 #define MIR_CLIENT_PRESENTATION_CHAIN_H
 
 #include "mir_presentation_chain.h"
+#include "buffer_stream.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
@@ -52,6 +53,9 @@ public:
     MirConnection* connection() const override;
     int rpc_id() const override;
     char const* error_msg() const override;
+    void set_dropping_mode() override;
+    void set_queueing_mode() override;
+
 private:
 
     MirConnection* const connection_;
@@ -59,6 +63,8 @@ private:
     rpc::DisplayServer& server;
     std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
     std::shared_ptr<AsyncBufferFactory> const mir_buffer_factory;
+
+    BufferStreamConfiguration interval_config;
 
     std::mutex mutex;
     std::vector<std::unique_ptr<Buffer>> buffers;

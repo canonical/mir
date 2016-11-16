@@ -184,3 +184,8 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 
     return mir_format;
 }
+
+void* mclm::ClientPlatform::request_interface(char const*, int)
+{
+    return nullptr;
+}
