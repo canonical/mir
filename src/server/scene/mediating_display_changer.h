@@ -42,7 +42,7 @@ namespace graphics
 {
     class Display;
     class DisplayConfigurationPolicy;
-    class DisplayConfigurationReport;
+    class DisplayConfigurationObserver;
 }
 namespace compositor { class Compositor; }
 namespace input
@@ -67,7 +67,7 @@ public:
         std::shared_ptr<SessionContainer> const& session_container,
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
         std::shared_ptr<ServerActionQueue> const& server_action_queue,
-        std::shared_ptr<graphics::DisplayConfigurationReport> const& report,
+        std::shared_ptr<graphics::DisplayConfigurationObserver> const& observer,
         std::shared_ptr<input::InputRegion> const& region,
         std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
@@ -113,7 +113,7 @@ private:
     std::shared_ptr<SessionContainer> const session_container;
     std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
     std::shared_ptr<ServerActionQueue> const server_action_queue;
-    std::shared_ptr<graphics::DisplayConfigurationReport> const report;
+    std::shared_ptr<graphics::DisplayConfigurationObserver> const observer;
     std::mutex configuration_mutex;
     std::map<std::weak_ptr<frontend::Session>,
              std::shared_ptr<graphics::DisplayConfiguration>,
