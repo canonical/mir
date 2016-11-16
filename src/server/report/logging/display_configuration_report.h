@@ -19,30 +19,42 @@
 #ifndef MIR_DISPLAYCONFIGURATIONREPORT_H
 #define MIR_DISPLAYCONFIGURATIONREPORT_H
 
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace logging { class Logger; }
+namespace logging { class Logger; enum class Severity; }
 
 namespace report
 {
 namespace logging
 {
-class DisplayConfigurationReport : public mir::graphics::DisplayConfigurationReport
+class DisplayConfigurationReport : public mir::graphics::DisplayConfigurationObserver
 {
 public:
     DisplayConfigurationReport(std::shared_ptr<mir::logging::Logger> const& logger);
     ~DisplayConfigurationReport();
 
-    virtual void initial_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void configuration_applied(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
 
-    virtual void new_configuration(graphics::DisplayConfiguration const& configuration) override;
+    void configuration_failed(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& attempted,
+        std::exception const& error) override;
+
+    void initial_configuration(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& configuration) override;
+
+    void catastrophic_configuration_error(
+        std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback,
+        std::exception const& error) override;
 
 private:
-    void log_configuration(graphics::DisplayConfiguration const& configuration) const;
+    void log_configuration(
+        mir::logging::Severity severity,
+        graphics::DisplayConfiguration const& configuration) const;
     std::shared_ptr<mir::logging::Logger> const logger;
 };
 }

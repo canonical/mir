@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_framework/testing_server_configuration.h"
-
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir/server_status_listener.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -78,6 +78,15 @@ mtf::TestingServerConfiguration::TestingServerConfiguration() :
 mtf::TestingServerConfiguration::TestingServerConfiguration(std::vector<geom::Rectangle> const& display_rects) :
     StubbedServerConfiguration(display_rects),
     using_server_started_sync(false)
+{
+}
+
+mtf::TestingServerConfiguration::TestingServerConfiguration(
+    std::vector<geometry::Rectangle> const& display_rects,
+    std::vector<std::unique_ptr<TemporaryEnvironmentValue>>&& setup_environment)
+    : StubbedServerConfiguration(display_rects),
+      using_server_started_sync(false),
+      environment{std::move(setup_environment)}
 {
 }
 

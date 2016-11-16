@@ -21,17 +21,23 @@
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+
 #include "mir/test/cross_process_sync.h"
 
 namespace mir_test_framework
 {
 using namespace mir;
 
+class TemporaryEnvironmentValue;
+
 class TestingServerConfiguration : public StubbedServerConfiguration
 {
 public:
     TestingServerConfiguration();
     explicit TestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
+    TestingServerConfiguration(
+        std::vector<geometry::Rectangle> const& display_rects,
+        std::vector<std::unique_ptr<TemporaryEnvironmentValue>>&& setup_environment);
     ~TestingServerConfiguration();
 
     // Code to run in server process
@@ -53,6 +59,7 @@ public:
 private:
     mir::test::CrossProcessSync server_started_sync;
     bool using_server_started_sync;
+    std::vector<std::unique_ptr<TemporaryEnvironmentValue>> environment;
 };
 
 std::string const& test_socket_file();

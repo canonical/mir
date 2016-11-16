@@ -24,10 +24,28 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-mtf::FakeInputServerConfiguration::FakeInputServerConfiguration() = default;
+namespace
+{
+std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> make_test_environment()
+{
+    std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> environment;
+
+    environment.emplace_back(
+        std::make_unique<mtf::TemporaryEnvironmentValue>(
+            "MIR_SERVER_PLATFORM_INPUT_LIB",
+            mtf::server_platform("input-stub.so").c_str()));
+
+    return environment;
+}
+}
+
+mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
+    : FakeInputServerConfiguration({mir::geometry::Rectangle{{0,0},{1600,1600}}})
+{
+}
 
 mtf::FakeInputServerConfiguration::FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects)
-    : TestingServerConfiguration(display_rects)
+    : TestingServerConfiguration(display_rects, make_test_environment())
 {
 }
 

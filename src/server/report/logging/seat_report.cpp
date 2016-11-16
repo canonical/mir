@@ -77,11 +77,11 @@ void mrl::SeatReport::seat_remove_device(uint64_t id)
     log->log(ml::Severity::informational, ss.str(), component);
 }
 
-void mrl::SeatReport::seat_dispatch_event(MirEvent const& event)
+void mrl::SeatReport::seat_dispatch_event(MirEvent const* event)
 {
     std::stringstream ss;
     ss << "Dispatch event"
-       << " event_type=" << event.type();
+       << " event_type=" << event->type();
 
     log->log(ml::Severity::informational, ss.str(), component);
 }
