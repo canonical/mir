@@ -25,6 +25,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/frame_dropping_policy_factory.h"
 #include "mir/compositor/frame_dropping_policy.h"
+#include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -87,21 +88,20 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
     return associated_buffers.size() - server_count;
 }
 
-void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
+void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    if (buffer)
+    if (!buffer)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
+
     {
-        {
-            std::lock_guard<decltype(mutex)> lk(mutex); 
-            first_frame_posted = true;
-            buffers->receive_buffer(buffer->id());
-            schedule->schedule((*buffers)[buffer->id()]);
-            if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
-                drop_policy->swap_now_blocking();
-        }
-        observers.frame_posted(1, buffer->size());
+        std::lock_guard<decltype(mutex)> lk(mutex); 
+        first_frame_posted = true;
+        buffers->receive_buffer(buffer->id());
+        schedule->schedule((*buffers)[buffer->id()]);
+        if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
+            drop_policy->swap_now_blocking();
     }
-    fn(nullptr); //legacy support
+    observers.frame_posted(1, buffer->size());
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)

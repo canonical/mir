@@ -87,7 +87,6 @@ private:
 
     struct StreamPainter;
     struct AllocatingPainter;
-    struct SwappingPainter;
 
     std::shared_ptr <StreamPainter> stream_painter;
 };

@@ -360,6 +360,8 @@ typedef struct MirRectangle
 
 typedef struct MirInputConfig MirInputConfig;
 typedef struct MirInputDevice MirInputDevice;
+typedef struct MirPointerConfiguration MirPointerConfiguration;
+typedef struct MirTouchpadConfiguration MirTouchpadConfiguration;
 
 /**
  * MirScreencastParameters is the structure of required information that

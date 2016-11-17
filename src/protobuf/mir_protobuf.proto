@@ -248,7 +248,7 @@ message Connection {
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
-  repeated InputDeviceInfo input_devices = 6;
+  optional InputDevices input_devices = 6;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -329,7 +329,7 @@ message EventSequence {
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
-  repeated InputDeviceInfo input_devices = 6;
+  optional InputDevices input_devices = 6;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -422,9 +422,33 @@ message RaiseRequest {
   required SurfaceId surface_id = 2;
 }
 
+message InputDevices {
+  repeated InputDeviceInfo device_info = 1;
+}
+
 message InputDeviceInfo {
   optional int64 id = 1;
   optional uint32 capabilities = 2;
   optional string name = 3;
   optional string unique_id = 4;
+  optional PointerConfiguration pointer_configuration = 5;
+  optional TouchpadConfiguration touchpad_configuration = 6;
+}
+
+message PointerConfiguration {
+  optional uint32 handedness = 1;
+  optional uint32 acceleration = 2;
+  optional double acceleration_bias = 3;
+  optional double horizontal_scroll_scale = 4;
+  optional double vertical_scroll_scale = 5;
+}
+
+message TouchpadConfiguration {
+  optional uint32 click_modes = 1;
+  optional uint32 scroll_modes = 2;
+  optional int32 button_down_scroll_button = 3;
+  optional uint32 tap_to_click = 4;
+  optional uint32 middle_mouse_button_emulation = 5;
+  optional uint32 disable_with_mouse = 6;
+  optional uint32 disable_while_typing = 7;
 }
