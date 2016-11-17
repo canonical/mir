@@ -615,6 +615,20 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().height()
         };
 
+    if (surface_specification.has_cursor_name())
+    {
+        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+    }
+
+    if (surface_specification.has_cursor_id() &&
+        surface_specification.has_hotspot_x() &&
+        surface_specification.has_hotspot_y())
+    {
+        mods.stream_cursor = msh::StreamCursor{
+            mf::BufferStreamId{surface_specification.cursor_id().value()},
+            geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
+    }
+
     mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());

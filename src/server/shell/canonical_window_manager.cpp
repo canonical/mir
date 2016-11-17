@@ -416,7 +416,6 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     if (modifications.cursor_image.is_set())
     {
-        printf("BBB\n");
         surface->set_cursor_image(modifications.cursor_image.value());        
     }
 
