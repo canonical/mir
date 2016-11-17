@@ -599,6 +599,11 @@ void mir_surface_spec_set_placement(
     int                 offset_dy);
 
 /**
+ * Set named
+ */
+void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
+
+/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
