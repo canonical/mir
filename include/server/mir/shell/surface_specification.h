@@ -46,6 +46,12 @@ struct StreamSpecification
     optional_value<geometry::Size> size;
 };
 
+struct StreamCursor
+{
+    frontend::BufferStreamId stream_id;
+    geometry::Displacement hotspot;
+};
+
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
@@ -87,8 +93,10 @@ struct SurfaceSpecification
     //
     //    it also has size instead of width + height
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
-    mir::optional_value<MirShellChrome> shell_chrome;
+    optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
+    optional_value<std::string> cursor_name;
+    optional_value<StreamCursor> stream_cursor; 
 };
 }
 }

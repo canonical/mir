@@ -455,6 +455,11 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
     return state;
 }
 
+void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
+{
+    spec->cursor_name = std::string(name);
+}
+
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;

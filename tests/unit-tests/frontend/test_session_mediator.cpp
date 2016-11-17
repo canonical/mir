@@ -1064,3 +1064,34 @@ TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw
         mediator.release_buffers(&release_buffer, &null, null_callback.get());
         );
 }
+
+MATCHER_P3(CursorIs, id_value, x_value, y_value, "cursor configuration match")
+{
+    if (!arg.stream_cursor.is_set())
+        return false;
+    auto& cursor = arg.stream_cursor.value();
+    EXPECT_THAT(cursor.hotspot.dx.as_int(), testing::Eq(x_value));
+    EXPECT_THAT(cursor.hotspot.dy.as_int(), testing::Eq(y_value));
+    EXPECT_THAT(cursor.stream_id.as_value(), testing::Eq(id_value));
+    return !(::testing::Test::HasFailure());
+}
+TEST_F(SessionMediator, arranges_cursors_via_shell)
+{
+    using namespace testing;
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    mp::BufferStreamParameters stream_request;
+    mp::BufferStream stream;
+
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    mediator.create_buffer_stream(&stream_request, &stream, null_callback.get());
+    spec->mutable_cursor_id()->set_value(stream.id().value());
+    spec->set_hotspot_x(-1);
+    spec->set_hotspot_y(2);
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()},
+        CursorIs(stream.id().value(), spec->hotspot_x(), spec->hotspot_y())));
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}

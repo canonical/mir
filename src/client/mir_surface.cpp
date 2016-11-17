@@ -563,6 +563,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(cursor_name);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
     #undef COPY_IF_SET
@@ -633,6 +634,14 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             new_shape->set_width(rect.width);
             new_shape->set_height(rect.height);
         }
+    }
+
+    if (spec.rendersurface_cursor.is_set())
+    {
+        auto const rs_cursor = spec.rendersurface_cursor.value();
+        surface_specification->mutable_cursor_id()->set_value(rs_cursor.id.as_value());
+        surface_specification->set_hotspot_x(rs_cursor.hotspot.x.as_int());
+        surface_specification->set_hotspot_y(rs_cursor.hotspot.y.as_int());
     }
 
     modify_wait_handle.expect_result();
