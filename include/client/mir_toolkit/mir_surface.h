@@ -877,6 +877,8 @@ MirPersistentId* mir_persistent_id_from_string(char const* string_representation
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 /**
+ * TODO: Probably remove this public API before proposing anything.
+ *
  * Wait for the next vsync interval to occur (on the display deemed most
  * appropriate by the server), which has not already been waited for.
  *
@@ -887,22 +889,6 @@ void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
  * of clients of nested servers not suffering the same lag to the screen as
  * they would if using swap interval 1 (assuming the nested server also
  * adopts the same approach).
- *
- * This might sound like a MirBufferStream operation but it's actually
- * important to provide one synchronization point per frame for all streams
- * on the surface, so that they all appear to update together. For example,
- * if surface S has two streams A and B then you might:
- *   mir_buffer_stream_set_swapinterval(A, 0);
- *   mir_buffer_stream_set_swapinterval(B, 0);
- *   mir_surface_wait_for_vsync(S);
- *   render(A);
- *   render(B);
- *   mir_buffer_stream_swap_buffers(A);
- *   mir_buffer_stream_swap_buffers(B);
- *
- * TODO: In future mir_buffer_stream_set_swapinterval(,1) should call
- * mir_surface_wait_for_vsync internally so that simple single-stream surfaces
- * always get minimal nesting latency by default.
  *
  * \param [in] surface  The surface used to choose which display output is most
  *                      appropriate to sync to.
