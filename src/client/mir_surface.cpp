@@ -464,7 +464,7 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-        throttle.set_speed(rate);
+        throttle.set_frequency(rate);
         fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
         /*
          * TODO: Notify the input receiver of the rate change AFTER the server

@@ -33,9 +33,16 @@ public:
     Throttle();
 
     /**
-     * Set the precise speed of the throttle in Hertz.
+     * Set the precise frame period in nanoseconds (1000000000/Hz).
      */
-    void set_speed(double hz);
+    void set_period(std::chrono::nanoseconds);
+
+    /**
+     * Set the frame frequency in Hertz.
+     * This is just a convenient wrapper around set_period, although slightly
+     * less precise.
+     */
+    void set_frequency(double hz);
 
     /**
      * Optionally set a callback that queries the server to ask for the
@@ -45,9 +52,9 @@ public:
     void set_resync_callback(ResyncCallback);
 
     /**
-     * Return the next timestamp to sleep_until after the previous one
-     * that was slept until. On first frame just provide an uninitialized
-     * timestamp.
+     * Return the next timestamp to sleep_until, which comes after the last one
+     * that was slept till. On the first frame you can just provide an
+     * uninitialized timestamp.
      */
     time::PosixTimestamp next_frame_after(time::PosixTimestamp prev) const;
 
@@ -55,7 +62,7 @@ private:
     time::PosixTimestamp fake_resync_callback() const;
 
     mutable bool readjustment_required;
-    std::chrono::nanoseconds interval;
+    std::chrono::nanoseconds period;
     ResyncCallback resync_callback;
 };
 

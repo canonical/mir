@@ -25,17 +25,21 @@ using namespace mir::time;
 Throttle::Throttle()
     : readjustment_required{false}
 {
-    set_speed(60);
+    set_frequency(60);
     set_resync_callback(std::bind(&Throttle::fake_resync_callback, this));
 }
 
-void Throttle::set_speed(double hz)
+void Throttle::set_period(std::chrono::nanoseconds ns)
+{
+    period = ns;
+    readjustment_required = true;
+}
+
+void Throttle::set_frequency(double hz)
 {
     if (hz <= 0.0)
-        throw std::logic_error("Throttle::set_speed must be greater than zero");
-
-    interval = std::chrono::nanoseconds(static_cast<long>(1000000000L / hz));
-    readjustment_required = true;
+        throw std::logic_error("Throttle::set_frequency is not positive");
+    set_period(std::chrono::nanoseconds(static_cast<long>(1000000000L / hz)));
 }
 
 void Throttle::set_resync_callback(ResyncCallback cb)
@@ -48,12 +52,18 @@ PosixTimestamp Throttle::fake_resync_callback() const
 {
     fprintf(stderr, "fake_resync_callback\n");
     auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
-    return now - (now % interval);
+    return now - (now % period);
 }
 
 PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
 {
-    auto target = prev + interval;
+    /*
+     * Regardless of render times and scheduling delays, we should always
+     * target a perfectly even interval. This results in the greatest
+     * visual smoothness as well as providing a catch-up for cases where
+     * the client's render time was a little too long.
+     */
+    auto target = prev + period;
 
     /*
      * On the first frame, and any resumption frame (after the client goes
@@ -65,13 +75,21 @@ PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
     auto const now = PosixTimestamp::now(target.clock_id);
     if (target < now || readjustment_required)
     {
-        readjustment_required = false;
         auto const server_frame = resync_callback();
-        auto const server_frame_phase = server_frame % interval;
-        auto const now_phase = now % interval;
-
-        // Target the next future time that's in phase with the server's vsync:
-        target = now + (server_frame_phase - now_phase);
+        if (server_frame > now)
+        {
+            target = server_frame;
+        }
+        else
+        {
+            auto const age_ns = now - server_frame;
+            // Ensure age_frames gets truncated if not already.
+            // C++ just guarantees "signed integer type of at least 64 bits"
+            // for std::chrono::nanoseconds::rep
+            auto const age_frames = age_ns / period;
+            target = server_frame + (age_frames + 1) * period;
+        }
+        readjustment_required = false;
     }
 
 #if 1
