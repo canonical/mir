@@ -388,49 +388,49 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& conf)
 {
     auto new_outputs = calculate_best_outputs(conf);
-
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-
     {
-        std::lock_guard<decltype(outputs_mutex)> outputs_lock{outputs_mutex};
-        for (auto const existing_output : outputs)
+        std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+
         {
-            // O(n²) here, but n < 10 and this is isn't a hot path.
-            if (!std::any_of(
-                new_outputs.begin(),
-                new_outputs.end(),
-                [id = existing_output.first](auto const& output) { return output.id == id; }))
+            std::lock_guard<decltype(outputs_mutex)> outputs_lock{outputs_mutex};
+            for (auto const existing_output : outputs)
             {
-                // At least one of the existing outputs isn't used in the ne
-                return false;
+                // O(n²) here, but n < 10 and this is isn't a hot path.
+                if (!std::any_of(
+                    new_outputs.begin(),
+                    new_outputs.end(),
+                [id = existing_output.first](auto const&output) { return output.id == id; }))
+                {
+                    // At least one of the existing outputs isn't used in the ne
+                    return false;
+                }
+            }
+
+            for (auto const& output : new_outputs)
+            {
+                auto existing_output = outputs.find(output.id);
+
+                /*
+                 * If there's no existing output associated with this ID then we can't be
+                 * invalidating its DisplayBuffer.
+                 *
+                 * If there *is* an existing output associated with this ID then
+                 * create_surfaces() will invalidate its DisplayBuffer if and only if
+                 * the viewport doesn't exactly match.
+                 */
+                if (existing_output != outputs.end() &&
+                    existing_output->second->view_area() != output.extents())
+                {
+                    return false;
+                }
             }
         }
 
-        for (auto const& output : new_outputs)
-        {
-            auto existing_output = outputs.find(output.id);
+        current_configuration =
+            decltype(current_configuration){dynamic_cast<NestedDisplayConfiguration*>(conf.clone().release())};
 
-            /*
-             * If there's no existing output associated with this ID then we can't be
-             * invalidating its DisplayBuffer.
-             *
-             * If there *is* an existing output associated with this ID then
-             * create_surfaces() will invalidate its DisplayBuffer if and only if
-             * the viewport doesn't exactly match.
-             */
-            if (existing_output != outputs.end() &&
-                existing_output->second->view_area() != output.extents())
-            {
-                return false;
-            }
-        }
+        create_surfaces(new_outputs);
     }
-
-    current_configuration =
-        decltype(current_configuration){dynamic_cast<NestedDisplayConfiguration*>(conf.clone().release())};
-
-    create_surfaces(new_outputs);
-
     connection->apply_display_config(**current_configuration);
 
     return true;
