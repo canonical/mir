@@ -909,7 +909,7 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
-    EXPECT_THAT(connection.input_devices(), mt::InputDevicesMatch(devices));
+    EXPECT_THAT(connection.input_devices().device_info(), mt::InputDevicesMatch(devices));
 }
 
 TEST_F(SessionMediator, disconnect_removes_orphaned_screencast_sessions)

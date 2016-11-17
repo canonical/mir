@@ -92,7 +92,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
+        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new mir::protobuf::InputDevices),
                                                    mir_input_config_destroy);
     }
 
