@@ -33,6 +33,7 @@
 
 namespace mir
 {
+namespace graphics { class CursorImage; }
 namespace scene { class Surface; }
 
 namespace shell
@@ -95,7 +96,7 @@ struct SurfaceSpecification
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
     optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
-    optional_value<std::string> cursor_name;
+    optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;
     optional_value<StreamCursor> stream_cursor; 
 };
 }
