@@ -1075,6 +1075,15 @@ MATCHER_P3(CursorIs, id_value, x_value, y_value, "cursor configuration match")
     EXPECT_THAT(cursor.stream_id.as_value(), testing::Eq(id_value));
     return !(::testing::Test::HasFailure());
 }
+
+MATCHER_P(CursorImageIs, image, "cursor configuration match")
+{
+    if (!arg.cursor_image.is_set())
+        return false;
+    EXPECT_THAT(arg.cursor_image.value(), testing::Eq(image));
+    return !(::testing::Test::HasFailure());
+}
+
 TEST_F(SessionMediator, arranges_cursors_via_shell)
 {
     using namespace testing;
@@ -1094,4 +1103,18 @@ TEST_F(SessionMediator, arranges_cursors_via_shell)
         mf::SurfaceId{surface_response.id().value()},
         CursorIs(stream.id().value(), spec->hotspot_x(), spec->hotspot_y())));
     mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, arranges_named_cursors_via_shell)
+{
+    std::string name = "cursor_gigante";
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name(name);
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()},
+        CursorImageIs(nullptr)));
 }
