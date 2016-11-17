@@ -24,6 +24,7 @@
 #include "src/server/frontend/event_sender.h"
 #include "src/server/frontend/protobuf_buffer_packer.h"
 #include "src/server/input/builtin_cursor_images.h"
+#include "src/server/input/default-theme.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
@@ -1079,12 +1080,18 @@ MATCHER_P3(CursorIs, id_value, x_value, y_value, "cursor configuration match")
     return !(::testing::Test::HasFailure());
 }
 
-MATCHER_P(CursorImageIs, image, "cursor configuration match")
+MATCHER(CursorImageIsSetNull, "cursor configuration match")
 {
-    return true;
     if (!arg.cursor_image.is_set())
         return false;
-    EXPECT_THAT(arg.cursor_image.value(), testing::Eq(image));
+    EXPECT_THAT(arg.cursor_image.value(), testing::Eq(nullptr));
+    return !(::testing::Test::HasFailure());
+}
+MATCHER(CursorImageIsSetNotNull, "cursor configuration match")
+{
+    if (!arg.cursor_image.is_set())
+        return false;
+    EXPECT_THAT(arg.cursor_image.value(), testing::Ne(nullptr));
     return !(::testing::Test::HasFailure());
 }
 
@@ -1111,15 +1118,23 @@ TEST_F(SessionMediator, arranges_cursors_via_shell)
 
 TEST_F(SessionMediator, arranges_named_cursors_via_shell)
 {
-    std::string name = "cursor_gigante";
     mp::Void null;
     mp::SurfaceModifications mods;
     auto spec = mods.mutable_surface_specification();
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-    spec->set_cursor_name(name);
+    spec->set_cursor_name("cursor_gigante");
+
+    testing::Sequence seq;
     EXPECT_CALL(*shell, modify_surface(_,
-        mf::SurfaceId{surface_response.id().value()},
-        CursorImageIs(nullptr)));
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNull()))
+        .InSequence(seq);
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNotNull()))
+        .InSequence(seq);
+    mediator.modify_surface(&mods, &null, null_callback.get());
+
+    ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
+    spec->set_cursor_name(cursor_data.begin()->name);
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
