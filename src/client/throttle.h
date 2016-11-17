@@ -29,8 +29,9 @@ class Throttle
 {
 public:
     typedef std::function<time::PosixTimestamp()> ResyncCallback;
+    typedef std::function<time::PosixTimestamp(clockid_t)> GetCurrentTime;
 
-    Throttle();
+    Throttle(GetCurrentTime);
 
     /**
      * Set the precise frame period in nanoseconds (1000000000/Hz).
@@ -61,6 +62,7 @@ public:
 private:
     time::PosixTimestamp fake_resync_callback() const;
 
+    GetCurrentTime const get_current_time;
     mutable bool readjustment_required;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;

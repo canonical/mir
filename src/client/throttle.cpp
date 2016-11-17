@@ -22,8 +22,8 @@
 using namespace mir;
 using namespace mir::time;
 
-Throttle::Throttle()
-    : readjustment_required{false}
+Throttle::Throttle(Throttle::GetCurrentTime gct)
+    : get_current_time{gct}, readjustment_required{false}
 {
     set_frequency(60);
     set_resync_callback(std::bind(&Throttle::fake_resync_callback, this));
@@ -51,7 +51,7 @@ void Throttle::set_resync_callback(ResyncCallback cb)
 PosixTimestamp Throttle::fake_resync_callback() const
 {
     fprintf(stderr, "fake_resync_callback\n");
-    auto const now = PosixTimestamp::now(CLOCK_MONOTONIC);
+    auto const now = get_current_time(CLOCK_MONOTONIC);
     return now - (now % period);
 }
 
@@ -72,7 +72,7 @@ PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
      * in perfect sync with the display, but only need to query the server
      * like this occasionally and not on every frame...
      */
-    auto const now = PosixTimestamp::now(target.clock_id);
+    auto const now = get_current_time(target.clock_id);
     if (target < now || readjustment_required)
     {
         auto const server_frame = resync_callback();
