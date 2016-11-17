@@ -166,6 +166,7 @@ pushd ${BUILD_DIR} > /dev/null
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
     export MIR_TARGET_MACHINE=${target_machine}
     export MIR_GCC_VARIANT=${gcc_variant}
+    export CMAKE_PREFIX_PATH=$MIR_NDK_PATH/usr/lib/${target_machine}/cmake 
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
