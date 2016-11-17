@@ -106,7 +106,7 @@ if [ "${dist}" = "vivid" ]; then
     gcc_variant=-4.9
 elif [ "${dist}" = "wily" -o "${dist}" = "xenial"  ]; then
     gcc_variant=-5
-elif [ "${dist}" = "yakkety" ]; then
+elif [ "${dist}" = "yakkety" -o "${dist}" = "zesty" ]; then
     gcc_variant=-6
 fi
 
