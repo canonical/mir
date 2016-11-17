@@ -27,6 +27,8 @@ set(
   reordering_message_sender.h
   event_sink_factory.h
   screencast_buffer_tracker.cpp
+  session_mediator_observer_multiplexer.cpp
+  session_mediator_observer_multiplexer.h
 )
 
 add_library(

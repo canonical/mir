@@ -160,17 +160,6 @@ public:
     std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
     {
         mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-        auto buffer1 = std::make_shared<mtd::StubBuffer>();
-        auto buffer2 = std::make_shared<mtd::StubBuffer>();
-        ON_CALL(*mock_streams[id], swap_buffers(testing::_,testing::_))
-            .WillByDefault(testing::Invoke(
-            [buffer1, buffer2](mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
-            {
-                if ((!b) || (b == buffer1.get()))
-                    complete(buffer2.get());
-                if (b == buffer2.get())
-                    complete(buffer1.get());
-            }));
         return mock_streams[id];
     }
 
@@ -308,7 +297,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
-    std::shared_ptr<mf::SessionMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorObserver> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
     std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
@@ -724,40 +713,6 @@ TEST_F(SessionMediator, removes_buffer_from_the_session)
     EXPECT_THAT(stubbed_session->num_destroy_requests(), Eq(num_requests));
 }
 
-TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
-{
-    using namespace testing;
-    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    ON_CALL(*mock_stream, swap_buffers(_,_))
-        .WillByDefault(InvokeArgument<1>(nullptr));
-    auto buffer1 = std::make_shared<mtd::StubBuffer>();
-    mf::SessionMediator mediator{
-        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
-        surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSinkFactory>(),
-        std::make_shared<mtd::NullMessageSender>(),
-        resource_cache, stub_screencast, nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create(),
-        mt::fake_shared(mock_hub)};
-
-    mp::Void null;
-    mp::BufferRequest request;
-
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-
-    request.mutable_id()->set_value(surface_response.id().value());
-    request.mutable_buffer()->set_buffer_id(buffer1->id().as_value());
-
-    InSequence seq;
-    EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
-    EXPECT_CALL(*mock_stream, swap_buffers(_,_))
-        .WillOnce(InvokeArgument<1>(nullptr));
-
-    mediator.submit_buffer(&request, &null, null_callback.get());
-}
-
 TEST_F(SessionMediator, configures_swap_intervals_on_streams)
 {
     using namespace testing;
@@ -865,19 +820,6 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         &surface_parameters,
         &surface_response,
         google::protobuf::NewCallback(&send_non_event, mock_sender));
-}
-
-TEST_F(SessionMediator, doesnt_inadventently_set_buffer_field_when_theres_no_buffer)
-{
-    mp::Void null;
-    mp::BufferStreamParameters stream_request;
-    mp::BufferStream stream_response;
-    auto stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    ON_CALL(*stream, swap_buffers(nullptr,testing::_))
-        .WillByDefault(testing::InvokeArgument<1>(nullptr));
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.create_buffer_stream(&stream_request, &stream_response, null_callback.get());
-    EXPECT_FALSE(stream_response.has_buffer());
 }
 
 TEST_F(SessionMediator, sets_base_display_configuration)
