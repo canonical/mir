@@ -599,7 +599,9 @@ void mir_surface_spec_set_placement(
     int                 offset_dy);
 
 /**
- * Set named
+ * Set the name for the cursor from the system cursor theme.
+ * \param [in] spec             The spec
+ * \param [in] name             The name, or "" to reset to default
  */
 void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
 
@@ -757,6 +759,8 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
 /**
  * Choose the cursor state for a surface: whether a cursor is shown, 
  * and which cursor if so.
+ *   \deprecated    Users should use mir_surface_spec_set_cursor_name
+ *                  or mir_surface_spec_set_cursor_render_surface.
  *    \param [in] surface    The surface to operate on
  *    \param [in] parameters The configuration parameters obtained
  *                           from mir_cursor* family of functions.
