@@ -31,10 +31,10 @@ struct gbm_device;
 //Set the gbm device used by the client
 //  \param [in] device    The gbm_device, or nullptr on failure. Sets errno on failure.
 //  \param [context] device    The gbm_device, or nullptr on failure. Sets errno on failure.
-typedef void (*_set_gbm_device)(struct gbm_device*, void* const context);
+typedef void (*set_gbm_dev)(struct gbm_device*, void* const context);
 struct MirExtensionSetGbmDevice
 {
-    _set_gbm_device set_gbm_device;
+    set_gbm_dev set_gbm_device;
     void* const context;
 };
 
