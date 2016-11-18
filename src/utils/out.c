@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
             printf("Output %d: %s, %s",
                    mir_output_get_id(out),
-                   mir_display_output_type_name(mir_output_get_type(out)),
+                   mir_output_type_name(mir_output_get_type(out)),
                    state_name(state));
 
             if (state == mir_output_connection_state_connected)
