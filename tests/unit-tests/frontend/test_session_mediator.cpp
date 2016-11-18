@@ -162,6 +162,8 @@ public:
     std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
     {
         mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        ON_CALL(*mock_streams[id], pixel_format())
+            .WillByDefault(Return(mir_pixel_format_argb_8888));
         return mock_streams[id];
     }
 
