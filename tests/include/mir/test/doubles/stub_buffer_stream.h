@@ -70,10 +70,9 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
     void drop_old_buffers() override {}
-    void swap_buffers(graphics::Buffer* b, std::function<void(graphics::Buffer*)> complete) override
+    void submit_buffer(std::shared_ptr<graphics::Buffer> const& b) override
     {
         if (b) ++nready;
-        complete(nullptr);
     }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn) override
     {
