@@ -79,7 +79,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
+//TODO: accept other pixel format types
 void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
 {
     if (stream.pixel_format() != mir_pixel_format_argb_8888)
