@@ -47,7 +47,7 @@ static const char *orientation_name(MirOrientation ori)
 
 static char const* state_name(MirOutputConnectionState s)
 {
-    static char const * const name[] =
+    static char const* const name[] =
     {
         "disconnected",
         "connected",
