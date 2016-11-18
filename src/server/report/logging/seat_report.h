@@ -19,7 +19,7 @@
 #ifndef MIR_REPORT_LOGGING_SEAT_REPORT_H_
 #define MIR_REPORT_LOGGING_SEAT_REPORT_H_
 
-#include <mir/input/seat_report.h>
+#include <mir/input/seat_observer.h>
 
 #include <memory>
 
@@ -41,14 +41,14 @@ namespace report
 namespace logging
 {
 
-class SeatReport : public input::SeatReport
+class SeatReport : public input::SeatObserver
 {
 public:
     SeatReport(std::shared_ptr<mir::logging::Logger> const& log);
 
     virtual void seat_add_device(uint64_t id) override;
     virtual void seat_remove_device(uint64_t id) override;
-    virtual void seat_dispatch_event(MirEvent const& event) override;
+    virtual void seat_dispatch_event(MirEvent const* event) override;
     virtual void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) override;
     virtual void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) override;
     virtual void seat_set_pointer_state(uint64_t id, unsigned buttons) override;
