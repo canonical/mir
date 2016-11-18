@@ -421,13 +421,11 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     if (modifications.stream_cursor.is_set())
     {
-        printf("AAA\n");
         auto stream_id = modifications.stream_cursor.value().stream_id;
         if (stream_id != mir::frontend::BufferStreamId{-1})
         {
             auto hotspot = modifications.stream_cursor.value().hotspot;
             auto stream = session->get_buffer_stream(modifications.stream_cursor.value().stream_id);
-//        throw_if_unsuitable_for_cursor(*stream);
             surface->set_cursor_stream(stream, hotspot);
         }
         else
