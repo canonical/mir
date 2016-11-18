@@ -45,6 +45,18 @@ static const char *orientation_name(MirOrientation ori)
     return name[(ori % 360) / 90];
 }
 
+static char const* state_name(MirOutputConnectionState s)
+{
+    static char const* const name[] =
+    {
+        "disconnected",
+        "connected",
+        "unknown",
+    };
+    unsigned int u = s;
+    return u < 3 ? name[u] : "out-of-range";
+}
+
 int main(int argc, char *argv[])
 {
     const char *server = NULL;
@@ -84,90 +96,98 @@ int main(int argc, char *argv[])
 
     printf("Connected to server: %s\n", server ? server : "<default>");
 
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(conn);
+    MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
     }
     else
     {
-        for (unsigned c = 0; c < conf->num_cards; ++c)
+        int num_outputs = mir_display_config_get_num_outputs(conf);
+
+        printf("Max %d simultaneous outputs\n",
+               mir_display_config_get_max_simultaneous_outputs(conf));
+
+        for (int i = 0; i < num_outputs; ++i)
         {
-            const MirDisplayCard *card = conf->cards + c;
-            printf("Card %u: Max %u simultaneous outputs\n",
-                   card->card_id, card->max_simultaneous_outputs);
-        }
+            MirOutput const* out = mir_display_config_get_output(conf, i);
+            MirOutputConnectionState const state =
+                mir_output_get_connection_state(out);
 
-        for (unsigned i = 0; i < conf->num_outputs; ++i)
-        {
-            const MirDisplayOutput *out = conf->outputs + i;
+            printf("Output %d: %s, %s",
+                   mir_output_get_id(out),
+                   mir_output_type_name(mir_output_get_type(out)),
+                   state_name(state));
 
-            printf("Output %u: Card %u, %s, %s",
-                   out->output_id,
-                   out->card_id,
-                   mir_display_output_type_name(out->type),
-                   out->connected ? "connected" : "disconnected");
-
-            if (out->connected)
+            if (state == mir_output_connection_state_connected)
             {
-                if (out->current_mode < out->num_modes)
+                MirOutputMode const* current_mode =
+                    mir_output_get_current_mode(out);
+                if (current_mode)
                 {
-                    const MirDisplayMode *cur = out->modes + out->current_mode;
-                    printf(", %ux%u",
-                           cur->horizontal_resolution,
-                           cur->vertical_resolution);
+                    printf(", %dx%d",
+                           mir_output_mode_get_width(current_mode),
+                           mir_output_mode_get_height(current_mode));
                 }
                 else
                 {
                     printf(", ");
                 }
 
+                int physical_width_mm = mir_output_get_physical_width_mm(out);
+                int physical_height_mm = mir_output_get_physical_height_mm(out);
                 float inches = sqrtf(
-                    (out->physical_width_mm * out->physical_width_mm) +
-                    (out->physical_height_mm * out->physical_height_mm))
+                    (physical_width_mm * physical_width_mm) +
+                    (physical_height_mm * physical_height_mm))
                     / 25.4f;
 
-                printf("%+d%+d, %s, %s, %umm x %umm (%.1f\"), %s",
-                       out->position_x,
-                       out->position_y,
-                       out->used ? "used" : "unused",
-                       power_mode_name(out->power_mode),
-                       out->physical_width_mm,
-                       out->physical_height_mm,
+                printf("%+d%+d, %s, %s, %dmm x %dmm (%.1f\"), %s",
+                       mir_output_get_position_x(out),
+                       mir_output_get_position_y(out),
+                       mir_output_is_enabled(out) ? "enabled" : "disabled",
+                       power_mode_name(mir_output_get_power_mode(out)),
+                       physical_width_mm,
+                       physical_height_mm,
                        inches,
-                       orientation_name(out->orientation));
+                       orientation_name(mir_output_get_orientation(out)));
             }
             printf("\n");
 
-            for (unsigned m = 0; m < out->num_modes; ++m)
-            {
-                const MirDisplayMode *mode = out->modes + m;
+            int const num_modes = mir_output_get_num_modes(out);
+            int const current_mode_index =
+                mir_output_get_current_mode_index(out);
+            int const preferred_mode_index =
+                mir_output_get_preferred_mode_index(out);
+            int prev_width = -1, prev_height = -1;
 
-                if (m == 0 ||
-                    mode->horizontal_resolution !=
-                        mode[-1].horizontal_resolution ||
-                    mode->vertical_resolution !=
-                        mode[-1].vertical_resolution)
+            for (int m = 0; m < num_modes; ++m)
+            {
+                MirOutputMode const* mode = mir_output_get_mode(out, m);
+                int const width = mir_output_mode_get_width(mode);
+                int const height = mir_output_mode_get_height(mode);
+
+                if (m == 0 || width != prev_width || height != prev_height)
                 {
                     if (m)
                         printf("\n");
 
-                    printf("%8ux%-8u",
-                           mode->horizontal_resolution,
-                           mode->vertical_resolution);
+                    printf("%8dx%-8d", width, height);
                 }
 
                 printf("%6.2f%c%c",
-                       mode->refresh_rate,
-                       (m == out->current_mode) ? '*' : ' ',
-                       (m == out->preferred_mode) ? '+' : ' ');
+                       mir_output_mode_get_refresh_rate(mode),
+                       (m == current_mode_index) ? '*' : ' ',
+                       (m == preferred_mode_index) ? '+' : ' ');
+
+                prev_width = width;
+                prev_height = height;
             }
 
-            if (out->num_modes)
+            if (num_modes)
                 printf("\n");
         }
 
-        mir_display_config_destroy(conf);
+        mir_display_config_release(conf);
     }
 
     mir_connection_release(conn);
