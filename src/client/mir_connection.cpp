@@ -479,16 +479,10 @@ void MirConnection::released(StreamRelease data)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     if (data.handle)
         data.handle->result_received();
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        if (!disconnecting)
-        {
-            if (data.rs)
-                surface_map->erase(data.rs);
-            else
-                surface_map->erase(mf::BufferStreamId(data.rpc_id));
-        }
-    }
+    if (data.rs)
+        surface_map->erase(data.rs);
+    else
+        surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
 void MirConnection::released(SurfaceRelease data)
