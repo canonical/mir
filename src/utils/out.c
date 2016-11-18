@@ -181,8 +181,7 @@ int main(int argc, char *argv[])
                        orientation_name(mir_output_get_orientation(out)),
                        mir_output_get_scale_factor(out),
                        subpixel_name(mir_output_get_subpixel_arrangement(out)),
-                       form_factor_name(mir_output_get_form_factor(out))
-                       );
+                       form_factor_name(mir_output_get_form_factor(out)));
             }
             printf("\n");
 
