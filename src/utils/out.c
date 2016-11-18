@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 
     printf("Connected to server: %s\n", server ? server : "<default>");
 
-    MirDisplayConfig *conf = mir_connection_create_display_configuration(conn);
+    MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
