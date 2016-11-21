@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
                            "    --  Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
-                           "    disable | disable\n"
+                           "    disable | enable\n"
                            "    rotate (normal | inverted | left | right)\n"
                            "    place +X+Y\n"
                            "    mode (WIDTHxHEIGHT | native) [rate HZ]\n"
