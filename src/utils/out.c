@@ -57,6 +57,35 @@ static char const* state_name(MirOutputConnectionState s)
     return u < 3 ? name[u] : "out-of-range";
 }
 
+static char const* subpixel_name(MirSubpixelArrangement s)
+{
+    static char const* const name[] =
+    {
+        "unknown",
+        "HRGB",
+        "HBGR",
+        "VRGB",
+        "VBGR",
+    };
+    return ((unsigned)s < sizeof(name)/sizeof(name[0])) ? name[s]
+                                                        : "out-of-range";
+}
+
+static char const* form_factor_name(MirFormFactor f)
+{
+    static char const* const name[] =
+    {
+        "unknown",
+        "phone",
+        "tablet",
+        "monitor",
+        "TV",
+        "projector",
+    };
+    return ((unsigned)f < sizeof(name)/sizeof(name[0])) ? name[f]
+                                                        : "out-of-range";
+}
+
 int main(int argc, char *argv[])
 {
     const char *server = NULL;
@@ -141,7 +170,7 @@ int main(int argc, char *argv[])
                     (physical_height_mm * physical_height_mm))
                     / 25.4f;
 
-                printf("%+d%+d, %s, %s, %dmm x %dmm (%.1f\"), %s",
+                printf("%+d%+d, %s, %s, %dmm x %dmm (%.1f\"), %s, %.2fx, %s, %s",
                        mir_output_get_position_x(out),
                        mir_output_get_position_y(out),
                        mir_output_is_enabled(out) ? "enabled" : "disabled",
@@ -149,7 +178,10 @@ int main(int argc, char *argv[])
                        physical_width_mm,
                        physical_height_mm,
                        inches,
-                       orientation_name(mir_output_get_orientation(out)));
+                       orientation_name(mir_output_get_orientation(out)),
+                       mir_output_get_scale_factor(out),
+                       subpixel_name(mir_output_get_subpixel_arrangement(out)),
+                       form_factor_name(mir_output_get_form_factor(out)));
             }
             printf("\n");
 
