@@ -191,7 +191,7 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                 }
                 else
                 {
-                    MirOrientation orientation = (MirOrientation)ori;
+                    MirOrientation orientation = (MirOrientation)(90 * ori);
                     for (int t = 0; t < targets; ++t)
                         mir_output_set_orientation(target[t], orientation);
                 }
