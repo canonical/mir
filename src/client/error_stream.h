@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ERROR_STREAM_H_
 #define MIR_CLIENT_ERROR_STREAM_H_
 
-#include "client_buffer_stream.h"
+#include "mir/client_buffer_stream.h"
 #include "buffer_stream.h"
 
 namespace mir
