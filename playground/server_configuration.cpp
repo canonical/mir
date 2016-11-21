@@ -28,14 +28,23 @@
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 
-me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
-    DefaultServerConfiguration(configuration_options)
+namespace
 {
-    namespace po = boost::program_options;
+std::shared_ptr<mir::options::DefaultConfiguration> const& customize(
+    std::shared_ptr<mir::options::DefaultConfiguration> const& opt)
+{
+    opt->add_options()(me::display_config_opt,
+                       boost::program_options::value<std::string>()->
+                           default_value(me::clone_opt_val),
+                       me::display_config_descr);
+    
+    return opt;
+}
+}
 
-    configuration_options->add_options()
-        (me::display_config_opt, po::value<std::string>()->default_value(me::clone_opt_val),
-            me::display_config_descr);
+me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
+    DefaultServerConfiguration(customize(configuration_options))
+{
 }
 
 me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
