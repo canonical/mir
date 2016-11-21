@@ -91,3 +91,8 @@ void mcl::RenderSurface::set_size(mir::geometry::Size size)
     std::lock_guard<decltype(size_mutex)> lk(size_mutex);
     desired_size = size;
 }
+
+bool mcl::RenderSurface::valid() const
+{
+    return protobuf_bs->has_id() && !protobuf_bs->has_error();
+}

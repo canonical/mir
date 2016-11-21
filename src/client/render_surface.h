@@ -51,7 +51,7 @@ public:
     mir::geometry::Size size() const override;
     void set_size(mir::geometry::Size) override;
     mir::frontend::BufferStreamId stream_id() const override;
-
+    bool valid() const override;
     MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,
