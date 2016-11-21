@@ -241,8 +241,8 @@ struct BufferDepository
 mcl::BufferStream::BufferStream(
     mir::client::rpc::DisplayServer& server,
     std::weak_ptr<mcl::SurfaceMap> const& map)
-        : display_server{server},
-          client_platform{nullptr},
+        : client_platform{nullptr},
+          interval_config{server, frontend::BufferStreamId{-1}},
           perf_report{nullptr},
           nbuffers{0},
           map{map},
@@ -264,10 +264,10 @@ mcl::BufferStream::BufferStream(
     geom::Size ideal_size,
     size_t nbuffers)
     : connection_(connection),
-      display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       user_swap_interval(parse_env_for_swap_interval()),
+      interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -299,7 +299,7 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<BufferDepository>(
             client_platform->create_buffer_factory(), factory,
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
+            std::make_shared<Requests>(server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
             protobuf_bs->buffer_usage(), nbuffers);
 
@@ -451,7 +451,7 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
         interval = user_swap_interval.value();
 
     buffer_depository->set_interval(interval);
-    return interval_config.set_swap_interval(display_server, rpc_id(), interval);
+    return interval_config.set_swap_interval(interval);
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

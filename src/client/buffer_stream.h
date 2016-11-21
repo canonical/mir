@@ -139,7 +139,6 @@ private:
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
-    mir::client::rpc::DisplayServer& display_server;
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
