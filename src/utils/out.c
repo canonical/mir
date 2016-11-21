@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
                            "    disable | disable\n"
                            "    rotate (normal | inverted | left | right)\n"
                            "    place +X+Y\n"
-                           "    mode WIDTHxHEIGHT\n"
+                           "    mode (WIDTHxHEIGHT | native) [rate HZ]\n"
                            "    rate HZ\n"
                            , argv[0]);
                     return 0;
