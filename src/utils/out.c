@@ -19,6 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include <stdbool.h>
 
 static const char *power_mode_name(MirPowerMode m)
 {
@@ -33,16 +35,17 @@ static const char *power_mode_name(MirPowerMode m)
     return ((unsigned)m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
 
+static const char * const orientation_names[] =
+{
+    "normal",
+    "left",
+    "inverted",
+    "right"
+};
+
 static const char *orientation_name(MirOrientation ori)
 {
-    static const char * const name[] =
-    {
-        "normal",
-        "left",
-        "inverted",
-        "right"
-    };
-    return name[(ori % 360) / 90];
+    return orientation_names[(ori % 360) / 90];
 }
 
 static char const* state_name(MirOutputConnectionState s)
@@ -86,9 +89,185 @@ static char const* form_factor_name(MirFormFactor f)
                                                         : "out-of-range";
 }
 
+static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
+{
+    int const max_targets = 256;
+    MirOutput* target[max_targets];
+    int targets = 0;
+
+    /* Until otherwise specified we apply actions to all outputs */
+    int num_outputs = mir_display_config_get_num_outputs(conf);
+    if (num_outputs > max_targets)
+        num_outputs = max_targets;
+    for (int i = 0; i < num_outputs; ++i)
+    {
+        MirOutput const* out = mir_display_config_get_output(conf, i);
+        if (mir_output_connection_state_connected ==
+            mir_output_get_connection_state(out))
+            target[targets++] = mir_display_config_get_mutable_output(conf, i);
+    }
+
+    char** action_end = actionv + actionc;
+    for (char** action = actionv; action < action_end; ++action)
+    {
+        int output_id;
+        if (1 == sscanf(*action, "%d", &output_id))
+        {
+            targets = 0;
+            for (int i = 0; i < num_outputs; ++i)
+            {
+                MirOutput* out = mir_display_config_get_mutable_output(conf, i);
+                if (output_id == mir_output_get_id(out))
+                {
+                    targets = 1;
+                    target[0] = out;
+                    break;
+                }
+            }
+        }
+        else if (!strcmp(*action, "off"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_set_power_mode(target[t], mir_power_mode_off);
+        }
+        else if (!strcmp(*action, "on"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_set_power_mode(target[t], mir_power_mode_on);
+        }
+        else if (!strcmp(*action, "standby"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_set_power_mode(target[t], mir_power_mode_standby);
+        }
+        else if (!strcmp(*action, "suspend"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_set_power_mode(target[t], mir_power_mode_suspend);
+        }
+        else if (!strcmp(*action, "enable"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_enable(target[t]);
+        }
+        else if (!strcmp(*action, "disable"))
+        {
+            for (int t = 0; t < targets; ++t)
+                mir_output_disable(target[t]);
+        }
+        else if (!strcmp(*action, "rotate"))
+        {
+            if (++action < action_end)
+            {
+                int ori = -1;
+                int const max = sizeof(orientation_names) /
+                                sizeof(orientation_names[0]);
+                for (int n = 0; n < max; ++n)
+                {
+                    if (!strcmp(orientation_names[n], *action))
+                    {
+                        ori = n;
+                        break;
+                    }
+                }
+                if (ori < 0)
+                {
+                    fprintf(stderr, "Unknown rotation `%s'\n", *action);
+                    return false;
+                }
+                else
+                {
+                    MirOrientation orientation = (MirOrientation)ori;
+                    for (int t = 0; t < targets; ++t)
+                        mir_output_set_orientation(target[t], orientation);
+                }
+            }
+        }
+        else if (!strcmp(*action, "place"))
+        {
+            if (++action < action_end)
+            {
+                int x, y;
+                if (2 != sscanf(*action, "%d%d", &x, &y))
+                {
+                    fprintf(stderr, "Invalid placement `%s'\n", *action);
+                    return false;
+                }
+                else
+                {
+                    for (int t = 0; t < targets; ++t)
+                        mir_output_set_position(target[t], x, y);
+                }
+            }
+        }
+        else if (!strcmp(*action, "mode"))
+        {
+            if (++action < action_end)
+            {
+                int w, h;
+                if (!strcmp(*action, "native"))
+                {
+                    w = -1;
+                    h = -1;
+                }
+                else if (2 != sscanf(*action, "%dx%d", &w, &h))
+                {
+                    fprintf(stderr, "Invalid dimensions `%s'\n", *action);
+                    return false;
+                }
+
+                for (int t = 0; t < targets; ++t)
+                {
+                    MirOutputMode const* set_mode = NULL;
+                    if (w <= 0 || h <= 0)
+                    {
+                        set_mode = mir_output_get_preferred_mode(target[t]);
+                    }
+                    else
+                    {
+                        int const num_modes =
+                            mir_output_get_num_modes(target[t]);
+                        /* Mir always assumes modes are grouped with the
+                           best refresh rate first */
+                        for (int m = 0; m < num_modes; ++m)
+                        {
+                            MirOutputMode const* mode =
+                                mir_output_get_mode(target[t], m);
+                            if (w == mir_output_mode_get_width(mode) &&
+                                h == mir_output_mode_get_height(mode))
+                            {
+                                set_mode = mode;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (set_mode)
+                    {
+                        mir_output_set_current_mode(target[t], set_mode);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "No matching mode for `%s'\n", *action);
+                        return false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Unrecognized action `%s'\n", *action);
+            return false;
+        }
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
-    const char *server = NULL;
+    char const* server = NULL;
+    char** actionv = NULL;
+    int actionc = 0;
 
     for (int a = 1; a < argc; a++)
     {
@@ -102,17 +281,30 @@ int main(int argc, char *argv[])
             {
                 case 'h':
                 default:
-                    printf("Usage: %s [-h] [<socket-file>] [--]\n"
+                    printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[OUTPUTID] ACTION]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
                            "    --  Ignore the rest of the command line.\n"
+                           "Actions:\n"
+                           "    off | suspend | standby | on\n"
+                           "    disable | disable\n"
+                           "    rotate (normal | inverted | left | right)\n"
+                           "    place +X+Y\n"
+                           "    mode WIDTHxHEIGHT\n"
+                           "    rate HZ\n"
                            , argv[0]);
                     return 0;
             }
         }
-        else
+        else if (arg[0] == '/')
         {
             server = arg;
+        }
+        else
+        {
+            actionv = argv + a;
+            actionc = argc - a;
+            break;
         }
     }
 
@@ -123,15 +315,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printf("Connected to server: %s\n", server ? server : "<default>");
-
     MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
     }
+    else if (actionc)
+    {
+        if (modify(conf, actionc, actionv))
+        {
+            mir_connection_preview_base_display_configuration(conn, conf, 10);
+            mir_connection_confirm_base_display_configuration(conn, conf);
+        }
+    }
     else
     {
+        printf("Connected to server: %s\n", server ? server : "<default>");
+
         int num_outputs = mir_display_config_get_num_outputs(conf);
 
         printf("Max %d simultaneous outputs\n",
