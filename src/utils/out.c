@@ -224,10 +224,19 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                     }
                 }
 
-                if (have_rate && 1 != sscanf(*action, "%63s", target_hz))
+                if (have_rate)
                 {
-                    fprintf(stderr, "Invalid refresh rate `%s'\n", *action);
-                    return false;
+                    if (1 != sscanf(*action, "%63[0-9.]", target_hz))
+                    {
+                        fprintf(stderr, "Invalid refresh rate `%s'\n", *action);
+                        return false;
+                    }
+                    else if (!strchr(target_hz, '.'))
+                    {
+                        size_t len = strlen(target_hz);
+                        if (len < (sizeof(target_hz)-4))
+                            snprintf(target_hz+len, 4, ".00");
+                    }
                 }
 
                 for (int t = 0; t < targets; ++t)
