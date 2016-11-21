@@ -329,41 +329,6 @@ mcl::BufferStream::BufferStream(
     perf_report->name_surface(surface_name.c_str());
 }
 
-mcl::BufferStream::BufferStream(
-    MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> creation_wait_handle,
-    mclr::DisplayServer& server,
-    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const& map,
-    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
-    mp::BufferStreamParameters const& parameters,
-    std::shared_ptr<mcl::PerfReport> const& perf_report,
-    size_t nbuffers)
-    : connection_(connection),
-      display_server(server),
-      client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      user_swap_interval(parse_env_for_swap_interval()),
-      perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle),
-      map(map),
-      factory(factory)
-{
-    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
-
-    buffer_depository = std::make_unique<BufferDepository>(
-        client_platform->create_buffer_factory(), factory,
-        std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
-        ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
-    egl_native_window_ = client_platform->create_egl_native_window(this);
-
-    if (user_swap_interval.is_set())
-        set_swap_interval(user_swap_interval.value());
-}
-
 mcl::BufferStream::~BufferStream()
 {
 }
