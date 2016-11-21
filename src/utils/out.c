@@ -110,19 +110,33 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     char** action_end = actionv + actionc;
     for (char** action = actionv; action < action_end; ++action)
     {
-        int output_id;
-        if (1 == sscanf(*action, "%d", &output_id))
+        if (!strcmp(*action, "output"))
         {
-            targets = 0;
-            for (int i = 0; i < num_outputs; ++i)
+            int output_id;
+            if (++action < action_end &&
+                1 == sscanf(*action, "%d", &output_id))
             {
-                MirOutput* out = mir_display_config_get_mutable_output(conf, i);
-                if (output_id == mir_output_get_id(out))
+                targets = 0;
+                for (int i = 0; i < num_outputs; ++i)
                 {
-                    targets = 1;
-                    target[0] = out;
-                    break;
+                    MirOutput* out = mir_display_config_get_mutable_output(conf, i);
+                    if (output_id == mir_output_get_id(out))
+                    {
+                        targets = 1;
+                        target[0] = out;
+                        break;
+                    }
                 }
+                if (!targets)
+                {
+                    fprintf(stderr, "Output ID `%s' not found\n", *action);
+                    return false;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Invalid output ID `%s'\n", *action);
+                return false;
             }
         }
         else if (!strcmp(*action, "off"))
@@ -321,7 +335,7 @@ int main(int argc, char *argv[])
             {
                 case 'h':
                 default:
-                    printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[OUTPUTID] ACTION]\n"
+                    printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
                            "    --  Ignore the rest of the command line.\n"
