@@ -353,3 +353,77 @@ TEST(NoTLSFuture, exception_in_void_continuation_is_captured)
         EXPECT_THAT(err.what(), HasSubstr("Theyms takin my data"));
     }
 }
+
+TEST(NoTLSFuture, detach_allows_destruction_before_readiness)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<void> promise;
+
+    bool continuation_called{false};
+
+    {
+        auto future = promise.get_future();
+
+        future.then([&continuation_called](auto&&) { continuation_called = true; }).detach();
+    }
+
+    promise.set_value();
+
+    EXPECT_TRUE(continuation_called);
+}
+
+TEST(NoTLSFuture, detached_future_still_runs_continuation)
+{
+    using namespace testing;
+    mcl::NoTLSPromise<std::string> promise;
+
+    constexpr char const* value = "Hello my pretties!";
+
+    bool continuation_called{false};
+
+    {
+        auto future = promise.get_future();
+
+        future.then(
+            [&continuation_called](auto&& resolved_future)
+            {
+                EXPECT_THAT(resolved_future.get(), StrEq(value));
+                continuation_called = true;
+            }).detach();
+    }
+
+    promise.set_value(value);
+
+    EXPECT_TRUE(continuation_called);
+}
+
+TEST(NoTLSFuture, detached_future_still_runs_continuation_on_broken_promise)
+{
+    using namespace testing;
+
+    bool continuation_called{false};
+    {
+        mcl::NoTLSPromise<void> promise;
+
+        {
+            auto future = promise.get_future();
+
+            future.then(
+                [&continuation_called](auto&& resolved_future)
+                {
+                    continuation_called = true;
+                    try
+                    {
+                        resolved_future.get();
+                        ADD_FAILURE() << "Unexpectedly failed to raise an exception";
+                    }
+                    catch (std::exception const& e)
+                    {
+                        EXPECT_THAT(e.what(), HasSubstr("broken_promise"));
+                    }
+                }).detach();
+        }
+    }
+
+    EXPECT_TRUE(continuation_called);
+}
