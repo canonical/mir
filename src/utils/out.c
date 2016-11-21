@@ -200,35 +200,55 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                 }
             }
         }
-        else if (!strcmp(*action, "mode"))
+        else if (!strcmp(*action, "mode") || !strcmp(*action, "rate"))
         {
+            bool have_rate = !strcmp(*action, "rate");
             if (++action < action_end)
             {
-                int w, h;
-                if (!strcmp(*action, "native"))
+                int w = -1, h = -1;
+                char target_hz[64] = "";
+
+                if (!have_rate)
                 {
-                    w = -1;
-                    h = -1;
+                    if (strcmp(*action, "native") &&
+                        2 != sscanf(*action, "%dx%d", &w, &h))
+                    {
+                        fprintf(stderr, "Invalid dimensions `%s'\n", *action);
+                        return false;
+                    }
+
+                    if (action+2 < action_end && !strcmp(action[1], "rate"))
+                    {
+                        have_rate = true;
+                        action += 2;
+                    }
                 }
-                else if (2 != sscanf(*action, "%dx%d", &w, &h))
+
+                if (have_rate && 1 != sscanf(*action, "%63s", target_hz))
                 {
-                    fprintf(stderr, "Invalid dimensions `%s'\n", *action);
+                    fprintf(stderr, "Invalid refresh rate `%s'\n", *action);
                     return false;
                 }
 
                 for (int t = 0; t < targets; ++t)
                 {
                     MirOutputMode const* set_mode = NULL;
-                    if (w <= 0 || h <= 0)
+                    MirOutputMode const* preferred =
+                        mir_output_get_preferred_mode(target[t]);
+
+                    if (w <= 0 && !target_hz[0])
                     {
-                        set_mode = mir_output_get_preferred_mode(target[t]);
+                        set_mode = preferred;
                     }
                     else
                     {
+                        if (w <= 0)
+                        {
+                            w = mir_output_mode_get_width(preferred);
+                            h = mir_output_mode_get_height(preferred);
+                        }
                         int const num_modes =
                             mir_output_get_num_modes(target[t]);
-                        /* Mir always assumes modes are grouped with the
-                           best refresh rate first */
                         for (int m = 0; m < num_modes; ++m)
                         {
                             MirOutputMode const* mode =
@@ -236,8 +256,19 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                             if (w == mir_output_mode_get_width(mode) &&
                                 h == mir_output_mode_get_height(mode))
                             {
-                                set_mode = mode;
-                                break;
+                                if (!target_hz[0])
+                                {
+                                    set_mode = mode;
+                                    break;
+                                }
+                                char hz[64];
+                                snprintf(hz, sizeof hz, "%.2f",
+                                    mir_output_mode_get_refresh_rate(mode));
+                                if (!strcmp(target_hz, hz))
+                                {
+                                    set_mode = mode;
+                                    break;
+                                }
                             }
                         }
                     }
