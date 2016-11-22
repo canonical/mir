@@ -1401,9 +1401,11 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
         surface_map->insert(request->native_window.get(), rs);
 
         if (request->callback)
+        {
             request->callback(
                 static_cast<MirRenderSurface*>(request->native_window.get()),
-                request->context);
+                    request->context);
+        }
 
         request->wh->result_received();
     }
@@ -1445,7 +1447,6 @@ void MirConnection::create_render_surface_with_content(
     } catch (std::exception& e)
     {
         //if this throws, our socket code will run the closure, which will make an error object.
-        //its nicer to return a chain with a error message, so just ignore the exception.
     }
 
     *native_window = nw.get();
