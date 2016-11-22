@@ -35,17 +35,16 @@ static const char *power_mode_name(MirPowerMode m)
     return ((unsigned)m < sizeof(name)/sizeof(name[0])) ? name[m] : "unknown";
 }
 
-static const char * const orientation_names[] =
-{
-    "normal",
-    "left",
-    "inverted",
-    "right"
-};
-
 static const char *orientation_name(MirOrientation ori)
 {
-    return orientation_names[(ori % 360) / 90];
+    static const char * const name[] =
+    {
+        "normal",
+        "left",
+        "inverted",
+        "right"
+    };
+    return name[(ori % 360) / 90];
 }
 
 static char const* state_name(MirOutputConnectionState s)
@@ -173,27 +172,29 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
         {
             if (++action < action_end)
             {
-                int ori = -1;
-                int const max = sizeof(orientation_names) /
-                                sizeof(orientation_names[0]);
-                for (int n = 0; n < max; ++n)
+                enum {orientations = 4};
+                static const MirOrientation orientation[orientations] =
                 {
-                    if (!strcmp(orientation_names[n], *action))
-                    {
-                        ori = n;
+                    mir_orientation_normal,
+                    mir_orientation_left,
+                    mir_orientation_inverted,
+                    mir_orientation_right,
+                };
+
+                int i;
+                for (i = 0; i < orientations; ++i)
+                    if (!strcmp(*action, orientation_name(orientation[i])))
                         break;
-                    }
-                }
-                if (ori < 0)
+
+                if (i >= orientations)
                 {
                     fprintf(stderr, "Unknown rotation `%s'\n", *action);
                     return false;
                 }
                 else
                 {
-                    MirOrientation orientation = (MirOrientation)(90 * ori);
                     for (int t = 0; t < targets; ++t)
-                        mir_output_set_orientation(target[t], orientation);
+                        mir_output_set_orientation(target[t], orientation[i]);
                 }
             }
         }
