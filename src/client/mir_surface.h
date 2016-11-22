@@ -20,7 +20,7 @@
 
 #include "mir/client_buffer_stream.h"
 #include "mir_wait_handle.h"
-#include "throttle.h"
+#include "frame_clock.h"
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
@@ -249,7 +249,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     mir::time::PosixTimestamp last_vsync;
-    mir::Throttle throttle;
+    mir::FrameClock frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

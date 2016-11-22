@@ -98,7 +98,7 @@ MirSurface::MirSurface(
     std::shared_ptr<MirWaitHandle> const& handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn),
-    throttle(mir::time::PosixTimestamp::now),
+    frame_clock(mir::time::PosixTimestamp::now),
     creation_handle(handle)
 {
     surface->set_error(error);
@@ -129,7 +129,7 @@ MirSurface::MirSurface(
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
-      throttle(mir::time::PosixTimestamp::now),
+      frame_clock(mir::time::PosixTimestamp::now),
       creation_handle(handle),
       size({surface_proto.width(), surface_proto.height()}),
       format(static_cast<MirPixelFormat>(surface_proto.pixel_format())),
@@ -466,7 +466,7 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-        throttle.set_frequency(rate);
+        frame_clock.set_frequency(rate);
         fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
         /*
          * TODO: Notify the input receiver of the rate change AFTER the server
@@ -493,7 +493,7 @@ void MirSurface::wait_for_vsync()
     mir::time::PosixTimestamp target;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        target = throttle.next_frame_after(last_vsync);
+        target = frame_clock.next_frame_after(last_vsync);
     }
     sleep_until(target);
     {

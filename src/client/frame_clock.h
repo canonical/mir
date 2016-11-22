@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_THROTTLE_H_
-#define MIR_THROTTLE_H_
+#ifndef MIR_FRAME_CLOCK_H_
+#define MIR_FRAME_CLOCK_H_
 
 #include "mir/time/posix_timestamp.h"
 #include <chrono>
@@ -25,13 +25,13 @@
 
 namespace mir {
 
-class Throttle
+class FrameClock
 {
 public:
     typedef std::function<time::PosixTimestamp()> ResyncCallback;
     typedef std::function<time::PosixTimestamp(clockid_t)> GetCurrentTime;
 
-    Throttle(GetCurrentTime);
+    FrameClock(GetCurrentTime);
 
     /**
      * Set the precise frame period in nanoseconds (1000000000/Hz).
@@ -70,4 +70,4 @@ private:
 
 } // namespace mir
 
-#endif // MIR_THROTTLE_H_
+#endif // MIR_FRAME_CLOCK_H_

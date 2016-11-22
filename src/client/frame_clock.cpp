@@ -16,46 +16,46 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "throttle.h"
+#include "frame_clock.h"
 #include <stdexcept>
 
 using namespace mir;
 using namespace mir::time;
 
-Throttle::Throttle(Throttle::GetCurrentTime gct)
+FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}, readjustment_required{false}
 {
     set_frequency(60);
-    set_resync_callback(std::bind(&Throttle::fallback_resync_callback, this));
+    set_resync_callback(std::bind(&FrameClock::fallback_resync_callback, this));
 }
 
-void Throttle::set_period(std::chrono::nanoseconds ns)
+void FrameClock::set_period(std::chrono::nanoseconds ns)
 {
     period = ns;
     readjustment_required = true;
 }
 
-void Throttle::set_frequency(double hz)
+void FrameClock::set_frequency(double hz)
 {
     if (hz <= 0.0)
-        throw std::logic_error("Throttle::set_frequency is not positive");
+        throw std::logic_error("FrameClock::set_frequency is not positive");
     set_period(std::chrono::nanoseconds(static_cast<long>(1000000000L / hz)));
 }
 
-void Throttle::set_resync_callback(ResyncCallback cb)
+void FrameClock::set_resync_callback(ResyncCallback cb)
 {
     resync_callback = cb;
     readjustment_required = true;
 }
 
-PosixTimestamp Throttle::fallback_resync_callback() const
+PosixTimestamp FrameClock::fallback_resync_callback() const
 {
     fprintf(stderr, "fallback_resync_callback\n");
     auto const now = get_current_time(CLOCK_MONOTONIC);
     return now - (now % period);
 }
 
-PosixTimestamp Throttle::next_frame_after(PosixTimestamp prev) const
+PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
 {
     /*
      * Regardless of render times and scheduling delays, we should always
