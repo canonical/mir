@@ -46,8 +46,7 @@ void FrameClock::set_resync_callback(ResyncCallback cb)
 PosixTimestamp FrameClock::fallback_resync_callback() const
 {
     fprintf(stderr, "fallback_resync_callback\n");
-    auto const now = get_current_time(fallback_resync_clock);
-    return period != period.zero() ? now - (now % period) : now;
+    return get_current_time(fallback_resync_clock);
 }
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
@@ -58,7 +57,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * it has no physical screen to sync to. Hence not throttled at all.
      */
     if (period == period.zero())
-        return get_current_time(prev.clock_id);
+        return prev;
 
     /*
      * Regardless of render times and scheduling delays, we should always
@@ -80,6 +79,13 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
     {
         fallback_resync_clock = prev.clock_id; // If required at all
         auto const server_frame = resync_callback();
+        /*
+         * It's important to target a future time and not allow 'now'. This
+         * is because we will have some buffer queues for the time being that
+         * have swapinterval 1, which if overfilled by being too agressive will
+         * cause visual lag. After all buffer queues move to always dropping
+         * (mailbox mode), this delay won't be required as a safety.
+         */
         if (server_frame > now)
         {
             target = server_frame;
@@ -87,9 +93,11 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
         else
         {
             auto const age_ns = now - server_frame;
-            // Ensure age_frames gets truncated if not already.
-            // C++ just guarantees "signed integer type of at least 64 bits"
-            // for std::chrono::nanoseconds::rep
+            /*
+             * Ensure age_frames gets truncated if not already.
+             * C++ just guarantees "signed integer type of at least 64 bits"
+             * for std::chrono::nanoseconds::rep
+             */
             auto const age_frames = age_ns / period;
             target = server_frame + (age_frames + 1) * period;
         }
