@@ -509,8 +509,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    (void)swapinterval;
-    eglSwapInterval(egldisplay, 0);
+    eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
 
