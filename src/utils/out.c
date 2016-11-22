@@ -134,7 +134,11 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
             }
             else
             {
-                fprintf(stderr, "Invalid output ID `%s'\n", *action);
+                if (action >= action_end)
+                    fprintf(stderr, "Missing output ID after `%s'\n",
+                            action[-1]);
+                else
+                    fprintf(stderr, "Invalid output ID `%s'\n", *action);
                 return false;
             }
         }
@@ -170,142 +174,150 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
         }
         else if (!strcmp(*action, "rotate"))
         {
-            if (++action < action_end)
+            if (++action >= action_end)
             {
-                enum {orientations = 4};
-                static const MirOrientation orientation[orientations] =
-                {
-                    mir_orientation_normal,
-                    mir_orientation_left,
-                    mir_orientation_inverted,
-                    mir_orientation_right,
-                };
+                fprintf(stderr, "Missing parameter after `%s'\n", action[-1]);
+                return false;
+            }
+            enum {orientations = 4};
+            static const MirOrientation orientation[orientations] =
+            {
+                mir_orientation_normal,
+                mir_orientation_left,
+                mir_orientation_inverted,
+                mir_orientation_right,
+            };
 
-                int i;
-                for (i = 0; i < orientations; ++i)
-                    if (!strcmp(*action, orientation_name(orientation[i])))
-                        break;
+            int i;
+            for (i = 0; i < orientations; ++i)
+                if (!strcmp(*action, orientation_name(orientation[i])))
+                    break;
 
-                if (i >= orientations)
-                {
-                    fprintf(stderr, "Unknown rotation `%s'\n", *action);
-                    return false;
-                }
-                else
-                {
-                    for (int t = 0; t < targets; ++t)
-                        mir_output_set_orientation(target[t], orientation[i]);
-                }
+            if (i >= orientations)
+            {
+                fprintf(stderr, "Unknown rotation `%s'\n", *action);
+                return false;
+            }
+            else
+            {
+                for (int t = 0; t < targets; ++t)
+                    mir_output_set_orientation(target[t], orientation[i]);
             }
         }
         else if (!strcmp(*action, "place"))
         {
-            if (++action < action_end)
+            int x, y;
+            if (++action >= action_end)
             {
-                int x, y;
-                if (2 != sscanf(*action, "%d%d", &x, &y))
-                {
-                    fprintf(stderr, "Invalid placement `%s'\n", *action);
-                    return false;
-                }
-                else
-                {
-                    for (int t = 0; t < targets; ++t)
-                        mir_output_set_position(target[t], x, y);
-                }
+                fprintf(stderr, "Missing placement parameter after `%s'\n",
+                        action[-1]);
+                return false;
+            }
+            else if (2 != sscanf(*action, "%d%d", &x, &y))
+            {
+                fprintf(stderr, "Invalid placement `%s'\n", *action);
+                return false;
+            }
+            else
+            {
+                for (int t = 0; t < targets; ++t)
+                    mir_output_set_position(target[t], x, y);
             }
         }
         else if (!strcmp(*action, "mode") || !strcmp(*action, "rate"))
         {
             bool have_rate = !strcmp(*action, "rate");
-            if (++action < action_end)
+            if (++action >= action_end)
             {
-                int w = -1, h = -1;
-                char target_hz[64] = "";
+                fprintf(stderr, "Missing parameter after `%s'\n", action[-1]);
+                return false;
+            }
 
-                if (!have_rate)
+            int w = -1, h = -1;
+            char target_hz[64] = "";
+
+            if (!have_rate)
+            {
+                if (strcmp(*action, "native") &&
+                    2 != sscanf(*action, "%dx%d", &w, &h))
                 {
-                    if (strcmp(*action, "native") &&
-                        2 != sscanf(*action, "%dx%d", &w, &h))
-                    {
-                        fprintf(stderr, "Invalid dimensions `%s'\n", *action);
-                        return false;
-                    }
-
-                    if (action+2 < action_end && !strcmp(action[1], "rate"))
-                    {
-                        have_rate = true;
-                        action += 2;
-                    }
+                    fprintf(stderr, "Invalid dimensions `%s'\n", *action);
+                    return false;
                 }
 
-                if (have_rate)
+                if (action+2 < action_end && !strcmp(action[1], "rate"))
                 {
-                    if (1 != sscanf(*action, "%63[0-9.]", target_hz))
-                    {
-                        fprintf(stderr, "Invalid refresh rate `%s'\n", *action);
-                        return false;
-                    }
-                    else if (!strchr(target_hz, '.'))
-                    {
-                        size_t len = strlen(target_hz);
-                        if (len < (sizeof(target_hz)-4))
-                            snprintf(target_hz+len, 4, ".00");
-                    }
+                    have_rate = true;
+                    action += 2;
                 }
+            }
 
-                for (int t = 0; t < targets; ++t)
+            if (have_rate)
+            {
+                if (1 != sscanf(*action, "%63[0-9.]", target_hz))
                 {
-                    MirOutputMode const* set_mode = NULL;
-                    MirOutputMode const* preferred =
-                        mir_output_get_preferred_mode(target[t]);
+                    fprintf(stderr, "Invalid refresh rate `%s'\n", *action);
+                    return false;
+                }
+                else if (!strchr(target_hz, '.'))
+                {
+                    size_t len = strlen(target_hz);
+                    if (len < (sizeof(target_hz)-4))
+                        snprintf(target_hz+len, 4, ".00");
+                }
+            }
 
-                    if (w <= 0 && !target_hz[0])
+            for (int t = 0; t < targets; ++t)
+            {
+                MirOutputMode const* set_mode = NULL;
+                MirOutputMode const* preferred =
+                    mir_output_get_preferred_mode(target[t]);
+
+                if (w <= 0 && !target_hz[0])
+                {
+                    set_mode = preferred;
+                }
+                else
+                {
+                    if (w <= 0)
                     {
-                        set_mode = preferred;
+                        w = mir_output_mode_get_width(preferred);
+                        h = mir_output_mode_get_height(preferred);
                     }
-                    else
+                    int const num_modes =
+                        mir_output_get_num_modes(target[t]);
+                    for (int m = 0; m < num_modes; ++m)
                     {
-                        if (w <= 0)
+                        MirOutputMode const* mode =
+                            mir_output_get_mode(target[t], m);
+                        if (w == mir_output_mode_get_width(mode) &&
+                            h == mir_output_mode_get_height(mode))
                         {
-                            w = mir_output_mode_get_width(preferred);
-                            h = mir_output_mode_get_height(preferred);
-                        }
-                        int const num_modes =
-                            mir_output_get_num_modes(target[t]);
-                        for (int m = 0; m < num_modes; ++m)
-                        {
-                            MirOutputMode const* mode =
-                                mir_output_get_mode(target[t], m);
-                            if (w == mir_output_mode_get_width(mode) &&
-                                h == mir_output_mode_get_height(mode))
+                            if (!target_hz[0])
                             {
-                                if (!target_hz[0])
-                                {
-                                    set_mode = mode;
-                                    break;
-                                }
-                                char hz[64];
-                                snprintf(hz, sizeof hz, "%.2f",
-                                    mir_output_mode_get_refresh_rate(mode));
-                                if (!strcmp(target_hz, hz))
-                                {
-                                    set_mode = mode;
-                                    break;
-                                }
+                                set_mode = mode;
+                                break;
+                            }
+                            char hz[64];
+                            snprintf(hz, sizeof hz, "%.2f",
+                                mir_output_mode_get_refresh_rate(mode));
+                            if (!strcmp(target_hz, hz))
+                            {
+                                set_mode = mode;
+                                break;
                             }
                         }
                     }
+                }
 
-                    if (set_mode)
-                    {
-                        mir_output_set_current_mode(target[t], set_mode);
-                    }
-                    else
-                    {
-                        fprintf(stderr, "No matching mode for `%s'\n", *action);
-                        return false;
-                    }
+                if (set_mode)
+                {
+                    mir_output_set_current_mode(target[t], set_mode);
+                }
+                else
+                {
+                    fprintf(stderr, "No matching mode for `%s'\n", *action);
+                    return false;
                 }
             }
         }
