@@ -910,6 +910,11 @@ TEST_F(MirConnectionTest, creation_of_render_surface_creates_egl_native_window)
     connection->connect("MirConnectionTest", connected_callback, 0)->wait_for_all();
 
     EXPECT_CALL(*mock_platform, create_egl_native_window(nullptr));
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& stream, google::protobuf::Closure*)
+        {
+            stream.mutable_id()->set_value(1);
+        }));
 
     void* nw = nullptr;
     connection->create_render_surface_with_content(
