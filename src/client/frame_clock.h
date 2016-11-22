@@ -39,13 +39,6 @@ public:
     void set_period(std::chrono::nanoseconds);
 
     /**
-     * Set the frame frequency in Hertz.
-     * This is just a convenient wrapper around set_period, although slightly
-     * less precise.
-     */
-    void set_frequency(double hz);
-
-    /**
      * Optionally set a callback that queries the server to ask for the
      * latest hardware vsync timestamp. This provides phase correction for
      * increased precision but is not strictly required.
@@ -63,7 +56,8 @@ private:
     time::PosixTimestamp fallback_resync_callback() const;
 
     GetCurrentTime const get_current_time;
-    mutable bool readjustment_required;
+    mutable bool resync_required;
+    mutable clockid_t fallback_resync_clock;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;
 };

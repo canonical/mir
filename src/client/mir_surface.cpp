@@ -466,7 +466,8 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-        frame_clock.set_frequency(rate);
+        frame_clock.set_period(
+            std::chrono::nanoseconds(static_cast<long>(1000000000L / rate)));
         fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
         /*
          * TODO: Notify the input receiver of the rate change AFTER the server
