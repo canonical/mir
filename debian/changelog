@@ -45,8 +45,6 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirtest-dev packaging fails to sepcify boost depends (LP: #1633537)
       . cursor.h is unclear about mir_diagonal_resize_* (LP: #1626924)
       . Inconsistent underscores in cursor names (LP: #1632617)
-      . [performance] Android overlays don't honour eglSwapInterval 0
-        (LP: #1369763)
       . [regression] Accidental libmircommon.so.6 break (LP: #1617865)
       . [regression] mir demo server fails to start with mx4 (LP: #1615703)
       . [regression] Trust prompt now shown when starting camera (LP: #1612256)
@@ -92,14 +90,12 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
         acceptable ...[to] throw a std::runtime_error" (LP: #1641166)
       . Test timeout MesaDisplayConfigurationTests.* (LP: #1613352)
       . Tests fail when built against lp:mir (LP: #1621917)
-      . CI failure PointerConfinement.* (LP: #1606418)
       . CI failure MultiThreadedCompositor (LP: #1595940)
       . CI failure in DisplayConfiguration (LP: #1563210)
       . CI failure  NestedServer.given_client_set_display_configuration*
         (LP: #1617036)
       . CI failure on krillin in NestedServer.* testes (LP: #1628828)
       . CI failure: PosixRWMutex hangs (LP: #1633920)
-      . CI failure in TestClientInput.* (LP: #1570698)
 
  -- Brandon Schaefer <brandon.schaefer@canonical.com>  Mon, 07 Nov 2016 13:32:11 -0800
 
