@@ -523,7 +523,6 @@ void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 
 void mir_surface_wait_for_vsync(MirSurface* surf)
 {
-    // TODO: constify is_valid
     mir::require(mir_surface_is_valid(surf));
     surf->wait_for_vsync();
 }
