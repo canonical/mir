@@ -203,7 +203,7 @@ TEST_F(EventSender, sends_input_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+            EXPECT_THAT(seq.input_devices().device_info(), mt::InputDevicesMatch(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -222,7 +222,7 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+            EXPECT_THAT(seq.input_devices().device_info(), mt::InputDevicesMatch(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
