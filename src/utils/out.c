@@ -238,7 +238,7 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
 
             if (!have_rate)
             {
-                if (strcmp(*action, "native") &&
+                if (strcmp(*action, "preferred") &&
                     2 != sscanf(*action, "%dx%d", &w, &h))
                 {
                     fprintf(stderr, "Invalid dimensions `%s'\n", *action);
@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                            "    disable | enable\n"
                            "    rotate (normal | inverted | left | right)\n"
                            "    place +X+Y\n"
-                           "    mode (WIDTHxHEIGHT | native) [rate HZ]\n"
+                           "    mode (WIDTHxHEIGHT | preferred) [rate HZ]\n"
                            "    rate HZ\n"
                            , argv[0]);
                     return 0;
