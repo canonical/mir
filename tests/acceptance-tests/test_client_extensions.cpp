@@ -19,6 +19,8 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/stub_platform_extension.h"
 #include "mir_toolkit/mir_extension_core.h"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 using namespace testing;

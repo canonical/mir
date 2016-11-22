@@ -400,15 +400,8 @@ public:
             surface_stack->add_surface(surface, params.input_mode);
 
             {
-                mg::Buffer* buffer{nullptr};
-                auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-
-                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
-                if (!buffer)
-                {
-                    auto buffer_id = buffers->add_buffer(properties);
-                    buffer = (*buffers)[buffer_id].get();
-                }
+                auto buffer_id = buffers->add_buffer(properties);
+                auto buffer = (*buffers)[buffer_id];
 
                 {
                     gl_context->make_current();
@@ -422,7 +415,7 @@ public:
 
                     gl_context->release_current();
                 }
-                surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Post rendered buffer
+                surface->primary_buffer_stream()->submit_buffer(buffer);
             }
 
             /*

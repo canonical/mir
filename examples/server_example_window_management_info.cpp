@@ -168,45 +168,6 @@ struct mir::examples::SurfaceInfo::StreamPainter
     StreamPainter& operator=(StreamPainter const&) = delete;
 };
 
-struct mir::examples::SurfaceInfo::SwappingPainter
-    : mir::examples::SurfaceInfo::StreamPainter
-{
-    SwappingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
-        buffer_stream{buffer_stream}, buffer{nullptr}
-    {
-        swap_buffers(nullptr);
-        if (!buffer)
-            throw std::runtime_error("no buffer after swap");
-    }
-
-    void swap_buffers(graphics::Buffer* buf)
-    {
-        auto const callback = [this](mir::graphics::Buffer* new_buffer)
-            {
-                buffer.store(new_buffer);
-            };
-
-        buffer_stream->swap_buffers(buf, callback);
-    }
-
-    void paint(int intensity) override
-    {
-        if (graphics::Buffer* buf = buffer.exchange(nullptr))
-        {
-            auto const format = buffer_stream->pixel_format();
-            auto const sz = buf->size().height.as_int() *
-                            buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-            std::vector<unsigned char> pixels(sz, intensity);
-            if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buf->native_buffer_base()))
-                pixel_source->write(pixels.data(), sz);
-            swap_buffers(buf);
-        }
-    }
-
-    std::shared_ptr<frontend::BufferStream> const buffer_stream;
-    std::atomic<graphics::Buffer*> buffer;
-};
-
 struct mir::examples::SurfaceInfo::AllocatingPainter
     : mir::examples::SurfaceInfo::StreamPainter
 {
@@ -236,7 +197,7 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
         std::vector<unsigned char> pixels(sz, intensity);
         if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base()))
             pixel_source->write(pixels.data(), sz);
-        buffer_stream->swap_buffers(buffer.get(), [](mg::Buffer*){});
+        buffer_stream->submit_buffer(buffer);
 
         std::swap(front_buffer, back_buffer);
     }
@@ -259,14 +220,7 @@ void mir::examples::SurfaceInfo::init_titlebar(
     std::shared_ptr<scene::Surface> const& surface)
 {
     auto stream = surface->primary_buffer_stream();
-    try
-    {
-        stream_painter = std::make_shared<SwappingPainter>(stream);
-    }
-    catch (...)
-    {
-        stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
-    }
+    stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
 }
 
 void mir::examples::SurfaceInfo::paint_titlebar(int intensity)

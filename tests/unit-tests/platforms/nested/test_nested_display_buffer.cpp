@@ -94,6 +94,7 @@ struct MockNestedChain : mgn::HostChain
 {
     MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_METHOD0(handle, MirPresentationChain*());
+    MOCK_METHOD1(set_submission_mode, void(mgn::SubmissionMode));
 };
 
 struct MockNestedStream : mgn::HostStream
@@ -432,4 +433,42 @@ TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fu
 
     auto display_buffer = create_display_buffer(host_connection);
     EXPECT_TRUE(display_buffer->overlay(list));
+}
+
+//bit subtle, but if a swapinterval 0 nested-client is submitting its buffers to 
+//a swapinterval-1 host chain, then its spare buffers will end up being owned by
+//the host, and stop swapinterval 0 from working.
+TEST_F(NestedDisplayBuffer, coordinates_clients_interval_setting_with_host)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+
+    Sequence seq;
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::dropping))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::queueing))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::dropping))
+        .InSequence(seq);
+
+    mtd::MockHostConnection mock_host_connection;
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+
+    auto nested_buffer1 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer2 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer3 = std::make_shared<StubNestedBuffer>();
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::StubRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
 }

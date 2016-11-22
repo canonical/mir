@@ -27,9 +27,6 @@
 
 #include <cstring>
 
-// Only MirPointerEvent and MirTouchEvent are typedefed in the public API
-typedef struct MirMotionEvent MirMotionEvent;
-
 struct MirEvent
 {
     MirEvent(MirEvent const& event);

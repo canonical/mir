@@ -52,30 +52,6 @@ struct SwapperSwappingStress : public ::testing::Test
     }
 
     std::shared_ptr<mc::Stream> stream;
-    std::mutex acquire_mutex;  // must live longer than our callback/lambda
-
-    mg::Buffer* client_acquire_blocking(mg::Buffer* buffer, std::shared_ptr<mc::Stream> const& stream)
-    {
-        std::condition_variable cv;
-        bool acquired = false;
-    
-        mg::Buffer* result;
-        stream->swap_buffers(buffer,
-            [&](mg::Buffer* new_buffer)
-             {
-                std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-                result = new_buffer;
-                acquired = true;
-                cv.notify_one();
-             });
-    
-        std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-        cv.wait(lock, [&]{ return acquired; });
-    
-        return result;
-    }
 };
 
 } // namespace
@@ -87,10 +63,10 @@ TEST_F(SwapperSwappingStress, swapper)
     auto f = std::async(std::launch::async,
                 [&]
                 {
-                    mg::Buffer* buffer = nullptr;
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        buffer = client_acquire_blocking(buffer, stream);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
                     }
                     done = true;
@@ -131,10 +107,10 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto f = std::async(std::launch::async,
                 [&]
                 {
-                    mg::Buffer* buffer = nullptr;
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        buffer = client_acquire_blocking(buffer, stream);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
                     }
                     done = true;

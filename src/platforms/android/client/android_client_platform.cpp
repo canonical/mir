@@ -22,6 +22,7 @@
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
 #include "mir/client_buffer.h"
+#include "mir/client_buffer_stream.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
@@ -61,6 +62,16 @@ catch (std::exception& ex)
 }
 
 void destroy_anwb(ANativeWindowBuffer*) noexcept
+{
+}
+
+ANativeWindow* create_anw(MirBufferStream* buffer_stream)
+{
+    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    return static_cast<ANativeWindow*>(bs->egl_native_window());
+}
+
+void destroy_anw(ANativeWindow*)
 {
 }
 
@@ -142,7 +153,7 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    android_types_extension{native_display_type, nullptr, nullptr, create_anwb, destroy_anwb},
+    android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
     fence_extension{get_fence, associate_fence, wait_for_access}
 {
 }
