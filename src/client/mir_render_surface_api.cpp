@@ -134,7 +134,7 @@ try
     auto conn = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = conn->connection_surface_map()->render_surface(render_surface);
     mir::require(rs != nullptr);
-    return true;
+    return rs->valid();
 }
 catch (std::exception const& ex)
 {

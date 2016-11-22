@@ -24,7 +24,6 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
-#include "mir_wait_handle.h"
 
 #include <memory>
 #include <functional>
@@ -55,6 +54,7 @@ static_assert(
 #define EGLNativeWindowType void*
 
 class MirRenderSurface;
+struct MirWaitHandle;
 
 namespace mir
 {

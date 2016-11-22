@@ -92,6 +92,11 @@ void mcl::RenderSurface::set_size(mir::geometry::Size size)
     desired_size = size;
 }
 
+bool mcl::RenderSurface::valid() const
+{
+    return protobuf_bs->has_id() && !protobuf_bs->has_error();
+}
+
 char const* mcl::RenderSurface::get_error_message() const
 {
     if (protobuf_bs->has_error())
