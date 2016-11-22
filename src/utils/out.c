@@ -112,13 +112,13 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
         if (!strcmp(*action, "output"))
         {
             int output_id;
-            if (++action < action_end &&
-                1 == sscanf(*action, "%d", &output_id))
+            if (++action < action_end && 1 == sscanf(*action, "%d", &output_id))
             {
                 targets = 0;
                 for (int i = 0; i < num_outputs; ++i)
                 {
-                    MirOutput* out = mir_display_config_get_mutable_output(conf, i);
+                    MirOutput* out =
+                        mir_display_config_get_mutable_output(conf, i);
                     if (output_id == mir_output_get_id(out))
                     {
                         targets = 1;
@@ -284,8 +284,7 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                         w = mir_output_mode_get_width(preferred);
                         h = mir_output_mode_get_height(preferred);
                     }
-                    int const num_modes =
-                        mir_output_get_num_modes(target[t]);
+                    int const num_modes = mir_output_get_num_modes(target[t]);
                     for (int m = 0; m < num_modes; ++m)
                     {
                         MirOutputMode const* mode =
