@@ -369,6 +369,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    int ret = 0;
     MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
@@ -380,6 +381,10 @@ int main(int argc, char *argv[])
         {
             mir_connection_preview_base_display_configuration(conn, conf, 10);
             mir_connection_confirm_base_display_configuration(conn, conf);
+        }
+        else
+        {
+            ret = 1;
         }
     }
     else
@@ -478,5 +483,5 @@ int main(int argc, char *argv[])
 
     mir_connection_release(conn);
 
-    return 0;
+    return ret;
 }
