@@ -496,12 +496,20 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void submit_buffer(mgn::NativeBuffer& buffer)
+    void submit_buffer(mgn::NativeBuffer& buffer) override
     {
         mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
 
-    MirPresentationChain* handle()
+    void set_submission_mode(mgn::SubmissionMode mode) override
+    {
+        if (mode == mgn::SubmissionMode::queueing)
+            mir_presentation_chain_set_queueing_mode(chain);
+        else
+            mir_presentation_chain_set_dropping_mode(chain);
+    }
+
+    MirPresentationChain* handle() override
     {
         return chain;
     }
@@ -588,7 +596,8 @@ public:
         EGLenum type;
         EGLClientBuffer client_buffer = nullptr;;
         EGLint* attrs = nullptr;
-        mir_buffer_egl_image_parameters(handle, &type, &client_buffer, &attrs);
+        // TODO: check return value
+        mir_buffer_get_egl_image_parameters(handle, &type, &client_buffer, &attrs);
         
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
     }

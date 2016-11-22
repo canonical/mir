@@ -20,7 +20,7 @@
 #ifndef MIR_REPORT_LOGGING_SESSION_MEDIATOR_REPORT_H_
 #define MIR_REPORT_LOGGING_SESSION_MEDIATOR_REPORT_H_
 
-#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator_observer.h"
 
 #include <memory>
 
@@ -36,7 +36,7 @@ namespace logging
 {
 
 
-class SessionMediatorReport : public frontend::SessionMediatorReport
+class SessionMediatorReport : public frontend::SessionMediatorObserver
 {
 public:
     SessionMediatorReport(std::shared_ptr<mir::logging::Logger> const& log);

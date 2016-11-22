@@ -21,7 +21,7 @@
 #ifndef MIR_REPORT_NULL_SESSION_MEDIATOR_REPORT_H_
 #define MIR_REPORT_NULL_SESSION_MEDIATOR_REPORT_H_
 
-#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator_observer.h"
 
 #include <string>
 
@@ -33,7 +33,7 @@ namespace null
 {
 
 // Do-nothing implementation to satisfy dependencies
-class SessionMediatorReport : public frontend::SessionMediatorReport
+class SessionMediatorReport : public frontend::SessionMediatorObserver
 {
     void session_connect_called(std::string const& app_name) override;
 

@@ -32,6 +32,10 @@ public:
     virtual int rpc_id() const = 0;
     virtual char const* error_msg() const = 0;
 
+    //In the future, the only mode will be dropping
+    virtual void set_dropping_mode() = 0;
+    virtual void set_queueing_mode() = 0;
+
 protected:
     MirPresentationChain(MirPresentationChain const&) = delete;
     MirPresentationChain& operator=(MirPresentationChain const&) = delete;

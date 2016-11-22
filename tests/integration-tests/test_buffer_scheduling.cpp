@@ -479,13 +479,13 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
         ipc->on_server_bound_transfer(
-            [weak_stream](mp::Buffer& buffer)
+            [weak_stream, this](mp::Buffer& buffer)
             {
                 auto submit_stream = weak_stream.lock();
                 if (!submit_stream)
                     return;
-                mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
-                submit_stream->swap_buffers(&b, [](mg::Buffer*){});
+                mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
+                submit_stream->submit_buffer((*map)[id]);
             });
         ipc->on_allocate(
             [this](geom::Size sz)

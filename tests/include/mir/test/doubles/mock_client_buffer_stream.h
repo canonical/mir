@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_H_
 
-#include "src/client/client_buffer_stream.h"
+#include "src/include/client/mir/client_buffer_stream.h"
 
 #include <gmock/gmock.h>
 
