@@ -313,9 +313,9 @@ MirConnection::~MirConnection() noexcept
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
 
+    std::lock_guard<decltype(mutex)> lock(mutex);
     surface_map.reset();
 
-    std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result && connect_result->has_platform())
     {
         auto const& platform = connect_result->platform();
@@ -479,15 +479,12 @@ void MirConnection::released(StreamRelease data)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     if (data.handle)
         data.handle->result_received();
+
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        if (!disconnecting)
-        {
-            if (data.rs)
-                surface_map->erase(data.rs);
-            else
-                surface_map->erase(mf::BufferStreamId(data.rpc_id));
-        }
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        if (data.rs)
+            surface_map->erase(data.rs);
+        surface_map->erase(mf::BufferStreamId(data.rpc_id));
     }
 }
 
@@ -576,16 +573,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             this->pong(serial);
         });
 
-        if (connect_result->input_devices_size())
+        if (connect_result->has_input_devices())
         {
-            std::vector<mir::input::DeviceData> devices;
-
-            devices.reserve(connect_result->input_devices_size());
-
-            for (auto const& dev : connect_result->input_devices())
-                devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
-
-            input_devices->update_devices(std::move(devices));
+            input_devices->update_devices(connect_result->input_devices());
         }
     }
     catch (std::exception const& e)
@@ -627,7 +617,11 @@ void MirConnection::done_disconnect()
         for (auto handle : release_wait_handles)
             delete handle;
     }
-    surface_map.reset();
+
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        surface_map.reset();
+    }
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
     lifecycle_control->set_callback([](MirLifecycleState){});
@@ -907,6 +901,7 @@ std::shared_ptr<mir::client::BufferStream> MirConnection::create_client_buffer_s
         this, render_surface, nullptr, server, platform, surface_map, buffer_factory,
         a_protobuf_bs, make_perf_report(logger), std::string{},
         mir::geometry::Size{width, height}, nbuffers);
+    surface_map->insert(render_surface->stream_id(), stream);
     return stream;
 }
 
@@ -1389,9 +1384,11 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
         surface_map->insert(request->native_window.get(), rs);
 
         if (request->callback)
+        {
             request->callback(
                 static_cast<MirRenderSurface*>(request->native_window.get()),
-                request->context);
+                    request->context);
+        }
 
         request->wh->result_received();
     }
@@ -1433,7 +1430,6 @@ void MirConnection::create_render_surface_with_content(
     } catch (std::exception& e)
     {
         //if this throws, our socket code will run the closure, which will make an error object.
-        //its nicer to return a chain with a error message, so just ignore the exception.
     }
 
     *native_window = nw.get();

@@ -50,7 +50,7 @@ typedef struct
 } ShimEGLImageKHR;
 
 EGLSurface future_driver_eglCreateWindowSurface(
-    EGLDisplay display, EGLConfig config, MirRenderSurface* surface)
+    EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint* attr)
 {
     if (info->surface)
     {
@@ -76,7 +76,7 @@ EGLSurface future_driver_eglCreateWindowSurface(
                                              mir_buffer_usage_hardware);
 
     printf("The driver chose pixel format %d.\n", pixel_format);
-    return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
+    return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, attr);
 }
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface)

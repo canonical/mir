@@ -42,9 +42,14 @@ mir::geometry::Size mcl::ErrorRenderSurface::size() const
     throw std::runtime_error(error);
 }
 
-void mcl::ErrorRenderSurface::set_size(mir::geometry::Size)
+void mcl::ErrorRenderSurface::set_size(mir::geometry::Size /*size*/)
 {
     throw std::runtime_error(error);
+}
+
+bool mcl::ErrorRenderSurface::valid() const
+{
+    return false;
 }
 
 MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
