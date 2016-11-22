@@ -26,7 +26,7 @@ Throttle::Throttle(Throttle::GetCurrentTime gct)
     : get_current_time{gct}, readjustment_required{false}
 {
     set_frequency(60);
-    set_resync_callback(std::bind(&Throttle::fake_resync_callback, this));
+    set_resync_callback(std::bind(&Throttle::fallback_resync_callback, this));
 }
 
 void Throttle::set_period(std::chrono::nanoseconds ns)
@@ -48,9 +48,9 @@ void Throttle::set_resync_callback(ResyncCallback cb)
     readjustment_required = true;
 }
 
-PosixTimestamp Throttle::fake_resync_callback() const
+PosixTimestamp Throttle::fallback_resync_callback() const
 {
-    fprintf(stderr, "fake_resync_callback\n");
+    fprintf(stderr, "fallback_resync_callback\n");
     auto const now = get_current_time(CLOCK_MONOTONIC);
     return now - (now % period);
 }

@@ -60,7 +60,7 @@ public:
     time::PosixTimestamp next_frame_after(time::PosixTimestamp prev) const;
 
 private:
-    time::PosixTimestamp fake_resync_callback() const;
+    time::PosixTimestamp fallback_resync_callback() const;
 
     GetCurrentTime const get_current_time;
     mutable bool readjustment_required;
