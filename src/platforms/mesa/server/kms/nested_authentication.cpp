@@ -21,7 +21,7 @@
 #include "nested_authentication.h"
 
 #include "mir_toolkit/mesa/platform_operation.h"
-#include "mir_toolkit/extensions/mesa_drm.h"
+#include "mir_toolkit/extensions/mesa_drm_auth.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

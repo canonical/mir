@@ -244,8 +244,8 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 
 void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
 {
-    if (!strcmp(MIR_EXTENSION_MESA_DRM, extension_name) &&
-        (MIR_EXTENSION_MESA_DRM_VERSION_1 == version))
+    if (!strcmp(MIR_EXTENSION_MESA_DRM_AUTH, extension_name) &&
+        (MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 == version))
     {
         return &drm_extensions;
     }

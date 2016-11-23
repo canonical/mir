@@ -24,7 +24,7 @@
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
-#include "mir_toolkit/extensions/mesa_drm.h"
+#include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -728,9 +728,9 @@ T auth(std::function<void(AuthRequest<T>*)> const& f)
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>
 mgn::MirClientHostConnection::auth_extensions()
 {
-    auto ext = static_cast<MirExtensionMesaDRM*>(
+    auto ext = static_cast<MirExtensionMesaDRMAuth*>(
         mir_connection_request_interface(mir_connection, 
-        MIR_EXTENSION_MESA_DRM, MIR_EXTENSION_MESA_DRM_VERSION_1));
+        MIR_EXTENSION_MESA_DRM_AUTH, MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1));
     if (!ext || !ext->drm_auth_fd)
         return {};
 
@@ -738,7 +738,7 @@ mgn::MirClientHostConnection::auth_extensions()
     {
         AuthExtensions(
             MirConnection* connection,
-            MirExtensionMesaDRM* ext) :
+            MirExtensionMesaDRMAuth* ext) :
             connection(connection),
             extensions(ext)
         {
@@ -755,7 +755,7 @@ mgn::MirClientHostConnection::auth_extensions()
         }
     private:
         MirConnection* const connection;
-        MirExtensionMesaDRM* const extensions;
+        MirExtensionMesaDRMAuth* const extensions;
     };
     return { std::make_unique<AuthExtensions>(mir_connection, ext) };
 }
