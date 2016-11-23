@@ -74,10 +74,10 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
 
     /*
      * On the first frame and any resumption frame (after the client goes
-     * from idle to busy) this will trigger a query to the server (or virtual
-     * server) to ask for the latest hardware vsync timestamp. So we get
-     * in phase with the display. Note we only need to query the server
-     * like this occasionally and not on every frame, which is good for IPC.
+     * from idle to busy) this will trigger a query to ask for the latest
+     * hardware vsync timestamp. So we get in phase with the display.
+     * Crucially this is not required on most frames, so that even if it is
+     * implemented as a round trip to the server, that won't happen often.
      */
     if (target < now || resync_required)
     {

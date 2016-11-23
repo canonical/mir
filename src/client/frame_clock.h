@@ -39,9 +39,12 @@ public:
     void set_period(std::chrono::nanoseconds);
 
     /**
-     * Optionally set a callback that queries the server to ask for the
-     * latest hardware vsync timestamp. This provides phase correction for
-     * increased precision but is not strictly required.
+     * Optionally set a callback that obtains the latest hardware vsync
+     * timestamp. This provides phase correction for increased precision but is
+     * not strictly required.
+     *   Lowest precision: Don't provide a callback.
+     *   Medium precision: Provide a callback which returns a recent timestamp.
+     *   Highest precision: Provide a callback that queries the server.
      */
     void set_resync_callback(ResyncCallback);
 
