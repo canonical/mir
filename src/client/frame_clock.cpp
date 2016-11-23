@@ -45,7 +45,12 @@ void FrameClock::set_resync_callback(ResyncCallback cb)
 PosixTimestamp FrameClock::fallback_resync_callback() const
 {
     fprintf(stderr, "fallback_resync_callback\n");
-    return get_current_time(PosixTimestamp().clock_id);
+    auto const now = get_current_time(PosixTimestamp().clock_id);
+    /*
+     * The result here needs to be in phase for all processes that call it,
+     * so that nesting servers does not add lag.
+     */
+    return period != period.zero() ? now - (now % period) : now;
 }
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
