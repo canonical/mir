@@ -20,8 +20,8 @@
 #include <stdexcept>
 #include <cassert>
 
-using namespace mir;
-using namespace mir::time;
+using mir::client::FrameClock;
+using mir::time::PosixTimestamp;
 
 namespace
 {

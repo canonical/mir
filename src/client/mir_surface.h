@@ -249,7 +249,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     mir::time::PosixTimestamp last_vsync;
-    mir::FrameClock frame_clock;
+    mir::client::FrameClock frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

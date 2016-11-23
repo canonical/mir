@@ -24,7 +24,7 @@
 #include <functional>
 #include <mutex>
 
-namespace mir {
+namespace mir { namespace client {
 
 class FrameClock
 {
@@ -67,6 +67,6 @@ private:
     ResyncCallback resync_callback;
 };
 
-} // namespace mir
+}} // namespace mir::client
 
 #endif // MIR_FRAME_CLOCK_H_
