@@ -89,16 +89,8 @@ MirWaitHandle* mir_buffer_stream_release(
     void* context)
 {
     auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto render_surface = bs->render_surface();
-    if (render_surface)
-    {
-        return render_surface->release_buffer_stream(callback, context);
-    }
-    else
-    {
-        auto connection = bs->connection();
-        return connection->release_buffer_stream(bs, callback, context);
-    }
+    auto connection = bs->connection();
+    return connection->release_buffer_stream(bs, callback, context);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
