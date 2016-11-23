@@ -114,6 +114,18 @@ void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, 
     connection->platform_operation(msg, auth_magic_cb, ctx);
     mir_platform_message_release(msg);
 }
+
+void set_device(gbm_device* device, void* context)
+{
+    auto platform = reinterpret_cast<mclm::ClientPlatform*>(context);
+    platform->set_gbm_device(device);
+}
+
+}
+
+void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
+{
+    gbm_dev = device;
 }
 
 mclm::ClientPlatform::ClientPlatform(
@@ -124,7 +136,8 @@ mclm::ClientPlatform::ClientPlatform(
       buffer_file_ops{buffer_file_ops},
       display_container(display_container),
       gbm_dev{nullptr},
-      drm_extensions{auth_fd_ext, auth_magic_ext}
+      drm_extensions{auth_fd_ext, auth_magic_ext},
+      mesa_auth{set_device, this}
 {
 }
 
@@ -248,6 +261,11 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         (MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 == version))
     {
         return &drm_extensions;
+    }
+    if (!strcmp(extension_name, MIR_EXTENSION_SET_GBM_DEVICE) &&
+       (version == MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
+    {
+        return &mesa_auth;
     }
     return nullptr;
 }

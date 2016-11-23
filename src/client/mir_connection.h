@@ -157,8 +157,11 @@ public:
         MirBufferUsage buffer_usage,
         MirRenderSurface* render_surface,
         mir_buffer_stream_callback mbs_callback,
-        buffer_stream_callback bs_callback,
         void *context);
+    std::shared_ptr<mir::client::BufferStream> create_client_buffer_stream_with_id(
+        int width, int height,
+        MirRenderSurface* render_surface,
+        mir::protobuf::BufferStream const& a_protobuf_bs);
     MirWaitHandle* release_buffer_stream(
         mir::client::ClientBufferStream*,
         mir_buffer_stream_callback callback,
@@ -212,8 +215,13 @@ public:
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
-    MirRenderSurface* create_render_surface(mir::geometry::Size logical_size);
-    void release_render_surface(void* render_surface);
+    void create_render_surface_with_content(
+        mir::geometry::Size logical_size,
+        mir_render_surface_callback callback,
+        void* context,
+        void** native_window);
+    void release_render_surface_with_content(
+        void* render_surface);
 
     void* request_interface(char const* name, int version);
 
@@ -241,12 +249,10 @@ private:
         StreamCreationRequest(
             MirRenderSurface* rs,
             mir_buffer_stream_callback mbs_cb,
-            buffer_stream_callback bs_cb,
             void* context,
             mir::protobuf::BufferStreamParameters const& params)
             : rs(rs),
               mbs_callback(mbs_cb),
-              bs_callback(bs_cb),
               context(context),
               parameters(params),
               response(std::make_shared<mir::protobuf::BufferStream>()),
@@ -255,7 +261,6 @@ private:
         }
         MirRenderSurface* rs;
         mir_buffer_stream_callback mbs_callback;
-        buffer_stream_callback bs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;
@@ -277,8 +282,35 @@ private:
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
     };
+
+    struct RenderSurfaceCreationRequest
+    {
+        RenderSurfaceCreationRequest(
+            mir_render_surface_callback cb,
+            void* context,
+            std::shared_ptr<void> native_window,
+            mir::geometry::Size size) :
+                callback(cb), context(context),
+                response(std::make_shared<mir::protobuf::BufferStream>()),
+                wh(std::make_shared<MirWaitHandle>()),
+                native_window(native_window),
+                logical_size(size)
+        {
+        }
+
+        mir_render_surface_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+        std::shared_ptr<void> native_window;
+        mir::geometry::Size logical_size;
+    };
+
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
+    std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
     void context_created(ChainCreationRequest*);
+    void render_surface_created(RenderSurfaceCreationRequest*);
+    void render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;

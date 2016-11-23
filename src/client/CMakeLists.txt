@@ -76,6 +76,7 @@ add_library(mirclientobjects OBJECT
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
+  error_render_surface.cpp
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp
@@ -103,6 +104,7 @@ add_library(mirclientobjects OBJECT
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
+add_dependencies(mirclientobjects mircapnproto)
 
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)

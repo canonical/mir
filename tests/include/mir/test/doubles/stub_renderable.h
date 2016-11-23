@@ -153,6 +153,13 @@ struct PlaneAlphaRenderable : public StubRenderable
 
 struct IntervalZeroRenderable : StubRenderable
 {
+    IntervalZeroRenderable() = default;
+    IntervalZeroRenderable(
+        std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect) :
+        StubRenderable(buffer, rect)
+    {
+    }
+
     unsigned int swap_interval() const override
     {
         return 0;

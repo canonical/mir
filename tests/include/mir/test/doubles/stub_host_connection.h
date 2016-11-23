@@ -92,7 +92,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
+        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new mir::protobuf::InputDevices),
                                                    mir_input_config_destroy);
     }
 
@@ -122,6 +122,7 @@ public:
         {
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
+            void set_submission_mode(graphics::nested::SubmissionMode) override {}
         };
         return std::make_unique<NullHostChain>();
     }
@@ -168,6 +169,7 @@ public:
     {
         return {};
     }
+    void* request_interface(char const*, int) { return nullptr; }
 };
 
 struct MockHostConnection : StubHostConnection
@@ -179,6 +181,7 @@ struct MockHostConnection : StubHostConnection
     MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
         (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
          graphics::BufferProperties, char const*, uint32_t));
+    MOCK_METHOD2(request_interface, void*(char const*, int));
 
     void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
     {

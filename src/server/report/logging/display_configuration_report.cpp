@@ -119,6 +119,20 @@ void mrl::DisplayConfigurationReport::log_configuration(
                                 mode.vrefresh_hz);
                 }
                 
+                static const char* const orientation[] =
+                    {"normal", "left", "inverted", "right"};
+                int degrees_ccw = out.orientation;
+                logger->log(component, severity,
+                            "%sOrientation %s",
+                            indent,
+                            orientation[degrees_ccw / 90]);
+
+                logger->log(component, severity,
+                            "%sLogical size %dx%d",
+                            indent,
+                            out.extents().size.width.as_int(),
+                            out.extents().size.height.as_int());
+
                 logger->log(component, severity,
                             "%sLogical position %+d%+d",
                             indent,

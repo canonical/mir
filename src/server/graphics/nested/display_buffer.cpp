@@ -144,6 +144,11 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         if ((submission_info == last_submitted) && (submitted != submitted_buffers.end()))
             return true;
 
+        if (list.back()->swap_interval() == 0)
+            host_chain->set_submission_mode(mgn::SubmissionMode::dropping);
+        else
+            host_chain->set_submission_mode(mgn::SubmissionMode::queueing);
+
         submitted_buffers[submission_info] = passthrough_buffer;
         last_submitted = submission_info;
     }
