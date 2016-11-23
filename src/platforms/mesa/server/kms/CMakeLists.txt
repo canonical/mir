@@ -1,5 +1,6 @@
 include_directories(
     ${server_common_include_dirs}
+    ${PROJECT_SOURCE_DIR}/include/client
     ..
 )
 

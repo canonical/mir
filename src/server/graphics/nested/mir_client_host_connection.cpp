@@ -23,6 +23,7 @@
 #include "host_surface_spec.h"
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
@@ -718,4 +719,9 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
         return false;
     return true;
+}
+
+void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
+{
+    return mir_connection_request_interface(mir_connection, name, version);    
 }
