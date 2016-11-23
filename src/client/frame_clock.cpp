@@ -30,7 +30,7 @@ typedef std::unique_lock<std::mutex> Lock;
 
 FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}
-    , resync_required{false}
+    , config_changed{false}
     , period{0}
     , resync_callback{std::bind(&FrameClock::fallback_resync_callback, this)}
 {
@@ -40,14 +40,14 @@ void FrameClock::set_period(std::chrono::nanoseconds ns)
 {
     Lock lock(mutex);
     period = ns;
-    resync_required = true;
+    config_changed = true;
 }
 
 void FrameClock::set_resync_callback(ResyncCallback cb)
 {
     Lock lock(mutex);
     resync_callback = cb;
-    resync_required = true;
+    config_changed = true;
 }
 
 PosixTimestamp FrameClock::fallback_resync_callback() const
@@ -105,7 +105,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * Crucially this is not required on most frames, so that even if it is
      * implemented as a round trip to the server, that won't happen often.
      */
-    if (missed_frames || resync_required)
+    if (missed_frames || config_changed)
     {
         lock.unlock();
         // Unlock as user-supplied callbacks might block or deadlock
@@ -135,7 +135,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
             target = server_frame + (age_frames + 1) * period;
         }
         assert(target > now);
-        resync_required = false;
+        config_changed = false;
     }
 
     return target;

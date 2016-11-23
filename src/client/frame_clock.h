@@ -62,7 +62,7 @@ private:
     GetCurrentTime const get_current_time;
 
     mutable std::mutex mutex;  // Protects below fields:
-    mutable bool resync_required;
+    mutable bool config_changed;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;
 };
