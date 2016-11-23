@@ -57,7 +57,6 @@ private:
 
     GetCurrentTime const get_current_time;
     mutable bool resync_required;
-    mutable clockid_t fallback_resync_clock;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;
 };

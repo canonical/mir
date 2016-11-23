@@ -25,7 +25,6 @@ using namespace mir::time;
 FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}
     , resync_required{false}
-    , fallback_resync_clock{CLOCK_MONOTONIC}
     , period{0}
     , resync_callback{std::bind(&FrameClock::fallback_resync_callback, this)}
 {
@@ -46,7 +45,7 @@ void FrameClock::set_resync_callback(ResyncCallback cb)
 PosixTimestamp FrameClock::fallback_resync_callback() const
 {
     fprintf(stderr, "fallback_resync_callback\n");
-    return get_current_time(fallback_resync_clock);
+    return get_current_time(PosixTimestamp().clock_id);
 }
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
@@ -77,7 +76,6 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      */
     if (target < now || resync_required)
     {
-        fallback_resync_clock = prev.clock_id; // If required at all
         auto const server_frame = resync_callback();
         /*
          * It's important to target a future time and not allow 'now'. This
