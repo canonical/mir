@@ -190,7 +190,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     me::Connection connection{socket, "MirRenderSurface example"};
 
-    auto render_surface = mir_connection_create_render_surface(connection, width, height);
+    auto render_surface = mir_connection_create_render_surface_sync(connection, width, height);
     if (!mir_render_surface_is_valid(render_surface))
         throw std::runtime_error(std::string("could not create render surface"));
 
@@ -201,17 +201,16 @@ int main(int /*argc*/, char* /*argv*/[])
 
     mir_surface_spec_set_name(spec, "Stream");
 
+    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &nformats);
     if (nformats == 0)
         throw std::runtime_error("no pixel formats for buffer stream");
     printf("Software Driver selected pixel format %d\n", pixel_format);
-    auto buffer_stream = mir_render_surface_create_buffer_stream_sync(
-        render_surface,
-        width, height,
-        pixel_format,
-        mir_buffer_usage_software);
-
-    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+    auto buffer_stream = mir_render_surface_get_buffer_stream(render_surface,
+                                                              width, height,
+                                                              pixel_format,
+                                                              mir_buffer_usage_software);
 
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
@@ -243,7 +242,6 @@ int main(int /*argc*/, char* /*argv*/[])
         mir_buffer_stream_swap_buffers_sync(buffer_stream);
     }
 
-    mir_buffer_stream_release_sync(buffer_stream);
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     close(signal_watch);
