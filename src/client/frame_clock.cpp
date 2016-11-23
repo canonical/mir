@@ -63,6 +63,8 @@ PosixTimestamp FrameClock::fallback_resync_callback() const
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
 {
+    // Sorry about the verbose comments, but there are many subtlties here.
+
     Lock lock(mutex);
     /*
      * Unthrottled is an option too. But why?... Because a stream might exist
@@ -82,13 +84,28 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
     auto const now = get_current_time(target.clock_id);
 
     /*
+     * Count missed frames. Note how the target time would need to be more than
+     * one frame in the past to count as a missed frame. If the target time
+     * is less than one frame in the past then there's still a chance to catch
+     * up by rendering the next frame without delay. This avoids decimating
+     * to half frame rate.
+     *   Compared to triple buffering, this approach is reactive rather than
+     * proactive. Both approaches have the same catch-up ability to avoid
+     * half frame rate, but this approach has the added benefit of only
+     * one frame of lag to the compositor compared to triple buffering's two
+     * frames of lag. But we're also doing better than double buffering here
+     * in that this approach avoids any additive lag when nested.
+     */
+    long const missed_frames = now > target ? (now - target) / period : 0L;
+
+    /*
      * On the first frame and any resumption frame (after the client goes
      * from idle to busy) this will trigger a query to ask for the latest
      * hardware vsync timestamp. So we get in phase with the display.
      * Crucially this is not required on most frames, so that even if it is
      * implemented as a round trip to the server, that won't happen often.
      */
-    if (target < now || resync_required)
+    if (missed_frames || resync_required)
     {
         lock.unlock();
         // Unlock as user-supplied callbacks might block or deadlock
@@ -111,7 +128,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
             auto const age_ns = now - server_frame;
             /*
              * Ensure age_frames gets truncated if not already.
-             * C++ just guarantees "signed integer type of at least 64 bits"
+             * C++ just guarantees a "signed integer type of at least 64 bits"
              * for std::chrono::nanoseconds::rep
              */
             auto const age_frames = age_ns / period;
