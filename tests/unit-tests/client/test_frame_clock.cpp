@@ -113,3 +113,22 @@ TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
 
     EXPECT_LT(d, fake_time);
 }
+
+TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp a = fake_time;
+    auto b = clock.next_frame_after(a);
+    auto c = clock.next_frame_after(b);
+    EXPECT_EQ(one_frame, c - b);
+
+    // Client idles for a while without producing new frames:
+    fake_time.nanoseconds += 567 * one_frame;
+
+    auto d = clock.next_frame_after(c);
+    EXPECT_GT(d, fake_time);  // Resumption must be in the future
+    EXPECT_LE(d, fake_time+one_frame);  // But not too far in the future
+}
+
