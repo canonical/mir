@@ -844,9 +844,6 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
                     dynamic_cast<mcl::ClientBufferStream*>(stream.get())),
                 request->context);
 
-        if (request->bs_callback)
-            request->bs_callback(stream.get(), request->context);
-
         request->wh->result_received();
     }
     catch (std::exception const& error)
@@ -863,7 +860,6 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     MirBufferUsage buffer_usage,
     MirRenderSurface* render_surface,
     mir_buffer_stream_callback mbs_callback,
-    buffer_stream_callback bs_callback,
     void *context)
 {
     mp::BufferStreamParameters params;
@@ -874,7 +870,6 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
 
     auto request = std::make_shared<StreamCreationRequest>(render_surface,
                                                            mbs_callback,
-                                                           bs_callback,
                                                            context,
                                                            params);
     request->wh->expect_result();
@@ -939,18 +934,6 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
         request->mbs_callback(
             reinterpret_cast<MirBufferStream*>(
                 dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
-    }
-
-    // TODO: A hack for now... To be removed when a BufferStream can
-    //       only be created through the render surface interface.
-    if (request->bs_callback)
-    {
-        auto error_buffer_stream = std::make_shared<mcl::ErrorBufferStream>(
-            request->rs, server, surface_map, error_msg, this, id, request->wh);
-        surface_map->insert(id, error_buffer_stream);
-
-        request->bs_callback(
-                error_buffer_stream.get(), request->context);
     }
 
     request->wh->result_received();
