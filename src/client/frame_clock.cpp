@@ -18,6 +18,7 @@
 
 #include "frame_clock.h"
 #include <stdexcept>
+#include <cassert>
 
 using namespace mir;
 using namespace mir::time;
@@ -44,7 +45,6 @@ void FrameClock::set_resync_callback(ResyncCallback cb)
 
 PosixTimestamp FrameClock::fallback_resync_callback() const
 {
-    fprintf(stderr, "fallback_resync_callback\n");
     auto const now = get_current_time(PosixTimestamp().clock_id);
     /*
      * The result here needs to be in phase for all processes that call it,
@@ -104,14 +104,9 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
             auto const age_frames = age_ns / period;
             target = server_frame + (age_frames + 1) * period;
         }
+        assert(target > now);
         resync_required = false;
     }
-
-#if 1
-    auto delta = target - prev;
-    long usec = delta.count() / 1000;
-    fprintf(stderr, "Wait delta %ld.%03ldms\n", usec/1000, usec%1000);
-#endif
 
     return target;
 }
