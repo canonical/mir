@@ -50,10 +50,8 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
     if (rc != success)
     {
-        std::string const error_msg{
-            "Nested server failed to authenticate DRM device magic cookie"};
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error(error_msg)) << boost::errinfo_errno(rc));
+        throw std::system_error(
+            rc, std::system_category(), "Nested server failed to authenticate DRM device magic cookie");
     }
 }
 
@@ -63,5 +61,5 @@ mir::Fd mgm::NestedAuthentication::authenticated_fd()
     if (ext.is_set())
         return ext.value()->auth_fd();
     else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested server failed to get authenticated DRM fd"));
+        throw std::system_error(EPERM, std::system_category(), "Nested server failed to get authenticated DRM fd");
 }
