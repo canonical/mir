@@ -157,7 +157,6 @@ public:
         MirBufferUsage buffer_usage,
         MirRenderSurface* render_surface,
         mir_buffer_stream_callback mbs_callback,
-        buffer_stream_callback bs_callback,
         void *context);
     std::shared_ptr<mir::client::BufferStream> create_client_buffer_stream_with_id(
         int width, int height,
@@ -250,12 +249,10 @@ private:
         StreamCreationRequest(
             MirRenderSurface* rs,
             mir_buffer_stream_callback mbs_cb,
-            buffer_stream_callback bs_cb,
             void* context,
             mir::protobuf::BufferStreamParameters const& params)
             : rs(rs),
               mbs_callback(mbs_cb),
-              bs_callback(bs_cb),
               context(context),
               parameters(params),
               response(std::make_shared<mir::protobuf::BufferStream>()),
@@ -264,7 +261,6 @@ private:
         }
         MirRenderSurface* rs;
         mir_buffer_stream_callback mbs_callback;
-        buffer_stream_callback bs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;
