@@ -72,9 +72,8 @@ public:
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.allocate_buffers(&request,  protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.allocate_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -84,9 +83,8 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.release_buffers(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.release_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -96,20 +94,17 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.submit_buffer(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.submit_buffer(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    static void ignore_response(mp::Void* void_response)
+    static void ignore_response(std::shared_ptr<mp::Void>)
     {
-        delete void_response;
     }
 
 private:
     mclr::DisplayServer& server;
-    mp::Void protobuf_void;
     int stream_id;
 };
 
@@ -239,20 +234,6 @@ struct BufferDepository
     geom::Size size_;
 };
 }
-}
-
-// Needed to create an ErrorBufferStream through the MirConnection API
-// TODO: remove once streams can only be created through MirRenderSurface API
-mcl::BufferStream::BufferStream(
-    mir::client::rpc::DisplayServer& server,
-    std::weak_ptr<mcl::SurfaceMap> const& map)
-        : display_server{server},
-          client_platform{nullptr},
-          perf_report{nullptr},
-          nbuffers{0},
-          map{map},
-          factory{nullptr}
-{
 }
 
 mcl::BufferStream::BufferStream(

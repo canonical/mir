@@ -28,6 +28,7 @@
 #include "mir/input/input_report.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
+#include "mir_toolkit/mir_input_device.h"
 
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "mir/test/doubles/mock_input_sink.h"
@@ -37,6 +38,7 @@
 #include "mir/test/event_matchers.h"
 
 namespace mi = mir::input;
+namespace mp = mir::protobuf;
 namespace mt = mir::test;
 namespace mr = mir::report;
 namespace mev = mir::events;
@@ -47,6 +49,18 @@ using namespace testing;
 namespace
 {
 
+auto to_device_info(MirInputDeviceId id, MirInputDeviceCapabilities caps, std::string const& name, std::string const& unique_id)
+{
+    mp::InputDeviceInfo ret;
+
+    ret.set_id(id);
+    ret.set_capabilities(caps);
+    ret.set_name(name);
+    ret.set_unique_id(unique_id);
+
+    return ret;
+}
+
 struct TestNestedInputPlatform : Test
 {
     NiceMock<mtd::MockInputDeviceRegistry> mock_input_device_registry;
@@ -54,19 +68,20 @@ struct TestNestedInputPlatform : Test
     NiceMock<mtd::MockInputSeat> mock_seat;
     mgn::InputPlatform platform{mt::fake_shared(mock_host_connection), mt::fake_shared(mock_input_device_registry),
                                 mr::null_input_report()};
-    mi::DeviceData a_keyboard{1, mir_input_device_capability_keyboard, "keys" , "keys-evdev2"};
-    mi::DeviceData a_mouse{0, mir_input_device_capability_pointer, "rodent", "rodent-evdev1"};
+    mp::InputDeviceInfo a_keyboard{to_device_info(1, mir_input_device_capability_keyboard, "keys" , "keys-evdev2")};
+    mp::InputDeviceInfo a_mouse{to_device_info(0, mir_input_device_capability_pointer, "rodent", "rodent-evdev1")};
     const mir::geometry::Rectangle source_surface{{0, 0}, {100, 100}};
 
-    auto capture_input_device(mi::DeviceData& dev)
+    auto capture_input_device(mp::InputDeviceInfo& dev)
     {
         std::shared_ptr<mi::InputDevice> input_dev;
         ON_CALL(mock_input_device_registry, add_device(_))
             .WillByDefault(SaveArg<0>(&input_dev));
         platform.start();
+        mp::InputDevices devices;
+        devices.add_device_info()->CopyFrom(dev);
         mgn::UniqueInputConfig input_config(
-            reinterpret_cast<MirInputConfig*>(
-                new std::vector<mir::input::DeviceData>{dev}),
+            reinterpret_cast<MirInputConfig*>(new mp::InputDevices(devices)),
             mir_input_config_destroy);
         mock_host_connection.device_change_callback(std::move(input_config));
 
@@ -91,11 +106,11 @@ MATCHER_P(MatchesDeviceData, device_data, "")
     mi::InputDevice& dev = *arg;
     auto dev_info = dev.get_device_info();
 
-    if (dev_info.name != device_data.name)
+    if (dev_info.name != device_data.name())
         return false;
-    if (dev_info.unique_id != device_data.unique_id)
+    if (dev_info.unique_id != device_data.unique_id())
         return false;
-    if (dev_info.capabilities.value() != device_data.caps)
+    if (dev_info.capabilities.value() != device_data.capabilities())
         return false;
 
     return true;
@@ -107,10 +122,11 @@ TEST_F(TestNestedInputPlatform, registers_devices)
     EXPECT_CALL(mock_input_device_registry, add_device(MatchesDeviceData(a_mouse)));
 
     platform.start();
-    mi::InputDevices devices;
+    mp::InputDevices devices;
+    devices.add_device_info()->CopyFrom(a_keyboard);
+    devices.add_device_info()->CopyFrom(a_mouse);
     mgn::UniqueInputConfig input_config(
-        reinterpret_cast<MirInputConfig*>(
-            new std::vector<mir::input::DeviceData>{a_keyboard, a_mouse}),
+        reinterpret_cast<MirInputConfig*>(new mp::InputDevices(devices)),
         mir_input_config_destroy);
     mock_host_connection.device_change_callback(std::move(input_config));
 
@@ -135,7 +151,7 @@ TEST_F(TestNestedInputPlatform, devices_forward_input_events)
 
     std::vector<uint8_t> cookie;
 
-    mock_host_connection.event_callback(*mev::make_event(a_mouse.id, 12ns, cookie, mir_input_event_modifier_none,
+    mock_host_connection.event_callback(*mev::make_event(a_mouse.id(), 12ns, cookie, mir_input_event_modifier_none,
                                                          mir_pointer_action_motion, mir_pointer_button_primary, 23, 42,
                                                          0, 0, 12, 10), source_surface);
 }
@@ -155,7 +171,7 @@ TEST_F(TestNestedInputPlatform, devices_forward_key_events)
                     mt::KeyDownEvent(), mt::KeyOfScanCode(scan_code), mt::InputDeviceIdMatches(MirInputDeviceId{18}))));
     std::vector<uint8_t> cookie;
 
-    mock_host_connection.event_callback(*mev::make_event(a_keyboard.id, 141ns, cookie, mir_keyboard_action_down, 0,
+    mock_host_connection.event_callback(*mev::make_event(a_keyboard.id(), 141ns, cookie, mir_keyboard_action_down, 0,
                                                          scan_code, mir_input_event_modifier_none), source_surface);
 }
 
@@ -173,7 +189,7 @@ TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
                     mt::PointerEventWithPosition(60.0f, 35.0f), mt::PointerEventWithDiff(60.0f, 35.0f))));
     std::vector<uint8_t> cookie;
 
-    auto event = mev::make_event(a_mouse.id,
+    auto event = mev::make_event(a_mouse.id(),
                                  141ns,
                                  cookie,
                                  mir_input_event_modifier_none,

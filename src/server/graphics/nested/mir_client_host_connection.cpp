@@ -23,6 +23,7 @@
 #include "host_surface_spec.h"
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -496,12 +497,20 @@ struct Chain : mgn::HostChain
         mir_presentation_chain_release(chain);
     }
 
-    void submit_buffer(mgn::NativeBuffer& buffer)
+    void submit_buffer(mgn::NativeBuffer& buffer) override
     {
         mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
     }
 
-    MirPresentationChain* handle()
+    void set_submission_mode(mgn::SubmissionMode mode) override
+    {
+        if (mode == mgn::SubmissionMode::queueing)
+            mir_presentation_chain_set_queueing_mode(chain);
+        else
+            mir_presentation_chain_set_dropping_mode(chain);
+    }
+
+    MirPresentationChain* handle() override
     {
         return chain;
     }
@@ -681,4 +690,9 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
         return false;
     return true;
+}
+
+void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
+{
+    return mir_connection_request_interface(mir_connection, name, version);    
 }

@@ -19,6 +19,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/observer_registrar.h"
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -173,13 +174,9 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
                 return shell;
             });
 
-        server.override_the_seat_report([this]
-            {
-                mock_seat_report = std::make_shared<NiceMock<mtd::MockSeatReport>>();
-                return mock_seat_report;
-            });
-
         HeadlessInProcessServer::SetUp();
+
+        server.the_seat_observer_registrar()->register_interest(mock_seat_observer);
 
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
@@ -202,7 +199,7 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     NiceMock<MockSurfaceObserver> surface_observer;
     mir::test::Signal resized_signaled;
 
-    std::shared_ptr<mtd::MockSeatReport> mock_seat_report;
+    std::shared_ptr<mtd::MockSeatObserver> mock_seat_observer{std::make_shared<NiceMock<mtd::MockSeatObserver>>()};
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
     geom::Rectangle screen_geometry{{0,0}, {800,600}};
     mtf::ClientInputRegions input_regions;
@@ -259,7 +256,7 @@ TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
     geom::Size new_size = {surface_width + 100, surface_height};
     EXPECT_CALL(surface_observer, resized_to(new_size)).Times(1);
 
-    EXPECT_CALL(*mock_seat_report, seat_set_confinement_region_called(_)).
+    EXPECT_CALL(*mock_seat_observer, seat_set_confinement_region_called(_)).
             WillRepeatedly(InvokeWithoutArgs([&] { change_observed(); }));
 
     client.resize(surface_width + 100, surface_height);

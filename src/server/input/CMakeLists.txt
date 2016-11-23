@@ -26,6 +26,8 @@ set(
   touchspot_controller.cpp
   validator.cpp
   vt_filter.cpp
+  seat_observer_multiplexer.cpp
+  seat_observer_multiplexer.h
 )
 
 add_subdirectory(android)
