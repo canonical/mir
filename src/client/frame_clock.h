@@ -22,6 +22,7 @@
 #include "mir/time/posix_timestamp.h"
 #include <chrono>
 #include <functional>
+#include <mutex>
 
 namespace mir {
 
@@ -59,6 +60,8 @@ private:
     time::PosixTimestamp fallback_resync_callback() const;
 
     GetCurrentTime const get_current_time;
+
+    mutable std::mutex mutex;  // Protects below fields:
     mutable bool resync_required;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;

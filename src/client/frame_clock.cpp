@@ -23,6 +23,11 @@
 using namespace mir;
 using namespace mir::time;
 
+namespace
+{
+typedef std::unique_lock<std::mutex> Lock;
+}
+
 FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}
     , resync_required{false}
@@ -33,12 +38,14 @@ FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
 
 void FrameClock::set_period(std::chrono::nanoseconds ns)
 {
+    Lock lock(mutex);
     period = ns;
     resync_required = true;
 }
 
 void FrameClock::set_resync_callback(ResyncCallback cb)
 {
+    Lock lock(mutex);
     resync_callback = cb;
     resync_required = true;
 }
@@ -46,6 +53,7 @@ void FrameClock::set_resync_callback(ResyncCallback cb)
 PosixTimestamp FrameClock::fallback_resync_callback() const
 {
     auto const now = get_current_time(PosixTimestamp().clock_id);
+    Lock lock(mutex);
     /*
      * The result here needs to be in phase for all processes that call it,
      * so that nesting servers does not add lag.
@@ -55,6 +63,7 @@ PosixTimestamp FrameClock::fallback_resync_callback() const
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
 {
+    Lock lock(mutex);
     /*
      * Unthrottled is an option too. But why?... Because a stream might exist
      * that's not bound to a surface. And if it's not bound to a surface then
@@ -81,7 +90,11 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      */
     if (target < now || resync_required)
     {
+        lock.unlock();
+        // Unlock as user-supplied callbacks might block or deadlock
         auto const server_frame = resync_callback();
+        lock.lock();
+
         /*
          * It's important to target a future time and not allow 'now'. This
          * is because we will have some buffer queues for the time being that
