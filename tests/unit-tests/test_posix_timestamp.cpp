@@ -82,6 +82,28 @@ TEST(PosixTimestamp, comparison)
     EXPECT_THROW((void)(aa < b), std::logic_error);
 }
 
+TEST(PosixTimestamp, or_equal)
+{
+    PosixTimestamp const a(CLOCK_MONOTONIC, 111ns);
+    PosixTimestamp const aa(CLOCK_REALTIME, 111ns);
+    PosixTimestamp const b(CLOCK_MONOTONIC, 333ns);
+    PosixTimestamp const bb(CLOCK_REALTIME, 333ns);
+
+    EXPECT_TRUE(a <= b);
+    EXPECT_TRUE(a <= a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_TRUE(b >= b);
+    EXPECT_TRUE(aa <= bb);
+    EXPECT_TRUE(aa <= aa);
+    EXPECT_TRUE(bb >= aa);
+    EXPECT_TRUE(bb >= bb);
+
+    EXPECT_THROW((void)(a <= bb), std::logic_error);
+    EXPECT_THROW((void)(a >= bb), std::logic_error);
+    EXPECT_THROW((void)(aa >= b), std::logic_error);
+    EXPECT_THROW((void)(aa <= b), std::logic_error);
+}
+
 TEST(PosixTimestamp, sleeps)
 {
     auto const start = PosixTimestamp::now(CLOCK_MONOTONIC);
