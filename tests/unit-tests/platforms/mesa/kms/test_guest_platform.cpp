@@ -47,39 +47,22 @@ using namespace testing;
 namespace
 {
 
+struct MockSetGbmExt : mg::SetGbmExtension
+{
+    MOCK_METHOD1(set_gbm_device, void(gbm_device* dev));
+};
+
 class MesaGuestPlatformTest : public ::testing::Test
 {
 public:
-
-    static void set_device(gbm_device* dev, void* const context)
+    MesaGuestPlatformTest()
     {
-        auto t = reinterpret_cast<MesaGuestPlatformTest*>(context);
-        t->set_gbm_device(dev);
-    }
-
-    MOCK_METHOD1(set_gbm_device, void(gbm_device* dev));
-
-    MesaGuestPlatformTest() :
-        set_gbm_device_ext{set_device, this}
-    {
-        using namespace testing;
-
-        MirMesaSetGBMDeviceResponse const response_success{0};
-        mg::PlatformOperationMessage set_gbm_device_success_msg;
-        set_gbm_device_success_msg.data.resize(sizeof(response_success));
-        std::memcpy(set_gbm_device_success_msg.data.data(),
-                    &response_success, sizeof(response_success));
-
         ON_CALL(mock_nested_context, platform_fd_items())
             .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
-        ON_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::set_gbm_device, _))
-            .WillByDefault(Return(set_gbm_device_success_msg));
-        ON_CALL(mock_nested_context, auth_extensions())
-            .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
-        ON_CALL(mock_nested_context, request_interface(
-            StrEq(MIR_EXTENSION_SET_GBM_DEVICE), MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
-            .WillByDefault(Return(&set_gbm_device_ext));
+        ON_CALL(mock_nested_context, set_gbm_extension())
+            .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>{mock_gbm_ext}));
+        ON_CALL(mock_nested_context, auth_extension())
+            .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     }
 
 protected:
@@ -87,7 +70,7 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockNestedContext> mock_nested_context;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
-    MirExtensionSetGbmDevice set_gbm_device_ext;
+    std::shared_ptr<MockSetGbmExt> mock_gbm_ext = std::make_shared<MockSetGbmExt>();
 };
 
 }
@@ -96,10 +79,8 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 {
     int const auth_fd{13};
 
-    EXPECT_CALL(*this, set_gbm_device(_));
-    EXPECT_CALL(mock_nested_context,
-                platform_operation(MirMesaPlatformOperation::set_gbm_device, _));
-    EXPECT_CALL(mock_nested_context, auth_extensions());
+    EXPECT_CALL(mock_nested_context, set_gbm_extension());
+    EXPECT_CALL(mock_nested_context, auth_extension());
     EXPECT_CALL(*mock_ext, auth_fd())
         .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
 
@@ -110,6 +91,7 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
 
 TEST_F(MesaGuestPlatformTest, sets_gbm_device_during_initialization)
 {
-    EXPECT_CALL(*this, set_gbm_device(mock_gbm.fake_gbm.device));
+    EXPECT_CALL(mock_nested_context, set_gbm_extension());
+    EXPECT_CALL(*mock_gbm_ext, set_gbm_device(mock_gbm.fake_gbm.device));
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
 }

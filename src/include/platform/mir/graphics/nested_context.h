@@ -32,16 +32,27 @@ namespace graphics
 {
 struct PlatformOperationMessage;
 
-class MesaAuthExtensions
+class MesaAuthExtension
 {
 public:
-    virtual ~MesaAuthExtensions() = default;
+    virtual ~MesaAuthExtension() = default;
     virtual mir::Fd auth_fd() = 0;
     virtual int auth_magic(unsigned int) = 0;
 protected:
-    MesaAuthExtensions() = default;
-    MesaAuthExtensions(MesaAuthExtensions const&) = delete;
-    MesaAuthExtensions& operator=(MesaAuthExtensions const&) = delete;
+    MesaAuthExtension() = default;
+    MesaAuthExtension(MesaAuthExtension const&) = delete;
+    MesaAuthExtension& operator=(MesaAuthExtension const&) = delete;
+};
+
+class SetGbmExtension
+{
+public:
+    virtual ~SetGbmExtension() = default;
+    virtual void set_gbm_device(gbm_device*) = 0;
+protected:
+    SetGbmExtension() = default;
+    SetGbmExtension(SetGbmExtension const&) = delete;
+    SetGbmExtension& operator=(SetGbmExtension const&) = delete;
 };
 
 class NestedContext
@@ -50,8 +61,8 @@ public:
     virtual ~NestedContext() = default;
 
     //unique_ptr would be nice, but don't want to break mircore
-    virtual mir::optional_value<std::shared_ptr<MesaAuthExtensions>> auth_extensions() = 0;
-    virtual void* request_interface(char const* name, int version) = 0;
+    virtual mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() = 0;
+    virtual mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() = 0;
 
     virtual std::vector<int> platform_fd_items() = 0;
     virtual PlatformOperationMessage platform_operation(

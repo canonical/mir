@@ -50,8 +50,8 @@ TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
     unsigned int const magic{332211};
     int const success_response{0};
 
-    EXPECT_CALL(mock_nested_context, auth_extensions())
-        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(mock_nested_context, auth_extension())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_magic(magic))
         .WillOnce(Return(success_response));
 
@@ -63,9 +63,9 @@ TEST_F(NestedAuthentication, reports_errors_during_auth_magic)
     unsigned int const magic{332211};
     int const error_response{-1};
 
-    EXPECT_CALL(mock_nested_context, auth_extensions())
-        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{}))
-        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(mock_nested_context, auth_extension())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{}))
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_magic(magic))
         .WillOnce(Return(error_response));
 
@@ -80,8 +80,8 @@ TEST_F(NestedAuthentication, reports_errors_during_auth_magic)
 TEST_F(NestedAuthentication, uses_nested_context_for_auth_fd)
 {
     int const auth_fd{13};
-    EXPECT_CALL(mock_nested_context, auth_extensions())
-        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtensions>>{mock_ext}));
+    EXPECT_CALL(mock_nested_context, auth_extension())
+        .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_fd())
         .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
     EXPECT_THAT(auth.authenticated_fd(), Eq(auth_fd));

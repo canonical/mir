@@ -44,7 +44,7 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
     static int const success{0};
 
     int rc = -1;
-    auto ext = nested_context->auth_extensions();
+    auto ext = nested_context->auth_extension();
     if (ext.is_set())
         rc = ext.value()->auth_magic(magic);
 
@@ -57,7 +57,7 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
-    auto ext = nested_context->auth_extensions();
+    auto ext = nested_context->auth_extension();
     if (ext.is_set())
         return ext.value()->auth_fd();
     else

@@ -49,7 +49,8 @@ struct MockNestedContext : graphics::NestedContext
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int, graphics::PlatformOperationMessage const&));
-    MOCK_METHOD0(auth_extensions, optional_value<std::shared_ptr<graphics::MesaAuthExtensions>>());
+    MOCK_METHOD0(auth_extension, optional_value<std::shared_ptr<graphics::MesaAuthExtension>>());
+    MOCK_METHOD0(set_gbm_extension, optional_value<std::shared_ptr<graphics::SetGbmExtension>>());
     MOCK_METHOD2(request_interface, void*(char const*, int));
 };
 

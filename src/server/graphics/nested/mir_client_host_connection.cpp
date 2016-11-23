@@ -25,6 +25,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
+#include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -733,18 +734,18 @@ T auth(std::function<void(AuthRequest<T>*)> const& f)
 }
 }
 
-mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtensions>>
-mgn::MirClientHostConnection::auth_extensions()
+mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtension>>
+mgn::MirClientHostConnection::auth_extension()
 {
     auto ext = static_cast<MirExtensionMesaDRMAuth*>(
         mir_connection_request_interface(mir_connection, 
         MIR_EXTENSION_MESA_DRM_AUTH, MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1));
-    if (!ext || !ext->drm_auth_fd)
+    if (!ext)
         return {};
 
-    struct AuthExtensions : MesaAuthExtensions
+    struct AuthExtension : MesaAuthExtension
     {
-        AuthExtensions(
+        AuthExtension(
             MirConnection* connection,
             MirExtensionMesaDRMAuth* ext) :
             connection(connection),
@@ -765,10 +766,29 @@ mgn::MirClientHostConnection::auth_extensions()
         MirConnection* const connection;
         MirExtensionMesaDRMAuth* const extensions;
     };
-    return { std::make_unique<AuthExtensions>(mir_connection, ext) };
+    return { std::make_unique<AuthExtension>(mir_connection, ext) };
 }
 
-void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
+mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>
+mgn::MirClientHostConnection::set_gbm_extension()
 {
-    return mir_connection_request_interface(mir_connection, name, version);    
+    auto ext = static_cast<MirExtensionSetGbmDevice*>(
+        mir_connection_request_interface(mir_connection, 
+            MIR_EXTENSION_SET_GBM_DEVICE, MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1));
+    if (!ext)
+        return {};
+
+    struct SetGbm : SetGbmExtension
+    {
+        SetGbm(MirExtensionSetGbmDevice* ext) :
+            ext(ext)
+        {
+        }
+        void set_gbm_device(gbm_device* dev) override
+        {
+            ext->set_gbm_device(dev, ext->context);
+        }
+        MirExtensionSetGbmDevice* const ext;
+    };
+    return { std::make_unique<SetGbm>(ext) };
 }

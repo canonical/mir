@@ -165,7 +165,11 @@ public:
     {
         return true;
     }
-    optional_value<std::shared_ptr<graphics::MesaAuthExtensions>> auth_extensions()
+    optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension()
+    {
+        return {};
+    }
+    optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension()
     {
         return {};
     }

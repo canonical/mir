@@ -27,7 +27,7 @@ namespace test
 namespace doubles
 {
 
-struct MockMesaExt : graphics::MesaAuthExtensions
+struct MockMesaExt : graphics::MesaAuthExtension
 {
     MOCK_METHOD0(auth_fd, mir::Fd());
     MOCK_METHOD1(auth_magic, int(unsigned int));
