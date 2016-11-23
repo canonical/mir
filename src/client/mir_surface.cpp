@@ -466,9 +466,12 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-        frame_clock.set_period(
-            std::chrono::nanoseconds(static_cast<long>(1000000000L / rate)));
-        fprintf(stderr, "Refresh rate is %.2fHz\n", rate);
+        if (rate > 0.0)
+        {
+            std::chrono::nanoseconds const ns(
+                static_cast<long>(1000000000L / rate));
+            frame_clock.set_period(ns);
+        }
         /*
          * TODO: Notify the input receiver of the rate change AFTER the server
          *       has been modified to always use frame dropping. If we do it
