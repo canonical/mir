@@ -379,17 +379,17 @@ INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
         TypePair{mir_surface_type_utility, mir_surface_type_normal},
         TypePair{mir_surface_type_dialog, mir_surface_type_utility},
         TypePair{mir_surface_type_dialog, mir_surface_type_normal}
-    ), );
+    ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetNeedingParent,
     Values(
         TypePair{mir_surface_type_normal, mir_surface_type_satellite},
         TypePair{mir_surface_type_utility, mir_surface_type_satellite},
         TypePair{mir_surface_type_dialog, mir_surface_type_satellite}
-    ), );
+    ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetMayHaveParent,
     Values(
         TypePair{mir_surface_type_normal, mir_surface_type_dialog},
         TypePair{mir_surface_type_utility, mir_surface_type_dialog}
-    ), );
+    ));

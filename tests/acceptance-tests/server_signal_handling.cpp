@@ -91,7 +91,7 @@ TEST_P(AbortDeathTest, cleanup_handler_is_called_for)
 }
 
 INSTANTIATE_TEST_CASE_P(ServerSignal, AbortDeathTest,
-    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS), );
+    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
 
 using ServerSignalDeathTest = ServerSignal;
 

@@ -669,10 +669,10 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceWithoutParent,
-    Values(mir_surface_type_utility, mir_surface_type_normal), );
+    Values(mir_surface_type_utility, mir_surface_type_normal));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceNeedingParent,
-    Values(mir_surface_type_satellite, mir_surface_type_gloss, mir_surface_type_tip), );
+    Values(mir_surface_type_satellite, mir_surface_type_gloss, mir_surface_type_tip));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceMayHaveParent,
-    Values(mir_surface_type_dialog, mir_surface_type_freestyle), );
+    Values(mir_surface_type_dialog, mir_surface_type_freestyle));

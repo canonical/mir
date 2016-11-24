@@ -1287,20 +1287,20 @@ int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Range(2, max_buffers_to_test), /* C++11 requires blank */);
+    Range(2, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Range(2, max_buffers_to_test), /* C++11 requires blank */);
+    Range(2, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Range(3, max_buffers_to_test), /* C++11 requires blank */);
+    Range(3, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Values(2), /* C++11 requires blank */ );
+    Values(2));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Values(3), /* C++11 requires blank */);
+    Values(3));

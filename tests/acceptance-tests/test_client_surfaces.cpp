@@ -223,7 +223,7 @@ INSTANTIATE_TEST_CASE_P(ClientSurfaces,
         mir_orientation_mode_portrait, mir_orientation_mode_landscape,
         mir_orientation_mode_portrait_inverted, mir_orientation_mode_landscape_inverted,
         mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
-        mir_orientation_mode_any), );
+        mir_orientation_mode_any));
 
 TEST_F(ClientSurfaces, can_be_menus)
 {

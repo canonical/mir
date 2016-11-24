@@ -209,7 +209,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 
 INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
     OrientationEvents,
-    Values(mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right), );
+    Values(mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right));
 
 TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 {

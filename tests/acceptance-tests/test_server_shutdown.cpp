@@ -81,7 +81,7 @@ INSTANTIATE_TEST_CASE_P(
         "create_buffer_allocator",
         "create_display",
         "make_ipc_operations"
-    ), );
+    ));
 
 using ServerShutdownDeathTest = ServerShutdown;
 
@@ -244,5 +244,5 @@ TEST_P(OnSignalDeathTest, removes_endpoint)
 
 INSTANTIATE_TEST_CASE_P(ServerShutdown,
     OnSignalDeathTest,
-    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS), );
+    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
 
