@@ -29,12 +29,12 @@ namespace
 {
 mp::DisplayConfiguration* client_to_config(MirDisplayConfig* config)
 {
-    return reinterpret_cast<mp::DisplayConfiguration*>(config);
+    return config;
 }
 
 mp::DisplayConfiguration const* client_to_config(MirDisplayConfig const* config)
 {
-    return reinterpret_cast<mp::DisplayConfiguration const*>(config);
+    return config;
 }
 
 MirOutput* output_to_client(mp::DisplayOutput* output)
