@@ -167,7 +167,7 @@ private:
     std::mutex mutable configuration_mutex;
     std::unique_ptr<NestedDisplayConfiguration> current_configuration;
 
-    void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
+    void create_surfaces(std::vector<graphics::DisplayConfigurationOutput> const& output_list);
     void complete_display_initialization(MirPixelFormat format);
 };
 
