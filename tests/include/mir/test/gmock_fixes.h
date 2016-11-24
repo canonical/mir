@@ -38,6 +38,8 @@
 #include <memory>
 #include <gmock/gmock.h>
 
+// FIXME - doesn't build with GMock 1.8 (zesty)
+
 #if 0
 namespace testing
 {
@@ -165,7 +167,6 @@ class DefaultValue<std::unique_ptr<T, D>> {
     return std::unique_ptr<T, D>();
   }
 };
-
 
 
 }

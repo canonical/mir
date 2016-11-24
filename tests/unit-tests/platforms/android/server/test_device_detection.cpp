@@ -291,7 +291,7 @@ TEST_F(DeviceQuirks, number_of_framebuffers_quirk_can_be_disabled)
 
     disable_num_framebuffers_quirk();
     mga::DeviceQuirks quirks(mock_ops, options);
-    EXPECT_THAT(quirks.num_framebuffers(), Ne(3));
+    EXPECT_THAT(quirks.num_framebuffers(), Ne(3u));
 }
 
 TEST_F(DeviceQuirks, gralloc_cannot_be_closed_safely_quirk_can_be_disabled)
