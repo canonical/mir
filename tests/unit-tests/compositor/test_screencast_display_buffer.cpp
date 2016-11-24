@@ -191,7 +191,7 @@ TEST_F(ScreencastDisplayBufferTest, schedules_onto_ready_queue)
     db.bind();
     db.swap_buffers();
 
-    ASSERT_THAT(ready_queue.num_scheduled(), Gt(0));
+    ASSERT_THAT(ready_queue.num_scheduled(), Gt(0u));
 
     auto ready_buffer = ready_queue.next_buffer();
     auto const expected_buffer = mt::fake_shared(stub_buffer);
