@@ -294,7 +294,6 @@ TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
 
     dispatcher.start();
@@ -312,10 +311,8 @@ TEST_F(SurfaceInputDispatcher, pointer_delivered_only_to_top_surface)
 
     InSequence seq;
     EXPECT_CALL(*top_surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*top_surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 0))).Times(1);
-    
+
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 0})));
@@ -334,12 +331,10 @@ TEST_F(SurfaceInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 
     InSequence seq;
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
     EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerLeaveEvent())).Times(1);
-    
+
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(*pointer.move_to({1, 1})));
@@ -419,8 +414,7 @@ TEST_F(SurfaceInputDispatcher, pointer_gesture_target_may_vanish_and_the_situati
     EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
     EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
     EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1,1))).Times(1);
-    
+
     dispatcher.start();
 
     EXPECT_TRUE(dispatcher.dispatch(*ev_1));
