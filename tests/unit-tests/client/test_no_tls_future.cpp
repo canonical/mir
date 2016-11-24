@@ -385,7 +385,7 @@ TEST(NoTLSFuture, detached_future_still_runs_continuation)
         auto future = promise.get_future();
 
         future.then(
-            [&continuation_called](auto&& resolved_future)
+            [&continuation_called, value](auto&& resolved_future)
             {
                 EXPECT_THAT(resolved_future.get(), StrEq(value));
                 continuation_called = true;
