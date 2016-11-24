@@ -1,20 +1,11 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-#gtest
-set(GTEST_INSTALL_DIR /usr/src/gmock/gtest/include)
-find_path(GTEST_INCLUDE_DIR gtest/gtest.h
-            HINTS ${GTEST_INSTALL_DIR})
-
-#gmock
-find_path(GMOCK_INSTALL_DIR gmock/CMakeLists.txt
-          HINTS /usr/src)
-if(${GMOCK_INSTALL_DIR} STREQUAL "GMOCK_INSTALL_DIR-NOTFOUND")
-    message(FATAL_ERROR "google-mock package not found")
+if(EXISTS "/usr/src/googletest")
+  set(GTEST_INCLUDE_DIR /usr/src/googletest/googletest/include)
+  set(GMOCK_INCLUDE_DIR /usr/src/googletest/googlemock/include)
+  set(GMOCK_SOURCE_DIR  /usr/src/googletest/googlemock/)
 endif()
-
-set(GMOCK_INSTALL_DIR ${GMOCK_INSTALL_DIR}/gmock)
-find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
 set(GMOCK_PREFIX gmock)
 set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
@@ -49,7 +40,7 @@ ExternalProject_Add(
     #where to build in source tree
     PREFIX ${GMOCK_PREFIX}
     #where the source is external to the project
-    SOURCE_DIR ${GMOCK_INSTALL_DIR}
+    SOURCE_DIR ${GMOCK_SOURCE_DIR}
     #forward the compilers to the subproject so cross-arch builds work
     CMAKE_ARGS ${GTEST_CMAKE_ARGS}
     BINARY_DIR ${GMOCK_BINARY_DIR}

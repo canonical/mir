@@ -562,7 +562,7 @@ INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceSpecStateCase,
         StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
         StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
         StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
-    ));
+    ), );
 
 TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
 {
@@ -588,4 +588,4 @@ INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,
         StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
         StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
         StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
-    ));
+    ), );

@@ -439,10 +439,10 @@ TEST_P(DisplaySubpixelSetting, can_get_all_subpixel_arrangements)
 
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayPowerSetting,
-    Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off));
+    Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off), );
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayFormatSetting,
-    ValuesIn(formats));
+    ValuesIn(formats), );
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplaySubpixelSetting,
     Values(
@@ -451,7 +451,7 @@ INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplaySubpixelSetting,
         mir_subpixel_arrangement_horizontal_bgr,
         mir_subpixel_arrangement_vertical_rgb,
         mir_subpixel_arrangement_vertical_bgr,
-        mir_subpixel_arrangement_none));
+        mir_subpixel_arrangement_none), );
 
 TEST_F(DisplayConfigurationTest, client_received_configuration_matches_server_config)
 {

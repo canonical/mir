@@ -497,7 +497,7 @@ INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
         mir_surface_type_normal,
         mir_surface_type_utility,
         mir_surface_type_dialog,
-        mir_surface_type_freestyle));
+        mir_surface_type_freestyle), );
 
 // Parented dialog or parented freestyle window
 //
@@ -562,4 +562,4 @@ INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
         mir_surface_type_popover,
         mir_surface_type_gloss,
         mir_surface_type_tip,
-        mir_surface_type_freestyle));
+        mir_surface_type_freestyle), );

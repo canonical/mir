@@ -905,8 +905,8 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);
     int limit = 10;
-    int num_devices = 0;
-    int expected_devices = 3;
+    unsigned num_devices = 0u;
+    unsigned const expected_devices = 3u;
 
     for(auto i = 0; i < limit; i++)
     {
@@ -956,7 +956,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
     EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
-    EXPECT_THAT(mir_input_config_device_count(config), Eq(4));
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(4u));
     EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
                                                                          mir_input_device_capability_pointer)));
 
@@ -981,7 +981,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
-    EXPECT_THAT(mir_input_config_device_count(config), Eq(2));
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(2u));
     mir_input_config_destroy(config);
 }
 
@@ -1090,7 +1090,10 @@ TEST_F(TestClientInput, touchpad_configuration_is_mutable)
     mir_touchpad_configuration_set_disable_while_typing(touchpad_config, false);
 
     EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(mir_touchpad_click_mode_area_to_click));
-    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll));
+    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config),
+                Eq(static_cast<MirTouchpadClickModes>(
+                    mir_touchpad_scroll_mode_edge_scroll
+                  | mir_touchpad_scroll_mode_button_down_scroll)));
     EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(10));
     EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(true));
     EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(true));
