@@ -27,15 +27,6 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-mp::DisplayConfiguration* client_to_config(MirDisplayConfig* config)
-{
-    return config;
-}
-
-mp::DisplayConfiguration const* client_to_config(MirDisplayConfig const* config)
-{
-    return config;
-}
 
 MirOutput* output_to_client(mp::DisplayOutput* output)
 {
@@ -68,26 +59,21 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
 }
 }
 
-int mir_display_config_get_num_outputs(MirDisplayConfig const* client)
+int mir_display_config_get_num_outputs(MirDisplayConfig const* config)
 {
-    auto config = client_to_config(client);
     return config->display_output_size();
 }
 
-MirOutput const* mir_display_config_get_output(MirDisplayConfig const* client_config, size_t index)
+MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config, size_t index)
 {
-    auto config = client_to_config(client_config);
-
-    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(client_config)));
+    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(config)));
 
     return output_to_client(&config->display_output(index));
 }
 
-MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* client_config, size_t index)
+MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, size_t index)
 {
-    auto config = client_to_config(client_config);
-
-    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(client_config)));
+    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(config)));
 
     return output_to_client(config->mutable_display_output(index));
 }
@@ -113,10 +99,8 @@ void mir_output_disable(MirOutput* client_output)
     output->set_used(0);
 }
 
-int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* client_config)
+int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
 {
-    auto config = client_to_config(client_config);
-
     return config->display_card(0).max_simultaneous_outputs();
 }
 
