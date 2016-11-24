@@ -31,6 +31,7 @@
 #include "mir/test/doubles/stub_cursor_listener.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/display_config_matchers.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -243,4 +244,135 @@ TEST_F(NestedDisplay, shared_context_uses_matching_egl_attributes)
         mt::fake_shared(mock_gl_config));
 
     auto dummy_context = nested_display->create_gl_context();
+}
+
+TEST_F(NestedDisplay, preserves_framebuffers_for_metadata_changes)
+{
+    using namespace testing;
+
+    auto display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
+
+    auto conf = display->configuration();
+
+    std::vector<mg::DisplayBuffer*> initial_dbs;
+
+    display->for_each_display_sync_group(
+        [&initial_dbs](auto& sync_group)
+        {
+            sync_group.for_each_display_buffer(
+                [&initial_dbs](auto& display_buffer)
+                {
+                    initial_dbs.push_back(&display_buffer);
+                });
+        });
+
+    ASSERT_THAT(initial_dbs, Not(IsEmpty()));
+
+    conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.scale *= 3.1415f;
+            output.form_factor =
+                output.form_factor == mir_form_factor_monitor ?
+                    mir_form_factor_phone :
+                    mir_form_factor_monitor;
+            output.subpixel_arrangement =
+                output.subpixel_arrangement == mir_subpixel_arrangement_horizontal_bgr ?
+                    mir_subpixel_arrangement_vertical_bgr :
+                    mir_subpixel_arrangement_horizontal_bgr;
+            output.orientation =
+                output.orientation == mir_orientation_normal ?
+                    mir_orientation_inverted :
+                    mir_orientation_normal;
+        });
+
+    EXPECT_THAT(*conf, Not(mt::DisplayConfigMatches(std::cref(*display->configuration()))));
+
+    EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(* conf));
+
+    // Touch each of the saved DisplayBuffers, so valgrind will complain if we've invalidated them
+    for (auto db : initial_dbs)
+    {
+        EXPECT_THAT(db->native_display_buffer(), NotNull());
+    }
+}
+
+TEST_F(NestedDisplay, changing_output_does_not_preserve_framebuffers)
+{
+    using namespace testing;
+
+    class MultiDisplayHostConnection : public mtd::StubHostConnection
+    {
+    public:
+        std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+        {
+            // This builds a 3-monitor configuration...
+            return mt::build_non_trivial_configuration();
+        }
+    };
+
+
+    auto display = std::make_unique<mgn::Display>(
+        null_platform,
+        std::make_shared<MultiDisplayHostConnection>(),
+        mt::fake_shared(null_display_report),
+        mt::fake_shared(default_conf_policy),
+        mt::fake_shared(stub_gl_config),
+        mgn::PassthroughOption::disabled);
+
+    auto conf = display->configuration();
+
+    // Enable the first and second displays, have the third disabled.
+    conf->for_each_output(
+        [counter = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            switch (counter)
+            {
+                case 0:
+                    output.used = true;
+                    output.top_left = {0, 0};
+                    break;
+                case 1:
+                    output.used = true;
+                    output.top_left = {2000, 2000};
+                    break;
+                case 2:
+                    output.used = false;
+                    break;
+            }
+            ++counter;
+        });
+
+    display->configure(*conf);
+
+    conf = display->configuration();
+
+    // Enable the first and third displays, have the second disabled.
+    conf->for_each_output(
+        [counter = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            switch (counter)
+            {
+                case 0:
+                    output.used = true;
+                    output.top_left = {0, 0};
+                    break;
+                case 1:
+                    output.used = false;
+                    break;
+                case 2:
+                    output.used = true;
+                    output.top_left = {2000, 2000};
+                    break;
+            }
+            ++counter;
+        });
+
+    /*
+     * This tests an implementation detail; it should be perfectly possible to preserve
+     * display buffers in this case, but we don't, so we shouldn't pretend to.
+     */
+    EXPECT_FALSE(display->apply_if_configuration_preserves_display_buffers(*conf));
 }
