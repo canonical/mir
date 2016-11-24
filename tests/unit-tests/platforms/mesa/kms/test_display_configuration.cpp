@@ -360,7 +360,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {
@@ -446,7 +446,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {

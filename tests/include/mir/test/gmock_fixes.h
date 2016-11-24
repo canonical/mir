@@ -38,6 +38,7 @@
 #include <memory>
 #include <gmock/gmock.h>
 
+#if 0
 namespace testing
 {
 namespace internal
@@ -168,5 +169,6 @@ class DefaultValue<std::unique_ptr<T, D>> {
 
 
 }
+#endif
 
 #endif /* MIR_TEST_GMOCK_FIXES_H_ */

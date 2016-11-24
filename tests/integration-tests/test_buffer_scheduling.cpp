@@ -446,7 +446,7 @@ void repeat_system_until(
     }
 }
 
-size_t unique_ids_in(std::vector<BufferEntry> log)
+int unique_ids_in(std::vector<BufferEntry> log)
 {
     std::sort(log.begin(), log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
@@ -1175,7 +1175,7 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 // Test that dynamic queue scaling/throttling actually works
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
-    int const discard = 3;
+    auto const discard = 3u;
 
     for (int frame = 0; frame < 20; frame++)
     {
@@ -1287,20 +1287,20 @@ int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Range(2, max_buffers_to_test));
+    Range(2, max_buffers_to_test), /* C++11 requires blank */);
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Range(2, max_buffers_to_test));
+    Range(2, max_buffers_to_test), /* C++11 requires blank */);
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Range(3, max_buffers_to_test));
+    Range(3, max_buffers_to_test), /* C++11 requires blank */);
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Values(2));
+    Values(2), /* C++11 requires blank */ );
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Values(3));
+    Values(3), /* C++11 requires blank */);
