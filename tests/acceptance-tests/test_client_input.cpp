@@ -317,8 +317,7 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
     // We should see the cursor enter
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(surface_width - 1, surface_height - 1)));
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(surface_width - 1, surface_height - 1)));
     EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
     // But we should not receive an event for the second movement outside of our surface!
@@ -337,8 +336,8 @@ TEST_F(TestClientInput, clients_receive_relative_pointer_events)
     Client first_client(new_connection(), first);
 
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEnterEventWithPosition(1, 1),
+                                                 mt::PointerEnterEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(3, 3), mt::PointerEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(-1, -1))));
@@ -434,16 +433,14 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 
     {
         InSequence seq;
-        EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
+        EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(client_width - 1, client_height - 1)));
         EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
             .WillOnce(mt::WakeUp(&first_client.all_events_received));
     }
 
     {
         InSequence seq;
-        EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
+        EXPECT_CALL(second_client, handle_input(mt::PointerEnterEventWithPosition(client_width - 1, client_height - 1)))
             .WillOnce(mt::WakeUp(&second_client.all_events_received));
     }
 
@@ -556,14 +553,12 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     Client first_client(new_connection(), first);
     Client second_client(new_connection(), second);
 
-    EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(second_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
-    EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(1, 1)))
+    EXPECT_CALL(second_client, handle_input(mt::PointerEnterEventWithPosition(1, 1)))
         .WillOnce(mt::WakeUp(&second_client.all_events_received));
 
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
-    EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(2, 2)))
+    EXPECT_CALL(second_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(2, 2)))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     // We send one event and then hide the surface on top before sending the next.
@@ -870,11 +865,9 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     ASSERT_TRUE(shell->wait_for_modify_surface(5s));
 
     // We verify that we don't receive the first shaped out button event.
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(1, 1)));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(1, 1)));
     EXPECT_CALL(client, handle_input(mt::ButtonDownEvent(1, 1)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
-    
 
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT).with_action(mis::EventAction::Up));
