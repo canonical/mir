@@ -49,6 +49,7 @@ struct MockNestedContext : graphics::NestedContext
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int, graphics::PlatformOperationMessage const&));
+    MOCK_METHOD2(request_interface, void*(char const*, int));
 };
 
 }

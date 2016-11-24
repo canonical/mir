@@ -385,12 +385,12 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
     mir_connection_create_render_surface;
-    mir_render_surface_create_buffer_stream;
-    mir_render_surface_create_buffer_stream_sync;
+    mir_connection_create_render_surface_sync;
+    mir_render_surface_get_buffer_stream;
     mir_render_surface_is_valid;
-    mir_render_surface_release;
     mir_render_surface_get_size;
     mir_render_surface_set_size;
+    mir_render_surface_release;
     mir_surface_spec_add_render_surface;
 
     #private functions needed temporarily by nested passthrough

@@ -50,7 +50,7 @@ typedef struct
 } ShimEGLImageKHR;
 
 EGLSurface future_driver_eglCreateWindowSurface(
-    EGLDisplay display, EGLConfig config, MirRenderSurface* surface)
+    EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint* attr)
 {
     if (info->surface)
     {
@@ -68,14 +68,15 @@ EGLSurface future_driver_eglCreateWindowSurface(
     MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
     //this particular [silly] driver has chosen the buffer stream as the way it wants to post
     //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
-    info->stream = mir_render_surface_create_buffer_stream_sync(
-        surface,
-        info->current_physical_width, info->current_physical_height,
-        pixel_format,
-        mir_buffer_usage_hardware);
+    info->stream =
+        mir_render_surface_get_buffer_stream(surface,
+                                             info->current_physical_width,
+                                             info->current_physical_height,
+                                             pixel_format,
+                                             mir_buffer_usage_hardware);
 
     printf("The driver chose pixel format %d.\n", pixel_format);
-    return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, NULL);
+    return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, attr);
 }
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
@@ -117,11 +118,7 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
 EGLBoolean future_driver_eglTerminate(EGLDisplay display)
 {
     if (info)
-    {
-        if (info->stream)
-            mir_buffer_stream_release_sync(info->stream);
         free(info);
-    }
     return eglTerminate(display);
 }
 
