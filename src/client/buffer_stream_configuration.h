@@ -32,11 +32,14 @@ namespace rpc { class DisplayServer; }
 class BufferStreamConfiguration
 {
 public:
+    BufferStreamConfiguration(rpc::DisplayServer& server, frontend::BufferStreamId id);
+
     void on_swap_interval_set(int interval);
     int swap_interval() const;
-    MirWaitHandle* set_swap_interval(
-        rpc::DisplayServer& server, frontend::BufferStreamId id, int interval);
+    MirWaitHandle* set_swap_interval(int interval);
 private:
+    rpc::DisplayServer& server;
+    frontend::BufferStreamId id;
     std::unique_ptr<protobuf::Void> protobuf_void{std::make_unique<protobuf::Void>()};
     MirWaitHandle interval_wait_handle;
     std::mutex mutable mutex;
