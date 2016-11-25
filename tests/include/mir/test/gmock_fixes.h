@@ -53,6 +53,10 @@ class ActionResultHolder<std::unique_ptr<T, D>>
   // The compiler-generated copy constructor and assignment operator
   // are exactly what we need, so we don't need to define them.
 
+  std::unique_ptr<T, D> Unwrap() {
+    return std::move(value_);
+  }
+
   // Returns the held value and deletes this object.
   std::unique_ptr<T, D> GetValueAndDelete() const {
       std::unique_ptr<T, D> retval(std::move(value_));
