@@ -298,6 +298,37 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
     screencast_local.capture(session_id);
 }
 
+TEST_F(CompositingScreencastTest, captures_to_buffer_by_compositing)
+{
+    using namespace testing;
+
+    mtd::StubGLBuffer stub_buffer;
+    mtd::StubSceneElement element1;
+    mtd::StubSceneElement element2;
+    mc::SceneElementSequence scene_elements{mt::fake_shared(element1), mt::fake_shared(element2)};
+    NiceMock<mtd::MockScene> mock_scene;
+    MockDisplayBufferCompositorFactory mock_db_compositor_factory;
+
+    InSequence s;
+    EXPECT_CALL(mock_db_compositor_factory,
+                create_compositor_mock(DisplayBufferCoversArea(default_region)));
+    EXPECT_CALL(mock_scene, scene_elements_for(_))
+        .WillOnce(Return(scene_elements));
+    EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite_(Eq(scene_elements)));
+
+    mc::CompositingScreencast screencast{
+        mt::fake_shared(mock_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stub_buffer_allocator),
+        mt::fake_shared(mock_db_compositor_factory)};
+
+    auto session_id = screencast.create_session(
+        default_region, default_size, default_pixel_format,
+        default_num_buffers, default_mirror_mode);
+
+    screencast_local.capture(session_id, stub_buffer);
+}
+
 TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)
 {
     using namespace testing;
