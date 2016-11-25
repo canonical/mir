@@ -349,6 +349,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
                 try
                 {
                     apply_base_config();
+                    observer->base_configuration_updated(base_configuration_);
                 }
                 catch (std::exception const&)
                 {
@@ -529,6 +530,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
             if (base_configuration_applied)
                 apply_base_config();
 
+            observer->base_configuration_updated(conf);
             send_config_to_all_sessions(conf);
         });
 }
