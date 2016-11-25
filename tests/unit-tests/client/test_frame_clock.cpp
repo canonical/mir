@@ -39,6 +39,11 @@ public:
         one_frame = std::chrono::nanoseconds(1000000000L/hz);
     }
 
+    void fake_sleep_for(std::chrono::nanoseconds ns)
+    {
+        fake_time.nanoseconds += ns;
+    }
+
 protected:
     FrameClock::GetCurrentTime with_fake_time;
     PosixTimestamp fake_time;
@@ -77,17 +82,17 @@ TEST_F(FrameClockTest, interval_is_perfectly_smooth)
     auto b = clock.next_frame_after(a);
 
     // Render time varies but our interval should not...
-    fake_time.nanoseconds += one_frame/13;
+    fake_sleep_for(one_frame/13);
 
     auto c = clock.next_frame_after(b);
     EXPECT_EQ(one_frame, c - b);
 
-    fake_time.nanoseconds += one_frame/7;
+    fake_sleep_for(one_frame/7);
 
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(one_frame, d - c);
 
-    fake_time.nanoseconds += one_frame/5;
+    fake_sleep_for(one_frame/5);
 
     auto e = clock.next_frame_after(d);
     EXPECT_EQ(one_frame, e - d);
@@ -101,12 +106,12 @@ TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
     PosixTimestamp a = fake_time;
     auto b = clock.next_frame_after(a);
 
-    fake_time.nanoseconds += one_frame * 5 / 4;
+    fake_sleep_for(one_frame * 5 / 4);
 
     auto c = clock.next_frame_after(b);
     EXPECT_EQ(one_frame, c - b);
 
-    fake_time.nanoseconds += one_frame * 7 / 6;
+    fake_sleep_for(one_frame * 7 / 6);
 
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(one_frame, d - c);
@@ -125,7 +130,7 @@ TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
     EXPECT_EQ(one_frame, c - b);
 
     // Client idles for a while without producing new frames:
-    fake_time.nanoseconds += 567 * one_frame;
+    fake_sleep_for(567 * one_frame);
 
     auto d = clock.next_frame_after(c);
     EXPECT_GT(d, fake_time);  // Resumption must be in the future
