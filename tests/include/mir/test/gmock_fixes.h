@@ -38,8 +38,6 @@
 #include <memory>
 #include <gmock/gmock.h>
 
-// FIXME - doesn't build with GMock 1.8 (zesty)
-
 namespace testing
 {
 namespace internal
