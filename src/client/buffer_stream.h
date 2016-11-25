@@ -87,17 +87,6 @@ public:
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
         geometry::Size ideal_size, size_t nbuffers);
-    // For surfaceless buffer streams
-    BufferStream(
-        MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> creation_wait_handle,
-        mir::client::rpc::DisplayServer& server,
-        std::shared_ptr<ClientPlatform> const& native_window_factory,
-        std::weak_ptr<SurfaceMap> const& map,
-        std::shared_ptr<AsyncBufferFactory> const& factory,
-        mir::protobuf::BufferStreamParameters const& parameters,
-        std::shared_ptr<PerfReport> const& perf_report,
-        size_t nbuffers);
 
     virtual ~BufferStream();
 
@@ -150,7 +139,6 @@ private:
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
-    mir::client::rpc::DisplayServer& display_server;
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 

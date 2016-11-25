@@ -39,6 +39,13 @@ namespace mgn = mir::graphics::nested;
 namespace
 {
 
+auto filter_pointer_action(MirPointerAction action)
+{
+    return (action == mir_pointer_action_enter || action == mir_pointer_action_leave)
+        ? mir_pointer_action_motion
+        : action;
+}
+
 mgn::UniqueInputConfig make_empty_config()
 {
     return mgn::UniqueInputConfig(nullptr, [](MirInputConfig const*){});
@@ -122,7 +129,7 @@ public:
                 auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
                 auto new_event = builder->pointer_event(
                         event_time,
-                        mir_pointer_event_action(pointer_event),
+                        filter_pointer_action(mir_pointer_event_action(pointer_event)),
                         mir_pointer_event_buttons(pointer_event),
                         x + frame.top_left.x.as_int(),
                         y + frame.top_left.y.as_int(),

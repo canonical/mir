@@ -23,6 +23,7 @@
 #include "mir/scene/observer.h"
 #include "mir/scene/surface.h"
 #include "mir/events/event_builders.h"
+#include "mir_toolkit/mir_cookie.h"
 
 #include <string.h>
 
@@ -68,6 +69,37 @@ struct InputDispatcherSceneObserver : public ms::Observer
 
     std::function<void(ms::Surface*)> const on_removed;
 };
+
+void deliver_without_relative_motion(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
+{
+    auto const* input_ev = mir_event_get_input_event(ev);
+    auto const* pev = mir_input_event_get_pointer_event(input_ev);
+    std::vector<uint8_t> cookie_data;
+    if (mir_input_event_has_cookie(input_ev))
+    {
+        auto cookie = mir_input_event_get_cookie(input_ev);
+        cookie_data.resize(mir_cookie_buffer_size(cookie));
+        mir_cookie_to_buffer(cookie, cookie_data.data(), mir_cookie_buffer_size(cookie));
+        mir_cookie_release(cookie);
+    }
+    auto const& bounds = surface->input_bounds();
+
+    auto to_deliver = mev::make_event(mir_input_event_get_device_id(input_ev),
+                                      std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)},
+                                      cookie_data,
+                                      mir_pointer_event_modifiers(pev),
+                                      mir_pointer_event_action(pev),
+                                      mir_pointer_event_buttons(pev),
+                                      mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+                                      mir_pointer_event_axis_value(pev, mir_pointer_axis_y),
+                                      0.0f,
+                                      0.0f,
+                                      0.0f,
+                                      0.0f);
+
+    mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
+    surface->consume(to_deliver.get());
+}
 
 void deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
@@ -287,7 +319,16 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent 
         {
             pointer_state.gesture_owner = target;
         }
-        deliver(target, ev);
+
+        if (sent_ev)
+        {
+            if (action != mir_pointer_action_motion)
+                deliver_without_relative_motion(target, ev);
+        }
+        else
+        {
+            deliver(target, ev);
+        }
         return true;
     }
     return false;
