@@ -109,6 +109,18 @@ public:
         return last_captured_buffer;
     }
 
+    void capture(std::shared_ptr<mg::Buffer> const& buffer)
+    {
+        auto scheduled = free_queue.num_scheduled();
+        free_queue.schedule(buffer);
+        for(auto i = 0u; i < scheduled; i++)
+            free_queue.schedule(free_queue.next_buffer());
+
+        display_buffer_compositor->composite(scene->scene_elements_for(this));
+        if (buffer != ready_queue.next_buffer())
+            throw std::runtime_error("unable to capture to buffer");
+    }
+
 private:
     std::shared_ptr<Scene> const scene;
     QueueingSchedule free_queue;
@@ -145,7 +157,7 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
         region.size.width.as_int() == 0 ||
         region.size.height.as_int() == 0 ||
         pixel_format == mir_pixel_format_invalid ||
-        nbuffers < 1)
+        nbuffers < 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
@@ -162,16 +174,15 @@ void mc::CompositingScreencast::destroy_session(mf::ScreencastSessionId id)
     session_contexts.erase(id);
 }
 
+std::shared_ptr<mc::detail::ScreencastSessionContext> mc::CompositingScreencast::session(mf::ScreencastSessionId id)
+{
+    std::lock_guard<decltype(session_mutex)> lock{session_mutex};
+    return session_contexts.at(id);
+}
+
 std::shared_ptr<mg::Buffer> mc::CompositingScreencast::capture(mf::ScreencastSessionId id)
 {
-    std::shared_ptr<detail::ScreencastSessionContext> session_context;
-
-    {
-        std::lock_guard<decltype(session_mutex)> lock{session_mutex};
-        session_context = session_contexts.at(id);
-    }
-
-    return session_context->capture();
+    return session(id)->capture();
 }
 
 mf::ScreencastSessionId mc::CompositingScreencast::next_available_session_id()
@@ -194,13 +205,13 @@ mc::CompositingScreencast::create_session_context(
     int nbuffers,
     MirMirrorMode mirror_mode)
 {
-
     return std::make_shared<detail::ScreencastSessionContext>(
         scene, *display, *buffer_allocator, *db_compositor_factory,
         rect, size, pixel_format, nbuffers, mirror_mode);
 }
 
-void mc::CompositingScreencast::capture(mf::ScreencastSessionId id, mg::Buffer& b)
+void mc::CompositingScreencast::capture(
+    mf::ScreencastSessionId id, std::shared_ptr<mg::Buffer> const& b)
 {
-    (void) id; (void) b;
+    session(id)->capture(b);
 }

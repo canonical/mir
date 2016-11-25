@@ -324,9 +324,29 @@ TEST_F(CompositingScreencastTest, captures_to_buffer_by_compositing)
 
     auto session_id = screencast.create_session(
         default_region, default_size, default_pixel_format,
+        0, default_mirror_mode);
+
+    screencast.capture(session_id, mt::fake_shared(stub_buffer));
+}
+
+TEST_F(CompositingScreencastTest, captures_to_buffer_by_compositing_with_reserve_buffers)
+{
+    using namespace testing;
+
+    mtd::StubGLBuffer stub_buffer;
+    NiceMock<mtd::MockScene> mock_scene;
+    MockDisplayBufferCompositorFactory mock_db_compositor_factory;
+    mc::CompositingScreencast screencast{
+        mt::fake_shared(mock_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stub_buffer_allocator),
+        mt::fake_shared(mock_db_compositor_factory)};
+
+    auto session_id = screencast.create_session(
+        default_region, default_size, default_pixel_format,
         default_num_buffers, default_mirror_mode);
 
-    screencast.capture(session_id, stub_buffer);
+    screencast.capture(session_id, mt::fake_shared(stub_buffer));
 }
 
 TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)

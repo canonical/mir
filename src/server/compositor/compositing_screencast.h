@@ -57,7 +57,7 @@ public:
         MirMirrorMode mirror_mode) override;
     void destroy_session(frontend::ScreencastSessionId id) override;
     std::shared_ptr<graphics::Buffer> capture(frontend::ScreencastSessionId id) override;
-    void capture(frontend::ScreencastSessionId id, graphics::Buffer& buffer) override;
+    void capture(frontend::ScreencastSessionId id, std::shared_ptr<graphics::Buffer> const& buffer) override;
 
 private:
     frontend::ScreencastSessionId next_available_session_id();
@@ -67,6 +67,7 @@ private:
             MirPixelFormat pixel_format,
             int nbuffers,
             MirMirrorMode mirror_mode);
+   std::shared_ptr<detail::ScreencastSessionContext> session(frontend::ScreencastSessionId id);
 
     std::mutex session_mutex;
     std::shared_ptr<Scene> const scene;

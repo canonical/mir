@@ -47,7 +47,7 @@ public:
     {
         return nullptr;
     }
-    void capture(frontend::ScreencastSessionId, graphics::Buffer&) {}
+    void capture(frontend::ScreencastSessionId, std::shared_ptr<graphics::Buffer> const&) {}
 };
 
 }
