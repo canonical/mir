@@ -94,6 +94,11 @@ void mrl::DisplayConfigurationReport::log_configuration(
             logger->log(component, severity, 
                         "%sPhysical size %.1f\" %dx%dmm",
                         indent, inches, width_mm, height_mm);
+
+            static const char* const power_mode[] =
+                {"on", "in standby", "suspended", "off"};
+            logger->log(component, severity,
+                        "%sPower is %s", indent, power_mode[out.power_mode]);
             
             if (out.used)
             {
