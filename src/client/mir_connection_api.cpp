@@ -240,12 +240,11 @@ MirDisplayConfig* mir_connection_create_display_configuration(
 {
     mir::require(mir_connection_is_valid(connection));
 
-    return reinterpret_cast<MirDisplayConfig*>(connection->snapshot_display_configuration().release());
+    return new MirDisplayConfig(*connection->snapshot_display_configuration());
 }
 
-void mir_display_config_release(MirDisplayConfig* user_config)
+void mir_display_config_release(MirDisplayConfig* config)
 {
-    auto config = reinterpret_cast<mir::protobuf::DisplayConfiguration*>(user_config);
     delete config;
 }
 
@@ -334,9 +333,7 @@ void mir_connection_preview_base_display_configuration(
 
     try
     {
-        connection->preview_base_display_configuration(
-            *reinterpret_cast<mp::DisplayConfiguration const*>(config),
-            std::chrono::seconds{timeout_seconds});
+        connection->preview_base_display_configuration(*config, std::chrono::seconds{timeout_seconds});
     }
     catch (std::exception const& ex)
     {
@@ -352,8 +349,7 @@ void mir_connection_confirm_base_display_configuration(
 
     try
     {
-        connection->confirm_base_display_configuration(
-            *reinterpret_cast<mp::DisplayConfiguration const*>(config));
+        connection->confirm_base_display_configuration(*config);
     }
     catch (std::exception const& ex)
     {
