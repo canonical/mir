@@ -47,6 +47,7 @@ public:
     {
         return nullptr;
     }
+    void capture(frontend::ScreencastSessionId, graphics::Buffer&) {}
 };
 
 }

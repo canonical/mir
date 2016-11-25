@@ -326,7 +326,7 @@ TEST_F(CompositingScreencastTest, captures_to_buffer_by_compositing)
         default_region, default_size, default_pixel_format,
         default_num_buffers, default_mirror_mode);
 
-    screencast_local.capture(session_id, stub_buffer);
+    screencast.capture(session_id, stub_buffer);
 }
 
 TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)

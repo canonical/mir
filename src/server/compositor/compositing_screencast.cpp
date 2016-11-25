@@ -199,3 +199,8 @@ mc::CompositingScreencast::create_session_context(
         scene, *display, *buffer_allocator, *db_compositor_factory,
         rect, size, pixel_format, nbuffers, mirror_mode);
 }
+
+void mc::CompositingScreencast::capture(mf::ScreencastSessionId id, mg::Buffer& b)
+{
+    (void) id; (void) b;
+}

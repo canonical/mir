@@ -44,3 +44,9 @@ std::shared_ptr<mir::graphics::Buffer> mf::UnauthorizedScreencast::capture(
     BOOST_THROW_EXCEPTION(
         std::runtime_error("Process is not authorized to capture screencasts"));
 }
+
+void mf::UnauthorizedScreencast::capture(mf::ScreencastSessionId, mir::graphics::Buffer&)
+{
+    BOOST_THROW_EXCEPTION(
+        std::runtime_error("Process is not authorized to capture screencasts"));
+}
