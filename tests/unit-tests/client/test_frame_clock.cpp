@@ -157,3 +157,35 @@ TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
     EXPECT_LE(d, fake_time+one_frame);  // But not too far in the future
 }
 
+TEST_F(FrameClockTest, multiple_streams_in_sync)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp left;
+    left = clock.next_frame_after(left);
+
+    fake_sleep_for(one_frame / 9);
+
+    PosixTimestamp right;
+    right = clock.next_frame_after(right);
+
+    ASSERT_EQ(left, right);
+    fake_sleep_until(left);
+    fake_sleep_until(right);
+
+    left = clock.next_frame_after(left);
+    fake_sleep_for(one_frame / 5);
+    right = clock.next_frame_after(right);
+
+    ASSERT_EQ(left, right);
+    fake_sleep_until(left);
+    fake_sleep_until(right);
+
+    left = clock.next_frame_after(left);
+    fake_sleep_for(one_frame / 7);
+    right = clock.next_frame_after(right);
+
+    ASSERT_EQ(left, right);
+}
+
