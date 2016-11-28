@@ -1012,6 +1012,7 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
     mp::BufferAllocation request;
     mp::Void null;
     mp::ScreencastParameters screencast_parameters;
+    screencast_parameters.set_num_buffers(0);
     mp::Screencast screencast;
 
     auto buffer_request = request.add_buffer_requests();
@@ -1030,6 +1031,7 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
     EXPECT_CALL(*mock_screencast, capture(expected_id, _/*buffer*/)); 
 
     auto mediator = create_session_mediator_with_screencast(mock_screencast);
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
     mediator->allocate_buffers(&request, &null, null_callback.get());
     mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
 

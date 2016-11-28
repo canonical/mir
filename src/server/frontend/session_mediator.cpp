@@ -740,17 +740,21 @@ void mf::SessionMediator::create_screencast(
         mirror_mode = static_cast<MirMirrorMode>(parameters->mirror_mode());
 
     auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
-    auto buffer = screencast->capture(screencast_session_id);
-    screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+
+    if (nbuffers > 0)
+    {
+        auto buffer = screencast->capture(screencast_session_id);
+        screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+        pack_protobuf_buffer(
+            *protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
+            buffer.get(),
+            msg_type);
+    }
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
-
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
-    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
-                         buffer.get(),
-                         msg_type);
 
     done->Run();
 }
@@ -788,10 +792,15 @@ void mf::SessionMediator::screencast_buffer(
 
 void mf::SessionMediator::screencast_to_buffer(
     mir::protobuf::ScreencastRequest const* request,
-    mir::protobuf::StructuredError* response,
+    mir::protobuf::StructuredError*,
     google::protobuf::Closure* done)
 {
-    (void)request;(void)response; (void)done;
+    auto session = weak_session.lock();
+    ScreencastSessionId const screencast_session_id{request->id().value()};
+    auto buffer = session->get_buffer(mg::BufferID{request->buffer_id()});
+    mf::ScreencastSessionId const screencast_id{request->id().value()};
+    screencast->capture(screencast_session_id, buffer);
+    done->Run();
 }
 
 void mf::SessionMediator::create_buffer_stream(

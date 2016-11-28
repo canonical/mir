@@ -352,7 +352,7 @@ message ScreencastId {
 
 message ScreencastRequest {
   optional ScreencastId id = 1;
-  optional int32 buffer_id = 2;
+  optional uint32 buffer_id = 2;
 }
 
 message Screencast {
