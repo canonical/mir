@@ -81,7 +81,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * the client's render time was a little too long.
      */
     auto target = prev + period;
-    auto const now = get_current_time(target.clock_id);
+    auto now = get_current_time(target.clock_id);
 
     /*
      * Count missed frames. Note how the target time would need to be more than
@@ -119,6 +119,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
          * cause visual lag. After all buffer queues move to always dropping
          * (mailbox mode), this delay won't be required as a safety.
          */
+        now = get_current_time(server_frame.clock_id);
         if (server_frame > now)
         {
             target = server_frame;

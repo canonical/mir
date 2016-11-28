@@ -18,6 +18,7 @@
 
 #include "src/client/frame_clock.h"
 #include <gtest/gtest.h>
+#include <unordered_map>
 
 using namespace ::testing;
 using namespace ::std::chrono_literals;
@@ -29,31 +30,33 @@ class FrameClockTest : public Test
 public:
     FrameClockTest()
     {
-        with_fake_time = [this](clockid_t){ return fake_time; };
+        with_fake_time = [this](clockid_t clk){ return fake_time[clk]; };
     }
 
     void SetUp()
     {
-        fake_time = PosixTimestamp(CLOCK_MONOTONIC, 12345678ns);
+        for (auto& c : {CLOCK_MONOTONIC, CLOCK_REALTIME})
+            fake_time[c] = PosixTimestamp(c, 12345678ns);
         int const hz = 60;
         one_frame = std::chrono::nanoseconds(1000000000L/hz);
     }
 
     void fake_sleep_for(std::chrono::nanoseconds ns)
     {
-        fake_time.nanoseconds += ns;
+        for (auto& f : fake_time)
+            f.second.nanoseconds += ns;
     }
 
     void fake_sleep_until(PosixTimestamp t)
     {
-        ASSERT_EQ(t.clock_id, fake_time.clock_id);
-        if (fake_time < t)
-            fake_time = t;
+        auto& now = fake_time[t.clock_id];
+        if (now < t)
+            now = t;
     }
 
 protected:
     FrameClock::GetCurrentTime with_fake_time;
-    PosixTimestamp fake_time;
+    std::unordered_map<clockid_t,PosixTimestamp> fake_time;
     std::chrono::nanoseconds one_frame;
 };
 
@@ -70,7 +73,7 @@ TEST_F(FrameClockTest, unthrottled_without_a_period)
 
 TEST_F(FrameClockTest, first_frame_is_within_one_frame)
 {
-    auto a = fake_time;
+    auto a = fake_time[CLOCK_MONOTONIC];
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
@@ -112,7 +115,7 @@ TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
-    PosixTimestamp a = fake_time;
+    auto a = fake_time[CLOCK_MONOTONIC];
     auto b = clock.next_frame_after(a);
 
     fake_sleep_until(b);
@@ -127,7 +130,7 @@ TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(one_frame, d - c);
 
-    EXPECT_LT(d, fake_time);
+    EXPECT_LT(d, fake_time[d.clock_id]);
 
     fake_sleep_until(d);
     fake_sleep_for(one_frame/4);  // short render time
@@ -142,7 +145,7 @@ TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
-    PosixTimestamp a = fake_time;
+    PosixTimestamp a = fake_time[CLOCK_MONOTONIC];
     auto b = clock.next_frame_after(a);
     fake_sleep_until(b);
     auto c = clock.next_frame_after(b);
@@ -153,8 +156,8 @@ TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
     fake_sleep_for(567 * one_frame);
 
     auto d = clock.next_frame_after(c);
-    EXPECT_GT(d, fake_time);  // Resumption must be in the future
-    EXPECT_LE(d, fake_time+one_frame);  // But not too far in the future
+    EXPECT_GT(d, fake_time[d.clock_id]);  // Resumption must be in the future
+    EXPECT_LE(d, fake_time[d.clock_id]+one_frame);  // But not too far in the future
 }
 
 TEST_F(FrameClockTest, multiple_streams_in_sync)
@@ -245,7 +248,7 @@ TEST_F(FrameClockTest, resuming_comes_in_phase_with_server_vsync)
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
-    PosixTimestamp a = fake_time;
+    PosixTimestamp a = fake_time[CLOCK_MONOTONIC];
     auto b = clock.next_frame_after(a);
     fake_sleep_until(b);
     auto c = clock.next_frame_after(b);
@@ -255,12 +258,12 @@ TEST_F(FrameClockTest, resuming_comes_in_phase_with_server_vsync)
     // Client idles for a while without producing new frames:
     fake_sleep_for(789 * one_frame);
 
-    auto last_server_frame = fake_time - 556677ns;
+    auto last_server_frame = fake_time[CLOCK_MONOTONIC] - 556677ns;
     clock.set_resync_callback([last_server_frame](){return last_server_frame;});
 
     auto d = clock.next_frame_after(c);
-    EXPECT_GT(d, fake_time);  // Resumption must be in the future
-    EXPECT_LE(d, fake_time+one_frame);  // But not too far in the future
+    EXPECT_GT(d, fake_time[d.clock_id]);  // Resumption must be in the future
+    EXPECT_LE(d, fake_time[d.clock_id]+one_frame);  // But not too far in the future
 
     auto server_phase = last_server_frame % one_frame;
     EXPECT_NE(server_phase, c % one_frame);  // wasn't in phase before
@@ -268,4 +271,20 @@ TEST_F(FrameClockTest, resuming_comes_in_phase_with_server_vsync)
 
     // Not only did we come in phase but we're targeting the soonest frame
     EXPECT_EQ(last_server_frame+one_frame, d);
+}
+
+TEST_F(FrameClockTest, switches_to_the_server_clock_on_startup)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp a(CLOCK_REALTIME, 0ns);
+
+    PosixTimestamp b;
+    EXPECT_NO_THROW({
+        b = clock.next_frame_after(a);
+    });
+
+    // The default resync callback uses CLOCK_MONOTONIC...
+    EXPECT_NE(a.clock_id, b.clock_id);
 }
