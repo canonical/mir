@@ -35,8 +35,10 @@ public:
 
     void SetUp()
     {
-        for (auto& c : {CLOCK_MONOTONIC, CLOCK_REALTIME})
-            fake_time[c] = PosixTimestamp(c, 12345678ns);
+        for (auto& c : {CLOCK_MONOTONIC, CLOCK_REALTIME,
+                        CLOCK_MONOTONIC_RAW, CLOCK_REALTIME_COARSE,
+                        CLOCK_MONOTONIC_COARSE, CLOCK_BOOTTIME})
+            fake_time[c] = PosixTimestamp(c, c * c * 1234567ns);
         int const hz = 60;
         one_frame = std::chrono::nanoseconds(1000000000L/hz);
     }
@@ -50,8 +52,11 @@ public:
     void fake_sleep_until(PosixTimestamp t)
     {
         auto& now = fake_time[t.clock_id];
-        if (now < t)
-            now = t;
+        if (t > now)
+        {
+            auto delta = t.nanoseconds - now.nanoseconds;
+            fake_sleep_for(delta);
+        }
     }
 
 protected:
