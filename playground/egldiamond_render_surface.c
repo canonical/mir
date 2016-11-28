@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
 
     render_surface = mir_connection_create_render_surface_sync(connection, width, height);
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
+    CHECK(mir_render_surface_get_error_message(render_surface), "");
 
     //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
     //       Current code requires creation of content before creation of the surface.
