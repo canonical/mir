@@ -297,3 +297,36 @@ TEST_F(FrameClockTest, switches_to_the_server_clock_on_startup)
     // The default resync callback uses CLOCK_MONOTONIC...
     EXPECT_NE(a.clock_id, b.clock_id);
 }
+
+TEST_F(FrameClockTest, switches_between_different_driver_clocks)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp a = fake_time[CLOCK_MONOTONIC];
+    auto b = clock.next_frame_after(a);
+    fake_sleep_until(b);
+    auto c = clock.next_frame_after(b);
+    EXPECT_EQ(one_frame, c - b);
+
+    fake_sleep_until(c);
+
+    // Window moves between displays and in the glorious future that might even
+    // mean it switches cards, with different drivers, different clocks...
+    auto last_server_frame = fake_time[CLOCK_REALTIME] - 556677ns;
+    clock.set_resync_callback([last_server_frame](){return last_server_frame;});
+
+    EXPECT_EQ(CLOCK_MONOTONIC, c.clock_id);
+    auto d = clock.next_frame_after(c);
+    EXPECT_EQ(CLOCK_REALTIME, d.clock_id);
+
+    EXPECT_GT(d, fake_time[CLOCK_REALTIME]);
+    EXPECT_LE(d, fake_time[CLOCK_REALTIME]+one_frame);
+
+    auto server_phase = last_server_frame % one_frame;
+    EXPECT_NE(server_phase, c % one_frame);  // wasn't in phase before
+    EXPECT_EQ(server_phase, d % one_frame);  // but is in phase now
+
+    // Not only did we come in phase but we're targeting the soonest frame
+    EXPECT_EQ(last_server_frame+one_frame, d);
+}
