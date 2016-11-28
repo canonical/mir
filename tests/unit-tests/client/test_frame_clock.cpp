@@ -298,7 +298,7 @@ TEST_F(FrameClockTest, switches_to_the_server_clock_on_startup)
     EXPECT_NE(a.clock_id, b.clock_id);
 }
 
-TEST_F(FrameClockTest, switches_between_different_driver_clocks)
+TEST_F(FrameClockTest, can_migrate_between_different_driver_clocks)
 {
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);

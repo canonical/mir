@@ -63,8 +63,6 @@ PosixTimestamp FrameClock::fallback_resync_callback() const
 
 PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
 {
-    // Sorry about the verbose comments, but there are many subtlties here.
-
     Lock lock(mutex);
     /*
      * Unthrottled is an option too. But why?... Because a stream might exist
@@ -81,7 +79,6 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * the client's render time was a little too long.
      */
     auto target = prev + period;
-    auto now = get_current_time(target.clock_id);
 
     /*
      * Count missed frames. Note how the target time would need to be more than
@@ -96,6 +93,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * frames of lag. But we're also doing better than double buffering here
      * in that this approach avoids any additive lag when nested.
      */
+    auto now = get_current_time(target.clock_id);
     long const missed_frames = now > target ? (now - target) / period : 0L;
 
     /*
@@ -108,9 +106,17 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
     if (missed_frames || config_changed)
     {
         lock.unlock();
-        // Unlock as user-supplied callbacks might block or deadlock
         auto const server_frame = resync_callback();
         lock.lock();
+
+        /*
+         * Avoid mismatches (which will throw) and ensure we're always
+         * comparing timestamps of the same clock ID. This means our result
+         * 'target' might have a different clock to that of 'prev'. And that's
+         * OK... we want to use whatever clock ID the driver is using for
+         * its hardware vsync timestamps. We support migrating between clocks.
+         */
+        now = get_current_time(server_frame.clock_id);
 
         /*
          * It's important to target a future time and not allow 'now'. This
@@ -119,7 +125,6 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
          * cause visual lag. After all buffer queues move to always dropping
          * (mailbox mode), this delay won't be required as a safety.
          */
-        now = get_current_time(server_frame.clock_id);
         if (server_frame > now)
         {
             target = server_frame;
