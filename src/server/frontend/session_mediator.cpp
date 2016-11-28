@@ -786,6 +786,14 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::screencast_to_buffer(
+    mir::protobuf::ScreencastRequest const* request,
+    mir::protobuf::StructuredError* response,
+    google::protobuf::Closure* done)
+{
+    (void)request;(void)response; (void)done;
+}
+
 void mf::SessionMediator::create_buffer_stream(
     mir::protobuf::BufferStreamParameters const* request,
     mir::protobuf::BufferStream* response,

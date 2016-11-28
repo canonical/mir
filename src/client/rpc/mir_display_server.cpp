@@ -126,6 +126,13 @@ void mclr::DisplayServer::screencast_buffer(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::screencast_to_buffer(
+    mir::protobuf::ScreencastRequest const* request,
+    mir::protobuf::StructuredError* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
 void mclr::DisplayServer::release_screencast(
     mir::protobuf::ScreencastId const* request,
     mir::protobuf::Void* response,
