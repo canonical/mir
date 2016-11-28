@@ -213,15 +213,31 @@ TEST_F(FrameClockTest, moving_between_displays_adapts_to_new_rate)
     // But not too far in the future:
     EXPECT_LE(d, c + one_tv_frame);
 
+    // Vsync is now at the slower rate of the TV:
     fake_sleep_until(d);
-
     auto e = clock.next_frame_after(d);
     EXPECT_EQ(one_tv_frame, e - d);
-
     fake_sleep_until(e);
-
     auto f = clock.next_frame_after(e);
     EXPECT_EQ(one_tv_frame, f - e);
+
+    fake_sleep_until(f);
+
+    // Window moves back to the faster display:
+    clock.set_period(one_frame);
+    auto g = clock.next_frame_after(f);
+    // Clock keeps ticking into the future for the new display:
+    EXPECT_GT(g, f);
+    // But not too far in the future:
+    EXPECT_LE(g, f + one_tv_frame);
+
+    // Vsync is now at the faster rate again:
+    fake_sleep_until(g);
+    auto h = clock.next_frame_after(g);
+    EXPECT_EQ(one_frame, h - g);
+    fake_sleep_until(e);
+    auto i = clock.next_frame_after(h);
+    EXPECT_EQ(one_frame, i - h);
 }
 
 TEST_F(FrameClockTest, resuming_comes_in_phase_with_server_vsync)
