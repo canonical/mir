@@ -44,6 +44,13 @@ public:
         fake_time.nanoseconds += ns;
     }
 
+    void fake_sleep_until(PosixTimestamp t)
+    {
+        ASSERT_EQ(t.clock_id, fake_time.clock_id);
+        if (fake_time < t)
+            fake_time = t;
+    }
+
 protected:
     FrameClock::GetCurrentTime with_fake_time;
     PosixTimestamp fake_time;
@@ -81,18 +88,20 @@ TEST_F(FrameClockTest, interval_is_perfectly_smooth)
     PosixTimestamp a;
     auto b = clock.next_frame_after(a);
 
-    // Render time varies but our interval should not...
-    fake_sleep_for(one_frame/13);
+    fake_sleep_until(b);
+    fake_sleep_for(one_frame/13);  // short render time
 
     auto c = clock.next_frame_after(b);
     EXPECT_EQ(one_frame, c - b);
 
-    fake_sleep_for(one_frame/7);
+    fake_sleep_until(c);
+    fake_sleep_for(one_frame/7);  // short render time
 
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(one_frame, d - c);
 
-    fake_sleep_for(one_frame/5);
+    fake_sleep_until(d);
+    fake_sleep_for(one_frame/5);  // short render time
 
     auto e = clock.next_frame_after(d);
     EXPECT_EQ(one_frame, e - d);
@@ -106,17 +115,26 @@ TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
     PosixTimestamp a = fake_time;
     auto b = clock.next_frame_after(a);
 
-    fake_sleep_for(one_frame * 5 / 4);
+    fake_sleep_until(b);
+    fake_sleep_for(one_frame * 5 / 4);  // long render time; over a frame
 
     auto c = clock.next_frame_after(b);
     EXPECT_EQ(one_frame, c - b);
 
-    fake_sleep_for(one_frame * 7 / 6);
+    fake_sleep_until(c);
+    fake_sleep_for(one_frame * 7 / 6);  // long render time; over a frame
 
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(one_frame, d - c);
 
     EXPECT_LT(d, fake_time);
+
+    fake_sleep_until(d);
+    fake_sleep_for(one_frame/4);  // short render time
+
+    // We can recover since we had a short render time...
+    auto e = clock.next_frame_after(d);
+    EXPECT_EQ(one_frame, e - d);
 }
 
 TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
@@ -126,8 +144,10 @@ TEST_F(FrameClockTest, resuming_from_sleep_targets_the_future)
 
     PosixTimestamp a = fake_time;
     auto b = clock.next_frame_after(a);
+    fake_sleep_until(b);
     auto c = clock.next_frame_after(b);
     EXPECT_EQ(one_frame, c - b);
+    fake_sleep_until(c);
 
     // Client idles for a while without producing new frames:
     fake_sleep_for(567 * one_frame);
