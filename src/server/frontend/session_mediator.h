@@ -170,7 +170,7 @@ public:
         google::protobuf::Closure* done) override;
     void screencast_to_buffer(
         mir::protobuf::ScreencastRequest const* request,
-        mir::protobuf::StructuredError* response,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
     void release_screencast(
         mir::protobuf::ScreencastId const* request,

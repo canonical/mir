@@ -792,7 +792,7 @@ void mf::SessionMediator::screencast_buffer(
 
 void mf::SessionMediator::screencast_to_buffer(
     mir::protobuf::ScreencastRequest const* request,
-    mir::protobuf::StructuredError*,
+    mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
     auto session = weak_session.lock();

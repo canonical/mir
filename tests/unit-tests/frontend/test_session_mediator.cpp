@@ -1028,7 +1028,7 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
 
     EXPECT_CALL(*mock_screencast, create_session(_,_,_,_,_))
         .WillOnce(Return(expected_id));
-    EXPECT_CALL(*mock_screencast, capture(expected_id, _/*buffer*/)); 
+    EXPECT_CALL(*mock_screencast, capture(expected_id, std::shared_ptr<mg::Buffer>(buffer))); 
 
     auto mediator = create_session_mediator_with_screencast(mock_screencast);
     mediator->connect(&connect_parameters, &connection, null_callback.get());
@@ -1036,10 +1036,9 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
     mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
 
     mp::ScreencastRequest screencast_request;
-    mp::StructuredError error;
 
     screencast_request.mutable_id()->set_value(expected_id.as_value());
     screencast_request.set_buffer_id(buffer_id);
 
-    mediator->screencast_to_buffer(&screencast_request, &error, null_callback.get());
+    mediator->screencast_to_buffer(&screencast_request, &null, null_callback.get());
 }

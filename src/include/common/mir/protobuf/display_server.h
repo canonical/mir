@@ -89,7 +89,7 @@ public:
         google::protobuf::Closure* done) = 0;
     virtual void screencast_to_buffer(
         mir::protobuf::ScreencastRequest const* request,
-        mir::protobuf::StructuredError* response,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
     virtual void release_screencast(
         mir::protobuf::ScreencastId const* request,

@@ -92,7 +92,7 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         google::protobuf::Closure* /*done*/) {}
     void screencast_to_buffer(
         mir::protobuf::ScreencastRequest const*,
-        mir::protobuf::StructuredError*,
+        mir::protobuf::Void*,
         google::protobuf::Closure*) {}
     void release_screencast(
         mir::protobuf::ScreencastId const* /*request*/,
