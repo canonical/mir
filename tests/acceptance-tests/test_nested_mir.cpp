@@ -127,6 +127,7 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationObserver
 {
     MOCK_METHOD1(initial_configuration, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
     MOCK_METHOD1(configuration_applied, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
+    MOCK_METHOD1(base_configuration_updated, void (std::shared_ptr<mg::DisplayConfiguration const> const& base_config));
     MOCK_METHOD2(configuration_failed, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
     MOCK_METHOD2(catastrophic_configuration_error, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
 };

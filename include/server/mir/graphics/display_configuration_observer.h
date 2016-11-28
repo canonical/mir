@@ -51,6 +51,13 @@ public:
     virtual void configuration_applied(std::shared_ptr<DisplayConfiguration const> const& config) = 0;
 
     /**
+     * Notification after updating base display configuration.
+     *
+     * \param [in] config   The configuration that has just been updated.
+     */
+    virtual void base_configuration_updated(std::shared_ptr<DisplayConfiguration const> const& base_config) = 0;
+
+    /**
      * Notification after every failed display configuration attempt.
      *
      * This is called if the graphics platform throws an exception when trying
