@@ -208,7 +208,10 @@ TEST_F(FrameClockTest, moving_between_displays_adapts_to_new_rate)
     // Window moves to a new slower display:
     clock.set_period(one_tv_frame);
     auto d = clock.next_frame_after(c);
+    // Clock keeps ticking into the future for the new display:
     EXPECT_GT(d, c);
+    // But not too far in the future:
+    EXPECT_LE(d, c + one_tv_frame);
 
     fake_sleep_until(d);
 
@@ -219,4 +222,34 @@ TEST_F(FrameClockTest, moving_between_displays_adapts_to_new_rate)
 
     auto f = clock.next_frame_after(e);
     EXPECT_EQ(one_tv_frame, f - e);
+}
+
+TEST_F(FrameClockTest, resuming_comes_in_phase_with_server_vsync)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp a = fake_time;
+    auto b = clock.next_frame_after(a);
+    fake_sleep_until(b);
+    auto c = clock.next_frame_after(b);
+    EXPECT_EQ(one_frame, c - b);
+    fake_sleep_until(c);
+
+    // Client idles for a while without producing new frames:
+    fake_sleep_for(789 * one_frame);
+
+    auto last_server_frame = fake_time - 556677ns;
+    clock.set_resync_callback([last_server_frame](){return last_server_frame;});
+
+    auto d = clock.next_frame_after(c);
+    EXPECT_GT(d, fake_time);  // Resumption must be in the future
+    EXPECT_LE(d, fake_time+one_frame);  // But not too far in the future
+
+    auto server_phase = last_server_frame % one_frame;
+    EXPECT_NE(server_phase, c % one_frame);  // wasn't in phase before
+    EXPECT_EQ(server_phase, d % one_frame);  // but is in phase now
+
+    // Not only did we come in phase but we're targeting the soonest frame
+    EXPECT_EQ(last_server_frame+one_frame, d);
 }
