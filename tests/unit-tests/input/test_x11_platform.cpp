@@ -122,7 +122,7 @@ TEST_F(X11PlatformTest, registered_devices_mimic_mouse_and_keyboard)
 
     x11_platform.start();
 
-    ASSERT_THAT(devices.size(), Eq(2));
+    ASSERT_THAT(devices.size(), Eq(2u));
 
     auto const& first_info = devices[0]->get_device_info();
     auto const& second_info = devices[1]->get_device_info();

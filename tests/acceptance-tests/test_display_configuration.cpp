@@ -479,7 +479,7 @@ TEST_F(LegacyDisplayConfigurationTest,
         display_client.connection, &display_config_change_handler, &callback_called);
 
     auto requested_config = display_client.get_base_config();
-    EXPECT_THAT(requested_config->outputs[0].used, Eq(1));
+    EXPECT_THAT(requested_config->outputs[0].used, Eq(1u));
     requested_config->outputs[0].used = 0;
 
     display_client.set_base_config(requested_config.get());

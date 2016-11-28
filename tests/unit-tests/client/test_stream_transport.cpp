@@ -100,10 +100,12 @@ TYPED_TEST(StreamTransportTest, watch_fd_is_pollable)
     EXPECT_FALSE(socket_readable.revents & POLLNVAL);
 }
 
+#define ssizeof(X) (static_cast<ssize_t>(sizeof(X)))
+
 TYPED_TEST(StreamTransportTest, watch_fd_notifies_readable_when_data_pending)
 {
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
@@ -113,7 +115,7 @@ TYPED_TEST(StreamTransportTest, watch_fd_remains_unreadable_until_event_pending)
     EXPECT_FALSE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 }
@@ -135,7 +137,7 @@ TYPED_TEST(StreamTransportTest, watch_fd_is_no_longer_readable_after_event_proce
 
     this->transport->register_observer(observer);
 
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     ASSERT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
@@ -153,7 +155,7 @@ TYPED_TEST(StreamTransportTest, no_events_dispatched_until_dispatch_called)
     bool disconnected{false};
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
     ::close(this->test_fd);
 
     ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, dummy, &data_available]()
@@ -189,7 +191,7 @@ TYPED_TEST(StreamTransportTest, dispatches_single_event_at_a_time)
     bool disconnected{false};
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
     ::close(this->test_fd);
 
     ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, dummy, &data_available]()
@@ -290,7 +292,7 @@ TYPED_TEST(StreamTransportTest, notifies_on_data_available)
     this->transport->register_observer(observer);
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
 
@@ -319,14 +321,15 @@ TYPED_TEST(StreamTransportTest, keeps_notifying_of_available_data_until_all_data
 
     this->transport->register_observer(observer);
 
-    EXPECT_EQ(data.size(), write(this->test_fd, data.data(), data.size()));
+    EXPECT_EQ(static_cast<int>(data.size()),
+              write(this->test_fd, data.data(), data.size()));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()) &&
            this->transport->dispatch(md::FdEvent::readable))
         ;
 
-    EXPECT_EQ(0, bytes_left);
+    EXPECT_EQ(0u, bytes_left);
 }
 
 TYPED_TEST(StreamTransportTest, stops_notifying_once_all_data_is_read)
@@ -349,7 +352,8 @@ TYPED_TEST(StreamTransportTest, stops_notifying_once_all_data_is_read)
 
     this->transport->register_observer(observer);
 
-    EXPECT_EQ(data.size(), write(this->test_fd, data.data(), data.size()));
+    EXPECT_EQ(static_cast<int>(data.size()),
+              write(this->test_fd, data.data(), data.size()));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (bytes_left > 0)
@@ -369,7 +373,7 @@ TYPED_TEST(StreamTransportTest, doesnt_send_data_available_notification_on_disco
     bool disconnected{false};
 
     uint64_t dummy{0xdeedfaac};
-    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected]()
                                                                { disconnected = true; }));
@@ -536,7 +540,8 @@ TYPED_TEST(StreamTransportTest, reads_correct_data)
 
     this->transport->register_observer(observer);
 
-    EXPECT_EQ(expected.size(), write(this->test_fd, expected.data(), expected.size()));
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
+              write(this->test_fd, expected.data(), expected.size()));
 
     EXPECT_TRUE(mt::fd_becomes_readable(this->transport->watch_fd(), std::chrono::seconds{1}));
     while (mt::fd_is_readable(this->transport->watch_fd()) &&
@@ -566,7 +571,7 @@ TYPED_TEST(StreamTransportTest, writes_correct_data)
 
     ASSERT_EQ(1, poll(&read_listener, 1, 1000)) << "Failed to poll(): " << strerror(errno);
 
-    EXPECT_EQ(expected.size(), read(this->test_fd, received.data(), received.size()));
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()), read(this->test_fd, received.data(), received.size()));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
 }
 
@@ -873,7 +878,9 @@ TYPED_TEST(StreamTransportTest, reads_data_with_fds)
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd, test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
+              send_with_fds(this->test_fd, test_fds, expected.data(),
+                            expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
     EXPECT_EQ(expected, received);
@@ -927,9 +934,9 @@ TYPED_TEST(StreamTransportTest, reads_fds_from_multiple_chunks)
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(),
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
               send_with_fds(this->test_fd, first_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
-    EXPECT_EQ(expected.size(),
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
               send_with_fds(this->test_fd, second_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
@@ -1090,7 +1097,7 @@ TYPED_TEST(StreamTransportTest, receiving_more_fds_than_expected_on_cmsg_boundar
     }};
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
+    EXPECT_EQ(ssizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
@@ -1119,7 +1126,7 @@ TYPED_TEST(StreamTransportTest, receiving_more_fds_than_requested_with_same_cmsg
     }};
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
+    EXPECT_EQ(ssizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
@@ -1169,9 +1176,9 @@ TYPED_TEST(StreamTransportTest, DISABLED_receiving_more_fds_than_expected_in_mul
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(),
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
               send_with_fds(this->test_fd, first_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
-    EXPECT_EQ(expected.size(),
+    EXPECT_EQ(static_cast<ssize_t>(expected.size()),
               send_with_fds(this->test_fd, second_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
@@ -1196,9 +1203,9 @@ TYPED_TEST(StreamTransportTest, mismatched_fd_expectations_have_appropriate_erro
     }
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
+    EXPECT_EQ(ssizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
+    EXPECT_EQ(ssizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     try
     {
@@ -1307,7 +1314,7 @@ TYPED_TEST(StreamTransportTest, receiving_data_without_asking_for_fds_is_an_erro
     }};
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
+    EXPECT_EQ(ssizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
