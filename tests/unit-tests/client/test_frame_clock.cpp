@@ -189,3 +189,34 @@ TEST_F(FrameClockTest, multiple_streams_in_sync)
     ASSERT_EQ(left, right);
 }
 
+TEST_F(FrameClockTest, moving_between_displays_adapts_to_new_rate)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    auto const one_tv_frame = std::chrono::nanoseconds(1000000000L / 25);
+    ASSERT_NE(one_frame, one_tv_frame);
+
+    PosixTimestamp a;
+    auto b = clock.next_frame_after(a);
+    fake_sleep_until(b);
+    auto c = clock.next_frame_after(b);
+    EXPECT_EQ(one_frame, c - b);
+
+    fake_sleep_until(c);
+
+    // Window moves to a new slower display:
+    clock.set_period(one_tv_frame);
+    auto d = clock.next_frame_after(c);
+    EXPECT_GT(d, c);
+
+    fake_sleep_until(d);
+
+    auto e = clock.next_frame_after(d);
+    EXPECT_EQ(one_tv_frame, e - d);
+
+    fake_sleep_until(e);
+
+    auto f = clock.next_frame_after(e);
+    EXPECT_EQ(one_tv_frame, f - e);
+}
