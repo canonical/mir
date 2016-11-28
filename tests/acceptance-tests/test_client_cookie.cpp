@@ -193,7 +193,7 @@ TEST_F(ClientCookies, pointer_click_events_have_cookies)
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
-    int events = 2;
+    unsigned events = 2;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);

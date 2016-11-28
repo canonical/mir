@@ -233,7 +233,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
     if (wait_for_n_events(events, this))
     {
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-        EXPECT_EQ(out_cookies.size(), events);
+        EXPECT_EQ(out_cookies.size(), static_cast<unsigned>(events));
 
         if (wait_for_n_events(events + 1, this))
         {
@@ -242,8 +242,8 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
             // We still have 2 cookie, but have gotten more then 2 events
-            EXPECT_EQ(out_cookies.size(), events);
-            EXPECT_GE(event_count, events + 1);
+            EXPECT_EQ(out_cookies.size(), static_cast<unsigned>(events));
+            EXPECT_GE(event_count, static_cast<unsigned>(events + 1));
         }
     }
 }
