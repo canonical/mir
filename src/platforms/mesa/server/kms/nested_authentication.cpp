@@ -33,21 +33,29 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
+namespace
+{
+std::shared_ptr<mg::MesaAuthExtension> load_extension(mg::NestedContext& context)
+{
+    auto ext = context.auth_extension();
+    if (!ext.is_set())
+        BOOST_THROW_EXCEPTION(std::runtime_error("No mesa_drm_auth extension. Perhaps the host is not using the mesa platform"));
+    return ext.value();
+}
+}
+
 mgm::NestedAuthentication::NestedAuthentication(
-    std::shared_ptr<NestedContext> const& nested_context)
-    : nested_context{nested_context}
+    std::shared_ptr<NestedContext> const& nested_context) :
+    nested_context{nested_context},
+    auth_extension(load_extension(*nested_context))
+
 {
 }
 
 void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 {
     static int const success{0};
-
-    int rc = -1;
-    auto ext = nested_context->auth_extension();
-    if (ext.is_set())
-        rc = ext.value()->auth_magic(magic);
-
+    auto rc = auth_extension->auth_magic(magic);
     if (rc != success)
     {
         BOOST_THROW_EXCEPTION(
@@ -58,9 +66,8 @@ void mgm::NestedAuthentication::auth_magic(drm_magic_t magic)
 
 mir::Fd mgm::NestedAuthentication::authenticated_fd()
 {
-    auto ext = nested_context->auth_extension();
-    if (ext.is_set())
-        return ext.value()->auth_fd();
-    else
+    auto fd = auth_extension->auth_fd(); 
+    if (fd <= mir::Fd::invalid)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested server failed to get authenticated DRM fd"));
+    return fd;
 }

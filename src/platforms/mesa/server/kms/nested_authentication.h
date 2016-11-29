@@ -26,6 +26,7 @@ namespace mir
 namespace graphics
 {
 class NestedContext;
+class MesaAuthExtension;
 namespace mesa
 {
 class NestedAuthentication : public DRMAuthentication
@@ -36,6 +37,7 @@ public:
     mir::Fd authenticated_fd() override;
 private:
     std::shared_ptr<NestedContext> const nested_context;
+    std::shared_ptr<MesaAuthExtension> const auth_extension;
 };
 }
 }
