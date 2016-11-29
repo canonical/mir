@@ -1010,6 +1010,84 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 
 namespace
 {
+MATCHER_P(PointsToIdenticalData, data, "")
+{
+    return arg == nullptr ? false : memcmp(arg, data.data(), data.size()) == 0;
+}
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_null_for_empty_edid)
+{
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = {};
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = mir_connection_create_display_configuration(client.connection);
+
+    auto output = mir_display_config_get_output(configuration, 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), IsNull());
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_edid)
+{
+    /*
+     * Valid EDID block in case we later do some parsing/quirking/validation.
+     */
+    std::vector<uint8_t> edid{
+        0xff, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0xff,
+        0xaf, 0x06, 0x11, 0x3d, 0x00, 0x00, 0x00, 0x00,
+        0x16, 0x00, 0x04, 0x01, 0x1f, 0x95, 0x78, 0x11,
+        0x87, 0x02, 0xa4, 0xe5, 0x50, 0x56, 0x26, 0x9e,
+        0x50, 0x0d, 0x00, 0x54, 0x00, 0x00, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x37, 0x14,
+        0xb8, 0x80, 0x38, 0x70, 0x40, 0x24, 0x10, 0x10,
+        0x00, 0x3e, 0xad, 0x35, 0x00, 0x10, 0x18, 0x00,
+        0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x41, 0x00,
+        0x4f, 0x55, 0x20, 0x0a, 0x20, 0x20, 0x20, 0x20,
+        0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0xfe, 0x00,
+        0x42, 0x00, 0x34, 0x31, 0x48, 0x30, 0x4e, 0x41,
+        0x31, 0x30, 0x31, 0x2e, 0x0a, 0x20, 0xa5, 0x00
+    };
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = edid;
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = mir_connection_create_display_configuration(client.connection);
+
+    auto output = mir_display_config_get_output(configuration, 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), PointsToIdenticalData(edid));
+
+    client.disconnect();
+}
+
+namespace
+{
 MATCHER_P(IsSameModeAs, mode, "")
 {
     return mir_output_mode_get_height(arg) == mir_output_mode_get_height(mode) &&
