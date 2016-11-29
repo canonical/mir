@@ -373,8 +373,7 @@ TEST_F(FrameClockTest, one_frame_skipped_only_after_2_frames_take_3_periods)
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
-    auto& now = fake_time[CLOCK_MONOTONIC];
-    auto a = now;
+    PosixTimestamp a;
     auto b = clock.next_frame_after(a);
 
     fake_sleep_until(b);
@@ -394,4 +393,28 @@ TEST_F(FrameClockTest, one_frame_skipped_only_after_2_frames_take_3_periods)
 
     auto e = clock.next_frame_after(d);
     EXPECT_EQ(one_frame, e - d);        // No frame skipped. We have recovered.
+}
+
+TEST_F(FrameClockTest, nesting_adds_zero_lag)
+{
+    FrameClock inner(with_fake_time);
+    FrameClock outer(with_fake_time);
+    inner.set_period(one_frame);
+    outer.set_period(one_frame);
+
+    PosixTimestamp in0, out0;
+    auto in1 = inner.next_frame_after(in0);
+    fake_sleep_for(1234567ns);  // scheduling and IPC delay
+    auto out1 = outer.next_frame_after(out0);
+    EXPECT_EQ(in1, out1);
+
+    fake_sleep_until(in1);
+    fake_sleep_until(out1);
+
+    auto in2 = inner.next_frame_after(in1);
+    fake_sleep_for(8765432ns);  // scheduling and IPC delay
+    auto out2 = outer.next_frame_after(out1);
+    EXPECT_EQ(in2, out2);
+    EXPECT_EQ(one_frame, in2 - in1);
+    EXPECT_EQ(one_frame, out2 - out1);
 }
