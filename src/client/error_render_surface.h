@@ -34,8 +34,9 @@ public:
     MirConnection* connection() const override;
     mir::frontend::BufferStreamId stream_id() const override;
     mir::geometry::Size size() const override;
-    void set_size(mir::geometry::Size size) override;
+    void set_size(mir::geometry::Size) override;
     bool valid() const override;
+    char const* get_error_message() const override;
     MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,

@@ -100,7 +100,7 @@ TEST(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
             ov.f(output);
             EXPECT_EQ(true, output.used);
             EXPECT_EQ(new_top_left, output.top_left);
-            EXPECT_EQ(0, output.current_mode_index);
+            EXPECT_EQ(0u, output.current_mode_index);
             EXPECT_EQ(default_current_output_format, output.current_format);
         });
 }
@@ -156,7 +156,7 @@ TEST(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
             {
                 EXPECT_EQ(true, output.used);
                 EXPECT_EQ(top_left, output.top_left);
-                EXPECT_EQ(1, output.current_mode_index);
+                EXPECT_EQ(1u, output.current_mode_index);
                 EXPECT_EQ(mir_pixel_format_argb_8888, output.current_format);
             }
         });

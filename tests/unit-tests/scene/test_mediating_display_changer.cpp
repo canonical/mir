@@ -172,6 +172,7 @@ struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
     void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
     void configuration_failed(
         std::shared_ptr<mg::DisplayConfiguration const> const&,
         std::exception const&) override {}
@@ -909,6 +910,33 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
 
     EXPECT_CALL(mock_session1, send_display_config(_));
     EXPECT_CALL(mock_session2, send_display_config(_));
+
+    changer->set_base_configuration(mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_observer_on_set_base_configuration)
+{
+    using namespace testing;
+
+    struct MockDisplayConfigurationObserver : StubDisplayConfigurationObserver
+    {
+        MOCK_METHOD1(base_configuration_updated, void (std::shared_ptr<mg::DisplayConfiguration const> const& base_config));
+    } display_configuration_observer;
+
+    changer = std::make_shared<ms::MediatingDisplayChanger>(
+        mt::fake_shared(mock_display),
+        mt::fake_shared(mock_compositor),
+        mt::fake_shared(mock_conf_policy),
+        mt::fake_shared(stub_session_container),
+        mt::fake_shared(session_event_sink),
+        mt::fake_shared(server_action_queue),
+        mt::fake_shared(display_configuration_observer),
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
+
+    mtd::NullDisplayConfiguration conf;
+
+    EXPECT_CALL(display_configuration_observer, base_configuration_updated(_));
 
     changer->set_base_configuration(mt::fake_shared(conf));
 }

@@ -201,6 +201,7 @@ TEST(DRMModeResources, can_access_plane_properties)
 
     mgk::ObjectProperties plane_props{0, plane_id, DRM_MODE_OBJECT_PLANE};
 
-    EXPECT_THAT(plane_props["type"], Eq(DRM_PLANE_TYPE_CURSOR));
-    EXPECT_THAT(plane_props.id_for("CRTC_ID"), Eq(99));
+    EXPECT_THAT(plane_props["type"],
+                Eq(static_cast<unsigned>(DRM_PLANE_TYPE_CURSOR)));
+    EXPECT_THAT(plane_props.id_for("CRTC_ID"), Eq(99u));
 }

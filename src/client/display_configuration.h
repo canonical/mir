@@ -27,6 +27,12 @@
 #include <vector>
 #include <memory>
 
+struct MirDisplayConfig : mir::protobuf::DisplayConfiguration
+{
+    explicit MirDisplayConfig(mir::protobuf::DisplayConfiguration& pconfig) :
+        mir::protobuf::DisplayConfiguration::DisplayConfiguration{std::move(pconfig)} {}
+};
+
 namespace mir
 {
 namespace client

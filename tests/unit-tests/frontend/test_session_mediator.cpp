@@ -543,7 +543,8 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
 
     mediator.create_screencast(&screencast_parameters,
                                &screencast, null_callback.get());
-    EXPECT_EQ(stub_buffer.id().as_value(), screencast.buffer_stream().buffer().buffer_id());
+    EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
+              screencast.buffer_stream().buffer().buffer_id());
 }
 
 TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
@@ -567,7 +568,8 @@ TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
 
     mediator.screencast_buffer(&screencast_id,
                                &protobuf_buffer, null_callback.get());
-    EXPECT_EQ(stub_buffer.id().as_value(), protobuf_buffer.buffer_id());
+    EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
+              protobuf_buffer.buffer_id());
 }
 
 TEST_F(SessionMediator, partially_packs_next_buffer_after_creating_screencast)
@@ -673,14 +675,14 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
 TEST_F(SessionMediator, allocates_from_the_session)
 {
     using namespace testing;
-    auto num_requests = 3u;
+    auto num_requests = 3;
     mp::Void null;
     mp::BufferStreamId id;
     id.set_value(0);
     mp::BufferAllocation request;
     *request.mutable_id() = id;
     mg::BufferProperties properties(geom::Size{34, 84}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware);
-    for(auto i = 0u; i < num_requests; i++)
+    for(auto i = 0; i < num_requests; i++)
     {
         auto buffer_request = request.add_buffer_requests();
         buffer_request->set_width(properties.size.width.as_int());
@@ -699,14 +701,14 @@ TEST_F(SessionMediator, allocates_from_the_session)
 TEST_F(SessionMediator, removes_buffer_from_the_session)
 {
     using namespace testing;
-    auto num_requests = 3u;
+    auto num_requests = 3;
     mp::Void null;
     mp::BufferStreamId id;
     id.set_value(0);
     mp::BufferRelease request;
     *request.mutable_id() = id;
     auto buffer_id = 442u;
-    for(auto i = 0u; i < num_requests; i++)
+    for(auto i = 0; i < num_requests; i++)
     {
         auto buffer_request = request.add_buffers();
         buffer_request->set_buffer_id(buffer_id);
