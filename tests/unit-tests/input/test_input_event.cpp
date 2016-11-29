@@ -145,7 +145,7 @@ TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
 
 TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
 {
-    unsigned const touch_id = 31;
+    int const touch_id = 31;
     MirTouchEvent old_ev;
 
     old_ev.set_pointer_count(1);
