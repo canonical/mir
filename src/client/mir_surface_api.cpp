@@ -632,7 +632,7 @@ catch (std::exception const& ex)
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     MirRenderSurface* render_surface,
-    int /*logical_width*/, int /*logical_height*/,
+    int logical_width, int logical_height,
     int displacement_x, int displacement_y)
 try
 {
@@ -641,7 +641,9 @@ try
 
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
+    ContentInfo info{{displacement_x, displacement_y},
+                     rs->stream_id().as_value(),
+                     mir::geometry::Size{logical_width, logical_height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);

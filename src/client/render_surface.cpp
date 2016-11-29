@@ -80,6 +80,22 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
         dynamic_cast<ClientBufferStream*>(stream_from_id.get()));
 }
 
+MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
+{
+    if (!chain_from_id)
+    {
+        chain_from_id = connection_->create_presentation_chain_with_id(this,
+                                                                       *protobuf_bs);
+/*        if (buffer_usage == mir_buffer_usage_hardware)
+        {
+            platform->use_egl_native_window(
+                wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
+        }*/
+    }
+
+    return reinterpret_cast<MirPresentationChain*>(chain_from_id.get());
+}
+
 geom::Size mcl::RenderSurface::size() const
 {
     std::lock_guard<decltype(size_mutex)> lk(size_mutex);

@@ -67,6 +67,7 @@ class EventHandlerRegister;
 class AsyncBufferFactory;
 class MirBuffer;
 class BufferStream;
+class PresentationChain;
 
 namespace rpc
 {
@@ -170,6 +171,9 @@ public:
     void create_presentation_chain(
         mir_presentation_chain_callback callback,
         void *context);
+    std::shared_ptr<mir::client::PresentationChain> create_presentation_chain_with_id(
+        MirRenderSurface* render_surface,
+        mir::protobuf::BufferStream const& a_protobuf_bs);
     void release_presentation_chain(MirPresentationChain* context);
 
     void release_consumer_stream(mir::client::ClientBufferStream*);

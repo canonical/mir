@@ -133,6 +133,14 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirBufferUsage usage);
 
 /**
+ * Obtain the presentation chain backing a given render surface
+ *
+ * \return                       The chain contained in the given render surface
+ */
+MirPresentationChain* mir_render_surface_get_presentation_chain(
+    MirRenderSurface* render_surface);
+
+/**
  * Set the MirSurfaceSpec to display content contained in a render surface
  *
  * \warning: The initial call to mir_surface_spec_add_render_surface will set

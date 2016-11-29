@@ -60,6 +60,11 @@ MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
     throw std::runtime_error(error);
 }
 
+MirPresentationChain* mcl::ErrorRenderSurface::get_presentation_chain()
+{
+    throw std::runtime_error(error);
+}
+
 char const* mcl::ErrorRenderSurface::get_error_message() const
 {
     return error.c_str();
