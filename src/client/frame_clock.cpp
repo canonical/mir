@@ -25,8 +25,17 @@ using mir::time::PosixTimestamp;
 
 namespace
 {
+/*
+ * If the client misses a small non-zero number of frames, we give it the
+ * benefit of the doubt and try to help it catch up immediately without
+ * querying the server or missing more frames. However if the number of
+ * missed frames exceeds this value we assume the client went intentionally
+ * idle and is just waking up. So only then stop to resync with the server.
+ */
+int const max_recovery_missed_frames = 2;
+
 typedef std::unique_lock<std::mutex> Lock;
-}
+} // namespace
 
 FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}
@@ -103,7 +112,7 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * Crucially this is not required on most frames, so that even if it is
      * implemented as a round trip to the server, that won't happen often.
      */
-    if (missed_frames || config_changed)
+    if (missed_frames > max_recovery_missed_frames || config_changed)
     {
         lock.unlock();
         auto const server_frame = resync_callback();
@@ -142,6 +151,14 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
         }
         assert(target > now);
         config_changed = false;
+    }
+    else if (missed_frames > 0)
+    {
+        /*
+         * Low number of missed frames. Try catching up without missing more...
+         */
+        // FIXME? Missing += operator
+        target = target + missed_frames * period;
     }
 
     return target;
