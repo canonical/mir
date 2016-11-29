@@ -287,7 +287,7 @@ TEST_F(FrameClockTest, switches_to_the_server_clock_on_startup)
     FrameClock clock(with_fake_time);
     clock.set_period(one_frame);
 
-    PosixTimestamp a(CLOCK_REALTIME, 0ns);
+    PosixTimestamp a(CLOCK_MONOTONIC_COARSE, 0ns);
 
     PosixTimestamp b;
     EXPECT_NO_THROW({
@@ -313,15 +313,15 @@ TEST_F(FrameClockTest, can_migrate_between_different_driver_clocks)
 
     // Window moves between displays and in the glorious future that might even
     // mean it switches cards, with different drivers, different clocks...
-    auto last_server_frame = fake_time[CLOCK_REALTIME] - 556677ns;
+    auto last_server_frame = fake_time[CLOCK_MONOTONIC_COARSE] - 556677ns;
     clock.set_resync_callback([last_server_frame](){return last_server_frame;});
 
     EXPECT_EQ(CLOCK_MONOTONIC, c.clock_id);
     auto d = clock.next_frame_after(c);
-    EXPECT_EQ(CLOCK_REALTIME, d.clock_id);
+    EXPECT_EQ(CLOCK_MONOTONIC_COARSE, d.clock_id);
 
-    EXPECT_GT(d, fake_time[CLOCK_REALTIME]);
-    EXPECT_LE(d, fake_time[CLOCK_REALTIME]+one_frame);
+    EXPECT_GT(d, fake_time[CLOCK_MONOTONIC_COARSE]);
+    EXPECT_LE(d, fake_time[CLOCK_MONOTONIC_COARSE]+one_frame);
 
     auto server_phase = last_server_frame % one_frame;
     EXPECT_NE(server_phase, c % one_frame);  // wasn't in phase before
