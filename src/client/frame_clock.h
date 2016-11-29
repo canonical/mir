@@ -33,6 +33,7 @@ public:
     typedef std::function<time::PosixTimestamp(clockid_t)> GetCurrentTime;
 
     FrameClock(GetCurrentTime);
+    FrameClock() : FrameClock(mir::time::PosixTimestamp::now) {}
 
     /**
      * Set the precise frame period in nanoseconds (1000000000/Hz).

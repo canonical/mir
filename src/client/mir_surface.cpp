@@ -46,7 +46,6 @@ namespace mircv = mi::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
-using namespace mir::time;
 
 namespace
 {
@@ -98,7 +97,6 @@ MirSurface::MirSurface(
     std::shared_ptr<MirWaitHandle> const& handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn),
-    frame_clock(mir::time::PosixTimestamp::now),
     creation_handle(handle)
 {
     surface->set_error(error);
@@ -129,7 +127,6 @@ MirSurface::MirSurface(
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
-      frame_clock(mir::time::PosixTimestamp::now),
       creation_handle(handle),
       size({surface_proto.width(), surface_proto.height()}),
       format(static_cast<MirPixelFormat>(surface_proto.pixel_format())),
