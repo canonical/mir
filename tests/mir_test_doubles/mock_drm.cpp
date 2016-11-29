@@ -236,6 +236,8 @@ mtd::MockDRM::MockDRM()
 
     global_mock = this;
 
+    memset(&empty_object_props, 0, sizeof(empty_object_props));
+
     ON_CALL(*this, open(_,_,_))
     .WillByDefault(Return(fake_drm.fd()));
 
@@ -256,6 +258,9 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, drmModeGetConnector(_, _))
     .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
+
+    ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
+        .WillByDefault(Return(&empty_object_props));
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
     .WillByDefault(Return(0));
