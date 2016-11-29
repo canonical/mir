@@ -1031,9 +1031,9 @@ TEST_F(DisplayConfigurationTest, client_receives_null_for_empty_edid)
     DisplayClient client{new_connection()};
     client.connect();
 
-    auto configuration = mir_connection_create_display_configuration(client.connection);
+    auto configuration = client.get_base_config();
 
-    auto output = mir_display_config_get_output(configuration, 0);
+    auto output = mir_display_config_get_output(configuration.get(), 0);
 
     EXPECT_THAT(mir_output_get_edid(output), IsNull());
 
@@ -1077,9 +1077,9 @@ TEST_F(DisplayConfigurationTest, client_receives_edid)
     DisplayClient client{new_connection()};
     client.connect();
 
-    auto configuration = mir_connection_create_display_configuration(client.connection);
+    auto configuration = client.get_base_config();
 
-    auto output = mir_display_config_get_output(configuration, 0);
+    auto output = mir_display_config_get_output(configuration.get(), 0);
 
     EXPECT_THAT(mir_output_get_edid(output), PointsToIdenticalData(edid));
 
