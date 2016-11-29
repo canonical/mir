@@ -38,8 +38,6 @@ extern "C" {
 /**
  * Release resources assosciated with cursor parameters
  *     \param [in] parameters The operand
- *     \deprecated  Users should use mir_surface_spec_set_cursor_name
- *                  or mir_surface_spec_set_cursor_render_surface.
  */
 void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
 
@@ -54,13 +52,15 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy
  */
+/// @cond
+__attribute__ ((deprecated))
+/// @endcond
 MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
 
 /**
  * Returns a new cursor configuration tied to a given buffer stream.
  * If the configuration is successfully applied buffers from the stream will be used 
  * to fill the system cursor.
- *    \deprecated  Users should use mir_surface_spec_set_cursor_render_surface.
  *    \param [in] stream      The buffer stream
  *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
  *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
