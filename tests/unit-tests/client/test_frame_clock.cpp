@@ -330,3 +330,40 @@ TEST_F(FrameClockTest, can_migrate_between_different_driver_clocks)
     // Not only did we come in phase but we're targeting the soonest frame
     EXPECT_EQ(last_server_frame+one_frame, d);
 }
+
+TEST_F(FrameClockTest, does_not_resync_on_most_frames)
+{
+    int callbacks = 0;
+
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+    clock.set_resync_callback([&callbacks]
+    {
+        ++callbacks;
+        return PosixTimestamp();
+    });
+
+    PosixTimestamp v;
+    v = clock.next_frame_after(v);
+    EXPECT_EQ(1, callbacks);  // sync with server happens on first frame
+
+    fake_sleep_until(v);
+
+    v = clock.next_frame_after(v);
+    EXPECT_EQ(1, callbacks);
+
+    fake_sleep_until(v);
+
+    v = clock.next_frame_after(v);
+    EXPECT_EQ(1, callbacks);
+
+    fake_sleep_until(v);
+
+    v = clock.next_frame_after(v);
+    EXPECT_EQ(1, callbacks);
+
+    fake_sleep_for(one_frame * 10);
+
+    clock.next_frame_after(v);
+    EXPECT_EQ(2, callbacks);   // resync because we went idle too long
+}
