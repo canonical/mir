@@ -236,6 +236,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_be_created_and_released)
         reinterpret_cast<mir_render_surface_callback>(assign_result),
         &render_surface,
         &nw);
+
     EXPECT_THAT(render_surface, NotNull());
     EXPECT_THAT(nw, NotNull());
     EXPECT_THAT(render_surface, Eq(nw));
@@ -258,16 +259,18 @@ TEST_F(MirRenderSurfaceTest, creation_of_render_surface_creates_egl_native_windo
         }));
 
     void* nw = nullptr;
-    connection->create_render_surface_with_content(
-        {10, 10},
-        &RenderSurfaceCallback::created,
-        &callback,
-        &nw);
+    connection->create_render_surface_with_content({10, 10},
+                                                   &RenderSurfaceCallback::created,
+                                                   &callback,
+                                                   &nw);
+
     EXPECT_THAT(nw, NotNull());
     EXPECT_TRUE(callback.invoked);
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
+
     auto rs = connection->connection_surface_map()->render_surface(
         static_cast<void*>(callback.resulting_render_surface));
+
     EXPECT_TRUE(reinterpret_cast<mcl::RenderSurface*>(rs->valid()));
 }
 
@@ -277,6 +280,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_returns_connection)
 
     mcl::RenderSurface rs(
         conn, nullptr, nullptr, nullptr, {});
+
     EXPECT_THAT(rs.connection(), Eq(conn));
 }
 
@@ -293,6 +297,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_has_correct_id_before_content_creati
 
     mcl::RenderSurface rs(
         conn, nullptr, nullptr, mt::fake_shared(protobuf_bs), {});
+
     EXPECT_THAT(rs.stream_id().as_value(), Eq(id));
 }
 
@@ -407,17 +412,15 @@ TEST_F(MirRenderSurfaceTest, render_surface_object_is_invalid_after_creation_exc
             Throw(std::runtime_error("Eeek!"))));
 
     void* nw = nullptr;
-    connection->create_render_surface_with_content(
-        {10, 10},
-        &RenderSurfaceCallback::created,
-        &callback,
-        &nw);
+    connection->create_render_surface_with_content({10, 10},
+                                                    &RenderSurfaceCallback::created,
+                                                    &callback,
+                                                    &nw);
 
     EXPECT_TRUE(callback.invoked);
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
     auto rs = connection->connection_surface_map()->render_surface(
         static_cast<void*>(callback.resulting_render_surface));
-
     EXPECT_THAT(rs->get_error_message(),
         StrEq("Error processing buffer stream response during render "
               "surface creation: no ID in response (disconnected?)"));
