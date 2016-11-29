@@ -143,6 +143,6 @@ TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)
     EXPECT_CALL(mock_drm_ops, authenticated_fd())
         .WillOnce(Return(stub_fd));
     auto connection_package = ipc_ops.connection_ipc_package();
-    ASSERT_THAT(connection_package->ipc_fds.size(), Eq(1));
+    ASSERT_THAT(connection_package->ipc_fds.size(), Eq(1u));
     EXPECT_THAT(connection_package->ipc_fds[0], mtd::RawFdMatcher(stub_fd));
 }

@@ -59,3 +59,8 @@ MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
 {
     throw std::runtime_error(error);
 }
+
+char const* mcl::ErrorRenderSurface::get_error_message() const
+{
+    return error.c_str();
+}

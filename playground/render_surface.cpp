@@ -192,7 +192,8 @@ int main(int /*argc*/, char* /*argv*/[])
 
     auto render_surface = mir_connection_create_render_surface_sync(connection, width, height);
     if (!mir_render_surface_is_valid(render_surface))
-        throw std::runtime_error(std::string("could not create render surface"));
+        throw std::runtime_error(
+                  std::string(mir_render_surface_get_error_message(render_surface)));
 
     auto spec = mir_connection_create_spec_for_normal_surface(
         connection,

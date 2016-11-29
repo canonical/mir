@@ -213,7 +213,7 @@ TEST_F(MesaClientBufferTest, suggests_dma_import)
     mclg::ClientBuffer buffer(buffer_file_ops, package, size, pf);
     buffer.egl_image_creation_parameters(&type, &egl_buffer, &attrs);
 
-    EXPECT_THAT(type, Eq(EGL_LINUX_DMA_BUF_EXT));
+    EXPECT_THAT(type, Eq(static_cast<EGLenum>(EGL_LINUX_DMA_BUF_EXT)));
     EXPECT_THAT(egl_buffer, Eq(nullptr));
     EXPECT_THAT(attrs, mir::test::doubles::AttrMatches(expected_image_attrs));
 }

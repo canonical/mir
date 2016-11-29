@@ -124,8 +124,8 @@ TEST_F(ScreencastStream, requests_screencast_buffer_when_next_buffer_called)
 
 TEST_F(ScreencastStream, advances_current_buffer)
 {
-    int id0 = 33;
-    int id1 = 34;
+    auto id0 = 33u;
+    auto id1 = 34u;
 
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .Times(2)

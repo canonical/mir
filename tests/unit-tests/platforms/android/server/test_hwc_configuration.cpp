@@ -196,7 +196,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
     auto attribs = config.active_config_for(display);
-    ASSERT_THAT(attribs.modes.size(), Eq(1));
+    ASSERT_THAT(attribs.modes.size(), Eq(1u));
     EXPECT_THAT(attribs.modes[0].size, Eq(px_size));
     EXPECT_THAT(attribs.modes[0].vrefresh_hz, Eq(vrefresh_hz));
     EXPECT_THAT(attribs.physical_size_mm, Eq(mm_size));
@@ -215,7 +215,7 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
         config.active_config_for(mga::DisplayName::primary);
     }, std::runtime_error);
     auto external_attribs = config.active_config_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0u));
     EXPECT_FALSE(external_attribs.connected);
     EXPECT_FALSE(external_attribs.used);
 }
@@ -231,7 +231,7 @@ TEST_F(HwcConfiguration, display_attributes_failure_indicates_problem_for_primar
         config.active_config_for(mga::DisplayName::primary);
     }, std::runtime_error);
     auto external_attribs = config.active_config_for(mga::DisplayName::external);
-    EXPECT_THAT(external_attribs.modes.size(), Eq(0));
+    EXPECT_THAT(external_attribs.modes.size(), Eq(0u));
     EXPECT_FALSE(external_attribs.connected);
     EXPECT_FALSE(external_attribs.used);
 }
@@ -286,8 +286,8 @@ TEST_F(HwcConfiguration, subscribes_to_hotplug_and_vsync)
     hotplug_fn(mga::DisplayName::primary, true);
     using namespace std::literals::chrono_literals;
     vsync_fn(mga::DisplayName::primary, mg::Frame::Timestamp{CLOCK_MONOTONIC,123ns});
-    EXPECT_THAT(hotplug_call_count, Eq(2));
-    EXPECT_THAT(vsync_call_count, Eq(1));
+    EXPECT_THAT(hotplug_call_count, Eq(2u));
+    EXPECT_THAT(vsync_call_count, Eq(1u));
 }
 
 TEST_F(HwcConfiguration, sets_active_config_when_needed)
