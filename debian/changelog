@@ -96,6 +96,8 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1617036)
       . CI failure on krillin in NestedServer.* testes (LP: #1628828)
       . CI failure: PosixRWMutex hangs (LP: #1633920)
+      . googletest 1.8.0-2 (on zesty) breaks existing builds [add_library
+        cannot create target "gmock" ...] (LP: #1644062)
 
  -- Brandon Schaefer <brandon.schaefer@canonical.com>  Mon, 07 Nov 2016 13:32:11 -0800
 
