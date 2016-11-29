@@ -19,6 +19,7 @@
 #include "real_kms_display_configuration.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/log.h"
 
 #include <cmath>
 #include <limits>
@@ -27,9 +28,11 @@
 #include <stdexcept>
 #include <algorithm>
 #include <system_error>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
+namespace mgk = mir::graphics::kms;
 namespace geom = mir::geometry;
 
 namespace
@@ -209,6 +212,83 @@ void mgm::RealKMSDisplayConfiguration::update()
     });
 }
 
+namespace
+{
+std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
+{
+    std::vector<uint8_t> edid;
+
+    mgk::ObjectProperties connector_props{
+        drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
+
+    if (connector_props.has_property("EDID"))
+    {
+        /*
+         * We don't technically need the property information here, but query it
+         * anyway so we can detect if our assumptions about DRM behaviour
+         * become invalid.
+         */
+        auto property = mgk::DRMModePropertyUPtr{
+            drmModeGetProperty(drm_fd, connector_props.id_for("EDID")),
+            &drmModeFreeProperty};
+
+        if (!property)
+        {
+            mir::log_warning(
+                "Failed to get EDID property for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+            return edid;
+        }
+
+        if (!drm_property_type_is(property.get(), DRM_MODE_PROP_BLOB))
+        {
+            mir::log_warning(
+                "EDID property on connector %u has unexpected type %u",
+                connector_id,
+                property->flags);
+            return edid;
+        }
+
+        // A property ID of 0 means invalid.
+        if (connector_props["EDID"] == 0)
+        {
+            /*
+             * Log a debug message only. This will trigger for broken monitors which
+             * don't provide an EDID, which is not as unusual as you might think...
+             */
+            mir::log_debug("No EDID data available on connector %u", connector_id);
+            return edid;
+        }
+
+        auto blob = drmModeGetPropertyBlob(drm_fd, connector_props["EDID"]);
+
+        if (!blob)
+        {
+            mir::log_warning(
+                "Failed to get EDID property blob for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+
+            return edid;
+        }
+
+        edid.reserve(blob->length);
+        edid.insert(edid.begin(),
+            reinterpret_cast<uint8_t*>(blob->data),
+            reinterpret_cast<uint8_t*>(blob->data) + blob->length);
+
+        drmModeFreePropertyBlob(blob);
+
+        edid.shrink_to_fit();
+    }
+
+    return edid;
+}
+}
+
 void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     kms::DRMModeResources const& resources,
     drmModeConnector const& connector)
@@ -225,6 +305,15 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     std::vector<DisplayConfigurationMode> modes;
     std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
                                          mir_pixel_format_xrgb_8888};
+
+    std::vector<uint8_t> edid;
+    if (connected)
+    {
+        /* Only ask for the EDID on connected outputs. There's obviously no monitor EDID
+         * when there is no monitor connected!
+         */
+        edid = edid_for_connector(drm_fd, connector.connector_id);
+    }
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
     GammaCurves gamma;
@@ -271,7 +360,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            mir_power_mode_on, mir_orientation_normal,
                            1.0f, mir_form_factor_monitor,
                            kms_subpixel_to_mir_subpixel(connector.subpixel),
-                           gamma, mir_output_gamma_supported, {}});
+                           gamma, mir_output_gamma_supported, std::move(edid)});
     }
     else
     {
