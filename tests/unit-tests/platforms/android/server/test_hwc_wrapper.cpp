@@ -251,7 +251,7 @@ TEST_F(HwcWrapper, accesses_display_config)
         id = mga::ConfigId{*array_it++};
 
     EXPECT_CALL(*mock_device, getDisplayConfigs_interface(
-        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(Gt(0))))
+        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(Gt(0u))))
             .WillOnce(DoAll(
                 SetArrayArgument<2>(id_array.begin(), id_array.end()),
                 SetArgPointee<3>(id_array.size()),
@@ -364,5 +364,5 @@ TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destru
     //After that point, we don't care, so just make sure there's something to call 
     callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
 
-    EXPECT_THAT(call_count, Eq(1));
+    EXPECT_THAT(call_count, Eq(1u));
 }

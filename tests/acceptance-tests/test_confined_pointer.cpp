@@ -215,8 +215,7 @@ TEST_F(PointerConfinement, test_we_hit_pointer_confined_boundary)
     Client client(new_connection(), first);
 
     InSequence seq;
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(surface_width / 2, 0)));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(surface_width / 2, 0)));
     EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width - 1, 0),
                                            mt::PointerEventWithDiff(surface_width * 2, 0))));
     EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width - 1, 0),
@@ -236,8 +235,7 @@ TEST_F(PointerConfinement, test_we_generate_relative_after_boundary)
     Client client(new_connection(), first);
 
     InSequence seq;
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(surface_width - 1, 0)));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(surface_width - 1, 0)));
     EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width - 1, 0), mt::PointerEventWithDiff(10, 0))))
         .WillOnce(mt::WakeUp(&client.all_events_received));
 
@@ -265,8 +263,7 @@ TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
     resized_signaled.wait_for(1s);
 
     InSequence seq;
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(surface_width + 100 - 1, 0)));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(surface_width + 100 - 1, 0)));
     EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width + 100 - 1, 0), mt::PointerEventWithDiff(10, 0))))
         .WillOnce(mt::WakeUp(&client.all_events_received));
 
@@ -295,8 +292,7 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
     std::this_thread::sleep_for(1s);
 
     InSequence seq;
-    EXPECT_CALL(client_2, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client_2, handle_input(mt::PointerEventWithPosition(0, 0)));
+    EXPECT_CALL(client_2, handle_input(mt::PointerEnterEventWithPosition(0, 0)));
     EXPECT_CALL(client_2, handle_input(mt::PointerEventWithPosition(surface_width - 1, 0)))
         .WillOnce(mt::WakeUp(&client_2.all_events_received));
 

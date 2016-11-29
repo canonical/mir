@@ -1063,7 +1063,7 @@ TEST_F(MirConnectionTest, render_surface_object_is_invalid_after_creation_except
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
         .WillOnce(DoAll(
             Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
-            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+            Throw(std::runtime_error("Eeek!"))));
 
     void* nw = nullptr;
     connection->create_render_surface_with_content(
@@ -1076,5 +1076,9 @@ TEST_F(MirConnectionTest, render_surface_object_is_invalid_after_creation_except
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
     auto rs = connection->connection_surface_map()->render_surface(
         static_cast<void*>(callback.resulting_render_surface));
+
+    EXPECT_THAT(rs->get_error_message(),
+        StrEq("Error processing buffer stream response during render "
+              "surface creation: no ID in response (disconnected?)"));
     EXPECT_FALSE(reinterpret_cast<mcl::RenderSurface*>(rs->valid()));
 }

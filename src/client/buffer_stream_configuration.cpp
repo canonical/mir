@@ -22,6 +22,13 @@
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
+mcl::BufferStreamConfiguration::BufferStreamConfiguration(
+    mclr::DisplayServer& server, frontend::BufferStreamId id)
+    : server{server},
+      id{id}
+{
+}
+
 void mcl::BufferStreamConfiguration::on_swap_interval_set(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -35,8 +42,7 @@ int mcl::BufferStreamConfiguration::swap_interval() const
     return swap_interval_;
 }
 
-MirWaitHandle* mcl::BufferStreamConfiguration::set_swap_interval(
-    mclr::DisplayServer& server, mir::frontend::BufferStreamId id, int interval)
+MirWaitHandle* mcl::BufferStreamConfiguration::set_swap_interval(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     if (interval == swap_interval_)

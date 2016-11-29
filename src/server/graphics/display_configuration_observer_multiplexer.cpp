@@ -32,6 +32,12 @@ void mg::DisplayConfigurationObserverMultiplexer::configuration_applied(
     for_each_observer(&mg::DisplayConfigurationObserver::configuration_applied, config);
 }
 
+void mg::DisplayConfigurationObserverMultiplexer::base_configuration_updated(
+    std::shared_ptr<DisplayConfiguration const> const& base_config)
+{
+    for_each_observer(&mg::DisplayConfigurationObserver::base_configuration_updated, base_config);
+}
+
 void mg::DisplayConfigurationObserverMultiplexer::configuration_failed(
     std::shared_ptr<mg::DisplayConfiguration const> const& attempted,
     std::exception const& error)

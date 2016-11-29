@@ -142,6 +142,21 @@ catch (std::exception const& ex)
     return false;
 }
 
+char const *mir_render_surface_get_error_message(
+    MirRenderSurface* render_surface)
+try
+{
+    mir::require(render_surface);
+    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = conn->connection_surface_map()->render_surface(render_surface);
+    return rs->get_error_message();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return "Unknown error";
+}
+
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
 try
