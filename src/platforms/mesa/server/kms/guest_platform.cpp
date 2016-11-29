@@ -50,7 +50,7 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
     if (ext.is_set())
         ext.value()->set_gbm_device(device);
     else
-        throw std::runtime_error(msg);
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
 }
 
