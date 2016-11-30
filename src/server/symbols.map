@@ -8,7 +8,7 @@ MIR_SERVER_0.25 {
     VTT?for?mir::shell::SystemCompositorWindowManager;
 
 # The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
+# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort
     mir::check_for_termination_exception*;
     mir::clear_termination_exception*;
     mir::compositor::Compositor::Compositor*;
@@ -839,3 +839,10 @@ MIR_SERVER_0.25 {
   };
  local: *;
 };
+
+MIR_SERVER_0.26 {
+ global:
+  extern "C++" {
+    mir::Server::add_pre_init_callback*;
+  };
+} MIR_SERVER_0.25;
