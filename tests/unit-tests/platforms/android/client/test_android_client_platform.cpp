@@ -25,8 +25,12 @@
 #include "mir_test_framework/client_platform_factory.h"
 #include <android/system/graphics.h>
 #include <EGL/egl.h>
+#include <system/window.h>
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <condition_variable>
+#include <mutex>
 
 using namespace testing;
 using namespace mir::client;
@@ -101,15 +105,17 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
     using namespace std::literals::chrono_literals;
     int width = 32;
     int height = 90;
-    auto ext = platform->request_interface(
-        MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1);
+    auto ext = static_cast<MirExtensionAndroidBuffer*>(
+        platform->request_interface(
+            MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1));
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->allocate_buffer_android, Ne(nullptr));
 
-    std::condition_variable cv;
-    std::mutex mut;
-    auto called = false;
-    auto cb = [&] {
+    static std::condition_variable cv;
+    static std::mutex mut;
+    static auto called = false;
+    auto cb = [] (MirBuffer*, void*)
+    {
         std::unique_lock<decltype(mut)> lk(mut);
         called = true;
         cv.notify_all();
@@ -121,5 +127,5 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
         cb, nullptr);
 
     std::unique_lock<decltype(mut)> lk(mut);
-    EXPECT_TRUE(cv.wait_for(lk, 5s, [&] { return called; })); 
+    EXPECT_TRUE(cv.wait_for(lk, 5s, [&] { return called; }));
 }
