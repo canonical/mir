@@ -105,8 +105,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
             std::shared_ptr<mg::DisplayConfiguration const> const& configuration)
         {
             std::lock_guard<decltype(guard)> lock{guard};
-            expectations.push_back({});
-            expectations.back().value = configuration;
+            expectations.push_back({{}, configuration});
             return expectations.back().notifier.get_future();
         }
 
