@@ -48,6 +48,7 @@ MIR_CORE_0.25 {
     mir::input::DeviceConfiguration::touchpad_configuration*;
     mir::input::DeviceConfiguration::touchscreen_configuration*;
     mir::input::DeviceConfiguration::unique_id*;
+    mir::input::DeviceConfiguration::operator*;
     mir::input::InputConfiguration::?InputConfiguration*;
     mir::input::InputConfiguration::InputConfiguration*;
     mir::input::InputConfiguration::add_device_configuration*;
@@ -55,6 +56,7 @@ MIR_CORE_0.25 {
     mir::input::InputConfiguration::get_device_configuration_by_id*;
     mir::input::InputConfiguration::get_device_configuration_by_index*;
     mir::input::InputConfiguration::size*;
+    mir::input::InputConfiguration::operator*;
     mir::input::deserialize_input_configuration*;
     mir::input::serialize_input_configuration*;
     typeinfo?for?MirBufferPackage;
