@@ -86,11 +86,8 @@ MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
     {
         chain_from_id = connection_->create_presentation_chain_with_id(this,
                                                                        *protobuf_bs);
-/*        if (buffer_usage == mir_buffer_usage_hardware)
-        {
-            platform->use_egl_native_window(
-                wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
-        }*/
+        //TODO: Figure out how to handle mir_buffer_usage_hardware once
+        //      EGL is made to support RSs.
     }
 
     return reinterpret_cast<MirPresentationChain*>(chain_from_id.get());

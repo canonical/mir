@@ -1181,27 +1181,13 @@ std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain
     MirRenderSurface* render_surface,
     mir::protobuf::BufferStream const& a_protobuf_bs)
 {
-    try
-    {
-        if (!client_buffer_factory)
-            client_buffer_factory = platform->create_buffer_factory();
-        auto chain = std::make_shared<mcl::PresentationChain>(
-            this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    auto chain = std::make_shared<mcl::PresentationChain>(
+        this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
 
-        surface_map->insert(render_surface->stream_id(), chain);
-        return chain;
-    }
-    catch (std::exception const& error)
-    {
-/*        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
-        chain_error(
-            std::string{"Error creating MirPresentationChain: "} + boost::diagnostic_information(error),
-            request);
-*/
-        return nullptr;
-    }
+    surface_map->insert(render_surface->stream_id(), chain);
+    return chain;
 }
 
 void MirConnection::create_presentation_chain(
