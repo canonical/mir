@@ -82,8 +82,8 @@ void create_buffer(
     mir_buffer_callback available_callback, void* available_context)
 {
 //    mir::require(connection);
-    auto cont = mcl::to_client_context(connection);
-    printf("CONT %X\n", (int)(long) cont); 
+//    auto cont = mcl::to_client_context(connection);
+//    printf("CONT %X\n", (int)(long) cont); 
 
 
     (void)connection; (void)width; (void)height; (void) hal_pixel_format; (void)gralloc_usage_flags; (void)available_callback; (void) available_context;
