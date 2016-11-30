@@ -17,30 +17,34 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_KEYBOARD_CONFIGURATION_H_
-#define MIR_INPUT_KEYBOARD_CONFIGURATION_H_
+#ifndef MIR_INPUT_TOUCH_SCREEN_CONFIGURATION_H_
+#define MIR_INPUT_TOUCH_SCREEN_CONFIGURATION_H_
 
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_input_device.h"
-#include "mir/input/keymap.h"
+#include "mir_toolkit/mir_input_device_types.h"
 
 namespace mir
 {
 namespace input
 {
 
-/*
- * Keyboard device configuration.
- */
-struct KeyboardConfiguration
+struct TouchscreenConfiguration
 {
-    KeyboardConfiguration() = default;
-    KeyboardConfiguration(Keymap&& keymap)
-        : device_keymap{keymap}
-    {
-    }
+    TouchscreenConfiguration() {}
 
-    Keymap device_keymap;
+    /**
+     * Configures the output the device coordinates should be aligned to.
+     *
+     * This element is only relevant when mapping_mode is set to
+     * mir_touchscreen_mapping_mode_to_output.
+     */
+    uint32_t output_id{0};
+
+    /**
+     * Configure the type of coordinate mapping to be used for this input
+     * device.
+     */
+    MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_output};
 };
 
 }

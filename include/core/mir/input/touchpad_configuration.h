@@ -21,7 +21,7 @@
 #define MIR_INPUT_TOUCH_PAD_CONFIGURATION_H_
 
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_input_device.h"
+#include "mir_toolkit/mir_input_device_types.h"
 
 namespace mir
 {
