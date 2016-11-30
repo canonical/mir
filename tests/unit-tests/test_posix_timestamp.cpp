@@ -85,9 +85,9 @@ TEST(PosixTimestamp, comparison)
 TEST(PosixTimestamp, or_equal)
 {
     PosixTimestamp const a(CLOCK_MONOTONIC, 111ns);
-    PosixTimestamp const aa(CLOCK_REALTIME, 111ns);
+    PosixTimestamp const aa(CLOCK_MONOTONIC_COARSE, 111ns);
     PosixTimestamp const b(CLOCK_MONOTONIC, 333ns);
-    PosixTimestamp const bb(CLOCK_REALTIME, 333ns);
+    PosixTimestamp const bb(CLOCK_MONOTONIC_COARSE, 333ns);
 
     EXPECT_TRUE(a <= b);
     EXPECT_TRUE(a <= a);
