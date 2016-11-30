@@ -25,7 +25,7 @@ namespace mir
 {
 namespace client
 {
-class ErrorStream : public ClientBufferStream
+class ErrorStream : public MirBufferStream
 {
 public:
     ErrorStream(

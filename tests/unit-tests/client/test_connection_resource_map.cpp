@@ -38,7 +38,7 @@ struct ConnectionResourceMap : testing::Test
 {
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
-    std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
+    std::shared_ptr<MirBufferStream> stream{ std::make_shared<mtd::MockMirBufferStream>() }; 
     std::shared_ptr<mcl::Buffer> buffer {
         std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr, nullptr, mir_buffer_usage_software) };
     mtd::MockProtobufServer mock_server;
@@ -74,7 +74,7 @@ TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
     map.insert(surface_id, surface);
     map.erase(surface_id);
     EXPECT_THROW({
-        map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
+        map.with_stream_do(stream_id, [](MirBufferStream*){});
     }, std::runtime_error);
 }
 
@@ -84,7 +84,7 @@ TEST_F(ConnectionResourceMap, maps_streams)
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(stream_id, stream);
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
+    map.with_stream_do(stream_id, [&](MirBufferStream* str) {
         EXPECT_THAT(str, Eq(stream.get()));
         stream_called = true;
     });

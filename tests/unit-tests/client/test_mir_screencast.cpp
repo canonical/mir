@@ -179,7 +179,7 @@ public:
     mir::geometry::Rectangle default_region;
     MirPixelFormat default_pixel_format;
     MirScreencastSpec default_spec;
-    mtd::MockClientBufferStream mock_bs;
+    mtd::MockMirBufferStream mock_bs;
 };
 
 }

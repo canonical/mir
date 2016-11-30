@@ -88,7 +88,7 @@ MirWaitHandle* mir_buffer_stream_release(
     mir_buffer_stream_callback callback,
     void* context)
 {
-    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
     auto connection = bs->connection();
     return connection->release_buffer_stream(bs, callback, context);
 }
@@ -101,7 +101,7 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)
 try
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
     *buffer_package_out = bs->get_current_buffer_package();
 }
 catch (std::exception const& ex)
@@ -115,7 +115,7 @@ MirWaitHandle* mir_buffer_stream_swap_buffers(
     void* context)
 try
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
     return bs->next_buffer([bs, callback, context]{
             if (callback)
                 callback(reinterpret_cast<MirBufferStream*>(bs), context);
@@ -146,7 +146,7 @@ void mir_buffer_stream_get_graphics_region(
     MirGraphicsRegion *region_out)
 try
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
 
     auto secured_region = bs->secure_for_cpu_write();
     region_out->width = secured_region->width.as_uint32_t();
@@ -163,7 +163,7 @@ catch (std::exception const& ex)
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream* buffer_stream)
 try
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
     return reinterpret_cast<MirEGLNativeWindowType>(bs->egl_native_window());
 }
 catch (std::exception const& ex)
@@ -175,7 +175,7 @@ catch (std::exception const& ex)
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream* buffer_stream)
 try
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
     return bs->platform_type();
 }
 catch (std::exception const& ex)
@@ -186,14 +186,14 @@ catch (std::exception const& ex)
 
 bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
 {
-    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    auto buffer_stream = reinterpret_cast<MirBufferStream*>(opaque_stream);
     return buffer_stream->valid();
 }
 
 MirWaitHandle* mir_buffer_stream_set_scale(MirBufferStream* opaque_stream, float scale)
 try
 {
-    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    auto buffer_stream = reinterpret_cast<MirBufferStream*>(opaque_stream);
     if (!buffer_stream)
         return nullptr;
 
@@ -214,7 +214,7 @@ void mir_buffer_stream_set_scale_sync(MirBufferStream* opaque_stream, float scal
 
 char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 {
-    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    auto buffer_stream = reinterpret_cast<MirBufferStream*>(opaque_stream);
     return buffer_stream->get_error_message();
 }
 
@@ -224,7 +224,7 @@ try
     if ((interval < 0) || (interval > 1))
         return nullptr;
 
-    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    auto buffer_stream = reinterpret_cast<MirBufferStream*>(stream);
     if (!buffer_stream)
         return nullptr;
 
@@ -239,7 +239,7 @@ catch (std::exception const& ex)
 int mir_buffer_stream_get_swapinterval(MirBufferStream* stream)
 try
 {
-    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    auto buffer_stream = reinterpret_cast<MirBufferStream*>(stream);
     if (buffer_stream)
         return buffer_stream->swap_interval();
     else
@@ -255,7 +255,7 @@ void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height)
 try
 {
     mir::require(stream);
-    if (auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream))
+    if (auto buffer_stream = reinterpret_cast<MirBufferStream*>(stream))
         return buffer_stream->set_size(mir::geometry::Size{width, height});
 }
 catch (std::exception const& ex)
@@ -269,7 +269,7 @@ try
     mir::require(stream);
     mir::require(width);
     mir::require(height);
-    if (auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(stream))
+    if (auto buffer_stream = reinterpret_cast<MirBufferStream*>(stream))
     {
         auto size = buffer_stream->size();
         *width = size.width.as_int();

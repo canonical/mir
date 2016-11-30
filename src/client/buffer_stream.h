@@ -69,7 +69,7 @@ class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
 class BufferDepository;
-class BufferStream : public EGLNativeSurface, public ClientBufferStream
+class BufferStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     BufferStream(

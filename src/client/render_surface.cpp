@@ -77,7 +77,7 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
     }
 
     return reinterpret_cast<MirBufferStream*>(
-        dynamic_cast<ClientBufferStream*>(stream_from_id.get()));
+        dynamic_cast<MirBufferStream*>(stream_from_id.get()));
 }
 
 geom::Size mcl::RenderSurface::size() const

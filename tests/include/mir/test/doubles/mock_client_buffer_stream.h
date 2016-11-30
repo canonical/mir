@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockClientBufferStream : public client::ClientBufferStream
+struct MockMirBufferStream : public MirBufferStream
 {
     MOCK_METHOD2(release, MirWaitHandle*(mir_buffer_stream_callback, void*));
     

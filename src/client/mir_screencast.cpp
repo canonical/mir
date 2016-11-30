@@ -205,7 +205,7 @@ void MirScreencast::released(
     release_wait_handle.result_received();
 }
 
-mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
+MirBufferStream* MirScreencast::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();

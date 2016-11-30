@@ -109,7 +109,7 @@ MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mclr::DisplayServer& the_server,
     mclr::DisplayServerDebug* debug,
-    std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream,
+    std::shared_ptr<MirBufferStream> const& buffer_stream,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
@@ -504,7 +504,7 @@ void MirSurface::raise_surface(MirCookie const* cookie)
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
 
-mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
+MirBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     

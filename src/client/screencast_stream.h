@@ -63,7 +63,7 @@ class ClientBuffer;
 class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
-class ScreencastStream : public EGLNativeSurface, public ClientBufferStream
+class ScreencastStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     ScreencastStream(
