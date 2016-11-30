@@ -79,7 +79,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_buffer_stream(MirBufferStr
 {
     try 
     {
-        return new MirCursorConfiguration(reinterpret_cast<MirBufferStream const*>(stream), hotspot_x, hotspot_y);
+        return new MirCursorConfiguration(stream, hotspot_x, hotspot_y);
     }
     catch (std::exception const& ex)
     {

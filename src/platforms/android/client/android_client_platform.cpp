@@ -66,8 +66,7 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 
 ANativeWindow* create_anw(MirBufferStream* buffer_stream)
 {
-    MirBufferStream *bs = reinterpret_cast<MirBufferStream*>(buffer_stream);
-    return static_cast<ANativeWindow*>(bs->egl_native_window());
+    return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
 
 void destroy_anw(ANativeWindow*)

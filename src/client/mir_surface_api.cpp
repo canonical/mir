@@ -524,7 +524,7 @@ void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
 try
 {
-    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+    return surface->get_buffer_stream();
 }
 catch (std::exception const& ex)
 {

@@ -476,7 +476,7 @@ struct MirConnection::StreamRelease
 void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
-        data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+        data.callback(data.stream, data.context);
     if (data.handle)
         data.handle->result_received();
 
@@ -839,10 +839,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->mbs_callback)
-            request->mbs_callback(
-                reinterpret_cast<MirBufferStream*>(
-                    dynamic_cast<MirBufferStream*>(stream.get())),
-                request->context);
+            request->mbs_callback(stream.get(), request->context);
 
         request->wh->result_received();
     }
@@ -931,9 +928,7 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 
     if (request->mbs_callback)
     {
-        request->mbs_callback(
-            reinterpret_cast<MirBufferStream*>(
-                dynamic_cast<MirBufferStream*>(stream.get())), request->context);
+        request->mbs_callback(stream.get(), request->context);
     }
 
     request->wh->result_received();
