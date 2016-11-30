@@ -61,6 +61,9 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
     MirPixelFormat format,
     MirBufferUsage buffer_usage)
 {
+    if (chain_from_id)
+        BOOST_THROW_EXCEPTION(std::logic_error("Already contains a presentation chain"));
+
     if (!stream_from_id)
     {
         protobuf_bs->set_pixel_format(format);
@@ -82,6 +85,9 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
 
 MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
 {
+    if (stream_from_id)
+        BOOST_THROW_EXCEPTION(std::logic_error("Already contains a buffer stream"));
+
     if (!chain_from_id)
     {
         chain_from_id = connection_->create_presentation_chain_with_id(this,
