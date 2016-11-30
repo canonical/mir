@@ -177,10 +177,9 @@ TEST_F(ClientCookies, keyboard_events_have_cookies)
 
 TEST_F(ClientCookies, pointer_motion_events_do_not_have_cookies)
 {
-    // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
 
-    int events = 2;
+    size_t events = 1;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);
@@ -217,11 +216,11 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_cookies)
         .at_position({1, 1})
         );
 
-    int events = 1;
+    size_t events = 1;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);
         EXPECT_GE(event_count, events);
-        EXPECT_EQ(out_cookies.size(), 1);
+        EXPECT_EQ(out_cookies.size(), 1u);
     }
 }

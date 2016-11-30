@@ -51,6 +51,7 @@ TEST_F(RenderSurfaceTest, creates_and_releases_render_surfaces)
 
     ASSERT_THAT(rs, NotNull());
     EXPECT_TRUE(mir_render_surface_is_valid(rs));
+    EXPECT_THAT(mir_render_surface_get_error_message(rs), StrEq(""));
 
     mir_render_surface_release(rs);
     mir_connection_release(connection);

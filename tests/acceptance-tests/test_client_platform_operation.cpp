@@ -174,7 +174,7 @@ TEST_F(ClientPlatformOperation, exchanges_fd_items_with_platform)
     EXPECT_THAT(reply, MessageDataIsEmpty());
 
     auto const reply_fds = mir_platform_message_get_fds(reply);
-    EXPECT_THAT(reply_fds.num_fds, Eq(1));
+    EXPECT_THAT(reply_fds.num_fds, Eq(1u));
 
     auto const reply_fd = reply_fds.fds[0];
     EXPECT_THAT(reply_fd, Ne(pipe.read_fd()));

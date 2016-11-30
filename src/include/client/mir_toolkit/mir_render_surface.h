@@ -96,6 +96,18 @@ bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface);
 
 /**
+ * Retrieve a text description of the error. The returned string is owned by
+ * the library and remains valid until the render surface or the associated
+ * connection has been released.
+ *   \param [in] redner_surface  The render surface
+ *   \return              A text description of any error resulting in an
+ *                        invalid render surface, or the empty string "" if the
+ *                        object is valid.
+ */
+char const *mir_render_surface_get_error_message(
+    MirRenderSurface* render_surface);
+
+/**
  * Release the specified render surface
  *
  * \param [in] render_surface                   The render surface to be released

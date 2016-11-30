@@ -96,3 +96,12 @@ bool mcl::RenderSurface::valid() const
 {
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
+
+char const* mcl::RenderSurface::get_error_message() const
+{
+    if (protobuf_bs->has_error())
+    {
+        return protobuf_bs->error().c_str();
+    }
+    return "";
+}

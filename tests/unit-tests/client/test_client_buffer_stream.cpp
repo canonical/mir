@@ -553,7 +553,7 @@ TEST_F(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
 
 TEST_F(ClientBufferStream, receives_unsolicited_buffer)
 {
-    int id = 88;
+    auto id = 88u;
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
@@ -764,7 +764,7 @@ TEST_F(ClientBufferStream, keeps_accurate_buffer_id)
         async_buffer_arrives(buffer);
     }
 
-    EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
+    EXPECT_THAT(stream.get_current_buffer_id(), Eq(10u));
 }
 
 //LP: #1584784

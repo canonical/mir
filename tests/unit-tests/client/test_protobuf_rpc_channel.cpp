@@ -311,7 +311,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_messages_atomically)
 
     channel_user.connect(&message, nullptr, nullptr);
 
-    EXPECT_EQ(transport->sent_messages.size(), 1);
+    EXPECT_EQ(transport->sent_messages.size(), 1u);
 }
 
 TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
@@ -339,7 +339,7 @@ TEST_F(MirProtobufRpcChannelTest, reads_fds)
                                           mir::Fd{open("/dev/null", O_RDONLY)},
                                           mir::Fd{open("/dev/null", O_RDONLY)}};
 
-    ASSERT_EQ(transport->sent_messages.size(), 1);
+    ASSERT_EQ(transport->sent_messages.size(), 1u);
     {
         mir::protobuf::Buffer reply_message;
 
@@ -375,7 +375,7 @@ TEST_F(MirProtobufRpcChannelTest, reads_fds)
         }
     }
 
-    ASSERT_EQ(reply.fd_size(), fds.size());
+    ASSERT_EQ(static_cast<size_t>(reply.fd_size()), fds.size());
     int i = 0;
     for (auto fd : fds)
     {
