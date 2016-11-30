@@ -44,6 +44,7 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_METHOD1(received, void(MirBufferPackage const&));
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(map_region, MirGraphicsRegion());
+    MOCK_METHOD0(unmap_region, void());
 
     MOCK_METHOD2(set_fence, void(Fd, MirBufferAccess));
     MOCK_CONST_METHOD0(get_fence, Fd());
