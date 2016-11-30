@@ -83,11 +83,14 @@ struct NamedCursorImage : public mg::CursorImage
 
 struct NamedCursorImages : public mi::CursorImages
 {
-   std::shared_ptr<mg::CursorImage>
+    std::shared_ptr<mg::CursorImage>
        image(std::string const& name, geom::Size const& /* size */) override
-   {
+    {
+        if (name == "none")
+            return nullptr;
+    
        return std::make_shared<NamedCursorImage>(name);
-   }
+    }
 };
 
 bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
