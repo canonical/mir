@@ -72,44 +72,20 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     }
 
     virtual void call_method(std::string const& name,
-                    google::protobuf::MessageLite const* parameters,
+                    google::protobuf::MessageLite const* /*parameters*/,
                     google::protobuf::MessageLite* response,
                     google::protobuf::Closure* complete)
     {
-        if (name == "connect")
-        {
-            static_cast<mp::Connection*>(response)->clear_error();
-            connect(static_cast<mp::ConnectParameters const*>(parameters),
-                    static_cast<mp::Connection*>(response));
-        }
-        else if (name == "create_surface")
-        {
-            auto response_message = static_cast<mp::Surface*>(response);
-            response_message->mutable_id()->set_value(33);
-            response_message->mutable_buffer_stream()->mutable_id()->set_value(33);
-        }
-        else if (name == "create_buffer_stream")
+        if (name == "create_buffer_stream")
         {
             auto response_message = static_cast<mp::BufferStream*>(response);
             on_buffer_stream_create(*response_message, complete);
-        }
-        else if (name == "release_buffer_stream")
-        {
-            auto const request_message = static_cast<mp::BufferStreamId const*>(parameters);
-            buffer_stream_release(request_message);
         }
 
         complete->Run();
     }
 
     MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
-    MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
-    MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
-    MOCK_METHOD2(platform_operation,
-                 void(mp::PlatformOperationMessage const*, mp::PlatformOperationMessage*));
-    MOCK_METHOD1(buffer_stream_release, void(mp::BufferStreamId const*));
-    MOCK_METHOD1(allocate_buffers, void(mp::BufferAllocation const*));
-    MOCK_METHOD1(release_buffers, void(mp::BufferRelease const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
@@ -148,8 +124,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_METHOD2(use_egl_native_window, void(std::shared_ptr<void>, mcl::EGLNativeSurface*));
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<void>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
-    MOCK_CONST_METHOD2(get_egl_pixel_format,
-        MirPixelFormat(EGLDisplay, EGLConfig));
+    MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
     MOCK_METHOD2(request_interface, void*(char const*, int));
 
     mcl::ClientContext* client_context = nullptr;
