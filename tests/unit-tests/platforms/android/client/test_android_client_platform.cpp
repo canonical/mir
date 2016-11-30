@@ -18,6 +18,7 @@
 
 #include "mir_native_window.h"
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/android_buffer.h"
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_egl.h"
@@ -93,4 +94,32 @@ TEST_F(AndroidClientPlatformTest, egl_pixel_format_asks_the_driver)
     EXPECT_EQ(mir_pixel_format_rgb_888, platform->get_egl_pixel_format(d, c));
     EXPECT_EQ(mir_pixel_format_argb_8888, platform->get_egl_pixel_format(d, c));
     EXPECT_EQ(mir_pixel_format_invalid, platform->get_egl_pixel_format(d, c));
+}
+
+TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
+{
+    using namespace std::literals::chrono_literals;
+    int width = 32;
+    int height = 90;
+    auto ext = platform->request_interface(
+        MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1);
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_android, Ne(nullptr));
+
+    std::condition_variable cv;
+    std::mutex mut;
+    auto called = false;
+    auto cb = [&] {
+        std::unique_lock<decltype(mut)> lk(mut);
+        called = true;
+        cv.notify_all();
+    };
+    ext->allocate_buffer_android(nullptr,
+        width, height,
+        HAL_PIXEL_FORMAT_RGBA_8888,
+        GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_TEXTURE,
+        cb, nullptr);
+
+    std::unique_lock<decltype(mut)> lk(mut);
+    EXPECT_TRUE(cv.wait_for(lk, 5s, [&] { return called; })); 
 }
