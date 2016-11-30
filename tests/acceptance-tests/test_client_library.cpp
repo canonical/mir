@@ -65,10 +65,10 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         config->surface_created(surface);
     }
 
-    static void next_buffer_callback(MirBufferStream* bs, void* context)
+    static void swap_buffers_callback(MirBufferStream* bs, void* context)
     {
         ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
-        config->next_buffer(bs);
+        config->swap_buffers(bs);
     }
 
     static void release_surface_callback(MirSurface* surface, void* context)
@@ -88,7 +88,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         surface = new_surface;
     }
 
-    virtual void next_buffer(MirBufferStream*)
+    virtual void swap_buffers(MirBufferStream*)
     {
         ++buffers;
     }
@@ -576,7 +576,7 @@ TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
     surface = mtf::make_any_surface(connection);
 
     buffers = 0;
-    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), next_buffer_callback, this));
+    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), swap_buffers_callback, this));
     EXPECT_THAT(buffers, Eq(1));
 
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));

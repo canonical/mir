@@ -307,7 +307,7 @@ TEST_F(ClientBufferStream, uses_buffer_message_from_server)
     service_requests_for(1);
 }
 
-TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
+TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_swap_buffers)
 {
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -318,10 +318,10 @@ TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 }
 
-TEST_F(ClientBufferStream, invokes_callback_on_next_buffer)
+TEST_F(ClientBufferStream, invokes_callback_on_swap_buffers)
 {
     mp::Buffer buffer;
     mcl::BufferStream bs{
@@ -336,7 +336,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_next_buffer)
             InvokeWithoutArgs([&bs, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
-    bs.next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
+    bs.swap_buffers([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
     EXPECT_EQ(callback_invoked, true);
 }
 
@@ -390,7 +390,7 @@ TEST_F(ClientBufferStream, returns_current_client_buffer)
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
 
     async_buffer_arrives(protobuf_buffer_2);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
@@ -421,7 +421,7 @@ TEST_F(ClientBufferStream, caches_width_and_height_in_case_of_partial_updates)
     service_requests_for(1);
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
     async_buffer_arrives(protobuf_buffer_2);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
@@ -533,7 +533,7 @@ TEST_F(ClientBufferStream, perf_report_starts_frame_at_securing)
     (void)bs.secure_for_cpu_write();
 }
 
-TEST_F(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
+TEST_F(ClientBufferStream, perf_report_ends_frame_at_swap_buffers)
 {
     NiceMock<MockPerfReport> mock_perf_report;
     EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(1);
@@ -548,7 +548,7 @@ TEST_F(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
     service_requests_for(2);
 
     (void)bs.get_current_buffer();
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 }
 
 TEST_F(ClientBufferStream, receives_unsolicited_buffer)
@@ -579,7 +579,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
     async_buffer_arrives(another_buffer_package);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 
     EXPECT_THAT(bs.get_current_buffer().get(), Eq(&second_mock_client_buffer));
     EXPECT_THAT(bs.get_current_buffer_id(), Eq(id));
@@ -640,7 +640,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_hand
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    wh = bs.next_buffer(
+    wh = bs.swap_buffers(
         [&]
         {
             if (wh)
@@ -662,7 +662,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    wh = bs.next_buffer(
+    wh = bs.swap_buffers(
         [&]
         {
             if (wh)
@@ -783,6 +783,6 @@ TEST_F(ClientBufferStream, can_cycle_through_available_buffers_without_waiting)
     for(auto i = 0u; i < mock_protobuf_server.alloc_count; i++)
     {
         bs.get_current_buffer();
-        bs.next_buffer([&count]{ count++;});
+        bs.swap_buffers([&count]{ count++;});
     }
 }

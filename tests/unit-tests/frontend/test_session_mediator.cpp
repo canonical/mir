@@ -566,7 +566,7 @@ TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
               protobuf_buffer.buffer_id());
 }
 
-TEST_F(SessionMediator, partially_packs_next_buffer_after_creating_screencast)
+TEST_F(SessionMediator, partially_packs_swap_buffers_after_creating_screencast)
 {
     using namespace testing;
 

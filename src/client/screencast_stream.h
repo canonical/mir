@@ -73,7 +73,7 @@ public:
         mir::protobuf::BufferStream const& protobuf_bs);
 
     MirSurfaceParameters get_parameters() const override;
-    MirWaitHandle* next_buffer(std::function<void()> const& done) override;
+    MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     uint32_t get_current_buffer_id() override;
     int swap_interval() const override;

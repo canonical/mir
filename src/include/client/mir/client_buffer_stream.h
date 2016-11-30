@@ -76,7 +76,7 @@ public:
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;
-    virtual MirWaitHandle* next_buffer(std::function<void()> const& done) = 0;
+    virtual MirWaitHandle* swap_buffers(std::function<void()> const& done) = 0;
 
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
 

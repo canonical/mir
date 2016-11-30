@@ -116,7 +116,7 @@ MirWaitHandle* mir_buffer_stream_swap_buffers(
 try
 {
     mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    return bs->next_buffer([bs, callback, context]{
+    return bs->swap_buffers([bs, callback, context]{
             if (callback)
                 callback(reinterpret_cast<MirBufferStream*>(bs), context);
     });

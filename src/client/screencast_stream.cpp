@@ -119,7 +119,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     }
 }
 
-MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::ScreencastStream::swap_buffers(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     secured_region.reset();
@@ -183,7 +183,7 @@ MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
 
 void mcl::ScreencastStream::swap_buffers_sync()
 {
-    next_buffer([](){})->wait_for_all();
+    swap_buffers([](){})->wait_for_all();
 }
 
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
