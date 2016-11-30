@@ -22,7 +22,7 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_platform.h"
 
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/doubles/stub_display_server.h"
 #include "mir/test/fake_shared.h"

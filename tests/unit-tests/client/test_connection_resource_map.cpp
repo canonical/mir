@@ -20,7 +20,7 @@
 #include "src/client/mir_surface.h"
 #include "src/client/presentation_chain.h"
 #include "src/client/render_surface.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
 

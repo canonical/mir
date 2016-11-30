@@ -16,8 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
-#define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
+// MIR_MIR_? Yes.
+//  The internal interface is mir/mir_buffer_stream.h
+//  The public client API is  mir_toolkit/mir_buffer_stream.h
+#ifndef MIR_MIR_BUFFER_STREAM_H_
+#define MIR_MIR_BUFFER_STREAM_H_
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
@@ -106,4 +109,4 @@ protected:
     MirBufferStream& operator=(const MirBufferStream&) = delete;
 };
 
-#endif /* MIR_CLIENT_CLIENT_BUFFER_STREAM_H_ */
+#endif /* MIR_MIR_BUFFER_STREAM_H_ */

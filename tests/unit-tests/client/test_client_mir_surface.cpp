@@ -52,7 +52,7 @@
 #include <boost/throw_exception.hpp>
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 

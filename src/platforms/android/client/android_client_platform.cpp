@@ -22,7 +22,7 @@
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"

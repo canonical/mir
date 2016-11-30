@@ -22,7 +22,7 @@
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 #include "buffer_stream_configuration.h"

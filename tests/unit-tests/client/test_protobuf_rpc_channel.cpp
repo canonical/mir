@@ -32,7 +32,7 @@
 #include "mir/input/input_devices.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fd_utils.h"
 #include "mir/test/gmock_fixes.h"

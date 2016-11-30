@@ -25,7 +25,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
