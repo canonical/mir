@@ -32,6 +32,10 @@ struct TouchscreenConfiguration
 {
     TouchscreenConfiguration() {}
 
+    TouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode)
+       : output_id{output_id}, mapping_mode{mode}
+    {}
+
     /**
      * Configures the output the device coordinates should be aligned to.
      *

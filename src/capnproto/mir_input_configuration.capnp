@@ -55,7 +55,7 @@ struct TouchscreenConfiguration
        toOutput @0;
        toDisplayWall @1;
     }
-    outputId @0 :Float32;
+    outputId @0 :UInt32;
     mappingMode @1 :MappingMode;
 }
 
