@@ -73,6 +73,22 @@ ANativeWindow* create_anw(MirBufferStream* buffer_stream)
 void destroy_anw(ANativeWindow*)
 {
 }
+
+void create_buffer(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags,
+    mir_buffer_callback available_callback, void* available_context)
+{
+//    mir::require(connection);
+    auto cont = mcl::to_client_context(connection);
+    printf("CONT %X\n", (int)(long) cont); 
+
+
+    (void)connection; (void)width; (void)height; (void) hal_pixel_format; (void)gralloc_usage_flags; (void)available_callback; (void) available_context;
+}
+
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -81,7 +97,8 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb}
+    extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
+    buffer_extension{create_buffer}
 {
 }
 
@@ -171,5 +188,7 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
 {
     if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_1))
         return &extension;
+    if (!strcmp(name, MIR_EXTENSION_ANDROID_BUFFER) && (version == MIR_EXTENSION_ANDROID_BUFFER_VERSION_1))
+        return &buffer_extension;
     return nullptr;
 }
