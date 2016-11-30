@@ -406,7 +406,7 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::BufferStream::request_and_wait_for_next_buffer()
+void mcl::BufferStream::swap_buffers_sync()
 {
     next_buffer([](){})->wait_for_all();
 }

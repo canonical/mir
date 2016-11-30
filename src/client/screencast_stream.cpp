@@ -181,7 +181,7 @@ MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::ScreencastStream::request_and_wait_for_next_buffer()
+void mcl::ScreencastStream::swap_buffers_sync()
 {
     next_buffer([](){})->wait_for_all();
 }

@@ -104,7 +104,7 @@ public:
 
     // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
-    void request_and_wait_for_next_buffer() override;
+    void swap_buffers_sync() override;
 
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
 

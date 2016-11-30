@@ -481,7 +481,7 @@ TEST_F(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
     bs.secure_for_cpu_write();
     bs.secure_for_cpu_write();
 
-    bs.request_and_wait_for_next_buffer();
+    bs.swap_buffers_sync();
     EXPECT_EQ(&second_expected_memory_region, bs.secure_for_cpu_write().get());
     bs.secure_for_cpu_write();
     bs.secure_for_cpu_write();
@@ -613,7 +613,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
             started = true;
             cv.notify_all();
         }
-        bs.request_and_wait_for_next_buffer();
+        bs.swap_buffers_sync();
     });
 
     std::unique_lock<decltype(mutex)> lk(mutex);
@@ -624,7 +624,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 
     EXPECT_THROW({
-        bs.request_and_wait_for_next_buffer();
+        bs.swap_buffers_sync();
     }, std::exception);
 }
 

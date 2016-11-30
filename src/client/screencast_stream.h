@@ -83,7 +83,7 @@ public:
     EGLNativeWindowType egl_native_window() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
-    void request_and_wait_for_next_buffer() override;
+    void swap_buffers_sync() override;
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
     MirNativeBuffer* get_current_buffer_package() override;
     MirPlatformType platform_type() override;
