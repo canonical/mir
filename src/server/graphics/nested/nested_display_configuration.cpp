@@ -113,7 +113,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 local_config.form_factor,
                 local_config.subpixel_arrangement,
                 local_config.gamma,
-                local_config.gamma_supported
+                local_config.gamma_supported,
+                {}
             };
 
             f(output);
@@ -174,7 +175,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 local_config.form_factor,
                 local_config.subpixel_arrangement,
                 local_config.gamma,
-                local_config.gamma_supported
+                local_config.gamma_supported,
+                {}
             };
             UserDisplayConfigurationOutput user(output);
 

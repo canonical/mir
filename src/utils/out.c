@@ -456,6 +456,22 @@ int main(int argc, char *argv[])
             }
             printf("\n");
 
+            uint8_t const* edid = mir_output_get_edid(out);
+            if (edid)
+            {
+                printf("EDID:");
+                /* The EDID is guaranteed to be at least 128 bytes */
+                for (int i = 0; i < 128 ; ++i)
+                {
+                    if ((i % 16) == 0)
+                    {
+                        printf("\n\t");
+                    }
+                    printf("%.2hhx", edid[i]);
+                }
+                printf("\n");
+            }
+
             int const num_modes = mir_output_get_num_modes(out);
             int const current_mode_index =
                 mir_output_get_current_mode_index(out);
