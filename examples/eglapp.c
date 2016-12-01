@@ -379,10 +379,14 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     if (no_vsync)
         swapinterval = 0;
 
-    if (dims && (2 != sscanf(dims, "%ux%u", width, height)))
+    if (dims)
     {
-        fprintf(stderr, "Invalid dimensions: %s\n", dims);
-        return 0;
+        if (2 != sscanf(dims, "%ux%u", width, height))
+        {
+            fprintf(stderr, "Invalid dimensions: %s\n", dims);
+            return 0;
+        }
+        fullscreen = 0;
     }
 
     if (quiet)

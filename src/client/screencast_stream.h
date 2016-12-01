@@ -22,7 +22,7 @@
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
@@ -63,7 +63,7 @@ class ClientBuffer;
 class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
-class ScreencastStream : public EGLNativeSurface, public ClientBufferStream
+class ScreencastStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     ScreencastStream(

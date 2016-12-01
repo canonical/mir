@@ -18,8 +18,8 @@
 #ifndef MIR_CLIENT_MIR_SURFACE_H_
 #define MIR_CLIENT_MIR_SURFACE_H_
 
-#include "mir/client_buffer_stream.h"
 #include "cursor_configuration.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir_wait_handle.h"
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
@@ -69,8 +69,7 @@ class DisplayServerDebug;
 }
 
 class ClientBuffer;
-class ClientBufferStream;
-class ClientBufferStreamFactory;
+class MirBufferStreamFactory;
 
 struct MemoryRegion;
 }
@@ -173,7 +172,7 @@ public:
         MirConnection *allocating_connection,
         mir::client::rpc::DisplayServer& server,
         mir::client::rpc::DisplayServerDebug* debug,
-        std::shared_ptr<mir::client::ClientBufferStream> const& buffer_stream,
+        std::shared_ptr<MirBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto,
         std::shared_ptr<MirWaitHandle> const& handle);
@@ -207,7 +206,7 @@ public:
 
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
-    mir::client::ClientBufferStream* get_buffer_stream();
+    MirBufferStream* get_buffer_stream();
 
     MirWaitHandle* modify(MirSurfaceSpec const& changes);
 
@@ -242,7 +241,7 @@ private:
     MirWaitHandle persistent_id_wait_handle;
 
     //Deprecated functions can cause MirSurfaces to be created with a default stream
-    std::shared_ptr<mir::client::ClientBufferStream> default_stream;
+    std::shared_ptr<MirBufferStream> default_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
