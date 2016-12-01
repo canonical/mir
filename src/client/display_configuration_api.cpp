@@ -21,6 +21,7 @@
 #include "mir/output_type_names.h"
 #include "display_configuration.h"
 #include "mir/uncaught.h"
+#include <cstring>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -84,6 +85,77 @@ void mir_output_enable(MirOutput* output)
 void mir_output_disable(MirOutput* output)
 {
     output->set_used(0);
+}
+
+static size_t edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
+                                        char str[14])
+{
+    union descriptor
+    {
+        struct
+        {
+            uint16_t pixel_clock;
+        } detailed_timing;
+        struct
+        {
+            uint16_t zero0;
+            uint8_t  zero2;
+            uint8_t  type;
+            uint8_t  zero4;
+            char     text[13];
+        } other;
+    };
+    
+    union descriptor const* desc = (union descriptor const*)(edid + 54);
+    union descriptor const* desc_end = desc + 4;
+    size_t len = 0;
+
+    for (; desc < desc_end; ++desc)
+    {
+        if (!desc->detailed_timing.pixel_clock)
+        {
+            if (desc->other.type == type)
+            {
+                len = 13;
+                memcpy(str, desc->other.text, len);
+                break;
+            }
+        }
+    }
+    str[len] = '\0';
+    return len;
+}
+
+static size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
+{
+    size_t len = edid_get_other_descriptor(edid, 0xFC, str);
+    char* lf = strchr(str, '\n');
+    if (lf)
+    {
+        *lf = '\0';
+        len = lf - str;
+    }
+    return len;
+}
+
+char const* mir_output_model(MirOutput const* output)
+{
+    // In future this might be provided by the server itself...
+    if (output->has_model())
+        return output->model().c_str();
+
+    // But if not we use the same member for caching our EDID probe...
+    if (auto edid = mir_output_get_edid(output))
+    {
+        char name[14];
+        if (edid_get_monitor_name(edid, name))
+        {
+            const_cast<MirOutput*>(output)->set_model(name);
+            return output->model().c_str();
+        }
+    }
+
+    return nullptr;
 }
 
 int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
