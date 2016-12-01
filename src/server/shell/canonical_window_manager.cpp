@@ -413,6 +413,26 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     {
         surface->set_confine_pointer_state(modifications.confine_pointer.value());
     }
+
+    if (modifications.cursor_image.is_set())
+    {
+        surface->set_cursor_image(modifications.cursor_image.value());        
+    }
+
+    if (modifications.stream_cursor.is_set())
+    {
+        auto stream_id = modifications.stream_cursor.value().stream_id;
+        if (stream_id != mir::frontend::BufferStreamId{-1})
+        {
+            auto hotspot = modifications.stream_cursor.value().hotspot;
+            auto stream = session->get_buffer_stream(modifications.stream_cursor.value().stream_id);
+            surface->set_cursor_stream(stream, hotspot);
+        }
+        else
+        {
+            surface->set_cursor_image({});
+        }
+    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
