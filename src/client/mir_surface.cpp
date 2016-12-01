@@ -17,7 +17,7 @@
  */
 
 #include "mir_surface.h"
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "cursor_configuration.h"
 #include "make_protobuf_object.h"
 #include "mir_protobuf.pb.h"

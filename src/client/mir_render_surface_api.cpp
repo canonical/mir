@@ -16,7 +16,7 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "render_surface.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"

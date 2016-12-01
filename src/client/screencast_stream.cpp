@@ -18,7 +18,7 @@
 
 #include "screencast_stream.h"
 #include "make_protobuf_object.h"
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"

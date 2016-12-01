@@ -18,9 +18,9 @@
 #ifndef MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 #define MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 
-#include "../lifecycle_control.h"
-#include "../ping_handler.h"
-#include "../error_handler.h"
+#include "mir/lifecycle_control.h"
+#include "mir/ping_handler.h"
+#include "mir/error_handler.h"
 
 #include <memory>
 

@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_protobuf.pb.h"
@@ -24,6 +24,8 @@
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
+//#include "rpc/mir_display_server.h"
+//#include "rpc/mir_display_server_debug.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -31,7 +33,6 @@
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
-#include "lifecycle_control.h"
 #include "error_stream.h"
 #include "buffer_stream.h"
 #include "screencast_stream.h"
@@ -65,7 +66,7 @@ namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
-
+namespace mclr = mcl::rpc;
 namespace
 {
 void ignore()
@@ -246,6 +247,83 @@ std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }
 
+struct MirConnection::SurfaceCreationRequest
+{
+    SurfaceCreationRequest(
+        mir_surface_callback cb, void* context, MirSurfaceSpec const& spec) :
+        cb(cb),
+        context(context),
+        spec(spec),
+        response(std::make_shared<mir::protobuf::Surface>()),
+        wh(std::make_shared<MirWaitHandle>())
+    {
+    }
+    mir_surface_callback cb;
+    void* context;
+    MirSurfaceSpec const spec;
+    std::shared_ptr<mir::protobuf::Surface> response;
+    std::shared_ptr<MirWaitHandle> wh;
+};
+
+struct MirConnection::StreamCreationRequest
+{
+    StreamCreationRequest(
+        MirRenderSurface* rs,
+        mir_buffer_stream_callback mbs_cb,
+        void* context,
+        mir::protobuf::BufferStreamParameters const& params)
+        : rs(rs),
+          mbs_callback(mbs_cb),
+          context(context),
+          parameters(params),
+          response(std::make_shared<mir::protobuf::BufferStream>()),
+          wh(std::make_shared<MirWaitHandle>())
+    {
+    }
+    MirRenderSurface* rs;
+    mir_buffer_stream_callback mbs_callback;
+    void* context;
+    mir::protobuf::BufferStreamParameters const parameters;
+    std::shared_ptr<mir::protobuf::BufferStream> response;
+    std::shared_ptr<MirWaitHandle> const wh;
+};
+
+struct MirConnection::ChainCreationRequest
+{
+    ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
+        callback(cb), context(context),
+        response(std::make_shared<mir::protobuf::BufferStream>())
+    {
+    }
+
+    mir_presentation_chain_callback callback;
+    void* context;
+    std::shared_ptr<mir::protobuf::BufferStream> response;
+};
+
+struct MirConnection::RenderSurfaceCreationRequest
+{
+    RenderSurfaceCreationRequest(
+        mir_render_surface_callback cb,
+        void* context,
+        std::shared_ptr<void> native_window,
+        mir::geometry::Size size) :
+            callback(cb), context(context),
+            response(std::make_shared<mir::protobuf::BufferStream>()),
+            wh(std::make_shared<MirWaitHandle>()),
+            native_window(native_window),
+            logical_size(size)
+    {
+    }
+
+    mir_render_surface_callback callback;
+    void* context;
+    std::shared_ptr<mir::protobuf::BufferStream> response;
+    std::shared_ptr<MirWaitHandle> const wh;
+    std::shared_ptr<void> native_window;
+    mir::geometry::Size logical_size;
+};
+
 MirConnection::Deregisterer::~Deregisterer()
 {
     std::lock_guard<std::mutex> lock(connection_guard);
@@ -263,9 +341,14 @@ MirConnection::Deregisterer::~Deregisterer()
 MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
-    server(nullptr),
-    debug(nullptr),
+    server(std::make_unique<mclr::DisplayServer>(nullptr)),
+    debug(std::make_unique<mclr::DisplayServerDebug>(nullptr)),
     error_message(error_message),
+    connect_wait_handle(std::make_unique<MirWaitHandle>()),
+    disconnect_wait_handle(std::make_unique<MirWaitHandle>()),
+    platform_operation_wait_handle(std::make_unique<MirWaitHandle>()),
+    configure_display_wait_handle(std::make_unique<MirWaitHandle>()),
+    set_base_display_configuration_wait_handle(std::make_unique<MirWaitHandle>()),
     nbuffers(get_nbuffers_from_env())
 {
 }
@@ -276,8 +359,8 @@ MirConnection::MirConnection(
         surface_map(conf.the_surface_map()),
         buffer_factory(conf.the_buffer_factory()),
         channel(conf.the_rpc_channel()),
-        server(channel),
-        debug(channel),
+        server(std::make_unique<mclr::DisplayServer>(channel)),
+        debug(std::make_unique<mclr::DisplayServerDebug>(channel)),
         logger(conf.the_logger()),
         void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         connect_result{mcl::make_protobuf_object<mir::protobuf::Connection>()},
@@ -289,6 +372,11 @@ MirConnection::MirConnection(
         set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
+        connect_wait_handle(std::make_unique<MirWaitHandle>()),
+        disconnect_wait_handle(std::make_unique<MirWaitHandle>()),
+        platform_operation_wait_handle(std::make_unique<MirWaitHandle>()),
+        configure_display_wait_handle(std::make_unique<MirWaitHandle>()),
+        set_base_display_configuration_wait_handle(std::make_unique<MirWaitHandle>()),
         display_configuration(conf.the_display_configuration()),
         input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
@@ -311,7 +399,7 @@ MirConnection::~MirConnection() noexcept
 {
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
-    connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+    connect_wait_handle->wait_for_pending(std::chrono::milliseconds(500));
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     surface_map.reset();
@@ -340,7 +428,7 @@ MirWaitHandle* MirConnection::create_surface(
 
     try 
     {
-        server.create_surface(&message, c->response.get(),
+        server->create_surface(&message, c->response.get(),
             gp::NewCallback(this, &MirConnection::surface_created, c.get()));
     }
     catch (std::exception const& ex)
@@ -392,7 +480,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         try
         {
             default_stream = std::make_shared<mcl::BufferStream>(
-                this, nullptr, request->wh, server, platform, surface_map, buffer_factory,
+                this, nullptr, request->wh, *server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
                 mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
             surface_map->insert(default_stream->rpc_id(), default_stream);
@@ -425,7 +513,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     else
     {
         surf = std::make_shared<MirSurface>(
-            this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
+            this, *server, debug.get(), default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
 
@@ -523,7 +611,7 @@ MirWaitHandle* MirConnection::release_surface(
     message.set_value(surface->id());
 
     new_wait_handle->expect_result();
-    server.release_surface(&message, void_response.get(),
+    server->release_surface(&message, void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
@@ -585,7 +673,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     }
 
     callback(this, context);
-    connect_wait_handle.result_received();
+    connect_wait_handle->result_received();
 }
 
 MirWaitHandle* MirConnection::connect(
@@ -597,15 +685,15 @@ MirWaitHandle* MirConnection::connect(
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         connect_parameters->set_application_name(app_name);
-        connect_wait_handle.expect_result();
+        connect_wait_handle->expect_result();
     }
 
-    server.connect(
+    server->connect(
         connect_parameters.get(),
         connect_result.get(),
         google::protobuf::NewCallback(
             this, &MirConnection::connected, callback, context));
-    return &connect_wait_handle;
+    return connect_wait_handle.get();
 }
 
 void MirConnection::done_disconnect()
@@ -625,7 +713,7 @@ void MirConnection::done_disconnect()
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
     lifecycle_control->set_callback([](MirLifecycleState){});
-    disconnect_wait_handle.result_received();
+    disconnect_wait_handle->result_received();
 }
 
 MirWaitHandle* MirConnection::disconnect()
@@ -639,11 +727,11 @@ MirWaitHandle* MirConnection::disconnect()
         receiver->buffer_unavailable();
     });
 
-    disconnect_wait_handle.expect_result();
-    server.disconnect(ignored.get(), ignored.get(),
+    disconnect_wait_handle->expect_result();
+    server->disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-    return &disconnect_wait_handle;
+    return disconnect_wait_handle.get();
 }
 
 void MirConnection::done_platform_operation(
@@ -665,7 +753,7 @@ void MirConnection::done_platform_operation(
 
     callback(this, reply, context);
 
-    platform_operation_wait_handle.result_received();
+    platform_operation_wait_handle->result_received();
 }
 
 MirWaitHandle* MirConnection::platform_operation(
@@ -690,14 +778,14 @@ MirWaitHandle* MirConnection::platform_operation(
     for (size_t i = 0; i != request_fds.num_fds; ++i)
         protobuf_request.add_fd(request_fds.fds[i]);
 
-    platform_operation_wait_handle.expect_result();
-    server.platform_operation(
+    platform_operation_wait_handle->expect_result();
+    server->platform_operation(
         &protobuf_request,
         platform_operation_reply.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
                                       callback, context));
 
-    return &platform_operation_wait_handle;
+    return platform_operation_wait_handle.get();
 }
 
 
@@ -833,7 +921,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->rs, request->wh, server, platform, surface_map, buffer_factory,
+            this, request->rs, request->wh, *server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
@@ -881,7 +969,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
 
     try
     {
-        server.create_buffer_stream(&params, request->response.get(),
+        server->create_buffer_stream(&params, request->response.get(),
             gp::NewCallback(this, &MirConnection::stream_created, request.get()));
     } catch (std::exception& e)
     {
@@ -898,7 +986,7 @@ std::shared_ptr<mir::client::BufferStream> MirConnection::create_client_buffer_s
     mir::protobuf::BufferStream const& a_protobuf_bs)
 {
     auto stream = std::make_shared<mcl::BufferStream>(
-        this, render_surface, nullptr, server, platform, surface_map, buffer_factory,
+        this, render_surface, nullptr, *server, platform, surface_map, buffer_factory,
         a_protobuf_bs, make_perf_report(logger), std::string{},
         mir::geometry::Size{width, height}, nbuffers);
     surface_map->insert(render_surface->stream_id(), stream);
@@ -943,7 +1031,7 @@ std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_st
    mp::BufferStream const& protobuf_bs)
 {
     return std::make_shared<mcl::ScreencastStream>(
-        this, server, platform, protobuf_bs);
+        this, *server, platform, protobuf_bs);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -978,7 +1066,7 @@ void MirConnection::pong(int32_t serial)
 {
     mp::PingEvent pong;
     pong.set_serial(serial);
-    server.pong(&pong, void_response.get(), pong_callback.get());
+    server->pong(&pong, void_response.get(), pong_callback.get());
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
@@ -1020,7 +1108,7 @@ void MirConnection::done_display_configure()
     if (!display_configuration_response->has_error())
         display_configuration->set_configuration(*display_configuration_response);
 
-    return configure_display_wait_handle.result_received();
+    return configure_display_wait_handle->result_received();
 }
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
@@ -1033,11 +1121,11 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     mp::DisplayConfiguration request;
     populate_protobuf_display_configuration(request, config);
 
-    configure_display_wait_handle.expect_result();
-    server.configure_display(&request, display_configuration_response.get(),
+    configure_display_wait_handle->expect_result();
+    server->configure_display(&request, display_configuration_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
-    return &configure_display_wait_handle;
+    return configure_display_wait_handle.get();
 }
 
 MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfiguration const* config)
@@ -1050,11 +1138,11 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
     mp::DisplayConfiguration request;
     populate_protobuf_display_configuration(request, config);
 
-    set_base_display_configuration_wait_handle.expect_result();
-    server.set_base_display_configuration(&request, set_base_display_configuration_response.get(),
+    set_base_display_configuration_wait_handle->expect_result();
+    server->set_base_display_configuration(&request, set_base_display_configuration_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_set_base_display_configuration));
 
-    return &set_base_display_configuration_wait_handle;
+    return set_base_display_configuration_wait_handle.get();
 }
 
 namespace
@@ -1094,7 +1182,7 @@ void MirConnection::preview_base_display_configuration(
         (*error_handler)(&error);
     };
 
-    server.preview_base_display_configuration(
+    server->preview_base_display_configuration(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
@@ -1114,7 +1202,7 @@ void MirConnection::cancel_base_display_configuration_preview()
         (*error_handler)(&error);
     };
 
-    server.cancel_base_display_configuration_preview(
+    server->cancel_base_display_configuration_preview(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
@@ -1123,7 +1211,7 @@ void MirConnection::cancel_base_display_configuration_preview()
 void MirConnection::confirm_base_display_configuration(
     mp::DisplayConfiguration const& configuration)
 {
-    server.confirm_base_display_configuration(
+    server->confirm_base_display_configuration(
         &configuration,
         set_base_display_configuration_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
@@ -1135,12 +1223,12 @@ void MirConnection::done_set_base_display_configuration()
 
     set_error_message(set_base_display_configuration_response->error());
 
-    return set_base_display_configuration_wait_handle.result_received();
+    return set_base_display_configuration_wait_handle->result_received();
 }
 
 mir::client::rpc::DisplayServer& MirConnection::display_server()
 {
-    return server;
+    return *server;
 }
 
 MirWaitHandle* MirConnection::release_buffer_stream(
@@ -1161,7 +1249,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
     }
 
     new_wait_handle->expect_result();
-    server.release_buffer_stream(
+    server->release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
     return new_wait_handle;
@@ -1197,7 +1285,7 @@ void MirConnection::create_presentation_chain(
 
     try
     {
-        server.create_buffer_stream(&params, request->response.get(),
+        server->create_buffer_stream(&params, request->response.get(),
             gp::NewCallback(this, &MirConnection::context_created, request.get()));
     } catch (std::exception& e)
     {
@@ -1239,7 +1327,7 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
         if (!client_buffer_factory)
             client_buffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, client_buffer_factory, buffer_factory);
+            this, protobuf_bs->id().value(), *server, client_buffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
@@ -1277,7 +1365,7 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id(), nullptr};
         mp::BufferStreamId buffer_stream_id;
         buffer_stream_id.set_value(chain->rpc_id());
-        server.release_buffer_stream(
+        server->release_buffer_stream(
             &buffer_stream_id, void_response.get(),
             google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
     }
@@ -1305,7 +1393,7 @@ void MirConnection::allocate_buffer(
         client_buffer_factory, this,
         size, format, usage,
         callback, context);
-    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+    server->allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
 void MirConnection::release_buffer(mcl::MirBuffer* buffer)
@@ -1319,7 +1407,7 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer->rpc_id());
-    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+    server->release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
 void MirConnection::release_render_surface_with_content(
@@ -1337,7 +1425,7 @@ void MirConnection::release_render_surface_with_content(
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(rs->stream_id().as_value());
 
-    server.release_buffer_stream(
+    server->release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
 }
@@ -1425,7 +1513,7 @@ void MirConnection::create_render_surface_with_content(
 
     try
     {
-        server.create_buffer_stream(&params, request->response.get(),
+        server->create_buffer_stream(&params, request->response.get(),
             gp::NewCallback(this, &MirConnection::render_surface_created, request.get()));
     } catch (std::exception& e)
     {

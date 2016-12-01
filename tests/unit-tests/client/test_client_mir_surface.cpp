@@ -27,7 +27,7 @@
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
 #include "src/client/mir_surface.h"
-#include "src/client/mir_connection.h"
+#include "mir/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/rpc/mir_display_server.h"

@@ -20,7 +20,7 @@
 
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_screencast.h"
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "mir/raii.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"

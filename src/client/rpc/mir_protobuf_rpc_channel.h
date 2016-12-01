@@ -25,9 +25,9 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
-#include "../lifecycle_control.h"
-#include "../ping_handler.h"
-#include "../error_handler.h"
+#include "mir/lifecycle_control.h"
+#include "mir/ping_handler.h"
+#include "mir/error_handler.h"
 
 #include <thread>
 #include <atomic>

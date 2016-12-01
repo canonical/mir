@@ -36,7 +36,7 @@
 #include "src/server/compositor/buffer_map.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
-#include "src/client/mir_connection.h"
+#include "mir/mir_connection.h"
 #include "src/client/rpc/mir_display_server.h"
 #include <chrono>
 #include <mutex>

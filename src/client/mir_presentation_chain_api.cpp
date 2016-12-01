@@ -19,11 +19,12 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "buffer.h"
 #include "mir_presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include <condition_variable>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 namespace mcl = mir::client;

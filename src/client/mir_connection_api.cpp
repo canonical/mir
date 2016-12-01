@@ -25,7 +25,8 @@
 #include "mir/raii.h"
 #include "mir/require.h"
 
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
+#include "mir_wait_handle.h"
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"

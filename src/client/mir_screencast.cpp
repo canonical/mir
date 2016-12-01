@@ -17,12 +17,13 @@
  */
 
 #include "mir_screencast.h"
-#include "mir_connection.h"
+#include "mir/mir_connection.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir/client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "rpc/mir_display_server.h"
 
 #include <boost/throw_exception.hpp>
 
