@@ -51,7 +51,55 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
 {
     return reinterpret_cast<MirOutputMode const*>(mode);
 }
+
+size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
+                                  char str[14])
+{
+    union descriptor
+    {
+        struct
+        {
+            uint16_t pixel_clock;
+        } detailed_timing;
+        struct
+        {
+            uint16_t zero0;
+            uint8_t  zero2;
+            uint8_t  type;
+            uint8_t  zero4;
+            char     text[13];
+        } other;
+    };
+    
+    union descriptor const* desc = (union descriptor const*)(edid + 54);
+    union descriptor const* desc_end = desc + 4;
+    size_t len = 0;
+
+    for (; desc < desc_end; ++desc)
+    {
+        if (!desc->detailed_timing.pixel_clock && desc->other.type == type)
+        {
+            len = 13;
+            memcpy(str, desc->other.text, len);
+            break;
+        }
+    }
+    str[len] = '\0';
+    return len;
 }
+
+size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
+{
+    size_t len = edid_get_descriptor_string(edid, 0xFC, str);
+    if (char* pad = strchr(str, '\n'))
+    {
+        *pad = '\0';
+        len = pad - str;
+    }
+    return len;
+}
+
+} // namespace
 
 int mir_display_config_get_num_outputs(MirDisplayConfig const* config)
 {
@@ -85,57 +133,6 @@ void mir_output_enable(MirOutput* output)
 void mir_output_disable(MirOutput* output)
 {
     output->set_used(0);
-}
-
-static size_t edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
-                                        char str[14])
-{
-    union descriptor
-    {
-        struct
-        {
-            uint16_t pixel_clock;
-        } detailed_timing;
-        struct
-        {
-            uint16_t zero0;
-            uint8_t  zero2;
-            uint8_t  type;
-            uint8_t  zero4;
-            char     text[13];
-        } other;
-    };
-    
-    union descriptor const* desc = (union descriptor const*)(edid + 54);
-    union descriptor const* desc_end = desc + 4;
-    size_t len = 0;
-
-    for (; desc < desc_end; ++desc)
-    {
-        if (!desc->detailed_timing.pixel_clock)
-        {
-            if (desc->other.type == type)
-            {
-                len = 13;
-                memcpy(str, desc->other.text, len);
-                break;
-            }
-        }
-    }
-    str[len] = '\0';
-    return len;
-}
-
-static size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
-{
-    size_t len = edid_get_other_descriptor(edid, 0xFC, str);
-    char* lf = strchr(str, '\n');
-    if (lf)
-    {
-        *lf = '\0';
-        len = lf - str;
-    }
-    return len;
 }
 
 char const* mir_output_get_model(MirOutput const* output)
