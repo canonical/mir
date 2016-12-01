@@ -27,7 +27,6 @@
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
-namespace mclr = mcl::rpc;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace mf = mir::frontend;

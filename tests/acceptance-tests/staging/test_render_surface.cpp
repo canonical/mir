@@ -89,19 +89,12 @@ TEST_F(RenderSurfaceTest, can_hand_out_buffer_stream)
 
 TEST_F(RenderSurfaceTest, hands_out_buffer_stream_only_once)
 {
+    auto physical_size = logical_size;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
 
-    auto determine_physical_size = [](MirRenderSurface* rs) -> geom::Size
-    {
-        int width = -1;
-        int height = -1;
-        mir_render_surface_get_size(rs, &width, &height);
-        return {width, height};
-    };
-    auto physical_size = determine_physical_size(rs);
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),

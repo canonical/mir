@@ -18,6 +18,8 @@
 
 #include "error_render_surface.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mcl = mir::client;
 
 mcl::ErrorRenderSurface::ErrorRenderSurface(
@@ -34,17 +36,17 @@ MirConnection* mcl::ErrorRenderSurface::connection() const
 
 mir::frontend::BufferStreamId mcl::ErrorRenderSurface::stream_id() const
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 mir::geometry::Size mcl::ErrorRenderSurface::size() const
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 void mcl::ErrorRenderSurface::set_size(mir::geometry::Size /*size*/)
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 bool mcl::ErrorRenderSurface::valid() const
@@ -57,12 +59,12 @@ MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
     MirPixelFormat /*format*/,
     MirBufferUsage /*buffer_usage*/)
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 MirPresentationChain* mcl::ErrorRenderSurface::get_presentation_chain()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 char const* mcl::ErrorRenderSurface::get_error_message() const
