@@ -329,11 +329,59 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     return true;
 }
 
+enum descriptor_type
+{
+    monitor_serial_number = 0xff,
+    unspecified_text = 0xfe,
+    monitor_name = 0xfc
+};
+
+union descriptor
+{
+    struct
+    {
+        uint16_t pixel_clock;
+    } detailed_timing;
+    struct
+    {
+        uint16_t zero0;
+        uint8_t  zero2;
+        uint8_t  type; /* enum descriptor_type */
+        uint8_t  zero4;
+        char     text[13];
+    } other;
+};
+
+static int edid_get_descriptor(uint8_t const* edid, enum descriptor_type type,
+                               char str[14])
+{
+    union descriptor const* desc = (union descriptor const*)(edid + 54);
+    union descriptor const* desc_end = desc + 4;
+    int len = 0;
+    for (; desc < desc_end; ++desc)
+    {
+        if (!desc->detailed_timing.pixel_clock)
+        {
+            if (desc->other.type == (uint8_t)type)
+            {
+                memcpy(str, desc->other.text, 13);
+                /* Standard padding (if any) is 0x0a 0x20 0x20... */
+                char* lf = strchr(str, '\n');
+                len = lf ? lf - str : 13;
+                break;
+            }
+        }
+    }
+    str[len] = '\0';
+    return len;
+}
+
 int main(int argc, char *argv[])
 {
     char const* server = NULL;
     char** actionv = NULL;
     int actionc = 0;
+    bool verbose = false;
 
     for (int a = 1; a < argc; a++)
     {
@@ -345,11 +393,15 @@ int main(int argc, char *argv[])
 
             switch (arg[1])
             {
+                case 'v':
+                    verbose = true;
+                    break;
                 case 'h':
                 default:
                     printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
+                           "    -v  Show verbose information.\n"
                            "    --  Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
@@ -413,11 +465,19 @@ int main(int argc, char *argv[])
             MirOutput const* out = mir_display_config_get_output(conf, i);
             MirOutputConnectionState const state =
                 mir_output_get_connection_state(out);
+            uint8_t const* edid = mir_output_get_edid(out);
+            char name[14] = "";
 
             printf("Output %d: %s, %s",
                    mir_output_get_id(out),
                    mir_output_type_name(mir_output_get_type(out)),
                    state_name(state));
+
+            /* If there's an EDID the standard requires monitor_name present */
+            if (edid && edid_get_descriptor(edid, monitor_name, name))
+            {
+                printf(", \"%s\"", name);
+            }
 
             if (state == mir_output_connection_state_connected)
             {
@@ -456,16 +516,17 @@ int main(int argc, char *argv[])
             }
             printf("\n");
 
-            uint8_t const* edid = mir_output_get_edid(out);
-            if (edid)
+            if (verbose && edid)
             {
-                printf("EDID:");
+                static char const indent[] = "    ";
                 /* The EDID is guaranteed to be at least 128 bytes */
-                for (int i = 0; i < 128 ; ++i)
+                int const len = 128;
+                printf("%sEDID (first %d bytes):", indent, len);
+                for (int i = 0; i < len; ++i)
                 {
                     if ((i % 16) == 0)
                     {
-                        printf("\n\t");
+                        printf("\n%s%s", indent, indent);
                     }
                     printf("%.2hhx", edid[i]);
                 }
