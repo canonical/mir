@@ -366,6 +366,7 @@ static int edid_get_descriptor(uint8_t const* edid, enum descriptor_type type,
             {
                 memcpy(str, desc->other.text, 13);
                 /* Standard padding (if any) is 0x0a 0x20 0x20... */
+                str[13] = '\0';
                 char* lf = strchr(str, '\n');
                 len = lf ? lf - str : 13;
                 break;
