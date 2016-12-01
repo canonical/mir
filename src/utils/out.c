@@ -329,51 +329,54 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     return true;
 }
 
-enum descriptor_type
+static int edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
+                                     char str[14])
 {
-    monitor_serial_number = 0xff,
-    unspecified_text = 0xfe,
-    monitor_name = 0xfc
-};
-
-union descriptor
-{
-    struct
+    union descriptor
     {
-        uint16_t pixel_clock;
-    } detailed_timing;
-    struct
-    {
-        uint16_t zero0;
-        uint8_t  zero2;
-        uint8_t  type; /* enum descriptor_type */
-        uint8_t  zero4;
-        char     text[13];
-    } other;
-};
-
-static int edid_get_descriptor(uint8_t const* edid, enum descriptor_type type,
-                               char str[14])
-{
+        struct
+        {
+            uint16_t pixel_clock;
+        } detailed_timing;
+        struct
+        {
+            uint16_t zero0;
+            uint8_t  zero2;
+            uint8_t  type;
+            uint8_t  zero4;
+            char     text[13];
+        } other;
+    };
+    
     union descriptor const* desc = (union descriptor const*)(edid + 54);
     union descriptor const* desc_end = desc + 4;
     int len = 0;
+
     for (; desc < desc_end; ++desc)
     {
         if (!desc->detailed_timing.pixel_clock)
         {
-            if (desc->other.type == (uint8_t)type)
+            if (desc->other.type == type)
             {
-                memcpy(str, desc->other.text, 13);
-                /* Standard padding (if any) is 0x0a 0x20 0x20... */
-                str[13] = '\0';
-                char* lf = strchr(str, '\n');
-                len = lf ? lf - str : 13;
+                len = 13;
+                memcpy(str, desc->other.text, len);
                 break;
             }
         }
     }
     str[len] = '\0';
+    return len;
+}
+
+static int edid_get_monitor_name(uint8_t const* edid, char str[14])
+{
+    int len = edid_get_other_descriptor(edid, 0xFC, str);
+    char* lf = strchr(str, '\n');
+    if (lf)
+    {
+        *lf = '\0';
+        len = lf - str;
+    }
     return len;
 }
 
@@ -467,21 +470,19 @@ int main(int argc, char *argv[])
             MirOutputConnectionState const state =
                 mir_output_get_connection_state(out);
             uint8_t const* edid = mir_output_get_edid(out);
-            char name[14] = "";
 
             printf("Output %d: %s, %s",
                    mir_output_get_id(out),
                    mir_output_type_name(mir_output_get_type(out)),
                    state_name(state));
 
-            /* If there's an EDID the standard requires monitor_name present */
-            if (edid && edid_get_descriptor(edid, monitor_name, name))
-            {
-                printf(", \"%s\"", name);
-            }
-
             if (state == mir_output_connection_state_connected)
             {
+                char name[14];
+                if (edid && !  edid_get_monitor_name(edid, name))
+                    name[0] = '\0';
+                printf(", \"%s\"", name);
+
                 MirOutputMode const* current_mode =
                     mir_output_get_current_mode(out);
                 if (current_mode)
@@ -517,6 +518,7 @@ int main(int argc, char *argv[])
             }
             printf("\n");
 
+            /* TODO: Move into if connected */
             if (verbose && edid)
             {
                 static char const indent[] = "    ";
