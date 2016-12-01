@@ -18,7 +18,7 @@
 
 #include "mir_native_window.h"
 #include "mir/client_platform.h"
-#include "mir/mir_connection.h"
+#include "src/client/mir_connection.h"
 #include "mir/dispatch/dispatchable.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir_toolkit/extensions/android_buffer.h"

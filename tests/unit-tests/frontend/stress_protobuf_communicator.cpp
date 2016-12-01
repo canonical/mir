@@ -29,8 +29,8 @@
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
-#include "mir/lifecycle_control.h"
-#include "mir/ping_handler.h"
+#include "src/client/lifecycle_control.h"
+#include "src/client/ping_handler.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"

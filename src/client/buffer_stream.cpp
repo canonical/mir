@@ -22,7 +22,7 @@
 #include "buffer.h"
 #include "buffer_factory.h"
 #include "make_protobuf_object.h"
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
 #include "rpc/mir_display_server.h"

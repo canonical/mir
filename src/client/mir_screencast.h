@@ -24,7 +24,6 @@
 #include "mir/optional_value.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_protobuf.pb.h"
 
 #include <EGL/eglplatform.h>
 

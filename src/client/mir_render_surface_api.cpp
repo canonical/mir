@@ -16,12 +16,11 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 #include "render_surface.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "connection_surface_map.h"
-#include "mir_surface.h"
 
 namespace
 {

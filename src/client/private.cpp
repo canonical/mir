@@ -17,7 +17,7 @@
  */
 
 #include "mir/client/private.h"
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 
 auto mir::client::the_rpc_channel(MirConnection *connection)
 -> std::shared_ptr<mir::client::rpc::MirBasicRpcChannel>

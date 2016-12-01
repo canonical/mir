@@ -18,10 +18,11 @@
 #ifndef MIR_CLIENT_MIR_CONNECTION_H_
 #define MIR_CLIENT_MIR_CONNECTION_H_
 
-#include "mir/lifecycle_control.h"
-#include "mir/ping_handler.h"
-#include "mir/error_handler.h"
-//#include "mir_wait_handle.h"
+#include "mir_wait_handle.h"
+#include "lifecycle_control.h"
+#include "ping_handler.h"
+#include "rpc/mir_display_server.h"
+#include "rpc/mir_display_server_debug.h"
 
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
@@ -29,6 +30,9 @@
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/client_types_nbs.h"
+#include "mir_surface.h"
+#include "display_configuration.h"
+#include "error_handler.h"
 
 #include <atomic>
 #include <memory>
@@ -36,10 +40,7 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
-#include <vector>
 
-struct MirWaitHandle;
-namespace google { namespace protobuf { class Closure; }}
 namespace mir
 {
 namespace input
@@ -48,7 +49,6 @@ class InputDevices;
 }
 namespace protobuf
 {
-class Void;
 class BufferStream;
 class Connection;
 class ConnectParameters;
@@ -224,28 +224,96 @@ public:
 
     void* request_interface(char const* name, int version);
 
-    void connected(mir_connected_callback callback, void * context);
 private:
-    struct SurfaceCreationRequest;
+    //google cant have callbacks with more than 2 args
+    struct SurfaceCreationRequest
+    {
+        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirSurfaceSpec const& spec) :
+            cb(cb), context(context), spec(spec),
+              response(std::make_shared<mir::protobuf::Surface>()),
+              wh(std::make_shared<MirWaitHandle>())
+        {
+        }
+        mir_surface_callback cb;
+        void* context;
+        MirSurfaceSpec const spec;
+        std::shared_ptr<mir::protobuf::Surface> response;
+        std::shared_ptr<MirWaitHandle> wh;
+    };
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
     void surface_created(SurfaceCreationRequest*);
 
-    struct StreamCreationRequest;
+    struct StreamCreationRequest
+    {
+        StreamCreationRequest(
+            MirRenderSurface* rs,
+            mir_buffer_stream_callback mbs_cb,
+            void* context,
+            mir::protobuf::BufferStreamParameters const& params)
+            : rs(rs),
+              mbs_callback(mbs_cb),
+              context(context),
+              parameters(params),
+              response(std::make_shared<mir::protobuf::BufferStream>()),
+              wh(std::make_shared<MirWaitHandle>())
+        {
+        }
+        MirRenderSurface* rs;
+        mir_buffer_stream_callback mbs_callback;
+        void* context;
+        mir::protobuf::BufferStreamParameters const parameters;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+    };
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
-    struct ChainCreationRequest;
-    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
-    void context_created(ChainCreationRequest*);
-    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
+    struct ChainCreationRequest
+    {
+        ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
+            callback(cb), context(context),
+            response(std::make_shared<mir::protobuf::BufferStream>())
+        {
+        }
 
-    struct RenderSurfaceCreationRequest;
+        mir_presentation_chain_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+    };
+
+    struct RenderSurfaceCreationRequest
+    {
+        RenderSurfaceCreationRequest(
+            mir_render_surface_callback cb,
+            void* context,
+            std::shared_ptr<void> native_window,
+            mir::geometry::Size size) :
+                callback(cb), context(context),
+                response(std::make_shared<mir::protobuf::BufferStream>()),
+                wh(std::make_shared<MirWaitHandle>()),
+                native_window(native_window),
+                logical_size(size)
+        {
+        }
+
+        mir_render_surface_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+        std::shared_ptr<void> native_window;
+        mir::geometry::Size logical_size;
+    };
+
+    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
+    void context_created(ChainCreationRequest*);
     void render_surface_created(RenderSurfaceCreationRequest*);
     void render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request);
+    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
+    // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
 
@@ -255,8 +323,8 @@ private:
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
-    std::unique_ptr<mir::client::rpc::DisplayServer> server;
-    std::unique_ptr<mir::client::rpc::DisplayServerDebug> debug;
+    mir::client::rpc::DisplayServer server;
+    mir::client::rpc::DisplayServerDebug debug;
     std::shared_ptr<mir::logging::Logger> const logger;
     std::unique_ptr<mir::protobuf::Void> void_response;
     std::unique_ptr<mir::protobuf::Connection> connect_result;
@@ -279,11 +347,12 @@ private:
 
     std::string error_message;
 
-    std::unique_ptr<MirWaitHandle> connect_wait_handle;
-    std::unique_ptr<MirWaitHandle> disconnect_wait_handle;
-    std::unique_ptr<MirWaitHandle> platform_operation_wait_handle;
-    std::unique_ptr<MirWaitHandle> configure_display_wait_handle;
-    std::unique_ptr<MirWaitHandle> set_base_display_configuration_wait_handle;
+    MirWaitHandle connect_wait_handle;
+    MirWaitHandle disconnect_wait_handle;
+    MirWaitHandle platform_operation_wait_handle;
+    MirWaitHandle configure_display_wait_handle;
+    MirWaitHandle set_base_display_configuration_wait_handle;
+
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
@@ -310,6 +379,7 @@ private:
 
     void set_error_message(std::string const& error);
     void done_disconnect();
+    void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease);
     void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);

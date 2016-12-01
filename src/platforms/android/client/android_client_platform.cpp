@@ -31,7 +31,7 @@
 #include "android_format_conversion-inl.h"
 
 #include "mir/weak_egl.h"
-#include "mir/mir_connection.h"
+#include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
 
@@ -84,8 +84,10 @@ void create_buffer(
 {
     //TODO: pass actual gralloc flags along
     (void) gralloc_usage_flags;
-    connection->allocate_buffer(
-        {width, height},
+
+    mir_connection_allocate_buffer(
+        connection,
+        width, height,
         mga::to_mir_format(hal_pixel_format),
         mir_buffer_usage_hardware,
         available_callback, available_context);

@@ -33,7 +33,7 @@
 #include "lttng/input_receiver_report.h"
 #include "lttng/shared_library_prober_report.h"
 #include "connection_surface_map.h"
-#include "mir/lifecycle_control.h"
+#include "lifecycle_control.h"
 #include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"

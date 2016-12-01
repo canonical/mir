@@ -20,7 +20,7 @@
 
 #include "mir_toolkit/mir_prompt_session.h"
 #include "mir_prompt_session.h"
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 
 #include "mir/uncaught.h"
 

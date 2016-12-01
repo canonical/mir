@@ -20,9 +20,9 @@
 #define MIR_CLIENT_CONNECTION_CONFIGURATION_H_
 
 #include <memory>
-#include "mir/lifecycle_control.h"
-#include "mir/ping_handler.h"
-#include "mir/error_handler.h"
+#include "lifecycle_control.h"
+#include "ping_handler.h"
+#include "error_handler.h"
 
 namespace mir
 {

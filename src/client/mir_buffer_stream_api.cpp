@@ -20,7 +20,7 @@
 
 #include "mir_screencast.h"
 #include "mir_surface.h"
-#include "mir/mir_connection.h"
+#include "mir_connection.h"
 #include "buffer_stream.h"
 #include "render_surface.h"
 
