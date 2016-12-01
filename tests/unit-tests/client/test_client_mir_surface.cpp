@@ -463,7 +463,10 @@ TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
 
     auto const surface = create_surface_with(unresponsive_server);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto cursor_config = mir_cursor_configuration_from_name(mir_default_cursor_name);
+#pragma GCC diagnostic pop
     auto cursor_wait_handle = surface->configure_cursor(cursor_config);
 
     auto expected_end = std::chrono::steady_clock::now() + pause_time;

@@ -19,6 +19,7 @@
 #ifndef MIR_CLIENT_CURSOR_CONFIGURATION_H_
 #define MIR_CLIENT_CURSOR_CONFIGURATION_H_
 
+#include "mir/mir_buffer_stream.h"
 #include <string>
 
 // Parameters for configuring the apperance and behavior of the system cursor. 
