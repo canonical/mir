@@ -498,4 +498,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_configuration_set_middle_mouse_button_emulation;
     mir_touchpad_configuration_set_scroll_modes;
     mir_touchpad_configuration_set_tap_to_click;
+    mir_output_get_model;
 } MIR_CLIENT_0.25;

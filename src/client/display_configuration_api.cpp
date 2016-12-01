@@ -138,7 +138,7 @@ static size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
     return len;
 }
 
-char const* mir_output_model(MirOutput const* output)
+char const* mir_output_get_model(MirOutput const* output)
 {
     // In future this might be provided by the server itself...
     if (output->has_model())

@@ -421,6 +421,10 @@ int main(int argc, char *argv[])
 
             if (state == mir_output_connection_state_connected)
             {
+                char const* model = mir_output_get_model(out);
+                if (model)
+                    printf(", \"%s\"", model);
+
                 MirOutputMode const* current_mode =
                     mir_output_get_current_mode(out);
                 if (current_mode)
