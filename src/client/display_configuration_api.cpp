@@ -52,6 +52,10 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
     return reinterpret_cast<MirOutputMode const*>(mode);
 }
 
+/*
+ * This EDID code could move up to the server later, but that's not required
+ * yet. Maybe when we want to dump it to the server log?
+ */
 size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
                                   char str[14])
 {
