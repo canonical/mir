@@ -366,3 +366,12 @@ uint8_t const* mir_output_get_edid(MirOutput const* output)
     }
     return nullptr;
 }
+
+size_t mir_output_get_edid_size(MirOutput const* output)
+{
+    if (output->has_edid())
+    {
+        return output->edid().length();
+    }
+    return 0;
+}
