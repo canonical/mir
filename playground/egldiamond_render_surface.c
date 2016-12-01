@@ -85,7 +85,12 @@ void wait_buffer(MirBuffer* b, void* context)
 
 void fill_buffer(MirBuffer* buffer)
 {
-    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    MirBufferLayout layout = mir_buffer_layout_unknown;
+    MirGraphicsRegion region;
+    bool rc = mir_buffer_map(buffer, &region, &layout);
+    if (!rc || layout == mir_buffer_layout_unknown)
+        return;
+
     unsigned int *data = (unsigned int*) region.vaddr;
     for (int i = 0; i < region.width; i++)
     {
@@ -98,8 +103,7 @@ void fill_buffer(MirBuffer* buffer)
                 data[ idx ] = 0xFFFF0000;
         }
     }
-    //FIXME: need a flush
-    mir_buffer_get_graphics_region(buffer, mir_read_write);
+    mir_buffer_unmap(buffer);
 }
 
 int main(int argc, char *argv[])

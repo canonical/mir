@@ -79,8 +79,7 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
         }
     }
 
-    return reinterpret_cast<MirBufferStream*>(
-        dynamic_cast<ClientBufferStream*>(stream_from_id.get()));
+    return stream_from_id.get();
 }
 
 MirPresentationChain* mcl::RenderSurface::get_presentation_chain()

@@ -60,7 +60,6 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
-class ClientBufferStream;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
@@ -147,7 +146,7 @@ public:
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
-    std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
+    std::shared_ptr<MirBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs);
 
     typedef void (*buffer_stream_callback)(mir::client::BufferStream* stream, void* context);
@@ -164,7 +163,7 @@ public:
         MirRenderSurface* render_surface,
         mir::protobuf::BufferStream const& a_protobuf_bs);
     MirWaitHandle* release_buffer_stream(
-        mir::client::ClientBufferStream*,
+        MirBufferStream*,
         mir_buffer_stream_callback callback,
         void *context);
 
@@ -176,14 +175,14 @@ public:
         mir::protobuf::BufferStream const& a_protobuf_bs);
     void release_presentation_chain(MirPresentationChain* context);
 
-    void release_consumer_stream(mir::client::ClientBufferStream*);
+    void release_consumer_stream(MirBufferStream*);
 
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
     MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
-    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
+    void on_stream_created(int id, MirBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();

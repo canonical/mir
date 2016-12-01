@@ -314,6 +314,23 @@ public:
         return transformed_future;
     }
 
+    /**
+     * Detach the asynchronous operation from this future.
+     *
+     * This decouples the asynchronous operation represented by the NoTLSFuture from the
+     * NoTLSFuture handle itself, similar to std::thread::detach().
+     *
+     * After calling detach() this future is no longer in a valid state; valid() will return
+     * false, and it is no longer possible to wait for or to extract the value of the future.
+     *
+     * This does not change the state of the underlying asynchronous operation. If this
+     * future is the result of a continuation, that continuation will still be run.
+     */
+    void detach()
+    {
+        state = nullptr;
+    }
+
 private:
     template<typename Func, typename Result>
     std::function<void()> make_continuation_for(NoTLSPromise<Result>&& resultant, Func&& continuation);

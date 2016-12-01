@@ -196,9 +196,10 @@ public:
     {
         if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
 
-        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_surface_configure_cursor(mir_surface, conf);
-        mir_cursor_configuration_destroy(conf);
+        auto spec = mir_connection_create_spec_for_changes(mir_connection);
+        mir_surface_spec_set_cursor_name(spec, mir_disabled_cursor_name);
+        mir_surface_apply_spec(mir_surface, spec);
+        mir_surface_spec_release(spec);
     }
 
 private:
@@ -523,6 +524,23 @@ std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() con
     return std::make_unique<Chain>(mir_connection);
 }
 
+mgn::GraphicsRegion::GraphicsRegion() :
+    handle(nullptr)
+{
+}
+
+mgn::GraphicsRegion::GraphicsRegion(MirBuffer* handle) :
+    handle(handle)
+{
+    mir_buffer_map(handle, this, &layout);
+}
+
+mgn::GraphicsRegion::~GraphicsRegion()
+{
+    if (handle)
+        mir_buffer_unmap(handle);
+}
+
 namespace
 {
 class HostBuffer : public mgn::NativeBuffer
@@ -560,9 +578,9 @@ public:
         return handle;
     }
 
-    MirGraphicsRegion get_graphics_region() override
+    std::unique_ptr<mgn::GraphicsRegion> get_graphics_region() override
     {
-        return mir_buffer_get_graphics_region(handle, mir_read_write);
+        return std::make_unique<mgn::GraphicsRegion>(handle);
     }
 
     geom::Size size() const override

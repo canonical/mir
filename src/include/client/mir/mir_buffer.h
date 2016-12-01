@@ -43,6 +43,7 @@ public:
     virtual void received(MirBufferPackage const& update_message) = 0;
     virtual std::shared_ptr<ClientBuffer> client_buffer() const = 0;
     virtual MirGraphicsRegion map_region() = 0;
+    virtual void unmap_region() = 0;
 
     virtual void set_fence(Fd, MirBufferAccess) = 0;
     virtual Fd get_fence() const = 0;

@@ -357,3 +357,12 @@ double mir_output_mode_get_refresh_rate(MirOutputMode const* client_mode)
 
     return mode->refresh_rate();
 }
+
+uint8_t const* mir_output_get_edid(MirOutput const* output)
+{
+    if (output->has_edid())
+    {
+        return reinterpret_cast<uint8_t const*>(output->edid().data());
+    }
+    return nullptr;
+}

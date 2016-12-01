@@ -520,6 +520,22 @@ void mir_output_set_gamma(MirOutput* client_output,
                           uint32_t  size);
 
 /**
+ * Get the raw EDID data of a display.
+ *
+ * This returns a pointer to the start of the raw, unparsed EDID data.
+ * Some displays or connection types may not provide EDID data. In that case,
+ * this returns NULL.
+ *
+ * An EDID is always at least 128 bytes, but may be longer in the presence of extensions.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     A pointer to the start of the raw EDID data.
+ *              This pointer remains valid as long as the MirOutput remains valid.
+ *              Returns NULL if there is no EDID available.
+ */
+uint8_t const* mir_output_get_edid(MirOutput const* output);
+
+/**
  * Get the width, in pixels, of a MirOutputMode
  *
  * \note    This is unaffected by the orientation of the output

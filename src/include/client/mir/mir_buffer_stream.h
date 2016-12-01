@@ -16,8 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
-#define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
+// MIR_MIR_? Yes.
+//  The internal interface is mir/mir_buffer_stream.h
+//  The public client API is  mir_toolkit/mir_buffer_stream.h
+#ifndef MIR_MIR_BUFFER_STREAM_H_
+#define MIR_MIR_BUFFER_STREAM_H_
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
@@ -30,7 +33,7 @@
 #include <EGL/eglplatform.h>
 
 /*
- * ClientBufferStream::egl_native_window() returns EGLNativeWindowType.
+ * MirBufferStream::egl_native_window() returns EGLNativeWindowType.
  *
  * EGLNativeWindowType is an EGL platform-specific type that is typically a
  * (possibly slightly obfuscated) pointer. This makes our client module ABI
@@ -48,7 +51,7 @@
 static_assert(
     sizeof(EGLNativeWindowType) == sizeof(void*) &&
     std::is_pod<EGLNativeWindowType>::value,
-    "The ClientBufferStream requires that EGLNativeWindowType be no-op convertible to void*");
+    "The MirBufferStream requires that EGLNativeWindowType be no-op convertible to void*");
 
 #undef EGLNativeWindowType
 #define EGLNativeWindowType void*
@@ -66,19 +69,21 @@ namespace client
 {
 class ClientBuffer;
 class MemoryRegion;
+}
+}
 
-class ClientBufferStream
+struct MirBufferStream
 {
 public:
-    virtual ~ClientBufferStream() = default;
+    virtual ~MirBufferStream() = default;
 
     virtual MirSurfaceParameters get_parameters() const = 0;
-    virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
+    virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;
     virtual MirWaitHandle* next_buffer(std::function<void()> const& done) = 0;
 
-    virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
+    virtual std::shared_ptr<mir::client::MemoryRegion> secure_for_cpu_write() = 0;
 
     virtual int swap_interval() const = 0;
     virtual MirWaitHandle* set_swap_interval(int interval) = 0;
@@ -86,11 +91,11 @@ public:
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;
 
-    virtual frontend::BufferStreamId rpc_id() const = 0;
+    virtual mir::frontend::BufferStreamId rpc_id() const = 0;
     
     virtual bool valid() const = 0;
-    virtual void set_size(geometry::Size) = 0;
-    virtual geometry::Size size() const = 0;
+    virtual void set_size(mir::geometry::Size) = 0;
+    virtual mir::geometry::Size size() const = 0;
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;
     virtual MirConnection* connection() const = 0;
@@ -99,12 +104,9 @@ public:
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
 protected:
-    ClientBufferStream() = default;
-    ClientBufferStream(const ClientBufferStream&) = delete;
-    ClientBufferStream& operator=(const ClientBufferStream&) = delete;
+    MirBufferStream() = default;
+    MirBufferStream(const MirBufferStream&) = delete;
+    MirBufferStream& operator=(const MirBufferStream&) = delete;
 };
 
-}
-}
-
-#endif /* MIR_CLIENT_CLIENT_BUFFER_STREAM_H_ */
+#endif /* MIR_MIR_BUFFER_STREAM_H_ */
