@@ -19,13 +19,13 @@
 #ifndef MIR_CLIENT_ERROR_STREAM_H_
 #define MIR_CLIENT_ERROR_STREAM_H_
 
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 
 namespace mir
 {
 namespace client
 {
-class ErrorStream : public ClientBufferStream
+class ErrorStream : public MirBufferStream
 {
 public:
     ErrorStream(

@@ -42,8 +42,7 @@ namespace rpc
 {
 class DisplayServer;
 }
-class ClientBufferStreamFactory;
-class ClientBufferStream;
+class MirBufferStreamFactory;
 }
 }
 
@@ -84,7 +83,7 @@ public:
 
     EGLNativeWindowType egl_native_window();
 
-    mir::client::ClientBufferStream* get_buffer_stream();
+    MirBufferStream* get_buffer_stream();
 
 private:
     void screencast_created(
@@ -95,7 +94,7 @@ private:
     std::mutex mutable mutex;
     mir::client::rpc::DisplayServer* const server{nullptr};
     MirConnection* const connection{nullptr};
-    std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
+    std::shared_ptr<MirBufferStream> buffer_stream;
 
     std::unique_ptr<mir::protobuf::Screencast> const protobuf_screencast;
     std::unique_ptr<mir::protobuf::Void> const protobuf_void;
