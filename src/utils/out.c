@@ -521,15 +521,13 @@ int main(int argc, char *argv[])
             /* TODO: Move into if connected */
             if (verbose && edid)
             {
-                static char const indent[] = "    ";
-                /* The EDID is guaranteed to be at least 128 bytes */
-                int const len = 128;
-                printf("%sEDID (first %d bytes):", indent, len);
-                for (int i = 0; i < len; ++i)
+                printf("EDID:");
+                size_t const size = mir_output_get_edid_size(out);
+                for (size_t i = 0; i < size ; ++i)
                 {
                     if ((i % 16) == 0)
                     {
-                        printf("\n%s%s", indent, indent);
+                        printf("\n\t");
                     }
                     printf("%.2hhx", edid[i]);
                 }
