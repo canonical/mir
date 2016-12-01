@@ -125,6 +125,9 @@ void mir_render_surface_release(
  * \param [in] usage             Requested buffer usage
  *
  * \return                       The buffer stream contained in the given render surface
+ *                               or 'nullptr' if it, or
+ *                               mir_render_surface_get_presentation_chain(), has already
+ *                               been called once
  */
 MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
@@ -136,6 +139,9 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
  * Obtain the presentation chain backing a given render surface
  *
  * \return                       The chain contained in the given render surface
+ *                               or 'nullptr' if it, or
+ *                               mir_render_surface_get_buffer_stream(), has already
+ *                               been called once
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface);
@@ -146,8 +152,6 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
  * \warning: The initial call to mir_surface_spec_add_render_surface will set
  *           the bottom-most content, and subsequent calls will stack the
  *           content on top.
- * \warning: It's an error to call this function with a render surface
- *           that holds no content.
  *
  * \param spec             The surface_spec to be updated
  * \param render_surface   The render surface containing the content to be displayed
