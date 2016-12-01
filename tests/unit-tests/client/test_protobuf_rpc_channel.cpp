@@ -32,7 +32,7 @@
 #include "mir/input/input_devices.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fd_utils.h"
 #include "mir/test/gmock_fixes.h"
@@ -62,9 +62,9 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_CONST_METHOD2(with_surface_do,
         void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
     MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
+        void(mir::frontend::BufferStreamId, std::function<void(MirBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
-        void(std::function<void(mcl::ClientBufferStream*)> const&));
+        void(std::function<void(MirBufferStream*)> const&));
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
     MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
@@ -79,10 +79,10 @@ public:
     {
     }
     void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
+        mir::frontend::BufferStreamId, std::function<void(MirBufferStream*)> const&) const override
     {
     }
-    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
+    void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const override
     {
     }
     void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
@@ -254,7 +254,7 @@ public:
     MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
     std::shared_ptr<mclr::MirProtobufRpcChannel> channel;
-    mtd::MockClientBufferStream stream;
+    mtd::MockMirBufferStream stream;
 };
 
 }

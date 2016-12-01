@@ -20,7 +20,7 @@
 #include "mir/mir_connection.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "rpc/mir_display_server.h"
@@ -206,7 +206,7 @@ void MirScreencast::released(
     release_wait_handle.result_received();
 }
 
-mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
+MirBufferStream* MirScreencast::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();

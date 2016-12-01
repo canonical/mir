@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_H_
-#define MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_STREAM_H_
+#define MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_STREAM_H_
 
-#include "src/include/client/mir/client_buffer_stream.h"
+#include "src/include/client/mir/mir_buffer_stream.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockClientBufferStream : public client::ClientBufferStream
+struct MockMirBufferStream : public MirBufferStream
 {
     MOCK_METHOD2(release, MirWaitHandle*(mir_buffer_stream_callback, void*));
     
@@ -61,4 +61,4 @@ struct MockClientBufferStream : public client::ClientBufferStream
 }
 }
 
-#endif // MIR_TEST_DOUBLES_MOCK_CLIENT_BUFFER_STREAM_H_
+#endif // MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_STREAM_H_

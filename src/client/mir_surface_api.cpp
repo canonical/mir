@@ -524,7 +524,7 @@ void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
 try
 {
-    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+    return surface->get_buffer_stream();
 }
 catch (std::exception const& ex)
 {
@@ -576,7 +576,7 @@ try
         mir::require(mir_buffer_stream_is_valid(streams[i].stream));
         copy.emplace_back(ContentInfo{
             mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
-            reinterpret_cast<mcl::ClientBufferStream*>(streams[i].stream)->rpc_id().as_value(),
+            streams[i].stream->rpc_id().as_value(),
             {}});
     }
     spec->streams = copy;
@@ -616,8 +616,7 @@ void mir_surface_spec_add_buffer_stream(
 try
 {
     mir::require(spec && stream);
-    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), mir::geometry::Size{width, height}};
+    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);
