@@ -364,6 +364,11 @@ MIR_CLIENT_DETAIL_0.21 {
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
+    extern "C++" {
+      MirConnection::allocate_buffer*;
+      typeinfo?for?MirConnection;
+      vtable?for?MirConnection;
+    };
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
     mir_buffer_wait_for_access;
@@ -402,6 +407,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_egl_image_parameters;
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
+  local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
 

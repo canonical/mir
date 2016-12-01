@@ -21,6 +21,7 @@
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "connection_surface_map.h"
+#include "mir_surface.h"
 
 namespace
 {
