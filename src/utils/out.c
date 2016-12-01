@@ -461,17 +461,22 @@ int main(int argc, char *argv[])
             }
             printf("\n");
 
-            /* TODO: Move into if connected */
+            /*
+             * Note we're not checking if state == connected here but it's
+             * probably a good test to probe this stuff unconditionally and
+             * make sure it all returns nothing for disconnected outputs...
+             */
             uint8_t const* edid = mir_output_get_edid(out);
             if (verbose && edid)
             {
-                printf("EDID:");
+                int indent = 0;
+                printf("    EDID: %n", &indent);
                 size_t const size = mir_output_get_edid_size(out);
-                for (size_t i = 0; i < size ; ++i)
+                for (size_t i = 0; i < size; ++i)
                 {
-                    if ((i % 16) == 0)
+                    if (i && (i % 32) == 0)
                     {
-                        printf("\n\t");
+                        printf("\n%*c", indent, ' ');
                     }
                     printf("%.2hhx", edid[i]);
                 }
