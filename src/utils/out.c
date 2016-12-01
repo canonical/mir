@@ -329,8 +329,8 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     return true;
 }
 
-static int edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
-                                     char str[14])
+static size_t edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
+                                        char str[14])
 {
     union descriptor
     {
@@ -350,7 +350,7 @@ static int edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
     
     union descriptor const* desc = (union descriptor const*)(edid + 54);
     union descriptor const* desc_end = desc + 4;
-    int len = 0;
+    size_t len = 0;
 
     for (; desc < desc_end; ++desc)
     {
@@ -368,9 +368,9 @@ static int edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
     return len;
 }
 
-static int edid_get_monitor_name(uint8_t const* edid, char str[14])
+static size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
 {
-    int len = edid_get_other_descriptor(edid, 0xFC, str);
+    size_t len = edid_get_other_descriptor(edid, 0xFC, str);
     char* lf = strchr(str, '\n');
     if (lf)
     {
@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
             if (state == mir_output_connection_state_connected)
             {
                 char name[14];
-                if (edid && !  edid_get_monitor_name(edid, name))
+                if (edid && !edid_get_monitor_name(edid, name))
                     name[0] = '\0';
                 printf(", \"%s\"", name);
 
