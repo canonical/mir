@@ -36,7 +36,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     const int32_t source_id = AINPUT_SOURCE_KEYBOARD;
     const int32_t action = AKEY_EVENT_ACTION_DOWN;
     const int32_t flags = 4;
-    const int32_t key_code = 5;
+    const uint32_t key_code = 5;
     const int32_t scan_code = 6;
     const int32_t meta_state = AMETA_ALT_ON;
     const int32_t repeat_count = 0;

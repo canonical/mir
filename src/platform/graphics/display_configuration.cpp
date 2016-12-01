@@ -296,7 +296,8 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         form_factor(master.form_factor),
         subpixel_arrangement(master.subpixel_arrangement),
         gamma(master.gamma),
-        gamma_supported(master.gamma_supported)
+        gamma_supported(master.gamma_supported),
+        edid(*reinterpret_cast<std::vector<uint8_t const>*>(&master.edid))
 {
 }
 
