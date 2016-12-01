@@ -1087,7 +1087,7 @@ TEST_F(DisplayConfigurationTest, client_receives_edid)
 
 TEST_F(DisplayConfigurationTest, client_receives_model_string_from_edid)
 {
-    static char const edid[129] =
+    static unsigned char const edid[129] =
         "\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x46\xf0\x4c\x4a\x31\x41"
         "\x05\x19\x01\x04\xb5\x34\x20\x78\x3a\x1d\xf5\xae\x4f\x35\xb3\x25"
         "\x0d\x50\x54\xa5\x4b\x00\x81\x80\xa9\x40\xd1\x00\x71\x4f\x01\x01"
@@ -1101,9 +1101,7 @@ TEST_F(DisplayConfigurationTest, client_receives_model_string_from_edid)
         mg::DisplayConfigurationOutputId{48},
         {{{1920, 1200}, 60.0}},
         {mir_pixel_format_abgr_8888}};
-
-    auto begin = (uint8_t const*)edid;
-    monitor.edid.assign(begin, begin+128);
+    monitor.edid.assign(edid, edid+128);
 
     auto config = std::make_shared<mtd::StubDisplayConfig>(
                       std::vector<mg::DisplayConfigurationOutput>{monitor});
@@ -1123,30 +1121,21 @@ TEST_F(DisplayConfigurationTest, client_receives_model_string_from_edid)
 
 TEST_F(DisplayConfigurationTest, client_receives_fallback_string_from_edid)
 {
-    std::vector<uint8_t> edid{
-        0xff, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0xff,
-        0xaf, 0x06, 0x11, 0x3d, 0x00, 0x00, 0x00, 0x00,
-        0x16, 0x00, 0x04, 0x01, 0x1f, 0x95, 0x78, 0x11,
-        0x87, 0x02, 0xa4, 0xe5, 0x50, 0x56, 0x26, 0x9e,
-        0x50, 0x0d, 0x00, 0x54, 0x00, 0x00, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x37, 0x14,
-        0xb8, 0x80, 0x38, 0x70, 0x40, 0x24, 0x10, 0x10,
-        0x00, 0x3e, 0xad, 0x35, 0x00, 0x10, 0x18, 0x00,
-        0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x20, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x41, 0x00,
-        0x4f, 0x55, 0x20, 0x0a, 0x20, 0x20, 0x20, 0x20,
-        0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0xfe, 0x00,
-        0x42, 0x00, 0x34, 0x31, 0x48, 0x30, 0x4e, 0x41,
-        0x31, 0x30, 0x31, 0x2e, 0x0a, 0x20, 0xa5, 0x00
-    };
+    static unsigned char const edid[129] =
+       "\xff\x00\xff\xff\xff\xff\x00\xff\xaf\x06\x11\x3d\x00\x00\x00\x00"
+       "\x16\x00\x04\x01\x1f\x95\x78\x11\x87\x02\xa4\xe5\x50\x56\x26\x9e"
+       "\x50\x0d\x00\x54\x00\x00\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01"
+       "\x01\x01\x01\x01\x01\x01\x37\x14\xb8\x80\x38\x70\x40\x24\x10\x10"
+       "\x00\x3e\xad\x35\x00\x10\x18\x00\x00\x00\x0f\x00\x00\x00\x00\x00"
+       "\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\xfe\x00\x41\x00"
+       "\x4f\x55\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x00\x00\xfe\x00"
+       "\x42\x00\x34\x31\x48\x30\x4e\x41\x31\x30\x31\x2e\x0a\x20\xa5\x00";
 
     mtd::StubDisplayConfigurationOutput monitor{
         mg::DisplayConfigurationOutputId{2},
         {{{3210, 2800}, 60.0}},
         {mir_pixel_format_abgr_8888}};
-    monitor.edid = edid;
+    monitor.edid.assign(edid, edid+128);
 
     auto config = std::make_shared<mtd::StubDisplayConfig>(
                       std::vector<mg::DisplayConfigurationOutput>{monitor});
