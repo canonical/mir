@@ -329,57 +329,6 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     return true;
 }
 
-static size_t edid_get_other_descriptor(uint8_t const* edid, uint8_t type,
-                                        char str[14])
-{
-    union descriptor
-    {
-        struct
-        {
-            uint16_t pixel_clock;
-        } detailed_timing;
-        struct
-        {
-            uint16_t zero0;
-            uint8_t  zero2;
-            uint8_t  type;
-            uint8_t  zero4;
-            char     text[13];
-        } other;
-    };
-    
-    union descriptor const* desc = (union descriptor const*)(edid + 54);
-    union descriptor const* desc_end = desc + 4;
-    size_t len = 0;
-
-    for (; desc < desc_end; ++desc)
-    {
-        if (!desc->detailed_timing.pixel_clock)
-        {
-            if (desc->other.type == type)
-            {
-                len = 13;
-                memcpy(str, desc->other.text, len);
-                break;
-            }
-        }
-    }
-    str[len] = '\0';
-    return len;
-}
-
-static size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
-{
-    size_t len = edid_get_other_descriptor(edid, 0xFC, str);
-    char* lf = strchr(str, '\n');
-    if (lf)
-    {
-        *lf = '\0';
-        len = lf - str;
-    }
-    return len;
-}
-
 int main(int argc, char *argv[])
 {
     char const* server = NULL;
@@ -469,7 +418,6 @@ int main(int argc, char *argv[])
             MirOutput const* out = mir_display_config_get_output(conf, i);
             MirOutputConnectionState const state =
                 mir_output_get_connection_state(out);
-            uint8_t const* edid = mir_output_get_edid(out);
 
             printf("Output %d: %s, %s",
                    mir_output_get_id(out),
@@ -478,11 +426,6 @@ int main(int argc, char *argv[])
 
             if (state == mir_output_connection_state_connected)
             {
-                char name[14];
-                if (edid && !edid_get_monitor_name(edid, name))
-                    name[0] = '\0';
-                printf(", \"%s\"", name);
-
                 MirOutputMode const* current_mode =
                     mir_output_get_current_mode(out);
                 if (current_mode)
@@ -519,6 +462,7 @@ int main(int argc, char *argv[])
             printf("\n");
 
             /* TODO: Move into if connected */
+            uint8_t const* edid = mir_output_get_edid(out);
             if (verbose && edid)
             {
                 printf("EDID:");
