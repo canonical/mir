@@ -103,6 +103,20 @@ size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
     return len;
 }
 
+void edid_get_manufacturer(uint8_t const* edid, char str[4])
+{
+    uint16_t manufacturer = static_cast<uint16_t>(edid[8]) << 8 | edid[9];
+    str[0] = ((manufacturer >> 10) & 31) + 'A' - 1;
+    str[1] = ((manufacturer >> 5) & 31) + 'A' - 1;
+    str[2] = (manufacturer & 31) + 'A' - 1;
+    str[3] = '\0';
+}
+
+uint16_t edid_get_product_code(uint8_t const* edid)
+{
+    return static_cast<uint16_t>(edid[11]) << 8 | edid[10];
+}
+
 } // namespace
 
 int mir_display_config_get_num_outputs(MirDisplayConfig const* config)
@@ -149,11 +163,13 @@ char const* mir_output_get_model(MirOutput const* output)
     if (auto edid = mir_output_get_edid(output))
     {
         char name[14];
-        if (edid_get_monitor_name(edid, name))
+        if (!edid_get_monitor_name(edid, name))
         {
-            const_cast<MirOutput*>(output)->set_model(name);
-            return output->model().c_str();
+            edid_get_manufacturer(edid, name);
+            snprintf(name+3, 11, " %hu", edid_get_product_code(edid));
         }
+        const_cast<MirOutput*>(output)->set_model(name);
+        return output->model().c_str();
     }
 
     return nullptr;
