@@ -224,6 +224,7 @@ public:
 
     void* request_interface(char const* name, int version);
 
+    void connected(mir_connected_callback callback, void * context);
 private:
     struct SurfaceCreationRequest;
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
@@ -309,7 +310,6 @@ private:
 
     void set_error_message(std::string const& error);
     void done_disconnect();
-    void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease);
     void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);

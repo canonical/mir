@@ -28,8 +28,10 @@
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
 #include "native_window_report.h"
+#include "android_format_conversion-inl.h"
 
 #include "mir/weak_egl.h"
+#include "mir/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
 
@@ -80,12 +82,13 @@ void create_buffer(
     unsigned int gralloc_usage_flags,
     mir_buffer_callback available_callback, void* available_context)
 {
-//    mir::require(connection);
-//    auto cont = mcl::to_client_context(connection);
-//    printf("CONT %X\n", (int)(long) cont); 
-
-
-    (void)connection; (void)width; (void)height; (void) hal_pixel_format; (void)gralloc_usage_flags; (void)available_callback; (void) available_context;
+    //TODO: pass actual gralloc flags along
+    (void) gralloc_usage_flags;
+    connection->allocate_buffer(
+        {width, height},
+        mga::to_mir_format(hal_pixel_format),
+        mir_buffer_usage_hardware,
+        available_callback, available_context);
 }
 
 }

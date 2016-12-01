@@ -24,8 +24,6 @@
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
-//#include "rpc/mir_display_server.h"
-//#include "rpc/mir_display_server_debug.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
