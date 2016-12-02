@@ -64,10 +64,10 @@ struct TouchpadConfiguration
     clickMode @0 :UInt32;
     scrollMode @1 :UInt32;
     buttonDownScrollButton @2 :Int32;
-    tapToClick @3 :UInt32;
-    middleMouseButtonEmulation @4 :UInt32;
-    disableWithMouse @5 :UInt32;
-    disableWhileTyping @6 :UInt32;
+    tapToClick @3 :Bool;
+    middleMouseButtonEmulation @4 :Bool;
+    disableWithMouse @5 :Bool;
+    disableWhileTyping @6 :Bool;
 }
 
 struct KeyboardConfiguration
