@@ -86,13 +86,13 @@ struct MockSessionMediatorReport : mf::SessionMediatorObserver
         // These are not needed for the 1st test, but they will be soon
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_swap_buffers_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_swap_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));

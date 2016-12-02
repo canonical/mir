@@ -71,7 +71,7 @@ EGLNativeWindowType mcl::ErrorStream::egl_native_window()
 {
     throw std::runtime_error(error);
 }
-MirWaitHandle* mcl::ErrorStream::next_buffer(std::function<void()> const&)
+MirWaitHandle* mcl::ErrorStream::swap_buffers(std::function<void()> const&)
 {
     throw std::runtime_error(error);
 }
