@@ -110,6 +110,7 @@ public:
 
     uint64_t operator[](char const* name) const;
     uint32_t id_for(char const* property_name) const;
+    bool has_property(char const* property_name) const;
 
     std::unordered_map<std::string, Prop>::const_iterator begin() const;
     std::unordered_map<std::string, Prop>::const_iterator end() const;

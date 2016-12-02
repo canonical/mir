@@ -148,6 +148,8 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_type;
     mir_surface_spec_set_width;
     mir_surface_spec_set_width_increment;
+    mir_surface_spec_set_cursor_name;
+    mir_surface_spec_set_cursor_render_surface;
     mir_touch_event_action;
     mir_touch_event_axis_value;
     mir_touch_event_id;
@@ -365,7 +367,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
     mir_buffer_wait_for_access;
-    mir_buffer_get_graphics_region;
+    mir_buffer_map;
+    mir_buffer_unmap;
     mir_buffer_set_callback;
     mir_buffer_release;
     mir_connection_create_presentation_chain_sync;
@@ -472,6 +475,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_input_device_get_mutable_touchpad_configuration;
     mir_input_device_get_pointer_configuration;
     mir_input_device_get_touchpad_configuration;
+    mir_output_get_edid;
+    mir_output_get_edid_size;
     mir_pointer_configuration_get_acceleration;
     mir_pointer_configuration_get_acceleration_bias;
     mir_pointer_configuration_get_handedness;

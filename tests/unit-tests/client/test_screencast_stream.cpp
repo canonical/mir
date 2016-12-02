@@ -109,7 +109,7 @@ struct ScreencastStream : Test
 };
 }
 
-TEST_F(ScreencastStream, requests_screencast_buffer_when_next_buffer_called)
+TEST_F(ScreencastStream, requests_screencast_buffer_when_swap_buffers_called)
 {
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -117,7 +117,7 @@ TEST_F(ScreencastStream, requests_screencast_buffer_when_next_buffer_called)
     mcl::ScreencastStream stream(
         nullptr, mock_protobuf_server, 
         std::make_shared<mir_test_framework::StubClientPlatform>(nullptr), response);
-    auto wh = stream.next_buffer([]{});
+    auto wh = stream.swap_buffers([]{});
     ASSERT_THAT(wh, NotNull());
     EXPECT_FALSE(wh->is_pending());
 }
@@ -144,12 +144,12 @@ TEST_F(ScreencastStream, advances_current_buffer)
         nullptr, mock_protobuf_server, 
         std::make_shared<mir_test_framework::StubClientPlatform>(nullptr), response);
 
-    auto wh = stream.next_buffer([]{});
+    auto wh = stream.swap_buffers([]{});
     wh->wait_for_all();
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(id0));
 
-    wh = stream.next_buffer([]{});
+    wh = stream.swap_buffers([]{});
     wh->wait_for_all();
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(id1));
@@ -199,7 +199,7 @@ TEST_F(ScreencastStream, exception_does_not_leave_wait_handle_hanging)
     mcl::ScreencastStream stream(nullptr, mock_protobuf_server, platform, response);
     factory->start_failing();
 
-    auto wh = stream.next_buffer([]{});
+    auto wh = stream.swap_buffers([]{});
     wh->wait_for_all();
     EXPECT_FALSE(wh->is_pending());
 }

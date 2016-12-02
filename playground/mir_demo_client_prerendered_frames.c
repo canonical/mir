@@ -41,8 +41,10 @@ float distance(int x0, int y0, int x1, int y1)
 void fill_buffer_with_centered_circle_abgr(
     MirBuffer* buffer, float radius, unsigned int fg, unsigned int bg)
 {
-    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
-    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888))
+    MirBufferLayout layout = mir_buffer_layout_unknown;
+    MirGraphicsRegion region;
+    mir_buffer_map(buffer, &region, &layout);
+    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888) || layout != mir_buffer_layout_linear)
         return;
     int const center_x = region.width / 2;
     int const center_y = region.height / 2; 
@@ -61,6 +63,7 @@ void fill_buffer_with_centered_circle_abgr(
         }
         vaddr += region.stride; 
     }
+    mir_buffer_unmap(buffer);
 }
 
 typedef struct SubmissionInfo

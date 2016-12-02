@@ -334,6 +334,7 @@ int main(int argc, char *argv[])
     char const* server = NULL;
     char** actionv = NULL;
     int actionc = 0;
+    bool verbose = false;
 
     for (int a = 1; a < argc; a++)
     {
@@ -345,11 +346,15 @@ int main(int argc, char *argv[])
 
             switch (arg[1])
             {
+                case 'v':
+                    verbose = true;
+                    break;
                 case 'h':
                 default:
                     printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
+                           "    -v  Show verbose information.\n"
                            "    --  Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
@@ -455,6 +460,28 @@ int main(int argc, char *argv[])
                        form_factor_name(mir_output_get_form_factor(out)));
             }
             printf("\n");
+
+            /*
+             * Note we're not checking if state == connected here but it's
+             * probably a good test to probe this stuff unconditionally and
+             * make sure it all returns nothing for disconnected outputs...
+             */
+            uint8_t const* edid = mir_output_get_edid(out);
+            if (verbose && edid)
+            {
+                int indent = 0;
+                printf("    EDID: %n", &indent);
+                size_t const size = mir_output_get_edid_size(out);
+                for (size_t i = 0; i < size; ++i)
+                {
+                    if (i && (i % 32) == 0)
+                    {
+                        printf("\n%*c", indent, ' ');
+                    }
+                    printf("%.2hhx", edid[i]);
+                }
+                printf("\n");
+            }
 
             int const num_modes = mir_output_get_num_modes(out);
             int const current_mode_index =
