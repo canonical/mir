@@ -1,11 +1,17 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-if (EXISTS /usr/src/googletest)
+#
+# When cross compiling MIR_NDK_PATH points to our chroot.
+# When not cross compiling, it should be blank to use the host system.
+#
+set(usr ${MIR_NDK_PATH}/usr)
+
+if (EXISTS ${usr}/src/googletest)
   set (USING_GOOGLETEST_1_8 TRUE)
-  set (GTEST_INSTALL_DIR /usr/src/googletest/googletest/include)
+  set (GTEST_INSTALL_DIR ${usr}/src/googletest/googletest/include)
 else()
-  set (GTEST_INSTALL_DIR /usr/src/gmock/gtest/include)
+  set (GTEST_INSTALL_DIR ${usr}/src/gmock/gtest/include)
 endif()
 
 #gtest
@@ -17,7 +23,7 @@ find_path(
 #gmock
 find_path(
   GMOCK_INSTALL_DIR CMakeLists.txt
-  HINTS /usr/src/googletest /usr/src/gmock)
+  HINTS ${usr}/src/googletest ${usr}/src/gmock)
 if(${GMOCK_INSTALL_DIR} STREQUAL "GMOCK_INSTALL_DIR-NOTFOUND")
     message(FATAL_ERROR "google-mock package not found")
 endif()
