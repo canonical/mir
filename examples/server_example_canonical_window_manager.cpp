@@ -746,7 +746,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
     {
         switch (count)
         {
-        case 2:
+        case 4:
             resize(cursor);
             consumes_event = true;
             break;
@@ -772,6 +772,8 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
 
     bool consumes_event = false;
     bool resize_event = false;
+
+    printf("handle pointer\n");
 
     if (action == mir_pointer_action_button_down)
     {

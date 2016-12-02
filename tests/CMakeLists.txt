@@ -10,7 +10,6 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
 check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
-check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
@@ -24,10 +23,6 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   # MOCK_METHOD()s cannot be marked as override; we cannot consistently mark overrides
   # in the tests.
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
-endif()
-if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-  # INSTANTIATE_TEST_CASE_P hits this like a slice of lemon wrapped around a large gold brick.
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
