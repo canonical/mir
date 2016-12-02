@@ -156,6 +156,19 @@ void mir_surface_spec_add_render_surface(
     int logical_width, int logical_height,
     int displacement_x, int displacement_y);
 
+/**
+ * Set the MirSurfaceSpec to contain a specific cursor. 
+ *
+ * \param [in] spec             The spec
+ * \param [in] render_surface   The rendersurface to set, or nullptr to reset to default cursor.
+ * \param [in] hotspot_x        The x-coordinate to use as the cursor's hotspot
+ * \param [in] hotspot_y        The y-coordinate to use as the cursor's hotspot
+ */
+void mir_surface_spec_set_cursor_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
+    int hotspot_x, int hotspot_y);
+
 #ifdef __cplusplus
 }
 /**@}*/
