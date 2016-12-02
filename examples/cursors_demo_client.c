@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-void configure_cursor(MirSurface *surface, unsigned int cursor_index)
+void configure_cursor(MirConnection* connection, MirSurface *surface, unsigned int cursor_index)
 {
     char const *const cursors[] = {
         mir_busy_cursor_name,
@@ -46,12 +46,10 @@ void configure_cursor(MirSurface *surface, unsigned int cursor_index)
 
     size_t num_cursors = sizeof(cursors)/sizeof(*cursors);
     size_t real_index = cursor_index % num_cursors;
-    
-    MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursors[real_index]);
-
-    mir_wait_for(mir_surface_configure_cursor(surface, conf));
-    
-    mir_cursor_configuration_destroy(conf);
+    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_cursor_name(spec, cursors[real_index]);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
 }
 
 int main(int argc, char *argv[])
@@ -68,7 +66,7 @@ int main(int argc, char *argv[])
     unsigned int cursor_index = 0;
     while (mir_eglapp_running())
     {
-        configure_cursor(mir_eglapp_native_surface(), cursor_index++);
+        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_surface(), cursor_index++);
         usleep(100000);
     }
 

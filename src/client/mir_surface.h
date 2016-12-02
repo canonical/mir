@@ -18,6 +18,7 @@
 #ifndef MIR_CLIENT_MIR_SURFACE_H_
 #define MIR_CLIENT_MIR_SURFACE_H_
 
+#include "cursor_configuration.h"
 #include "mir/mir_buffer_stream.h"
 #include "mir_wait_handle.h"
 #include "rpc/mir_display_server.h"
@@ -134,6 +135,14 @@ struct MirSurfaceSpec
     };
     mir::optional_value<EventHandler> event_handler;
     mir::optional_value<MirShellChrome> shell_chrome;
+    
+    mir::optional_value<std::string> cursor_name;
+    struct RenderSurfaceCursor
+    {
+        mir::frontend::BufferStreamId id;
+        mir::geometry::Point hotspot;
+    };
+    mir::optional_value<RenderSurfaceCursor> rendersurface_cursor;
 };
 
 struct MirPersistentId

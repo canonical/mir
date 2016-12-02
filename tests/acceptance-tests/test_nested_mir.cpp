@@ -1028,9 +1028,10 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto const cursor = mir_cursor_configuration_from_name(name);
-        mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
-        mir_cursor_configuration_destroy(cursor);
+        auto spec = mir_connection_create_spec_for_changes(client.connection);
+        mir_surface_spec_set_cursor_name(spec, name);
+        mir_surface_apply_spec(client.surface, spec);
+        mir_surface_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();

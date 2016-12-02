@@ -548,6 +548,18 @@ void mir_output_set_gamma(MirOutput* client_output,
 uint8_t const* mir_output_get_edid(MirOutput const* output);
 
 /**
+ * Get the size of the EDID of this display.
+ *
+ * If the EDID is unavailable for some reason this returns 0.
+ *
+ * An EDID is always at least 128 bytes, but may be longer in the presence of extensions.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The size of the data pointed to by mir_output_get_edid(output).
+ */
+size_t mir_output_get_edid_size(MirOutput const* output);
+
+/**
  * Get the width, in pixels, of a MirOutputMode
  *
  * \note    This is unaffected by the orientation of the output
