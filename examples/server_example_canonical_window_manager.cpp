@@ -773,8 +773,6 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
     bool consumes_event = false;
     bool resize_event = false;
 
-    printf("handle pointer\n");
-
     if (action == mir_pointer_action_button_down)
     {
         click(cursor);
