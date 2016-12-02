@@ -26,6 +26,7 @@
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 
+#include <system_error>
 #include <cstring>
 
 namespace mg = mir::graphics;
