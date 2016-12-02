@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_INPUT_DEVICES_H_
 #define MIR_INPUT_INPUT_DEVICES_H_
 
-#include "mir_protobuf.pb.h"
+#include "mir/input/input_configuration.h"
 
 #include <mutex>
 #include <string>
@@ -29,19 +29,16 @@ namespace mir
 namespace input
 {
 
-using DeviceInfo = ::mir::protobuf::InputDeviceInfo;
-using ProtobufDeviceInfos = ::mir::protobuf::InputDevices;
-
 class InputDevices
 {
 public:
     InputDevices() = default;
-    void update_devices(protobuf::InputDevices const& new_devices);
-    protobuf::InputDevices* clone_devices();
+    void update_devices(std::string const& device_buffer);
+    InputConfiguration clone_devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
     std::mutex devices_access;
-    protobuf::InputDevices devices;
+    InputConfiguration configuration;
     std::function<void()> callback;
 };
 

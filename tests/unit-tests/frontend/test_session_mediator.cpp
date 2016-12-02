@@ -65,6 +65,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/cookie/authority.h"
+#include "mir/input/input_configuration.h"
+#include "mir/input/input_configuration_serialization.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
@@ -910,8 +912,9 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
             }));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
+    auto received_conf = mir::input::deserialize_input_configuration(connection.input_configuration());
 
-    EXPECT_THAT(connection.input_devices().device_info(), mt::InputDevicesMatch(devices));
+    EXPECT_THAT(received_conf, mt::InputConfigurationMatches(devices));
 }
 
 TEST_F(SessionMediator, disconnect_removes_orphaned_screencast_sessions)
