@@ -599,6 +599,13 @@ void mir_surface_spec_set_placement(
     int                 offset_dy);
 
 /**
+ * Set the name for the cursor from the system cursor theme.
+ * \param [in] spec             The spec
+ * \param [in] name             The name, or "" to reset to default
+ */
+void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
+
+/**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the

@@ -460,8 +460,8 @@ int main(int argc, char *argv[])
             if (edid)
             {
                 printf("EDID:");
-                /* The EDID is guaranteed to be at least 128 bytes */
-                for (int i = 0; i < 128 ; ++i)
+                size_t const size = mir_output_get_edid_size(out);
+                for (size_t i = 0; i < size ; ++i)
                 {
                     if ((i % 16) == 0)
                     {
