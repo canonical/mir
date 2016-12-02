@@ -40,7 +40,7 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
     config.for_each(
         [&](mi::DeviceConfiguration const& conf)
         {
-            auto device = *device_iterator;
+            auto device = *device_iterator++;
             device.initId().setId(conf.id());
             device.setCapabilities(conf.capabilities().value());
             device.setName(conf.name());
