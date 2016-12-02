@@ -83,12 +83,12 @@ mi::DeviceCapabilities mi::DeviceConfiguration::capabilities() const
     return impl->caps;
 }
 
-std::string mi::DeviceConfiguration::name() const
+std::string const& mi::DeviceConfiguration::name() const
 {
     return impl->name;
 }
 
-std::string mi::DeviceConfiguration::unique_id() const
+std::string const& mi::DeviceConfiguration::unique_id() const
 {
     return impl->unique_id;
 }

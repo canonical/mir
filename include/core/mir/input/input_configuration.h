@@ -47,8 +47,8 @@ public:
 
     MirInputDeviceId id() const;
     DeviceCapabilities capabilities() const;
-    std::string name() const;
-    std::string unique_id() const;
+    std::string const& name() const;
+    std::string const& unique_id() const;
 
     bool has_touchpad_configuration() const;
     TouchpadConfiguration& touchpad_configuration();
