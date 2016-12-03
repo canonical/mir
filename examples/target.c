@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
     setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
 
     static unsigned int width = 0, height = 0;
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     pthread_join(shutdown_handler_thread, NULL);
     return 0;

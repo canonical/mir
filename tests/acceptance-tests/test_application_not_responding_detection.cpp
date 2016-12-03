@@ -129,7 +129,7 @@ TEST_F(ApplicationNotRespondingDetection, failure_to_pong_is_noticed)
 
     mir_connection_set_ping_event_callback(connection, &black_hole_pong, nullptr);
 
-    EXPECT_TRUE(marked_as_unresponsive.wait_for(10s));
+    EXPECT_TRUE(marked_as_unresponsive.wait_for(1min));
 }
 
 TEST_F(ApplicationNotRespondingDetection, can_override_anr_detector)
@@ -198,7 +198,7 @@ TEST_F(ApplicationNotRespondingDetection, can_wrap_anr_detector)
 
     mir_connection_set_ping_event_callback(connection, &black_hole_pong, nullptr);
 
-    EXPECT_TRUE(marked_as_unresponsive.wait_for(10s));
+    EXPECT_TRUE(marked_as_unresponsive.wait_for(1min));
 
 
     tear_down();
@@ -273,7 +273,7 @@ TEST_F(ApplicationNotRespondingDetection, responding_client_is_not_marked_as_unr
     auto ping_context = std::make_unique<PingContext>();
     mir_connection_set_ping_event_callback(connection, &respond_to_ping, ping_context.get());
 
-    EXPECT_TRUE(ping_context->pung_thrice.wait_for(10s));
+    EXPECT_TRUE(ping_context->pung_thrice.wait_for(1min));
     EXPECT_FALSE(unresponsive_called);
 }
 

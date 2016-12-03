@@ -52,7 +52,7 @@ typedef enum
  * \param[in] ev The input configuration event
  * \return       The action
  */
-MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev);
+MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) __attribute__((deprecated));
 
 /**
  * Retreive the time associated with a MirInputConfiguration event
@@ -60,7 +60,7 @@ MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputCon
  * \param[in] ev The input configuration event
  * \return       The time in nanoseconds since epoch
  */
-int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev);
+int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev) __attribute__((deprecated));
 
 /**
  * Retreive the device id associated with a MirInputConfiguration event
@@ -68,7 +68,7 @@ int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const*
  * \param[in] ev The input configuration event
  * \return       The device id or -1 if not applicable to events of this action
  */
-MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev);
+MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev) __attribute__((deprecated));
 
 #ifdef __cplusplus
 }

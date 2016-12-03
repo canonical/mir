@@ -64,7 +64,7 @@ public:
             else
             {
                 auto socket_env = getenv("MIR_SOCKET");
-                if (socket_env)
+                if (socket_env && socket_env[0])
                     sock = socket_env;
                 else
                     sock = mir::default_server_socket;
@@ -347,6 +347,21 @@ void mir_connection_confirm_base_display_configuration(
     {
         connection->confirm_base_display_configuration(
             *reinterpret_cast<mp::DisplayConfiguration const*>(config));
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+
+void mir_connection_cancel_base_display_configuration_preview(
+    MirConnection* connection)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->cancel_base_display_configuration_preview();
     }
     catch (std::exception const& ex)
     {

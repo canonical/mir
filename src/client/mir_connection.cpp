@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -36,6 +36,7 @@
 #include "buffer_stream.h"
 #include "screencast_stream.h"
 #include "perf_report.h"
+#include "render_surface.h"
 #include "presentation_chain.h"
 #include "error_chain.h"
 #include "logging/perf_report.h"
@@ -122,6 +123,11 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(state);
     SERIALIZE_OPTION_IF_SET(pref_orientation);
     SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(placement_hints);
+    SERIALIZE_OPTION_IF_SET(surface_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_gravity);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_x);
+    SERIALIZE_OPTION_IF_SET(aux_rect_placement_offset_y);
     SERIALIZE_OPTION_IF_SET(min_width);
     SERIALIZE_OPTION_IF_SET(min_height);
     SERIALIZE_OPTION_IF_SET(max_width);
@@ -285,6 +291,7 @@ MirConnection::MirConnection(
         input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
+        error_handler{conf.the_error_handler()},
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
@@ -383,7 +390,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         try
         {
             default_stream = std::make_shared<mcl::BufferStream>(
-                this, request->wh, server, platform, surface_map, buffer_factory,
+                this, nullptr, request->wh, server, platform, surface_map, buffer_factory,
                 surface_proto->buffer_stream(), make_perf_report(logger), name,
                 mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
             surface_map->insert(default_stream->rpc_id(), default_stream);
@@ -392,12 +399,10 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         {
             if (!surface_proto->has_error())
                 surface_proto->set_error(error.what());
-            // failed to create buffer_stream, so clean up FDs it doesn't own
+            // Clean up surface_proto's direct fds; BufferStream has cleaned up any owned by
+            // surface_proto->buffer_stream()
             for (auto i = 0; i < surface_proto->fd_size(); i++)
                 ::close(surface_proto->fd(i));
-            if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
-                for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
-                    ::close(surface_proto->buffer_stream().buffer().fd(i));
         }
     }
 
@@ -822,20 +827,24 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform, surface_map, buffer_factory,
+            this, request->rs, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
-        if (request->callback)
-            request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        if (request->mbs_callback)
+            request->mbs_callback(
+                reinterpret_cast<MirBufferStream*>(
+                    dynamic_cast<mcl::ClientBufferStream*>(stream.get())),
+                request->context);
+
+        if (request->bs_callback)
+            request->bs_callback(stream.get(), request->context);
+
         request->wh->result_received();
     }
     catch (std::exception const& error)
     {
-        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-            ::close(protobuf_bs->buffer().fd(i));
-
         stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
             request);
@@ -846,7 +855,9 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirRenderSurface* render_surface,
+    mir_buffer_stream_callback mbs_callback,
+    buffer_stream_callback bs_callback,
     void *context)
 {
     mp::BufferStreamParameters params;
@@ -855,7 +866,11 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
 
-    auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
+    auto request = std::make_shared<StreamCreationRequest>(render_surface,
+                                                           mbs_callback,
+                                                           bs_callback,
+                                                           context,
+                                                           params);
     request->wh->expect_result();
 
     {
@@ -880,13 +895,29 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
-    surface_map->insert(id, stream); 
 
-    if (request->callback)
+    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
+    surface_map->insert(id, stream);
+
+    if (request->mbs_callback)
     {
-        request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        request->mbs_callback(
+            reinterpret_cast<MirBufferStream*>(
+                dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
     }
+
+    // TODO: A hack for now... To be removed when a BufferStream can
+    //       only be created through the render surface interface.
+    if (request->bs_callback)
+    {
+        auto error_buffer_stream = std::make_shared<mcl::ErrorBufferStream>(
+            request->rs, server, surface_map, error_msg, this, id, request->wh);
+        surface_map->insert(id, error_buffer_stream);
+
+        request->bs_callback(
+                error_buffer_stream.get(), request->context);
+    }
+
     request->wh->result_received();
 }
 
@@ -922,7 +953,7 @@ void MirConnection::register_ping_event_callback(mir_ping_event_callback callbac
 
 void MirConnection::register_error_callback(mir_error_callback callback, void* context)
 {
-    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
+    error_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)
@@ -1042,10 +1073,30 @@ void MirConnection::preview_base_display_configuration(
         MirError const error{
             static_cast<MirErrorDomain>(message.structured_error().domain()),
             message.structured_error().code()};
-        error_handler(&error);
+        (*error_handler)(&error);
     };
 
     server.preview_base_display_configuration(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::cancel_base_display_configuration_preview()
+{
+    mp::Void request;
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        (*error_handler)(&error);
+    };
+
+    server.cancel_base_display_configuration_preview(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
@@ -1203,7 +1254,7 @@ void MirConnection::chain_error(
 void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 {
     auto id = chain->rpc_id();
-    if (id > 0)
+    if (id >= 0)
     {
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
         mp::BufferStreamId buffer_stream_id;
@@ -1251,4 +1302,20 @@ void MirConnection::release_buffer(mcl::MirBuffer* buffer)
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer->rpc_id());
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+}
+
+MirRenderSurface* MirConnection::create_render_surface(geom::Size logical_size)
+{
+    auto native_window = platform->create_egl_native_window(nullptr);
+
+    std::shared_ptr<MirRenderSurface> rs {nullptr};
+    rs = std::make_shared<mcl::RenderSurface>(this, native_window, platform, logical_size);
+    surface_map->insert(native_window.get(), rs);
+
+    return static_cast<MirRenderSurface*>(native_window.get());
+}
+
+void MirConnection::release_render_surface(void* render_surface)
+{
+    surface_map->erase(static_cast<void*>(render_surface));
 }

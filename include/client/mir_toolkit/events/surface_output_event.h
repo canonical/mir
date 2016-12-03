@@ -55,6 +55,17 @@ MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent con
 float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev);
 
 /**
+ * Retrieve the maximum refresh rate of the output(s) associated with a
+ * MirSurfaceOutputEvent. For variable refresh rate displays this represents
+ * the maximum refresh rate of the display to aim for, rather than a measurement
+ * of recent performance.
+ *
+ * \param [in] ev   The event
+ * \return          The refresh rate in Hz
+ */
+double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev);
+
+/**
  * Retrieve the ID of the output this surface is on from a MirSurfaceOutputEvent
  *
  * \param [in] ev   The event

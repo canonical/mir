@@ -73,12 +73,19 @@ struct ShmMemoryRegion : mcl::MemoryRegion
     size_t const size_in_bytes;
 };
 
+std::shared_ptr<mir::graphics::eglstream::NativeBuffer> to_native_buffer(MirBufferPackage const& package)
+{
+    auto buffer = std::make_shared<mir::graphics::eglstream::NativeBuffer>();
+    *static_cast<MirBufferPackage*>(buffer.get()) = package;
+    return buffer;
+}
+
 }
 
 mcle::ClientBuffer::ClientBuffer(
     std::shared_ptr<MirBufferPackage> const& package,
     geom::Size size, MirPixelFormat pf)
-    : creation_package{package},
+    : creation_package{to_native_buffer(*package)},
       rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
@@ -122,7 +129,7 @@ MirPixelFormat mcle::ClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<MirNativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
+std::shared_ptr<mir::graphics::NativeBuffer> mcle::ClientBuffer::native_buffer_handle() const
 {
     creation_package->age = age();
     return creation_package;
@@ -138,22 +145,26 @@ void mcle::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-MirNativeBuffer* mcle::ClientBuffer::as_mir_native_buffer() const
-{
-    //mesa has a POD native type for now. can return it directly to client API.
-    return native_buffer_handle().get();
-}
-
-void mcle::ClientBuffer::set_fence(MirNativeFence*, MirBufferAccess)
+void mcle::ClientBuffer::set_fence(Fd, MirBufferAccess)
 {
 }
 
-MirNativeFence* mcle::ClientBuffer::get_fence() const
+mir::Fd mcle::ClientBuffer::get_fence() const
 {
-    return nullptr;
+    return mir::Fd(mir::Fd::invalid);
 }
 
 bool mcle::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
 {
     return true;
+}
+
+MirBufferPackage* mcle::ClientBuffer::package() const
+{
+    return creation_package.get();
+}
+
+void mcle::ClientBuffer::egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**)
+{
+    BOOST_THROW_EXCEPTION(std::invalid_argument("not implemented yet"));
 }

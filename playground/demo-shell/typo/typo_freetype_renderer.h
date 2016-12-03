@@ -16,14 +16,14 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_
-#define MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_
+#ifndef MIR_TYPO_FREETYPE_RENDERER_H_
+#define MIR_TYPO_FREETYPE_RENDERER_H_
 
 #include "typo_renderer.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-namespace mir { namespace examples { namespace typo {
+namespace mir { namespace typo {
 
 class FreetypeRenderer : public Renderer
 {
@@ -39,6 +39,6 @@ private:
     int preferred_height;
 };
 
-} } } // namespace mir::examples::typo
+} } // namespace mir::typo
 
-#endif // MIR_EXAMPLES_TYPO_FREETYPE_RENDERER_H_
+#endif // MIR_TYPO_FREETYPE_RENDERER_H_

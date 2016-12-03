@@ -20,22 +20,22 @@
 #include "nested_display_configuration.h"
 #include "display_buffer.h"
 #include "host_connection.h"
+#include "host_stream.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/pixel_format_utils.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <sstream>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -124,7 +124,7 @@ EGLContext mgn::detail::EGLDisplayHandle::egl_context() const
     return egl_context_;
 }
 
-std::unique_ptr<mg::GLContext> mgn::detail::EGLDisplayHandle::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mgn::detail::EGLDisplayHandle::create_gl_context()
 {
     EGLint const attribs[] =
     {
@@ -180,11 +180,13 @@ mgn::Display::Display(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<mg::GLConfig> const& gl_config) :
+    std::shared_ptr<mg::GLConfig> const& gl_config,
+    PassthroughOption passthrough_option) :
     platform{platform},
     connection{connection},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
+    passthrough_option(passthrough_option),
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
@@ -298,26 +300,13 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
             {
                 complete_display_initialization(egl_config_format);
 
-                std::ostringstream surface_title;
-
-                surface_title << "Mir nested display for output #" << best_output.id.as_value();
-
-                auto const host_surface = connection->create_surface(
-                    extents.size.width.as_int(),
-                    extents.size.height.as_int(),
-                    egl_config_format,
-                    surface_title.str().c_str(),
-                    mir_buffer_usage_hardware,
-                    static_cast<uint32_t>(best_output.id.as_value()));
-
                 eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,
-                        host_surface,
-                        extents,
-                        best_output.current_format,
-                        connection));
+                        best_output,
+                        connection,
+                        passthrough_option));
             }
         });
 
@@ -366,12 +355,28 @@ auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     // So we can't do this: return std::make_shared<Cursor>(connection, initial_image);
 }
 
-std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
+std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
+{
+    return nullptr;
+}
+
+mg::NativeDisplay* mgn::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgn::Display::create_gl_context()
 {
     return egl_display.create_gl_context();
 }
 
-std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
+bool mgn::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/)
 {
-    return nullptr;
+    return false;
+}
+
+mg::Frame mgn::Display::last_frame_on(unsigned) const
+{
+    return {}; // TODO after the client API exists for us to get it
 }

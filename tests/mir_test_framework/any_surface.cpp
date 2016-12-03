@@ -18,6 +18,9 @@
 
 #include "mir_test_framework/any_surface.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mtf = mir_test_framework;
 
 namespace 
@@ -29,10 +32,24 @@ namespace
 
 MirSurface* mtf::make_any_surface(MirConnection *connection)
 {
+    return mtf::make_surface(connection, mir::geometry::Size{width, height}, format);
+}
+
+MirSurface* mtf::make_surface(
+    MirConnection *connection, mir::geometry::Size size, MirPixelFormat f)
+{
+    using namespace std::literals::string_literals;
+
     auto spec = mir_connection_create_spec_for_normal_surface(connection,
-        width, height, format);
+        size.width.as_int(), size.height.as_int(), f);
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
+
+    if (!mir_surface_is_valid(surface))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"Failed to create surface: "s + mir_surface_get_error_message(surface)}));
+    }
     
     return surface;
 }

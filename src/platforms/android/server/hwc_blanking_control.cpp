@@ -99,6 +99,15 @@ mga::HwcBlankingControl::HwcBlankingControl(
 {
 }
 
+mga::HwcBlankingControl::HwcBlankingControl(
+    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
+    MirPixelFormat format) :
+    hwc_device{hwc_device},
+    off{false},
+    format{format}
+{
+}
+
 void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
 {
     if (mode_request == mir_power_mode_on)
@@ -149,7 +158,7 @@ mg::DisplayConfigurationOutput populate_config(
         type = mg::DisplayConfigurationOutputType::displayport;
         form_factor = mir_form_factor_monitor;
     }
-    
+
     return {
         as_output_id(name),
         mg::DisplayConfigurationCardId{0},
@@ -166,7 +175,10 @@ mg::DisplayConfigurationOutput populate_config(
         external_mode,
         mir_orientation_normal,
         1.0f,
-        form_factor
+        form_factor,
+        mir_subpixel_arrangement_unknown,
+        {},
+        mir_output_gamma_unsupported
     };
 }
 
@@ -215,13 +227,13 @@ mga::ConfigChangeSubscription subscribe_to_config_changes(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device,
     void const* subscriber,
     std::function<void()> const& hotplug,
-    std::function<void(mga::DisplayName)> const& vsync)
+    std::function<void(mga::DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return std::make_shared<
         mir::raii::PairedCalls<std::function<void()>, std::function<void()>>>(
         [hotplug, vsync, subscriber, hwc_device]{
             hwc_device->subscribe_to_events(subscriber,
-                [vsync](mga::DisplayName name, std::chrono::nanoseconds){ vsync(name); },
+                [vsync](mga::DisplayName name, mg::Frame::Timestamp ts){ vsync(name, ts); },
                 [hotplug](mga::DisplayName, bool){ hotplug(); },
                 []{});
         },
@@ -238,7 +250,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
     {
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
-        else   
+        else
             return populate_config(display_name, {0,0}, 0.0f, {0,0}, mir_power_mode_off, mir_pixel_format_invalid, false);
     }
 
@@ -247,7 +259,7 @@ mg::DisplayConfigurationOutput mga::HwcBlankingControl::active_config_for(Displa
 
 mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }
@@ -310,7 +322,7 @@ mg::DisplayConfigurationOutput mga::HwcPowerModeControl::active_config_for(Displ
 
 mga::ConfigChangeSubscription mga::HwcPowerModeControl::subscribe_to_config_changes(
     std::function<void()> const& hotplug,
-    std::function<void(DisplayName)> const& vsync)
+    std::function<void(DisplayName, mg::Frame::Timestamp)> const& vsync)
 {
     return ::subscribe_to_config_changes(hwc_device, this, hotplug, vsync);
 }

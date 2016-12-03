@@ -26,6 +26,7 @@
 #include "protobuf_buffer_packer.h"
 
 #include "mir/graphics/buffer.h"
+#include "mir/client_visible_error.h"
 
 #include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
@@ -185,4 +186,13 @@ void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buf
 
     request->mutable_buffer()->set_fds_on_side_channel(set.size());
     send_event_sequence(seq, {set});
+}
+
+void mfd::EventSender::handle_error(mir::ClientVisibleError const& error)
+{
+    mp::EventSequence seq;
+    auto proto_error = seq.mutable_structured_error();
+    proto_error->set_domain(error.domain());
+    proto_error->set_code(error.code());
+    send_event_sequence(seq, {});
 }

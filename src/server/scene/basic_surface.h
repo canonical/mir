@@ -65,7 +65,6 @@ public:
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
-        bool nonrectangular,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
@@ -77,7 +76,6 @@ public:
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
         MirPointerConfinementState state,
-        bool nonrectangular,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
@@ -152,6 +150,7 @@ public:
 
     void set_confine_pointer_state(MirPointerConfinementState state) override;
     MirPointerConfinementState confine_pointer_state() const override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
@@ -171,7 +170,6 @@ private:
     float surface_alpha;
     bool hidden;
     input::InputReceptionMode input_mode;
-    const bool nonrectangular;
     std::vector<geometry::Rectangle> custom_input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;

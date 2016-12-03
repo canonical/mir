@@ -20,6 +20,7 @@
 #define MIR_DISPATCH_MULTIPLEXING_DISPATCHABLE_H_
 
 #include "mir/dispatch/dispatchable.h"
+#include "mir/posix_rw_mutex.h"
 
 #include <functional>
 #include <initializer_list>
@@ -77,7 +78,7 @@ public:
     /**
      * \brief Add a simple callback to the adaptor
      * \param [in] fd       File descriptor to monitor for readability
-     * \param [in] callback Callback to fire when \ref fd becomes readable.
+     * \param [in] callback Callback to fire when \p fd becomes readable.
      *                      This callback is not called reentrantly.
      */
     void add_watch(Fd const& fd, std::function<void()> const& callback);
@@ -94,7 +95,7 @@ public:
      */
     void remove_watch(Fd const& fd);
 private:
-    pthread_rwlock_t lifetime_mutex;
+    PosixRWMutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;
 
     Fd epoll_fd;

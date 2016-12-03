@@ -69,7 +69,7 @@ public:
 
         mir::optional_value<unsigned int> latency;
 
-        for (auto i = submissions.begin(); i != submissions.end(); i++)
+        for (auto i = submissions.begin(); i != submissions.end();)
         {
             if (i->buffer_id == submission_id)
             {
@@ -81,8 +81,14 @@ public:
                     i = submissions.erase(submissions.begin(), i);
 
                 latency = visible_frame - i->visible_frame_when_submitted;
-                submissions.erase(i);
-                break;
+                i = submissions.erase(i);
+                if (swap_interval > 0)
+                    break;
+                //else for interval zero delete dropped entries and use last
+            }
+            else
+            {
+                i++;
             }
         }
 
@@ -100,6 +106,8 @@ public:
         }
         return true;
     }
+
+    unsigned int swap_interval{1};
 
 private:
     std::mutex mutex;
@@ -129,7 +137,7 @@ public:
         return {{0,0}, {1920, 1080}};
     }
 
-    bool post_renderables_if_optimizable(mg::RenderableList const& renderables) override
+    bool overlay(mg::RenderableList const& renderables) override
     {
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
@@ -250,6 +258,8 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
             del);
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;
+
+        stats.swap_interval = 1;
     }
 
     void TearDown() override
@@ -310,6 +320,28 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 
     auto max_latency = display.group.max_latency();
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
+}
+
+TEST_F(ClientLatency, dropping_latency_is_limited_to_one)
+{
+    using namespace testing;
+
+    auto stream = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(stream, 0);
+    stats.swap_interval = 0;
+
+    do
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
+
+    auto max_latency = display.group.max_latency();
+    EXPECT_THAT(max_latency, Le(1u));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
 }
 
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)

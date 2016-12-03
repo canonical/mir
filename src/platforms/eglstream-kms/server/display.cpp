@@ -26,12 +26,12 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/renderer/gl/render_target.h"
+#include "mir/renderer/gl/context.h"
 
 #include <drm/drm.h>
 #include <xf86drmMode.h>
@@ -195,7 +195,7 @@ public:
         return view_area_;
     }
 
-    bool post_renderables_if_optimizable(const mir::graphics::RenderableList& /*renderlist*/) override
+    bool overlay(const mir::graphics::RenderableList& /*renderlist*/) override
     {
         return false;
     }
@@ -329,9 +329,19 @@ std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor(
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mge::Display::create_gl_context()
+std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
-    class GLContext : public mg::GLContext
+    return nullptr;
+}
+
+mg::NativeDisplay* mge::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
+{
+    class GLContext : public renderer::gl::Context
     {
     public:
         GLContext(EGLDisplay display, EGLContext context)
@@ -357,7 +367,18 @@ std::unique_ptr<mg::GLContext> mge::Display::create_gl_context()
     return std::make_unique<GLContext>(display, context);
 }
 
-std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*width*/, int /*height*/)
+bool mge::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/)
 {
-    return nullptr;
+    return false;
+}
+
+mg::Frame mge::Display::last_frame_on(unsigned) const
+{
+    /*
+     * TODO: Implement this later when we have the hardware + driver to test on.
+     *       If no proper hardware counters are available, just call
+     *       AtomicFrame.increment_now() in post() above.
+     */
+    return {};
 }

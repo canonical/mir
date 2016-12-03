@@ -17,10 +17,10 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/frame.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
 #include "virtual_output.h"
@@ -152,7 +152,9 @@ mga::Display::Display(
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(
         std::bind(&mga::Display::on_hotplug, this),
-        std::bind(&mga::Display::on_vsync, this, std::placeholders::_1))},
+        std::bind(&mga::Display::on_vsync, this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2))},
     config(
         hwc_config->active_config_for(mga::DisplayName::primary),
         mir_power_mode_off,
@@ -243,50 +245,9 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    using namespace geometry;
-    if (!new_configuration.valid())
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
-
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
-        displays.add(mga::DisplayName::external,
-            create_display_buffer(
-                display_device,
-                mga::DisplayName::external,
-                *display_buffer_builder,
-                config.external(),
-                gl_program_factory,
-                gl_context,
-                config.external().top_left - origin,
-                native_window_report,
-                overlay_option));
-    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
-        displays.remove(mga::DisplayName::external);
-
-    new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output)
-    {
-        if (output.current_format != config[output.id].current_format)
-            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
-
-        config[output.id].orientation = output.orientation;
-        config[output.id].form_factor = output.form_factor;
-        config[output.id].scale = output.scale;
-
-        geom::Displacement offset(output.top_left - origin);
-        config[output.id].top_left = output.top_left;
-
-        if (config.primary().id == output.id)
-        {
-            power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
-        }
-        else if (config.external().id == output.id && config.external().connected)
-        {
-            power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
-        }
-    });
+    configure_locked(new_configuration, lock);
 }
 
 //NOTE: We avoid calling back to hwc from within the hotplug callback. Only arrange for an update.
@@ -297,9 +258,32 @@ void mga::Display::on_hotplug()
     display_change_pipe->notify_change();
 }
 
-void mga::Display::on_vsync(DisplayName name) const
+void mga::Display::on_vsync(DisplayName name, mg::Frame::Timestamp timestamp)
 {
-    display_report->report_vsync(as_output_id(name).as_value());
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    /*
+     * XXX It's presently useful but idealistically inefficient that we
+     *     get a callback on every frame, even when the compositor is idle.
+     *     (LP: #1374318)
+     *     Although we possibly shouldn't fix that at all because the
+     *     call to increment_with_timestamp would produce incorrect MSC values
+     *     if it were to miss a physical frame. The X11 platform has that
+     *     problem already, but it's less important for production use than
+     *     Android.
+     */
+    auto& f = last_frame[as_output_id(name).as_value()];
+    f.increment_with_timestamp(timestamp);
+    display_report->report_vsync(as_output_id(name).as_value(), f.load());
+}
+
+mg::Frame mga::Display::last_frame_on(unsigned output_id) const
+{
+    std::lock_guard<decltype(vsync_mutex)> lock{vsync_mutex};
+    auto last = last_frame.find(output_id);
+    if (last == last_frame.end())
+         return {};  // Not an error. It might be a valid output_id pre-vsync
+    else
+         return last->second.load();
 }
 
 void mga::Display::register_configuration_change_handler(
@@ -335,11 +319,6 @@ auto mga::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
     return nullptr;
 }
 
-std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
-{
-    return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
-}
-
 std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width, int height)
 {
     auto enable_virtual_output = [this, width, height]
@@ -353,4 +332,86 @@ std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width
         on_hotplug();
     };
     return {std::make_unique<mga::VirtualOutput>(enable_virtual_output, disable_virtual_output)};
+}
+
+mg::NativeDisplay* mga::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mga::Display::create_gl_context()
+{
+    return std::make_unique<mga::PbufferGLContext>(gl_context);
+}
+
+bool mga::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& conf)
+{
+    /*
+     * We never invalidate display buffers based on the configuration to apply.
+     *
+     * The only way we invalidate a display buffer is if we detect that a previously-connected
+     * external display has been removed. In that case, regardless of whether or not it's enabled
+     * in the configuration, we destroy the display.
+     *
+     * Take the configuration lock to ensure consistency between our checking for external
+     * connections and configure's checking.
+     */
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (!config.external().connected || displays.display_present(mga::DisplayName::external))
+    {
+        configure_locked(conf, lock);
+        return true;
+    }
+    return false;
+}
+
+void mga::Display::configure_locked(
+    mir::graphics::DisplayConfiguration const& new_configuration,
+    std::lock_guard<decltype(configuration_mutex)> const&)
+{
+    using namespace geometry;
+    if (!new_configuration.valid())
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
+
+    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
+        displays.add(
+            mga::DisplayName::external,
+            create_display_buffer(
+                display_device,
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                config.external(),
+                gl_program_factory,
+                gl_context,
+                config.external().top_left - origin,
+                native_window_report,
+                overlay_option));
+    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
+        displays.remove(mga::DisplayName::external);
+
+    new_configuration.for_each_output(
+        [this](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.current_format != config[output.id].current_format)
+                BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
+
+            config[output.id].orientation = output.orientation;
+            config[output.id].form_factor = output.form_factor;
+            config[output.id].scale = output.scale;
+
+            geom::Displacement offset(output.top_left - origin);
+            config[output.id].top_left = output.top_left;
+
+            if (config.primary().id == output.id)
+            {
+                power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
+                displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
+            }
+            else if (config.external().id == output.id && config.external().connected)
+            {
+                power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
+                displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
+            }
+        });
 }

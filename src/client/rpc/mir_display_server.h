@@ -79,6 +79,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void cancel_base_display_configuration_preview(
+        mir::protobuf::Void const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
@@ -114,10 +118,6 @@ public:
     void stop_prompt_session(
         mir::protobuf::Void const* request,
         mir::protobuf::Void* response,
-        google::protobuf::Closure* done) override;
-    void exchange_buffer(
-        mir::protobuf::BufferRequest const* request,
-        mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
     void submit_buffer(
         mir::protobuf::BufferRequest const* request,

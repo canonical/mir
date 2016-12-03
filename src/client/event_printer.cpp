@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -17,6 +17,8 @@
  */
 
 #include "mir/event_printer.h"
+
+#include "mir/events/surface_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
@@ -321,6 +323,16 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceEvent const& event)
     return out << ')';
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirSurfacePlacementEvent const& event)
+{
+    auto const& placement = event.placement();
+    return out << "surface_placement_event({"
+               << placement.left << ", "
+               << placement.top << ", "
+               << placement.width << ", "
+               << placement.height << "})";
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const& event)
 {
     out << "input_device_state(ts="
@@ -336,11 +348,11 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
         out << mir_input_device_state_event_device_id(&event, index) 
             << " btns=" << mir_input_device_state_event_device_pointer_buttons(&event, index)
             << " pressed=(";
-        auto keys = mir_input_device_state_event_device_pressed_keys(&event, index);
-        for (size_t count_keys = mir_input_device_state_event_device_pressed_keys_count(&event, index), i = 0; i != count_keys; ++i)
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(&event, index);
+        for (uint32_t i = 0; i < key_count; i++)
         {
-            out << static_cast<uint32_t>(keys[i]);
-            if (i + 1 < count_keys)
+            out << mir_input_device_state_event_device_pressed_keys_for_index(&event, index, i);
+            if (i + 1 < key_count)
                 out << ", ";
         }
         out << ")";
@@ -367,6 +379,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
+        PRINT_EVENT(surface_placement);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:

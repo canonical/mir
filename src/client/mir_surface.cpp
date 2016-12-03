@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2015 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -496,7 +496,7 @@ void MirSurface::raise_surface(MirCookie const* cookie)
 
     auto const event_cookie = raise_request.mutable_cookie();
 
-    event_cookie->set_cookie(cookie->blob().data(), cookie->size());
+    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
 
     server->raise_surface(
         &raise_request,
@@ -550,6 +550,11 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     // parent_id is a special case (below)
     // aux_rect is a special case (below)
     COPY_IF_SET(edge_attachment);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
     COPY_IF_SET(max_width);

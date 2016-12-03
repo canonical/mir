@@ -11,6 +11,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/gl
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
 protobuf_generate_cpp(
@@ -31,7 +32,7 @@ set(
   test_stale_frames.cpp
   test_test_framework.cpp
   test_error_reporting.cpp
-  test_exchange_buffer.cpp
+  test_submit_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_macros.cpp
@@ -41,7 +42,6 @@ set(
   test_server_shutdown.cpp
   test_session.cpp
   session_management.cpp
-  surface_composition.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
@@ -75,7 +75,6 @@ target_link_libraries(
   mirclient-debug-extension
   mirclient-static
   mirdraw
-  mirclientrpc-static
   mirclientlttng-static
 
   mircommon

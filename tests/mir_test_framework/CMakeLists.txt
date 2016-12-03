@@ -4,11 +4,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${Boost_INCLUDE_DIRS}
   ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
   ${UMOCKDEV_INCLUDE_DIRS}
-  ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
 add_definitions(
@@ -35,6 +35,7 @@ add_library(mir-public-test-framework OBJECT
   executable_path.cpp
   headless_in_process_server.cpp
   headless_nested_server_runner.cpp
+  headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp

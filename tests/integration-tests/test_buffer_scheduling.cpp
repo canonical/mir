@@ -19,16 +19,14 @@
 #include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
-#include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -45,6 +43,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mrs = mir::renderer::software;
 using namespace testing;
 
 namespace
@@ -101,121 +100,6 @@ struct ConsumerSystem
     ConsumerSystem(ConsumerSystem const&) = delete;
     ConsumerSystem& operator=(ConsumerSystem const&) = delete;
 };
-
-//buffer queue testing
-struct BufferQueueProducer : ProducerSystem
-{
-    BufferQueueProducer(mc::BufferStream& stream) :
-        stream(stream)
-    {
-        stream.swap_buffers(buffer,
-            std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
-    }
-
-    bool can_produce()
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return buffer;
-    }
-
-    mg::BufferID current_id()
-    {
-        if (buffer)
-            return buffer->id();
-        else
-            return mg::BufferID{INT_MAX};
-    }
-
-    void produce()
-    {
-        mg::Buffer* b = nullptr;
-        if (can_produce())
-        {
-            {
-                std::unique_lock<decltype(mutex)> lk(mutex);
-                b = buffer;
-                buffer = nullptr;
-                age++;
-                entries.emplace_back(BufferEntry{b->id(), age, Access::unblocked});
-                b->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
-            }
-            stream.swap_buffers(b,
-                std::bind(&BufferQueueProducer::buffer_ready, this, std::placeholders::_1));
-        }
-        else
-        {
-            entries.emplace_back(BufferEntry{mg::BufferID{INT_MAX}, 0u, Access::blocked});
-        }
-    }
-
-    std::vector<BufferEntry> production_log()
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return entries;
-    }
-
-    geom::Size last_size()
-    {
-        if (buffer)
-            return buffer->size();
-        return geom::Size{};
-    }
-
-    void reset_log()
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        return entries.clear();
-    }
-private:
-    mc::BufferStream& stream;
-    void buffer_ready(mg::Buffer* b)
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        buffer = b;
-    }
-    std::mutex mutex;
-    unsigned int age {0};
-    std::vector<BufferEntry> entries;
-    mg::Buffer* buffer {nullptr};
-};
-
-struct BufferQueueConsumer : ConsumerSystem
-{
-    BufferQueueConsumer(mc::BufferStream& stream) :
-        stream(stream)
-    {
-    }
-
-    std::shared_ptr<mg::Buffer> consume_resource() override
-    {
-        auto b = stream.lock_compositor_buffer(this);
-        last_size_ = b->size();
-        b->read([this, b](unsigned char const* p) {
-            entries.emplace_back(BufferEntry{b->id(), *reinterpret_cast<unsigned int const*>(p), Access::unblocked});
-        });
-        return b;
-    }
-
-    std::vector<BufferEntry> consumption_log()
-    {
-        return entries;
-    }
-
-    geom::Size last_size()
-    {
-        return last_size_;
-    }
-    
-    void set_framedropping(bool allow) override
-    {
-        stream.allow_framedropping(allow);
-    }
-
-    mc::BufferStream& stream;
-    std::vector<BufferEntry> entries;
-    geom::Size last_size_;
-};
-
 
 struct StubIpcSystem
 {
@@ -333,6 +217,7 @@ struct StubEventSink : public mf::EventSink
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
+    void handle_error(mir::ClientVisibleError const&) {}
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
     void send_ping(int32_t) {}
 
@@ -448,6 +333,10 @@ struct ScheduledProducer : ProducerSystem
         {
             vault.set_size(sz);
         });
+    }
+    ~ScheduledProducer()
+    {
+        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
     }
 
     bool can_produce()
@@ -576,76 +465,49 @@ MATCHER(NeverBlocks, "")
 
 
 //test infrastructure
-struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
+struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
 {
     BufferScheduling()
     {
-        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
-        {
-            auto exchange_stream = std::make_shared<mc::BufferStreamSurfaces>(mt::fake_shared(queue));
-            producer = std::make_unique<BufferQueueProducer>(*exchange_stream);
-            consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
-            second_consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
-            third_consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
-            stream = exchange_stream;
-        }
-        else
-        {
-            ipc = std::make_shared<StubIpcSystem>();
-            map = std::make_shared<mc::BufferMap>(
-                    std::make_shared<StubEventSink>(ipc),
-                    std::make_shared<mtd::StubBufferAllocator>());
-            auto submit_stream = std::make_shared<mc::Stream>(
-                drop_policy,
-                map,
-                geom::Size{100,100},
-                mir_pixel_format_abgr_8888);
-            auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
-            ipc->on_server_bound_transfer(
-                [weak_stream](mp::Buffer& buffer)
-                {
-                    auto submit_stream = weak_stream.lock();
-                    if (!submit_stream)
-                        return;
-                    mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
-                    submit_stream->swap_buffers(&b, [](mg::Buffer*){});
-                });
-            ipc->on_allocate(
-                [this](geom::Size sz)
-                {
-                    map->add_buffer(
-                        mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
-                });
+        ipc = std::make_shared<StubIpcSystem>();
+        sink = std::make_shared<StubEventSink>(ipc);
+        map = std::make_shared<mc::BufferMap>(sink, std::make_shared<mtd::StubBufferAllocator>());
+        auto submit_stream = std::make_shared<mc::Stream>(
+            drop_policy,
+            map,
+            geom::Size{100,100},
+            mir_pixel_format_abgr_8888);
+        auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
+        ipc->on_server_bound_transfer(
+            [weak_stream](mp::Buffer& buffer)
+            {
+                auto submit_stream = weak_stream.lock();
+                if (!submit_stream)
+                    return;
+                mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
+                submit_stream->swap_buffers(&b, [](mg::Buffer*){});
+            });
+        ipc->on_allocate(
+            [this](geom::Size sz)
+            {
+                map->add_buffer(
+                    mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
+            });
 
-            consumer = std::make_unique<ScheduledConsumer>(submit_stream);
-            second_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
-            third_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
-            producer = std::make_unique<ScheduledProducer>(ipc, std::get<0>(GetParam()));
+        consumer = std::make_unique<ScheduledConsumer>(submit_stream);
+        second_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
+        third_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
+        producer = std::make_unique<ScheduledProducer>(ipc, GetParam());
 
-            stream = submit_stream;
-        }
+        stream = submit_stream;
     }
 
 
     void resize(geom::Size sz)
     {
-        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
-        {
-            stream->resize(sz);
-        }
-        else
-        {
-            producer->produce();
-            ipc->resize_event(sz);
-            consumer->consume();
-        }
-    }
-
-
-    void set_scaling_delay(int delay)
-    {
-        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
-            queue.set_scaling_delay(delay);
+        producer->produce();
+        ipc->resize_event(sz);
+        consumer->consume();
     }
 
     void allow_framedropping()
@@ -662,12 +524,11 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     mtd::MockClientBufferFactory client_buffer_factory;
     mtd::StubBufferAllocator server_buffer_factory;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    int nbuffers = std::get<0>(GetParam());
+    int nbuffers = GetParam();
 
-    mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, drop_policy};
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mf::BufferSink> sink;
     std::unique_ptr<ProducerSystem> producer;
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
@@ -1113,139 +974,6 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     }
 }
 
-TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
-{   // Regression test for LP: #1480164
-    mtd::MockFrameDroppingPolicyFactory policy_factory;
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
-                          properties, policy_factory};
-    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
-    queue.allow_framedropping(false);
-
-    mg::Buffer* client_buffer = nullptr;
-    auto callback = [&](mg::Buffer* buffer)
-    {
-        client_buffer = buffer;
-    };
-
-    auto client_try_acquire = [&]() -> bool
-    {
-        queue.client_acquire(callback);
-        return client_buffer != nullptr;
-    };
-
-    auto client_release = [&]()
-    {
-        EXPECT_TRUE(client_buffer);
-        queue.client_release(client_buffer);
-        client_buffer = nullptr;
-    };
-
-    // Skip over the first frame. The early release optimization is too
-    // conservative to allow it to happen right at the start (so as to
-    // maintain correct multimonitor frame rates if required).
-    ASSERT_TRUE(client_try_acquire());
-    client_release();
-    queue.compositor_release(queue.compositor_acquire(this));
-
-    auto onscreen = queue.compositor_acquire(this);
-
-    bool blocking;
-    do
-    {
-        blocking = !client_try_acquire();
-        if (!blocking)
-            client_release();
-    } while (!blocking);
-
-    int throttled_count = 0;
-
-    for (int f = 0; f < 100; ++f)
-    {
-        ASSERT_FALSE(client_buffer);
-        queue.compositor_release(onscreen);
-        if (client_buffer)
-        { // This should always happen if dynamic queue scaling is disabled...
-            client_release();
-            onscreen = queue.compositor_acquire(this);
-            client_try_acquire();
-            throttled_count = 0;
-        }
-        else
-        {
-            ASSERT_THAT(queue.scaling_delay(), Ge(0));
-            ++throttled_count;
-            ASSERT_THAT(throttled_count, Le(nbuffers));
-            onscreen = queue.compositor_acquire(this);
-        }
-    }
-}
-
-TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
-{   // Regression test related to LP: #1480164
-    mtd::MockFrameDroppingPolicyFactory policy_factory;
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
-                          properties, policy_factory};
-    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
-    queue.allow_framedropping(false);
-
-    const void* const leftid = "left";
-    const void* const rightid = "right";
-
-    mg::Buffer* client_buffer = nullptr;
-    auto callback = [&](mg::Buffer* buffer)
-    {
-        client_buffer = buffer;
-    };
-
-    auto client_try_acquire = [&]() -> bool
-    {
-        queue.client_acquire(callback);
-        return client_buffer != nullptr;
-    };
-
-    auto client_release = [&]()
-    {
-        EXPECT_TRUE(client_buffer);
-        queue.client_release(client_buffer);
-        client_buffer = nullptr;
-    };
-
-    // Skip over the first frame. The early release optimization is too
-    // conservative to allow it to happen right at the start (so as to
-    // maintain correct multimonitor frame rates if required).
-    ASSERT_TRUE(client_try_acquire());
-    client_release();
-    queue.compositor_release(queue.compositor_acquire(leftid));
-
-    auto left = queue.compositor_acquire(leftid);
-    auto right = queue.compositor_acquire(rightid);
-
-    bool blocking;
-    do
-    {
-        blocking = !client_try_acquire();
-        if (!blocking)
-            client_release();
-    } while (!blocking);
-
-    for (int f = 0; f < 100; ++f)
-    {
-        // These two assertions are the important ones
-        ASSERT_FALSE(client_buffer);
-        queue.compositor_release(left);
-        queue.compositor_release(right);
-        ASSERT_FALSE(client_buffer);
-        left = queue.compositor_acquire(leftid);
-        right = queue.compositor_acquire(rightid);
-        // Note: This is only reliably true when queue scaling is disabled:
-        if (client_buffer)
-        {
-            client_release();
-            client_try_acquire();
-        } // else dynamic queue scaling is throttling us.
-    }
-}
-
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
 {
     producer->produce();
@@ -1409,10 +1137,6 @@ TEST_P(WithTwoOrMoreBuffers, client_never_owns_compositor_buffers_and_vice_versa
  */
 TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 {
-    // This test is technically not valid with dynamic queue scaling on
-    // BufferQueue specific setup
-    set_scaling_delay(-1);
-
     const int nmonitors = 2;
     std::array<ConsumerSystem*, nmonitors> consumers { {
         consumer.get(),
@@ -1451,9 +1175,7 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 // Test that dynamic queue scaling/throttling actually works
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
-    //BufferQueue specific for now
     int const discard = 3;
-    queue.set_scaling_delay(discard);
 
     for (int frame = 0; frame < 20; frame++)
     {
@@ -1464,11 +1186,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     auto log = producer->production_log();
     ASSERT_THAT(log.size(), Gt(discard));  // avoid the below erase crashing
     log.erase(log.begin(), log.begin() + discard);
-
-    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
-        EXPECT_THAT(log, NeverBlocks());
-    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
-        EXPECT_THAT(unique_ids_in(log), Eq(2));
+    EXPECT_THAT(log, NeverBlocks());
 
     producer->reset_log();
 
@@ -1500,10 +1218,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // Expect double-buffers as the steady state for fast clients
     log = producer->production_log();
     log.erase(log.begin(), log.begin() + discard);
-    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
-        EXPECT_THAT(log, NeverBlocks());
-    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
-        EXPECT_THAT(unique_ids_in(log), Eq(2));
+    EXPECT_THAT(log, NeverBlocks());
 }
 
 //NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
@@ -1572,20 +1287,20 @@ int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+    Range(2, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+    Range(2, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Combine(Range(3, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+    Range(3, max_buffers_to_test));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Combine(Values(2), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+    Values(2));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Combine(Values(3), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+    Values(3));

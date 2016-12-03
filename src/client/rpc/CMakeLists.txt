@@ -1,4 +1,4 @@
-add_library(mirclientrpc-static STATIC
+add_library(mirclientrpc OBJECT 
 
   mir_basic_rpc_channel.cpp
   null_rpc_report.cpp
@@ -9,4 +9,4 @@ add_library(mirclientrpc-static STATIC
   mir_display_server_debug.cpp
 )
 
-add_dependencies(mirclientrpc-static mirprotobuf)
+add_dependencies(mirclientrpc mirprotobuf)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -41,6 +41,7 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -54,8 +55,6 @@
 #include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
-#include "buffer_stream_tracker.h"
-#include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
 #include "mir_toolkit/client_types.h"
@@ -76,6 +75,16 @@ namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+
+namespace
+{
+mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
+{
+    mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
+    std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
+    return out;
+}
+}
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
@@ -109,8 +118,7 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    hub(hub),
-    buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
+    hub(hub)
 {
 }
 
@@ -180,23 +188,6 @@ void mf::SessionMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     done->Run();
-}
-
-void mf::SessionMediator::advance_buffer(
-    BufferStreamId stream_id,
-    BufferStream& stream,
-    graphics::Buffer* old_buffer,
-    std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
-{
-    stream.swap_buffers(
-        old_buffer,
-        [this, stream_id, complete](mg::Buffer* new_buffer)
-        {
-            if (!new_buffer || buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-        });
 }
 
 namespace
@@ -285,6 +276,11 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
 
     #undef COPY_IF_SET
 
@@ -359,62 +355,14 @@ void mf::SessionMediator::create_surface(
 
     if (legacy_stream)
     {
-        buffer_stream_tracker.set_default_stream(surf_id, buffer_stream_id);
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         response->mutable_buffer_stream()->set_pixel_format(legacy_stream->pixel_format());
         response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
-
-        advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
-            [this, buffering_sender, response, done, session]
-            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-            {
-                if (client_buffer)
-                    pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
-
-                // Send the create_surface reply first...
-                done->Run();
-
-                // ...then uncork the message sender, sending all buffered surface events.
-                buffering_sender->uncork();
-            });
+        legacy_default_stream_map[surf_id] = buffer_stream_id;
     }
-    else
-    {
-        done->Run();
-        buffering_sender->uncork();
-    }
-}
-
-void mf::SessionMediator::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    mf::BufferStreamId const stream_id{request->id().value()};
-
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    auto buffer = buffer_stream_tracker.last_buffer(stream_id);
-    if (!buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error("No buffer found for given stream id"));
-
-    ipc_operations->unpack_buffer(request_msg, *buffer);
-
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_exchange_buffer_called(session->name());
-
-    auto const& surface = session->get_buffer_stream(stream_id);
-    advance_buffer(stream_id, *surface, buffer_stream_tracker.buffer_from(buffer_id),
-        [this, response, done]
-        (graphics::Buffer* new_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, new_buffer, msg_type);
-            done->Run();
-        });
+    done->Run();
+    // ...then uncork the message sender, sending all buffered surface events.
+    buffering_sender->uncork();
 }
 
 void mf::SessionMediator::submit_buffer(
@@ -431,26 +379,10 @@ void mf::SessionMediator::submit_buffer(
     auto stream = session->get_buffer_stream(stream_id);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    if (auto* buffer = buffer_stream_tracker.last_buffer(stream_id))
-    {
-        ipc_operations->unpack_buffer(request_msg, *buffer);
-        stream->swap_buffers(buffer,
-            [this, stream_id](mg::Buffer* new_buffer)
-            {
-                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-                else
-                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
-            });
-    }
-    else
-    {
-        auto b = session->get_buffer(buffer_id);
-        ipc_operations->unpack_buffer(request_msg, *b);
+    auto b = session->get_buffer(buffer_id);
+    ipc_operations->unpack_buffer(request_msg, *b);
 
-        auto stream = session->get_buffer_stream(stream_id);
-        stream->swap_buffers(b.get(), [](mg::Buffer*) {});
-    }
+    stream->swap_buffers(b.get(), [](mg::Buffer*) {});
 
     done->Run();
 }
@@ -493,19 +425,30 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_release_buffers_called(session->name());
+    if (request->has_id())
+    {
+        auto stream_id = mf::BufferStreamId{request->id().value()};
+        try
+        {
+            auto stream = session->get_buffer_stream(stream_id);
+            for (auto i = 0; i < request->buffers().size(); i++)
+            {
+                mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
+                stream->disassociate_buffer(buffer_id);
+            }
+        }
+        catch(...)
+        {
+        }
+    }
     for (auto i = 0; i < request->buffers().size(); i++)
     {
         mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-        if (request->has_id())
-        {
-            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-            stream->disassociate_buffer(buffer_id);
-        }
         session->destroy_buffer(buffer_id);
     }
    done->Run();
 }
- 
+
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -522,12 +465,11 @@ void mf::SessionMediator::release_surface(
 
     shell->destroy_surface(session, id);
 
-    auto default_stream = buffer_stream_tracker.default_stream(id);
-    if (default_stream.is_set())
+    auto it = legacy_default_stream_map.find(id);
+    if (it != legacy_default_stream_map.end())
     {
-        session->destroy_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_buffer_stream(default_stream.value());
-        buffer_stream_tracker.remove_default_stream(id);
+        session->destroy_buffer_stream(it->second);
+        legacy_default_stream_map.erase(it);
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -539,15 +481,17 @@ void mf::SessionMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    auto session = weak_session.lock();
+    {
+        auto session = weak_session.lock();
 
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_disconnect_called(session->name());
+        report->session_disconnect_called(session->name());
 
-    shell->close_session(session);
-    destroy_screencast_sessions();
+        shell->close_session(session);
+        destroy_screencast_sessions();
+    }
     weak_session.reset();
 
     done->Run();
@@ -608,6 +552,11 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(parent_id);
     // aux_rect is a special case (below)
+    COPY_IF_SET(aux_rect_placement_gravity);
+    COPY_IF_SET(surface_placement_gravity);
+    COPY_IF_SET(placement_hints);
+    COPY_IF_SET(aux_rect_placement_offset_x);
+    COPY_IF_SET(aux_rect_placement_offset_y);
     COPY_IF_SET(edge_attachment);
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -754,6 +703,21 @@ void mf::SessionMediator::confirm_base_display_configuration(
     done->Run();
 }
 
+void mf::SessionMediator::cancel_base_display_configuration_preview(
+    mir::protobuf::Void const* /*request*/,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->cancel_base_configuration_preview(session);
+
+    done->Run();
+}
+
 void mf::SessionMediator::create_screencast(
     const mir::protobuf::ScreencastParameters* parameters,
     mir::protobuf::Screencast* protobuf_screencast,
@@ -851,16 +815,7 @@ void mf::SessionMediator::create_buffer_stream(
 
     // TODO: Is it guaranteed we get the buffer usage we want?
     response->set_buffer_usage(request->buffer_usage());
-
-    advance_buffer(buffer_stream_id, *stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
-        [this, response, done, session]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            if (client_buffer)
-                pack_protobuf_buffer(*response->mutable_buffer(), client_buffer, msg_type);
-
-            done->Run();
-        });
+    done->Run();
 }
 
 void mf::SessionMediator::release_buffer_stream(
@@ -878,7 +833,6 @@ void mf::SessionMediator::release_buffer_stream(
     auto const id = BufferStreamId(request->value());
 
     session->destroy_buffer_stream(id);
-    buffer_stream_tracker.remove_buffer_stream(id);
 
     done->Run();
 }
@@ -1182,6 +1136,10 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+
+        dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
+                      convert_string_to_gamma_curve(src.gamma_green()),
+                      convert_string_to_gamma_curve(src.gamma_blue())};
     });
 
     return config;

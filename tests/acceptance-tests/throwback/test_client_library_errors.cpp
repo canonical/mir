@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/shared_library.h"
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/debug/surface.h"
@@ -33,6 +35,7 @@
 #include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -67,63 +70,78 @@ bool should_fail()
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *)
+public:
+    ConfigurableFailurePlatform(mcl::ClientContext* context)
+    {
+        mir::SharedLibrary dummy_client_module{mtf::client_platform("dummy.so")};
+        stub_platform =
+            dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context, nullptr);
+    }
+
+    void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*surface*/) override
+    {
+    }
+
+    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *surface) override
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::shared_ptr<EGLNativeWindowType>{};
+        return stub_platform->create_egl_native_window(surface);
     }
 
-    void populate(MirPlatformPackage&) const override
+    void populate(MirPlatformPackage& package) const override
     {
+        stub_platform->populate(package);
     }
 
-    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
+    MirPlatformMessage* platform_operation(MirPlatformMessage const* message) override
     {
-        return nullptr;
+        return stub_platform->platform_operation(message);
     }
 
-    MirPlatformType platform_type() const
+    MirPlatformType platform_type() const override
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return MirPlatformType::mir_platform_type_gbm;
     }
-    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
+    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override
     {
         if (should_fail<Method::create_buffer_factory, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<mtd::StubClientBufferFactory>();
+        return stub_platform->create_buffer_factory();
     }
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
     {
-        return std::shared_ptr<EGLNativeDisplayType>{};
+        return stub_platform->create_egl_native_display();
     }
-    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const
+    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer* buffer) const override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        return nullptr;
+        return stub_platform->convert_native_buffer(buffer);
     }
-    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    MirPixelFormat get_egl_pixel_format(EGLDisplay dpy, EGLConfig config) const override
     {
-        return mir_pixel_format_invalid;
+        return stub_platform->get_egl_pixel_format(dpy, config);
     }
+
+private:
+    mir::UniqueModulePtr<mcl::ClientPlatform> stub_platform;
 };
 
 template<Method failure_set>
 class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
 {
     std::shared_ptr<mir::client::ClientPlatform>
-    create_client_platform(mir::client::ClientContext* /*context*/) override
+    create_client_platform(mir::client::ClientContext* context) override
     {
         if (should_fail<Method::create_client_platform, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<ConfigurableFailurePlatform<failure_set>>();
+        return std::make_shared<ConfigurableFailurePlatform<failure_set>>(context);
     }
 };
 
@@ -194,7 +212,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
@@ -221,6 +245,27 @@ TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descriptors_on_error)
+{
+    using namespace testing;
+
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_THAT(connection, IsValid());
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
 namespace
 {
 void recording_surface_callback(MirSurface*, void* ctx)
@@ -238,7 +283,12 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
@@ -259,7 +309,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_THAT(connection, IsValid());
 
-    auto surface = mtf::make_any_surface(connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(
+        connection,
+        800, 600,
+        mir_pixel_format_xbgr_8888);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));

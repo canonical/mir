@@ -50,6 +50,14 @@ using namespace testing;
 
 namespace
 {
+char const* fd_connect_string(int fd)
+{
+    static char client_connect_string[32] = {0};
+
+    sprintf(client_connect_string, "fd://%d", fd);
+    return client_connect_string;
+}
+
 struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
     MockSessionAuthorizer()
@@ -221,14 +229,6 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
         return cv.wait_for(lock, timeout, [this]{ return called_back; });
     }
 
-    char const* fd_connect_string(int fd)
-    {
-        static char client_connect_string[32] = {0};
-
-        sprintf(client_connect_string, "fd://%d", fd);
-        return client_connect_string;
-    }
-
     MOCK_METHOD1(process_line, void(std::string const&));
 
     std::vector<std::shared_ptr<mf::Session>> list_providers_for(
@@ -284,8 +284,14 @@ void client_fd_callback(MirPromptSession*, size_t count, int const* fds, void* c
 
 struct DummyPromptProvider
 {
-    DummyPromptProvider(char const* connect_string, char const* app_name) :
-        connection{mir_connect_sync(connect_string, app_name)}
+    DummyPromptProvider(mir::Fd&& fd, char const* app_name) :
+        /* mir_connect_sync will take ownership of the fd, and close it as a part of
+         * mir_connection_release.
+         *
+         * There's no escape hatch for mir::Fd (nor can we safely add one),
+         * so dup() the file descriptor first.
+         */
+        connection{mir_connect_sync(fd_connect_string(dup(fd)), app_name)}
     {
         EXPECT_THAT(connection, NotNull());
     }
@@ -378,12 +384,12 @@ TEST_F(PromptSessionClientAPI,
     EXPECT_CALL(*the_mock_prompt_session_listener(),
         prompt_provider_added(_, IsSessionWithPid(expected_pid)));
 
-    DummyPromptProvider{fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__};
+    DummyPromptProvider{std::move(actual_fds[0]), __PRETTY_FUNCTION__};
 
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
+TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -524,8 +530,8 @@ TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, no_of_prompt_providers, &client_fd_callback, this));
 
-    DummyPromptProvider provider1{fd_connect_string(actual_fds[0]), provider_name[0]};
-    DummyPromptProvider provider2{fd_connect_string(actual_fds[1]), provider_name[1]};
+    DummyPromptProvider provider1{std::move(actual_fds[0]), provider_name[0]};
+    DummyPromptProvider provider2{std::move(actual_fds[1]), provider_name[1]};
 
     EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(
         SessionWithName(provider_name[0]), SessionWithName(provider_name[1])));
@@ -589,8 +595,8 @@ TEST_F(PromptSessionClientAPI,
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, no_of_prompt_providers, &client_fd_callback, this));
 
-    DummyPromptProvider provider1{fd_connect_string(actual_fds[0]), provider_name[0]};
-    DummyPromptProvider provider2{fd_connect_string(actual_fds[1]), provider_name[1]};
+    DummyPromptProvider provider1{std::move(actual_fds[0]), provider_name[0]};
+    DummyPromptProvider provider2{std::move(actual_fds[1]), provider_name[1]};
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -624,7 +630,7 @@ TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt
 #ifndef TEST
 int main()
 #else
-TEST(LP, DISABLED_1540731)
+TEST(LP, 1540731)
 #endif
 {
     enum { server, client, size };

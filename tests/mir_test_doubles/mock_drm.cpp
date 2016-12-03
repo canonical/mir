@@ -155,7 +155,8 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
                                           uint32_t encoder_id,
                                           std::vector<drmModeModeInfo>& modes,
                                           std::vector<uint32_t>& possible_encoder_ids,
-                                          geom::Size const& physical_size)
+                                          geom::Size const& physical_size,
+                                          drmModeSubPixel subpixel_arrangement)
 {
     drmModeConnector connector = drmModeConnector();
 
@@ -169,6 +170,7 @@ void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
     connector.count_encoders = possible_encoder_ids.size();
     connector.mmWidth = physical_size.width.as_uint32_t();
     connector.mmHeight = physical_size.height.as_uint32_t();
+    connector.subpixel = subpixel_arrangement;
 
     connectors.push_back(connector);
 }
@@ -326,6 +328,18 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 {
     return global_mock->drmModeSetCrtc(fd, crtcId, bufferId, x, y,
                                        connectors, count, mode);
+}
+
+int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcGetGamma(fd, crtc_id, size, red, green, blue);
+}
+
+int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
+                        uint16_t* red, uint16_t* green, uint16_t* blue)
+{
+    return global_mock->drmModeCrtcSetGamma(fd, crtc_id, size, red, green, blue);
 }
 
 void drmModeFreeResources(drmModeResPtr ptr)

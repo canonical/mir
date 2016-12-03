@@ -21,9 +21,9 @@
 
 #include <chrono>
 #include <cstdint>
+#include <vector>
 
 #include "mir/events/input_event.h"
-#include "mir/cookie/blob.h"
 
 struct MirKeyboardEvent : MirInputEvent
 {
@@ -50,20 +50,8 @@ struct MirKeyboardEvent : MirInputEvent
     std::chrono::nanoseconds event_time() const;
     void set_event_time(std::chrono::nanoseconds const& event_time);
 
-    mir::cookie::Blob cookie() const;
-    void set_cookie(mir::cookie::Blob const& cookie);
-
-private:
-    int32_t device_id_{-1};
-    int32_t source_id_{-1};
-    MirKeyboardAction action_;
-    MirInputEventModifiers modifiers_{0};
-
-    int32_t key_code_{0};
-    int32_t scan_code_{0};
-
-    std::chrono::nanoseconds event_time_{0};
-    mir::cookie::Blob cookie_;
+    std::vector<uint8_t> cookie() const;
+    void set_cookie(std::vector<uint8_t> const& cookie);
 };
 
 #endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */

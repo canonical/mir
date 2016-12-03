@@ -28,7 +28,7 @@ namespace test
 {
 namespace doubles
 {
-struct StubAndroidNativeBuffer : public graphics::NativeBuffer
+struct StubAndroidNativeBuffer : public graphics::android::NativeBuffer
 {
     StubAndroidNativeBuffer()
     {
@@ -41,17 +41,20 @@ struct StubAndroidNativeBuffer : public graphics::NativeBuffer
     }
 
     auto anwb() const -> ANativeWindowBuffer* override { return const_cast<ANativeWindowBuffer*>(&stub_anwb); }
-    auto handle() const -> buffer_handle_t override { return &native_handle; }
+    auto handle() const -> buffer_handle_t override { return native_handle.get(); }
     auto copy_fence() const -> graphics::android::NativeFence override { return -1; }
 
     void ensure_available_for(graphics::android::BufferAccess) {}
+    bool ensure_available_for(graphics::android::BufferAccess, std::chrono::milliseconds) { return true; }
     void update_usage(graphics::android::NativeFence&, graphics::android::BufferAccess) {}
+    void reset_fence() {}
 
     void lock_for_gpu() {};
     void wait_for_unlock_by_gpu() {};
 
     ANativeWindowBuffer stub_anwb;
-    native_handle_t native_handle;
+    std::unique_ptr<native_handle_t> native_handle =
+        std::make_unique<native_handle_t>();
 };
 }
 }

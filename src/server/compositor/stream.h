@@ -44,6 +44,7 @@ public:
     Stream(
         FrameDroppingPolicyFactory const& policy_factory,
         std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+    ~Stream();
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -56,6 +57,7 @@ public:
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
+    bool framedropping() const override;
     void drop_outstanding_requests() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;

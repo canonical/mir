@@ -21,7 +21,7 @@
 #define MIR_REPORT_LOGGING_DISPLAY_REPORTER_H_
 
 #include "mir/graphics/display_report.h"
-#include "mir/time/clock.h"
+#include "mir/graphics/frame.h"
 
 #include <unordered_map>
 #include <memory>
@@ -33,6 +33,7 @@ namespace logging
 {
 class Logger;
 }
+namespace graphics { struct Frame; }
 namespace report
 {
 namespace logging
@@ -45,8 +46,7 @@ class DisplayReport : public graphics::DisplayReport
     static const char* component();
 
     DisplayReport(
-        std::shared_ptr<mir::logging::Logger> const& logger,
-        std::shared_ptr<time::Clock> const& clock);
+        std::shared_ptr<mir::logging::Logger> const& logger);
 
     virtual ~DisplayReport();
 
@@ -55,7 +55,7 @@ class DisplayReport : public graphics::DisplayReport
     virtual void report_successful_egl_buffer_swap_on_construction() override;
     virtual void report_successful_drm_mode_set_crtc_on_construction() override;
     virtual void report_successful_display_construction() override;
-    virtual void report_vsync(unsigned int display_id) override;
+    virtual void report_vsync(unsigned int output_id, graphics::Frame const&) override;
     virtual void report_drm_master_failure(int error) override;
     virtual void report_vt_switch_away_failure() override;
     virtual void report_vt_switch_back_failure() override;
@@ -67,10 +67,8 @@ class DisplayReport : public graphics::DisplayReport
 
   private:
     std::shared_ptr<mir::logging::Logger> const logger;
-    std::shared_ptr<time::Clock> const clock;
     std::mutex vsync_event_mutex;
-    mir::time::Timestamp last_report;
-    std::unordered_map<unsigned int, unsigned int> event_map;
+    std::unordered_map<unsigned int, mir::graphics::Frame> prev_frame;
 };
 }
 }

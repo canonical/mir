@@ -340,3 +340,19 @@ void mir::GLibMainLoop::handle_exception(std::exception_ptr const& e)
     main_loop_exception = e;
     stop();
 }
+
+void mir::GLibMainLoop::spawn(std::function<void()>&& work)
+{
+    auto const action_with_exception_handling =
+        [this, action = std::move(work)]
+        {
+            try { action(); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
+    detail::add_server_action_gsource(
+        main_context,
+        nullptr,
+        action_with_exception_handling,
+        [](auto) { return true; });
+}

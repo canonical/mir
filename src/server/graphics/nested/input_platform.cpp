@@ -30,7 +30,6 @@
 #include "mir/input/device_capability.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
-#include "mir/events/event_private.h"
 
 #include <chrono>
 
@@ -85,23 +84,22 @@ public:
         case mir_input_event_type_touch:
             {
                 auto const* touch_event = mir_input_event_get_touch_event(event);
-                auto new_event = builder->touch_event(event_time);
+                auto point_count = mir_touch_event_point_count(touch_event);
+                std::vector<mir::events::ContactState> contacts(point_count);
 
                 for (int i = 0, point_count = mir_touch_event_point_count(touch_event); i != point_count; ++i)
                 {
-                    builder->add_touch(
-                        *new_event,
-                        mir_touch_event_id(touch_event, i),
-                        mir_touch_event_action(touch_event, i),
-                        mir_touch_event_tooltype(touch_event, i),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_x),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_y),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_pressure),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_major),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_minor),
-                        mir_touch_event_axis_value(touch_event, i, mir_touch_axis_size));
+                    auto & contact = contacts[i];
+                    contact.touch_id = mir_touch_event_id(touch_event, i);
+                    contact.action = mir_touch_event_action(touch_event, i);
+                    contact.tooltype = mir_touch_event_tooltype(touch_event, i);
+                    contact.x = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_x);
+                    contact.y = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_y);
+                    contact.pressure = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_pressure);
+                    contact.touch_major = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_major);
+                    contact.touch_minor = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_minor);
                 }
-                destination->handle_input(*new_event);
+                destination->handle_input(*builder->touch_event(event_time, contacts));
                 break;
             }
         case mir_input_event_type_key:
@@ -120,20 +118,20 @@ public:
         case mir_input_event_type_pointer:
             {
                 auto const* pointer_event = mir_input_event_get_pointer_event(event);
+                auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
+                auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
                 auto new_event = builder->pointer_event(
                         event_time,
                         mir_pointer_event_action(pointer_event),
                         mir_pointer_event_buttons(pointer_event),
+                        x + frame.top_left.x.as_int(),
+                        y + frame.top_left.y.as_int(),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_x),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_y)
                         );
 
-                auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
-                auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-                new_event->to_input()->to_motion()->set_x(0, x + frame.top_left.x.as_int());
-                new_event->to_input()->to_motion()->set_y(0, y + frame.top_left.y.as_int());
                 destination->handle_input(*new_event);
                 break;
             }
@@ -217,6 +215,7 @@ void mgn::InputPlatform::start()
 
             if (event_type == mir_event_type_input)
             {
+                std::lock_guard<std::mutex> lock(devices_guard);
                 auto const* input_ev = mir_event_get_input_event(&event);
                 auto const id = mir_input_event_get_device_id(input_ev);
                 auto it = devices.find(id);
@@ -228,12 +227,13 @@ void mgn::InputPlatform::start()
                 {
                     unknown_device_events[id].emplace_back(
                         std::piecewise_construct,
-                        std::forward_as_tuple(event.clone(), [](MirEvent* e){delete e;}),
+                        std::forward_as_tuple(mir::events::clone_event(event)),
                         std::forward_as_tuple(area));
                 }
             }
             else if (event_type == mir_event_type_input_device_state)
             {
+                std::lock_guard<std::mutex> lock(devices_guard);
                 if (!devices.empty())
                 {
                     auto const* device_state = mir_event_get_input_device_state_event(&event);
@@ -245,9 +245,13 @@ void mgn::InputPlatform::start()
                         {
                             auto dest = it->second->destination;
                             auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
-                            auto const* scan_codes = mir_input_device_state_event_device_pressed_keys(device_state, index);
+                            std::vector<uint32_t> scan_codes;
+                            for (uint32_t i = 0; i < key_count; i++)
+                            {
+                                scan_codes.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+                            }
 
-                            dest->key_state({scan_codes, scan_codes + key_count});
+                            dest->key_state(scan_codes);
                             dest->pointer_state(
                                 mir_input_device_state_event_device_pointer_buttons(device_state, index));
                         }
@@ -270,6 +274,7 @@ void mgn::InputPlatform::stop()
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> empty_event_callback;
     connection->set_input_event_callback(empty_event_callback);
 
+    std::lock_guard<std::mutex> lock(devices_guard);
     for(auto const& device : devices)
         input_device_registry->remove_device(device.second);
 

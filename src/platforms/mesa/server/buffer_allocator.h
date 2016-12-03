@@ -22,6 +22,7 @@
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"
@@ -52,8 +53,6 @@ public:
 
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
-
-    std::unique_ptr<Buffer> reconstruct_from(MirBufferPackage* package, MirPixelFormat format);
 
 private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(

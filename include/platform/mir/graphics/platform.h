@@ -29,6 +29,8 @@ namespace mir
 {
 class EmergencyCleanupRegistry;
 
+namespace logging { class Logger; }
+
 namespace frontend
 {
 class Surface;
@@ -114,7 +116,8 @@ enum PlatformPriority : uint32_t
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
@@ -132,6 +135,12 @@ typedef mir::ModuleProperties const*(*DescribeModule)();
 
 extern "C"
 {
+#if defined(__clang__)
+#pragma clang diagnostic push
+// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+// (We don't want a warning for doing this intentionally.)
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 
 /**
  * Function prototype used to return a new host graphics platform. The host graphics platform
@@ -148,7 +157,8 @@ extern "C"
 mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
 
 /**
  * Function prototype used to return a new guest graphics platform. The guest graphics platform
@@ -183,6 +193,10 @@ void add_graphics_platform_options(
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 }
 
 #endif // MIR_GRAPHICS_PLATFORM_H_

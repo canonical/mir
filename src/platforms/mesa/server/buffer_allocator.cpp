@@ -23,6 +23,8 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
+#include "software_buffer.h"
+#include "gbm_format_conversions.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -287,11 +289,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     auto shm_file =
         std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
-    auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
-                                    buffer_properties.format);
-
-    return buffer;
+    return std::make_shared<mgm::SoftwareBuffer>(
+        std::move(shm_file),
+        buffer_properties.size,
+        buffer_properties.format);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
@@ -318,34 +319,4 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
     };
 
     return pixel_formats;
-}
-
-std::unique_ptr<mg::Buffer> mgm::BufferAllocator::reconstruct_from(
-    MirBufferPackage* package,
-    MirPixelFormat format)
-{
-    if (package->fd_items != 1)
-        BOOST_THROW_EXCEPTION(std::logic_error("Failed to create mgm::Buffer from invalid MirBufferPackage"));
-
-    gbm_import_fd_data data;
-    data.fd = package->fd[0];
-    data.width  = package->width;
-    data.height = package->height; 
-    data.stride = package->stride;
-    data.format = format;
-
-    std::shared_ptr<gbm_bo> bo(
-        gbm_bo_import(device, GBM_BO_IMPORT_FD, &data, package->flags),
-        [](gbm_bo* bo){ gbm_bo_destroy(bo); });
-
-    if (!bo)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to import MirBufferPackage"));
-    }
-
-    return std::make_unique<mgm::GBMBuffer>(
-        bo,
-        package->flags,
-        std::make_unique<NativePixmapTextureBinder>(bo, egl_extensions));
 }

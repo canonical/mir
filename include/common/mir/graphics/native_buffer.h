@@ -19,22 +19,18 @@
 #ifndef MIR_GRAPHICS_NATIVE_BUFFER_H_
 #define MIR_GRAPHICS_NATIVE_BUFFER_H_
 
-#ifndef ANDROID
-#include <mir_toolkit/mir_native_buffer.h>
-#endif
-
 namespace mir
 {
 namespace graphics
 {
-
-#ifdef ANDROID
-//just a fwd dcl
-class NativeBuffer;
-#else
-typedef struct MirBufferPackage NativeBuffer;
-#endif
-
+class NativeBuffer
+{
+protected:
+    NativeBuffer() = default;
+    virtual ~NativeBuffer() = default;
+    NativeBuffer(NativeBuffer const&) = delete;
+    NativeBuffer operator=(NativeBuffer const&) = delete;
+};
 }
 }
 

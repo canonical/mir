@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/frame.h"
 #include "mir_toolkit/common.h"
 
 #include <gbm.h>
@@ -62,6 +63,8 @@ public:
     virtual bool has_cursor() const = 0;
 
     virtual void set_power_mode(MirPowerMode mode) = 0;
+    virtual void set_gamma(GammaCurves const& gamma) = 0;
+    virtual Frame last_frame() const = 0;
 
 protected:
     KMSOutput() = default;

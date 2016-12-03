@@ -18,10 +18,10 @@
 
 #include "egl_native_surface_interpreter.h"
 #include "sync_fence.h"
-#include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>
 #include <hardware/gralloc.h>
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
@@ -38,11 +38,11 @@ mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface&
 {
 }
 
-mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
+mga::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
-    auto buffer_to_driver = buffer->native_buffer_handle();
-
+    auto buffer_to_driver = mga::to_native_buffer_checked(buffer->native_buffer_handle());
+    
     ANativeWindowBuffer* anwb = buffer_to_driver->anwb();
     anwb->format = driver_pixel_format;
     return buffer_to_driver.get();
@@ -97,6 +97,5 @@ void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
 {
-    if (count > mir::frontend::client_buffer_cache_size)
-        surface.set_buffer_cache_size(count);
+    surface.set_buffer_cache_size(count);
 }

@@ -2,7 +2,6 @@ list(
   APPEND ANDROID_DIAGNOSTICS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_hardware_sanity.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/patterns.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/android_graphics_region_factory.cpp
 )
 
 add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
@@ -11,6 +10,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/include/test
   ${PROJECT_SOURCE_DIR}/tests/include
   ${PROJECT_SOURCE_DIR}/src/include/server

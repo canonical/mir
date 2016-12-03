@@ -10,6 +10,7 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
 check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
+check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
@@ -24,21 +25,13 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   # in the tests.
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
+if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+  # INSTANTIATE_TEST_CASE_P hits this like a slice of lemon wrapped around a large gold brick.
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
-
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   #avoid complaints about poor quality android headers
@@ -57,6 +50,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/test
+  ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 

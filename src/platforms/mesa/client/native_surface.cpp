@@ -20,12 +20,17 @@
 
 #include <cstring>
 
+#include "native_buffer.h"
 #include "mir/client_buffer.h"
 #include "mir/uncaught.h"
 
 #include "native_surface.h"
 
 namespace mclm=mir::client::mesa;
+
+#define THROW_IF_NULL(s) \
+    if (!(s)) \
+        throw std::logic_error("error: use_egl_native_window(...) has not yet been called");
 
 namespace
 {
@@ -50,7 +55,7 @@ static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interva
 }
 }
 
-mclm::NativeSurface::NativeSurface(EGLNativeSurface& surface)
+mclm::NativeSurface::NativeSurface(EGLNativeSurface* surface)
     : starting(true), surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
@@ -61,6 +66,8 @@ mclm::NativeSurface::NativeSurface(EGLNativeSurface& surface)
 int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
 try
 {
+    THROW_IF_NULL(surface);
+
     /*
      * At present dri2_create_mir_window_surface will trigger
      * mir_advance_colour_buffer which will land here. Since we're still
@@ -70,12 +77,15 @@ try
     if (starting)
         starting = false;
     else
-        surface.request_and_wait_for_next_buffer();
+        surface->request_and_wait_for_next_buffer();
 
-    auto buffer = surface.get_current_buffer();
+    auto buffer = surface->get_current_buffer();
 
-    auto buffer_to_driver = buffer->native_buffer_handle();
-    memcpy(buffer_package, buffer_to_driver.get(), sizeof(MirBufferPackage));
+    auto buffer_to_driver = std::dynamic_pointer_cast<mir::graphics::mesa::NativeBuffer>(
+        buffer->native_buffer_handle());
+    if (!buffer_to_driver)
+        return MIR_MESA_FALSE;
+    *buffer_package = *buffer_to_driver;
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)
@@ -87,7 +97,8 @@ catch (std::exception const& e)
 int mclm::NativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
 try
 {
-    auto params = surface.get_parameters();
+    THROW_IF_NULL(surface);
+    auto params = surface->get_parameters();
     memcpy(surface_parameters, &params, sizeof(MirSurfaceParameters));
     return MIR_MESA_TRUE;
 }
@@ -100,14 +111,21 @@ catch (std::exception const& e)
 int mclm::NativeSurface::set_swapinterval(int interval)
 try
 {
+    THROW_IF_NULL(surface);
+
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
-    surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    surface->request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)
 {
     MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return MIR_MESA_FALSE;
+}
+
+void mclm::NativeSurface::use_native_surface(EGLNativeSurface* native_surface)
+{
+    surface = native_surface;
 }

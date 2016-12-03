@@ -24,6 +24,7 @@
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -33,6 +34,37 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace msh = mir::shell;
+namespace geom = mir::geometry;
+
+namespace
+{
+
+struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
+{
+    UpdateConfinementOnSurfaceChanges(msh::AbstractShell* shell) :
+        shell(shell)
+    {
+    }
+
+    void resized_to(geom::Size const& /*size*/) override
+    {
+        update_confinement_region();
+    }
+
+    void moved_to(geom::Point const& /*top_left*/) override
+    {
+        update_confinement_region();
+    }
+
+private:
+    void update_confinement_region()
+    {
+        shell->update_focused_surface_confined_region();
+    }
+
+    msh::AbstractShell* shell;
+};
+}
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
@@ -48,12 +80,23 @@ msh::AbstractShell::AbstractShell(
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
-    report(report)
+    report(report),
+    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this))
 {
 }
 
 msh::AbstractShell::~AbstractShell() noexcept
 {
+}
+
+void msh::AbstractShell::update_focused_surface_confined_region()
+{
+    auto const current_focus = focus_surface.lock();
+
+    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_surface)
+    {
+        seat->set_confinement_regions({current_focus->input_bounds()});
+    }
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
@@ -118,7 +161,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
-    if (modifications.confine_pointer.is_set())
+    if (modifications.confine_pointer.is_set() && focused_surface() == surface)
     {
         if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
         {
@@ -245,7 +288,10 @@ void msh::AbstractShell::set_focus_to_locked(
         seat->reset_confinement_regions();
 
         if (current_focus)
+        {
             current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+            current_focus->remove_observer(focus_surface_observer);
+        }
 
         if (surface)
         {
@@ -258,6 +304,7 @@ void msh::AbstractShell::set_focus_to_locked(
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+            surface->add_observer(focus_surface_observer);
         }
         else
         {
@@ -313,6 +360,10 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 
     case mir_input_event_type_pointer:
         return window_manager->handle_pointer_event(mir_input_event_get_pointer_event(input_event));
+    
+    case mir_input_event_types:
+        abort();
+        return false;
     }
 
     return false;
@@ -329,3 +380,4 @@ void msh::AbstractShell::raise(SurfaceSet const& surfaces)
     surface_stack->raise(surfaces);
     report->surfaces_raised(surfaces);
 }
+

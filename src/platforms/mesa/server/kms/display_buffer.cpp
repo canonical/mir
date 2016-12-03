@@ -22,6 +22,8 @@
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
+#include "mir/log.h"
+#include "native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include MIR_SERVER_GL_H
@@ -151,7 +153,7 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     set_crtc(scheduled_composite_frame);
 
-    egl.release_current();
+    release_current();
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
@@ -197,7 +199,7 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
     area = a;
 }
 
-bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
+bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
        (bypass_option == mgm::BypassOption::allowed))
@@ -207,13 +209,13 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buffer = (*bypass_it)->buffer();
-            auto native = bypass_buffer->native_buffer_handle();
+            auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(bypass_buffer->native_buffer_handle());
+            if (!native)
+                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                auto gbm_native =
-                    static_cast<mgm::GBMNativeBuffer*>(native.get());
-                if (auto bufobj = get_buffer_object(gbm_native->bo))
+                if (auto bufobj = get_buffer_object(native->bo))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -246,8 +248,17 @@ void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
 {
     for (auto& output : outputs)
     {
+        /*
+         * Note that failure to set the CRTC is not a fatal error. This can
+         * happen under normal conditions when resizing VirtualBox (which
+         * actually removes and replaces the virtual output each time so
+         * sometimes it's really not there). Xorg often reports similar
+         * errors, and it's not fatal.
+         */
         if (!output->set_crtc(forced_frame->get_drm_fb_id()))
-            fatal_error("Failed to set DRM CRTC");
+            mir::log_error("Failed to set DRM CRTC. "
+                "Screen contents may be incomplete. "
+                "Try plugging the monitor in again.");
     }
 }
 
@@ -274,19 +285,17 @@ void mgm::DisplayBuffer::post()
     }
 
     /*
-     * Schedule the current front buffer object for display, and wait
-     * for it to be actually displayed (flipped).
-     *
-     * If the flip fails, release the buffer object to make it available
-     * for future rendering.
+     * Try to schedule a page flip as first preference to avoid tearing.
+     * [will complete in a background thread]
      */
     if (!needs_set_crtc && !schedule_page_flip(bufobj))
-    {
-        if (!bypass_buf)
-            bufobj->release();
-        fatal_error("Failed to schedule page flip");
-    }
-    else if (needs_set_crtc)
+        needs_set_crtc = true;
+
+    /*
+     * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
+     * to need to do this on every frame. [will complete in this thread]
+     */
+    if (needs_set_crtc)
     {
         set_crtc(bufobj);
         needs_set_crtc = false;

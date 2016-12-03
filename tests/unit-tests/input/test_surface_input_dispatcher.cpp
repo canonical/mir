@@ -264,7 +264,7 @@ TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
     FakeKeyboard keyboard;
     auto event = keyboard.press();
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(ByRef(*event)))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
 
     dispatcher.start();
 
@@ -372,30 +372,6 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_button_down)
     EXPECT_TRUE(dispatcher.dispatch(*ev_1));
     EXPECT_TRUE(dispatcher.dispatch(*ev_2));
     EXPECT_TRUE(dispatcher.dispatch(*ev_3));
-}
-
-TEST_F(SurfaceInputDispatcher, gestures_terminated_by_device_reset)
-{
-    auto surface = scene.add_surface({{0, 0}, {5, 5}});
-    auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
-
-    MirInputDeviceId device_id{1};
-    FakePointer pointer(device_id);
-    auto ev_1 = pointer.press_button({0, 0});
-    auto ev_2 = pointer.move_to({6, 6});
-
-    InSequence seq;
-    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*surface, consume(mt::ButtonDownEvent(0,0))).Times(1);
-    EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
-    EXPECT_CALL(*another_surface, consume(mt::PointerEventWithPosition(1, 1))).Times(1);
-    
-    dispatcher.start();
-
-    EXPECT_TRUE(dispatcher.dispatch(*ev_1));
-    EXPECT_TRUE(dispatcher.dispatch(
-        *mev::make_event(mir_input_configuration_action_device_reset, device_id, std::chrono::nanoseconds{1})));
-    EXPECT_TRUE(dispatcher.dispatch(*ev_2));
 }
 
 TEST_F(SurfaceInputDispatcher, pointer_gestures_may_transfer_over_buttons)
@@ -558,26 +534,6 @@ TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_release_all_touches)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touches_at({5, 5}, {6, 6})));
     EXPECT_TRUE(dispatcher.dispatch(*toucher.releases_at({5, 5}, {6, 6})));
     EXPECT_FALSE(dispatcher.dispatch(*toucher.move_to({5, 6})));
-}
-
-TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
-{
-    auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
-    auto right_surface = scene.add_surface({{1, 1}, {1, 1}});
-
-    MirInputDeviceId device_id{1};
-    FakeToucher toucher(device_id);
-
-    InSequence seq;
-    EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0))).Times(1);
-    EXPECT_CALL(*right_surface, consume(mt::TouchEvent(0, 0))).Times(1);
-
-    dispatcher.start();
-    
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
-    EXPECT_TRUE(dispatcher.dispatch(
-        *mev::make_event(mir_input_configuration_action_device_reset, device_id, std::chrono::nanoseconds{1})));
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({1, 1})));
 }
 
 TEST_F(SurfaceInputDispatcher, touch_gesture_target_may_vanish_but_things_continue_to_function_as_intended)

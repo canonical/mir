@@ -18,12 +18,15 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_buffer_private.h"
 #include "presentation_chain.h"
 #include "mir_connection.h"
 #include "buffer.h"
+#include "mir/client_buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
+#include "mir/client_buffer.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -46,11 +49,13 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void ignore(MirBuffer*, void*){}
 void mir_buffer_release(MirBuffer* b) 
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    buffer->set_callback(ignore, nullptr);
     auto connection = buffer->allocating_connection();
     connection->release_buffer(buffer);
 }
@@ -59,7 +64,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
+int mir_buffer_get_fence(MirBuffer* b)
 try
 {
     mir::require(b);
@@ -69,15 +74,15 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
+    return mir::Fd::invalid;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
+void mir_buffer_associate_fence(MirBuffer* b, int fence, MirBufferAccess access)
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    buffer->set_fence(fence, access);
+    buffer->set_fence(mir::Fd(fence), access);
 }
 catch (std::exception const& ex)
 {
@@ -89,27 +94,13 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout));
+     
+    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout)) ? 0 : -1;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return -1;
-}
-
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer* b, MirBufferAccess access) 
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-    return buffer->as_mir_native_buffer();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
 }
 
 MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
@@ -211,6 +202,35 @@ try
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->set_callback(available_callback, available_context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->client_buffer()->package();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+void mir_buffer_egl_image_parameters(
+    MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
+try
+{
+    mir::require(b);
+    mir::require(type);
+    mir::require(client_buffer);
+    mir::require(attr);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->client_buffer()->egl_image_creation_parameters(type, client_buffer, attr);
 }
 catch (std::exception const& ex)
 {

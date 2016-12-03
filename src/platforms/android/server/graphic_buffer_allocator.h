@@ -20,6 +20,7 @@
 #ifndef MIR_PLATFORM_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 #define MIR_PLATFORM_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 
+#include <cstddef>  // to fix missing #includes in graphics.h from hardware.h
 #include <hardware/hardware.h>
 #include "mir_toolkit/mir_native_buffer.h" 
 
@@ -49,8 +50,6 @@ public:
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
-
-    std::unique_ptr<graphics::Buffer> reconstruct_from(MirNativeBuffer* anwb, MirPixelFormat);
 
     std::shared_ptr<graphics::Buffer> alloc_framebuffer(
         geometry::Size sz, MirPixelFormat pf);

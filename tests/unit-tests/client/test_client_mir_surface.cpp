@@ -108,24 +108,15 @@ struct MockServerPackageGenerator : public mt::StubServerTool
     void release_surface(
         const mir::protobuf::SurfaceId*,
         mir::protobuf::Void*,
-        google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-
-    void exchange_buffer(
-        mir::protobuf::BufferRequest const* /*request*/,
-        mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override
     {
-        create_buffer_response(response);
         done->Run();
     }
 
     void modify_surface(
         const mir::protobuf::SurfaceModifications*, 
         mir::protobuf::Void*,
-        google::protobuf::Closure* done)
+        google::protobuf::Closure* done) override
     {
         done->Run();
     }

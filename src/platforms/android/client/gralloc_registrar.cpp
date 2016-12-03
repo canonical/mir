@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform_ipc_operations.h"
 #include "egl_sync_fence.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
@@ -61,7 +62,7 @@ mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_mod
 
 namespace
 {
-std::shared_ptr<mg::NativeBuffer> create_native_buffer(
+std::shared_ptr<mga::NativeBuffer> create_native_buffer(
     std::shared_ptr<const native_handle_t> const& handle,
     std::shared_ptr<mga::Fence> const& fence,
     MirBufferPackage const& package,
@@ -87,12 +88,11 @@ std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     return std::make_shared<mga::AndroidNativeBuffer>(anwb, sync, fence, mga::BufferAccess::read);
 }
 }
-std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
+std::shared_ptr<mga::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     MirBufferPackage const& package,
     MirPixelFormat pf) const
 {
-    bool const fence_present{package.data[0] == static_cast<int>(mga::BufferFlag::fenced)};
-    int const mir_flag_offset{1};
+    auto fence_present = package.flags & mir_buffer_flag_fenced;
 
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
@@ -118,9 +118,9 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
             handle->data[i] = package.fd[i];
     }
 
-    handle->numInts = package.data_items - mir_flag_offset;
+    handle->numInts = package.data_items;
     for (auto i = 0; i < handle->numInts; i++)
-        handle->data[handle->numFds+i] = package.data[i + mir_flag_offset];
+        handle->data[handle->numFds+i] = package.data[i];
 
     if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
@@ -133,7 +133,7 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
 }
 
 std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
-    std::shared_ptr<mg::NativeBuffer> const& handle,
+    std::shared_ptr<mga::NativeBuffer> const& handle,
     geometry::Rectangle const rect)
 {
     char* vaddr;

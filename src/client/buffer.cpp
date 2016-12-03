@@ -90,17 +90,12 @@ MirGraphicsRegion mcl::Buffer::map_region()
     };
 }
 
-MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
-{
-    return buffer->as_mir_native_buffer();
-}
-
-void mcl::Buffer::set_fence(MirNativeFence* native_fence, MirBufferAccess access)
+void mcl::Buffer::set_fence(mir::Fd native_fence, MirBufferAccess access)
 {
     buffer->set_fence(native_fence, access);
 }
 
-MirNativeFence* mcl::Buffer::get_fence() const
+mir::Fd mcl::Buffer::get_fence() const
 {
     return buffer->get_fence();
 }

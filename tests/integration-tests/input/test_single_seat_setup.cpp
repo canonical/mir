@@ -26,6 +26,8 @@
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/mock_seat_report.h"
+#include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -80,15 +82,17 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
+    NiceMock<mtd::MockSeatReport> mock_seat_report;
+    NiceMock<mtd::MockServerStatusListener> mock_status_listener;
     mi::receiver::XKBMapper key_mapper;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
     mi::BasicSeat seat{
         mt::fake_shared(mock_dispatcher),mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock)};
+        mt::fake_shared(mock_region), mt::fake_shared(key_mapper), mt::fake_shared(clock), mt::fake_shared(mock_seat_report)};
     mi::DefaultInputDeviceHub hub{
         mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
-        cookie_authority, mt::fake_shared(key_mapper)};
+        cookie_authority, mt::fake_shared(key_mapper), mt::fake_shared(mock_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
 
     mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;
@@ -147,25 +151,23 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
 
     observer_loop.trigger_server_actions();
 
-    auto touch_event_1 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_1 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_2 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f,
-                       15.0f, 5.0f, 4.0f);
-    builder->add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_2 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_3 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
-    builder->add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f,
-                       15.0f, 5.0f, 4.0f);
+    auto touch_event_3 = builder->touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_4 = builder->touch_event(arbitrary_timestamp);
-    builder->add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f,
-                       5.0f, 4.0f);
+    auto touch_event_4 = builder->touch_event(
+        arbitrary_timestamp,
+        {{1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f, 5.0f, 4.0f}});
 
 
     using Spot = mi::TouchVisualizer::Spot;

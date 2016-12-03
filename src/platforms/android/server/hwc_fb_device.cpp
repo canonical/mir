@@ -86,7 +86,7 @@ void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
     }
 
     auto& buffer = *context.last_rendered_buffer();
-    auto native_buffer = buffer.native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer.native_buffer_handle());
     native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
@@ -98,7 +98,7 @@ void mga::HwcFbDevice::commit(std::list<DisplayContents> const& contents)
     vsync_trigger.wait(lk, [this]{return vsync_occurred;});
 }
 
-void mga::HwcFbDevice::notify_vsync(mga::DisplayName, std::chrono::nanoseconds)
+void mga::HwcFbDevice::notify_vsync(mga::DisplayName, mg::Frame::Timestamp)
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
     vsync_occurred = true;

@@ -5,6 +5,16 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+if (MIR_TEST_PLATFORM STREQUAL "android")
+  add_definitions(-DANDROID)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+  add_definitions(-DMESA_KMS)
+endif()
+if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  add_definitions(-DMESA_X11)
+endif()
+
 mir_add_wrapped_executable(mir_glmark2_performance_test
   test_glmark2-es2-mir.cpp
 )
@@ -17,11 +27,16 @@ target_link_libraries(mir_glmark2_performance_test
   ${GTEST_BOTH_LIBRARIES}
 )
 
+add_library(mir_system_performance_test STATIC
+  system_performance_test.cpp
+)
+
 mir_add_wrapped_executable(mir_compositor_performance_test
   test_compositor.cpp
 )
 target_link_libraries(mir_compositor_performance_test
   ${GTEST_BOTH_LIBRARIES}
+  mir_system_performance_test
 )
 
 mir_add_wrapped_executable(mir_client_startup_performance_test

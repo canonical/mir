@@ -18,6 +18,10 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+
+// TODO Remove me once we use capnproto for input platform serialization
+#include "mir/cookie/blob.h"
+
 #include "mir/cookie/cookie.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
@@ -26,6 +30,7 @@
 #include "mir_toolkit/mir_cookie.h"
 
 #include "../mir_cookie.h"
+#include "../handle_event_exception.h"
 
 #include <string.h>
 
@@ -91,7 +96,7 @@ MirInputEventType type_from_device_class(int32_t source_class)
 }
 }
 
-MirInputEventType mir_input_event_get_type(MirInputEvent const* ev)
+MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (ev->type() != mir_event_type_key && ev->type() != mir_event_type_motion)
     {
@@ -108,9 +113,9 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev)
     default:
         abort();
     }
-}
+})
 
-MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
+MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(mir_event_get_type(ev) != mir_event_type_input)
     {
@@ -127,9 +132,9 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
     default:
         abort();
     }
-}
+})
 
-int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
+int64_t mir_input_event_get_event_time(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(mir_event_get_type(ev) != mir_event_type_input)
     {
@@ -146,7 +151,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     default:
         abort();
     }
-}
+})
 
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 {
@@ -177,33 +182,33 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
     return reinterpret_cast<MirKeyboardEvent const*>(ev);
 }
 
-MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
+MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return kev->action();
-}
+})
 
-xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)
+xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return kev->key_code();
-}
+})
 
-int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev)
+int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return kev->scan_code();
-}
+})
 
-MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
+MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {    
     return kev->modifiers();
-}
+})
 /* Touch event accessors */
 
-MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev)
+MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) MIR_HANDLE_EVENT_EXCEPTION(
 {    
     return tev->to_motion()->modifiers();
-}
+})
 
-MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
+MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
     {
@@ -213,14 +218,14 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev)
     }
 
     return reinterpret_cast<MirTouchEvent const*>(ev);
-}
+})
 
-unsigned int mir_touch_event_point_count(MirTouchEvent const* event)
+unsigned int mir_touch_event_point_count(MirTouchEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return event->to_motion()->pointer_count();
-}
+})
 
-MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (touch_index >= event->to_motion()->pointer_count())
     {
@@ -229,9 +234,9 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
     }
 
     return event->to_motion()->id(touch_index);
-}
+})
 
-MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index)
+MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -240,10 +245,10 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
     }
     
     return static_cast<MirTouchAction>(event->to_motion()->action(touch_index));
-}
+})
 
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
-    size_t touch_index)
+    size_t touch_index) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -252,10 +257,10 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     }
 
     return event->to_motion()->tool_type(touch_index);
-}
+})
 
 float mir_touch_event_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis)
+    size_t touch_index, MirTouchAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(touch_index > event->to_motion()->pointer_count())
     {
@@ -281,11 +286,11 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
     default:
         return -1;
     }
-}                                                                            
+})
 
 /* Pointer event accessors */
 
-MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev)
+MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_pointer)
     {
@@ -295,30 +300,30 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     }
 
     return reinterpret_cast<MirPointerEvent const*>(ev);
-}
+})
 
-MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev)
+MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {    
     return pev->to_motion()->modifiers();
-}
+})
 
-MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev)
+MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {    
     return static_cast<MirPointerAction>(pev->to_motion()->action(0));
-}
+})
 
 bool mir_pointer_event_button_state(MirPointerEvent const* pev,
-    MirPointerButton button)
+    MirPointerButton button) MIR_HANDLE_EVENT_EXCEPTION(
 {
    return pev->to_motion()->buttons() & button;
-}
+})
 
-MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev)
+MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {
    return pev->to_motion()->buttons();
-}
+})
 
-float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis)
+float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
 {
    auto mev = pev->to_motion();
    switch (axis)
@@ -339,9 +344,9 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
    }
-}
+})
 
-bool mir_input_event_has_cookie(MirInputEvent const* ev)
+bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     switch (mir_input_event_get_type(ev))
     {
@@ -369,20 +374,20 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
             }
             break;
         }
+        case mir_input_event_types:
+            abort();
+            break;
     }
 
     return false;
-}
+})
 
-size_t mir_cookie_buffer_size(MirCookie const* cookie) try
+size_t mir_cookie_buffer_size(MirCookie const* cookie) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return cookie->size();
-} catch (...)
-{
-    abort();
-}
+})
 
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     switch (iev->type())
     {
@@ -396,34 +401,22 @@ MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
         abort();
     }
     }
-} catch (...)
-{
-    abort();
-}
+})
 
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) try
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return cookie->copy_to(buffer, size);
-} catch (...)
-{
-    abort();
-}
+})
 
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
+MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (size != mir::cookie::default_blob_size)
         return NULL;
 
     return new MirCookie(buffer, size);
-} catch (...)
-{
-    abort();
-}
+})
 
-void mir_cookie_release(MirCookie const* cookie) try
+void mir_cookie_release(MirCookie const* cookie)
 {
     delete cookie;
-} catch (...)
-{
-    abort();
 }

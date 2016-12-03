@@ -29,9 +29,9 @@
 
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/renderer/gl/context.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -53,7 +53,7 @@ int errno_from_exception(std::exception const& e)
     return (errno_ptr != nullptr) ? *errno_ptr : -1;
 }
 
-class GBMGLContext : public mg::GLContext
+class GBMGLContext : public mir::renderer::gl::Context
 {
 public:
     GBMGLContext(mgm::helpers::GBMHelper const& gbm,
@@ -207,6 +207,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 if (!comp)
                 {
                     kms_output->set_power_mode(conf_output.power_mode);
+                    kms_output->set_gamma(conf_output.gamma);
                     kms_outputs.push_back(kms_output);
                 }
 
@@ -360,17 +361,22 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
             Display& display;
         };
 
-        cursor = locked_cursor = std::make_shared<Cursor>(gbm->device, output_container,
-            std::make_shared<KMSCurrentConfiguration>(*this),
-            initial_image);
+        try
+        {
+            locked_cursor = std::make_shared<Cursor>(gbm->device,
+                              output_container,
+                              std::make_shared<KMSCurrentConfiguration>(*this),
+                              initial_image);
+        }
+        catch (std::runtime_error const&)
+        {
+            // That's OK, we don't need a hardware cursor. Returning null
+            // is allowed and will trigger a fallback to software.
+        }
+        cursor = locked_cursor;
     }
 
     return locked_cursor;
-}
-
-std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
-{
-    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }
 
 void mgm::Display::clear_connected_unused_outputs()
@@ -390,6 +396,7 @@ void mgm::Display::clear_connected_unused_outputs()
 
             kms_output->clear_crtc();
             kms_output->set_power_mode(conf_output.power_mode);
+            kms_output->set_gamma(conf_output.gamma);
         }
     });
 }
@@ -397,4 +404,26 @@ void mgm::Display::clear_connected_unused_outputs()
 std::unique_ptr<mg::VirtualOutput> mgm::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
+}
+
+mg::NativeDisplay* mgm::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
+{
+    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
+}
+
+bool mgm::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& /*conf*/)
+{
+    return false;
+}
+
+mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
+{
+    auto output = output_container.get_kms_output_for(output_id);
+    return output->last_frame();
 }

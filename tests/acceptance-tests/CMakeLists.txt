@@ -7,6 +7,9 @@ include_directories(
 set(
   SOURCES
 
+  # Catch double-free bugs by wrapping close() and abort()ing on EBADF
+  strict_close.cpp
+
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
@@ -65,12 +68,14 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
 endif()
 
 add_subdirectory(throwback)
+add_subdirectory(staging)
 
 mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
   $<TARGET_OBJECTS:acceptance-test-throwback>
+  $<TARGET_OBJECTS:acceptance-test-staging>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -96,5 +101,4 @@ CMAKE_DEPENDENT_OPTION(
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
-  mir_discover_tests_with_fd_leak_detection_and_env(mir_acceptance_tests "MIR_SERVER_NBUFFERS=3")
 endif (MIR_RUN_ACCEPTANCE_TESTS)

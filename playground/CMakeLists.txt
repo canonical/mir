@@ -9,6 +9,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/examples/
 )
@@ -35,4 +36,25 @@ mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
 
 target_link_libraries(mir_demo_client_chain_jumping_buffers
     mirclient
+)
+
+mir_add_wrapped_executable(mir_demo_client_render_surface
+  render_surface.cpp
+)
+
+target_link_libraries(mir_demo_client_render_surface
+    mirclient
+    eglapp
+)
+
+mir_add_wrapped_executable(mir_demo_client_egldiamond_render_surface
+    egldiamond_render_surface.c
+    mir_egl_platform_shim.c
+    diamond.c
+)
+
+target_link_libraries(mir_demo_client_egldiamond_render_surface
+    mirclient
+    ${EGL_LIBRARIES}
+    ${GLESv2_LIBRARIES}
 )

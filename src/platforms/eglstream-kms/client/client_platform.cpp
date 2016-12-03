@@ -21,6 +21,7 @@
 #include "client_buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "native_buffer.h"
 
 #include <cstring>
 #include <boost/throw_exception.hpp>
@@ -38,7 +39,11 @@ std::shared_ptr<mcl::ClientBufferFactory> mcle::ClientPlatform::create_buffer_fa
     return std::make_shared<mcle::ClientBufferFactory>();
 }
 
-std::shared_ptr<void> mcle::ClientPlatform::create_egl_native_window(EGLNativeSurface* /*client_surface*/)
+void mcle::ClientPlatform::use_egl_native_window(std::shared_ptr<void> /*native_window*/, EGLNativeSurface* /*surface*/)
+{
+}
+
+std::shared_ptr<void> mcle::ClientPlatform::create_egl_native_window(EGLNativeSurface* /*surface*/)
 {
     return nullptr;
 }
@@ -64,8 +69,9 @@ MirPlatformMessage* mcle::ClientPlatform::platform_operation(MirPlatformMessage 
 
 MirNativeBuffer* mcle::ClientPlatform::convert_native_buffer(graphics::NativeBuffer* buf) const
 {
-    // Only buffers we currently support are ShmBuffers, which are type-compatible
-    return buf;
+    if (auto native = dynamic_cast<mir::graphics::eglstream::NativeBuffer*>(buf))
+        return native;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert to NativeBuffer")); 
 }
 
 
