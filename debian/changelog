@@ -1,4 +1,4 @@
-mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.25.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.25.0 (https://launchpad.net/mir/+milestone/0.25.0)
     - ABI summary:
@@ -99,7 +99,7 @@ mir (0.25.0-0ubuntu1) UNRELEASED; urgency=medium
       . googletest 1.8.0-2 (on zesty) breaks existing builds [add_library
         cannot create target "gmock" ...] (LP: #1644062)
 
- -- Brandon Schaefer <brandon.schaefer@canonical.com>  Mon, 07 Nov 2016 13:32:11 -0800
+ -- Brandon Schaefer <brandon.schaefer@canonical.com>  Sat, 03 Dec 2016 12:42:33 +0000
 
 mir (0.24.1+16.10.20160928-0ubuntu1) yakkety; urgency=medium
 
