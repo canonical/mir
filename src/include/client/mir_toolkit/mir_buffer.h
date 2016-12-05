@@ -36,7 +36,7 @@ extern "C" {
  *  It will be called once when created, and once per every
  *  mir_presentation_chain_submit_buffer.
  *
- *   \param [in] presentation_chain    The presentation chain
+ *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
  *   \param [in] height                Requested buffer height
  *   \param [in] buffer_usage          Requested buffer usage
