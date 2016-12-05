@@ -20,13 +20,21 @@
 #include "mir/shared_library.h"
 #include "mir/raii.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "src/client/mir_connection.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir_protobuf.pb.h"
+#include "mir_test_framework/stub_client_connection_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
+
+#include "gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -175,4 +183,93 @@ TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_sur
 {
     auto egl_native_window = platform->create_egl_native_window(nullptr);
     EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(MesaClientPlatformTest, can_allocate_buffer)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+    struct DummyChannel : mcl::rpc::MirBasicRpcChannel,
+        mir::dispatch::Dispatchable
+    {
+        void call_method(
+            std::string const&,
+            google::protobuf::MessageLite const*,
+            google::protobuf::MessageLite*,
+            google::protobuf::Closure* c) override
+        {
+            channel_call_count++;
+            c->Run();
+        }
+        mir::Fd watch_fd() const
+        {
+            int fd[2];
+            pipe(fd);
+            mir::Fd{fd[1]};
+            return mir::Fd{fd[0]};
+        }
+        bool dispatch(mir::dispatch::FdEvents)
+        {
+            return true;
+        }
+        mir::dispatch::FdEvents relevant_events() const { return {}; }
+        int channel_call_count = 0;
+    };
+    auto channel = std::make_shared<DummyChannel>();
+    struct StubConnection : mir_test_framework::StubConnectionConfiguration
+    {
+        StubConnection(
+            std::string str,
+            std::shared_ptr<DummyChannel> const& channel,
+            std::shared_ptr<mir::client::ClientPlatform> const& platform) :
+            mir_test_framework::StubConnectionConfiguration(str),
+            channel(channel),
+            platform(platform)
+        {
+        }
+
+        std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
+        {
+            struct StubPlatformFactory : mir::client::ClientPlatformFactory
+            {
+                StubPlatformFactory(std::shared_ptr<mir::client::ClientPlatform> const& platform) :
+                    platform(platform)
+                {
+                }
+
+                std::shared_ptr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext*) override
+                {
+                    return platform;
+                }
+                std::shared_ptr<mir::client::ClientPlatform> platform;
+            };
+            return std::make_shared<StubPlatformFactory>(platform);
+        }
+
+        std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> the_rpc_channel() override
+        {
+            return channel;
+        }
+        std::shared_ptr<DummyChannel> channel;
+        std::shared_ptr<mir::client::ClientPlatform> platform;
+    } conf(std::string{}, channel, platform);
+
+    MirConnection connection(conf);
+    mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+
+    int width = 32;
+    int height = 90;
+    auto ext = static_cast<MirExtensionGbmBuffer*>(
+        platform->request_interface(
+            MIR_EXTENSION_GBM_BUFFER,MIR_EXTENSION_GBM_BUFFER_VERSION_1));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_gbm, Ne(nullptr));
+
+    auto call_count = channel->channel_call_count;
+    ext->allocate_buffer_gbm(
+        &connection,
+        width, height,
+        GBM_FORMAT_ARGB8888, 0,
+        [] (::MirBuffer*, void*) {}, nullptr);
+    EXPECT_THAT(channel->channel_call_count, Eq(call_count + 1));
 }
