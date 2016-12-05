@@ -98,7 +98,7 @@ public:
     // Provide a functional version of eglSwapBuffers on stubbed platforms
     // When enabled, if an instance of mir::client::EGLNativeSurface is passed to
     // eglCreateWindowSurface, then the returned EGLSurface can be used with
-    // eglSwapBuffers to invoke EGLNativeSurface::request_and_wait_for_next_buffer
+    // eglSwapBuffers to invoke EGLNativeSurface::swap_buffers_sync
     void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);

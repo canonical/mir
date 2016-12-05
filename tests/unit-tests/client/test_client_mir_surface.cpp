@@ -52,7 +52,7 @@
 #include <boost/throw_exception.hpp>
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 
@@ -329,7 +329,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirSurface> create_surface_with(
         mclr::DisplayServer& server_stub,
-        std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream)
+        std::shared_ptr<MirBufferStream> const& buffer_stream)
     {
         return std::make_shared<MirSurface>(
             connection.get(),
@@ -351,7 +351,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
         mclr::DisplayServer& server_stub,
-        std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream)
+        std::shared_ptr<MirBufferStream> const& buffer_stream)
     {
         auto surface = create_surface_with(server_stub, buffer_stream);
         return surface;
@@ -360,7 +360,7 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<MirConnection> connection;
 
     MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
-    std::shared_ptr<mtd::MockClientBufferStream> stub_buffer_stream{std::make_shared<mtd::MockClientBufferStream>()};
+    std::shared_ptr<mtd::MockMirBufferStream> stub_buffer_stream{std::make_shared<mtd::MockMirBufferStream>()};
     std::shared_ptr<StubClientInputPlatform> const input_platform =
         std::make_shared<StubClientInputPlatform>();
     std::shared_ptr<MockServerPackageGenerator> const mock_server_tool =
@@ -463,7 +463,10 @@ TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
 
     auto const surface = create_surface_with(unresponsive_server);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto cursor_config = mir_cursor_configuration_from_name(mir_default_cursor_name);
+#pragma GCC diagnostic pop
     auto cursor_wait_handle = surface->configure_cursor(cursor_config);
 
     auto expected_end = std::chrono::steady_clock::now() + pause_time;
@@ -494,7 +497,7 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
 TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized_streams)
 {
     using namespace testing;
-    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
+    auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
@@ -513,7 +516,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
 TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_streams)
 {
     using namespace testing;
-    auto mock_stream = std::make_shared<NiceMock<mtd::MockClientBufferStream>>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockMirBufferStream>>();
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
@@ -537,7 +540,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
 TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
 {
     using namespace testing;
-    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
+    auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
@@ -565,7 +568,7 @@ TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
 TEST_F(MirClientSurfaceTest, initial_sizes_are_from_response_from_server)
 {
     using namespace testing;
-    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
+    auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));

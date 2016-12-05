@@ -100,6 +100,11 @@ message SurfaceSpecification {
   optional int32 aux_rect_placement_gravity = 29;
   optional int32 aux_rect_placement_offset_x = 30;
   optional int32 aux_rect_placement_offset_y = 31;
+
+  optional string cursor_name = 32;
+  optional BufferStreamId cursor_id = 33;
+  optional int32 hotspot_x = 34;
+  optional int32 hotspot_y = 35;    
 }
 
 message StreamConfiguration {

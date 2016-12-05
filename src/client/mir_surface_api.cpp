@@ -455,6 +455,11 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
     return state;
 }
 
+void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
+{
+    spec->cursor_name = std::string(name);
+}
+
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;
@@ -530,7 +535,7 @@ void mir_surface_wait_for_vsync(MirSurface* surf)
 MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
 try
 {
-    return reinterpret_cast<MirBufferStream*>(surface->get_buffer_stream());
+    return surface->get_buffer_stream();
 }
 catch (std::exception const& ex)
 {
@@ -582,7 +587,7 @@ try
         mir::require(mir_buffer_stream_is_valid(streams[i].stream));
         copy.emplace_back(ContentInfo{
             mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
-            reinterpret_cast<mcl::ClientBufferStream*>(streams[i].stream)->rpc_id().as_value(),
+            streams[i].stream->rpc_id().as_value(),
             {}});
     }
     spec->streams = copy;
@@ -622,8 +627,7 @@ void mir_surface_spec_add_buffer_stream(
 try
 {
     mir::require(spec && stream);
-    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), mir::geometry::Size{width, height}};
+    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);

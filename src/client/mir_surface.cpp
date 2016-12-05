@@ -25,7 +25,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
@@ -110,7 +110,7 @@ MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mclr::DisplayServer& the_server,
     mclr::DisplayServerDebug* debug,
-    std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream,
+    std::shared_ptr<MirBufferStream> const& buffer_stream,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
@@ -543,7 +543,7 @@ void MirSurface::raise_surface(MirCookie const* cookie)
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
 
-mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
+MirBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     
@@ -602,6 +602,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(height_inc);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(confine_pointer);
+    COPY_IF_SET(cursor_name);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
     #undef COPY_IF_SET
@@ -672,6 +673,14 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             new_shape->set_width(rect.width);
             new_shape->set_height(rect.height);
         }
+    }
+
+    if (spec.rendersurface_cursor.is_set())
+    {
+        auto const rs_cursor = spec.rendersurface_cursor.value();
+        surface_specification->mutable_cursor_id()->set_value(rs_cursor.id.as_value());
+        surface_specification->set_hotspot_x(rs_cursor.hotspot.x.as_int());
+        surface_specification->set_hotspot_y(rs_cursor.hotspot.y.as_int());
     }
 
     modify_wait_handle.expect_result();
