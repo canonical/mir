@@ -127,7 +127,7 @@ public:
 
     MirWaitHandle* platform_operation(
         MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context);
+        mir_platform_operation_callback callback, void* context) override;
 
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
 
