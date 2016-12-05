@@ -105,7 +105,7 @@ private:
     size_t const initial_buffer_count;
     int last_received_id = 0;
     int interval = 1;
-    MirWaitHandle next_buffer_wait_handle;
+    MirWaitHandle swap_buffers_wait_handle;
     std::function<void()> deferred_cb;
 };
 }

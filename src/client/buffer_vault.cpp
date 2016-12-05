@@ -228,10 +228,10 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
     }
     else
     {
-        next_buffer_wait_handle.expect_result();
+        swap_buffers_wait_handle.expect_result();
         deferred_cb = done;
     }
-    return &next_buffer_wait_handle;
+    return &swap_buffers_wait_handle;
 }
 
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
@@ -298,7 +298,7 @@ void mcl::BufferVault::trigger_callback(std::unique_lock<std::mutex> lk)
         deferred_cb = {};
         lk.unlock();
         cb();
-        next_buffer_wait_handle.result_received();
+        swap_buffers_wait_handle.result_received();
     }
 }
 
