@@ -38,13 +38,13 @@ extern "C" {
  *
  *  The buffer can be destroyed via mir_buffer_release().
  *
- *   \note  Not all pixel formats or flags are available.
+ *   \note  Not all formats or flags are available, and allocations may fail.
  *          Be sure to check mir_buffer_is_valid() on the returned buffer.
  *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
  *   \param [in] height                Requested buffer height
- *   \param [in] hal_pixel_format      The pixel format, one of the GBM_FORMATs
- *   \param [in] gralloc_usage_flags   The gbm_bo_flags for the buffer.
+ *   \param [in] gbm_pixel_format      The pixel format, one of the GBM_FORMATs
+ *   \param [in] gbm_bo_flags          The gbm_bo_flags for the buffer.
  *   \param [in] available_callback    The callback called when the buffer
  *                                     is available
  *   \param [in] available_context     The context for the available_callback
