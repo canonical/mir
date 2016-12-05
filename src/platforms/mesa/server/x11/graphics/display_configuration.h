@@ -36,6 +36,7 @@ public:
     DisplayConfiguration(MirPixelFormat pf,
                          mir::geometry::Size const pixels,
                          mir::geometry::Size const size_mm,
+                         float const scale,
                          MirOrientation orientation);
     DisplayConfiguration(DisplayConfiguration const&);
 
