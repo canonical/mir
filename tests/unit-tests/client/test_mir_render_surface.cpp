@@ -298,7 +298,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_create_buffer_stream)
     EXPECT_THAT(bs, NotNull());
 }
 
-TEST_F(MirRenderSurfaceTest, render_surface_creation_of_buffer_stream_more_than_once_returns_same_object)
+TEST_F(MirRenderSurfaceTest, excepts_on_creation_of_buffer_stream_more_than_once)
 {
     connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
     auto id = 123;
@@ -316,15 +316,14 @@ TEST_F(MirRenderSurfaceTest, render_surface_creation_of_buffer_stream_more_than_
 
     EXPECT_CALL(*mock_platform, use_egl_native_window(native_window,_));
 
-    auto bs1 = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+    auto bs = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware);
 
-    auto bs2 = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
-
-    EXPECT_THAT(bs1, NotNull());
-    EXPECT_THAT(bs2, NotNull());
-    EXPECT_THAT(bs1, Eq(bs2));
+    EXPECT_THROW(
+        { rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+              mir_buffer_usage_hardware); },
+        std::logic_error);
+    EXPECT_THAT(bs, NotNull());
 }
 
 TEST_F(MirRenderSurfaceTest, render_surface_creation_of_buffer_stream_with_hardware_usage_installs_new_native_window)
@@ -394,10 +393,114 @@ TEST_F(MirRenderSurfaceTest, render_surface_object_is_invalid_after_creation_exc
 
     EXPECT_TRUE(callback.invoked);
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
+
     auto rs = connection->connection_surface_map()->render_surface(
         static_cast<void*>(callback.resulting_render_surface));
+
     EXPECT_THAT(rs->get_error_message(),
         StrEq("Error processing buffer stream response during render "
               "surface creation: no ID in response (disconnected?)"));
     EXPECT_FALSE(reinterpret_cast<mcl::RenderSurface*>(rs->valid()));
+}
+
+TEST_F(MirRenderSurfaceTest, render_surface_can_create_presentation_chain)
+{
+    connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, nullptr, mt::fake_shared(protobuf_bs), {});
+
+    auto pc = rs.get_presentation_chain();
+
+    EXPECT_THAT(pc, NotNull());
+}
+
+TEST_F(MirRenderSurfaceTest, excepts_on_creation_of_presentation_chain_more_than_once)
+{
+    connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(
+        connection.get(), native_window, mock_platform, mt::fake_shared(protobuf_bs), {});
+
+    auto pc = rs.get_presentation_chain();
+    EXPECT_THAT(pc, NotNull());
+
+    EXPECT_THROW(
+        { rs.get_presentation_chain(); },
+        std::logic_error);
+}
+
+TEST_F(MirRenderSurfaceTest, excepts_on_creation_of_chain_after_stream)
+{
+    connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(connection.get(),
+                          native_window,
+                          mock_platform,
+                          mt::fake_shared(protobuf_bs),
+                          {});
+
+    auto bs = rs.get_buffer_stream(2, 2, mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware);
+
+    EXPECT_THAT(bs, NotNull());
+    EXPECT_THROW(
+        { rs.get_presentation_chain(); },
+        std::logic_error);
+}
+
+TEST_F(MirRenderSurfaceTest, excepts_on_creation_of_stream_after_chain)
+{
+    connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto id = 123;
+
+    mp::BufferStream protobuf_bs;
+    mp::BufferStreamId bs_id;
+
+    bs_id.set_value(id);
+    *protobuf_bs.mutable_id() = bs_id;
+
+    auto native_window = mock_platform->create_egl_native_window(nullptr);
+
+    mcl::RenderSurface rs(connection.get(),
+                          native_window,
+                          mock_platform,
+                          mt::fake_shared(protobuf_bs),
+                          {});
+
+    auto pc = rs.get_presentation_chain();
+
+    EXPECT_THAT(pc, NotNull());
+    EXPECT_THROW(
+        { rs.get_buffer_stream(2, 2,
+                               mir_pixel_format_abgr_8888,
+                               mir_buffer_usage_hardware); },
+        std::logic_error);
 }

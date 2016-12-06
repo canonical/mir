@@ -18,6 +18,8 @@
 
 #include "error_stream.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mcl = mir::client;
 
 mcl::ErrorStream::ErrorStream(
@@ -57,53 +59,53 @@ mir::frontend::BufferStreamId mcl::ErrorStream::rpc_id() const
 
 MirSurfaceParameters mcl::ErrorStream::get_parameters() const
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 std::shared_ptr<mcl::ClientBuffer> mcl::ErrorStream::get_current_buffer()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 uint32_t mcl::ErrorStream::get_current_buffer_id()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 EGLNativeWindowType mcl::ErrorStream::egl_native_window()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirWaitHandle* mcl::ErrorStream::swap_buffers(std::function<void()> const&)
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 std::shared_ptr<mcl::MemoryRegion> mcl::ErrorStream::secure_for_cpu_write()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 int mcl::ErrorStream::swap_interval() const
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirWaitHandle* mcl::ErrorStream::set_swap_interval(int)
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirNativeBuffer* mcl::ErrorStream::get_current_buffer_package()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirPlatformType mcl::ErrorStream::platform_type()
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirWaitHandle* mcl::ErrorStream::set_scale(float)
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 mir::geometry::Size mcl::ErrorStream::size() const
 {
-    throw std::runtime_error(error);
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 
 void mcl::ErrorStream::buffer_available(mir::protobuf::Buffer const&) {}
