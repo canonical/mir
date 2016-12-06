@@ -88,6 +88,9 @@ MirWaitHandle* mcl::ErrorStream::set_swap_interval(int)
 {
     throw std::runtime_error(error);
 }
+void mcl::ErrorStream::parent_changed_to(std::weak_ptr<MirSurface>)
+{
+}
 MirNativeBuffer* mcl::ErrorStream::get_current_buffer_package()
 {
     throw std::runtime_error(error);
