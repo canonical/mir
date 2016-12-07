@@ -272,11 +272,6 @@ ms::BasicSurface::~BasicSurface() noexcept
     report->surface_deleted(this, surface_name);
 }
 
-std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
-{
-    return surface_buffer_stream;
-}
-
 std::string ms::BasicSurface::name() const
 {
     return surface_name;
