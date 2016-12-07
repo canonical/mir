@@ -22,6 +22,8 @@
 
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_input_device_types.h"
+#include <memory>
+#include <iosfwd>
 
 namespace mir
 {
@@ -30,11 +32,12 @@ namespace input
 
 struct TouchscreenConfiguration
 {
-    TouchscreenConfiguration() {}
-
-    TouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode)
-       : output_id{output_id}, mapping_mode{mode}
-    {}
+    TouchscreenConfiguration();
+    ~TouchscreenConfiguration();
+    TouchscreenConfiguration(TouchscreenConfiguration const&);
+    TouchscreenConfiguration(TouchscreenConfiguration &&);
+    TouchscreenConfiguration& operator=(TouchscreenConfiguration const&);
+    TouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode);
 
     /**
      * Configures the output the device coordinates should be aligned to.
@@ -42,16 +45,26 @@ struct TouchscreenConfiguration
      * This element is only relevant when mapping_mode is set to
      * mir_touchscreen_mapping_mode_to_output.
      */
-    uint32_t output_id{0};
+    uint32_t output_id() const;
+    void output_id(uint32_t);
 
     /**
      * Configure the type of coordinate mapping to be used for this input
      * device.
      */
-    MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_output};
+    MirTouchscreenMappingMode mapping_mode() const;
+    void mapping_mode(MirTouchscreenMappingMode);
+
+    bool operator==(TouchscreenConfiguration const& other) const;
+    bool operator!=(TouchscreenConfiguration const& other) const;
+private:
+    struct Implementation;
+    std::unique_ptr<Implementation> impl;
 };
 
+std::ostream& operator<<(std::ostream& out, TouchscreenConfiguration const& conf);
 }
 }
+
 
 #endif

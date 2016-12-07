@@ -9,6 +9,10 @@ add_library(mircore SHARED
     geometry/ostream.cpp
     input/input_configuration.cpp
     input/input_configuration_serialization.cpp
+    input/touchpad_configuration.cpp
+    input/pointer_configuration.cpp
+    input/keyboard_configuration.cpp
+    input/touchscreen_configuration.cpp
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h

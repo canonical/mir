@@ -24,24 +24,36 @@
 #include "mir_toolkit/mir_input_device_types.h"
 #include "mir/input/keymap.h"
 
+#include <iosfwd>
+#include <memory>
+
 namespace mir
 {
 namespace input
 {
-
 /*
  * Keyboard device configuration.
  */
 struct KeyboardConfiguration
 {
-    KeyboardConfiguration() = default;
-    KeyboardConfiguration(Keymap&& keymap)
-        : device_keymap{keymap}
-    {
-    }
+    KeyboardConfiguration();
+    ~KeyboardConfiguration();
+    KeyboardConfiguration(Keymap&& keymap);
+    KeyboardConfiguration(KeyboardConfiguration&& other);
+    KeyboardConfiguration(KeyboardConfiguration const& other);
+    KeyboardConfiguration& operator=(KeyboardConfiguration const& other);
 
-    Keymap device_keymap;
+    Keymap const& device_keymap() const;
+    void device_keymap(Keymap const& );
+
+    bool operator==(KeyboardConfiguration const& rhs) const;
+    bool operator!=(KeyboardConfiguration const& rhs) const;
+private:
+    struct Implementation;
+    std::unique_ptr<Implementation> impl;
 };
+
+std::ostream& operator<<(std::ostream& out, KeyboardConfiguration const& keyboard);
 
 }
 }

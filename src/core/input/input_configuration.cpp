@@ -24,11 +24,14 @@
 #include "mir/input/touchscreen_configuration.h"
 
 #include "mir/optional_value.h"
+#include <algorithm>
+#include <ostream>
 
 namespace mi = mir::input;
 
 struct mi::InputConfiguration::Implementation
 {
+    // FIXME use a map instead?
     std::vector<mi::DeviceConfiguration> devices;
 };
 
@@ -181,6 +184,22 @@ void mi::DeviceConfiguration::set_pointer_configuration(PointerConfiguration con
     impl->pointer = conf;
 }
 
+bool mi::DeviceConfiguration::operator==(DeviceConfiguration const& rhs) const
+{
+    return impl->id == rhs.impl->id &&
+        impl->name == rhs.impl->name &&
+        impl->caps == rhs.impl->caps &&
+        impl->pointer == rhs.impl->pointer &&
+        impl->keyboard == rhs.impl->keyboard &&
+        impl->touchpad == rhs.impl->touchpad &&
+        impl->touchscreen == rhs.impl->touchscreen;
+}
+
+bool mi::DeviceConfiguration::operator!=(DeviceConfiguration const& rhs) const
+{
+    return !(*this == rhs);
+}
+
 mi::InputConfiguration::InputConfiguration()
     : impl(std::make_unique<Implementation>())
 {
@@ -250,4 +269,40 @@ mi::DeviceConfiguration& mi::InputConfiguration::get_device_configuration_by_ind
 mi::DeviceConfiguration const& mi::InputConfiguration::get_device_configuration_by_index(size_t pos) const
 {
     return impl->devices[pos];
+}
+
+void mi::InputConfiguration::remove_device_by_id(MirInputDeviceId id)
+{
+    impl->devices.erase(
+        remove_if(begin(impl->devices), end(impl->devices),
+                  [id](auto const & conf){ return conf.id() ==id; }),
+        end(impl->devices)
+        );
+}
+
+bool mi::InputConfiguration::operator==(InputConfiguration const& rhs) const
+{
+    // FIXME assumes fixed ordering
+    return impl->devices == rhs.impl->devices;
+}
+
+bool mi::InputConfiguration::operator!=(InputConfiguration const& rhs) const
+{
+    return !(*this == rhs);
+}
+
+std::ostream& mi::operator<<(std::ostream& out, mi::DeviceConfiguration const& rhs)
+{
+    return out << rhs.id() << ' '<< rhs.name()  << ' ' << rhs.unique_id();
+}
+
+std::ostream& mi::operator<<(std::ostream& out, mi::InputConfiguration const& rhs)
+{
+    out << "InputConfiguration{";
+    rhs.for_each(
+        [&out](DeviceConfiguration const& conf)
+        {
+           out << '[' << conf << ']';
+        });
+    return out << "}";
 }

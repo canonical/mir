@@ -23,6 +23,9 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_input_device_types.h"
 
+#include <memory>
+#include <iosfwd>
+
 namespace mir
 {
 namespace input
@@ -30,51 +33,68 @@ namespace input
 
 struct TouchpadConfiguration
 {
-    TouchpadConfiguration() {}
+    TouchpadConfiguration();
+    TouchpadConfiguration(TouchpadConfiguration && other);
+    TouchpadConfiguration(TouchpadConfiguration const& other);
+    TouchpadConfiguration& operator=(TouchpadConfiguration const& other);
+    ~TouchpadConfiguration();
     TouchpadConfiguration(MirTouchpadClickModes click_mode,
                           MirTouchpadScrollModes scroll_mode,
                           int button_down_scroll_button,
                           bool tap_to_click,
                           bool disable_while_typing,
                           bool disable_with_mouse,
-                          bool middle_mouse_button_emulation)
-        : click_mode{click_mode}, scroll_mode{scroll_mode}, button_down_scroll_button{button_down_scroll_button},
-          tap_to_click{tap_to_click}, middle_mouse_button_emulation{middle_mouse_button_emulation},
-          disable_with_mouse{disable_with_mouse}, disable_while_typing{disable_while_typing}
-    {
-    }
+                          bool middle_mouse_button_emulation);
 
     /*!
      * The click mode defines when the touchpad generates software emulated button events.
      */
-    MirTouchpadClickModes click_mode{mir_touchpad_click_mode_finger_count};
-/*!
+    MirTouchpadClickModes click_mode() const;
+    void click_mode(MirTouchpadClickModes) ;
+    /*!
      * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
      */
-    MirTouchpadScrollModes scroll_mode{mir_touchpad_scroll_mode_two_finger_scroll};
+    MirTouchpadScrollModes scroll_mode() const;
+    void scroll_mode(MirTouchpadScrollModes);
 
     /*!
      * Configures the button used for the on-button-down scroll mode
      */
-    int button_down_scroll_button{0};
+    int button_down_scroll_button() const;
+    void button_down_scroll_button(int);
 
     /*!
      * When tap to click is enabled the system will interpret short finger touch down/up sequences as button clicks.
      */
-    bool tap_to_click{true};
+    bool tap_to_click() const;
+    void tap_to_click(bool);
+
     /*!
      * Emulates a middle mouse button press when the left and right buttons on a touchpad are pressed.
      */
-    bool middle_mouse_button_emulation{true};
+    bool middle_mouse_button_emulation() const;
+    void middle_mouse_button_emulation(bool);
+
     /*!
      * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
      */
-    bool disable_with_mouse{false};
+    bool disable_with_mouse() const;
+    void disable_with_mouse(bool);
+
     /*!
      * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.
      */
-    bool disable_while_typing{false};
+    bool disable_while_typing() const;
+    void disable_while_typing(bool);
+
+    bool operator==(TouchpadConfiguration const& rhs) const;
+    bool operator!=(TouchpadConfiguration const& rhs) const;
+private:
+    struct Implementation;
+    std::unique_ptr<Implementation> impl;
 };
+
+std::ostream& operator<<(std::ostream& out, TouchpadConfiguration const& conf);
 
 }
 }
