@@ -316,3 +316,18 @@ TEST_F(RenderSurfaceTest, excepts_on_chain_request_if_stream_handed_out)
     mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
+
+TEST_F(RenderSurfaceTest, returns_its_connection)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto rs = mir_connection_create_render_surface_sync(
+        connection, logical_size.width.as_int(), logical_size.height.as_int());
+
+    auto ret = mir_render_surface_connection(rs);
+
+    EXPECT_THAT(ret, Eq(connection));
+
+    mir_render_surface_release(rs);
+    mir_connection_release(connection);
+}

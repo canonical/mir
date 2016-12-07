@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 {
     //once full transition to Mir platform has been made, internal shim will be removed,
     //and the examples/ will use MirConnection/MirRenderSurface/MirBuffer as their egl types.
-    int use_shim = 1;
+    int use_shim = 0;
     int swapinterval = 1;
     char* socket = NULL; 
     int c;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 
     connection = mir_connect_sync(socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
-
+#if 1
     BufferWait w; 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -187,11 +187,11 @@ int main(int argc, char *argv[])
     pthread_mutex_unlock(&mutex);
 
     fill_buffer(buffer);
-
+#endif
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
     else
-        egldisplay = eglGetDisplay(connection);
+        egldisplay = eglGetDisplay(mir_connection_get_egl_native_display(connection));
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
@@ -220,8 +220,6 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
-    //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
-    //       Current code requires creation of content before creation of the surface.
     if (use_shim)
         eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
     else
@@ -256,6 +254,7 @@ int main(int argc, char *argv[])
 
     eglSwapInterval(egldisplay, swapinterval);
     EGLImageKHR image = EGL_NO_IMAGE_KHR;
+#if 1
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = NULL;
     PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = NULL;
     char const* extensions = eglQueryString(egldisplay, EGL_EXTENSIONS);
@@ -276,7 +275,7 @@ int main(int argc, char *argv[])
         }
         image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
     }
-
+#endif
     Diamond diamond;
     if (image == EGL_NO_IMAGE_KHR)
     {
@@ -305,13 +304,15 @@ int main(int argc, char *argv[])
 
     destroy_diamond(&diamond);
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+#if 1
     if (image)
         eglDestroyImageKHR(egldisplay, image);
-
-    if (use_shim) 
+#endif
+    if (use_shim)
         future_driver_eglTerminate(egldisplay);
     else
         eglTerminate(egldisplay);
+
     mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

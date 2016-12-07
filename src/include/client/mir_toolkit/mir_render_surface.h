@@ -181,6 +181,15 @@ void mir_surface_spec_set_cursor_render_surface(
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y);
 
+/**
+ * Get the connection that a given render surface belongs to.
+ *
+ * \param [in] render_surface   The render surface for which the connection
+ *                              is queried
+ * \return                      The connection that the render surface belongs to
+ */
+MirConnection* mir_render_surface_connection(MirRenderSurface* render_surface);
+
 #ifdef __cplusplus
 }
 /**@}*/

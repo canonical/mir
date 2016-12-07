@@ -231,3 +231,15 @@ void mir_surface_spec_set_cursor_render_surface(
     auto rs = connection->connection_surface_map()->render_surface(surface);
     spec->rendersurface_cursor = MirSurfaceSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }
+
+MirConnection* mir_render_surface_connection(MirRenderSurface* render_surface)
+try
+{
+    mir::require(render_surface);
+    return connection_map.connection(static_cast<void*>(render_surface));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}

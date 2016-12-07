@@ -193,8 +193,22 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
+if (MIR_TEST_PLATFORM STREQUAL "android")
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
+else()
+# platform != "android"
+set(EGL_LIBRARIES EGL)
+set(EGL_INCLUDE_DIRS /home/camako/git/mesa/usr/local/include)
+set(GLESv2_LIBRARIES GLESv2)
+set(GLESv2_INCLUDE_DIRS /home/camako/git/mesa/usr/local/include)
+set(GL_LIBRARIES GLESv2)
+set(GL_INCLUDE_DIRS /home/camako/git/mesa/usr/local/include)
+set(GBM_LIBRARIES gbm)
+set(GBM_INCLUDE_DIRS /home/camako/git/mesa/usr/local/include)
+link_directories(/home/camako/git/mesa/usr/local/lib)
+endif ()
+ 
 find_package(GLM REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(CapnProto REQUIRED)
@@ -234,7 +248,7 @@ if (MIR_SERVER_LIBGL STREQUAL "libGL")
     -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_API
   )
 elseif (MIR_SERVER_LIBGL STREQUAL "libGLESv2")
-  pkg_check_modules(GL REQUIRED glesv2)
+#  pkg_check_modules(GL REQUIRED glesv2)
   add_definitions(
     -DMIR_SERVER_GL_H=<GLES2/gl2.h>
     -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
@@ -252,7 +266,7 @@ endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
-  pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
+#  pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
 endif()
 
