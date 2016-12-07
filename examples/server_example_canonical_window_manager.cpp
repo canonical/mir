@@ -746,7 +746,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
     {
         switch (count)
         {
-        case 2:
+        case 4:
             resize(cursor);
             consumes_event = true;
             break;
