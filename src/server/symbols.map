@@ -171,7 +171,6 @@ MIR_SERVER_0.26 {
     mir::Server::override_the_coordinate_translator*;
     mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
-    mir::Server::override_the_display_configuration_report*;
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
