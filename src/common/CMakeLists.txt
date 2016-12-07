@@ -45,12 +45,12 @@ add_library(mircommon SHARED
   input/pointer_configuration.cpp
   input/keyboard_configuration.cpp
   input/touchscreen_configuration.cpp
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/pointer_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchpad_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchscreen_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/keyboard_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration_serialization.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/input_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/pointer_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/touchpad_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/touchscreen_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/keyboard_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/input_configuration_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 
