@@ -6,13 +6,7 @@ add_library(mircore SHARED
     fatal.cpp
     geometry/rectangle.cpp
     geometry/rectangles.cpp
-    geometry/ostream.cpp
-    input/input_configuration.cpp
-    input/input_configuration_serialization.cpp
-    input/touchpad_configuration.cpp
-    input/pointer_configuration.cpp
-    input/keyboard_configuration.cpp
-    input/touchscreen_configuration.cpp
+    geometry/ostream.cpp 
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
@@ -24,18 +18,9 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/size.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/forward.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/dimensions.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/pointer_configuration.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchpad_configuration.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchscreen_configuration.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/keyboard_configuration.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration_serialization.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_input_device_types.h
 )
-add_dependencies(mircore mircapnproto)
-target_link_libraries(mircore mircapnproto)
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 

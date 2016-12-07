@@ -39,6 +39,18 @@ set(MIRCOMMON_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
+  input/input_configuration.cpp
+  input/input_configuration_serialization.cpp
+  input/touchpad_configuration.cpp
+  input/pointer_configuration.cpp
+  input/keyboard_configuration.cpp
+  input/touchscreen_configuration.cpp
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/pointer_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchpad_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/touchscreen_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/keyboard_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/core/mir/input/input_configuration_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 

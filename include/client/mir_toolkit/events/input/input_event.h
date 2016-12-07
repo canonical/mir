@@ -20,7 +20,6 @@
 #define MIR_TOOLKIT_INPUT_EVENT_H_
 
 #include "mir_toolkit/events/event.h"
-#include "mir_toolkit/mir_input_device_types.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -32,6 +31,8 @@
  */
 extern "C" {
 #endif
+
+typedef int64_t MirInputDeviceId;
 
 typedef enum {
     mir_input_event_type_key = 0,

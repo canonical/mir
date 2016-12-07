@@ -21,7 +21,7 @@
 #define MIR_INPUT_KEYBOARD_CONFIGURATION_H_
 
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_input_device_types.h"
+#include "mir_toolkit/mir_input_device.h"
 #include "mir/input/keymap.h"
 
 #include <iosfwd>
