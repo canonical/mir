@@ -3,6 +3,8 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(fd)
 add_subdirectory(events)
 add_subdirectory(logging)

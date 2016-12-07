@@ -1,7 +1,5 @@
 set(MIRCORE_ABI 1)
 
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
-
 add_library(mircore SHARED
     fatal.cpp
     geometry/rectangle.cpp
