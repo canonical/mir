@@ -52,12 +52,18 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
     return reinterpret_cast<MirOutputMode const*>(mode);
 }
 
+enum
+{
+    edid_descriptor_text_max_len = 13,
+    edid_manufacturer_len = 3
+};
+
 /*
  * This EDID code could move up to the server later, but that's not required
  * yet. Maybe when we want to dump it to the server log?
  */
 size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
-                                  char str[14])
+                                  char str[edid_descriptor_text_max_len+1])
 {
     union descriptor
     {
@@ -71,7 +77,7 @@ size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
             uint8_t  zero2;
             uint8_t  type;
             uint8_t  zero4;
-            char     text[13];
+            char     text[edid_descriptor_text_max_len];
         } other;
     };
     
@@ -83,7 +89,7 @@ size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
     {
         if (!desc->detailed_timing.pixel_clock && desc->other.type == type)
         {
-            len = 13;
+            len = sizeof desc->other.text;
             memcpy(str, desc->other.text, len);
             break;
         }
@@ -92,7 +98,8 @@ size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
     return len;
 }
 
-size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
+size_t edid_get_monitor_name(uint8_t const* edid,
+                             char str[edid_descriptor_text_max_len+1])
 {
     size_t len = edid_get_descriptor_string(edid, 0xFC, str);
     if (char* pad = strchr(str, '\n'))
@@ -103,7 +110,8 @@ size_t edid_get_monitor_name(uint8_t const* edid, char str[14])
     return len;
 }
 
-void edid_get_manufacturer(uint8_t const* edid, char str[4])
+void edid_get_manufacturer(uint8_t const* edid,
+                           char str[edid_manufacturer_len+1])
 {
     uint16_t manufacturer = static_cast<uint16_t>(edid[8]) << 8 | edid[9];
     str[0] = ((manufacturer >> 10) & 31) + 'A' - 1;
@@ -162,11 +170,13 @@ char const* mir_output_get_model(MirOutput const* output)
     // But if not we use the same member for caching our EDID probe...
     if (auto edid = mir_output_get_edid(output))
     {
-        char name[14];
+        char name[edid_descriptor_text_max_len+1];
         if (!edid_get_monitor_name(edid, name))
         {
             edid_get_manufacturer(edid, name);
-            snprintf(name+3, 11, " %hu", edid_get_product_code(edid));
+            snprintf(name + edid_manufacturer_len,
+                     sizeof(name) - edid_manufacturer_len,
+                     " %hu", edid_get_product_code(edid));
         }
         const_cast<MirOutput*>(output)->set_model(name);
         return output->model().c_str();
