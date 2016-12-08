@@ -440,6 +440,11 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
     return interval_config.set_swap_interval(interval);
 }
 
+void mcl::BufferStream::adopted_by(std::weak_ptr<MirSurface>)
+{
+    // TODO
+}
+
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
 {
     auto buffer = get_current_buffer();

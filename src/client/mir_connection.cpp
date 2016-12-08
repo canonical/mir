@@ -427,6 +427,8 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         surf = std::make_shared<MirSurface>(
             this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
+        if (default_stream)
+            default_stream->adopted_by(surf);
     }
 
     callback(surf.get(), context);

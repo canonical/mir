@@ -97,6 +97,7 @@ public:
 
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
+    void adopted_by(std::weak_ptr<MirSurface>) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
