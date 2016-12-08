@@ -334,6 +334,7 @@ int main(int argc, char *argv[])
     char const* server = NULL;
     char** actionv = NULL;
     int actionc = 0;
+    bool verbose = false;
 
     for (int a = 1; a < argc; a++)
     {
@@ -345,11 +346,15 @@ int main(int argc, char *argv[])
 
             switch (arg[1])
             {
+                case 'v':
+                    verbose = true;
+                    break;
                 case 'h':
                 default:
                     printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
+                           "    -v  Show verbose information.\n"
                            "    --  Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
@@ -456,16 +461,22 @@ int main(int argc, char *argv[])
             }
             printf("\n");
 
+            /*
+             * Note we're not checking if state == connected here but it's
+             * probably a good test to probe this stuff unconditionally and
+             * make sure it all returns nothing for disconnected outputs...
+             */
             uint8_t const* edid = mir_output_get_edid(out);
-            if (edid)
+            if (verbose && edid)
             {
-                printf("EDID:");
-                /* The EDID is guaranteed to be at least 128 bytes */
-                for (int i = 0; i < 128 ; ++i)
+                int indent = 0;
+                printf("    EDID: %n", &indent);
+                size_t const size = mir_output_get_edid_size(out);
+                for (size_t i = 0; i < size; ++i)
                 {
-                    if ((i % 16) == 0)
+                    if (i && (i % 32) == 0)
                     {
-                        printf("\n\t");
+                        printf("\n%*c", indent, ' ');
                     }
                     printf("%.2hhx", edid[i]);
                 }

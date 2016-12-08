@@ -125,6 +125,9 @@ void mir_render_surface_release(
  * \param [in] usage             Requested buffer usage
  *
  * \return                       The buffer stream contained in the given render surface
+ *                               or 'nullptr' if it, or
+ *                               mir_render_surface_get_presentation_chain(), has already
+ *                               been called once
  */
 MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
@@ -133,13 +136,22 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirBufferUsage usage);
 
 /**
+ * Obtain the presentation chain backing a given render surface
+ *
+ * \return                       The chain contained in the given render surface
+ *                               or 'nullptr' if it, or
+ *                               mir_render_surface_get_buffer_stream(), has already
+ *                               been called once
+ */
+MirPresentationChain* mir_render_surface_get_presentation_chain(
+    MirRenderSurface* render_surface);
+
+/**
  * Set the MirSurfaceSpec to display content contained in a render surface
  *
  * \warning: The initial call to mir_surface_spec_add_render_surface will set
  *           the bottom-most content, and subsequent calls will stack the
  *           content on top.
- * \warning: It's an error to call this function with a render surface
- *           that holds no content.
  *
  * \param spec             The surface_spec to be updated
  * \param render_surface   The render surface containing the content to be displayed
@@ -155,6 +167,19 @@ void mir_surface_spec_add_render_surface(
     MirRenderSurface* render_surface,
     int logical_width, int logical_height,
     int displacement_x, int displacement_y);
+
+/**
+ * Set the MirSurfaceSpec to contain a specific cursor. 
+ *
+ * \param [in] spec             The spec
+ * \param [in] render_surface   The rendersurface to set, or nullptr to reset to default cursor.
+ * \param [in] hotspot_x        The x-coordinate to use as the cursor's hotspot
+ * \param [in] hotspot_y        The y-coordinate to use as the cursor's hotspot
+ */
+void mir_surface_spec_set_cursor_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
+    int hotspot_x, int hotspot_y);
 
 #ifdef __cplusplus
 }

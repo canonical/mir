@@ -86,13 +86,13 @@ struct MockSessionMediatorReport : mf::SessionMediatorObserver
         // These are not needed for the 1st test, but they will be soon
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_swap_buffers_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_swap_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
@@ -1028,9 +1028,10 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto const cursor = mir_cursor_configuration_from_name(name);
-        mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
-        mir_cursor_configuration_destroy(cursor);
+        auto spec = mir_connection_create_spec_for_changes(client.connection);
+        mir_surface_spec_set_cursor_name(spec, name);
+        mir_surface_apply_spec(client.surface, spec);
+        mir_surface_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();

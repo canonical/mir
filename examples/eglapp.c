@@ -491,9 +491,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
-    MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
-    mir_surface_configure_cursor(surface, conf);
-    mir_cursor_configuration_destroy(conf);
+    spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_cursor_name(spec, cursor_name);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);

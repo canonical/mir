@@ -23,6 +23,8 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/frontend/event_sender.h"
 #include "src/server/frontend/protobuf_buffer_packer.h"
+#include "src/server/input/builtin_cursor_images.h"
+#include "src/server/input/default-theme.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
@@ -160,6 +162,8 @@ public:
     std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
     {
         mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        ON_CALL(*mock_streams[id], pixel_format())
+            .WillByDefault(Return(mir_pixel_format_argb_8888));
         return mock_streams[id];
     }
 
@@ -245,7 +249,9 @@ struct SessionMediator : public ::testing::Test
             surface_pixel_formats, report,
             std::make_shared<mtd::NullEventSinkFactory>(),
             std::make_shared<mtd::NullMessageSender>(),
-            resource_cache, stub_screencast, &connector, nullptr, nullptr,
+            resource_cache, stub_screencast, &connector,
+            std::make_shared<mi::BuiltinCursorImages>(),
+            nullptr,
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_hub)}
@@ -566,7 +572,7 @@ TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
               protobuf_buffer.buffer_id());
 }
 
-TEST_F(SessionMediator, partially_packs_next_buffer_after_creating_screencast)
+TEST_F(SessionMediator, partially_packs_swap_buffers_after_creating_screencast)
 {
     using namespace testing;
 
@@ -1007,4 +1013,74 @@ TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw
     EXPECT_NO_THROW(
         mediator.release_buffers(&release_buffer, &null, null_callback.get());
         );
+}
+
+MATCHER_P3(CursorIs, id_value, x_value, y_value, "cursor configuration match")
+{
+    if (!arg.stream_cursor.is_set())
+        return false;
+    auto& cursor = arg.stream_cursor.value();
+    EXPECT_THAT(cursor.hotspot.dx.as_int(), testing::Eq(x_value));
+    EXPECT_THAT(cursor.hotspot.dy.as_int(), testing::Eq(y_value));
+    EXPECT_THAT(cursor.stream_id.as_value(), testing::Eq(id_value));
+    return !(::testing::Test::HasFailure());
+}
+
+MATCHER(CursorImageIsSetNull, "cursor configuration match")
+{
+    if (!arg.cursor_image.is_set())
+        return false;
+    EXPECT_THAT(arg.cursor_image.value(), testing::Eq(nullptr));
+    return !(::testing::Test::HasFailure());
+}
+MATCHER(CursorImageIsSetNotNull, "cursor configuration match")
+{
+    if (!arg.cursor_image.is_set())
+        return false;
+    EXPECT_THAT(arg.cursor_image.value(), testing::Ne(nullptr));
+    return !(::testing::Test::HasFailure());
+}
+
+TEST_F(SessionMediator, arranges_cursors_via_shell)
+{
+    using namespace testing;
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    mp::BufferStreamParameters stream_request;
+    mp::BufferStream stream;
+
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    mediator.create_buffer_stream(&stream_request, &stream, null_callback.get());
+    spec->mutable_cursor_id()->set_value(stream.id().value());
+    spec->set_hotspot_x(-1);
+    spec->set_hotspot_y(2);
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()},
+        CursorIs(stream.id().value(), spec->hotspot_x(), spec->hotspot_y())));
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, arranges_named_cursors_via_shell)
+{
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name("cursor_gigante");
+
+    testing::Sequence seq;
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNull()))
+        .InSequence(seq);
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNotNull()))
+        .InSequence(seq);
+    mediator.modify_surface(&mods, &null, null_callback.get());
+
+    ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
+    spec->set_cursor_name(cursor_data.begin()->name);
+    mediator.modify_surface(&mods, &null, null_callback.get());
 }

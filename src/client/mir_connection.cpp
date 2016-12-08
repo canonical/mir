@@ -386,7 +386,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     std::string name{spec.surface_name.is_set() ?
                      spec.surface_name.value() : ""};
 
-    std::shared_ptr<mcl::ClientBufferStream> default_stream {nullptr};
+    std::shared_ptr<MirBufferStream> default_stream {nullptr};
     if (surface_proto->buffer_stream().has_id())
     {
         try
@@ -465,7 +465,7 @@ struct MirConnection::SurfaceRelease
 
 struct MirConnection::StreamRelease
 {
-    mcl::ClientBufferStream* stream;
+    MirBufferStream* stream;
     MirWaitHandle* handle;
     mir_buffer_stream_callback callback;
     void* context;
@@ -476,7 +476,7 @@ struct MirConnection::StreamRelease
 void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
-        data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+        data.callback(data.stream, data.context);
     if (data.handle)
         data.handle->result_received();
 
@@ -634,7 +634,7 @@ MirWaitHandle* MirConnection::disconnect()
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;
     }
-    surface_map->with_all_streams_do([](mcl::ClientBufferStream* receiver)
+    surface_map->with_all_streams_do([](MirBufferStream* receiver)
     {
         receiver->buffer_unavailable();
     });
@@ -839,10 +839,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->mbs_callback)
-            request->mbs_callback(
-                reinterpret_cast<MirBufferStream*>(
-                    dynamic_cast<mcl::ClientBufferStream*>(stream.get())),
-                request->context);
+            request->mbs_callback(stream.get(), request->context);
 
         request->wh->result_received();
     }
@@ -931,15 +928,13 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 
     if (request->mbs_callback)
     {
-        request->mbs_callback(
-            reinterpret_cast<MirBufferStream*>(
-                dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        request->mbs_callback(stream.get(), request->context);
     }
 
     request->wh->result_received();
 }
 
-std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
+std::shared_ptr<MirBufferStream> MirConnection::make_consumer_stream(
    mp::BufferStream const& protobuf_bs)
 {
     return std::make_shared<mcl::ScreencastStream>(
@@ -1144,7 +1139,7 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
 }
 
 MirWaitHandle* MirConnection::release_buffer_stream(
-    mir::client::ClientBufferStream* stream,
+    MirBufferStream* stream,
     mir_buffer_stream_callback callback,
     void *context)
 {
@@ -1167,7 +1162,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
     return new_wait_handle;
 }
 
-void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* stream)
+void MirConnection::release_consumer_stream(MirBufferStream* stream)
 {
     surface_map->erase(stream->rpc_id());
 }
@@ -1175,6 +1170,19 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
 std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_display_configuration() const
 {
     return display_configuration->take_snapshot();
+}
+
+std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain_with_id(
+    MirRenderSurface* render_surface,
+    mir::protobuf::BufferStream const& a_protobuf_bs)
+{
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    auto chain = std::make_shared<mcl::PresentationChain>(
+        this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
+
+    surface_map->insert(render_surface->stream_id(), chain);
+    return chain;
 }
 
 void MirConnection::create_presentation_chain(

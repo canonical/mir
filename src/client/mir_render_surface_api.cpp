@@ -189,6 +189,21 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+MirPresentationChain* mir_render_surface_get_presentation_chain(
+    MirRenderSurface* render_surface)
+try
+{
+    mir::require(render_surface);
+    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    return rs->get_presentation_chain();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
 void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
 {
     mir::require(render_surface && width && height);
@@ -205,4 +220,14 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
     auto connection = connection_map.connection(static_cast<void*>(render_surface));
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     rs->set_size({width, height});
+}
+
+void mir_surface_spec_set_cursor_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+{
+    auto connection = connection_map.connection(static_cast<void*>(surface));
+    auto rs = connection->connection_surface_map()->render_surface(surface);
+    spec->rendersurface_cursor = MirSurfaceSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }
