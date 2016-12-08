@@ -103,8 +103,6 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
-    std::shared_ptr<compositor::BufferStream> buffer_stream() const;
-
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;

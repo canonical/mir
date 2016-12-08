@@ -49,6 +49,14 @@ public:
      */
     virtual void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf) = 0;
+
+    /**
+     * Get the base display configuration.
+     *
+     * This is the display configuration that is used by default, but will be
+     * overridden by a client's requested configuration if that client is focused.
+     */
+    virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration() = 0;
 };
 }
 }

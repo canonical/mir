@@ -25,6 +25,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <iosfwd>
 
 namespace mir
 {
@@ -69,6 +70,9 @@ public:
     TouchscreenConfiguration& touchscreen_configuration();
     TouchscreenConfiguration const& touchscreen_configuration() const;
     void set_touchscreen_configuration(TouchscreenConfiguration const& conf);
+
+    bool operator==(DeviceConfiguration const& rhs) const;
+    bool operator!=(DeviceConfiguration const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
@@ -88,14 +92,20 @@ public:
     DeviceConfiguration const* get_device_configuration_by_id(MirInputDeviceId id) const;
     DeviceConfiguration& get_device_configuration_by_index(size_t pos);
     DeviceConfiguration const& get_device_configuration_by_index(size_t pos) const;
+    void remove_device_by_id(MirInputDeviceId id);
     size_t size() const;
 
     void for_each(std::function<void(DeviceConfiguration const&)> const& visitor) const;
     void for_each(std::function<void(DeviceConfiguration &)> const& visitor);
+    bool operator==(InputConfiguration const& rhs) const;
+    bool operator!=(InputConfiguration const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
+
+std::ostream& operator<<(std::ostream&, DeviceConfiguration const&);
+std::ostream& operator<<(std::ostream&, InputConfiguration const&);
 
 }
 }

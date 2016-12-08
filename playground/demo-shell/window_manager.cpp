@@ -570,6 +570,13 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
         max_fingers = 0;
 
     old_cursor = cursor;
+
+    /*
+     * For now we reserve all 3 or 4 finger gestures for window manipulation.
+     * Make sure clients don't receive spurious events in the process...
+     */
+    handled |= (max_fingers == 3 || max_fingers == 4);
+
     return handled;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,7 +18,7 @@
 #ifndef MIR_TOOLKIT_MIR_INPUT_DEVICE_TYPES_H_
 #define MIR_TOOLKIT_MIR_INPUT_DEVICE_TYPES_H_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 /**
  * \addtogroup mir_toolkit
@@ -124,6 +124,7 @@ enum MirTouchscreenMappingMode
      */
     mir_touchscreen_mapping_mode_to_display_wall
 };
+
 
 #ifdef __cplusplus
 }

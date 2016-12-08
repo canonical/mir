@@ -50,16 +50,16 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
             {
                 auto ptr_conf = conf.pointer_configuration();
                 auto ptr_builder = device.initPointerConfiguration();
-                ptr_builder.setHandedness(ptr_conf.handedness == mir_pointer_handedness_right ?
+                ptr_builder.setHandedness(ptr_conf.handedness() == mir_pointer_handedness_right ?
                                           mc::PointerConfiguration::Handedness::RIGHT :
                                           mc::PointerConfiguration::Handedness::LEFT);
-                ptr_builder.setAcceleration(ptr_conf.acceleration == mir_pointer_acceleration_adaptive ?
+                ptr_builder.setAcceleration(ptr_conf.acceleration() == mir_pointer_acceleration_adaptive ?
                                             mc::PointerConfiguration::Acceleration::ADAPTIVE :
                                             mc::PointerConfiguration::Acceleration::NONE
                                            );
-                ptr_builder.setCursorAccelerationBias(ptr_conf.cursor_acceleration_bias);
-                ptr_builder.setHorizontalScrollScale(ptr_conf.horizontal_scroll_scale);
-                ptr_builder.setVerticalScrollScale(ptr_conf.vertical_scroll_scale);
+                ptr_builder.setCursorAccelerationBias(ptr_conf.cursor_acceleration_bias());
+                ptr_builder.setHorizontalScrollScale(ptr_conf.horizontal_scroll_scale());
+                ptr_builder.setVerticalScrollScale(ptr_conf.vertical_scroll_scale());
             }
 
             if (conf.has_touchpad_configuration())
@@ -67,13 +67,13 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
                 auto tpd_conf = conf.touchpad_configuration();
                 auto tpd_builder = device.initTouchpadConfiguration();
 
-                tpd_builder.setClickMode(tpd_conf.click_mode);
-                tpd_builder.setScrollMode(tpd_conf.scroll_mode);
-                tpd_builder.setButtonDownScrollButton(tpd_conf.button_down_scroll_button);
-                tpd_builder.setTapToClick(tpd_conf.tap_to_click);
-                tpd_builder.setMiddleMouseButtonEmulation(tpd_conf.middle_mouse_button_emulation);
-                tpd_builder.setDisableWithMouse(tpd_conf.disable_with_mouse);
-                tpd_builder.setDisableWhileTyping(tpd_conf.disable_while_typing);
+                tpd_builder.setClickMode(tpd_conf.click_mode());
+                tpd_builder.setScrollMode(tpd_conf.scroll_mode());
+                tpd_builder.setButtonDownScrollButton(tpd_conf.button_down_scroll_button());
+                tpd_builder.setTapToClick(tpd_conf.tap_to_click());
+                tpd_builder.setMiddleMouseButtonEmulation(tpd_conf.middle_mouse_button_emulation());
+                tpd_builder.setDisableWithMouse(tpd_conf.disable_with_mouse());
+                tpd_builder.setDisableWhileTyping(tpd_conf.disable_while_typing());
             }
 
             if (conf.has_touchscreen_configuration())
@@ -81,8 +81,8 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
                 auto ts_conf = conf.touchscreen_configuration();
                 auto ts_builder = device.initTouchscreenConfiguration();
 
-                ts_builder.setOutputId(ts_conf.output_id);
-                ts_builder.setMappingMode(ts_conf.mapping_mode == mir_touchscreen_mapping_mode_to_output?
+                ts_builder.setOutputId(ts_conf.output_id());
+                ts_builder.setMappingMode(ts_conf.mapping_mode() == mir_touchscreen_mapping_mode_to_output?
                                           mc::TouchscreenConfiguration::MappingMode::TO_OUTPUT :
                                           mc::TouchscreenConfiguration::MappingMode::TO_DISPLAY_WALL);
             }
@@ -92,11 +92,12 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
                 auto kbd_conf = conf.keyboard_configuration();
                 auto kbd_builder = device.initKeyboardConfiguration();
                 auto keymap_builder = kbd_builder.initKeymap();
+                auto keymap = kbd_conf.device_keymap();
 
-                keymap_builder.setModel(kbd_conf.device_keymap.model);
-                keymap_builder.setLayout(kbd_conf.device_keymap.layout);
-                keymap_builder.setVariant(kbd_conf.device_keymap.variant);
-                keymap_builder.setOptions(kbd_conf.device_keymap.options);
+                keymap_builder.setModel(keymap.model);
+                keymap_builder.setLayout(keymap.layout);
+                keymap_builder.setVariant(keymap.variant);
+                keymap_builder.setOptions(keymap.options);
             }
         });
 

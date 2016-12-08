@@ -92,28 +92,21 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             static bool grabbed = true;
 
             MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
-            MirPointerConfinementState state = mir_pointer_unconfined;
-            MirCursorConfiguration* conf = NULL;
-
             if (!grabbed)
             {
-                state = mir_pointer_confined_to_surface;
+                mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+                mir_surface_spec_set_name(spec, "");
             }
             else
             {
-                conf = mir_cursor_configuration_from_name(mir_default_cursor_name);
+                mir_surface_spec_set_pointer_confinement(spec, mir_pointer_unconfined);
+                mir_surface_spec_set_name(spec, mir_default_cursor_name);
             }
 
             grabbed = !grabbed;
 
-            mir_surface_spec_set_pointer_confinement(spec, state);
-
             mir_surface_apply_spec(surface, spec);
             mir_surface_spec_release(spec);
-
-            // If we are grabbing we'll make it NULL which will hide the cursor
-            mir_surface_configure_cursor(surface, conf);
-            mir_cursor_configuration_destroy(conf);
         }
         else if (key_code == XKB_KEY_f)
         {
