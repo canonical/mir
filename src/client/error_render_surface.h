@@ -41,6 +41,7 @@ public:
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage) override;
+    MirPresentationChain* get_presentation_chain() override;
 private:
     std::string const error;
     MirConnection* const connection_;

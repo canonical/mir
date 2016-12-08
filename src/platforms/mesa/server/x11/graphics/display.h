@@ -110,6 +110,7 @@ private:
     std::shared_ptr<GLConfig> const gl_config;
     float pixel_width;
     float pixel_height;
+    float scale;
     std::unique_ptr<X11Window> win;
     MirPixelFormat pf;
     std::shared_ptr<DisplayReport> const report;

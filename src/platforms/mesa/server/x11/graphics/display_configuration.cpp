@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 
 mg::DisplayConfigurationOutputId const mgx::DisplayConfiguration::the_output_id{1};
 
-mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const pixels, geom::Size const size, MirOrientation orientation) :
+mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const pixels, geom::Size const size, const float scale, MirOrientation orientation) :
     configuration{
             the_output_id,
             mg::DisplayConfigurationCardId{0},
@@ -43,7 +43,7 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             pf,
             mir_power_mode_on,
             orientation,
-            1.0f,
+            scale,
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},

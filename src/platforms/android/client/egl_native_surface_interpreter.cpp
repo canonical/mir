@@ -54,7 +54,7 @@ void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffe
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
     sync_fence.wait();
 
-    surface.request_and_wait_for_next_buffer();
+    surface.swap_buffers_sync();
 }
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_format(int format)

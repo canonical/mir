@@ -75,7 +75,7 @@ TEST_F(MesaClientNativeSurfaceTest, first_advance_skips_request)
     
     using namespace testing;
     MirBufferPackage buffer_package;
-    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+    EXPECT_CALL(mock_surface, swap_buffers_sync())
         .Times(0);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
@@ -91,7 +91,7 @@ TEST_F(MesaClientNativeSurfaceTest, basic_advance)
     InSequence seq;
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
-    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+    EXPECT_CALL(mock_surface, swap_buffers_sync())
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);

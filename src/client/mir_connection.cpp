@@ -1172,6 +1172,19 @@ std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_dis
     return display_configuration->take_snapshot();
 }
 
+std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain_with_id(
+    MirRenderSurface* render_surface,
+    mir::protobuf::BufferStream const& a_protobuf_bs)
+{
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    auto chain = std::make_shared<mcl::PresentationChain>(
+        this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
+
+    surface_map->insert(render_surface->stream_id(), chain);
+    return chain;
+}
+
 void MirConnection::create_presentation_chain(
     mir_presentation_chain_callback callback,
     void *context)
