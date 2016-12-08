@@ -2,7 +2,6 @@ MIR_SERVER_0.26 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
-    vtable?for?mir::input::NullInputDispatcher;
     VTT?for?mir::shell::ShellWrapper;
     VTT?for?mir::shell::SystemCompositorWindowManager;
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
