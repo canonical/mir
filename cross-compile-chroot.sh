@@ -80,11 +80,11 @@ if [ ${update_build_dir} -eq 1 ]; then
     BUILD_DIR=build-${target_arch}-${dist}
 fi
 
-if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=~/.cache/mir-${target_arch}-chroot-${dist}
+if [ "${MIR_CHROOT}" = "" ]; then
+    export MIR_CHROOT=~/.cache/mir-${target_arch}-chroot-${dist}
 fi
 
-if [ ! -d ${MIR_NDK_PATH} ]; then 
+if [ ! -d ${MIR_CHROOT} ]; then 
     echo "no partial chroot dir detected. attempting to create one"
     _do_update_chroot=1
 fi
@@ -94,7 +94,7 @@ if [ ! -d ${BUILD_DIR} ]; then
 fi
 
 echo "Building for distro: $dist"
-echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
+echo "Using MIR_CHROOT: ${MIR_CHROOT}"
 
 additional_repositories=
 if [ ${dist} == "vivid" ] ; then
@@ -151,7 +151,7 @@ echo "Target machine: ${target_machine}"
 
 if [ ${_do_update_chroot} -eq 1 ] ; then
     pushd tools > /dev/null
-        ./setup-partial-armhf-chroot.sh -d ${dist} -a ${target_arch} ${additional_repositories} ${MIR_NDK_PATH}
+        ./setup-partial-armhf-chroot.sh -d ${dist} -a ${target_arch} ${additional_repositories} ${MIR_CHROOT}
     popd > /dev/null
     # force a clean build after an update, since CMake cache maybe out of date
     clean_build_dir ${BUILD_DIR}
@@ -159,14 +159,14 @@ fi
 
 pushd ${BUILD_DIR} > /dev/null 
 
-    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/${target_machine}/pkgconfig"
+    export PKG_CONFIG_PATH="${MIR_CHROOT}/usr/lib/pkgconfig:${MIR_CHROOT}/usr/lib/${target_machine}/pkgconfig"
     export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
     export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
-    export PKG_CONFIG_SYSROOT_DIR=$MIR_NDK_PATH
+    export PKG_CONFIG_SYSROOT_DIR=$MIR_CHROOT
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
     export MIR_TARGET_MACHINE=${target_machine}
     export MIR_GCC_VARIANT=${gcc_variant}
-    export CMAKE_PREFIX_PATH=$MIR_NDK_PATH/usr/lib/${target_machine}/cmake 
+    export CMAKE_PREFIX_PATH=$MIR_CHROOT/usr/lib/${target_machine}/cmake 
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
