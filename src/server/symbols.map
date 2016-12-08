@@ -825,7 +825,8 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
 MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
  global:
   extern "C++" {
-    mir::renderer::gl::ProgramFamily::*;
+    mir::renderer::gl::ProgramFamily::add_program*;
+
     mir::renderer::gl::Renderer::Renderer*;
     mir::renderer::gl::Renderer::?Renderer*;
     mir::renderer::gl::Renderer::Program::Program*;
