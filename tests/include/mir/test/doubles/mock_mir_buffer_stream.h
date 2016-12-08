@@ -42,7 +42,7 @@ struct MockMirBufferStream : public MirBufferStream
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<client::MemoryRegion>());
     MOCK_CONST_METHOD0(swap_interval, int());
     MOCK_METHOD1(set_swap_interval, MirWaitHandle*(int));
-    MOCK_METHOD1(adopted_by, void(std::weak_ptr<MirSurface>));
+    MOCK_METHOD1(adopted_by, void(MirSurface*));
     MOCK_METHOD0(platform_type, MirPlatformType(void));
     MOCK_METHOD0(get_current_buffer_package, MirNativeBuffer*(void));
     MOCK_METHOD0(get_create_wait_handle, MirWaitHandle*(void));

@@ -21,6 +21,7 @@
 #include "cursor_configuration.h"
 #include "make_protobuf_object.h"
 #include "mir_protobuf.pb.h"
+#include "connection_surface_map.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
@@ -648,6 +649,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
+        auto const& mapping = connection_->connection_surface_map();
         default_stream = nullptr;
         for(auto const& stream : spec.streams.value())
         {
@@ -660,6 +662,13 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
                 new_stream->set_width(stream.size.value().width.as_int());
                 new_stream->set_height(stream.size.value().height.as_int());
             }
+
+            mir::frontend::BufferStreamId id(stream.stream_id);
+            mapping->with_stream_do(id,
+                [this](MirBufferStream* bs)
+                {
+                    bs->adopted_by(this);
+                });
         }
     }
 

@@ -87,7 +87,7 @@ public:
 
     virtual int swap_interval() const = 0;
     virtual MirWaitHandle* set_swap_interval(int interval) = 0;
-    virtual void adopted_by(std::weak_ptr<MirSurface>) = 0;
+    virtual void adopted_by(MirSurface*) = 0;
 
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;
