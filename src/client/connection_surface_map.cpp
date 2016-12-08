@@ -55,7 +55,7 @@ std::shared_ptr<MirBufferStream> ConnectionSurfaceMap::stream(BufferStreamId id)
     auto const found = streams.find(id);
     return found != streams.end() ? found->second : nullptr;
 }
-    
+
 void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(MirBufferStream*)> const& fn) const
 {
     std::shared_lock<decltype(stream_guard)> lk(stream_guard);
