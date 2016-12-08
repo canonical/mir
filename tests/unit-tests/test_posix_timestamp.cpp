@@ -80,14 +80,6 @@ TEST(PosixTimestamp, comparison)
     EXPECT_THROW((void)(a > bb), std::logic_error);
     EXPECT_THROW((void)(aa > b), std::logic_error);
     EXPECT_THROW((void)(aa < b), std::logic_error);
-}
-
-TEST(PosixTimestamp, or_equal_comparison_operators)
-{
-    PosixTimestamp const a(CLOCK_MONOTONIC, 111ns);
-    PosixTimestamp const aa(CLOCK_MONOTONIC_COARSE, 111ns);
-    PosixTimestamp const b(CLOCK_MONOTONIC, 333ns);
-    PosixTimestamp const bb(CLOCK_MONOTONIC_COARSE, 333ns);
 
     EXPECT_TRUE(a <= b);
     EXPECT_TRUE(a <= a);
