@@ -51,7 +51,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 
 std::shared_ptr<MirBufferStream> ConnectionSurfaceMap::stream(BufferStreamId id) const
 {
-    std::shared_lock<decltype(guard)> lk(guard);
+    std::shared_lock<decltype(stream_guard)> lk(stream_guard);
     auto const found = streams.find(id);
     return found != streams.end() ? found->second : nullptr;
 }
