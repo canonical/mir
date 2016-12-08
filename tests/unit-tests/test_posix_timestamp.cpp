@@ -80,6 +80,20 @@ TEST(PosixTimestamp, comparison)
     EXPECT_THROW((void)(a > bb), std::logic_error);
     EXPECT_THROW((void)(aa > b), std::logic_error);
     EXPECT_THROW((void)(aa < b), std::logic_error);
+
+    EXPECT_TRUE(a <= b);
+    EXPECT_TRUE(a <= a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_TRUE(b >= b);
+    EXPECT_TRUE(aa <= bb);
+    EXPECT_TRUE(aa <= aa);
+    EXPECT_TRUE(bb >= aa);
+    EXPECT_TRUE(bb >= bb);
+
+    EXPECT_THROW((void)(a <= bb), std::logic_error);
+    EXPECT_THROW((void)(a >= bb), std::logic_error);
+    EXPECT_THROW((void)(aa >= b), std::logic_error);
+    EXPECT_THROW((void)(aa <= b), std::logic_error);
 }
 
 TEST(PosixTimestamp, sleeps)
