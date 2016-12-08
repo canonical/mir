@@ -1,4 +1,4 @@
-MIR_SERVER_0.25 {
+MIR_SERVER_0.26 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -159,6 +159,7 @@ MIR_SERVER_0.25 {
     mir::Server::add_configuration_option*;
     mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
+    mir::Server::add_pre_init_callback*;
     mir::Server::apply_settings*;
     mir::Server::exited_normally*;
     mir::Server::get_options*;
@@ -170,7 +171,6 @@ MIR_SERVER_0.25 {
     mir::Server::override_the_coordinate_translator*;
     mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
-    mir::Server::override_the_display_configuration_report*;
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
@@ -839,10 +839,3 @@ MIR_SERVER_0.25 {
   };
  local: *;
 };
-
-MIR_SERVER_0.26 {
- global:
-  extern "C++" {
-    mir::Server::add_pre_init_callback*;
-  };
-} MIR_SERVER_0.25;
