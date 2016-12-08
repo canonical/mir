@@ -312,10 +312,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             {
                 if (seq.buffer_request().has_id())
                 {
-                    map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                    [&] (MirBufferStream* receiver) {
+                    mf::BufferStreamId stream_id(seq.buffer_request().id().value());
+                    if (auto receiver = map->stream(stream_id))
                         receiver->buffer_available(seq.buffer_request().buffer());
-                    });
                 }
                 
                 else if (seq.buffer_request().has_operation())
@@ -372,46 +371,41 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     rpc_report->event_parsing_succeeded(*e);
 
-                    auto const send_e = [&e](MirSurface* surface)
-                        { surface->handle_event(*e); };
+                    int surface_id = 0;
+                    bool is_surface_event = true;
 
                     switch (e->type())
                     {
                     case mir_event_type_surface:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_surface()->id()), send_e);
+                        surface_id = e->to_surface()->id();
                         break;
-
                     case mir_event_type_resize:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_resize()->surface_id()), send_e);
+                        surface_id = e->to_resize()->surface_id();
                         break;
-
                     case mir_event_type_orientation:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_orientation()->surface_id()), send_e);
+                        surface_id = e->to_orientation()->surface_id();
                         break;
-
                     case mir_event_type_close_surface:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_close_surface()->surface_id()), send_e);
+                        surface_id = e->to_close_surface()->surface_id();
                         break;
                     case mir_event_type_keymap:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_keymap()->surface_id()), send_e);
+                        surface_id = e->to_keymap()->surface_id();
                         break;
                     case mir_event_type_surface_output:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_surface_output()->surface_id()), send_e);
+                        surface_id = e->to_surface_output()->surface_id();
                         break;
                     case mir_event_type_surface_placement:
-                        if (auto map = surface_map.lock())
-                            map->with_surface_do(mf::SurfaceId(e->to_surface_placement()->id()), send_e);
+                        surface_id = e->to_surface_placement()->id();
                         break;
-
                     default:
+                        is_surface_event = false;
                         event_sink->handle_event(*e);
                     }
+
+                    if (is_surface_event)
+                        if (auto map = surface_map.lock())
+                            if (auto surf = map->surface(mf::SurfaceId(surface_id)))
+                                surf->handle_event(*e);
                 }
             }
             catch(...)
