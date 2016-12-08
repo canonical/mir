@@ -699,7 +699,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
     mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
-    mir::shell::CanonicalSurfaceInfo::CanonicalSurfaceInfo*;
     mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
@@ -707,7 +706,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
-    mir::shell::DefaultWindowManager::DefaultWindowManager*;
 
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
@@ -814,7 +812,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
     typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
     typeinfo?for?mir::DefaultServerConfiguration;
     mir::run_mir*;
-    mir::DisplayServer::stop*;
     vtable?for?mir::shell::CanonicalWindowManagerPolicy;
     VTT?for?mir::shell::CanonicalWindowManagerPolicy;
     mir::DefaultServerConfiguration::the_key_mapper*;
