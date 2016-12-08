@@ -247,6 +247,7 @@ private:
 
     //Deprecated functions can cause MirSurfaces to be created with a default stream
     std::shared_ptr<MirBufferStream> default_stream;
+    std::unordered_set<std::shared_ptr<MirBufferStream>> streams;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 

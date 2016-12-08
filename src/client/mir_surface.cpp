@@ -125,6 +125,7 @@ MirSurface::MirSurface(
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
       default_stream(buffer_stream),
+      streams{default_stream},
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
@@ -651,6 +652,8 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     {
         auto const& mapping = connection_->connection_surface_map();
         default_stream = nullptr;
+        for (auto const& old_stream : streams)
+            old_stream->adopted_by(nullptr);
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
