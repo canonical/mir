@@ -684,8 +684,14 @@ MIR_SERVER_0.26 {
     virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
     virtual?thunk?to?mir::shell::ShellWrapper::handle*;
     virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
+  };
+ local: *;
+};
 
 # these symbols are needed by mir_proving_server but are not intended to be public
+MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
+ global:
+  extern "C++" {
     mir::renderer::gl::ProgramFamily::*;
     mir::renderer::gl::Renderer::Renderer*;
     mir::renderer::gl::Renderer::?Renderer*;
@@ -736,8 +742,13 @@ MIR_SERVER_0.26 {
     virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
     virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
     VTT?for?mir::shell::BasicWindowManager;
+  };
+} MIR_SERVER_0.26;
 
 # these symbols are needed by the test framework but are not intended to be public
+MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
+ global:
+  extern "C++" {
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
     mir::shell::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy*;
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
@@ -868,5 +879,4 @@ MIR_SERVER_0.26 {
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
     mir::DefaultServerConfiguration::the_stop_callback*;
   };
- local: *;
-};
+} MIR_SERVER_0.26;
