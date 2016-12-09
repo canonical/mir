@@ -20,6 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
+#include "mir/edid.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
@@ -93,6 +94,21 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     );
         if (out.connected)
         {
+            if (auto edid = reinterpret_cast<mir::EDID const*>(out.edid.data()))
+            {
+                char name[14];
+                edid->get_monitor_name(name);  // May be empty
+                logger->log(component, severity,
+                            "%sEDID monitor name: %s", indent, name);
+
+                char man[4];
+                edid->get_manufacturer(man);
+                logger->log(component, severity,
+                            "%sEDID manufacturer: %s", indent, man);
+                logger->log(component, severity,
+                            "%sEDID product code: %hu", indent, edid->product_code());
+            }
+
             int width_mm = out.physical_size_mm.width.as_int();
             int height_mm = out.physical_size_mm.height.as_int();
             float inches =
