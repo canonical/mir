@@ -108,6 +108,10 @@ private:
         } other;
     };
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
     /* 0x00 */ uint8_t  header[8];
     /* 0x08 */ uint8_t  manufacturer[2];
     /* 0x0a */ uint16_t product_code_le;
@@ -137,6 +141,9 @@ private:
     /* 0x36 */ Descriptor descriptor[4];
     /* 0x7e */ uint8_t  num_extensions;  /* each is another 128-byte block */
     /* 0x7f */ uint8_t  checksum;
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 };
 
 } // namespace mir
