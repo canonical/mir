@@ -48,6 +48,8 @@ namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
 
+using mir::client::FrameClock;
+
 namespace
 {
 std::mutex handle_mutex;
@@ -98,6 +100,7 @@ MirSurface::MirSurface(
     std::shared_ptr<MirWaitHandle> const& handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn),
+    frame_clock(std::make_shared<FrameClock>()),
     creation_handle(handle)
 {
     surface->set_error(error);
@@ -129,6 +132,7 @@ MirSurface::MirSurface(
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
+      frame_clock(std::make_shared<FrameClock>()),
       creation_handle(handle),
       size({surface_proto.width(), surface_proto.height()}),
       format(static_cast<MirPixelFormat>(surface_proto.pixel_format())),
@@ -469,7 +473,7 @@ void MirSurface::handle_event(MirEvent const& e)
         {
             std::chrono::nanoseconds const ns(
                 static_cast<long>(1000000000L / rate));
-            frame_clock.set_period(ns);
+            frame_clock->set_period(ns);
         }
         /*
          * TODO: Notify the input receiver of the rate change AFTER the server
@@ -496,7 +500,7 @@ void MirSurface::wait_for_vsync()
     mir::time::PosixTimestamp target;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        target = frame_clock.next_frame_after(last_vsync);
+        target = frame_clock->next_frame_after(last_vsync);
     }
     sleep_until(target);
     {
@@ -705,4 +709,10 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 MirConnection* MirSurface::connection() const
 {
     return connection_;
+}
+
+std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return frame_clock;
 }

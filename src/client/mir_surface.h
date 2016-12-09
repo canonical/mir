@@ -219,6 +219,8 @@ public:
 
     void wait_for_vsync();
 
+    std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
+
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
@@ -258,7 +260,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     mir::time::PosixTimestamp last_vsync;
-    mir::client::FrameClock frame_clock;
+    std::shared_ptr<mir::client::FrameClock> const frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
