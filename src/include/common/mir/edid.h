@@ -19,6 +19,7 @@
 #ifndef MIR_EDID_H_
 #define MIR_EDID_H_
 
+#include <cstdint>
 #include <cstring>
 
 namespace mir
