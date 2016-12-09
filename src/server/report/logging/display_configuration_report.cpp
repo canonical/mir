@@ -97,9 +97,9 @@ void mrl::DisplayConfigurationReport::log_configuration(
             if (auto edid = reinterpret_cast<mir::EDID const*>(out.edid.data()))
             {
                 char name[14];
-                edid->get_monitor_name(name);  // May be empty
-                logger->log(component, severity,
-                            "%sEDID monitor name: %s", indent, name);
+                if (edid->get_monitor_name(name))
+                    logger->log(component, severity,
+                                "%sEDID monitor name: %s", indent, name);
 
                 char man[4];
                 edid->get_manufacturer(man);
