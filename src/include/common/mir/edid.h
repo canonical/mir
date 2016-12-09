@@ -61,24 +61,7 @@ struct EDID
 private:
     /* Pretty much every field in an EDID requires some kind of conversion
        and reinterpretation. So keep those details private... */
-
-    union Descriptor
-    {
-        struct
-        {
-            uint16_t  pixel_clock_le;
-            uint8_t   todo[16];
-        } detailed_timing;
-        struct
-        {
-            uint16_t zero0;
-            uint8_t  zero2;
-            uint8_t  type;
-            uint8_t  zero4;
-            uint8_t  text[13];
-        } other;
-    };
-    
+   
     enum StringDescriptorType
     {
         string_monitor_serial_number = 0xff,
@@ -102,6 +85,23 @@ private:
         str[len] = '\0';
         return len;
     }
+
+    union Descriptor
+    {
+        struct
+        {
+            uint16_t  pixel_clock_le;
+            uint8_t   todo[16];
+        } detailed_timing;
+        struct
+        {
+            uint16_t zero0;
+            uint8_t  zero2;
+            uint8_t  type;
+            uint8_t  zero4;
+            uint8_t  text[13];
+        } other;
+    };
 
     /* 0x00 */ uint8_t  header[8];
     /* 0x08 */ uint8_t  manufacturer[2];
