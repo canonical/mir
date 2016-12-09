@@ -138,20 +138,18 @@ struct EDID
         str[len] = '\0';
         return len;
     }
-};
 
-size_t edid_get_monitor_name(uint8_t const* raw_edid,
-                             char str[13+1])
-{
-    auto edid = reinterpret_cast<EDID const*>(raw_edid);
-    size_t len = edid->get_string(edid_string_monitor_name, str);
-    if (char* pad = strchr(str, '\n'))
+    size_t get_monitor_name(char str[14]) const
     {
-        *pad = '\0';
-        len = pad - str;
+        size_t len = get_string(edid_string_monitor_name, str);
+        if (char* pad = strchr(str, '\n'))
+        {
+            *pad = '\0';
+            len = pad - str;
+        }
+        return len;
     }
-    return len;
-}
+};
 
 void edid_get_manufacturer(uint8_t const* edid,
                            char str[4+1])
@@ -211,15 +209,17 @@ char const* mir_output_get_model(MirOutput const* output)
         return output->model().c_str();
 
     // But if not we use the same member for caching our EDID probe...
-    if (auto edid = mir_output_get_edid(output))
+    if (auto raw_edid = mir_output_get_edid(output))
     {
-        char name[13+1];
-        if (!edid_get_monitor_name(edid, name))
+        auto edid = reinterpret_cast<EDID const*>(raw_edid);
+        char name[14];
+
+        if (!edid->get_monitor_name(name))
         {
-            edid_get_manufacturer(edid, name);
+            edid_get_manufacturer(raw_edid, name);
             snprintf(name + 4,
                      sizeof(name) - 4,
-                     " %hu", edid_get_product_code(edid));
+                     " %hu", edid_get_product_code(raw_edid));
         }
         const_cast<MirOutput*>(output)->set_model(name);
         return output->model().c_str();
