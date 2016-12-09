@@ -128,7 +128,6 @@ MirSurface::MirSurface(
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
       default_stream(buffer_stream),
-      streams{default_stream},
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
@@ -139,6 +138,9 @@ MirSurface::MirSurface(
       usage(static_cast<MirBufferUsage>(surface_proto.buffer_usage())),
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
+    if (default_stream)
+        streams.insert(default_stream);
+
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {
         auto const& attrib = surface_proto.attributes(i);
