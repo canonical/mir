@@ -18,7 +18,7 @@
  */
 
 #include "mir/input/pointer_configuration.h"
-#include <iostream>
+#include <ostream>
 
 namespace mi = mir::input;
 struct mi::PointerConfiguration::Implementation
