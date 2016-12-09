@@ -37,12 +37,13 @@ unsigned char const dell_u2413_edid[129] =
 TEST(EDID, has_correct_size)
 {
     EXPECT_EQ(128u, sizeof(EDID));
+    EXPECT_EQ(128u, EDID::minimum_size);
 }
 
 TEST(EDID, can_get_name)
 {
     auto edid = reinterpret_cast<EDID const*>(dell_u2413_edid);
-    char name[14];
+    EDID::MonitorName name;
     int len = edid->get_monitor_name(name);
     EXPECT_EQ(10, len);
     EXPECT_STREQ("DELL U2413", name);
@@ -51,8 +52,9 @@ TEST(EDID, can_get_name)
 TEST(EDID, can_get_manufacturer)
 {
     auto edid = reinterpret_cast<EDID const*>(dell_u2413_edid);
-    char man[4];
-    edid->get_manufacturer(man);
+    EDID::Manufacturer man;
+    int len = edid->get_manufacturer(man);
+    EXPECT_EQ(3, len);
     EXPECT_STREQ("DEL", man);
 }
 

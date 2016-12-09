@@ -32,7 +32,11 @@ struct EDID
     EDID(EDID const&) = delete;
     EDID(EDID const&&) = delete;
 
-    size_t get_monitor_name(char str[14]) const
+    enum { minimum_size = 128 };
+    typedef char MonitorName[14];  // up to 13 characters
+    typedef char Manufacturer[4];  // always 3 characters
+
+    size_t get_monitor_name(MonitorName str) const
     {
         size_t len = get_string(string_monitor_name, str);
         if (char* pad = strchr(str, '\n'))
@@ -43,7 +47,7 @@ struct EDID
         return len;
     }
 
-    void get_manufacturer(char str[4]) const
+    size_t get_manufacturer(Manufacturer str) const
     {
         // Confusingly this field is more like big endian. Others are little.
         auto man = static_cast<uint16_t>(manufacturer[0]) << 8 | manufacturer[1];
@@ -51,6 +55,7 @@ struct EDID
         str[1] = ((man >> 5) & 31) + 'A' - 1;
         str[2] = (man & 31) + 'A' - 1;
         str[3] = '\0';
+        return 3;
     }
 
     uint16_t product_code() const
