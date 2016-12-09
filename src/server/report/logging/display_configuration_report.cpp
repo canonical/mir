@@ -94,13 +94,13 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     );
         if (out.connected)
         {
-            if (auto edid = reinterpret_cast<mir::EDID const*>(out.edid.data()))
+            if (out.edid.size() >= 128)
             {
+                auto edid = reinterpret_cast<mir::EDID const*>(out.edid.data());
                 char name[14];
                 if (edid->get_monitor_name(name))
                     logger->log(component, severity,
                                 "%sEDID monitor name: %s", indent, name);
-
                 char man[4];
                 edid->get_manufacturer(man);
                 logger->log(component, severity,
