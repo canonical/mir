@@ -19,6 +19,7 @@
 #ifndef MIR_EDID_H_
 #define MIR_EDID_H_
 
+#include <endian.h>
 #include <cstdint>
 #include <cstring>
 
@@ -54,15 +55,12 @@ struct EDID
 
     uint16_t product_code() const
     {
-        return to_host(product_code_le);
+        return le16toh(product_code_le);
     }
 
 private:
-    static uint16_t to_host(uint16_t little_endian)
-    {
-        auto bytes = reinterpret_cast<uint8_t const*>(&little_endian);
-        return static_cast<uint16_t>(bytes[1]) << 8 | bytes[0];
-    }
+    /* Pretty much every field in an EDID requires some kind of conversion
+       and reinterpretation. So keep those details private... */
 
     union Descriptor
     {
@@ -77,7 +75,7 @@ private:
             uint8_t  zero2;
             uint8_t  type;
             uint8_t  zero4;
-            char     text[13];
+            uint8_t  text[13];
         } other;
     };
     
