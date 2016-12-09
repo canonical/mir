@@ -54,17 +54,17 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
 
 union le_uint16
 {
-    uint16_t u16;
     uint8_t u8[2];
+    uint16_t to_host() const
+    {
+        return static_cast<uint16_t>(u8[1]) << 8 | u8[0];
+    }
 };
 
 union le_uint32
 {
-    uint32_t u32;
     uint8_t u8[4];
 };
-
-// http://read.pudn.com/downloads110/ebook/456020/E-EDID%20Standard.pdf
 
 typedef union EDIDDescriptor
 {
@@ -122,6 +122,10 @@ struct EDID
     /* 0x7e */ uint8_t   num_extensions;  /* each is another 128-byte block */
     /* 0x7f */ uint8_t   checksum;
 
+    EDID() = delete;
+    EDID(EDID const&) = delete;
+    EDID(EDID const&&) = delete;
+
     size_t get_string(EDIDStringId type, char str[14]) const
     {
         size_t len = 0;
@@ -149,22 +153,16 @@ struct EDID
         }
         return len;
     }
+
+    void get_manufacturer(char str[4]) const
+    {
+        auto man = manufacturer.to_host();
+        str[0] = ((man >> 10) & 31) + 'A' - 1;
+        str[1] = ((man >> 5) & 31) + 'A' - 1;
+        str[2] = (man & 31) + 'A' - 1;
+        str[3] = '\0';
+    }
 };
-
-void edid_get_manufacturer(uint8_t const* edid,
-                           char str[4+1])
-{
-    uint16_t manufacturer = static_cast<uint16_t>(edid[8]) << 8 | edid[9];
-    str[0] = ((manufacturer >> 10) & 31) + 'A' - 1;
-    str[1] = ((manufacturer >> 5) & 31) + 'A' - 1;
-    str[2] = (manufacturer & 31) + 'A' - 1;
-    str[3] = '\0';
-}
-
-uint16_t edid_get_product_code(uint8_t const* edid)
-{
-    return static_cast<uint16_t>(edid[11]) << 8 | edid[10];
-}
 
 } // namespace
 
@@ -213,13 +211,11 @@ char const* mir_output_get_model(MirOutput const* output)
     {
         auto edid = reinterpret_cast<EDID const*>(raw_edid);
         char name[14];
-
         if (!edid->get_monitor_name(name))
         {
-            edid_get_manufacturer(raw_edid, name);
-            snprintf(name + 4,
-                     sizeof(name) - 4,
-                     " %hu", edid_get_product_code(raw_edid));
+            edid->get_manufacturer(name);
+            snprintf(name + 4, sizeof(name) - 4, " %hu",
+                     edid->product_code.to_host());
         }
         const_cast<MirOutput*>(output)->set_model(name);
         return output->model().c_str();
