@@ -52,56 +52,99 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
     return reinterpret_cast<MirOutputMode const*>(mode);
 }
 
-enum
+union le_uint16
 {
-    edid_descriptor_text_max_len = 13,
-    edid_manufacturer_len = 3
+    uint16_t u16;
+    uint8_t u8[2];
 };
 
-/*
- * This EDID code could move up to the server later, but that's not required
- * yet. Maybe when we want to dump it to the server log?
- */
-size_t edid_get_descriptor_string(uint8_t const* edid, uint8_t type,
-                                  char str[edid_descriptor_text_max_len+1])
+union le_uint32
 {
-    union descriptor
-    {
-        struct
-        {
-            uint16_t pixel_clock;
-        } detailed_timing;
-        struct
-        {
-            uint16_t zero0;
-            uint8_t  zero2;
-            uint8_t  type;
-            uint8_t  zero4;
-            char     text[edid_descriptor_text_max_len];
-        } other;
-    };
-    
-    union descriptor const* desc = (union descriptor const*)(edid + 54);
-    union descriptor const* desc_end = desc + 4;
-    size_t len = 0;
+    uint32_t u32;
+    uint8_t u8[4];
+};
 
-    for (; desc < desc_end; ++desc)
+// http://read.pudn.com/downloads110/ebook/456020/E-EDID%20Standard.pdf
+
+typedef union EDIDDescriptor
+{
+    struct
     {
-        if (!desc->detailed_timing.pixel_clock && desc->other.type == type)
+        le_uint16 pixel_clock;
+        uint8_t   todo[16];
+    } detailed_timing;
+    struct
+    {
+        uint16_t zero0;
+        uint8_t  zero2;
+        uint8_t  type;
+        uint8_t  zero4;
+        char     text[13];
+    } other;
+} EDIDDescritor;
+
+typedef enum EDIDStringId
+{
+    edid_string_monitor_serial_number = 0xff,
+    edid_string_unspecified_text = 0xfe,
+    edid_string_monitor_name = 0xfc,
+} EDIDStringId;
+
+struct EDID
+{
+    /* 0x00 */ uint8_t   header[8];
+    /* 0x08 */ le_uint16 manufacturer;
+    /* 0x0a */ le_uint16 product_code;
+    /* 0x0c */ le_uint32 serial_number;
+    /* 0x10 */ uint8_t   week_of_manufacture;
+    /* 0x11 */ uint8_t   year_of_manufacture;
+    /* 0x12 */ uint8_t   edid_version;
+    /* 0x13 */ uint8_t   edid_revision;
+    /* 0x14 */ uint8_t   input_bitmap;
+    /* 0x15 */ uint8_t   max_horz_cm;
+    /* 0x16 */ uint8_t   max_vert_cm;
+    /* 0x17 */ uint8_t   gamma;
+    /* 0x18 */ uint8_t   features_bitmap;
+    /* 0x19 */ uint8_t   red_green_bits_1to0;
+    /* 0x1a */ uint8_t   blue_white_bits_1to0;
+    /* 0x1b */ uint8_t   red_x_bits_9to2;
+    /* 0x1c */ uint8_t   red_y_bits_9to2;
+    /* 0x1d */ uint8_t   green_x_bits_9to2;
+    /* 0x1e */ uint8_t   green_y_bits_9to2;
+    /* 0x1f */ uint8_t   blue_x_bits_9to2;
+    /* 0x20 */ uint8_t   blue_y_bits_9to2;
+    /* 0x21 */ uint8_t   white_x_bits_9to2;
+    /* 0x22 */ uint8_t   white_y_bits_9to2;
+    /* 0x23 */ uint8_t   established_timings[2];
+    /* 0x25 */ uint8_t   reserved_timings;
+    /* 0x26 */ uint8_t   standard_timings[2][8];
+    /* 0x36 */ EDIDDescriptor descriptor[4];
+    /* 0x7e */ uint8_t   num_extensions;  /* each is another 128-byte block */
+    /* 0x7f */ uint8_t   checksum;
+
+    size_t get_string(EDIDStringId type, char str[14]) const
+    {
+        size_t len = 0;
+        for (int d = 0; d < 4; ++d)
         {
-            len = sizeof desc->other.text;
-            memcpy(str, desc->other.text, len);
-            break;
+            auto& desc = descriptor[d];
+            if (!desc.other.zero0 && desc.other.type == type)
+            {
+                len = sizeof desc.other.text;
+                memcpy(str, desc.other.text, len);
+                break;
+            }
         }
+        str[len] = '\0';
+        return len;
     }
-    str[len] = '\0';
-    return len;
-}
+};
 
-size_t edid_get_monitor_name(uint8_t const* edid,
-                             char str[edid_descriptor_text_max_len+1])
+size_t edid_get_monitor_name(uint8_t const* raw_edid,
+                             char str[13+1])
 {
-    size_t len = edid_get_descriptor_string(edid, 0xFC, str);
+    auto edid = reinterpret_cast<EDID const*>(raw_edid);
+    size_t len = edid->get_string(edid_string_monitor_name, str);
     if (char* pad = strchr(str, '\n'))
     {
         *pad = '\0';
@@ -111,7 +154,7 @@ size_t edid_get_monitor_name(uint8_t const* edid,
 }
 
 void edid_get_manufacturer(uint8_t const* edid,
-                           char str[edid_manufacturer_len+1])
+                           char str[4+1])
 {
     uint16_t manufacturer = static_cast<uint16_t>(edid[8]) << 8 | edid[9];
     str[0] = ((manufacturer >> 10) & 31) + 'A' - 1;
@@ -170,12 +213,12 @@ char const* mir_output_get_model(MirOutput const* output)
     // But if not we use the same member for caching our EDID probe...
     if (auto edid = mir_output_get_edid(output))
     {
-        char name[edid_descriptor_text_max_len+1];
+        char name[13+1];
         if (!edid_get_monitor_name(edid, name))
         {
             edid_get_manufacturer(edid, name);
-            snprintf(name + edid_manufacturer_len,
-                     sizeof(name) - edid_manufacturer_len,
+            snprintf(name + 4,
+                     sizeof(name) - 4,
                      " %hu", edid_get_product_code(edid));
         }
         const_cast<MirOutput*>(output)->set_model(name);
