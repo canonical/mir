@@ -95,8 +95,8 @@ private:
     {
         struct
         {
-            uint16_t  pixel_clock_le;
-            uint8_t   todo[16];
+            uint16_t pixel_clock_le;
+            uint8_t  todo[16];
         } detailed_timing;
         struct
         {
