@@ -52,7 +52,7 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
     return reinterpret_cast<MirOutputMode const*>(mode);
 }
 
-union le_uint16
+struct le_uint16
 {
     uint8_t u8[2];
     uint16_t to_host() const
@@ -61,7 +61,7 @@ union le_uint16
     }
 };
 
-union le_uint32
+struct le_uint32
 {
     uint8_t u8[4];
 };
