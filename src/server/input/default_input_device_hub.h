@@ -79,11 +79,15 @@ public:
     void add_observer(std::shared_ptr<InputDeviceObserver> const&) override;
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
     void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
+    void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
+
 
 private:
     void update_spots();
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
+    void device_changed(Device* dev);
+    void emit_changed_devices();
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<frontend::EventSink> const sink;
@@ -125,6 +129,8 @@ private:
     std::vector<std::shared_ptr<Device>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
+    std::mutex changed_devices_guard;
+    std::unique_ptr<std::vector<std::shared_ptr<Device>>> changed_devices;
 
     MirInputDeviceId device_id_generator;
     bool ready{false};

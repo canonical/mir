@@ -244,6 +244,13 @@ void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device 
         callback(*item);
 }
 
+void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
+{
+    std::unique_lock<std::mutex> lock(observer_guard);
+    for (auto& item : handles)
+        callback(*item);
+}
+
 void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& element)
 {
     auto observer = element.lock();
