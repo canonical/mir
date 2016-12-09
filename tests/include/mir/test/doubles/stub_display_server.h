@@ -66,6 +66,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::DisplayConfiguration const* /*request*/,
         mir::protobuf::DisplayConfiguration* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void remove_display(
+        mir::protobuf::Void const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
     void set_base_display_configuration(
         mir::protobuf::DisplayConfiguration const* /*request*/,
         mir::protobuf::Void* /*response*/,

@@ -109,6 +109,11 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
             return expectations.back().notifier.get_future();
         }
 
+        MOCK_METHOD2(session_configuration_applied, void(
+            std::shared_ptr<mf::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&));
+        MOCK_METHOD1(session_configuration_removed, void(std::shared_ptr<mf::Session> const&));
+
     protected:
         void initial_configuration(
             std::shared_ptr<mg::DisplayConfiguration const> const&) override
@@ -187,6 +192,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     testing::NiceMock<MockDisplay> mock_display;
     std::shared_ptr<NotifyingConfigurationObserver> observer{std::make_shared<NotifyingConfigurationObserver>()};
     StubAuthorizer stub_authorizer;
+    mir::test::Signal observed_changed;
 };
 
 TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
@@ -1658,4 +1664,38 @@ TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_t
     EXPECT_TRUE(error_received.wait_for(10s));
 
     client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, configure_session_display)
+{
+    auto configuration = mir_connection_create_display_configuration(connection);
+
+    EXPECT_CALL(*observer, session_configuration_applied(_, _))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_apply_session_display_config(connection, configuration);
+
+    observed_changed.wait_for(10s);
+}
+
+TEST_F(DisplayConfigurationTest, configure_session_removed_display)
+{
+    auto configuration = mir_connection_create_display_configuration(connection);
+
+    EXPECT_CALL(*observer, session_configuration_applied(_, _))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_apply_session_display_config(connection, configuration);
+
+    observed_changed.wait_for(10s);
+
+    mir_connection_remove_session_display_config(connection);
+
+    EXPECT_CALL(*observer, session_configuration_removed(_))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    observed_changed.wait_for(10s);
 }

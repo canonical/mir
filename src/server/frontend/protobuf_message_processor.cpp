@@ -249,6 +249,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::configure_display, invocation);
         }
+        else if ("remove_display" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::remove_display, invocation);
+        }
         else if ("set_base_display_configuration" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::set_base_display_configuration, invocation);
