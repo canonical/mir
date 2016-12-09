@@ -93,7 +93,7 @@ typedef enum EDIDStringId
 struct EDID
 {
     /* 0x00 */ uint8_t   header[8];
-    /* 0x08 */ le_uint16 manufacturer;
+    /* 0x08 */ uint8_t   manufacturer[2];
     /* 0x0a */ le_uint16 product_code;
     /* 0x0c */ le_uint32 serial_number;
     /* 0x10 */ uint8_t   week_of_manufacture;
@@ -156,7 +156,8 @@ struct EDID
 
     void get_manufacturer(char str[4]) const
     {
-        auto man = manufacturer.to_host();
+        // Confusingly this field is more like big endian. Others are little.
+        auto man = static_cast<uint16_t>(manufacturer[0]) << 8 | manufacturer[1];
         str[0] = ((man >> 10) & 31) + 'A' - 1;
         str[1] = ((man >> 5) & 31) + 'A' - 1;
         str[2] = (man & 31) + 'A' - 1;
@@ -214,7 +215,7 @@ char const* mir_output_get_model(MirOutput const* output)
         if (!edid->get_monitor_name(name))
         {
             edid->get_manufacturer(name);
-            snprintf(name + 4, sizeof(name) - 4, " %hu",
+            snprintf(name + 3, sizeof(name) - 3, " %hu",
                      edid->product_code.to_host());
         }
         const_cast<MirOutput*>(output)->set_model(name);
