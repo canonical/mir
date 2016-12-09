@@ -83,13 +83,13 @@ void wait_buffer(MirBuffer* b, void* context)
     pthread_mutex_unlock(w->mut);
 }
 
-void fill_buffer(MirBuffer* buffer)
+bool fill_buffer(MirBuffer* buffer)
 {
     MirBufferLayout layout = mir_buffer_layout_unknown;
     MirGraphicsRegion region;
     bool rc = mir_buffer_map(buffer, &region, &layout);
     if (!rc || layout == mir_buffer_layout_unknown)
-        return;
+        return false;
 
     unsigned int *data = (unsigned int*) region.vaddr;
     for (int i = 0; i < region.width; i++)
@@ -104,13 +104,14 @@ void fill_buffer(MirBuffer* buffer)
         }
     }
     mir_buffer_unmap(buffer);
+    return true;
 }
 
 int main(int argc, char *argv[])
 {
     //once full transition to Mir platform has been made, internal shim will be removed,
     //and the examples/ will use MirConnection/MirRenderSurface/MirBuffer as their egl types.
-    int use_shim = 0;
+    int use_shim = 1;
     int swapinterval = 1;
     char* socket = NULL; 
     int c;
@@ -168,7 +169,7 @@ int main(int argc, char *argv[])
 
     connection = mir_connect_sync(socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
-#if 1
+
     BufferWait w; 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -186,8 +187,8 @@ int main(int argc, char *argv[])
         pthread_cond_wait(&cond, &mutex);
     pthread_mutex_unlock(&mutex);
 
-    fill_buffer(buffer);
-#endif
+    bool filled = fill_buffer(buffer);
+
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
     else
@@ -254,7 +255,6 @@ int main(int argc, char *argv[])
 
     eglSwapInterval(egldisplay, swapinterval);
     EGLImageKHR image = EGL_NO_IMAGE_KHR;
-#if 1
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = NULL;
     PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = NULL;
     char const* extensions = eglQueryString(egldisplay, EGL_EXTENSIONS);
@@ -273,9 +273,11 @@ int main(int argc, char *argv[])
             eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR"); 
             eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR"); 
         }
-        image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+
+        if (filled)
+            image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
     }
-#endif
+
     Diamond diamond;
     if (image == EGL_NO_IMAGE_KHR)
     {
@@ -304,10 +306,8 @@ int main(int argc, char *argv[])
 
     destroy_diamond(&diamond);
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-#if 1
     if (image)
         eglDestroyImageKHR(egldisplay, image);
-#endif
     if (use_shim)
         future_driver_eglTerminate(egldisplay);
     else
