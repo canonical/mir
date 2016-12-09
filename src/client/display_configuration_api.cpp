@@ -101,8 +101,7 @@ char const* mir_output_get_model(MirOutput const* output)
         if (!edid->get_monitor_name(name))
         {
             edid->get_manufacturer(name);
-            snprintf(name + 3, sizeof(name) - 3, " %hu",
-                     edid->product_code.to_host());
+            snprintf(name + 3, sizeof(name) - 3, " %hu", edid->product_code());
         }
         const_cast<MirOutput*>(output)->set_model(name);
         return output->model().c_str();
