@@ -78,7 +78,7 @@ bool mi::KeyboardConfiguration::operator!=(KeyboardConfiguration const& rhs) con
     return !(*this == rhs);
 }
 
-std::ostream& operator<<(std::ostream& out, mi::KeyboardConfiguration const& keyboard)
+std::ostream& mi::operator<<(std::ostream& out, mi::KeyboardConfiguration const& keyboard)
 {
     return out << " keymap:" << keyboard.device_keymap();
 }

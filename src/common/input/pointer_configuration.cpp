@@ -141,7 +141,7 @@ bool mi::PointerConfiguration::operator!=(PointerConfiguration const& rhs) const
     return !(*this == rhs);
 }
 
-std::ostream& operator<<(std::ostream& out, mi::PointerConfiguration const& rhs)
+std::ostream& mi::operator<<(std::ostream& out, mi::PointerConfiguration const& rhs)
 {
     return out << " handedness:" << rhs.handedness()
         << " acceleration:" << rhs.acceleration()
