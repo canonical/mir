@@ -1677,6 +1677,8 @@ TEST_F(DisplayConfigurationTest, configure_session_display)
     mir_connection_apply_session_display_config(connection, configuration);
 
     observed_changed.wait_for(10s);
+
+    mir_display_config_release(configuration);
 }
 
 TEST_F(DisplayConfigurationTest, configure_session_removed_display)
@@ -1698,4 +1700,6 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
         .WillOnce(mt::WakeUp(&observed_changed));
 
     observed_changed.wait_for(10s);
+
+    mir_display_config_release(configuration);
 }
