@@ -175,6 +175,9 @@ MirSurface::~MirSurface()
 
     std::lock_guard<decltype(mutex)> lock(mutex);
 
+    for (auto const& s : streams)
+        s->adopted_by(nullptr);
+
     input_thread.reset();
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
@@ -660,9 +663,19 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         mir::frontend::SurfaceId surface_id{mods.surface_id().value()};
         auto self = map->surface(surface_id);
 
-        default_stream = nullptr;
+        /*
+         * This might be slightly premature to update our list of streams
+         * before we've even asked the server to do it, but the alternative
+         * is to get the server to emit stream-surface relationship changes
+         * back to us as events. It's possible but would be way overcomplicated
+         * for what we need right now. A proof of concept was begun:
+         *   lp:~vanvugt/mir/adoption
+         * But while we can avoid needing that, this is smaller and simpler...
+         */
         for (auto const& old_stream : streams)
             old_stream->adopted_by(nullptr);
+        streams.clear();
+        default_stream = nullptr;
 
         for(auto const& stream : spec.streams.value())
         {
@@ -678,14 +691,16 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
             mir::frontend::BufferStreamId id(stream.stream_id);
             /*
-             * Notice we don't treat non-existent stream IDs as an error.
+             * Notice we don't treat non-existent stream IDs as an error, yet.
              * This can probably be fixed in future but before we can do that,
              * some tests which violate that precondition of supplying valid
-             * known stream IDs would need to be fixed. So for now we support
-             * them and their fake stream IDs...
+             * known stream IDs would need to be fixed.
              */
             if (auto bs = map->stream(id))
+            {
                 bs->adopted_by(self);
+                streams.insert(bs);
+            }
         }
     }
 
