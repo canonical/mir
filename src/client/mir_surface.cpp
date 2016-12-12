@@ -139,7 +139,10 @@ MirSurface::MirSurface(
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
     if (default_stream)
+    {
         streams.insert(default_stream);
+        default_stream->adopted_by(this);
+    }
 
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {
@@ -168,16 +171,23 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    StreamSet old_streams;
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        old_streams = std::move(streams);
+    }
+
+    // Do callbacks without holding the lock:
+    for (auto const& s : old_streams)
+        s->unadopted_by(this);
+
     {
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
         valid_surfaces.erase(this);
     }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
-
-    for (auto const& s : streams)
-        s->unadopted_by(this);
-    streams.clear();
 
     input_thread.reset();
 
@@ -660,21 +670,16 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        auto const& map = connection_->connection_surface_map();
+        std::shared_ptr<mir::client::ConnectionSurfaceMap> map;
+        StreamSet old_streams, new_streams;
 
-        /*
-         * This might be slightly premature to update our list of streams
-         * before we've even asked the server to do it, but the alternative
-         * is to get the server to emit stream-surface relationship changes
-         * back to us as events. It's possible but would be way overcomplicated
-         * for what we need right now. A proof of concept was begun:
-         *   lp:~vanvugt/mir/adoption
-         * But while we can avoid needing that, this is smaller and simpler...
-         */
-        for (auto const& old_stream : streams)
-            old_stream->unadopted_by(this);
-        streams.clear();
-        default_stream = nullptr;
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+            old_streams = std::move(streams);
+            streams.clear();  // Just in case two threads call this function?!
+            default_stream = nullptr;
+            map = connection_->connection_surface_map();
+        }
 
         for(auto const& stream : spec.streams.value())
         {
@@ -696,10 +701,18 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
              * known stream IDs would need to be fixed.
              */
             if (auto bs = map->stream(id))
-            {
-                streams.insert(bs);
-                bs->adopted_by(this);
-            }
+                new_streams.insert(bs);
+        }
+
+        // Worth optimizing and avoiding the intersection of both sets?....
+        for (auto const& old_stream : old_streams)
+            old_stream->unadopted_by(this);
+        for (auto const& new_stream : new_streams)
+            new_stream->adopted_by(this);
+        // ... probably not, since we can std::move(new_streams) this way...
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+            streams = std::move(new_streams);
         }
     }
 
