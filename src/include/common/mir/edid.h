@@ -26,11 +26,11 @@
 namespace mir
 {
 
-struct EDID
+struct Edid
 {
-    EDID() = delete;
-    EDID(EDID const&) = delete;
-    EDID(EDID const&&) = delete;
+    Edid() = delete;
+    Edid(Edid const&) = delete;
+    Edid(Edid const&&) = delete;
 
     enum { minimum_size = 128 };
     typedef char MonitorName[14];  // up to 13 characters

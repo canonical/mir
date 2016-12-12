@@ -94,11 +94,11 @@ char const* mir_output_get_model(MirOutput const* output)
         return output->model().c_str();
 
     // But if not we use the same member for caching our EDID probe...
-    using mir::EDID;
-    if (mir_output_get_edid_size(output) >= EDID::minimum_size)
+    using mir::Edid;
+    if (mir_output_get_edid_size(output) >= Edid::minimum_size)
     {
-        auto edid = reinterpret_cast<EDID const*>(mir_output_get_edid(output));
-        EDID::MonitorName name;
+        auto edid = reinterpret_cast<Edid const*>(mir_output_get_edid(output));
+        Edid::MonitorName name;
         if (!edid->get_monitor_name(name))
         {
             auto len = edid->get_manufacturer(name);

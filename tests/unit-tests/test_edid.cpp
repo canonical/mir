@@ -19,7 +19,7 @@
 #include "mir/edid.h"
 #include <gtest/gtest.h>
 
-using mir::EDID;
+using mir::Edid;
 
 namespace
 {
@@ -36,14 +36,14 @@ unsigned char const dell_u2413_edid[129] =
 
 TEST(EDID, has_correct_size)
 {
-    EXPECT_EQ(128u, sizeof(EDID));
-    EXPECT_EQ(128u, EDID::minimum_size);
+    EXPECT_EQ(128u, sizeof(Edid));
+    EXPECT_EQ(128u, Edid::minimum_size);
 }
 
 TEST(EDID, can_get_name)
 {
-    auto edid = reinterpret_cast<EDID const*>(dell_u2413_edid);
-    EDID::MonitorName name;
+    auto edid = reinterpret_cast<Edid const*>(dell_u2413_edid);
+    Edid::MonitorName name;
     int len = edid->get_monitor_name(name);
     EXPECT_EQ(10, len);
     EXPECT_STREQ("DELL U2413", name);
@@ -51,8 +51,8 @@ TEST(EDID, can_get_name)
 
 TEST(EDID, can_get_manufacturer)
 {
-    auto edid = reinterpret_cast<EDID const*>(dell_u2413_edid);
-    EDID::Manufacturer man;
+    auto edid = reinterpret_cast<Edid const*>(dell_u2413_edid);
+    Edid::Manufacturer man;
     int len = edid->get_manufacturer(man);
     EXPECT_EQ(3, len);
     EXPECT_STREQ("DEL", man);
@@ -60,6 +60,6 @@ TEST(EDID, can_get_manufacturer)
 
 TEST(EDID, can_get_product_code)
 {
-    auto edid = reinterpret_cast<EDID const*>(dell_u2413_edid);
+    auto edid = reinterpret_cast<Edid const*>(dell_u2413_edid);
     EXPECT_EQ(61510u, edid->product_code());
 }
