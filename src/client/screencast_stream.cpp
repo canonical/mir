@@ -264,12 +264,12 @@ MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
 }
 
-void mcl::ScreencastStream::adopted_by(std::shared_ptr<MirSurface> const&)
+void mcl::ScreencastStream::adopted_by(MirSurface*)
 {
     // TODO
 }
 
-void mcl::ScreencastStream::unadopted_by(std::shared_ptr<MirSurface> const&)
+void mcl::ScreencastStream::unadopted_by(MirSurface*)
 {
     // TODO
 }

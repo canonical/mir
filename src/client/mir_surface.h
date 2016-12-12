@@ -224,7 +224,6 @@ public:
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
-    std::shared_ptr<MirSurface> self() const;
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);

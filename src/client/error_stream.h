@@ -40,8 +40,8 @@ public:
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     int swap_interval() const;
     MirWaitHandle* set_swap_interval(int interval);
-    void adopted_by(std::shared_ptr<MirSurface> const&) override;
-    void unadopted_by(std::shared_ptr<MirSurface> const&) override;
+    void adopted_by(MirSurface*) override;
+    void unadopted_by(MirSurface*) override;
     MirNativeBuffer* get_current_buffer_package();
     MirPlatformType platform_type();
     frontend::BufferStreamId rpc_id() const;

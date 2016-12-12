@@ -440,12 +440,12 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
     return interval_config.set_swap_interval(interval);
 }
 
-void mcl::BufferStream::adopted_by(std::shared_ptr<MirSurface> const&)
+void mcl::BufferStream::adopted_by(MirSurface*)
 {
     // TODO
 }
 
-void mcl::BufferStream::unadopted_by(std::shared_ptr<MirSurface> const&)
+void mcl::BufferStream::unadopted_by(MirSurface*)
 {
     // TODO
 }
