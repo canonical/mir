@@ -31,12 +31,6 @@ class InputConfigElementsMatcher
       public UnorderedElementsAreMatcherImplBase
 {
 public:
-    /*typedef InputConfiguration RawContainer;
-    //typedef internal::StlContainerView<RawContainer> View;
-    typedef typename View::type StlContainer;
-    typedef typename View::const_reference StlContainerReference;
-    typedef typename StlContainer::const_iterator StlContainerConstIterator;
-    typedef typename RawContainer::value_type Element;*/
     typedef mir::input::DeviceConfiguration Element;
 
     // Constructs the matcher from a sequence of element values or
@@ -50,14 +44,10 @@ public:
             matcher_describers().push_back(matchers_.back().GetDescriber());
         }
     }
-
-    // Describes what this matcher does.
     virtual void DescribeTo(::std::ostream* os) const
     {
         return UnorderedElementsAreMatcherImplBase::DescribeToImpl(os);
     }
-
-    // Describes what the negation of this matcher does.
     virtual void DescribeNegationTo(::std::ostream* os) const
     {
         return UnorderedElementsAreMatcherImplBase::DescribeNegationToImpl(os);
@@ -75,10 +65,6 @@ public:
         }
         if (actual_count != matchers_.size())
         {
-            // The element count doesn't match.  If the container is empty,
-            // there's no need to explain anything as Google Mock already
-            // prints the empty container. Otherwise we just need to show
-            // how many elements there actually are.
             if (actual_count != 0 && listener->IsInterested())
             {
                 *listener << "which has " << Elements(actual_count);
@@ -112,12 +98,8 @@ private:
         MatchMatrix matrix(num_elements, matchers_.size());
         ::std::vector<char>::const_iterator did_match_iter = did_match.begin();
         for (size_t ilhs = 0; ilhs != num_elements; ++ilhs)
-        {
             for (size_t irhs = 0; irhs != matchers_.size(); ++irhs)
-            {
                 matrix.SetEdge(ilhs, irhs, *did_match_iter++ != 0);
-            }
-        }
         return matrix;
     }
 
@@ -126,32 +108,38 @@ private:
     GTEST_DISALLOW_ASSIGN_(InputConfigElementsMatcher);
 };
 
+// Multiple specializations because gmock does not decay the parameter type to the
+// actual value type.
 template <>
 class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration const&>
     : public InputConfigElementsMatcher
 {
 public:
     using InputConfigElementsMatcher::InputConfigElementsMatcher;
-    //template <typename InputIter>
-    //InputConfigElementsMatcher(InputIter first, InputIter last)
 };
 
 template <>
 class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration&>
     : public InputConfigElementsMatcher
 {
+public:
+    using InputConfigElementsMatcher::InputConfigElementsMatcher;
 };
 
 template <>
 class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration>
     : public InputConfigElementsMatcher
 {
+public:
+    using InputConfigElementsMatcher::InputConfigElementsMatcher;
 };
 
 template <>
 class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration const>
     : public InputConfigElementsMatcher
 {
+public:
+    using InputConfigElementsMatcher::InputConfigElementsMatcher;
 };
 
 }
