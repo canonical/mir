@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
         pthread_cond_wait(&cond, &mutex);
     pthread_mutex_unlock(&mutex);
 
-    bool filled = fill_buffer(buffer);
+    bool const filled = fill_buffer(buffer);
 
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
