@@ -656,10 +656,14 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        auto const& mapping = connection_->connection_surface_map();
+        auto const& map = connection_->connection_surface_map();
+        mir::frontend::SurfaceId surface_id{mods.surface_id().value()};
+        auto self = map->surface(surface_id);
+
         default_stream = nullptr;
         for (auto const& old_stream : streams)
             old_stream->adopted_by(nullptr);
+
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
@@ -680,8 +684,8 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
              * known stream IDs would need to be fixed. So for now we support
              * them and their fake stream IDs...
              */
-            if (auto bs = mapping->stream(id))
-                bs->adopted_by(this);
+            if (auto bs = map->stream(id))
+                bs->adopted_by(self);
         }
     }
 
