@@ -673,11 +673,15 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             }
 
             mir::frontend::BufferStreamId id(stream.stream_id);
-            mapping->with_stream_do(id,
-                [this](MirBufferStream* bs)
-                {
-                    bs->adopted_by(this);
-                });
+            /*
+             * Notice we don't treat non-existent stream IDs as an error.
+             * This can probably be fixed in future but before we can do that,
+             * some tests which violate that precondition of supplying valid
+             * known stream IDs would need to be fixed. So for now we support
+             * them and their fake stream IDs...
+             */
+            if (auto bs = mapping->stream(id))
+                bs->adopted_by(this);
         }
     }
 
