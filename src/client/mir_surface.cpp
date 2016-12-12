@@ -673,6 +673,16 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         std::shared_ptr<mir::client::ConnectionSurfaceMap> map;
         StreamSet old_streams, new_streams;
 
+        /*
+         * Admittedly we're updating this->streams before the server has
+         * updated its own list. But we don't care. Even in the remotely
+         * possible case that the modify_surface fails on the server side,
+         * it's arguably still useful for the client to maintain the
+         * intended vs actual list of streams per surface. Certainly it
+         * seems harmless right now. Not worth fixing the whole server side
+         * and communicating adoption changes over the wire, but there is a
+         * prototype if anyone wanted to:  lp:~vanvugt/mir/adoption
+         */
         {
             std::unique_lock<decltype(mutex)> lock(mutex);
             old_streams = std::move(streams);
@@ -694,14 +704,11 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             }
 
             mir::frontend::BufferStreamId id(stream.stream_id);
-            /*
-             * Notice we don't treat non-existent stream IDs as an error, yet.
-             * This can probably be fixed in future but before we can do that,
-             * some tests which violate that precondition of supplying valid
-             * known stream IDs would need to be fixed.
-             */
             if (auto bs = map->stream(id))
                 new_streams.insert(bs);
+            // else: we have never implemented stream ID validation but that's
+            // more difficult than it sounds as we have some tests using
+            // fake stream IDs that would fail validation and so need fixing.
         }
 
         // Worth optimizing and avoiding the intersection of both sets?....
