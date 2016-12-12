@@ -99,6 +99,8 @@ public:
     void for_each(std::function<void(DeviceConfiguration &)> const& visitor);
     bool operator==(InputConfiguration const& rhs) const;
     bool operator!=(InputConfiguration const& rhs) const;
+
+    using value_type = DeviceConfiguration;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

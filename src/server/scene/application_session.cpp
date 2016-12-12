@@ -336,9 +336,9 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     }
 }
 
-void ms::ApplicationSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void ms::ApplicationSession::send_input_config(input::InputConfiguration const& config)
 {
-    event_sink->handle_input_device_change(devices);
+    event_sink->handle_input_config_change(config);
 }
 
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)

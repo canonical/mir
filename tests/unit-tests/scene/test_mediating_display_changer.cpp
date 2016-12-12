@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/mediating_display_changer.h"
-#include "src/server/scene/session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/geometry/rectangles.h"
@@ -31,6 +31,7 @@
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_session_container.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/doubles/fake_alarm_factory.h"
@@ -103,32 +104,6 @@ public:
     MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
 };
 
-class StubSessionContainer : public ms::SessionContainer
-{
-public:
-    void insert_session(std::shared_ptr<ms::Session> const& session)
-    {
-        sessions.push_back(session);
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const&)
-    {
-    }
-
-    void for_each(std::function<void(std::shared_ptr<ms::Session> const&)> f) const
-    {
-        for (auto const& session : sessions)
-            f(session);
-    }
-
-    std::shared_ptr<ms::Session> successor_of(std::shared_ptr<ms::Session> const&) const
-    {
-        return {};
-    }
-
-private:
-    std::vector<std::shared_ptr<ms::Session>> sessions;
-};
 
 struct MockDisplay : public mtd::MockDisplay
 {
@@ -204,7 +179,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     testing::NiceMock<MockDisplay> mock_display;
     testing::NiceMock<mtd::MockCompositor> mock_compositor;
     testing::NiceMock<MockDisplayConfigurationPolicy> mock_conf_policy;
-    StubSessionContainer stub_session_container;
+    mtd::StubSessionContainer stub_session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;

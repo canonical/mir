@@ -42,7 +42,7 @@ struct NullEventSink : public frontend::EventSink
     void handle_error(ClientVisibleError const&) override {}
     void send_ping(int32_t) override {}
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
-    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) override {}
+    void handle_input_config_change(input::InputConfiguration const&) override {}
     void add_buffer(graphics::Buffer&) override {}
     void remove_buffer(graphics::Buffer&) override {}
     void update_buffer(graphics::Buffer&) override {}

@@ -23,7 +23,7 @@
 #include <memory>
 #include <mutex>
 
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 
 namespace mir
 {

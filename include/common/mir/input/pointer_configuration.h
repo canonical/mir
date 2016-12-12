@@ -81,7 +81,7 @@ private:
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream operator<<(std::ostream& out, PointerConfiguration const& rhs);
+std::ostream& operator<<(std::ostream& out, PointerConfiguration const& rhs);
 
 }
 }

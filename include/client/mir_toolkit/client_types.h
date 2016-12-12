@@ -452,6 +452,12 @@ typedef enum MirErrorDomain
      * Associated error codes are found in \ref MirDisplayConfigurationError.
      */
     mir_error_domain_display_configuration,
+    /**
+     * Errors relating to input configuration.
+     *
+     * Associated error codes are found in \ref MirInputConfigurationError.
+     */
+    mir_error_domain_input_configuration,
 } MirErrorDomain;
 
 /**
@@ -475,6 +481,18 @@ typedef enum MirDisplayConfigurationError {
      */
      mir_display_configuration_error_rejected_by_hardware
 } MirDisplayConfigurationError;
+
+/**
+ * Errors from the \ref mir_error_domain_input_configuration \ref MirErrorDomain
+ */
+typedef enum MirInputConfigurationError {
+    /**
+     * Input configuration was attempted but was rejected by driver
+     */
+     mir_input_configuration_error_rejected_by_driver
+} MirInputConfigurationError;
+
+
 
 typedef void (*mir_error_callback)(
     MirConnection* connection,

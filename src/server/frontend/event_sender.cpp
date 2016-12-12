@@ -97,29 +97,11 @@ void mfd::EventSender::send_ping(int32_t serial)
     send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void mfd::EventSender::handle_input_config_change(input::InputConfiguration const& config)
 {
     mp::EventSequence seq;
 
-    mi::InputConfiguration temp;
-    for(auto const& dev : devices)
-    {
-        mi::DeviceConfiguration conf(dev->id(), dev->capabilities(), dev->name(), dev->unique_id());
-        auto ptr_conf = dev->pointer_configuration();
-        auto tpd_conf = dev->touchpad_configuration();
-        auto kbd_conf = dev->keyboard_configuration();
-
-        if (ptr_conf.is_set())
-            conf.set_pointer_configuration(ptr_conf.value());
-        if (tpd_conf.is_set())
-            conf.set_touchpad_configuration(tpd_conf.value());
-        if (kbd_conf.is_set())
-            conf.set_keyboard_configuration(kbd_conf.value());
-
-        temp.add_device_configuration(conf);
-    }
-
-    seq.set_input_configuration(mi::serialize_input_configuration(temp));
+    seq.set_input_configuration(mi::serialize_input_configuration(config));
     send_event_sequence(seq, {});
 }
 

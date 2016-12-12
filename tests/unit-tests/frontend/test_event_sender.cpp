@@ -196,44 +196,46 @@ TEST_F(EventSender, sends_input_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices{
-        std::make_shared<StubDevice>(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad",
-                                     "5352"),
-        std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
-                                     "keybaord", "7853")};
+    mi::DeviceConfiguration tpd(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad", "5352");
+    mi::DeviceConfiguration kbd(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric, "keyboard",
+                                "5352");
+
+    mi::InputConfiguration devices;
+    devices.add_device_configuration(tpd);
+    devices.add_device_configuration(kbd);
 
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
             auto received_input_config = mi::deserialize_input_configuration(seq.input_configuration());
-            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
+            EXPECT_THAT(received_input_config, Eq(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(devices);
 }
 
 TEST_F(EventSender, sends_empty_sequence_of_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices;
+    mi::InputConfiguration empty;
 
     auto msg_validator = make_validator(
-        [&devices](auto const& seq)
+        [&empty](auto const& seq)
         {
             auto received_input_config = mi::deserialize_input_configuration(seq.input_configuration());
-            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
+            EXPECT_THAT(received_input_config, Eq(empty));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(empty);
 }
 
 TEST_F(EventSender, can_send_error_buffer)

@@ -23,7 +23,7 @@
 #include "mir/client_visible_error.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/events/event_private.h"
-#include "mir/graphics/display_configuration.h"
+#include "mir/input/input_configuration.h"
 
 #include <gmock/gmock.h>
 
@@ -45,7 +45,7 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD1(remove_buffer, void(graphics::Buffer&));
     MOCK_METHOD1(update_buffer, void(graphics::Buffer&));
     MOCK_METHOD2(error_buffer, void(graphics::BufferProperties const&, std::string const&));
-    MOCK_METHOD1(handle_input_device_change, void(std::vector<std::shared_ptr<input::Device>> const&));
+    MOCK_METHOD1(handle_input_config_change, void(input::InputConfiguration const&));
 };
 }
 }

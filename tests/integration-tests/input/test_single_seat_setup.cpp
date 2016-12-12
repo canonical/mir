@@ -45,6 +45,7 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/test/input_config_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -69,8 +70,8 @@ void PrintTo(mir::input::InputDeviceInfo const &info, ::std::ostream* out)
 
 MATCHER_P(DeviceMatches, device_info, "")
 {
-    return arg->name() == device_info.name &&
-        arg->unique_id() == device_info.unique_id;
+    return arg.name() == device_info.name &&
+        arg.unique_id() == device_info.unique_id;
 }
 
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
@@ -473,7 +474,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink)
 {
-    EXPECT_CALL(mock_sink, handle_input_device_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
+    EXPECT_CALL(mock_sink, handle_input_config_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
     hub.add_device(mt::fake_shared(device));
     observer_loop.trigger_server_actions();
 }
@@ -484,7 +485,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_multiple
     observer_loop.trigger_server_actions();
 
     EXPECT_CALL(mock_sink,
-                handle_input_device_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()),
+                handle_input_config_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()),
                                                                 DeviceMatches(another_device.get_device_info()))));
     hub.add_device(mt::fake_shared(another_device));
     observer_loop.trigger_server_actions();
@@ -497,7 +498,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_removal)
     observer_loop.trigger_server_actions();
 
     EXPECT_CALL(mock_sink,
-                handle_input_device_change(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
+                handle_input_config_change(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
     hub.remove_device(mt::fake_shared(device));
     observer_loop.trigger_server_actions();
 }

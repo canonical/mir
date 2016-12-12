@@ -21,6 +21,9 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/pointer_configuration.h"
+#include "mir/input/touchpad_configuration.h"
+#include "mir/input/keyboard_configuration.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -38,6 +41,27 @@
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
+
+namespace
+{
+mi::DeviceConfiguration from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
+{
+    mi::DeviceConfiguration conf(device->id(), device->capabilities(), device->name(), device->unique_id());
+
+    auto ptr_conf = device->pointer_configuration();
+    auto tpd_conf = device->touchpad_configuration();
+    auto kbd_conf = device->keyboard_configuration();
+
+    if (ptr_conf.is_set())
+        conf.set_pointer_configuration(ptr_conf.value());
+    if (tpd_conf.is_set())
+        conf.set_touchpad_configuration(tpd_conf.value());
+    if (kbd_conf.is_set())
+        conf.set_keyboard_configuration(kbd_conf.value());
+
+    return conf;
+}
+}
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mf::EventSink> const& sink,
@@ -267,7 +291,8 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
-    sink->handle_input_device_change(handles);
+    config.add_device_configuration(from_handle(handle));
+    sink->handle_input_config_change(config);
 
     for (auto const& observer : observers)
     {
@@ -304,7 +329,8 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         return;
 
     handles.erase(handle_it, end(handles));
-    sink->handle_input_device_change(handles);
+    config.remove_device_by_id(id);
+    sink->handle_input_config_change(config);
 
     if (ready && 0 == handles.size())
     {
