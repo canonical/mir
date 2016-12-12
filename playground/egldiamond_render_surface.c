@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
     else
-        egldisplay = eglGetDisplay(mir_connection_get_egl_native_display(connection));
+        egldisplay = eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
