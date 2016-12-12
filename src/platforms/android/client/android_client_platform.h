@@ -20,6 +20,7 @@
 
 #include "mir/client_platform.h"
 #include "mir_toolkit/extensions/android_egl.h"
+#include "mir_toolkit/extensions/android_buffer.h"
 
 namespace mir
 {
@@ -52,6 +53,7 @@ private:
 
     std::shared_ptr<EGLNativeDisplayType> const native_display;
     MirExtensionAndroidEGL extension;
+    MirExtensionAndroidBuffer buffer_extension;
 };
 
 }

@@ -21,12 +21,14 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/render_surface.h"
 #include "src/client/connection_surface_map.h"
+#include "src/client/mir_wait_handle.h"
 
 #include "mir/client_platform_factory.h"
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir_protobuf.pb.h"
 
 #include <sys/eventfd.h>
 
@@ -99,7 +101,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MockClientPlatform()
     {
         auto native_window = std::make_shared<EGLNativeWindowType>();
-        *native_window = reinterpret_cast<EGLNativeWindowType>(0x12345678);
+        *native_window = reinterpret_cast<EGLNativeWindowType>(this);
 
         ON_CALL(*this, create_buffer_factory())
             .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
