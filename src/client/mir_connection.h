@@ -222,7 +222,7 @@ public:
         mir::geometry::Size logical_size,
         mir_render_surface_callback callback,
         void* context,
-        void** native_window);
+        MirRenderSurface** native_window);
     void release_render_surface_with_content(
         void* render_surface);
 

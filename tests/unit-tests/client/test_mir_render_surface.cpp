@@ -206,18 +206,18 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_be_created_and_released)
 
     connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
 
-    void* nw = nullptr;
-    MirRenderSurface* render_surface = nullptr;
+    MirRenderSurface* render_surface_from_out_param = nullptr;
+    MirRenderSurface* render_surface_from_callback = nullptr;
     connection->create_render_surface_with_content(
         {10, 10},
         reinterpret_cast<mir_render_surface_callback>(assign_result),
-        &render_surface,
-        &nw);
+        &render_surface_from_callback,
+        &render_surface_from_out_param);
 
-    EXPECT_THAT(render_surface, NotNull());
-    EXPECT_THAT(nw, NotNull());
-    EXPECT_THAT(render_surface, Eq(nw));
-    EXPECT_NO_THROW(connection->release_render_surface_with_content(nw));
+    EXPECT_THAT(render_surface_from_callback, NotNull());
+    EXPECT_THAT(render_surface_from_out_param, NotNull());
+    EXPECT_THAT(render_surface_from_callback, Eq(render_surface_from_out_param));
+    EXPECT_NO_THROW(connection->release_render_surface_with_content(render_surface_from_out_param));
 
     connection->disconnect();
 }
@@ -235,13 +235,13 @@ TEST_F(MirRenderSurfaceTest, creation_of_render_surface_creates_egl_native_windo
             stream.mutable_id()->set_value(1);
         }));
 
-    void* nw = nullptr;
+    MirRenderSurface* render_surface = nullptr;
     connection->create_render_surface_with_content({10, 10},
                                                    &RenderSurfaceCallback::created,
                                                    &callback,
-                                                   &nw);
+                                                   &render_surface);
 
-    EXPECT_THAT(nw, NotNull());
+    EXPECT_THAT(render_surface, NotNull());
     EXPECT_TRUE(callback.invoked);
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
 
@@ -387,11 +387,11 @@ TEST_F(MirRenderSurfaceTest, render_surface_object_is_invalid_after_creation_exc
             Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
             Throw(std::runtime_error("Eeek!"))));
 
-    void* nw = nullptr;
+    MirRenderSurface* render_surface = nullptr;
     connection->create_render_surface_with_content({10, 10},
                                                     &RenderSurfaceCallback::created,
                                                     &callback,
-                                                    &nw);
+                                                    &render_surface);
 
     EXPECT_TRUE(callback.invoked);
     EXPECT_THAT(callback.resulting_render_surface, NotNull());
