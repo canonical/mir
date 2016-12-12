@@ -1,7 +1,0 @@
-[suppress_function]
-    name_regexp = .*(mir::DefaultServerConfiguration|mir::shell::CanonicalWindowManagerPolicy|mir::renderer::gl::ProgramFamily|mir::renderer::gl::Renderer|mir::shell::BasicWindowManager)::.*
-    drop = yes
-
-[suppress_type]
-    name_regexp = mir::DefaultServerConfiguration|mir::shell::CanonicalWindowManagerPolicy|mir::renderer::gl::ProgramFamily|mir::renderer::gl::Renderer|mir::shell::BasicWindowManager
-    drop = yes
