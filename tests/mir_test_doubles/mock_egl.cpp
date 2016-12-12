@@ -177,7 +177,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
             [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
             {
                 auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
-                mir_surf->request_and_wait_for_next_buffer();
+                mir_surf->swap_buffers_sync();
                 return true;
             }));
 }

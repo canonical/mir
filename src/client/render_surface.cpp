@@ -27,7 +27,6 @@
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
-namespace mclr = mcl::rpc;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace mf = mir::frontend;
@@ -61,22 +60,35 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
     MirPixelFormat format,
     MirBufferUsage buffer_usage)
 {
-    if (!stream_from_id)
+    if (chain_from_id || stream_from_id)
+        BOOST_THROW_EXCEPTION(std::logic_error("Content already handed out"));
+
+    protobuf_bs->set_pixel_format(format);
+    protobuf_bs->set_buffer_usage(buffer_usage);
+    stream_from_id = connection_->create_client_buffer_stream_with_id(width,
+                                                                      height,
+                                                                      this,
+                                                                      *protobuf_bs);
+    if (buffer_usage == mir_buffer_usage_hardware)
     {
-        protobuf_bs->set_pixel_format(format);
-        protobuf_bs->set_buffer_usage(buffer_usage);
-        stream_from_id = connection_->create_client_buffer_stream_with_id(width,
-                                                                          height,
-                                                                          this,
-                                                                          *protobuf_bs);
-        if (buffer_usage == mir_buffer_usage_hardware)
-        {
-            platform->use_egl_native_window(
-                wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
-        }
+        platform->use_egl_native_window(
+            wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
     }
 
     return stream_from_id.get();
+}
+
+MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
+{
+    if (chain_from_id || stream_from_id)
+        BOOST_THROW_EXCEPTION(std::logic_error("Content already handed out"));
+
+    chain_from_id = connection_->create_presentation_chain_with_id(this,
+                                                                   *protobuf_bs);
+    //TODO: Figure out how to handle mir_buffer_usage_hardware once
+    //      EGL is made to support RSs.
+
+    return reinterpret_cast<MirPresentationChain*>(chain_from_id.get());
 }
 
 geom::Size mcl::RenderSurface::size() const

@@ -103,6 +103,18 @@ inline bool operator<(PosixTimestamp const& a, PosixTimestamp const& b)
     return a.nanoseconds < b.nanoseconds;
 }
 
+inline bool operator>=(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds >= b.nanoseconds;
+}
+
+inline bool operator<=(PosixTimestamp const& a, PosixTimestamp const& b)
+{
+    assert_same_clock(a, b);
+    return a.nanoseconds <= b.nanoseconds;
+}
+
 inline void sleep_until(PosixTimestamp const& t)
 {
     long long ns = t.nanoseconds.count();

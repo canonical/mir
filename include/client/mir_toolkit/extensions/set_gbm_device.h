@@ -29,8 +29,8 @@ extern "C" {
 struct gbm_device;
 
 //Set the gbm device used by the client
-//  \param [in] device    The gbm_device, or nullptr on failure. Sets errno on failure.
-//  \param [context] device    The gbm_device, or nullptr on failure. Sets errno on failure.
+//  \param [in] device    The gbm_device.
+//  \param [in] context   The context to set the gbm device.
 typedef void (*set_gbm_dev)(struct gbm_device*, void* const context);
 struct MirExtensionSetGbmDevice
 {

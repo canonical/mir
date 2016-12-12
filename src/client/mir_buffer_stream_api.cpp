@@ -113,7 +113,7 @@ MirWaitHandle* mir_buffer_stream_swap_buffers(
     void* context)
 try
 {
-    return buffer_stream->next_buffer([buffer_stream, callback, context]{
+    return buffer_stream->swap_buffers([buffer_stream, callback, context]{
             if (callback)
                 callback(buffer_stream, context);
     });
