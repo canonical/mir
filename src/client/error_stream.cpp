@@ -90,7 +90,10 @@ MirWaitHandle* mcl::ErrorStream::set_swap_interval(int)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
-void mcl::ErrorStream::adopted_by(std::shared_ptr<MirSurface>)
+void mcl::ErrorStream::adopted_by(std::shared_ptr<MirSurface> const&)
+{
+}
+void mcl::ErrorStream::unadopted_by(std::shared_ptr<MirSurface> const&)
 {
 }
 MirNativeBuffer* mcl::ErrorStream::get_current_buffer_package()

@@ -175,8 +175,10 @@ MirSurface::~MirSurface()
 
     std::lock_guard<decltype(mutex)> lock(mutex);
 
+    auto me = self();
     for (auto const& s : streams)
-        s->adopted_by(nullptr);
+        s->unadopted_by(me);
+    streams.clear();
 
     input_thread.reset();
 
@@ -660,8 +662,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     if (spec.streams.is_set())
     {
         auto const& map = connection_->connection_surface_map();
-        mir::frontend::SurfaceId surface_id{mods.surface_id().value()};
-        auto self = map->surface(surface_id);
+        auto me = self();
 
         /*
          * This might be slightly premature to update our list of streams
@@ -673,7 +674,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
          * But while we can avoid needing that, this is smaller and simpler...
          */
         for (auto const& old_stream : streams)
-            old_stream->adopted_by(nullptr);
+            old_stream->unadopted_by(me);
         streams.clear();
         default_stream = nullptr;
 
@@ -698,8 +699,8 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
              */
             if (auto bs = map->stream(id))
             {
-                bs->adopted_by(self);
                 streams.insert(bs);
+                bs->adopted_by(me);
             }
         }
     }
@@ -740,4 +741,14 @@ std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return frame_clock;
+}
+
+std::shared_ptr<MirSurface> MirSurface::self() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (surface)
+        if (auto const& map = connection_->connection_surface_map())
+            return map->surface(mir::frontend::SurfaceId(surface->id().value()));
+
+    return nullptr;
 }
