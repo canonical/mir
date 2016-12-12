@@ -4,7 +4,7 @@ add_library(mircore SHARED
     fatal.cpp
     geometry/rectangle.cpp
     geometry/rectangles.cpp
-    geometry/ostream.cpp 
+    geometry/ostream.cpp
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
