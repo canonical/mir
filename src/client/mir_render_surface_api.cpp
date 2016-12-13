@@ -56,13 +56,13 @@ void set_result(MirRenderSurface* result, RenderSurfaceResult* context)
 class RenderSurfaceToConnectionMap
 {
 public:
-    void insert(void* const render_surface_key, MirConnection* const connection)
+    void insert(MirRenderSurface* render_surface_key, MirConnection* connection)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         connections[render_surface_key] = connection;
     }
 
-    void erase(void* const render_surface_key)
+    void erase(MirRenderSurface* render_surface_key)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         auto conn_it = connections.find(render_surface_key);
@@ -70,7 +70,7 @@ public:
             connections.erase(conn_it);
     }
 
-    MirConnection* connection(void* const render_surface_key) const
+    MirConnection* connection(MirRenderSurface* render_surface_key) const
     {
         std::shared_lock<decltype(guard)> lk(guard);
         auto const it = connections.find(render_surface_key);
@@ -81,7 +81,7 @@ public:
     }
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<void*, MirConnection*> connections;
+    std::unordered_map<MirRenderSurface*, MirConnection*> connections;
 };
 
 RenderSurfaceToConnectionMap connection_map;
@@ -95,12 +95,14 @@ void mir_connection_create_render_surface(
 try
 {
     mir::require(connection);
-    void* rs = nullptr;
-    connection->create_render_surface_with_content(
-        mir::geometry::Size{width, height}, callback, context, &rs);
-    if (!rs)
+    if (auto rs = connection->create_render_surface_with_content({width, height}, callback, context))
+    {
+        connection_map.insert(rs, connection);
+    }
+    else
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Error creating native window"));
-    connection_map.insert(rs, connection);
+    }
 }
 catch (std::exception const& ex)
 {
@@ -131,7 +133,7 @@ bool mir_render_surface_is_valid(
 try
 {
     mir::require(render_surface);
-    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto conn = connection_map.connection(render_surface);
     auto rs = conn->connection_surface_map()->render_surface(render_surface);
     mir::require(rs != nullptr);
     return rs->valid();
@@ -147,7 +149,7 @@ char const *mir_render_surface_get_error_message(
 try
 {
     mir::require(render_surface);
-    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto conn = connection_map.connection(render_surface);
     auto rs = conn->connection_surface_map()->render_surface(render_surface);
     return rs->get_error_message();
 }
@@ -162,8 +164,8 @@ void mir_render_surface_release(
 try
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
-    connection_map.erase(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
+    connection_map.erase(render_surface);
     connection->release_render_surface_with_content(render_surface);
 }
 catch (std::exception const& ex)
@@ -179,7 +181,7 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
 try
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     return rs->get_buffer_stream(width, height, format, usage);
 }
@@ -194,7 +196,7 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
 try
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     return rs->get_presentation_chain();
 }
@@ -207,7 +209,7 @@ catch (std::exception const& ex)
 void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
 {
     mir::require(render_surface && width && height);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     auto size = rs->size();
     *width = size.width.as_int();
@@ -217,7 +219,7 @@ void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, i
 void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height)
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     rs->set_size({width, height});
 }
@@ -227,7 +229,7 @@ void mir_surface_spec_set_cursor_render_surface(
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
 {
-    auto connection = connection_map.connection(static_cast<void*>(surface));
+    auto connection = connection_map.connection(surface);
     auto rs = connection->connection_surface_map()->render_surface(surface);
     spec->rendersurface_cursor = MirSurfaceSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }
