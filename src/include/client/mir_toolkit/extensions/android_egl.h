@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
 #define MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
 
-#define MIR_EXTENSION_ANDROID_EGL "817e4327-bdd7-495a-9d3c-b5ac7a8a831f"
+#define MIR_EXTENSION_ANDROID_EGL "mir_extension_android_egl"
 #define MIR_EXTENSION_ANDROID_EGL_VERSION_1 1
 
 #include "mir_toolkit/mir_connection.h"

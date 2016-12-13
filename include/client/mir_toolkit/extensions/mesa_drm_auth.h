@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_MESA_DRM_AUTH_H_
 #define MIR_CLIENT_EXTENSIONS_MESA_DRM_AUTH_H_
 
-#define MIR_EXTENSION_MESA_DRM_AUTH "2782f477-bb9c-473b-a9ed-e4e85c61c0d1"
+#define MIR_EXTENSION_MESA_DRM_AUTH "mir_extension_mesa_drm_auth"
 #define MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 1
 
 #ifdef __cplusplus
