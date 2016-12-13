@@ -36,6 +36,13 @@ declare -A libsoname=(\
     ["mirplatformgraphicsmesakms"]="mir/server-platform/graphics-mesa-kms" \
     ["mirplatforminputevdev"]="mir/server-platform/input-evdev" )
 
+declare -A buildsoname=(\
+    ["mirclientplatformandroid"]="client-modules/android" \
+    ["mirclientplatformmesa"]="client-modules/mesa" \
+    ["mirplatformgraphicsandroid"]="server-modules/graphics-android" \
+    ["mirplatformgraphicsmesakms"]="server-modules/graphics-mesa-kms" \
+    ["mirplatforminputevdev"]="server-modules/input-evdev" )
+
 function print_help_and_exit()
 {
     local prog=$(basename $0)
@@ -158,7 +165,12 @@ function header_packages_for()
 function debug_package_for()
 {
     local name=${1}
-    local pkg=lib${name}$(package_abi_for ${name})-dbgsym
+    local so_name=lib${name}
+    if is_plugin ${name};
+    then
+        so_name=${package_name[${name}]}
+    fi
+    local pkg=${so_name}$(package_abi_for ${name})-dbgsym
 
     echo ${pkg}
 }
@@ -228,9 +240,15 @@ function run_abi_check()
         local suppressions="--suppressions ${GENERIC_SUPPRESSIONS} --suppressions ${CLIENT_SUPPRESSIONS}"
     fi
 
+    local new_soname=${BUILD_DIR}/lib/lib${name}.so
+    if is_plugin ${name};
+    then
+        new_soname=${BUILD_DIR}/lib/${buildsoname[${name}]}.so.$(package_abi_for ${name})
+    fi
+
     echo "Running abidiff for ${name}"
     set +e
-    abidiff ${suppressions} --debug-info-dir1 ${unpack_dir} ${soname} ${BUILD_DIR}/lib/lib${name}.so
+    abidiff ${suppressions} --debug-info-dir1 ${unpack_dir} ${soname} ${new_soname}
     local result=$?
     set -e
 
