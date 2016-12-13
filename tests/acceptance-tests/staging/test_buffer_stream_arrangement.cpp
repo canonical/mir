@@ -25,6 +25,7 @@ namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 using namespace testing;
 
+#if 0
 typedef mt::BufferStreamArrangementBase BufferStreamArrangementStaging;
 TEST_F(BufferStreamArrangementStaging, can_set_stream_logical_and_physical_size)
 {
@@ -83,3 +84,4 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
     streams.back()->swap_buffers();
     EXPECT_THAT(stream.physical_size(), Eq(changed_physical_size));
 }
+#endif

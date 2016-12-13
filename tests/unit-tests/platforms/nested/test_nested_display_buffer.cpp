@@ -95,10 +95,12 @@ struct MockNestedChain : mgn::HostChain
     MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_METHOD0(handle, MirPresentationChain*());
     MOCK_METHOD1(set_submission_mode, void(mgn::SubmissionMode));
+    MOCK_CONST_METHOD0(rs, MirRenderSurface*());
 };
 
 struct MockNestedStream : mgn::HostStream
 {
+    MOCK_CONST_METHOD0(rs, MirRenderSurface*());
     MOCK_CONST_METHOD0(handle, MirBufferStream*());
     MOCK_CONST_METHOD0(egl_native_window, EGLNativeWindowType());
 };

@@ -729,6 +729,8 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
 
+#if 0
+
 TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
 {
     PresentationChainCallback callback;
@@ -813,7 +815,7 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 
     connection->release_presentation_chain(callback.resulting_chain);
 }
-
+#endif
 TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
 {
     connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
