@@ -266,7 +266,8 @@ void mi::ConfigChanger::apply_config(mi::InputConfiguration const& config)
         [&config](Device& device)
         {
             auto device_config = config.get_device_configuration_by_id(device.id());
-            apply_device_config(device_config, device);
+            if (device_config)
+               apply_device_config(device_config, device);
         });
     base_configuration_applied = false;
 }

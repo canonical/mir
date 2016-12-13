@@ -71,7 +71,7 @@ struct MockDevice : mir::input::Device
     MOCK_METHOD1(apply_keyboard_configuration, void(mi::KeyboardConfiguration const&));
 };
 
-struct MockInputDeviceHub : mtd::MockInputDeviceHub
+struct FakeInputDeviceHub : mir::input::InputDeviceHub
 {
     std::shared_ptr<mi::InputDeviceObserver> observer;
     std::string const first{"first"};
@@ -83,31 +83,44 @@ struct MockInputDeviceHub : mtd::MockInputDeviceHub
 
     NiceMock<MockDevice> first_device{first_id, caps, first, first};
     NiceMock<MockDevice> second_device{second_id, caps, second, second};
+    std::vector<std::shared_ptr<mir::input::Device>> active_devices;
 
-    MockInputDeviceHub()
+    void add_observer(std::shared_ptr<mi::InputDeviceObserver> const& obs) override
     {
-        ON_CALL(*this, add_observer(_))
-            .WillByDefault(
-                Invoke([this](std::shared_ptr<mi::InputDeviceObserver> obs)
-                       {
-                           observer = obs;
-                           observer->device_added(mt::fake_shared(first_device));
-                           observer->changes_complete();
-                       }));
-        ON_CALL(*this, for_each_input_device(_))
-            .WillByDefault(
-                Invoke([this](auto const& callback)
-                       {
-                          callback(first_device);
-                       }
-                       ));
-        ON_CALL(*this, for_each_mutable_input_device(_))
-            .WillByDefault(
-                Invoke([this](auto & callback)
-                       {
-                          callback(first_device);
-                       }
-                       ));
+        observer = obs;
+        observer->device_added(mt::fake_shared(first_device));
+        observer->changes_complete();
+    }
+    void remove_observer(std::weak_ptr<mi::InputDeviceObserver> const&) override
+    {
+        observer.reset();
+    }
+
+    void for_each_input_device(std::function<void(mi::Device const& device)> const& callback) override
+    {
+        for (auto const & device : active_devices)
+            callback(*device);
+    }
+
+    void for_each_mutable_input_device(std::function<void(mi::Device& device)> const& callback) override
+    {
+        for (auto & device : active_devices)
+            callback(*device);
+    }
+
+    FakeInputDeviceHub()
+    {
+        active_devices.push_back(mt::fake_shared(first_device));
+    }
+
+    void add_second_device()
+    {
+        active_devices.push_back(mt::fake_shared(second_device));
+        if (observer)
+        {
+            observer->device_added(mt::fake_shared(second_device));
+            observer->changes_complete();
+        }
     }
 };
 
@@ -115,8 +128,8 @@ struct MockInputDeviceHub : mtd::MockInputDeviceHub
 
 struct ConfigChanger : Test
 {
-    mtd::MockInputManager mock_input_manager;
-    MockInputDeviceHub hub;
+    NiceMock<mtd::MockInputManager> mock_input_manager;
+    FakeInputDeviceHub hub;
     mtd::StubSessionContainer stub_session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
 
@@ -204,8 +217,7 @@ TEST_F(ConfigChanger, notifies_all_sessions_on_hardware_config_change)
     EXPECT_CALL(mock_session1, send_input_config(_));
     EXPECT_CALL(mock_session2, send_input_config(_));
 
-    hub.observer->device_added(mt::fake_shared(hub.second_device));
-    hub.observer->changes_complete();
+    hub.add_second_device();
 }
 
 TEST_F(ConfigChanger, focusing_a_session_with_attached_config_applies_config)

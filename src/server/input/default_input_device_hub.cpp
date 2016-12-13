@@ -264,14 +264,14 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
 void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
-    for (auto const& item : handles)
+    for (auto const item : handles)
         callback(*item);
 }
 
 void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
-    for (auto& item : handles)
+    for (auto item : handles)
         callback(*item);
 }
 
