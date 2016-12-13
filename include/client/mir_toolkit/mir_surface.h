@@ -883,25 +883,6 @@ MirPersistentId* mir_persistent_id_from_string(char const* string_representation
  */
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
-/**
- * TODO: Probably remove this public API before proposing anything.
- *
- * Wait for the next vsync interval to occur (on the display deemed most
- * appropriate by the server), which has not already been waited for.
- *
- * If you are already using swap interval 1 then you should not call this
- * function as synchronization is already provided for you in the swap_buffers
- * functions. If you are using interval 0 however this function provides the
- * same amount of throttling as interval 1 would but with the added benefit
- * of clients of nested servers not suffering the same lag to the screen as
- * they would if using swap interval 1 (assuming the nested server also
- * adopts the same approach).
- *
- * \param [in] surface  The surface used to choose which display output is most
- *                      appropriate to sync to.
- */
-void mir_surface_wait_for_vsync(MirSurface* surface);
-
 #ifdef __cplusplus
 }
 /**@}*/

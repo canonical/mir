@@ -431,6 +431,12 @@ void mcl::BufferStream::wait_for_vsync()
 void mcl::BufferStream::swap_buffers_sync()
 {
     swap_buffers([](){})->wait_for_all();
+
+    /*
+     * Accurate frame timing is all about getting the start of the rendering
+     * synchronized. So that's why this wait is after the swap. This is the
+     * potential start of the next frame.
+     */
     int interval = swap_interval();
     for (int i = 0; i < interval; ++i)
         wait_for_vsync();
@@ -453,11 +459,19 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 
 int mcl::BufferStream::swap_interval() const
 {
+    /*
+     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
+     *       has been ported to the new way of doing things.
+     */
     return interval_config.swap_interval();
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
+    /*
+     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
+     *       has been ported to the new way of doing things.
+     */
     if (user_swap_interval.is_set())
         interval = user_swap_interval.value();
 

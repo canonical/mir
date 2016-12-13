@@ -186,7 +186,6 @@ int main(int argc, char* argv[])
         i++;
         render_pattern(&graphics_region, pattern[i & 1]);
         mir_buffer_stream_swap_buffers_sync(bs);
-        mir_surface_wait_for_vsync(surface);
     }
 
     mir_surface_release_sync(surface);

@@ -266,12 +266,10 @@ MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
 
 void mcl::ScreencastStream::adopted_by(MirSurface*)
 {
-    // TODO
 }
 
 void mcl::ScreencastStream::unadopted_by(MirSurface*)
 {
-    // TODO
 }
 
 void mcl::ScreencastStream::set_size(geom::Size)

@@ -95,8 +95,6 @@ void mir_eglapp_swap_buffers(void)
     {
         glViewport(0, 0, width, height);
     }
-
-    mir_surface_wait_for_vsync(surface);
 }
 
 static void mir_eglapp_handle_input_event(MirInputEvent const* event)

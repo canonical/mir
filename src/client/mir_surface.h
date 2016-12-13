@@ -217,8 +217,6 @@ public:
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
     MirConnection* connection() const;
 
-    void wait_for_vsync();
-
     std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
 
 private:
@@ -260,7 +258,6 @@ private:
     int attrib_cache[mir_surface_attribs];
     MirOrientation orientation = mir_orientation_normal;
 
-    mir::time::PosixTimestamp last_vsync;
     std::shared_ptr<mir::client::FrameClock> const frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;

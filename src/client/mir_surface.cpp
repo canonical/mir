@@ -511,26 +511,6 @@ void MirSurface::handle_event(MirEvent const& e)
     }
 }
 
-void MirSurface::wait_for_vsync()
-{
-    mir::time::PosixTimestamp target;
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        target = frame_clock->next_frame_after(last_vsync);
-    }
-    sleep_until(target);
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        /*
-         * Note we record the target wakeup time and not the actual wakeup time
-         * so that the frame interval remains perfectly spaced even in the
-         * face of scheduling irregularities.
-         */
-        if (target > last_vsync)
-            last_vsync = target;
-    }
-}
-
 void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
 {
     configure(a, value)->wait_for_all();
