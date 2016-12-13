@@ -46,11 +46,11 @@ namespace
 void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
 {
     std::string const msg{"Nested Mir failed to set the gbm device."};
-    auto ext = static_cast<MirExtensionSetGbmDevice*>(nested_context.request_interface(
-        MIR_EXTENSION_SET_GBM_DEVICE, MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1));
-    if (!ext || !ext->set_gbm_device)
-        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    ext->set_gbm_device(device, ext->context);
+    auto ext = nested_context.set_gbm_extension();
+    if (ext.is_set())
+        ext.value()->set_gbm_device(device);
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
 }
 

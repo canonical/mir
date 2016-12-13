@@ -40,6 +40,8 @@ public:
     void configuration_applied(
         std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
 
+    void base_configuration_updated(std::shared_ptr<graphics::DisplayConfiguration const> const& base_config) override;
+
     void configuration_failed(
         std::shared_ptr<graphics::DisplayConfiguration const> const& attempted,
         std::exception const& error) override;

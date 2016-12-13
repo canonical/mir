@@ -127,6 +127,9 @@ struct DisplayConfigurationOutput
     GammaCurves gamma;
     MirOutputGammaSupported gamma_supported;
 
+    /** EDID of the display, if non-empty */
+    std::vector<uint8_t> edid;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -158,6 +161,7 @@ struct UserDisplayConfigurationOutput
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
+    std::vector<uint8_t const> const& edid;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;

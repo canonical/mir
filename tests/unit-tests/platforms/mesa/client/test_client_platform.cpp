@@ -52,6 +52,11 @@ struct StubClientContext : mcl::ClientContext
     {
         memset(&graphics_module, 0, sizeof(graphics_module));
     }
+    MirWaitHandle* platform_operation(
+        MirPlatformMessage const*, mir_platform_operation_callback, void*) override
+    {
+        return nullptr;
+    }
 };
 
 struct MesaClientPlatformTest : testing::Test
@@ -124,7 +129,9 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
         &mir_platform_message_release);
 
     platform->populate(pkg);
-    EXPECT_THAT(pkg.data_items, Eq(previous_data_count + (sizeof(gbm_dev_dummy) / sizeof(int))));
+    EXPECT_THAT(pkg.data_items,
+                Eq(static_cast<int>(previous_data_count +
+                                    (sizeof(gbm_dev_dummy) / sizeof(int)))));
 
     gbm_device* device_in_package{nullptr};
     std::memcpy(&device_in_package, &pkg.data[previous_data_count],

@@ -28,7 +28,7 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mrl= mir::report::logging;
 
-namespace 
+namespace
 {
 auto const component = MIR_LOG_COMPONENT_FALLBACK;
 auto const severity  = ml::Severity::informational;
@@ -55,6 +55,13 @@ void mrl::DisplayConfigurationReport::configuration_applied(
 {
     logger->log(component, severity, "New display configuration:");
     log_configuration(severity, *config);
+}
+
+void mrl::DisplayConfigurationReport::base_configuration_updated(
+    std::shared_ptr<mg::DisplayConfiguration const> const& base_config)
+{
+    logger->log(component, severity, "New base display configuration:");
+    log_configuration(severity, *base_config);
 }
 
 void mrl::DisplayConfigurationReport::configuration_failed(
@@ -91,7 +98,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
             float inches =
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
 
-            logger->log(component, severity, 
+            logger->log(component, severity,
                         "%sPhysical size %.1f\" %dx%dmm",
                         indent, inches, width_mm, height_mm);
 
@@ -112,7 +119,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
                 }
-                
+
                 if (out.preferred_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
@@ -123,7 +130,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
                 }
-                
+
                 static const char* const orientation[] =
                     {"normal", "left", "inverted", "right"};
                 int degrees_ccw = out.orientation;

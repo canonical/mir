@@ -348,7 +348,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done)
 {
     auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -406,9 +406,9 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::BufferStream::request_and_wait_for_next_buffer()
+void mcl::BufferStream::swap_buffers_sync()
 {
-    next_buffer([](){})->wait_for_all();
+    swap_buffers([](){})->wait_for_all();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)

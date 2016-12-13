@@ -21,6 +21,7 @@
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_presentation_chain.h>
+#include <mir_toolkit/mir_render_surface.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <mir_toolkit/version.h>
 #include <sys/types.h>
@@ -41,8 +42,10 @@ float distance(int x0, int y0, int x1, int y1)
 void fill_buffer_with_centered_circle_abgr(
     MirBuffer* buffer, float radius, unsigned int fg, unsigned int bg)
 {
-    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
-    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888))
+    MirBufferLayout layout = mir_buffer_layout_unknown;
+    MirGraphicsRegion region;
+    mir_buffer_map(buffer, &region, &layout);
+    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888) || layout != mir_buffer_layout_linear)
         return;
     int const center_x = region.width / 2;
     int const center_y = region.height / 2; 
@@ -61,6 +64,7 @@ void fill_buffer_with_centered_circle_abgr(
         }
         vaddr += region.stride; 
     }
+    mir_buffer_unmap(buffer);
 }
 
 typedef struct SubmissionInfo
@@ -143,7 +147,14 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    MirPresentationChain* chain =  mir_connection_create_presentation_chain_sync(connection);
+    MirRenderSurface* render_surface = mir_connection_create_render_surface_sync(connection, width, height);
+    if (!mir_render_surface_is_valid(render_surface))
+    {
+        printf("could not create a render surface\n");
+        return -1;
+    }
+
+    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(render_surface);
     if (!mir_presentation_chain_is_valid(chain))
     {
         printf("could not create MirPresentationChain\n");
@@ -158,8 +169,8 @@ int main(int argc, char** argv)
     }
 
     MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    mir_surface_spec_add_presentation_chain(
-        spec, width, height, displacement_x, displacement_y, chain);
+    mir_surface_spec_add_render_surface(
+        spec, render_surface, width, height, displacement_x, displacement_y);
     MirSurface* surface = mir_surface_create_sync(spec);
     if (!mir_surface_is_valid(surface))
     {
@@ -221,7 +232,7 @@ int main(int argc, char** argv)
 
     for (i = 0u; i < num_prerendered_frames; i++)
         mir_buffer_release(buffer_available[i].buffer);
-    mir_presentation_chain_release(chain);
+    mir_render_surface_release(render_surface);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
     return 0;

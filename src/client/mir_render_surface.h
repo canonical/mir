@@ -36,6 +36,8 @@ public:
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage) = 0;
+    virtual MirPresentationChain* get_presentation_chain() = 0;
+    virtual char const* get_error_message() const = 0;
     virtual ~MirRenderSurface() = default;
 protected:
     MirRenderSurface(MirRenderSurface const&) = delete;

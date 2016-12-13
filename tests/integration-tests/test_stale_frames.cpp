@@ -191,7 +191,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    EXPECT_THAT(stale_buffers.size(), Eq(2));
+    EXPECT_THAT(stale_buffers.size(), Eq(2u));
 
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -202,7 +202,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     stale_buffers.erase(fresh_buffer);
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    ASSERT_THAT(new_buffers.size(), Eq(1));
+    ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
 }
 
@@ -222,6 +222,6 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    ASSERT_THAT(new_buffers.size(), Eq(1));
+    ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }

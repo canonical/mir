@@ -25,8 +25,6 @@
 
 #include <memory>
 
-namespace mcl = mir::client;
-
 // Cursor names are from CSS3: https://www.w3.org/TR/css-ui-3/#propdef-cursor
 extern "C" char const* const mir_default_cursor_name = "default";
 extern "C" char const* const mir_disabled_cursor_name = "none";
@@ -51,7 +49,7 @@ MirCursorConfiguration::MirCursorConfiguration(char const* name) :
 {
 }
 
-MirCursorConfiguration::MirCursorConfiguration(mcl::ClientBufferStream const* stream, int hotspot_x, int hotspot_y) :
+MirCursorConfiguration::MirCursorConfiguration(MirBufferStream const* stream, int hotspot_x, int hotspot_y) :
     stream(stream),
     hotspot_x(hotspot_x),
     hotspot_y(hotspot_y)
@@ -81,7 +79,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_buffer_stream(MirBufferStr
 {
     try 
     {
-        return new MirCursorConfiguration(reinterpret_cast<mcl::ClientBufferStream const*>(stream), hotspot_x, hotspot_y);
+        return new MirCursorConfiguration(stream, hotspot_x, hotspot_y);
     }
     catch (std::exception const& ex)
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,13 +15,10 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
+#define MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
 
-#ifndef MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
-#define MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_
-
-#include "mir/egl_native_surface.h"
-
-#include <gmock/gmock.h>
+#include "mir/graphics/nested_context.h"
 
 namespace mir
 {
@@ -30,16 +27,13 @@ namespace test
 namespace doubles
 {
 
-struct MockEGLNativeSurface : public client::EGLNativeSurface
+struct MockMesaExt : graphics::MesaAuthExtension
 {
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
-    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
-    MOCK_METHOD0(swap_buffers_sync, void());
-    MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib,int));
-    MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
+    MOCK_METHOD0(auth_fd, mir::Fd());
+    MOCK_METHOD1(auth_magic, int(unsigned int));
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_EGL_NATIVE_SURFACE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_ */

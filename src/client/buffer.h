@@ -52,6 +52,7 @@ public:
 
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
+    void unmap_region() override;
 
     void set_fence(Fd, MirBufferAccess) override;
     Fd get_fence() const override;

@@ -121,7 +121,7 @@ public:
         std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
         std::shared_ptr<mgn::HostConnection> const& connection) :
         TextureAccess(buffer, native_buffer, connection),
-        stride_(geom::Stride{native_buffer->get_graphics_region().stride})
+        stride_(geom::Stride{native_buffer->get_graphics_region()->stride})
     {
     }
 
@@ -133,21 +133,21 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
         auto region = native_buffer->get_graphics_region();
-        if (!region.vaddr)
+        if (!region->vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
-        for (int i = 0; i < region.height; i++)
+        for (int i = 0; i < region->height; i++)
         {
             int line_offset_in_buffer = stride().as_uint32_t() * i;
-            int line_offset_in_source = bpp * region.width * i;
-            memcpy(region.vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region.width * bpp);
+            int line_offset_in_source = bpp * region->width * i;
+            memcpy(region->vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region->width * bpp);
         }
     }
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
         auto region = native_buffer->get_graphics_region();
-        do_with_pixels(reinterpret_cast<unsigned char*>(region.vaddr));
+        do_with_pixels(reinterpret_cast<unsigned char*>(region->vaddr));
     }
 
     geom::Stride stride() const override

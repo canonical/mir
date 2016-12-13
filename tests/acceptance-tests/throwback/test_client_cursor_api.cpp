@@ -83,11 +83,14 @@ struct NamedCursorImage : public mg::CursorImage
 
 struct NamedCursorImages : public mi::CursorImages
 {
-   std::shared_ptr<mg::CursorImage>
+    std::shared_ptr<mg::CursorImage>
        image(std::string const& name, geom::Size const& /* size */) override
-   {
+    {
+        if (name == "none")
+            return nullptr;
+    
        return std::make_shared<NamedCursorImage>(name);
-   }
+    }
 };
 
 bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
@@ -188,7 +191,10 @@ struct DisabledCursorClient : CursorClient
 
     void setup_cursor(MirSurface* surface) override
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+#pragma GCC diagnostic pop
         mir_wait_for(mir_surface_configure_cursor(surface, conf));
         mir_cursor_configuration_destroy(conf);
     }
@@ -207,7 +213,10 @@ struct NamedCursorClient : CursorClient
 
     void setup_cursor(MirSurface* surface) override
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(cursor_name.c_str());
+#pragma GCC diagnostic pop
         mir_wait_for(mir_surface_configure_cursor(surface, conf));
         mir_cursor_configuration_destroy(conf);
     }
@@ -375,8 +384,11 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
         void setup_cursor(MirSurface* surface) override
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             auto conf1 = mir_cursor_configuration_from_name(cursor_name.c_str());
             auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+#pragma GCC diagnostic pop
 
             mir_wait_for(mir_surface_configure_cursor(surface, conf1));
             mir_wait_for(mir_surface_configure_cursor(surface, conf2));
@@ -469,7 +481,10 @@ struct FullscreenDisabledCursorClient : CursorClient
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
         mir_surface_set_state(surface, mir_surface_state_fullscreen);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+#pragma GCC diagnostic pop
         mir_surface_configure_cursor(surface, conf);
         mir_cursor_configuration_destroy(conf);
     }

@@ -79,16 +79,18 @@ TEST_F(LayerListTest, list_defaults)
 
 TEST_F(LayerListTest, list_iterators)
 {
-    size_t additional_layers = 2;
+    int additional_layers = 2;
     mga::LayerList list(layer_adapter, {}, offset);
     EXPECT_EQ(std::distance(list.begin(), list.end()), additional_layers);
 
     additional_layers = 1;
     mga::LayerList list2(layer_adapter, renderables, offset);
-    EXPECT_EQ(std::distance(list2.begin(), list2.end()), additional_layers + renderables.size());
+    int const nrenderables = renderables.size();
+    EXPECT_EQ(std::distance(list2.begin(), list2.end()),
+              additional_layers + nrenderables);
 
     mga::LayerList list3(std::make_shared<mga::Hwc10Adapter>(), renderables, offset);
-    EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
+    EXPECT_EQ(std::distance(list3.begin(), list3.end()), nrenderables);
 }
 
 TEST_F(LayerListTest, keeps_track_of_needs_commit)
@@ -145,7 +147,7 @@ TEST_F(LayerListTest, setup_fb_hwc10)
     list.setup_fb(stub_fb);
 
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(1));
+    ASSERT_THAT(l->numHwLayers, Eq(1u));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(skip));
 }
 
@@ -156,7 +158,7 @@ TEST_F(LayerListTest, setup_fb_without_skip)
     list.setup_fb(stub_fb);
 
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(1 + renderables.size()));
+    ASSERT_THAT(l->numHwLayers, Eq(1u + renderables.size()));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
 
@@ -166,7 +168,7 @@ TEST_F(LayerListTest, setup_fb_with_skip)
     mga::LayerList list(layer_adapter, {}, offset);
     list.setup_fb(stub_fb);
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(2));
+    ASSERT_THAT(l->numHwLayers, Eq(2u));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
@@ -177,7 +179,7 @@ TEST_F(LayerListTest, generate_rejected_renderables)
     mga::LayerList list(layer_adapter, renderables, offset);
 
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(4));
+    ASSERT_THAT(l->numHwLayers, Eq(4u));
     l->hwLayers[1].compositionType = HWC_OVERLAY;
 
     EXPECT_THAT(list.rejected_renderables(), ElementsAre(renderables.front(), renderables.back())); 
@@ -188,7 +190,7 @@ TEST_F(LayerListTest, swap_not_needed_when_all_layers_overlay)
     using namespace testing;
     mga::LayerList list(layer_adapter, renderables, offset);
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(4));
+    ASSERT_THAT(l->numHwLayers, Eq(4u));
     for (auto i = 0u; i < 3; i++)
         l->hwLayers[i].compositionType = HWC_OVERLAY;
     l->hwLayers[3].compositionType = HWC_FRAMEBUFFER_TARGET;
@@ -221,7 +223,7 @@ TEST_F(LayerListTest, offset_origin_does_not_affect_skip_and_target)
     mga::LayerList list(layer_adapter, {}, offset);
     list.setup_fb(stub_fb);
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(2));
+    ASSERT_THAT(l->numHwLayers, Eq(2u));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(skip));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
@@ -243,7 +245,7 @@ TEST_F(LayerListTest, list_is_offset_for_nonorigin_displays)
     mt::fill_hwc_layer(expected_layer, &visible_rect, expected_rectangle, *buffer1, HWC_FRAMEBUFFER, 0);
 
     auto l = list.native_list();
-    ASSERT_THAT(l->numHwLayers, Eq(2));
+    ASSERT_THAT(l->numHwLayers, Eq(2u));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-2], MatchesLegacyLayer(expected_layer));
     EXPECT_THAT(l->hwLayers[l->numHwLayers-1], MatchesLegacyLayer(fbtarget));
 }
