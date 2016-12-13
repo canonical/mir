@@ -169,7 +169,7 @@ TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
 
     watch->wait_until_entries_number_at_least(2, 5s);
     auto entries = watch->size_entries();
-    ASSERT_THAT(entries, SizeIs(Ge(1)));
+    ASSERT_THAT(entries, SizeIs(Ge(1u)));
 
     bool an_entry_with_differing_size {false};
     for(auto &entry : entries)

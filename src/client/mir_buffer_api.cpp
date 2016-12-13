@@ -64,7 +64,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_buffer_mmap(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
+bool mir_buffer_map(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {
     mir::require(b);
@@ -73,15 +73,17 @@ try
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
     *layout = mir_buffer_layout_linear;
     *region = buffer->map_region();
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     *region = MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
     *layout = mir_buffer_layout_unknown;
+    return false;
 }
 
-void mir_buffer_munmap(MirBuffer* b)
+void mir_buffer_unmap(MirBuffer* b)
 try
 {
     mir::require(b);

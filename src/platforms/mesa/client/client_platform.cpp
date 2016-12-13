@@ -59,11 +59,68 @@ constexpr size_t division_ceiling(size_t a, size_t b)
     return ((a - 1) / b) + 1;
 }
 
+struct AuthFdContext
+{
+    mir_auth_fd_callback cb;
+    void* context;
+};
+
+void auth_fd_cb(
+    MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    AuthFdContext* ctx = reinterpret_cast<AuthFdContext*>(context);
+    int auth_fd{-1};
+
+    MirPlatformMessageFds fds = mir_platform_message_get_fds(reply);
+    if (fds.num_fds == 1)
+        auth_fd = fds.fds[0];
+    ctx->cb(auth_fd, ctx->context);
+    delete ctx;
+}
+
+void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
+{
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
+    auto ctx = new AuthFdContext{cb, context};
+    connection->platform_operation(msg, auth_fd_cb, ctx);
+    mir_platform_message_release(msg);
+}
+
+struct AuthMagicContext
+{
+    mir_auth_magic_callback cb;
+    void* context;
+};
+
+void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    AuthMagicContext* ctx = reinterpret_cast<AuthMagicContext*>(context);
+    int auth_magic_response{-1};
+
+    MirPlatformMessageData data = mir_platform_message_get_data(reply);
+    if (data.size == sizeof(auth_magic_response))
+        memcpy(&auth_magic_response, data.data, sizeof(auth_magic_response));
+    ctx->cb(auth_magic_response, ctx->context);
+    delete ctx;
+}
+
+void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
+{
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
+    mir_platform_message_set_data(msg, &magic, sizeof(magic));
+    auto ctx = new AuthMagicContext{cb, context};
+    connection->platform_operation(msg, auth_magic_cb, ctx);
+    mir_platform_message_release(msg);
+}
+
 void set_device(gbm_device* device, void* context)
 {
     auto platform = reinterpret_cast<mclm::ClientPlatform*>(context);
     platform->set_gbm_device(device);
 }
+
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
@@ -79,6 +136,7 @@ mclm::ClientPlatform::ClientPlatform(
       buffer_file_ops{buffer_file_ops},
       display_container(display_container),
       gbm_dev{nullptr},
+      drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this}
 {
 }
@@ -197,9 +255,17 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
     return mir_format;
 }
 
-void* mclm::ClientPlatform::request_interface(char const* name, int version)
+void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
 {
-    if (!strcmp(name, MIR_EXTENSION_SET_GBM_DEVICE) && (version == MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
+    if (!strcmp(MIR_EXTENSION_MESA_DRM_AUTH, extension_name) &&
+        (MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 == version))
+    {
+        return &drm_extensions;
+    }
+    if (!strcmp(extension_name, MIR_EXTENSION_SET_GBM_DEVICE) &&
+       (version == MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
+    {
         return &mesa_auth;
+    }
     return nullptr;
 }

@@ -229,7 +229,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    int events = 2;
+    size_t events = 2;
     if (wait_for_n_events(events, this))
     {
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));

@@ -22,15 +22,17 @@
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
 #include "native_window_report.h"
+#include "android_format_conversion-inl.h"
 
 #include <chrono>
 #include "mir/weak_egl.h"
+#include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
 
@@ -67,8 +69,7 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 
 ANativeWindow* create_anw(MirBufferStream* buffer_stream)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    return static_cast<ANativeWindow*>(bs->egl_native_window());
+    return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
 
 void destroy_anw(ANativeWindow*)
@@ -145,6 +146,25 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return -1;
 }
+
+void create_buffer(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags,
+    mir_buffer_callback available_callback, void* available_context)
+{
+    //TODO: pass actual gralloc flags along
+    (void) gralloc_usage_flags;
+
+    mir_connection_allocate_buffer(
+        connection,
+        width, height,
+        mga::to_mir_format(hal_pixel_format),
+        mir_buffer_usage_hardware,
+        available_callback, available_context);
+}
+
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -154,7 +174,8 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
     android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
-    fence_extension{get_fence, associate_fence, wait_for_access}
+    fence_extension{get_fence, associate_fence, wait_for_access},
+    buffer_extension{create_buffer}
 {
 }
 
@@ -248,5 +269,7 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
     if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_1))
         return &android_types_extension;
 
+    if (!strcmp(name, MIR_EXTENSION_ANDROID_BUFFER) && (version == MIR_EXTENSION_ANDROID_BUFFER_VERSION_1))
+        return &buffer_extension;
     return nullptr;
 }

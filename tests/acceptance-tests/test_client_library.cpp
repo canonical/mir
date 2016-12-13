@@ -65,10 +65,10 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         config->surface_created(surface);
     }
 
-    static void next_buffer_callback(MirBufferStream* bs, void* context)
+    static void swap_buffers_callback(MirBufferStream* bs, void* context)
     {
         ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
-        config->next_buffer(bs);
+        config->swap_buffers(bs);
     }
 
     static void release_surface_callback(MirSurface* surface, void* context)
@@ -88,7 +88,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         surface = new_surface;
     }
 
-    virtual void next_buffer(MirBufferStream*)
+    virtual void swap_buffers(MirBufferStream*)
     {
         ++buffers;
     }
@@ -576,7 +576,7 @@ TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
     surface = mtf::make_any_surface(connection);
 
     buffers = 0;
-    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), next_buffer_callback, this));
+    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), swap_buffers_callback, this));
     EXPECT_THAT(buffers, Eq(1));
 
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
@@ -695,7 +695,7 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     mir_wait_for(mir_surface_release(surf_one, release_surface_callback, this));
     mir_wait_for(mir_surface_release(surf_two, release_surface_callback, this));
 
-    ASSERT_THAT(current_surface_count(), testing::Eq(0));
+    ASSERT_THAT(current_surface_count(), testing::Eq(0u));
 
     mir_connection_release(connection);
 }
@@ -808,7 +808,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     // We need to specify a valid output id, so we need to find which ones are valid...
     auto configuration = mir_connection_create_display_config(connection);
-    ASSERT_THAT(configuration->num_outputs, Ge(1));
+    ASSERT_THAT(configuration->num_outputs, Ge(1u));
 
     auto const requested_output = configuration->outputs[0];
 
@@ -823,10 +823,12 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     mir_buffer_stream_get_current_buffer(
         mir_surface_get_buffer_stream(surface), &native_buffer);
 
-    EXPECT_THAT(native_buffer->width,
-                Eq(requested_output.modes[requested_output.current_mode].horizontal_resolution));
-    EXPECT_THAT(native_buffer->height,
-                Eq(requested_output.modes[requested_output.current_mode].vertical_resolution));
+    int const mode_width =
+        requested_output.modes[requested_output.current_mode].  horizontal_resolution;
+    EXPECT_THAT(native_buffer->width, Eq(mode_width));
+    int const mode_height =
+        requested_output.modes[requested_output.current_mode].vertical_resolution;
+    EXPECT_THAT(native_buffer->height, Eq(mode_height));
 
 // TODO: This is racy. Fix in subsequent "send all the things on construction" branch
 //    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));

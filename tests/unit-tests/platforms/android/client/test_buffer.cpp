@@ -123,13 +123,13 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
     buffer.fill_update_msg(msg);
 
     EXPECT_THAT(msg.data_items, Eq(0));
-    EXPECT_THAT(msg.flags, Eq(mir_buffer_flag_fenced));
+    EXPECT_THAT(msg.flags, Eq(static_cast<unsigned>(mir_buffer_flag_fenced)));
     EXPECT_THAT(msg.fd_items, Eq(1));
     EXPECT_THAT(msg.fd[0], Eq(stub_fence));
 
     buffer.fill_update_msg(msg);
 
     EXPECT_THAT(msg.data_items, Eq(0));
-    EXPECT_THAT(msg.flags, Eq(0));
+    EXPECT_THAT(msg.flags, Eq(0u));
     EXPECT_THAT(msg.fd_items, Eq(0));
 }

@@ -33,7 +33,7 @@ class EGLNativeSurface
   public:
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
-    virtual void request_and_wait_for_next_buffer() = 0;
+    virtual void swap_buffers_sync() = 0;
     virtual void request_and_wait_for_configure(MirSurfaceAttrib a, int value) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
 

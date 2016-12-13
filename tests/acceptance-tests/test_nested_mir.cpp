@@ -86,13 +86,13 @@ struct MockSessionMediatorReport : mf::SessionMediatorObserver
         // These are not needed for the 1st test, but they will be soon
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_swap_buffers_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_swap_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
@@ -127,6 +127,7 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationObserver
 {
     MOCK_METHOD1(initial_configuration, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
     MOCK_METHOD1(configuration_applied, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
+    MOCK_METHOD1(base_configuration_updated, void (std::shared_ptr<mg::DisplayConfiguration const> const& base_config));
     MOCK_METHOD2(configuration_failed, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
     MOCK_METHOD2(catastrophic_configuration_error, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
 };
@@ -1027,9 +1028,10 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto const cursor = mir_cursor_configuration_from_name(name);
-        mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
-        mir_cursor_configuration_destroy(cursor);
+        auto spec = mir_connection_create_spec_for_changes(client.connection);
+        mir_surface_spec_set_cursor_name(spec, name);
+        mir_surface_apply_spec(client.surface, spec);
+        mir_surface_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();
@@ -1270,6 +1272,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
+    /* We need to attach a painted client before attempting to set the display mode,
+     * otherwise the nested server will not have rendered anything, so won't be focused,
+     * so the host server won't apply any set configuration
+     */
+    ClientWithAPaintedSurface client(nested_mir);
+
     {
         std::shared_ptr<mg::DisplayConfiguration> const initial_config{nested_mir.server.the_display()->configuration()};
         initial_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -1287,8 +1295,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
-
-    ClientWithAPaintedSurface client(nested_mir);
 
     auto const expect_config = hw_display_config_for_unplug();
 
@@ -1371,6 +1377,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
+    /* We need to attach a painted client before attempting to set the display mode,
+     * otherwise the nested server will not have rendered anything, so won't be focused,
+     * so the host server won't apply any set configuration
+     */
+    ClientWithAPaintedSurface client(nested_mir);
+
     {
         std::shared_ptr<mg::DisplayConfiguration> const initial_config{nested_mir.server.the_display()->configuration()};
         initial_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -1388,8 +1400,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
         ASSERT_TRUE(initial_condition.raised());
     }
-
-    ClientWithAPaintedSurface client(nested_mir);
 
     auto const new_config = hw_display_config_for_plugin();
 

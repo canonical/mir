@@ -22,6 +22,8 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/shell/display_configuration_controller.h"
+#include "mir/graphics/display_configuration_observer.h"
+#include "mir/observer_registrar.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_platform.h"
@@ -34,7 +36,6 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
-#include "mir/test/signal.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -43,6 +44,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <future>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -92,39 +94,98 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
     std::atomic<bool> allow_configure_display{true};
     std::atomic<bool> allow_set_base_display_configuration{true};
 };
-
-void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
-{
-    mt::Signal last_action_done;
-    server_action_queue.enqueue(
-        &last_action_done,
-        [&] { last_action_done.raise(); });
-
-    last_action_done.wait_for(std::chrono::seconds{5});
-}
 }
 
 struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
 {
+    class NotifyingConfigurationObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        std::future<void> expect_configuration_change(
+            std::shared_ptr<mg::DisplayConfiguration const> const& configuration)
+        {
+            std::lock_guard<decltype(guard)> lock{guard};
+            expectations.push_back({{}, configuration});
+            return expectations.back().notifier.get_future();
+        }
+
+    protected:
+        void initial_configuration(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+        }
+
+        void configuration_applied(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            std::lock_guard<decltype(guard)> lock{guard};
+            auto match = std::find_if(
+                expectations.begin(),
+                expectations.end(),
+                [config](auto const& candidate)
+                {
+                    return *config == *candidate.value;
+                });
+
+            if (match != expectations.end())
+            {
+                match->notifier.set_value();
+                expectations.erase(match);
+            }
+        }
+
+        void base_configuration_updated(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+        }
+
+        void configuration_failed(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {
+        }
+
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {
+        }
+
+    private:
+        struct Expectation
+        {
+            std::promise<void> notifier;
+            std::shared_ptr<mg::DisplayConfiguration const> value;
+        };
+
+        std::mutex mutable guard;
+        std::vector<Expectation> expectations;
+    };
+
     void SetUp() override
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
         mtf::ConnectedClientWithASurface::SetUp();
+
+        server.the_display_configuration_observer_registrar()->register_interest(observer);
     }
 
     void apply_config_change_and_wait_for_propagation(
         std::shared_ptr<mg::DisplayConfiguration> const& new_config)
     {
-        mock_display.emit_configuration_change_event(new_config);
-        // This waits until the configuration change event has propagated to MediatingDisplayChanger...
-        mock_display.wait_for_configuration_change_handler();
-        // ...and MediatingDisplayChanger will defer *actually* processing this to the mainloop,
-        // so wait until that has been processed before returning.
-        wait_for_server_actions_to_finish(*server.the_main_loop());
+        auto future = observer->expect_configuration_change(new_config);
+
+        server.the_display_configuration_controller()->set_base_configuration(new_config);
+
+        if (future.wait_for(std::chrono::seconds{10}) != std::future_status::ready)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Timeout waiting for display configuration to apply"});
+        }
     }
 
     testing::NiceMock<MockDisplay> mock_display;
+    std::shared_ptr<NotifyingConfigurationObserver> observer{std::make_shared<NotifyingConfigurationObserver>()};
     StubAuthorizer stub_authorizer;
 };
 
@@ -311,11 +372,7 @@ TEST_P(DisplayPowerSetting, can_get_power_mode)
             output.power_mode = mode;
         });
 
-    // We don't use apply_config_change_and_wait_for_propagation() here as
-    // that simulates a hardware change to which the default configuration policy
-    // will be applied... and that switches all the enabled monitors on!
-    server.the_display_configuration_controller()->set_base_configuration(server_config);
-    wait_for_server_actions_to_finish(*server.the_main_loop());
+    apply_config_change_and_wait_for_propagation(server_config);
 
     DisplayClient client{new_connection()};
 
@@ -946,6 +1003,84 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 
                 ++output_num;
             });
+
+    client.disconnect();
+}
+
+namespace
+{
+MATCHER_P(PointsToIdenticalData, data, "")
+{
+    return arg == nullptr ? false : memcmp(arg, data.data(), data.size()) == 0;
+}
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_null_for_empty_edid)
+{
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = {};
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = client.get_base_config();
+
+    auto output = mir_display_config_get_output(configuration.get(), 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), IsNull());
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_edid)
+{
+    /*
+     * Valid EDID block in case we later do some parsing/quirking/validation.
+     */
+    std::vector<uint8_t> edid{
+        0xff, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0xff,
+        0xaf, 0x06, 0x11, 0x3d, 0x00, 0x00, 0x00, 0x00,
+        0x16, 0x00, 0x04, 0x01, 0x1f, 0x95, 0x78, 0x11,
+        0x87, 0x02, 0xa4, 0xe5, 0x50, 0x56, 0x26, 0x9e,
+        0x50, 0x0d, 0x00, 0x54, 0x00, 0x00, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x37, 0x14,
+        0xb8, 0x80, 0x38, 0x70, 0x40, 0x24, 0x10, 0x10,
+        0x00, 0x3e, 0xad, 0x35, 0x00, 0x10, 0x18, 0x00,
+        0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x41, 0x00,
+        0x4f, 0x55, 0x20, 0x0a, 0x20, 0x20, 0x20, 0x20,
+        0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0xfe, 0x00,
+        0x42, 0x00, 0x34, 0x31, 0x48, 0x30, 0x4e, 0x41,
+        0x31, 0x30, 0x31, 0x2e, 0x0a, 0x20, 0xa5, 0x00
+    };
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = edid;
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = client.get_base_config();
+
+    auto output = mir_display_config_get_output(configuration.get(), 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), PointsToIdenticalData(edid));
 
     client.disconnect();
 }

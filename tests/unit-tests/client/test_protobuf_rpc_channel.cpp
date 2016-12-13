@@ -32,7 +32,7 @@
 #include "mir/input/input_devices.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fd_utils.h"
 #include "mir/test/gmock_fixes.h"
@@ -59,12 +59,10 @@ namespace
 
 struct MockSurfaceMap : mcl::SurfaceMap
 {
-    MOCK_CONST_METHOD2(with_surface_do,
-        void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
-    MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<MirSurface>(mir::frontend::SurfaceId));
+    MOCK_CONST_METHOD1(stream, std::shared_ptr<MirBufferStream>(mir::frontend::BufferStreamId));
     MOCK_CONST_METHOD1(with_all_streams_do,
-        void(std::function<void(mcl::ClientBufferStream*)> const&));
+        void(std::function<void(MirBufferStream*)> const&));
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
     MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
@@ -74,15 +72,15 @@ struct MockSurfaceMap : mcl::SurfaceMap
 class StubSurfaceMap : public mcl::SurfaceMap
 {
 public:
-    void with_surface_do(
-        mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&) const override
+    std::shared_ptr<MirSurface> surface(mir::frontend::SurfaceId) const override
     {
+        return {};
     }
-    void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
+    std::shared_ptr<MirBufferStream> stream(mir::frontend::BufferStreamId) const override
     {
+        return {};
     }
-    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
+    void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const override
     {
     }
     void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
@@ -254,7 +252,7 @@ public:
     MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
     std::shared_ptr<mclr::MirProtobufRpcChannel> channel;
-    mtd::MockClientBufferStream stream;
+    mtd::MockMirBufferStream stream;
 };
 
 }
@@ -311,7 +309,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_messages_atomically)
 
     channel_user.connect(&message, nullptr, nullptr);
 
-    EXPECT_EQ(transport->sent_messages.size(), 1);
+    EXPECT_EQ(transport->sent_messages.size(), 1u);
 }
 
 TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
@@ -339,7 +337,7 @@ TEST_F(MirProtobufRpcChannelTest, reads_fds)
                                           mir::Fd{open("/dev/null", O_RDONLY)},
                                           mir::Fd{open("/dev/null", O_RDONLY)}};
 
-    ASSERT_EQ(transport->sent_messages.size(), 1);
+    ASSERT_EQ(transport->sent_messages.size(), 1u);
     {
         mir::protobuf::Buffer reply_message;
 
@@ -375,7 +373,7 @@ TEST_F(MirProtobufRpcChannelTest, reads_fds)
         }
     }
 
-    ASSERT_EQ(reply.fd_size(), fds.size());
+    ASSERT_EQ(static_cast<size_t>(reply.fd_size()), fds.size());
     int i = 0;
     for (auto fd : fds)
     {
@@ -796,7 +794,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
     auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
-    EXPECT_CALL(*stream_map, with_stream_do(mir::frontend::BufferStreamId{stream_id},_))
+    EXPECT_CALL(*stream_map, stream(mir::frontend::BufferStreamId{stream_id}))
         .Times(1);
 
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();

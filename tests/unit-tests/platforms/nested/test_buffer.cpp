@@ -118,7 +118,7 @@ TEST_F(NestedBuffer, creates_buffer_when_constructed)
 TEST_F(NestedBuffer, generates_valid_id)
 {
     mgn::Buffer buffer(mt::fake_shared(mock_connection), sw_properties);
-    EXPECT_THAT(buffer.id().as_value(), Gt(0));
+    EXPECT_THAT(buffer.id().as_value(), Gt(0u));
 }
 
 TEST_F(NestedBuffer, has_correct_properties)

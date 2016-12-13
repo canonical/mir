@@ -94,8 +94,8 @@ TEST(ProtobufBufferPacker, message_takes_ownership_of_fds)
     using namespace testing;
 
     mp::Buffer response;
-    unsigned int const num_fds{3};
-    for(auto i = 0u; i < num_fds; i++)
+    int const num_fds{3};
+    for(auto i = 0; i < num_fds; i++)
         response.add_fd(fileno(tmpfile()));
 
     mir::Fd additional_fd{fileno(tmpfile())};
@@ -106,7 +106,7 @@ TEST(ProtobufBufferPacker, message_takes_ownership_of_fds)
     }
 
     EXPECT_THAT(response.fd().size(), Eq(num_fds+1));
-    auto i = 0u;
+    auto i = 0;
     for(; i < num_fds; i++)
         EXPECT_THAT(response.fd().Get(i), Not(mtd::RawFdIsValid()));
     EXPECT_THAT(response.fd().Get(i), mtd::RawFdIsValid());

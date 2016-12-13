@@ -174,3 +174,30 @@ TEST_F(TestNestedInputPlatform, devices_forward_key_events)
     mock_host_connection.event_callback(*mev::make_event(a_keyboard.id(), 141ns, cookie, mir_keyboard_action_down, 0,
                                                          scan_code, mir_input_event_modifier_none), source_surface);
 }
+
+TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
+{
+    auto nested_input_device = capture_input_device(a_mouse);
+    NiceMock<mtd::MockInputSink> event_sink;
+    mi::DefaultEventBuilder builder(MirInputDeviceId{18}, mir::cookie::Authority::create(), mt::fake_shared(mock_seat));
+
+    ASSERT_THAT(nested_input_device, Ne(nullptr));
+    nested_input_device->start(&event_sink, &builder);
+
+    EXPECT_CALL(event_sink,
+                handle_input(AllOf(
+                    mt::PointerEventWithPosition(60.0f, 35.0f), mt::PointerEventWithDiff(60.0f, 35.0f))));
+    std::vector<uint8_t> cookie;
+
+    auto event = mev::make_event(a_mouse.id(),
+                                 141ns,
+                                 cookie,
+                                 mir_input_event_modifier_none,
+                                 mir_pointer_action_enter,
+                                 0,
+                                 60.0f, 35.0f,
+                                 0, 0,
+                                 60.0f, 35.0f);
+
+    mock_host_connection.event_callback(*event, source_surface);
+}

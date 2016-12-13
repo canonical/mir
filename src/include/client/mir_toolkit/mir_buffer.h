@@ -18,6 +18,7 @@
 #ifndef MIR_TOOLKIT_MIR_BUFFER_H_
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
+#include <stdbool.h>
 #include <mir_toolkit/client_types_nbs.h>
 #include <mir_toolkit/mir_native_buffer.h>
 
@@ -35,7 +36,7 @@ extern "C" {
  *  It will be called once when created, and once per every
  *  mir_presentation_chain_submit_buffer.
  *
- *   \param [in] presentation_chain    The presentation chain
+ *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
  *   \param [in] height                Requested buffer height
  *   \param [in] buffer_usage          Requested buffer usage
@@ -90,17 +91,18 @@ MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* buffer);
  *   \param [in] buffer    The buffer
  *   \param [out] region   The mapped region
  *   \param [out] layout   The memory layout of the region
+ *   \return               true if success, false if failure
  *   \warning The buffer should be flushed via mir_buffer_munmap() before
  *            submitting the buffer to the server. 
  **/
-void mir_buffer_mmap(MirBuffer* buffer, MirGraphicsRegion* region, MirBufferLayout* layout);
+bool mir_buffer_map(MirBuffer* buffer, MirGraphicsRegion* region, MirBufferLayout* layout);
 
 /** Flush the CPU caches for the buffer.
  *
  *  \post MirGraphicsRegions that are associated with the buffer will be invalid.
  *  \param [in] buffer    The buffer
  **/ 
-void mir_buffer_munmap(MirBuffer* buffer);
+void mir_buffer_unmap(MirBuffer* buffer);
 
 /** Retrieve the width of the buffer in pixels.
  *

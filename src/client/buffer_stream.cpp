@@ -250,10 +250,10 @@ mcl::BufferStream::BufferStream(
     geom::Size ideal_size,
     size_t nbuffers)
     : connection_(connection),
-      display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       user_swap_interval(parse_env_for_swap_interval()),
+      interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -285,7 +285,7 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<BufferDepository>(
             client_platform->create_buffer_factory(), factory,
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
+            std::make_shared<Requests>(server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
             protobuf_bs->buffer_usage(), nbuffers);
 
@@ -313,41 +313,6 @@ mcl::BufferStream::BufferStream(
     if (!valid())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
     perf_report->name_surface(surface_name.c_str());
-}
-
-mcl::BufferStream::BufferStream(
-    MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> creation_wait_handle,
-    mclr::DisplayServer& server,
-    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const& map,
-    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
-    mp::BufferStreamParameters const& parameters,
-    std::shared_ptr<mcl::PerfReport> const& perf_report,
-    size_t nbuffers)
-    : connection_(connection),
-      display_server(server),
-      client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      user_swap_interval(parse_env_for_swap_interval()),
-      perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle),
-      map(map),
-      factory(factory)
-{
-    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
-
-    buffer_depository = std::make_unique<BufferDepository>(
-        client_platform->create_buffer_factory(), factory,
-        std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
-        ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
-    egl_native_window_ = client_platform->create_egl_native_window(this);
-
-    if (user_swap_interval.is_set())
-        set_swap_interval(user_swap_interval.value());
 }
 
 mcl::BufferStream::~BufferStream()
@@ -383,7 +348,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done)
 {
     auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -441,9 +406,9 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::BufferStream::request_and_wait_for_next_buffer()
+void mcl::BufferStream::swap_buffers_sync()
 {
-    next_buffer([](){})->wait_for_all();
+    swap_buffers([](){})->wait_for_all();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
@@ -472,7 +437,7 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
         interval = user_swap_interval.value();
 
     buffer_depository->set_interval(interval);
-    return interval_config.set_swap_interval(display_server, rpc_id(), interval);
+    return interval_config.set_swap_interval(interval);
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

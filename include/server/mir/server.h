@@ -56,7 +56,7 @@ class SurfaceStack;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class BufferStreamFactory; 
+class BufferStreamFactory;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
@@ -190,6 +190,11 @@ public:
  *  These allow the user to insert logic into startup or error handling.
  *  For obvious reasons they should be called before run().
  *  @{ */
+    /// Add a callback to be invoked when the settings have been applied, but before
+    /// the server has been initialized. This allows client code to get access Mir objects.
+    /// If multiple callbacks are added they will be invoked in the sequence added.
+    void add_pre_init_callback(std::function<void()> const& pre_init_callback);
+
     /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
     /// If multiple callbacks are added they will be invoked in the sequence added.

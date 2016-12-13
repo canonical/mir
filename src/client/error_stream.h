@@ -19,13 +19,13 @@
 #ifndef MIR_CLIENT_ERROR_STREAM_H_
 #define MIR_CLIENT_ERROR_STREAM_H_
 
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 
 namespace mir
 {
 namespace client
 {
-class ErrorStream : public ClientBufferStream
+class ErrorStream : public MirBufferStream
 {
 public:
     ErrorStream(
@@ -36,7 +36,7 @@ public:
     std::shared_ptr<ClientBuffer> get_current_buffer();
     uint32_t get_current_buffer_id();
     EGLNativeWindowType egl_native_window();
-    MirWaitHandle* next_buffer(std::function<void()> const& done);
+    MirWaitHandle* swap_buffers(std::function<void()> const& done);
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     int swap_interval() const;
     MirWaitHandle* set_swap_interval(int interval);

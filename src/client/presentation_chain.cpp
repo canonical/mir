@@ -40,7 +40,8 @@ mcl::PresentationChain::PresentationChain(
     stream_id(stream_id),
     server(server),
     native_buffer_factory(native_buffer_factory),
-    mir_buffer_factory(mir_buffer_factory)
+    mir_buffer_factory(mir_buffer_factory),
+    interval_config{server, frontend::BufferStreamId{stream_id}}
 {
 }
 
@@ -86,10 +87,10 @@ char const* mcl::PresentationChain::error_msg() const
 
 void mcl::PresentationChain::set_dropping_mode()
 {
-    mir_wait_for(interval_config.set_swap_interval(server, mir::frontend::BufferStreamId{stream_id}, 0));
+    mir_wait_for(interval_config.set_swap_interval(0));
 }
 
 void mcl::PresentationChain::set_queueing_mode()
 {
-    mir_wait_for(interval_config.set_swap_interval(server, mir::frontend::BufferStreamId{stream_id}, 1));
+    mir_wait_for(interval_config.set_swap_interval(1));
 }

@@ -22,7 +22,7 @@
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 #include "buffer_stream_configuration.h"
@@ -69,7 +69,7 @@ class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
 class BufferDepository;
-class BufferStream : public EGLNativeSurface, public ClientBufferStream
+class BufferStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     BufferStream(
@@ -87,21 +87,10 @@ public:
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
         geometry::Size ideal_size, size_t nbuffers);
-    // For surfaceless buffer streams
-    BufferStream(
-        MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> creation_wait_handle,
-        mir::client::rpc::DisplayServer& server,
-        std::shared_ptr<ClientPlatform> const& native_window_factory,
-        std::weak_ptr<SurfaceMap> const& map,
-        std::shared_ptr<AsyncBufferFactory> const& factory,
-        mir::protobuf::BufferStreamParameters const& parameters,
-        std::shared_ptr<PerfReport> const& perf_report,
-        size_t nbuffers);
 
     virtual ~BufferStream();
 
-    MirWaitHandle* next_buffer(std::function<void()> const& done) override;
+    MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     // Required by debug API
     uint32_t get_current_buffer_id() override;
@@ -115,7 +104,7 @@ public:
 
     // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
-    void request_and_wait_for_next_buffer() override;
+    void swap_buffers_sync() override;
 
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
 
@@ -150,7 +139,6 @@ private:
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
-    mir::client::rpc::DisplayServer& display_server;
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 

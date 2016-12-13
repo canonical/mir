@@ -20,18 +20,29 @@
 #include "mir/client_platform.h"
 #include "mir/fd.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
+#include "src/client/mir_connection.h"
+#include "mir/dispatch/dispatchable.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "mir_toolkit/extensions/android_buffer.h"
+#include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_buffer_registrar.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "src/platforms/android/client/buffer.h"
 #include "src/client/buffer.h"
 #include <android/system/graphics.h>
 #include <EGL/egl.h>
+#include <system/window.h>
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <condition_variable>
+#include <mutex>
+#include "mir_protobuf.pb.h"
 
 using namespace testing;
 using namespace mir::client;
@@ -52,6 +63,7 @@ struct AndroidClientPlatformTest : public Test
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
     MockEGL mock_egl;
+    testing::NiceMock<mtd::HardwareAccessMock> hw;
 };
 
 TEST_F(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
@@ -177,28 +189,93 @@ TEST_F(ClientExtensions, can_wait_fence)
 {
     ASSERT_THAT(extension, Ne(nullptr)); 
     ASSERT_THAT(extension->wait_for_access, Ne(nullptr));
+}
 
-    using namespace std::literals::chrono_literals;
-    Sequence seq;
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::read, 0ms))
-        .InSequence(seq)
-        .WillOnce(Return(false));
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
-        .InSequence(seq)
-        .WillOnce(Return(true));
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
-        .InSequence(seq)
-        .WillOnce(Return(true));
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 10ms))
-        .InSequence(seq)
-        .WillOnce(Return(true));
-    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::write, 11ms))
-        .InSequence(seq)
-        .WillOnce(Return(true));
+TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
+{
+    struct DummyChannel : rpc::MirBasicRpcChannel,
+        mir::dispatch::Dispatchable
+    {
+        void call_method(
+            std::string const&,
+            google::protobuf::MessageLite const*,
+            google::protobuf::MessageLite*,
+            google::protobuf::Closure* c) override
+        {
+            channel_call_count++;
+            c->Run();
+        }
+        mir::Fd watch_fd() const
+        {
+            int fd[2];
+            if (pipe(fd))
+                return mir::Fd{};
+            mir::Fd{fd[1]};
+            return mir::Fd{fd[0]};
+        }
+        bool dispatch(mir::dispatch::FdEvents)
+        {
+            return true;
+        }
+        mir::dispatch::FdEvents relevant_events() const { return {}; }
+        int channel_call_count = 0;
+    };
+    auto channel = std::make_shared<DummyChannel>();
+    struct StubConnection : mir_test_framework::StubConnectionConfiguration
+    {
+        StubConnection(
+            std::string str,
+            std::shared_ptr<DummyChannel> const& channel,
+            std::shared_ptr<ClientPlatform> const& platform) :
+            mir_test_framework::StubConnectionConfiguration(str),
+            channel(channel),
+            platform(platform)
+        {
+        }
 
-    EXPECT_FALSE(extension->wait_for_access(mir_buffer, mir_read, 150));
-    EXPECT_TRUE(extension->wait_for_access(mir_buffer, mir_read_write, 10499999));
-    EXPECT_TRUE(extension->wait_for_access(mir_buffer, mir_read_write, 10500001));
-    EXPECT_TRUE(extension->wait_for_access(mir_buffer, mir_read_write, 10999999));
-    EXPECT_TRUE(extension->wait_for_access(mir_buffer, mir_read_write, 11000001));
+        std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() override
+        {
+            struct StubPlatformFactory : ClientPlatformFactory
+            {
+                StubPlatformFactory(std::shared_ptr<ClientPlatform> const& platform) :
+                    platform(platform)
+                {
+                }
+
+                std::shared_ptr<ClientPlatform> create_client_platform(ClientContext*) override
+                {
+                    return platform;
+                }
+                std::shared_ptr<ClientPlatform> platform;
+            };
+            return std::make_shared<StubPlatformFactory>(platform);
+        }
+
+        std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> the_rpc_channel() override
+        {
+            return channel;
+        }
+        std::shared_ptr<DummyChannel> channel;
+        std::shared_ptr<ClientPlatform> platform;
+    } conf(std::string{}, channel, platform);
+
+    MirConnection connection(conf);
+    mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+
+    int width = 32;
+    int height = 90;
+    auto ext = static_cast<MirExtensionAndroidBuffer*>(
+        platform->request_interface(
+            MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_android, Ne(nullptr));
+
+    auto call_count = channel->channel_call_count;
+    ext->allocate_buffer_android(
+        &connection,
+        width, height,
+        HAL_PIXEL_FORMAT_RGBA_8888,
+        GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_TEXTURE,
+        [] (::MirBuffer*, void*) {}, nullptr);
+    EXPECT_THAT(channel->channel_call_count, Eq(call_count+1));
 }
