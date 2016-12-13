@@ -218,11 +218,10 @@ public:
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
-    void create_render_surface_with_content(
+    auto create_render_surface_with_content(
         mir::geometry::Size logical_size,
         mir_render_surface_callback callback,
-        void* context,
-        void** native_window);
+        void* context) -> MirRenderSurface*;
     void release_render_surface_with_content(
         void* render_surface);
 
