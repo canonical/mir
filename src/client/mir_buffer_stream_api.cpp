@@ -133,6 +133,7 @@ void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
      *       which does not work if you were to call mir_wait_for_one()
      *       instead.
      */
+    // TODO: Add a MirBufferStream::swap_buffers_sync to utilize the new code
     mir_wait_for(mir_buffer_stream_swap_buffers(buffer_stream,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result),
         nullptr));
