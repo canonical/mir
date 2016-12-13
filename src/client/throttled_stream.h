@@ -20,6 +20,9 @@
 #define MIR_CLIENT_THROTTLED_STREAM_H_
 
 #include "mir/mir_buffer_stream.h"
+#include "./mir_surface.h"
+#include "./frame_clock.h"
+#include <unordered_set>
 
 namespace mir { namespace client {
 
@@ -37,6 +40,9 @@ protected:
     void swap_buffers_sync();
 private:
     int interval;
+    std::unordered_set<MirSurface*> users;
+    std::shared_ptr<FrameClock> frame_clock;
+    mir::time::PosixTimestamp last_vsync;
 };
 
 } } // mir::client

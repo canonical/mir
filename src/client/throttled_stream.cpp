@@ -43,19 +43,46 @@ MirWaitHandle* ThrottledStream::set_swap_interval(int i)
     return nullptr;
 }
 
-void ThrottledStream::adopted_by(MirSurface*)
+void ThrottledStream::adopted_by(MirSurface* surface)
 {
-    // TODO
+    // TODO locking?
+    users.insert(surface);
+    if (!frame_clock)
+        frame_clock = surface->get_frame_clock();
 }
 
-void ThrottledStream::unadopted_by(MirSurface*)
+void ThrottledStream::unadopted_by(MirSurface* surface)
 {
-    // TODO
+    // TODO locking?
+    users.erase(surface);
+    if (frame_clock == surface->get_frame_clock())
+    {
+        frame_clock = users.empty() ? nullptr
+                                    : (*users.begin())->get_frame_clock();
+    }
 }
 
 void ThrottledStream::wait_for_vsync()
 {
-    // TODO
+    if (!frame_clock)
+        return;
+
+    mir::time::PosixTimestamp target;
+    {
+        //std::lock_guard<decltype(mutex)> lock(mutex);
+        target = frame_clock->next_frame_after(last_vsync);
+    }
+    sleep_until(target);
+    {
+        //std::lock_guard<decltype(mutex)> lock(mutex);
+        /*
+         * Note we record the target wakeup time and not the actual wakeup time
+         * so that the frame interval remains perfectly spaced even in the
+         * face of scheduling irregularities.
+         */
+        if (target > last_vsync)
+            last_vsync = target;
+    }
 }
 
 void ThrottledStream::swap_buffers_sync()
