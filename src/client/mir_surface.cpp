@@ -108,6 +108,14 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
+
+    /*
+     * TODO: Implement frame_clock->set_resync_callback(...) when such info
+     *       exists (IPC for the server to send timestamps to clients isn't
+     *       implemented yet). But that will only provide a small improvement
+     *       in precision and isn't an immediate requirement for us to get
+     *       real benefits from frame_clock already.
+     */
 }
 
 MirSurface::MirSurface(
@@ -167,6 +175,14 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
+
+    /*
+     * TODO: Implement frame_clock->set_resync_callback(...) when such info
+     *       exists (IPC for the server to send timestamps to clients isn't
+     *       implemented yet). But that will only provide a small improvement
+     *       in precision and isn't an immediate requirement for us to get
+     *       real benefits from frame_clock already.
+     */
 }
 
 MirSurface::~MirSurface()
