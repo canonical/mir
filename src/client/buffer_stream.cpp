@@ -430,6 +430,12 @@ void mcl::BufferStream::wait_for_vsync()
 
 void mcl::BufferStream::swap_buffers_sync()
 {
+    /*
+     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
+     *       has been ported to the new way of doing things.
+     *       In the mean time, having both throttles acting simultaneously
+     *       is harmless (they not additive).
+     */
     swap_buffers([](){})->wait_for_all();
 
     /*
