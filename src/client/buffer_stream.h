@@ -26,11 +26,13 @@
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 #include "buffer_stream_configuration.h"
+#include "frame_clock.h"
 
 #include "mir_toolkit/client_types.h"
 
 #include <EGL/eglplatform.h>
 
+#include <unordered_set>
 #include <queue>
 #include <memory>
 #include <mutex>
@@ -137,6 +139,7 @@ private:
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
     void init_swap_interval();
+    void wait_for_vsync();
 
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -163,6 +166,10 @@ private:
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
     MirRenderSurface* render_surface_;
+
+    std::unordered_set<MirSurface*> users;
+    std::shared_ptr<FrameClock> frame_clock;
+    mir::time::PosixTimestamp last_vsync;
 };
 
 }

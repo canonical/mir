@@ -406,9 +406,34 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
+void mcl::BufferStream::wait_for_vsync()
+{
+    mir::time::PosixTimestamp target;
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (!frame_clock)
+            return;
+        target = frame_clock->next_frame_after(last_vsync);
+    }
+    sleep_until(target);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        /*
+         * Note we record the target wakeup time and not the actual wakeup time
+         * so that the frame interval remains perfectly spaced even in the
+         * face of scheduling irregularities.
+         */
+        if (target > last_vsync)
+            last_vsync = target;
+    }
+}
+
 void mcl::BufferStream::swap_buffers_sync()
 {
     swap_buffers([](){})->wait_for_all();
+    int interval = swap_interval();
+    for (int i = 0; i < interval; ++i)
+        wait_for_vsync();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
@@ -440,14 +465,23 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
     return interval_config.set_swap_interval(interval);
 }
 
-void mcl::BufferStream::adopted_by(MirSurface*)
+void mcl::BufferStream::adopted_by(MirSurface* surface)
 {
-    // TODO
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    users.insert(surface);
+    if (!frame_clock)
+        frame_clock = surface->get_frame_clock();
 }
 
-void mcl::BufferStream::unadopted_by(MirSurface*)
+void mcl::BufferStream::unadopted_by(MirSurface* surface)
 {
-    // TODO
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    users.erase(surface);
+    if (frame_clock == surface->get_frame_clock())
+    {
+        frame_clock = users.empty() ? nullptr
+                                    : (*users.begin())->get_frame_clock();
+    }
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
