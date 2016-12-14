@@ -218,7 +218,8 @@ class MirClientHostStream : public mgn::HostStream
 {
 public:
     MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
-        render_surface(mir_connection_create_render_surface_sync(connection, 0, 0)),
+        render_surface(mir_connection_create_render_surface_sync(connection,
+            properties.size.width.as_int(), properties.size.height.as_int())),
         stream(mir_render_surface_get_buffer_stream(render_surface,
             properties.size.width.as_int(), properties.size.height.as_int(),
             properties.format,
