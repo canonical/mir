@@ -21,6 +21,7 @@
 #include "mir/output_type_names.h"
 #include "display_configuration.h"
 #include "mir/uncaught.h"
+#include "mir/graphics/edid.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -84,6 +85,30 @@ void mir_output_enable(MirOutput* output)
 void mir_output_disable(MirOutput* output)
 {
     output->set_used(0);
+}
+
+char const* mir_output_get_model(MirOutput const* output)
+{
+    // In future this might be provided by the server itself...
+    if (output->has_model())
+        return output->model().c_str();
+
+    // But if not we use the same member for caching our EDID probe...
+    using mir::graphics::Edid;
+    if (mir_output_get_edid_size(output) >= Edid::minimum_size)
+    {
+        auto edid = reinterpret_cast<Edid const*>(mir_output_get_edid(output));
+        Edid::MonitorName name;
+        if (!edid->get_monitor_name(name))
+        {
+            auto len = edid->get_manufacturer(name);
+            snprintf(name+len, sizeof(name)-len, " %hu", edid->product_code());
+        }
+        const_cast<MirOutput*>(output)->set_model(name);
+        return output->model().c_str();
+    }
+
+    return nullptr;
 }
 
 int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
