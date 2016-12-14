@@ -16,14 +16,13 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EDID_H_
-#define MIR_EDID_H_
+#ifndef MIR_GRAPHICS_EDID_H_
+#define MIR_GRAPHICS_EDID_H_
 
 #include <cstdint>
 #include <cstddef>
 
-namespace mir
-{
+namespace mir { namespace graphics {
 
 struct Edid
 {
@@ -107,6 +106,6 @@ private:
 #endif
 };
 
-} // namespace mir
+} } // namespace mir::graphics
 
-#endif // MIR_EDID_H_
+#endif // MIR_GRAPHICS_EDID_H_

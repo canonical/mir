@@ -16,11 +16,11 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/edid.h"
+#include "mir/graphics/edid.h"
 #include <endian.h>
 #include <cstring>
 
-using mir::Edid;
+using mir::graphics::Edid;
 
 size_t Edid::get_monitor_name(MonitorName str) const
 {

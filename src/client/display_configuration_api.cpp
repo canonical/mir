@@ -21,7 +21,7 @@
 #include "mir/output_type_names.h"
 #include "display_configuration.h"
 #include "mir/uncaught.h"
-#include "mir/edid.h"
+#include "mir/graphics/edid.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -94,7 +94,7 @@ char const* mir_output_get_model(MirOutput const* output)
         return output->model().c_str();
 
     // But if not we use the same member for caching our EDID probe...
-    using mir::Edid;
+    using mir::graphics::Edid;
     if (mir_output_get_edid_size(output) >= Edid::minimum_size)
     {
         auto edid = reinterpret_cast<Edid const*>(mir_output_get_edid(output));

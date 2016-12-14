@@ -20,7 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
-#include "mir/edid.h"
+#include "mir/graphics/edid.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
@@ -94,7 +94,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     );
         if (out.connected)
         {
-            using mir::Edid;
+            using mir::graphics::Edid;
             if (out.edid.size() >= Edid::minimum_size)
             {
                 auto edid = reinterpret_cast<Edid const*>(out.edid.data());

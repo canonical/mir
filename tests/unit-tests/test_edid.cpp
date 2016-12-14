@@ -16,10 +16,10 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/edid.h"
+#include "mir/graphics/edid.h"
 #include <gtest/gtest.h>
 
-using mir::Edid;
+using mir::graphics::Edid;
 
 namespace
 {

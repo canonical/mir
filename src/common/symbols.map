@@ -407,6 +407,6 @@ MIR_COMMON_0.25_PRIVATE {
 MIR_COMMON_0.26 {
  global:
   extern "C++" {
-      mir::Edid::*;
+      mir::graphics::Edid::*;
   };
 } MIR_COMMON_0.25;
