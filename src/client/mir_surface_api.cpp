@@ -471,7 +471,6 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     }
     catch (std::exception const& ex)
     {
-        printf("EXCEPT\n");
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
 

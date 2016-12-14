@@ -97,7 +97,6 @@ try
     mir::require(connection);
     if (auto rs = connection->create_render_surface_with_content({width, height}, callback, context))
     {
-        printf("INSERTING\n");
         connection_map.insert(rs, connection);
     }
     else
