@@ -30,7 +30,7 @@ mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<Fence> const& fence,
     BufferAccess access) :
     cmdstream_sync(cmdstream_sync),
-    fence(fence),
+    fence_(fence),
     access(access),
     native_window_buffer(anwb)
 {
@@ -41,7 +41,7 @@ void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
     if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
         return;
   
-    fence->wait();
+    fence_->wait();
 }
 
 bool mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent, std::chrono::milliseconds ms)
@@ -49,18 +49,18 @@ bool mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent, std::ch
     if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
         return true;
 
-    return fence->wait_for(ms);
+    return fence_->wait_for(ms);
 }
 
 void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
 {
-    fence->merge_with(merge_fd);
+    fence_->merge_with(merge_fd);
     access = updated_access;
 }
 
 void mga::AndroidNativeBuffer::reset_fence()
 {
-    fence->reset_fence();
+    fence_->reset_fence();
 }
 
 ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const
@@ -75,7 +75,12 @@ buffer_handle_t mga::AndroidNativeBuffer::handle() const
 
 mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 {
-    return fence->copy_native_handle();
+    return fence_->copy_native_handle();
+}
+
+mga::NativeFence mga::AndroidNativeBuffer::fence() const
+{
+    return fence_->native_handle();
 }
 
 void mga::AndroidNativeBuffer::lock_for_gpu()

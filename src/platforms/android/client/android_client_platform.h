@@ -19,6 +19,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
 #include "mir/client_platform.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_egl.h"
 #include "mir_toolkit/extensions/android_buffer.h"
 
@@ -52,7 +53,8 @@ private:
     std::shared_ptr<logging::Logger> const logger;
 
     std::shared_ptr<EGLNativeDisplayType> const native_display;
-    MirExtensionAndroidEGL extension;
+    MirExtensionAndroidEGL android_types_extension;
+    MirExtensionFencedBuffers fence_extension;
     MirExtensionAndroidBuffer buffer_extension;
 };
 
