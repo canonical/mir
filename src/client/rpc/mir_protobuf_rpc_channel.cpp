@@ -106,7 +106,6 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     {
         map->with_all_streams_do(
             [](MirBufferStream* receiver) {
-                printf("DISOCNENCT\n");
                 if (receiver) receiver->buffer_unavailable();
             });
     }

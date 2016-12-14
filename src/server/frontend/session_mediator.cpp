@@ -299,7 +299,6 @@ void mf::SessionMediator::create_surface(
         {
             if (stream.has_width() && stream.has_height())
             {
-                printf("NOT DEFAULTIN\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -308,7 +307,6 @@ void mf::SessionMediator::create_surface(
             }
             else
             {
-                printf("DEFAULTIN\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -577,17 +575,14 @@ void mf::SessionMediator::modify_surface(
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
-    printf("MODIFY! server side\n");
 #undef COPY_IF_SET
     if (surface_specification.stream_size() > 0)
     {
-        printf("YEP< had spec %i\n", surface_specification.stream_size());
         std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : surface_specification.stream())
         {
             if (stream.has_width() && stream.has_height())
             {
-                printf("MODIFYING width height, id %i\n", stream.id().value());
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -596,7 +591,6 @@ void mf::SessionMediator::modify_surface(
             }
             else
             {
-                printf("MODIFYING nononon width height\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -605,7 +599,7 @@ void mf::SessionMediator::modify_surface(
             }
         }
         mods.streams = std::move(stream_spec);
-    }   else { printf("newp, no thing\n"); }
+    }
 
     if (surface_specification.has_aux_rect())
     {
@@ -646,7 +640,6 @@ void mf::SessionMediator::modify_surface(
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
-    printf("GO TO SHELL\n");
     shell->modify_surface(session, id, mods);
 
     done->Run();
@@ -836,7 +829,6 @@ void mf::SessionMediator::create_buffer_stream(
         usage);
     
     auto const buffer_stream_id = session->create_buffer_stream(props);
-    printf("CREATE BUFFER STREAM %i\n", buffer_stream_id.as_value());
     auto stream = session->get_buffer_stream(buffer_stream_id);
     
     response->mutable_id()->set_value(buffer_stream_id.as_value());
@@ -852,7 +844,6 @@ void mf::SessionMediator::release_buffer_stream(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    printf("RELEASE BSTREAM\n");
     auto session = weak_session.lock();
 
     if (session.get() == nullptr)

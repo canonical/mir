@@ -440,7 +440,6 @@ bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
     bool visible{false};
     for (auto const& info : layers)
         visible |= info.stream->has_submitted_buffer();
-    printf("HMM %i\n",!hidden && visible);
     return !hidden && visible;
 }
 
@@ -890,7 +889,6 @@ void ms::BasicSurface::rename(std::string const& title)
 
 void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
-    printf("YEP, set stream\n");
     {
         std::unique_lock<std::mutex> lk(guard);
         for(auto& layer : layers)
@@ -907,37 +905,28 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
                 layer.stream->add_observer(observer);
             });
     }
-    printf("MAKING MOVE\n");
     observers.moved_to(surface_rect.top_left);
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    printf("GEN REN\n");
     mg::RenderableList list;
     for (auto const& info : layers)
     {
         if (info.stream->has_submitted_buffer())
         {
-            printf("YEPPPERS\n");
             geom::Size size;
             if (info.size.is_set())
-            {
                 size = info.size.value();
-                printf("SIZE SET %i %i\n", size.width.as_int(), size.height.as_int());
-            }
             else
-            {
                 size = info.stream->stream_size();
-                printf("DEFAULTO\n");
-            }
 
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
                 geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
                 transformation_matrix, surface_alpha, info.stream.get()));
-        } else { printf(" NO SUBMITTED BUFFE\n"); }
+        }
     }
     return list;
 }

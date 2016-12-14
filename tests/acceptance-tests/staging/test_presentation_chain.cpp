@@ -390,8 +390,6 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     ASSERT_TRUE(mir_render_surface_is_valid(rs_chain));
     ASSERT_TRUE(mir_render_surface_is_valid(rs_stream));
 
-    printf("CHAIN %X STREAM %X\n", (int)(long)rs_chain, (int)(long)rs_stream);
-
     auto spec = mir_connection_create_spec_for_normal_surface(
         connection, size.width.as_int(), size.height.as_int(), pf);
     auto surface = mir_surface_create_sync(spec);
@@ -423,7 +421,6 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     ASSERT_TRUE(context.wait_for_buffer(10s));
 
     mir_render_surface_release(rs_stream);
-    printf("DUN\n");
 }
 
 TEST_F(PresentationChain, can_access_basic_buffer_properties)

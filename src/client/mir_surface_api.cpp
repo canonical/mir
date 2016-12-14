@@ -471,6 +471,7 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     }
     catch (std::exception const& ex)
     {
+        printf("EXCEPT\n");
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
 
@@ -562,7 +563,6 @@ try
     mir::require(mir_surface_is_valid(surface));
     mir::require(spec);
 
-    printf("MODIFY\n");
     surface->modify(*spec);
 }
 catch (std::exception const& ex)
@@ -603,7 +603,6 @@ try
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    printf("ADDED %i\n", rs->stream_id().as_value());
     ContentInfo info{
         {displacement_x, displacement_y},
         rs->stream_id().as_value(),

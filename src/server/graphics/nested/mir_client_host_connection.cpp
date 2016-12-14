@@ -228,7 +228,7 @@ public:
 
     ~MirClientHostStream()
     {
-        mir_buffer_stream_release_sync(stream);
+        mir_render_surface_release(render_surface);
     }
 
     EGLNativeWindowType egl_native_window() const override
