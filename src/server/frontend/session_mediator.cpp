@@ -577,9 +577,11 @@ void mf::SessionMediator::modify_surface(
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
+    printf("MODIFY! server side\n");
 #undef COPY_IF_SET
     if (surface_specification.stream_size() > 0)
     {
+        printf("YEP< had spec %i\n", surface_specification.stream_size());
         std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : surface_specification.stream())
         {
@@ -603,7 +605,7 @@ void mf::SessionMediator::modify_surface(
             }
         }
         mods.streams = std::move(stream_spec);
-    }
+    }   else { printf("newp, no thing\n"); }
 
     if (surface_specification.has_aux_rect())
     {
@@ -644,6 +646,7 @@ void mf::SessionMediator::modify_surface(
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
+    printf("GO TO SHELL\n");
     shell->modify_surface(session, id, mods);
 
     done->Run();

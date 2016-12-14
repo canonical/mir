@@ -130,6 +130,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
 {
     RecursiveReadLock lg(guard);
 
+    printf("TRIGGER\n");
     scene_changed = false;
     mc::SceneElementSequence elements;
     for (auto const& surface : surfaces)

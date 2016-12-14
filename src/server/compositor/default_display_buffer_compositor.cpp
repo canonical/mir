@@ -72,6 +72,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
+    printf("RENDER!\n");
     if (display_buffer.overlay(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);
@@ -79,6 +80,11 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     }
     else
     {
+        for(auto& r : renderable_list)
+        {
+            printf("SIZE %i %i\n", r->screen_position().size.width.as_int(),
+                r->screen_position().size.height.as_int());
+        }
         renderer->set_output_transform(display_buffer.orientation(), display_buffer.mirror_mode());
         renderer->render(renderable_list);
 

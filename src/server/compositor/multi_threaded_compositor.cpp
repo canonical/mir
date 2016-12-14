@@ -270,10 +270,12 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     observer = std::make_shared<ms::LegacySceneChangeNotification>(
     [this]()
     {
+        printf("SCHEDULE\n");
         schedule_compositing(1);
     },
     [this](int num, geometry::Rectangle const& damage)
     {
+        printf("SCHE\n");
         schedule_compositing(num, damage);
     });
 }

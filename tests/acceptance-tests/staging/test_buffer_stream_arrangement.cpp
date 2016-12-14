@@ -79,7 +79,7 @@ TEST_F(BufferStreamArrangementStaging, can_set_stream_logical_and_physical_size)
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
     mir_surface_spec_add_render_surface(change_spec, stream.rs->surface,
-        0, 0, logical_size.width.as_int(), logical_size.height.as_int());
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
@@ -101,7 +101,7 @@ TEST_F(BufferStreamArrangementStaging, can_setting_stream_physical_size_doesnt_a
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
     mir_surface_spec_add_render_surface(change_spec, stream.rs->surface,
-        0, 0, logical_size.width.as_int(), logical_size.height.as_int());
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
@@ -129,7 +129,7 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
 
     auto change_spec = mir_connection_create_spec_for_changes(connection);
     mir_surface_spec_add_render_surface(change_spec, stream.rs->surface,
-        0, 0, logical_size.width.as_int(), logical_size.height.as_int());
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 

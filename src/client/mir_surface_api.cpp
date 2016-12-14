@@ -562,6 +562,7 @@ try
     mir::require(mir_surface_is_valid(surface));
     mir::require(spec);
 
+    printf("MODIFY\n");
     surface->modify(*spec);
 }
 catch (std::exception const& ex)
@@ -600,9 +601,9 @@ try
 {
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-    printf("NEW VALUE %i\n", rs->stream_id().as_value());
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
+    printf("ADDED %i\n", rs->stream_id().as_value());
     ContentInfo info{
         {displacement_x, displacement_y},
         rs->stream_id().as_value(),

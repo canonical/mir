@@ -284,7 +284,6 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 void mcl::BufferVault::disconnected()
 {
     std::unique_lock<std::mutex> lk(mutex);
-    printf("DISCONNECTED\n");
     disconnected_ = true;
     promises.clear();
     trigger_callback(std::move(lk));

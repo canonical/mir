@@ -64,6 +64,7 @@ mt::Stream::Stream(
     position_{position},
     stream(create_stream())
 {
+    swap_buffers();
 }
 
 mt::LegacyStream::LegacyStream(MirConnection* connection,
