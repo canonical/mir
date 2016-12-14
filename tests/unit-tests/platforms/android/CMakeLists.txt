@@ -27,6 +27,8 @@ target_link_libraries(
   mirclient-static
   mirclientlttng-static
   mirsharedandroid-static
+  mirclient-static
+  mirclientlttng-static
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 

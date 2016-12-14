@@ -46,10 +46,6 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_METHOD0(map_region, MirGraphicsRegion());
     MOCK_METHOD0(unmap_region, void());
 
-    MOCK_METHOD2(set_fence, void(Fd, MirBufferAccess));
-    MOCK_CONST_METHOD0(get_fence, Fd());
-    MOCK_METHOD2(wait_fence, bool(MirBufferAccess, std::chrono::nanoseconds));
-
     MOCK_CONST_METHOD0(buffer_usage, MirBufferUsage());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(size, geometry::Size());
