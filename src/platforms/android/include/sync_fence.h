@@ -56,6 +56,7 @@ public:
     void reset_fence() override;
     void merge_with(NativeFence& merge_fd) override;
     NativeFence copy_native_handle() const override;
+    NativeFence native_handle() const override;
 
 private:
     SyncFence(SyncFence const&) = delete;

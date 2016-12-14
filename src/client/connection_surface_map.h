@@ -34,11 +34,11 @@ class MirBuffer;
 class ConnectionSurfaceMap : public SurfaceMap
 {
 public:
-    void with_surface_do(frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const override;
+    virtual std::shared_ptr<MirSurface> surface(frontend::SurfaceId) const override;
     void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface);
     void erase(frontend::SurfaceId surface_id);
 
-    void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(MirBufferStream*)> const& exec) const override;
+    virtual std::shared_ptr<MirBufferStream> stream(frontend::BufferStreamId) const override;
     void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const override;
 
     void insert(frontend::BufferStreamId stream_id, std::shared_ptr<MirBufferStream> const& chain);

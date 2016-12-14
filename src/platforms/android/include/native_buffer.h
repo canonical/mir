@@ -45,6 +45,7 @@ public:
     virtual ANativeWindowBuffer* anwb() const = 0;
     virtual buffer_handle_t handle() const = 0;
     virtual android::NativeFence copy_fence() const = 0;
+    virtual android::NativeFence fence() const = 0;
 
     virtual void ensure_available_for(android::BufferAccess intent) = 0;
     virtual bool ensure_available_for(android::BufferAccess intent, std::chrono::milliseconds timeout) = 0;

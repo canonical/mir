@@ -50,13 +50,19 @@ char const* animal_name()
     static char const* name = "bobcat";
     return name;
 }
+
+int get_fence(MirBuffer*)
+{
+    return -1;
+}
 }
 
 mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
     context{context},
     flavor_ext_0_1{favorite_flavor_0_1},
     flavor_ext_2_2{favorite_flavor_2_2},
-    animal_ext{animal_name}
+    animal_ext{animal_name},
+    fence_ext{get_fence, nullptr, nullptr}
 {
 }
 
@@ -157,6 +163,12 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
         (version == MIR_EXTENSION_ANIMAL_NAME_VERSION_9))
     {
         return &animal_ext;
+    }
+
+    if (!strcmp(name, MIR_EXTENSION_FENCED_BUFFERS) &&
+        (version == MIR_EXTENSION_FENCED_BUFFERS_VERSION_1))
+    {
+        return &fence_ext;
     }
     return nullptr;
 }

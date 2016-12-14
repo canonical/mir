@@ -241,6 +241,7 @@ message DisplayOutput {
   optional bytes  gamma_blue = 22;
   optional uint32 gamma_supported = 23;
   optional bytes edid = 24;
+  optional string model = 25;
 }
 
 message Connection {

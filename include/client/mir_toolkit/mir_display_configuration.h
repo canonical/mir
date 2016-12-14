@@ -373,6 +373,18 @@ void mir_output_enable(MirOutput* output);
 void mir_output_disable(MirOutput* output);
 
 /**
+ * Get a descriptive manufacturer/model string for the connected display.
+ * The format of this string is arbitrary and driver-specific but should be
+ * human-readable and helpful for someone to identify which physical display
+ * this is. Note this function is not called get_name because that would imply
+ * the returned value is different for each output, whereas it may not be.
+ *
+ * \returns  A nul-terminated string or NULL if none available. This string
+ *           remains valid for the lifetime of the MirOutput object.
+ */
+char const* mir_output_get_model(MirOutput const* output);
+
+/**
  * Get the physical width of the connected display, in millimetres.
  *
  * A best-effort report of the physical width of the display connected to this

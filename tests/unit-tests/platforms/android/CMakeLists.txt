@@ -24,7 +24,11 @@ add_dependencies(mir_unit_tests_android GMock)
 target_link_libraries(
   mir_unit_tests_android
 
+  mirclient-static
+  mirclientlttng-static
   mirsharedandroid-static
+  mirclient-static
+  mirclientlttng-static
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 
