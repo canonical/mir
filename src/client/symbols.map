@@ -364,9 +364,6 @@ MIR_CLIENT_DETAIL_0.21 {
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
-    mir_buffer_get_fence;
-    mir_buffer_associate_fence;
-    mir_buffer_wait_for_access;
     mir_buffer_map;
     mir_buffer_unmap;
     mir_buffer_set_callback;
