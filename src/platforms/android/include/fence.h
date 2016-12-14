@@ -41,6 +41,7 @@ public:
     //TODO: (kdub) use the Fd type instead of NativeFence
     virtual void merge_with(NativeFence& merge_fd) = 0;
     virtual NativeFence copy_native_handle() const = 0;
+    virtual NativeFence native_handle() const = 0;
 
 protected:
     Fence() = default;

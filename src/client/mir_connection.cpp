@@ -480,6 +480,7 @@ void MirConnection::released(StreamRelease data)
     if (data.handle)
         data.handle->result_received();
 
+    printf("RELEASING STREAM\n");
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         if (data.rs)
@@ -636,6 +637,7 @@ MirWaitHandle* MirConnection::disconnect()
     }
     surface_map->with_all_streams_do([](MirBufferStream* receiver)
     {
+        printf("DISCONNECTED HERE because discon\n");
         receiver->buffer_unavailable();
     });
 
@@ -1273,12 +1275,13 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
 
     try
     {
-        std::shared_ptr<MirRenderSurface> rs {nullptr};
-        rs = std::make_shared<mcl::RenderSurface>(this,
-                                                  request->native_window,
-                                                  platform,
-                                                  protobuf_bs,
-                                                  request->logical_size);
+        printf("protobuf bs %i\n", protobuf_bs->id().value());
+        auto rs = std::make_shared<mcl::RenderSurface>(
+            this,
+            request->native_window,
+            platform,
+            protobuf_bs,
+            request->logical_size);
         surface_map->insert(request->native_window.get(), rs);
 
         if (request->callback)
@@ -1311,6 +1314,7 @@ auto MirConnection::create_render_surface_with_content(
     params.set_buffer_usage(-1);
 
     auto nw = platform->create_egl_native_window(nullptr);
+    printf("NW %X\n", (int)(long) nw.get());
     auto request = std::make_shared<RenderSurfaceCreationRequest>(
         callback, context, nw, logical_size);
 

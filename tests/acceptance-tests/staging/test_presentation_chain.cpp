@@ -21,6 +21,8 @@
 #include "mir_toolkit/mir_buffer.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
@@ -243,6 +245,12 @@ TEST_F(PresentationChain, has_native_fence)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
+    auto ext = static_cast<MirExtensionFencedBuffers*>(
+        mir_connection_request_interface(
+            connection, MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->get_fence, Ne(nullptr));
+
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
@@ -254,7 +262,7 @@ TEST_F(PresentationChain, has_native_fence)
     EXPECT_THAT(context.buffer(), Ne(nullptr));
 
     //the native type for the stub platform is nullptr
-    EXPECT_THAT(mir_buffer_get_fence(buffer), Eq(mir::Fd::invalid));
+    EXPECT_THAT(ext->get_fence(buffer), Eq(mir::Fd::invalid));
 }
 
 TEST_F(PresentationChain, can_map_for_cpu_render)
@@ -374,11 +382,15 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
 
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
 {
-    auto rs_chain = mir_connection_create_render_surface_sync(connection, 0, 0);
+    auto rs_chain = mir_connection_create_render_surface_sync(connection, 1, 1);
     auto chain = mir_render_surface_get_presentation_chain(rs_chain);
-    auto rs_stream = mir_connection_create_render_surface_sync(connection, 0, 0);
+    auto rs_stream = mir_connection_create_render_surface_sync(connection, 1, 1);
     auto stream = mir_render_surface_get_buffer_stream(rs_stream, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
+    ASSERT_TRUE(mir_render_surface_is_valid(rs_chain));
+    ASSERT_TRUE(mir_render_surface_is_valid(rs_stream));
+
+    printf("CHAIN %X STREAM %X\n", (int)(long)rs_chain, (int)(long)rs_stream);
 
     auto spec = mir_connection_create_spec_for_normal_surface(
         connection, size.width.as_int(), size.height.as_int(), pf);
@@ -401,15 +413,17 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_presentation_chain_submit_buffer(chain, context.buffer());
 
     spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_add_render_surface(spec, rs_stream, 0, 0, size.width.as_int(), size.height.as_int());
+    mir_surface_spec_add_render_surface(spec, rs_stream, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
+
     mir_render_surface_release(rs_chain);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
 
     mir_render_surface_release(rs_stream);
+    printf("DUN\n");
 }
 
 TEST_F(PresentationChain, can_access_basic_buffer_properties)

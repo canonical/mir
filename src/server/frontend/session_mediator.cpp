@@ -299,6 +299,7 @@ void mf::SessionMediator::create_surface(
         {
             if (stream.has_width() && stream.has_height())
             {
+                printf("NOT DEFAULTIN\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -307,6 +308,7 @@ void mf::SessionMediator::create_surface(
             }
             else
             {
+                printf("DEFAULTIN\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -583,6 +585,7 @@ void mf::SessionMediator::modify_surface(
         {
             if (stream.has_width() && stream.has_height())
             {
+                printf("MODIFYING width height, id %i\n", stream.id().value());
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -591,6 +594,7 @@ void mf::SessionMediator::modify_surface(
             }
             else
             {
+                printf("MODIFYING nononon width height\n");
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
                         mf::BufferStreamId{stream.id().value()},
@@ -829,6 +833,7 @@ void mf::SessionMediator::create_buffer_stream(
         usage);
     
     auto const buffer_stream_id = session->create_buffer_stream(props);
+    printf("CREATE BUFFER STREAM %i\n", buffer_stream_id.as_value());
     auto stream = session->get_buffer_stream(buffer_stream_id);
     
     response->mutable_id()->set_value(buffer_stream_id.as_value());
@@ -844,6 +849,7 @@ void mf::SessionMediator::release_buffer_stream(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
+    printf("RELEASE BSTREAM\n");
     auto session = weak_session.lock();
 
     if (session.get() == nullptr)

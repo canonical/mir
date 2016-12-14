@@ -591,61 +591,22 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_surface_spec_add_presentation_chain(
-    MirSurfaceSpec* spec,
-    int width, int height,
-    int displacement_x, int displacement_y,
-    MirPresentationChain* client_chain)
-try
-{
-    mir::require(spec && client_chain);
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
-
-    ContentInfo info{
-        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info}; 
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_buffer_stream(
-    MirSurfaceSpec* spec,
-    int displacement_x, int displacement_y,
-    int width, int height,
-    MirBufferStream* stream)
-try
-{
-    mir::require(spec && stream);
-    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
-
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info}; 
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     MirRenderSurface* render_surface,
-    int /*logical_width*/, int /*logical_height*/,
+    int logical_width, int logical_height,
     int displacement_x, int displacement_y)
 try
 {
     mir::require(spec && render_surface);
     auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-
+    printf("NEW VALUE %i\n", rs->stream_id().as_value());
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
+    ContentInfo info{
+        {displacement_x, displacement_y},
+        rs->stream_id().as_value(),
+        mir::geometry::Size{logical_width, logical_height}};
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);

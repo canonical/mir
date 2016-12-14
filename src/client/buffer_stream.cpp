@@ -205,6 +205,7 @@ struct BufferDepository
 
     void lost_connection()
     {
+        printf("LOST CONNECTION\n");
         vault.disconnected();
     }
 
@@ -478,6 +479,7 @@ void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 void mcl::BufferStream::buffer_unavailable()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
+    printf("UNAVAIL\n");
     buffer_depository->lost_connection(); 
 }
 

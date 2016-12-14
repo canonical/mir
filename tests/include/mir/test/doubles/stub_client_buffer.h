@@ -82,9 +82,6 @@ struct StubClientBuffer : client::ClientBuffer
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
 
-    void set_fence(Fd, MirBufferAccess) override {}
-    Fd get_fence() const override { return mir::Fd(mir::Fd::invalid); }
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override { return true; }
     void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint** attrs)
     {
         static EGLint image_attrs[] = { EGL_NONE };
