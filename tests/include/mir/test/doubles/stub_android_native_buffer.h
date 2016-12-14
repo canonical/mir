@@ -43,6 +43,7 @@ struct StubAndroidNativeBuffer : public graphics::android::NativeBuffer
     auto anwb() const -> ANativeWindowBuffer* override { return const_cast<ANativeWindowBuffer*>(&stub_anwb); }
     auto handle() const -> buffer_handle_t override { return native_handle.get(); }
     auto copy_fence() const -> graphics::android::NativeFence override { return -1; }
+    auto fence() const -> graphics::android::NativeFence override { return -1; }
 
     void ensure_available_for(graphics::android::BufferAccess) {}
     bool ensure_available_for(graphics::android::BufferAccess, std::chrono::milliseconds) { return true; }

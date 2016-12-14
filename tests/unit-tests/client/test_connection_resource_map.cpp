@@ -56,15 +56,9 @@ struct ConnectionResourceMap : testing::Test
 TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
 {
     using namespace testing;
-    auto surface_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
-    map.with_surface_do(surface_id, [&](MirSurface* surf) {
-        EXPECT_THAT(surf, Eq(surface.get()));
-        surface_called = true;
-    });
-
-    EXPECT_TRUE(surface_called);
+    EXPECT_EQ(surface, map.surface(surface_id));
 }
 
 TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
@@ -73,22 +67,15 @@ TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
     map.erase(surface_id);
-    EXPECT_THROW({
-        map.with_stream_do(stream_id, [](MirBufferStream*){});
-    }, std::runtime_error);
+    EXPECT_FALSE(map.stream(stream_id));
 }
 
 TEST_F(ConnectionResourceMap, maps_streams)
 {
     using namespace testing;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(stream_id, stream);
-    map.with_stream_do(stream_id, [&](MirBufferStream* str) {
-        EXPECT_THAT(str, Eq(stream.get()));
-        stream_called = true;
-    });
-    EXPECT_TRUE(stream_called);
+    EXPECT_EQ(stream, map.stream(stream_id));
     map.erase(stream_id);
 }
 
@@ -126,11 +113,7 @@ TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)
     mcl::ConnectionSurfaceMap map;
     map.insert(buffer_id, buffer);
     map.insert(surface_id, surface);
-
-    map.with_surface_do(surface_id,
-        [this, &map](auto) {
-            EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
-        });
+    EXPECT_EQ(buffer, map.buffer(buffer_id));
 }
 
 TEST_F(ConnectionResourceMap, can_insert_retrieve_erase_render_surface)

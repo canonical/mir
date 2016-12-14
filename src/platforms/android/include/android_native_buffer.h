@@ -43,6 +43,7 @@ struct AndroidNativeBuffer : public NativeBuffer
     ANativeWindowBuffer* anwb() const;
     buffer_handle_t handle() const;
     NativeFence copy_fence() const;
+    NativeFence fence() const;
 
     void ensure_available_for(BufferAccess);
     bool ensure_available_for(android::BufferAccess intent, std::chrono::milliseconds timeout);
@@ -54,7 +55,7 @@ struct AndroidNativeBuffer : public NativeBuffer
 
 private:
     std::shared_ptr<CommandStreamSync> cmdstream_sync;
-    std::shared_ptr<Fence> fence;
+    std::shared_ptr<Fence> fence_;
     BufferAccess access;
     std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
 };

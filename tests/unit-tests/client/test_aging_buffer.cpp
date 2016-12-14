@@ -64,21 +64,6 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
     }
 
-    void set_fence(Fd, MirBufferAccess) override
-    {
-        exit(1);
-    }
-
-    Fd get_fence() const override
-    {
-        exit(1);
-    }
-
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override
-    {
-        exit(1);
-    }
-
     MirBufferPackage* package() const override
     {
         exit(1);
