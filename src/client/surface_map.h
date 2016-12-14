@@ -40,10 +40,8 @@ class MirBuffer;
 class SurfaceMap
 {
 public:
-    virtual void with_surface_do(
-        frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const = 0;
-    virtual void with_stream_do(
-        frontend::BufferStreamId stream_id, std::function<void(MirBufferStream*)> const& exec) const = 0;
+    virtual std::shared_ptr<MirSurface> surface(frontend::SurfaceId) const = 0;
+    virtual std::shared_ptr<MirBufferStream> stream(frontend::BufferStreamId) const = 0;
     virtual void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const = 0;
     virtual std::shared_ptr<MirBuffer> buffer(int buffer_id) const = 0;
     virtual void insert(int buffer_id, std::shared_ptr<MirBuffer> const& buffer) = 0;

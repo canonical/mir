@@ -403,3 +403,10 @@ MIR_COMMON_0.25_PRIVATE {
       mir::PosixRWMutex::unlock_shared*;
     };
 } MIR_COMMON_0.25;
+
+MIR_COMMON_0.26 {
+ global:
+  extern "C++" {
+      mir::graphics::Edid::*;
+  };
+} MIR_COMMON_0.25;

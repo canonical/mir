@@ -1172,6 +1172,19 @@ std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_dis
     return display_configuration->take_snapshot();
 }
 
+std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain_with_id(
+    MirRenderSurface* render_surface,
+    mir::protobuf::BufferStream const& a_protobuf_bs)
+{
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    auto chain = std::make_shared<mcl::PresentationChain>(
+        this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
+
+    surface_map->insert(render_surface->stream_id(), chain);
+    return chain;
+}
+
 void MirConnection::create_presentation_chain(
     mir_presentation_chain_callback callback,
     void *context)
@@ -1395,11 +1408,11 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     }
 }
 
-void MirConnection::create_render_surface_with_content(
+auto MirConnection::create_render_surface_with_content(
     mir::geometry::Size logical_size,
     mir_render_surface_callback callback,
-    void* context,
-    void** native_window)
+    void* context)
+-> MirRenderSurface*
 {
     mir::protobuf::BufferStreamParameters params;
     params.set_width(logical_size.width.as_int());
@@ -1427,7 +1440,7 @@ void MirConnection::create_render_surface_with_content(
         //if this throws, our socket code will run the closure, which will make an error object.
     }
 
-    *native_window = nw.get();
+    return static_cast<MirRenderSurface*>(nw.get());
 }
 
 void* MirConnection::request_interface(char const* name, int version)
