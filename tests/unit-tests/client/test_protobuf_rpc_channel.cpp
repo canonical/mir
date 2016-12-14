@@ -59,10 +59,8 @@ namespace
 
 struct MockSurfaceMap : mcl::SurfaceMap
 {
-    MOCK_CONST_METHOD2(with_surface_do,
-        void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
-    MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(MirBufferStream*)> const&));
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<MirSurface>(mir::frontend::SurfaceId));
+    MOCK_CONST_METHOD1(stream, std::shared_ptr<MirBufferStream>(mir::frontend::BufferStreamId));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(MirBufferStream*)> const&));
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
@@ -74,13 +72,13 @@ struct MockSurfaceMap : mcl::SurfaceMap
 class StubSurfaceMap : public mcl::SurfaceMap
 {
 public:
-    void with_surface_do(
-        mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&) const override
+    std::shared_ptr<MirSurface> surface(mir::frontend::SurfaceId) const override
     {
+        return {};
     }
-    void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(MirBufferStream*)> const&) const override
+    std::shared_ptr<MirBufferStream> stream(mir::frontend::BufferStreamId) const override
     {
+        return {};
     }
     void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const override
     {
@@ -796,7 +794,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
     auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
-    EXPECT_CALL(*stream_map, with_stream_do(mir::frontend::BufferStreamId{stream_id},_))
+    EXPECT_CALL(*stream_map, stream(mir::frontend::BufferStreamId{stream_id}))
         .Times(1);
 
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();

@@ -1408,11 +1408,11 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     }
 }
 
-void MirConnection::create_render_surface_with_content(
+auto MirConnection::create_render_surface_with_content(
     mir::geometry::Size logical_size,
     mir_render_surface_callback callback,
-    void* context,
-    void** native_window)
+    void* context)
+-> MirRenderSurface*
 {
     mir::protobuf::BufferStreamParameters params;
     params.set_width(logical_size.width.as_int());
@@ -1440,7 +1440,7 @@ void MirConnection::create_render_surface_with_content(
         //if this throws, our socket code will run the closure, which will make an error object.
     }
 
-    *native_window = nw.get();
+    return static_cast<MirRenderSurface*>(nw.get());
 }
 
 void* MirConnection::request_interface(char const* name, int version)

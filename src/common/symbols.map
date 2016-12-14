@@ -405,8 +405,9 @@ MIR_COMMON_0.25_PRIVATE {
 } MIR_COMMON_0.25;
 
 MIR_COMMON_0.26 {
-  global:
-    extern "C++" {
+ global:
+  extern "C++" {
+      mir::graphics::Edid::*;
       mir::input::DeviceConfiguration::?DeviceConfiguration*;
       mir::input::DeviceConfiguration::DeviceConfiguration*;
       mir::input::DeviceConfiguration::capabilities*;
@@ -471,6 +472,5 @@ MIR_COMMON_0.26 {
       typeinfo?for?mir::input::KeyboardConfiguration;
       typeinfo?for?mir::input::InputConfiguration;
       typeinfo?for?mir::input::DeviceConfiguration;
-    };
-} MIR_COMMON_0.25_PRIVATE;
-
+  };
+} MIR_COMMON_0.25;
