@@ -1224,13 +1224,19 @@ void MirConnection::release_render_surface_with_content(
     void* render_surface)
 {
     auto rs = surface_map->render_surface(render_surface);
+    if (!rs->valid())
+    {
+        surface_map->erase(render_surface);
+        return;
+    }
 
-    StreamRelease stream_release{nullptr,
-                                 nullptr,
-                                 nullptr,
-                                 nullptr,
-                                 rs->stream_id().as_value(),
-                                 render_surface};
+    StreamRelease stream_release{
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        rs->stream_id().as_value(),
+        render_surface};
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(rs->stream_id().as_value());
@@ -1242,6 +1248,7 @@ void MirConnection::release_render_surface_with_content(
 
 void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request_raw)
 {
+    std::string static const error_msg = "Error creating MirRenderSurface: ";
     std::shared_ptr<RenderSurfaceCreationRequest> request {nullptr};
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -1258,16 +1265,14 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
-            protobuf_bs->set_error("no ID in response (disconnected?)");
+            protobuf_bs->set_error("no ID in response");
     }
 
     if (protobuf_bs->has_error())
     {
         for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
             ::close(protobuf_bs->buffer().fd(i));
-        render_surface_error(
-            std::string{"Error processing buffer stream response during render surface creation: "} + protobuf_bs->error(),
-            request);
+        render_surface_error(error_msg + protobuf_bs->error(), request);
         return;
     }
 
@@ -1292,9 +1297,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     }
     catch (std::exception const& error)
     {
-        render_surface_error(
-            std::string{"Error processing buffer stream response during render surface creation: "} + protobuf_bs->error(),
-            request);
+        render_surface_error(error_msg + error.what(), request);
     }
 }
 
