@@ -84,7 +84,7 @@ void mclr::DisplayServer::configure_display(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::remove_display(
+void mclr::DisplayServer::remove_session_configuration(
     mir::protobuf::Void const* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)

@@ -666,7 +666,7 @@ void mf::SessionMediator::configure_display(
     done->Run();
 }
 
-void mf::SessionMediator::remove_display(
+void mf::SessionMediator::remove_session_configuration(
     ::mir::protobuf::Void const* /*request*/,
     ::mir::protobuf::Void* /*response*/,
     ::google::protobuf::Closure* done)
@@ -676,7 +676,7 @@ void mf::SessionMediator::remove_display(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    display_changer->remove(session);
+    display_changer->remove_session_configuration(session);
 
     done->Run();
 }

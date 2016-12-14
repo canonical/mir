@@ -1132,7 +1132,7 @@ void MirConnection::remove_session_display()
     mp::Void request;
     auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
-    server.remove_display(
+    server.remove_session_configuration(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));

@@ -1674,7 +1674,7 @@ TEST_F(DisplayConfigurationTest, configure_session_display)
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
 
-    mir_connection_apply_session_display_config(connection, configuration);
+    mir_connection_apply_session_display_configuration(connection, configuration);
 
     observed_changed.wait_for(10s);
 
@@ -1689,11 +1689,11 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
 
-    mir_connection_apply_session_display_config(connection, configuration);
+    mir_connection_apply_session_display_configuration(connection, configuration);
 
     observed_changed.wait_for(10s);
 
-    mir_connection_remove_session_display_config(connection);
+    mir_connection_remove_session_display_configuration(connection);
 
     EXPECT_CALL(*observer, session_configuration_removed(_))
         .Times(1)
@@ -1702,4 +1702,30 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
     observed_changed.wait_for(10s);
 
     mir_display_config_release(configuration);
+}
+
+// That calling remove_session_display_config from a client that hasn't set a session configuration is a no-op
+TEST_F(DisplayConfigurationTest, remove_is_noop_when_no_session_configuration_set)
+{
+    EXPECT_CALL(*observer, session_configuration_removed(_))
+        .Times(0);
+
+    mir_connection_remove_session_display_configuration(connection);
+
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+}
+
+// That calling remove_session_display_config from a *focused* client that *has* set a session configuration results in a hardware configuration change
+TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_change)
+{
+}
+
+// That calling remove_session_display_config from an *unfocused* client that *has* set a session configuration results in *no* hardware configuration change
+TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware_change)
+{
+}
+
+// That calling remove_session_display_config from an *unfocused* client that *has* set a session configuration results in the base configuration getting applied when the client becomes focused.
+TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_change_when_focused)
+{
 }

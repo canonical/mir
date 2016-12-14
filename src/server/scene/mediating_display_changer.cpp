@@ -223,12 +223,41 @@ void ms::MediatingDisplayChanger::configure(
         });
 }
 
-void ms::MediatingDisplayChanger::remove(
+void ms::MediatingDisplayChanger::remove_session_configuration(
     std::shared_ptr<mf::Session> const& session)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
-    config_map.erase(session);
-    observer->session_configuration_removed(session);
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        if (config_map.find(session) != config_map.end())
+        {
+            config_map.erase(session);
+            observer->session_configuration_removed(session);
+        }
+
+        if (session != focused_session.lock())
+            return;
+    }
+
+    std::weak_ptr<mf::Session> const weak_session{session};
+
+    server_action_queue->enqueue(
+        this,
+        [this, weak_session]
+        {
+            if (auto const session = weak_session.lock())
+            {
+                std::lock_guard<std::mutex> lg{configuration_mutex};
+
+                try
+                {
+                    apply_base_config();
+                }
+                catch (std::exception const&)
+                {
+                    session->send_error(DisplayConfigurationFailedError{});
+                }
+            }
+        });
 }
 
 void

@@ -69,11 +69,11 @@ void mf::AuthorizingDisplayChanger::configure(
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
 
-void mf::AuthorizingDisplayChanger::remove(
+void mf::AuthorizingDisplayChanger::remove_session_configuration(
     std::shared_ptr<mf::Session> const& session)
 {
     if (configure_display_is_allowed)
-        changer->remove(session);
+        changer->remove_session_configuration(session);
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to remove display configurations"));
 }

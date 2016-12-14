@@ -204,28 +204,26 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
 /**
  * Apply the display configuration for the connection
  *
- * The display config is applied to this connection only (per-connection
- * config) and is invalidated when a hardware change occurs. Clients should
+ * The display configuration is applied to this connection only (per-connection
+ * configuration) and is invalidated when a hardware change occurs. Clients should
  * register a callback with mir_connection_set_display_config_change_callback()
- * to get notified about hardware changes, so that the can apply a new config.
+ * to get notified about hardware changes, so that they can apply a new configuration.
  *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] connection             The connection
  *   \param [in] display_config         The display_config to apply
  */
-void mir_connection_apply_session_display_config(MirConnection* connection, MirDisplayConfig const* display_config);
+void mir_connection_apply_session_display_configuration(MirConnection* connection, MirDisplayConfig const* display_config);
 
 /**
  * Remove the display configuration for the connection
  *
- * If a session display config is applied to the connection it is removed, and
- * the base display config is used. If there was no previous call to
+ * If a session display configuration is applied to the connection it is removed, and
+ * the base display configuration is used. If there was no previous call to
  * mir_connection_apply_session_display_config this will do nothing.
  *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] connection             The connection
  */
-void mir_connection_remove_session_display_config(MirConnection* connection);
+void mir_connection_remove_session_display_configuration(MirConnection* connection);
 
 /**
  * Set the base display configuration

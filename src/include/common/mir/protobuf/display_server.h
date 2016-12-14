@@ -63,7 +63,7 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) = 0;
-    virtual void remove_display(
+    virtual void remove_session_configuration(
         mir::protobuf::Void const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
