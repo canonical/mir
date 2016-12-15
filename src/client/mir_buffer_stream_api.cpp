@@ -113,6 +113,13 @@ MirWaitHandle* mir_buffer_stream_swap_buffers(
     void* context)
 try
 {
+    /*
+     * TODO: Add client-side vsync support for mir_buffer_stream_swap_buffers()
+     *       Not in a hurry though, because the old server-side vsync is still
+     *       present and AFAIK the only user of swap_buffers callbacks is Xmir.
+     *       There are many ways to approach the problem and some more
+     *       contentious than others, so do it later.
+     */
     return buffer_stream->swap_buffers([buffer_stream, callback, context]{
             if (callback)
                 callback(buffer_stream, context);
@@ -127,13 +134,19 @@ catch (std::exception const& ex)
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
 {
     /*
+     * TODO: Add client-side vsync support for mir_buffer_stream_swap_buffers_sync()
+     *       Not in a hurry though, because the old server-side vsync is still
+     *       present and this code path is only used by software rendering.
+     *       eglSwapBuffers skips this function and goes straight to
+     *       BufferStream::swap_buffers_sync() instead.
+     */
+    /*
      * NOTE: In the case that the vault already has a free buffer waiting
      *       for us this will return immediately. This means we rely on
      *       mir_wait_for() not blocking on any un-signalled MirWaitHandle,
      *       which does not work if you were to call mir_wait_for_one()
      *       instead.
      */
-    // TODO: Add a MirBufferStream::swap_buffers_sync to utilize the new code
     mir_wait_for(mir_buffer_stream_swap_buffers(buffer_stream,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result),
         nullptr));
