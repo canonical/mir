@@ -20,6 +20,8 @@
 #include "mir_toolkit/mir_buffer.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
@@ -235,6 +237,10 @@ TEST_F(PresentationChain, has_native_fence)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
+    auto ext = mir_extension_fenced_buffers_v1(connection);
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->get_fence, Ne(nullptr));
+
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
@@ -246,7 +252,7 @@ TEST_F(PresentationChain, has_native_fence)
     EXPECT_THAT(context.buffer(), Ne(nullptr));
 
     //the native type for the stub platform is nullptr
-    EXPECT_THAT(mir_buffer_get_fence(buffer), Eq(mir::Fd::invalid));
+    EXPECT_THAT(ext->get_fence(buffer), Eq(mir::Fd::invalid));
 }
 
 TEST_F(PresentationChain, can_map_for_cpu_render)

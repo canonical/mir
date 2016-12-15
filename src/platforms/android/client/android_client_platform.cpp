@@ -30,6 +30,7 @@
 #include "native_window_report.h"
 #include "android_format_conversion-inl.h"
 
+#include <chrono>
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
@@ -75,6 +76,77 @@ void destroy_anw(ANativeWindow*)
 {
 }
 
+int get_fence(MirBuffer* b) noexcept
+try
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    return native->fence();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return mir::Fd::invalid;
+}
+
+bool validate_access(MirBufferAccess access)
+{
+    return access == mir_none || access == mir_read || access == mir_read_write; 
+}
+
+void associate_fence(MirBuffer* b, int fence, MirBufferAccess access) noexcept
+try
+{
+    if (!b || !validate_access(access))
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native_buffer = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+
+    mga::NativeFence f = fence;
+    if (fence <= mir::Fd::invalid)
+        native_buffer->reset_fence();
+    else if (access == mir_read)
+        native_buffer->update_usage(f, mga::BufferAccess::read); 
+    else if (access == mir_read_write)
+        native_buffer->update_usage(f, mga::BufferAccess::write); 
+    else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+int wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout) noexcept
+try
+{
+    if (!b || !validate_access(access))
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native_buffer = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+
+    // could use std::chrono::floor once we're using C++17
+    auto ns = std::chrono::nanoseconds(timeout);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
+    if (ms > ns)
+        ms = ms - std::chrono::milliseconds{1};
+
+    bool rc = true;
+    if (access == mir_read)
+        rc = native_buffer->ensure_available_for(mga::BufferAccess::read, ms); 
+    if (access == mir_read_write)
+        rc = native_buffer->ensure_available_for(mga::BufferAccess::write, ms); 
+
+    return rc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
+}
+
 void create_buffer(
     MirConnection* connection,
     int width, int height,
@@ -101,7 +173,8 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
+    android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
+    fence_extension{get_fence, associate_fence, wait_for_access},
     buffer_extension{create_buffer}
 {
 }
@@ -191,8 +264,10 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 void* mcla::AndroidClientPlatform::request_interface(char const* name, int version)
 {
     if (!strcmp(name, "mir_extension_android_egl") && (version == 1))
-        return &extension;
+        return &android_types_extension;
     if (!strcmp(name, "mir_extension_android_buffer") && (version == 1))
         return &buffer_extension;
+    if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
+        return &fence_extension;
     return nullptr;
 }

@@ -364,9 +364,6 @@ MIR_CLIENT_DETAIL_0.21 {
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
-    mir_buffer_get_fence;
-    mir_buffer_associate_fence;
-    mir_buffer_wait_for_access;
     mir_buffer_map;
     mir_buffer_unmap;
     mir_buffer_set_callback;
@@ -503,4 +500,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_configuration_set_scroll_modes;
     mir_touchpad_configuration_set_tap_to_click;
     mir_connection_request_extension;
+    mir_output_get_model;
 } MIR_CLIENT_0.25;

@@ -25,6 +25,7 @@
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <tuple>
