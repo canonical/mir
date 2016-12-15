@@ -505,12 +505,7 @@ void MirSurface::handle_event(MirEvent const& e)
                 static_cast<long>(1000000000L / rate));
             frame_clock->set_period(ns);
         }
-        /*
-         * TODO: Notify the input receiver of the rate change AFTER the server
-         *       has been modified to always use frame dropping. If we do it
-         *       before then the input receiver using the precise vsync rate
-         *       could easily cause extra queuing and increased touch lag.
-         */
+        // else rendering will be unthrottled. Impose some artificial limit?
         break;
     }
     default:
