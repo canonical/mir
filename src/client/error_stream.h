@@ -37,6 +37,7 @@ public:
     uint32_t get_current_buffer_id();
     EGLNativeWindowType egl_native_window();
     MirWaitHandle* swap_buffers(std::function<void()> const& done);
+    void swap_buffers_sync() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     int swap_interval() const;
     MirWaitHandle* set_swap_interval(int interval);

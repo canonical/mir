@@ -39,6 +39,7 @@ struct MockMirBufferStream : public MirBufferStream
     MOCK_METHOD0(get_current_buffer_id, uint32_t());
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
     MOCK_METHOD1(swap_buffers, MirWaitHandle*(std::function<void()> const&));
+    MOCK_METHOD0(swap_buffers_sync, void());
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<client::MemoryRegion>());
     MOCK_CONST_METHOD0(swap_interval, int());
     MOCK_METHOD1(set_swap_interval, MirWaitHandle*(int));
