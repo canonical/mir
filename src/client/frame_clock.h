@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_FRAME_CLOCK_H_
-#define MIR_FRAME_CLOCK_H_
+#ifndef MIR_CLIENT_FRAME_CLOCK_H_
+#define MIR_CLIENT_FRAME_CLOCK_H_
 
 #include "mir/time/posix_timestamp.h"
 #include <chrono>
@@ -70,4 +70,4 @@ private:
 
 }} // namespace mir::client
 
-#endif // MIR_FRAME_CLOCK_H_
+#endif // MIR_CLIENT_FRAME_CLOCK_H_
