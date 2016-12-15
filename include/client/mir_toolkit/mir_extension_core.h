@@ -27,6 +27,25 @@ extern "C" {
 
 /**
  * Request a Mir extension
+ * \deprecated  Use mir_connection_request_extension
+ * \param [in]  connection  A connection
+ * \param [in]  interface   The name of the interface.
+ * \param [in]  version     The version of the interface.
+ * \return      A pointer that can be cast to the object
+ *              provided by the interface or NULL if the
+ *              extension is not supported.
+ */
+
+__attribute__ ((deprecated))
+void* mir_connection_request_interface(
+    MirConnection* connection,
+    char const* interface,
+    int version);
+
+/**
+ * Request a Mir extension
+ * \note    Extensions should provide an inline function to access
+ *          the extension that should be preferred to using this directly.
  *
  * \param [in]  connection  A connection
  * \param [in]  interface   The name of the interface.
@@ -35,7 +54,8 @@ extern "C" {
  *              provided by the interface or NULL if the
  *              extension is not supported.
  */
-void* mir_connection_request_interface(
+
+void const* mir_connection_request_extension(
     MirConnection* connection,
     char const* interface,
     int version);

@@ -19,8 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_MESA_DRM_AUTH_H_
 #define MIR_CLIENT_EXTENSIONS_MESA_DRM_AUTH_H_
 
-#define MIR_EXTENSION_MESA_DRM_AUTH "mir_extension_mesa_drm_auth"
-#define MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 1
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,11 +49,21 @@ typedef void (*mir_auth_magic_callback)(
 typedef void (*mir_extension_mesa_drm_auth_magic)(
     MirConnection* connection, int magic, mir_auth_magic_callback cb, void* context);
 
-struct MirExtensionMesaDRMAuth
+typedef struct MirExtensionMesaDRMAuthV1
 {
     mir_extension_mesa_drm_auth_fd drm_auth_fd;
     mir_extension_mesa_drm_auth_magic drm_auth_magic;
-};
+} MirExtensionMesaDRMAuthV1;
+
+//legacy compatibility
+typedef MirExtensionMesaDRMAuthV1 MirExtensionMesaDRMAuth;
+
+static inline MirExtensionMesaDRMAuthV1 const* mir_extension_mesa_drm_auth_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionMesaDRMAuthV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_mesa_drm_auth", 1);
+}
 
 #ifdef __cplusplus
 }

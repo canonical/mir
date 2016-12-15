@@ -43,9 +43,9 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;
 
-    MirExtensionFavoriteFlavor flavor_ext_0_1;
-    MirExtensionFavoriteFlavor flavor_ext_2_2;
-    MirExtensionAnimalNames animal_ext;
+    MirExtensionFavoriteFlavorV1 flavor_ext_1;
+    MirExtensionFavoriteFlavorV9 flavor_ext_9;
+    MirExtensionAnimalNamesV1 animal_ext;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

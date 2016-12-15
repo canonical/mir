@@ -16,15 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_EXTENSIONS_ANDORID_BUFFER_H_
-#define MIR_CLIENT_EXTENSIONS_ANDORID_BUFFER_H_
-
-#define MIR_EXTENSION_ANDROID_BUFFER "mir_extension_android_buffer"
-#define MIR_EXTENSION_ANDROID_BUFFER_VERSION_1 1
+#ifndef MIR_CLIENT_EXTENSIONS_ANDROID_BUFFER_H_
+#define MIR_CLIENT_EXTENSIONS_ANDROID_BUFFER_H_
 
 #include "mir_toolkit/mir_connection.h"
 #include <mir_toolkit/client_types_nbs.h>
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,12 +55,19 @@ typedef void (*mir_connection_allocate_buffer_android)(
     unsigned int gralloc_usage_flags,
     mir_buffer_callback available_callback, void* available_context);
 
-struct MirExtensionAndroidBuffer
+typedef struct MirExtensionAndroidBufferV1
 {
     mir_connection_allocate_buffer_android allocate_buffer_android;
-};
+} MirExtensionAndroidBufferV1;
+
+static inline MirExtensionAndroidBufferV1 const* mir_extension_android_buffer_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionAndroidBufferV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_android_buffer", 1);
+}
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* MIR_CLIENT_EXTENSIONS_ANDORID_BUFFER_H_ */
+#endif /* MIR_CLIENT_EXTENSIONS_ANDROID_BUFFER_H_ */

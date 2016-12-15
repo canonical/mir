@@ -19,28 +19,45 @@
 #ifndef MIR_TEST_FRAMEWORK_STUB_PLATFORM_EXTENSION_H_
 #define MIR_TEST_FRAMEWORK_STUB_PLATFORM_EXTENSION_H_
 
-#define MIR_EXTENSION_FAVORITE_FLAVOR "665f8be5-996f-4557-8404-f1c7ed94c04a"
-#define MIR_EXTENSION_ANIMAL_NAME    "817e4327-bdd7-495a-9d3c-b5ac7a8a831f"
-
-#define MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_1 1
-#define MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2 2
-#define MIR_EXTENSION_ANIMAL_NAME_VERSION_9 9
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef char const* (*mir_extension_favorite_flavor)();
-struct MirExtensionFavoriteFlavor
+typedef struct MirExtensionFavoriteFlavorV1
 {
     mir_extension_favorite_flavor favorite_flavor;
-};
+} MirExtensionFavoriteFlavor;
+typedef MirExtensionFavoriteFlavorV1 MirExtensionFavoriteFlavorV9;
 
 typedef char const* (*mir_extension_animal_name)();
-struct MirExtensionAnimalNames 
+typedef struct MirExtensionAnimalNamesV1
 {
     mir_extension_animal_name animal_name;
-};
+} MirExtensionAnimalNames;
+
+static inline MirExtensionFavoriteFlavorV1 const* mir_extension_favorite_flavor_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionFavoriteFlavorV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_favorite_flavor", 1);
+}
+
+static inline MirExtensionFavoriteFlavorV9 const* mir_extension_favorite_flavor_v9(
+    MirConnection* connection)
+{
+    return (MirExtensionFavoriteFlavorV9 const*) mir_connection_request_extension(
+        connection, "mir_extension_favorite_flavor", 9);
+}
+
+static inline MirExtensionAnimalNamesV1 const* mir_extension_animal_names_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionAnimalNamesV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_animal_names", 1); 
+}
 
 #ifdef __cplusplus
 }

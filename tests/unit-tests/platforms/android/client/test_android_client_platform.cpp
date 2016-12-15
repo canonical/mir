@@ -181,9 +181,8 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
 
     int width = 32;
     int height = 90;
-    auto ext = static_cast<MirExtensionAndroidBuffer*>(
-        platform->request_interface(
-            MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1));
+    auto ext = static_cast<MirExtensionAndroidBufferV1*>(
+        platform->request_interface("mir_extension_android_buffer", 1));
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->allocate_buffer_android, Ne(nullptr));
 
