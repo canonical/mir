@@ -110,11 +110,12 @@ MirSurface::MirSurface(
     valid_surfaces.insert(this);
 
     /*
-     * TODO: Implement frame_clock->set_resync_callback(...) when such info
-     *       exists (IPC for the server to send timestamps to clients isn't
-     *       implemented yet). But that will only provide a small improvement
-     *       in precision and isn't an immediate requirement for us to get
-     *       real benefits from frame_clock already.
+     * TODO: Implement frame_clock->set_resync_callback(...) when IPC to get
+     *       timestamps from the server exists.
+     *       Until we do, client-side vsync will perform suboptimally (it is
+     *       randomly up to one frame out of phase with the real display).
+     *       However even while it's suboptimal it's dramatically lower latency
+     *       than the old approach and still totally eliminates nesting lag.
      */
 }
 
@@ -177,11 +178,8 @@ MirSurface::MirSurface(
     valid_surfaces.insert(this);
 
     /*
-     * TODO: Implement frame_clock->set_resync_callback(...) when such info
-     *       exists (IPC for the server to send timestamps to clients isn't
-     *       implemented yet). But that will only provide a small improvement
-     *       in precision and isn't an immediate requirement for us to get
-     *       real benefits from frame_clock already.
+     * TODO: Implement frame_clock->set_resync_callback(...) here too, same as
+     *       detailed above.
      */
 }
 
