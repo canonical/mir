@@ -410,6 +410,30 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
     EXPECT_TRUE(dispatched->wait_for(std::chrono::seconds{5}));
 }
 
+TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
+{
+    using namespace ::testing;
+
+    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
+
+    MirSurface* adopted_by = nullptr;
+    MirSurface* unadopted_by = nullptr;
+    EXPECT_CALL(*stub_buffer_stream, adopted_by(_))
+        .WillOnce(SaveArg<0>(&adopted_by));
+    EXPECT_CALL(*stub_buffer_stream, unadopted_by(_))
+        .WillOnce(SaveArg<0>(&unadopted_by));
+
+    {
+        MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+            stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
+        EXPECT_EQ(&surface, adopted_by);
+        EXPECT_EQ(nullptr, unadopted_by);
+    }
+
+    EXPECT_NE(nullptr, unadopted_by);
+    EXPECT_EQ(adopted_by, unadopted_by);
+}
+
 TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_dispatch)
 {
     using namespace ::testing;
