@@ -244,34 +244,12 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_surface_release_sync(menu);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST_F(ClientSurfaces, can_be_tooltips)
-{
-    auto parent = mtf::make_any_surface(connection);
-    MirRectangle zone_rect{100, 200, 100, 100};
-
-    auto spec = mir_connection_create_spec_for_tooltip(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &zone_rect);
-    ASSERT_THAT(spec, NotNull());
-
-    auto tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
-    ASSERT_THAT(tooltip, IsValid());
-    EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
-
-    mir_surface_release_sync(parent);
-    mir_surface_release_sync(tooltip);
-}
-#pragma GCC diagnostic pop
-
 TEST_F(ClientSurfaces, can_be_tips)
 {
     auto parent = mtf::make_any_surface(connection);
     MirRectangle rect{100, 200, 100, 100};
 
-    auto spec = mir_connection_create_spec_for_tip(connection, 640, 480,
+    auto spec = mir_connection_create_window_spec_for_tip(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent, &rect, mir_edge_attachment_any);
     ASSERT_THAT(spec, NotNull());
 

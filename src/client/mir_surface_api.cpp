@@ -61,8 +61,7 @@ mir_connection_create_window_spec_for_normal_window(MirConnection* connection,
 
 MirWindowSpec*
 mir_connection_create_window_spec_for_menu(MirConnection* connection,
-                                           int width,
-                                           int height,
+                                           int width, int height,
                                            MirPixelFormat format,
                                            MirSurface* parent,
                                            MirRectangle* rect,
@@ -73,6 +72,24 @@ mir_connection_create_window_spec_for_menu(MirConnection* connection,
 
     auto spec = new MirWindowSpec{connection, width, height, format};
     spec->type = mir_surface_type_menu;
+    spec->parent = parent;
+    spec->aux_rect = *rect;
+    spec->edge_attachment = edge;
+    return spec;
+}
+
+MirWindowSpec* mir_connection_create_window_spec_for_tip(MirConnection* connection,
+                                                         int width, int height,
+                                                         MirPixelFormat format,
+                                                         MirSurface* parent,
+                                                         MirRectangle* rect,
+                                                         MirEdgeAttachment edge)
+{
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirWindowSpec{connection, width, height, format};
+    spec->type = mir_surface_type_tip;
     spec->parent = parent;
     spec->aux_rect = *rect;
     spec->edge_attachment = edge;
@@ -107,32 +124,32 @@ MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
-                                                       int width,
-                                                       int height,
+                                                       int width, int height,
                                                        MirPixelFormat format,
                                                        MirSurface* parent,
                                                        MirRectangle* rect)
 {
-    return mir_connection_create_spec_for_tip(connection, width, height, format, parent, rect, mir_edge_attachment_any);
+    return mir_connection_create_window_spec_for_tip(connection,
+                                                     width, height,
+                                                     format,
+                                                     parent,
+                                                     rect,
+                                                     mir_edge_attachment_any);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
-                                                   int width,
-                                                   int height,
+                                                   int width, int height,
                                                    MirPixelFormat format,
                                                    MirSurface* parent,
                                                    MirRectangle* rect,
                                                    MirEdgeAttachment edge)
 {
-    mir::require(mir_surface_is_valid(parent));
-    mir::require(rect != nullptr);
-
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_tip;
-    spec->parent = parent;
-    spec->aux_rect = *rect;
-    spec->edge_attachment = edge;
-    return spec;
+    return mir_connection_create_window_spec_for_tip(connection,
+                                                     width, height,
+                                                     format,
+                                                     parent,
+                                                     rect,
+                                                     edge);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,

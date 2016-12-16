@@ -102,7 +102,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     MirRectangle zone = { 0, 0, 10, 10 };
     int const width = 50;
     int const height = 20;
-    MirWindowSpec* const spec = mir_connection_create_spec_for_tip(
+    MirWindowSpec* const spec = mir_connection_create_window_spec_for_tip(
         connection, width, height, format, parent, &zone, mir_edge_attachment_vertical);
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);

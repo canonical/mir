@@ -383,7 +383,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
     auto parent = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    surface_spec = mir_connection_create_spec_for_tip(
+    surface_spec = mir_connection_create_window_spec_for_tip(
         connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
 
     mir_surface_spec_set_placement(
