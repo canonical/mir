@@ -131,7 +131,7 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
         EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
             WillOnce(InvokeWithoutArgs([&]{ change_observed(); }));
 
-        change_surface(surface, [&](MirSurfaceSpec* spec)
+        change_surface(surface, [&](MirWindowSpec* spec)
             {
                 mir_surface_spec_set_name(spec, new_title);
             });
@@ -176,7 +176,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
@@ -190,7 +190,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
         });
@@ -201,7 +201,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -210,7 +210,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, old_type);
         mir_surface_spec_set_width(spec, width);
@@ -224,7 +224,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         Times(0);
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
             mir_surface_spec_set_parent(spec, parent);
@@ -242,7 +242,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -251,7 +251,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
@@ -265,7 +265,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, new_type);
         mir_surface_spec_set_parent(spec, parent);
@@ -277,7 +277,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
@@ -291,7 +291,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         Times(0);
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
 
@@ -308,7 +308,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -317,7 +317,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
@@ -331,7 +331,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, new_type);
         mir_surface_spec_set_parent(spec, parent);
@@ -343,7 +343,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
        {
            mir_surface_spec_set_type(spec, mir_surface_type_normal);
            mir_surface_spec_set_width(spec, width);
@@ -352,7 +352,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
        });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
@@ -367,7 +367,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
     WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
 
-    change_surface(surface, [&](MirSurfaceSpec* spec)
+    change_surface(surface, [&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
         });

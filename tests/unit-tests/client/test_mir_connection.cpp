@@ -720,7 +720,7 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     TestConnectionConfiguration conf{
         mock_platform, std::make_shared<NiceMock<FakeRpcChannel>>(), mock_buffer_allocator };
     MirConnection connection(conf);
-    MirSurfaceSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
+    MirWindowSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
 
     auto wait_handle = connection.create_surface(spec, nullptr, nullptr);
     auto expected_end = std::chrono::steady_clock::now() + pause_time;

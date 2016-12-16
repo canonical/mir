@@ -19,7 +19,7 @@
 #include "mir_test_framework/visible_surface.h"
 namespace mtf = mir_test_framework;
 
-mtf::VisibleSurface::VisibleSurface(MirSurfaceSpec* spec) :
+mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
     visible{false}
 {
     mir_surface_spec_set_event_handler(spec, VisibleSurface::event_callback, this);

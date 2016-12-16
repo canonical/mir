@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
-    MirSurfaceSpec *spec =
+    MirWindowSpec *spec =
         mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
     assert(spec != NULL);
     mir_surface_spec_set_name(spec, __FILE__);

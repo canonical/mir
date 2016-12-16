@@ -225,7 +225,7 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
 }
 
 void mir_surface_spec_set_cursor_render_surface(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
 {

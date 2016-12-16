@@ -33,6 +33,9 @@
 extern "C" {
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 /**
  * Create a surface specification for a normal surface.
  *
@@ -882,6 +885,8 @@ MirPersistentId* mir_persistent_id_from_string(char const* string_representation
  *                     An invalid cookie will terminate the client connection.
  */
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
+
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

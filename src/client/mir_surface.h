@@ -174,7 +174,7 @@ public:
         mir::client::rpc::DisplayServerDebug* debug,
         std::shared_ptr<MirBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto,
+        MirWindowSpec const& spec, mir::protobuf::Surface const& surface_proto,
         std::shared_ptr<MirWaitHandle> const& handle);
 
     ~MirSurface();
@@ -208,7 +208,7 @@ public:
 
     MirBufferStream* get_buffer_stream();
 
-    MirWaitHandle* modify(MirSurfaceSpec const& changes);
+    MirWaitHandle* modify(MirWindowSpec const& changes);
 
     static bool is_valid(MirSurface* query);
 

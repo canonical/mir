@@ -130,7 +130,7 @@ struct SurfaceWithChainFromReassociation : SurfaceWithChain
 private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
-        MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(
+        MirWindowSpec* spec = mir_connection_create_spec_for_normal_surface(
             connection, size.width.as_int(), size.height.as_int(), pf);
         auto surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);

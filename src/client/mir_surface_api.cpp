@@ -37,6 +37,9 @@
 
 namespace mcl = mir::client;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 namespace
 {
 
@@ -835,3 +838,5 @@ MirPersistentId* mir_persistent_id_from_string(char const* id_string)
 {
     return new MirPersistentId{id_string};
 }
+
+#pragma GCC diagnostic pop

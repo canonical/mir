@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
 
     mir_display_config_destroy(display_config);
 
-    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    MirWindowSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
     mir_surface_spec_set_name(spec, "Mir Fingerpaint");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 

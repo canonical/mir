@@ -39,7 +39,8 @@ typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
-typedef struct MirSurfaceSpec MirSurfaceSpec;
+typedef struct MirSurfaceSpec MirSurfaceSpec __attribute__((deprecated)); /* Use MirWindowSpec */
+typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;

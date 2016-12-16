@@ -216,7 +216,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
-    MirSurfaceSpec* surface_spec;
+    MirWindowSpec* surface_spec;
 
     void SetUp() override
     {
