@@ -415,17 +415,18 @@ TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
     using namespace ::testing;
 
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
+    auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
 
     MirSurface* adopted_by = nullptr;
     MirSurface* unadopted_by = nullptr;
-    EXPECT_CALL(*stub_buffer_stream, adopted_by(_))
+    EXPECT_CALL(*mock_stream, adopted_by(_))
         .WillOnce(SaveArg<0>(&adopted_by));
-    EXPECT_CALL(*stub_buffer_stream, unadopted_by(_))
+    EXPECT_CALL(*mock_stream, unadopted_by(_))
         .WillOnce(SaveArg<0>(&unadopted_by));
 
     {
         MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-            stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
+            mock_stream, mock_input_platform, spec, surface_proto, wh};
         EXPECT_EQ(&surface, adopted_by);
         EXPECT_EQ(nullptr, unadopted_by);
     }
