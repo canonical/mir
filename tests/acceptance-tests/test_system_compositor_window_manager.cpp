@@ -74,7 +74,7 @@ struct MockClient
 
     auto create_surface(int output_id) -> SurfaceHandle
     {
-        auto const spec = mir_connection_create_spec_for_normal_surface(
+        auto const spec = mir_connection_create_window_spec_for_normal_window(
                 connection_, 800, 600, mir_pixel_format_bgr_888);
 
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);

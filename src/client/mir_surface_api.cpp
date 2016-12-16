@@ -50,6 +50,16 @@ void assign_result(void* result, void** context)
 }
 
 MirWindowSpec*
+mir_connection_create_window_spec_for_normal_window(MirConnection* connection,
+                                                    int width, int height,
+                                                    MirPixelFormat format)
+{
+    auto spec = new MirWindowSpec{connection, width, height, format};
+    spec->type = mir_surface_type_normal;
+    return spec;
+}
+
+MirWindowSpec*
 mir_connection_create_window_spec_for_menu(MirConnection* connection,
                                            int width,
                                            int height,
@@ -76,9 +86,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_normal;
-    return spec;
+    return mir_connection_create_window_spec_for_normal_window(connection,
+                                                               width, height,
+                                                               format);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,

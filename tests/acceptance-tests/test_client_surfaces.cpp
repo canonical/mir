@@ -121,7 +121,7 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
 {
     int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
     
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, width_1, height_1, mir_pixel_format_abgr_8888);
+    auto spec = mir_connection_create_window_spec_for_normal_window(connection, width_1, height_1, mir_pixel_format_abgr_8888);
     mir_surface_create(spec, create_surface_callback, ssync);
     wait_for_surface_create(ssync);
 
@@ -169,7 +169,7 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
 {
     for (int i = 0; i != max_surface_count; ++i)
     {
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+        auto spec = mir_connection_create_window_spec_for_normal_window(connection, 1, 1, mir_pixel_format_abgr_8888);
         mir_surface_create(spec, create_surface_callback, ssync+i);
         mir_surface_spec_release(spec);
     }
@@ -203,7 +203,7 @@ struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrient
 
 TEST_P(WithOrientation, have_requested_preferred_orientation)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+    auto spec = mir_connection_create_window_spec_for_normal_window(connection, 1, 1, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     MirOrientationMode mode{GetParam()};
@@ -333,7 +333,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
 
 TEST_F(ClientSurfaces, can_be_renamed)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(
+    auto spec = mir_connection_create_window_spec_for_normal_window(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
     auto surf = mir_surface_create_sync(spec);

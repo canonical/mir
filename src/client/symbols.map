@@ -501,4 +501,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_configuration_set_tap_to_click;
     mir_output_get_model;
     mir_connection_create_window_spec_for_menu;
+    mir_connection_create_window_spec_for_normal_window;
 } MIR_CLIENT_0.25;

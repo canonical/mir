@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
     MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
+        mir_connection_create_window_spec_for_normal_window(connection, 640, 480, pixel_format);
     assert(spec != NULL);
     mir_surface_spec_set_name(spec, __FILE__);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);

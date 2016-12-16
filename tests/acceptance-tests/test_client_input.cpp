@@ -94,7 +94,7 @@ struct Client
                 std::runtime_error{std::string{"Failed to connect to test server: "} +
                 mir_connection_get_error_message(connection)});
         }
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
+        auto spec = mir_connection_create_window_spec_for_normal_window(connection, surface_width,
                                                                   surface_height, mir_pixel_format_abgr_8888);
         mir_surface_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);

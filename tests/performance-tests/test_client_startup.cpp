@@ -69,7 +69,7 @@ MirSurface* make_surface(MirConnection* connection)
 {
     auto format = find_pixel_format(connection);
 
-    auto spec = mir_connection_create_spec_for_normal_surface(connection,
+    auto spec = mir_connection_create_window_spec_for_normal_window(connection,
             720, 1280, format);
     auto surface = mir_surface_create_sync(spec);
 

@@ -135,7 +135,7 @@ int demo_client(const char* server, int buffer_swap_count)
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
 
     MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
+        mir_connection_create_window_spec_for_normal_window(mcd.connection, 640, 480, pixel_format);
     assert(spec != NULL);
     mir_surface_spec_set_name(spec, __FILE__);
 

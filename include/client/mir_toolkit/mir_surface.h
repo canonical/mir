@@ -34,6 +34,22 @@ extern "C" {
 #endif
 
 /**
+ * Create a window specification for a normal window.
+ *
+ * A normal window is suitable for most application windows. It has no special semantics.
+ * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \param [in] format       Pixel format for the window.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirWindowSpec* mir_connection_create_window_spec_for_normal_window(MirConnection* connection,
+                                                                   int width, int height,
+                                                                   MirPixelFormat format);
+
+/**
  * Create a window specification for a menu window.
  *
  * Positioning of the window is specified with respect to the parent window
@@ -71,21 +87,22 @@ mir_connection_create_window_spec_for_menu(MirConnection* connection,
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 /**
- * Create a surface specification for a normal surface.
+ * Create a window specification for a normal window.
  *
- * A normal surface is suitable for most application windows. It has no special semantics.
+ * A normal window is suitable for most application windows. It has no special semantics.
  * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
  *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
- * \param [in] format       Pixel format for the surface.
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \param [in] format       Pixel format for the window.
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width,
                                                               int height,
-                                                              MirPixelFormat format);
+                                                              MirPixelFormat format)
+__attribute__((deprecated("Use mir_connection_create_window_spec_for_normal_window() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_menu(MirConnection* connection,

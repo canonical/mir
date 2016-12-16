@@ -195,7 +195,7 @@ int main(int /*argc*/, char* /*argv*/[])
         throw std::runtime_error(
                   std::string(mir_render_surface_get_error_message(render_surface)));
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
+    auto spec = mir_connection_create_window_spec_for_normal_window(
         connection,
         width, height,
         mir_pixel_format_invalid);

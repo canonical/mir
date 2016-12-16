@@ -72,7 +72,7 @@ bool UnacceleratedClient::create_surface()
     MirPixelFormat const pixel_format = display_state.output_formats[0];
     mir_display_config_destroy(display_configuration);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
+    auto const spec = mir_connection_create_window_spec_for_normal_window(
         connection_, 640, 480, pixel_format);
     mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
