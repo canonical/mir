@@ -167,6 +167,20 @@ mir_connection_create_window_spec_for_dialog(MirConnection* connection,
                                              int width, int height,
                                              MirPixelFormat format);
 
+/**
+ * Create a window specification.
+ * This can be used with mir_surface_create() to create a window or with
+ * mir_surface_apply_spec() to change an existing window.
+ * \remark For use with mir_surface_create() at least the type, width, height,
+ * format and buffer_usage must be set. (And for types requiring a parent that
+ * too must be set.)
+ *
+ * \param [in] connection   a valid mir connection
+ * \return                  A handle that can ultimately be passed to
+ *                          mir_surface_create() or mir_surface_apply_spec()
+ */
+MirWindowSpec* mir_connection_create_window_spec(MirConnection* connection);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -234,20 +248,11 @@ mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       MirPixelFormat format)
 __attribute__((deprecated("Use mir_connection_create_window_spec_for_dialog() instead")));
 
-
 /**
- * Create a surface specification.
- * This can be used with mir_surface_create() to create a surface or with
- * mir_surface_apply_spec() to change an existing surface.
- * \remark For use with mir_surface_create() at least the type, width, height,
- * format and buffer_usage must be set. (And for types requiring a parent that
- * too must be set.)
- *
- * \param [in] connection   a valid mir connection
- * \return                  A handle that can ultimately be passed to
- *                          mir_surface_create() or mir_surface_apply_spec()
+ *\deprecated use mir_connection_create_window_spec() instead
  */
-MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
+__attribute__((deprecated("Use mir_connection_create_window_spec() instead")));
 
 /**
  * Create a surface specification for updating a surface.

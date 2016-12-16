@@ -134,7 +134,7 @@ private:
             connection, size.width.as_int(), size.height.as_int(), pf);
         auto surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
-        spec = mir_create_surface_spec(connection);
+        spec = mir_connection_create_window_spec(connection);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
         mir_surface_apply_spec(surface, spec);

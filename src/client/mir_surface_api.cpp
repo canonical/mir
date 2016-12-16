@@ -120,6 +120,20 @@ mir_connection_create_window_spec_for_dialog(MirConnection* connection,
     return spec;
 }
 
+MirWindowSpec* mir_connection_create_window_spec(MirConnection* connection)
+try
+{
+    mir::require(mir_connection_is_valid(connection));
+    auto const spec = new MirWindowSpec{};
+    spec->connection = connection;
+    return spec;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -322,17 +336,8 @@ void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
 }
 
 MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
-try
 {
-    mir::require(mir_connection_is_valid(connection));
-    auto const spec = new MirSurfaceSpec{};
-    spec->connection = connection;
-    return spec;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+    return mir_connection_create_window_spec(connection);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)

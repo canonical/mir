@@ -505,4 +505,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_connection_create_window_spec_for_tip;
     mir_connection_create_window_spec_for_modal_dialog;
     mir_connection_create_window_spec_for_dialog;
+    mir_connection_create_window_spec;
 } MIR_CLIENT_0.25;
