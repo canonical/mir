@@ -92,19 +92,18 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
-                                                    int width,
-                                                    int height,
+                                                    int width, int height,
                                                     MirPixelFormat format,
                                                     MirSurface* parent,
                                                     MirRectangle* rect,
                                                     MirEdgeAttachment edge)
 {
     return mir_connection_create_window_spec_for_menu(connection,
-                                               width, height,
-                                               format,
-                                               parent,
-                                               rect,
-                                               edge);
+                                                      width, height,
+                                                      format,
+                                                      parent,
+                                                      rect,
+                                                      edge);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
