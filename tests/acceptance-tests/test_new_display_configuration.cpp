@@ -57,6 +57,8 @@ namespace mt = mir::test;
 using namespace testing;
 using namespace std::literals::chrono_literals;
 
+namespace
+{
 mtd::StubDisplayConfig stub_display_config;
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
@@ -78,8 +80,6 @@ public:
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
 };
 
-namespace
-{
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
     bool configure_display_is_allowed(mf::SessionCredentials const&) override
