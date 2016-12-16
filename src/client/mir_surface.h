@@ -84,7 +84,7 @@ struct ContentInfo
 
 struct MirSurfaceSpec
 {
-    MirSurfaceSpec();
+    MirSurfaceSpec() = default;
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
 
