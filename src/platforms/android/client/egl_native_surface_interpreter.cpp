@@ -99,3 +99,11 @@ void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(uns
 {
     surface.set_buffer_cache_size(count);
 }
+
+void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_size(geometry::Size size)
+{
+    auto params = surface.get_parameters();
+    if (geometry::Size{params.width, params.height} == size)
+        return;
+    surface.set_size(size);
+}

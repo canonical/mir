@@ -20,7 +20,7 @@
 #define MIR_CLIENT_EGL_NATIVE_SURFACE_H_
 
 #include "mir_toolkit/client_types.h"
-
+#include "mir/geometry/size.h"
 #include <memory>
 
 namespace mir
@@ -36,6 +36,7 @@ class EGLNativeSurface
     virtual void swap_buffers_sync() = 0;
     virtual void request_and_wait_for_configure(MirSurfaceAttrib a, int value) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
+    virtual void set_size(geometry::Size) = 0;
 
   protected:
     EGLNativeSurface() = default;

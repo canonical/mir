@@ -37,6 +37,7 @@ struct MockEGLNativeSurface : public client::EGLNativeSurface
     MOCK_METHOD0(swap_buffers_sync, void());
     MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib,int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
+    MOCK_METHOD1(set_size, void(geometry::Size));
 };
 
 }
