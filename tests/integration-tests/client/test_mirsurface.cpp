@@ -183,7 +183,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
 
     auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
-        mir_connection_create_spec_for_menu(connection, 640, 480,
+        mir_connection_create_window_spec_for_menu(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
             edge),
         spec_deleter
