@@ -22,6 +22,7 @@
 #include "mir/client_platform_factory.h"
 #include "mir/client_platform.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_test_framework/stub_platform_extension.h"
 
 namespace mir_test_framework
@@ -46,6 +47,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirExtensionFavoriteFlavor flavor_ext_0_1;
     MirExtensionFavoriteFlavor flavor_ext_2_2;
     MirExtensionAnimalNames animal_ext;
+    MirExtensionFencedBuffers fence_ext;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

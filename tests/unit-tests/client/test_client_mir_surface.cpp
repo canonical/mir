@@ -498,10 +498,11 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
 {
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
+    mir::frontend::BufferStreamId const mock_stream_id(2);
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
-    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
+    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mock_stream_id));
 
     geom::Size size(120, 124);
     EXPECT_CALL(*mock_stream, set_size(size));
@@ -509,16 +510,18 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
+    surface_map->insert(mock_stream_id, mock_stream);
     surface.handle_event(*ev);
-    surface_map->erase(mir::frontend::BufferStreamId(2));
+    surface_map->erase(mock_stream_id);
 }
 
 TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_streams)
 {
     using namespace testing;
     auto mock_stream = std::make_shared<NiceMock<mtd::MockMirBufferStream>>();
+    mir::frontend::BufferStreamId const mock_stream_id(2);
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
+    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mock_stream_id));
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
 
@@ -532,9 +535,10 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     std::vector<ContentInfo> info =
         { ContentInfo{ geom::Displacement{0,0}, 2, geom::Size{1,1}} };
     spec.streams = info;
+    surface_map->insert(mock_stream_id, mock_stream);
     surface.modify(spec)->wait_for_all();
     surface.handle_event(*ev);
-    surface_map->erase(mir::frontend::BufferStreamId(2));
+    surface_map->erase(mock_stream_id);
 }
 
 TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)

@@ -83,13 +83,13 @@ void wait_buffer(MirBuffer* b, void* context)
     pthread_mutex_unlock(w->mut);
 }
 
-void fill_buffer(MirBuffer* buffer)
+bool fill_buffer(MirBuffer* buffer)
 {
     MirBufferLayout layout = mir_buffer_layout_unknown;
     MirGraphicsRegion region;
     bool rc = mir_buffer_map(buffer, &region, &layout);
     if (!rc || layout == mir_buffer_layout_unknown)
-        return;
+        return false;
 
     unsigned int *data = (unsigned int*) region.vaddr;
     for (int i = 0; i < region.width; i++)
@@ -104,6 +104,7 @@ void fill_buffer(MirBuffer* buffer)
         }
     }
     mir_buffer_unmap(buffer);
+    return true;
 }
 
 int main(int argc, char *argv[])
@@ -186,7 +187,7 @@ int main(int argc, char *argv[])
         pthread_cond_wait(&cond, &mutex);
     pthread_mutex_unlock(&mutex);
 
-    fill_buffer(buffer);
+    bool const filled = fill_buffer(buffer);
 
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
@@ -220,8 +221,6 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
-    //FIXME: we should be able to eglCreateWindowSurface or mir_surface_create in any order.
-    //       Current code requires creation of content before creation of the surface.
     if (use_shim)
         eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
     else
@@ -274,7 +273,8 @@ int main(int argc, char *argv[])
             eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR"); 
             eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR"); 
         }
-        image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
+        if (filled)
+            image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
     }
 
     Diamond diamond;
