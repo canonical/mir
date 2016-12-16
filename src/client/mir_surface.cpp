@@ -663,17 +663,14 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         StreamSet old_streams, new_streams;
 
         /*
-         * Admittedly we're updating this->streams before the server has
-         * updated its own list. But we don't care. Even in the remotely
-         * possible case that the modify_surface fails on the server side,
-         * it's arguably still useful for the client to maintain the
-         * intended vs actual list of streams per surface. Certainly it
-         * seems harmless right now. Not worth fixing the whole server side
-         * and communicating adoption changes over the wire, but there is a
-         * prototype if anyone wanted to:  lp:~vanvugt/mir/adoption
+         * Note that we don't check for errors from modify_surface. So in
+         * updating default_stream here, we're just assuming it will succeed.
+         * Seems to be a harmless assumption to have made so far and much
+         * simpler than communicating back suceessful mappings from the server,
+         * but there is a prototype started for that: lp:~vanvugt/mir/adoption
          */
         {
-            std::unique_lock<decltype(mutex)> lock(mutex);
+            std::lock_guard<decltype(mutex)> lock(mutex);
             old_streams = std::move(streams);
             streams.clear();  // Just in case two threads call this function?!
             default_stream = nullptr;
