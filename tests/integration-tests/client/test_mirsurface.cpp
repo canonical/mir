@@ -240,7 +240,7 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
 
     auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
-        mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
+        mir_connection_create_window_spec_for_modal_dialog(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get()),
         spec_deleter
     };

@@ -96,6 +96,20 @@ MirWindowSpec* mir_connection_create_window_spec_for_tip(MirConnection* connecti
     return spec;
 }
 
+MirWindowSpec* mir_connection_create_window_spec_for_modal_dialog(MirConnection* connection,
+                                                                  int width, int height,
+                                                                  MirPixelFormat format,
+                                                                  MirSurface* parent)
+{
+    mir::require(mir_surface_is_valid(parent));
+
+    auto spec = new MirWindowSpec{connection, width, height, format};
+    spec->type = mir_surface_type_dialog;
+    spec->parent = parent;
+
+    return spec;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -173,18 +187,14 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
-                                                           int width,
-                                                           int height,
+                                                           int width, int height,
                                                            MirPixelFormat format,
                                                            MirSurface* parent)
 {
-    mir::require(mir_surface_is_valid(parent));
-
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_dialog;
-    spec->parent = parent;
-
-    return spec;
+    return mir_connection_create_window_spec_for_modal_dialog(connection,
+                                                              width, height,
+                                                              format,
+                                                              parent);
 }
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)

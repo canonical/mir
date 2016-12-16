@@ -117,6 +117,34 @@ mir_connection_create_window_spec_for_tip(MirConnection* connection,
                                           MirRectangle* rect,
                                           MirEdgeAttachment edge);
 
+/**
+ * Create a window specification for a modal dialog window.
+ *
+ * The dialog window will have input focus; the parent can still be moved,
+ * resized or hidden/minimized but no interaction is possible until the dialog
+ * is dismissed.
+ *
+ * A dialog will typically have no close/maximize button decorations.
+ *
+ * During window creation, if the specified parent is another dialog window
+ * the server may choose to close the specified parent in order to show this
+ * new dialog window.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a window of this height.
+ * \param [in] format       Pixel format for the window.
+ * \param [in] parent       A valid parent window.
+ *
+ */
+MirWindowSpec*
+mir_connection_create_window_spec_for_modal_dialog(MirConnection* connection,
+                                                   int width, int height,
+                                                   MirPixelFormat format,
+                                                   MirSurface* parent);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -166,33 +194,14 @@ mir_connection_create_spec_for_tip(MirConnection* connection,
 __attribute__((deprecated("Use mir_connection_create_window_spec_for_tip() instead")));
 
 /**
- * Create a surface specification for a modal dialog surface.
- *
- * The dialog surface will have input focus; the parent can still be moved,
- * resized or hidden/minimized but no interaction is possible until the dialog
- * is dismissed.
- *
- * A dialog will typically have no close/maximize button decorations.
- *
- * During surface creation, if the specified parent is another dialog surface
- * the server may choose to close the specified parent in order to show this
- * new dialog surface.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface.
- *
+ *\deprecated use mir_connection_create_window_spec_for_modal_dialog() instead
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
-                                            int width,
-                                            int height,
+                                            int width, int height,
                                             MirPixelFormat format,
-                                            MirSurface* parent);
+                                            MirSurface* parent)
+__attribute__((deprecated("Use mir_connection_create_window_spec_for_modal_dialog() instead")));
 
 /**
  * Create a surface specification for a parentless dialog surface.

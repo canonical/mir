@@ -281,7 +281,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
 TEST_F(ClientSurfaces, can_be_modal_dialogs)
 {
     auto parent = mtf::make_any_surface(connection);
-    auto spec = mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
+    auto spec = mir_connection_create_window_spec_for_modal_dialog(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent);
     ASSERT_THAT(spec, NotNull());
 
