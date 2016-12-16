@@ -342,7 +342,7 @@ MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 {
-    return mir_create_surface_spec(connection);
+    return mir_connection_create_window_spec(connection);
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)

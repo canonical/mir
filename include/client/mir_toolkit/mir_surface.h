@@ -255,16 +255,11 @@ MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
 __attribute__((deprecated("Use mir_connection_create_window_spec() instead")));
 
 /**
- * Create a surface specification for updating a surface.
- *
- * This can be applied to one or more target surfaces using
- * mir_surface_apply_spec(...).
- *
- * \param [in] connection   a valid mir connection
- *
+ *\deprecated use mir_connection_create_window_spec() instead
  */
 MirSurfaceSpec*
-mir_connection_create_spec_for_changes(MirConnection* connection);
+mir_connection_create_spec_for_changes(MirConnection* connection)
+__attribute__((deprecated("Use mir_connection_create_window_spec() instead")));
 
 /**
  * Set the requested parent.

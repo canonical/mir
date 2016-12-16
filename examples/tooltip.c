@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     MirConnection* const connection = mir_eglapp_native_connection();
     MirSurface* const parent = mir_eglapp_native_surface();
 
-    MirWindowSpec* const spec = mir_connection_create_spec_for_changes(connection);
+    MirWindowSpec* const spec = mir_connection_create_window_spec(connection);
     mir_surface_spec_set_name(spec, "tooltip example");
     mir_surface_spec_set_min_width(spec, width/2);
     mir_surface_spec_set_max_width(spec, width*2);

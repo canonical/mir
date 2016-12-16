@@ -857,7 +857,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
 
     MirRectangle input_rects[] = {{1, 1, 10, 10}};
 
-    auto spec = mir_connection_create_spec_for_changes(client.connection);
+    auto spec = mir_connection_create_window_spec(client.connection);
     mir_surface_spec_set_input_shape(spec, input_rects, 1);
     mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);

@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
 
-    auto spec = mir_connection_create_spec_for_changes(connection);
+    auto spec = mir_connection_create_window_spec(connection);
 
     int baseColour = 255, dbase = 1;
     int topColour = 255, dtop = 1;

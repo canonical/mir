@@ -327,7 +327,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
      *
      * At least verify the rename completes without blocking...
      */
-    spec = mir_connection_create_spec_for_changes(connection);
+    spec = mir_connection_create_window_spec(connection);
     ASSERT_THAT(spec, NotNull());
     mir_surface_spec_set_name(spec, "New Name");
     mir_surface_apply_spec(surf, spec);
