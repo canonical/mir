@@ -188,11 +188,12 @@ MirSurface::~MirSurface()
     StreamSet old_streams;
 
     {
+        // Is this sensible? If we need locking in a destructor we're in trouble
         std::lock_guard<decltype(mutex)> lock(mutex);
         old_streams = std::move(streams);
     }
 
-    // Do callbacks without holding the lock:
+    // Do callbacks without holding the lock
     for (auto const& s : old_streams)
         s->unadopted_by(this);
 
@@ -671,9 +672,9 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
          */
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
-            old_streams = std::move(streams);
-            streams.clear();  // Just in case two threads call this function?!
             default_stream = nullptr;
+            old_streams = std::move(streams);
+            streams.clear();  // Leave the container valid before we unlock
             map = connection_->connection_surface_map();
         }
 
@@ -692,9 +693,12 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             mir::frontend::BufferStreamId id(stream.stream_id);
             if (auto bs = map->stream(id))
                 new_streams.insert(bs);
-            // else: we have never implemented stream ID validation but that's
-            // more difficult than it sounds as we have some tests using
-            // fake stream IDs that would fail validation and so need fixing.
+            /* else: we could implement stream ID validation here, which we've
+             * never had before.
+             * The only problem with that plan is that we have some tests
+             * that rely on the ability to pass in invalid stream IDs so those
+             * need fixing.
+             */
         }
 
         // Worth optimizing and avoiding the intersection of both sets?....

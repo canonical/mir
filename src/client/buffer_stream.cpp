@@ -409,20 +409,23 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
 void mcl::BufferStream::wait_for_vsync()
 {
     mir::time::PosixTimestamp target;
+
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         if (!frame_clock)
             return;
+        /*
+         * Note: lock is held and this will sometimes call resync_callback
+         * Presently that's just a stub, and in future it will be provided by us
+         * so it's safe for now, but keep it in mind.
+         */
         target = frame_clock->next_frame_after(last_vsync);
     }
+
     sleep_until(target);
+
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        /*
-         * Note we record the target wakeup time and not the actual wakeup time
-         * so that the frame interval remains perfectly spaced even in the
-         * face of scheduling irregularities.
-         */
         if (target > last_vsync)
             last_vsync = target;
     }
@@ -430,18 +433,14 @@ void mcl::BufferStream::wait_for_vsync()
 
 void mcl::BufferStream::swap_buffers_sync()
 {
-    /*
-     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
-     *       has been ported to the new way of doing things.
-     *       In the mean time, having both throttles acting simultaneously
-     *       is harmless (they are not additive).
-     */
     swap_buffers([](){})->wait_for_all();
 
     /*
-     * Accurate frame timing is all about getting the start of the rendering
-     * synchronized. So that's why this wait is after the swap. This is the
-     * potential start of the next frame.
+     * Client-side vsync:
+     * Note wait_for_vsync keeps its own timestamp so is unaffected by any
+     * additional throttling of server-side vsync while it's still present.
+     * But with this in place we no longer need the server throttling buffer
+     * returns...
      */
     int interval = swap_interval();
     for (int i = 0; i < interval; ++i)
@@ -466,8 +465,8 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 int mcl::BufferStream::swap_interval() const
 {
     /*
-     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
-     *       has been ported to the new way of doing things.
+     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
+     *       has been ported to use client-side vsync.
      */
     return interval_config.swap_interval();
 }
@@ -475,8 +474,8 @@ int mcl::BufferStream::swap_interval() const
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
     /*
-     * TODO: Deprecate interval_config after the asynchronous swap_buffers()
-     *       has been ported to the new way of doing things.
+     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
+     *       has been ported to use client-side vsync.
      */
     if (user_swap_interval.is_set())
         interval = user_swap_interval.value();
@@ -488,6 +487,12 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 void mcl::BufferStream::adopted_by(MirSurface* surface)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
+    /*
+     * Yes, we're storing raw pointers here. That's safe so long as MirSurface
+     * remembers to always call unadopted_by prior to its destruction.
+     *   The alternative of MirSurface passing in a shared_ptr to itself is
+     * actually uglier than this...
+     */
     users.insert(surface);
     if (!frame_clock)
         frame_clock = surface->get_frame_clock();
