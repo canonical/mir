@@ -1849,6 +1849,7 @@ TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_chan
 
         observed_changed.wait_for(10s);
         observed_changed.reset();
+        mir_display_config_release(new_config);
     }
 
     // Remove the configuration, assert we have been re-configured back to the base config
