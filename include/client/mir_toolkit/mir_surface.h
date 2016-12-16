@@ -181,6 +181,14 @@ mir_connection_create_window_spec_for_dialog(MirConnection* connection,
  */
 MirWindowSpec* mir_connection_create_window_spec(MirConnection* connection);
 
+/**
+ * Set the requested parent.
+ *
+ * \param [in] spec    Specification to mutate
+ * \param [in] parent  A valid parent window.
+ */
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -262,12 +270,10 @@ mir_connection_create_spec_for_changes(MirConnection* connection)
 __attribute__((deprecated("Use mir_connection_create_window_spec() instead")));
 
 /**
- * Set the requested parent.
- *
- * \param [in] spec    Specification to mutate
- * \param [in] parent  A valid parent surface.
+ *\deprecated use mir_window_spec_set_parent() instead
  */
-void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
+__attribute__((deprecated("Use mir_window_spec_set_parent() instead")));
 
 /**
  * Update a surface specification with a surface type.

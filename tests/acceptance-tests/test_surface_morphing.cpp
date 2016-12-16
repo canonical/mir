@@ -227,7 +227,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     change_surface(surface, [&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, new_type);
-            mir_surface_spec_set_parent(spec, parent);
+            mir_window_spec_set_parent(spec, parent);
 
             // Don't wait for a notification we don't expect
             // We'll wait for another change
@@ -268,7 +268,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     change_surface(surface, [&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, new_type);
-        mir_surface_spec_set_parent(spec, parent);
+        mir_window_spec_set_parent(spec, parent);
     });
 }
 
@@ -334,7 +334,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     change_surface(surface, [&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, new_type);
-        mir_surface_spec_set_parent(spec, parent);
+        mir_window_spec_set_parent(spec, parent);
     });
 }
 
