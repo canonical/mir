@@ -145,6 +145,28 @@ mir_connection_create_window_spec_for_modal_dialog(MirConnection* connection,
                                                    MirPixelFormat format,
                                                    MirSurface* parent);
 
+/**
+ * Create a window specification for a parentless dialog window.
+ *
+ * A parentless dialog window is similar to a normal window, but it cannot
+ * be fullscreen and typically won't have any maximize/close button decorations.
+ *
+ * A parentless dialog is not allowed to have other dialog children. The server
+ * may decide to close the parent and show the child dialog only.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a window of this height.
+ * \param [in] format       Pixel format for the window.
+ *
+ */
+MirWindowSpec*
+mir_connection_create_window_spec_for_dialog(MirConnection* connection,
+                                             int width, int height,
+                                             MirPixelFormat format);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -204,27 +226,14 @@ mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
 __attribute__((deprecated("Use mir_connection_create_window_spec_for_modal_dialog() instead")));
 
 /**
- * Create a surface specification for a parentless dialog surface.
- *
- * A parentless dialog surface is similar to a normal surface, but it cannot
- * be fullscreen and typically won't have any maximize/close button decorations.
- *
- * A parentless dialog is not allowed to have other dialog children. The server
- * may decide to close the parent and show the child dialog only.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- *
+ *\deprecated use mir_connection_create_window_spec_for_dialog() instead
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_dialog(MirConnection* connection,
-                                      int width,
-                                      int height,
-                                      MirPixelFormat format);
+                                      int width, int height,
+                                      MirPixelFormat format)
+__attribute__((deprecated("Use mir_connection_create_window_spec_for_dialog() instead")));
+
 
 /**
  * Create a surface specification.
