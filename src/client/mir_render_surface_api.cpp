@@ -231,5 +231,5 @@ void mir_surface_spec_set_cursor_render_surface(
 {
     auto connection = connection_map.connection(surface);
     auto rs = connection->connection_surface_map()->render_surface(surface);
-    spec->rendersurface_cursor = MirSurfaceSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
+    spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }

@@ -670,7 +670,7 @@ struct ClientWithAPaintedSurface : virtual Client
         mir_surface_release_sync(surface);
     }
 
-    void update_surface_spec(void (*changer)(MirSurfaceSpec* spec))
+    void update_surface_spec(void (*changer)(MirWindowSpec* spec))
     {
         auto const spec = mir_connection_create_spec_for_changes(connection);
         changer(spec);
