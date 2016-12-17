@@ -138,7 +138,7 @@ void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
         nullptr));
 }
 
-void mir_buffer_stream_get_graphics_region(
+bool mir_buffer_stream_get_graphics_region(
     MirBufferStream *buffer_stream,
     MirGraphicsRegion *region_out)
 try
@@ -149,10 +149,12 @@ try
     region_out->stride = secured_region->stride.as_uint32_t();
     region_out->pixel_format = secured_region->format;
     region_out->vaddr = secured_region->vaddr.get();
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream* buffer_stream)
