@@ -157,38 +157,3 @@ TEST_F(SwapInterval, change_to_one_disables_framedropping)
     EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());
 }
-
-TEST_F(SwapInterval, defaults_to_one_legacy)
-{
-    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-    EXPECT_FALSE(framedropping_enabled());
-}
-
-TEST_F(SwapInterval, change_to_zero_enables_framedropping_legacy)
-{
-    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
-
-    EXPECT_EQ(0, mir_surface_get_swapinterval(surface));
-    EXPECT_TRUE(framedropping_enabled());
-}
-
-TEST_F(SwapInterval, change_to_one_disables_framedropping_legacy)
-{
-    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
-    mir_wait_for(mir_surface_set_swapinterval(surface, 1));
-
-    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-    EXPECT_FALSE(framedropping_enabled());
-}
-
-TEST_F(SwapInterval, is_not_changed_if_requested_value_is_unsupported)
-{
-    auto const original_swapinterval = mir_surface_get_swapinterval(surface);
-    auto const original_framedropping = framedropping_enabled();
-
-    int const unsupported_swap_interval_value{2};
-    EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, unsupported_swap_interval_value));
-
-    EXPECT_EQ(original_swapinterval, mir_surface_get_swapinterval(surface));
-    EXPECT_EQ(original_framedropping, framedropping_enabled());
-}

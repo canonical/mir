@@ -276,6 +276,20 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 __attribute__((deprecated("Use mir_window_spec_set_parent() instead")));
 
 /**
+ *
+ *\deprecated This will soon be a property of the backing content.
+ *
+ * Query the swapinterval that the surface is operating with.
+ * The default interval is 1.
+ *   \param [in] surface  The surface to operate on
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if surface is invalid, or if the default stream
+ *                        was removed by use of mir_surface_spec_set_streams().
+ */
+int mir_surface_get_swapinterval(MirSurface* surface)
+__attribute__((deprecated("This will soon be a property of the backing content")));
+
+/**
  * Update a surface specification with a surface type.
  * This can be used with mir_surface_create() to create a surface or with
  * mir_surface_apply_spec() to change an existing surface.
@@ -789,16 +803,6 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *                        or NULL if the interval could not be supported
  */
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
-
-/**
- * Query the swapinterval that the surface is operating with.
- * The default interval is 1.
- *   \param [in] surface  The surface to operate on
- *   \return              The swapinterval value that the client is operating with.
- *                        Returns -1 if surface is invalid, or if the default stream
- *                        was removed by use of mir_surface_spec_set_streams().
- */
-int mir_surface_get_swapinterval(MirSurface* surface);
 
 /**
  * Query the DPI value of the surface (dots per inch). This will vary depending
