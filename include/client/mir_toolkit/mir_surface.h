@@ -75,13 +75,12 @@ MirWindowSpec* mir_connection_create_window_spec_for_normal_window(MirConnection
  *                          to complete construction.
  */
 MirWindowSpec*
-mir_connection_create_window_spec_for_menu(MirConnection* connection,
-                                           int width,
-                                           int height,
-                                           MirPixelFormat format,
-                                           MirSurface* parent,
-                                           MirRectangle* rect,
-                                           MirEdgeAttachment edge);
+mir_specify_menu(MirConnection* connection,
+                 int width, int height,
+                 MirPixelFormat format,
+                 MirSurface* parent,
+                 MirRectangle* rect,
+                 MirEdgeAttachment edge);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -112,7 +111,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirSurface* parent,
                                     MirRectangle* rect,
                                     MirEdgeAttachment edge)
-__attribute__((deprecated("Use mir_connection_create_window_spec_for_menu() instead")));
+__attribute__((deprecated("Use mir_specify_menu() instead")));
 
 /**
  * Create a surface specification for a tooltip surface.
