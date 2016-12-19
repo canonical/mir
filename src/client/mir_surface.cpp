@@ -609,7 +609,17 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        default_stream = nullptr;
+        /*
+         * Note that we don't check for errors from modify_surface. So in
+         * updating default_stream here, we're just assuming it will succeed.
+         * Seems to be a harmless assumption to have made so far and much
+         * simpler than communicating back suceessful mappings from the server,
+         * but there is a prototype started for that: lp:~vanvugt/mir/adoption
+         */
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            default_stream = nullptr;
+        }
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
