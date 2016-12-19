@@ -156,6 +156,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_name(MirWindowSpec* spec, char const* name)
+try
+{
+    mir::require(spec);
+    spec->surface_name = name;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -253,7 +264,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
 
 void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 {
-    spec->surface_name = name;
+    mir_surface_spec_set_name(spec, name);
 }
 
 void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)

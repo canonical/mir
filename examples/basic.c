@@ -136,7 +136,7 @@ int demo_client(const char* server, int buffer_swap_count)
 
     MirWindowSpec *spec = mir_specify_window(mcd.connection, 640, 480, pixel_format);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __FILE__);
+    mir_spec_set_name(spec, __FILE__);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.

@@ -137,7 +137,7 @@ struct CursorClient
 
                 auto spec = mir_specify_window(connection,
                     1, 1, mir_pixel_format_abgr_8888);
-                mir_surface_spec_set_name(spec, client_name.c_str());
+                mir_spec_set_name(spec, client_name.c_str());
                 auto const surface = mir_surface_create_sync(spec);
                 mir_surface_spec_release(spec);
 

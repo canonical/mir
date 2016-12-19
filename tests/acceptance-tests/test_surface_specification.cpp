@@ -160,7 +160,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
         auto const spec = mir_create_spec(connection);
 
-        mir_surface_spec_set_name(spec, new_title);
+        mir_spec_set_name(spec, new_title);
 
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);

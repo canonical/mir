@@ -133,7 +133,7 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         change_surface(surface, [&](MirWindowSpec* spec)
             {
-                mir_surface_spec_set_name(spec, new_title);
+                mir_spec_set_name(spec, new_title);
             });
     }
 

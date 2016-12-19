@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
         mir_specify_window(connection, width, height, mir_pixel_format_invalid);
 
     CHECK(spec, "Can't create a surface spec");
-    mir_surface_spec_set_name(spec, appname);
+    mir_spec_set_name(spec, appname);
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
     mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);

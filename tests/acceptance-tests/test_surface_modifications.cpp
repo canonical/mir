@@ -123,7 +123,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
         apply_changes([&](MirWindowSpec* spec)
             {
-                mir_surface_spec_set_name(spec, new_title);
+                mir_spec_set_name(spec, new_title);
             });
 
         server_ready.wait();
@@ -191,7 +191,7 @@ TEST_F(SurfaceModifications, surface_spec_name_is_notified)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_name(spec, new_title);
+            mir_spec_set_name(spec, new_title);
         });
 }
 

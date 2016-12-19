@@ -73,7 +73,7 @@ bool UnacceleratedClient::create_surface()
     mir_display_config_destroy(display_configuration);
 
     auto const spec = mir_specify_window(connection_, 640, 480, pixel_format);
-    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_spec_set_name(spec, __PRETTY_FUNCTION__);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surface_ = mir_surface_create_sync(spec);

@@ -757,7 +757,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     auto surface_spec = mir_specify_window(connection, 800, 600, mir_pixel_format_bgr_888);
 
     char const* name = "The magnificent Dandy Warhols";
-    mir_surface_spec_set_name(surface_spec, name);
+    mir_spec_set_name(surface_spec, name);
 
     int const width{999}, height{555};
     mir_surface_spec_set_width(surface_spec, width);

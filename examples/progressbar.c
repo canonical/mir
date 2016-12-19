@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
         name[sizeof(name)-1] = '\0';
-        mir_surface_spec_set_name(spec, name);
+        mir_spec_set_name(spec, name);
     }
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);

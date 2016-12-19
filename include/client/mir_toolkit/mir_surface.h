@@ -206,6 +206,19 @@ void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
  */
 void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
 
+/**
+ * Set the requested name.
+ *
+ * The window name helps the user to distinguish between multiple surfaces
+ * from the same application. A typical desktop shell may use it to provide
+ * text in the window titlebar, in an alt-tab switcher, or equivalent.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] name     Requested name. This must be valid UTF-8.
+ *                      Copied into spec; clients can free the buffer passed after this call.
+ */
+void mir_spec_set_name(MirWindowSpec* spec, char const* name);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -311,17 +324,10 @@ void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
 __attribute__((deprecated("use mir_spec_set_type() instead")));
 
 /**
- * Set the requested name.
- *
- * The surface name helps the user to distinguish between multiple surfaces
- * from the same application. A typical desktop shell may use it to provide
- * text in the window titlebar, in an alt-tab switcher, or equivalent.
- *
- * \param [in] spec     Specification to mutate
- * \param [in] name     Requested name. This must be valid UTF-8.
- *                      Copied into spec; clients can free the buffer passed after this call.
+ *\deprecated use mir_spec_set_name() instead
  */
-void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
+__attribute__((deprecated("use mir_spec_set_name() instead")));
 
 /**
  * Set the requested width, in pixels

@@ -182,7 +182,7 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
     EXPECT_CALL(window_manager, modify_surface(_,_,_));
 
     auto const spec = mir_create_spec(client.connection);
-    mir_surface_spec_set_name(spec, new_title);
+    mir_spec_set_name(spec, new_title);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 

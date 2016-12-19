@@ -327,13 +327,13 @@ TEST_F(ClientSurfaces, can_be_renamed)
      */
     spec = mir_create_spec(connection);
     ASSERT_THAT(spec, NotNull());
-    mir_surface_spec_set_name(spec, "New Name");
+    mir_spec_set_name(spec, "New Name");
     mir_surface_apply_spec(surf, spec);
 
-    mir_surface_spec_set_name(spec, "");
+    mir_spec_set_name(spec, "");
     mir_surface_apply_spec(surf, spec);
 
-    mir_surface_spec_set_name(spec, "Alice");
+    mir_spec_set_name(spec, "Alice");
     mir_surface_apply_spec(surf, spec);
     mir_surface_spec_release(spec);
 

@@ -479,7 +479,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         if (*p == '/')
             name = p + 1;
     }
-    mir_surface_spec_set_name(spec, name);
+    mir_spec_set_name(spec, name);
 
     if (output_id != mir_display_output_id_invalid)
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);

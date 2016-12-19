@@ -95,12 +95,12 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             if (!grabbed)
             {
                 mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
-                mir_surface_spec_set_name(spec, "");
+                mir_spec_set_name(spec, "");
             }
             else
             {
                 mir_surface_spec_set_pointer_confinement(spec, mir_pointer_unconfined);
-                mir_surface_spec_set_name(spec, mir_default_cursor_name);
+                mir_spec_set_name(spec, mir_default_cursor_name);
             }
 
             grabbed = !grabbed;

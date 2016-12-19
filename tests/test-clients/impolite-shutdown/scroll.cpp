@@ -78,7 +78,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
 
     assert(spec != nullptr);
 
-    mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
+    mir_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
     mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
 
     MirSurface *surface = mir_surface_create_sync(spec.get());

@@ -95,7 +95,7 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_specify_window(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_name(spec, name.c_str());
+        mir_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
         if (!mir_surface_is_valid(surface))
