@@ -45,9 +45,9 @@ extern "C" {
  * \param [in] format       Pixel format for the window.
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
-MirWindowSpec* mir_connection_create_window_spec_for_normal_window(MirConnection* connection,
-                                                                   int width, int height,
-                                                                   MirPixelFormat format);
+MirWindowSpec* mir_specify_window(MirConnection* connection,
+                                  int width, int height,
+                                  MirPixelFormat format);
 
 /**
  * Create a window specification for a menu window.
@@ -98,10 +98,9 @@ mir_specify_menu(MirConnection* connection,
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
-                                                              int width,
-                                                              int height,
+                                                              int width, int height,
                                                               MirPixelFormat format)
-__attribute__((deprecated("Use mir_connection_create_window_spec_for_normal_window() instead")));
+__attribute__((deprecated("Use mir_specify_window() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_menu(MirConnection* connection,

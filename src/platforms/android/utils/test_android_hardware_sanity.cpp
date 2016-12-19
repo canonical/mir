@@ -115,7 +115,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
 
-    auto const spec = mir_connection_create_window_spec_for_normal_window(
+    auto const spec = mir_specify_window(
         connection, test_width, test_height, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto const surface = mir_surface_create_sync(spec);
@@ -171,7 +171,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
     eglGetConfigAttrib(egl_display, egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
-    auto const spec = mir_connection_create_window_spec_for_normal_window(
+    auto const spec = mir_specify_window(
         connection, test_width, test_height, select_format_for_visual_id(visual_id));
     auto const mir_surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);

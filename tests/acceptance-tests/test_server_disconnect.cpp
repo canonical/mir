@@ -121,7 +121,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
             MirSurface* surf;
 
             create_surface.exec([&] {
-                auto spec = mir_connection_create_window_spec_for_normal_window(
+                auto spec = mir_specify_window(
                     connection,
                     800, 600,
                     mir_pixel_format_xbgr_8888);

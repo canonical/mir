@@ -145,7 +145,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_window_spec_for_normal_window(
+    auto spec = mir_specify_window(
         connection,
         physical_size.width.as_int(), physical_size.height.as_int(),
         mir_pixel_format_invalid);
@@ -172,9 +172,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_window_spec_for_normal_window(connection,
-                                                              width, height,
-                                                              format);
+    auto spec = mir_specify_window(connection, width, height, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
@@ -237,9 +235,7 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_window_spec_for_normal_window(connection,
-                                                              width, height,
-                                                              format);
+    auto spec = mir_specify_window(connection, width, height, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);

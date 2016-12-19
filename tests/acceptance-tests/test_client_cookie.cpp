@@ -58,7 +58,7 @@ public:
         mtf::ConnectedClientHeadlessServer::SetUp();
 
         // Need fullscreen for the cursor events
-        auto const spec = mir_connection_create_window_spec_for_normal_window(
+        auto const spec = mir_specify_window(
             connection, 100, 100, mir_pixel_format_abgr_8888);
         mir_surface_spec_set_fullscreen_on_output(spec, 1);
         mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
