@@ -103,7 +103,7 @@ struct Client
     {
         auto spec = mir_create_spec(connection);
         mir_spec_set_width (spec, width);
-        mir_surface_spec_set_height(spec, height);
+        mir_spec_set_height(spec, height);
 
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);

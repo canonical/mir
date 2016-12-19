@@ -510,4 +510,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_set_type;
     mir_spec_set_name;
     mir_spec_set_width;
+    mir_spec_set_height;
 } MIR_CLIENT_0.25;

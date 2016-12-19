@@ -212,7 +212,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_min_width(spec, min_width);
@@ -237,7 +237,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_min_height(spec, min_height);
@@ -262,7 +262,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_max_width(spec, max_width);
@@ -287,7 +287,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_max_height(spec, max_height);
@@ -312,7 +312,7 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_width_increment(spec, width_inc);
@@ -341,7 +341,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_width_increment(spec, width_inc);
@@ -370,7 +370,7 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_height_increment(spec, height_inc);
@@ -399,7 +399,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_height_increment(spec, height_inc);
@@ -429,7 +429,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
@@ -459,7 +459,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
@@ -496,7 +496,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
@@ -512,7 +512,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
             mir_surface_spec_set_width_increment(spec, width_inc);
             mir_surface_spec_set_height_increment(spec, height_inc);
 
-            mir_surface_spec_set_height(spec, min_height);
+            mir_spec_set_height(spec, min_height);
             mir_spec_set_width(spec, min_width);
         });
 
@@ -550,7 +550,7 @@ TEST_P(SurfaceWithoutParent, not_setting_parent_succeeds)
         {
             mir_spec_set_type(spec, type);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
@@ -566,7 +566,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
@@ -575,7 +575,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
     {
         mir_spec_set_type(spec, type);
         mir_spec_set_width(spec, width);
-        mir_surface_spec_set_height(spec, height);
+        mir_spec_set_height(spec, height);
         mir_surface_spec_set_pixel_format(spec, pixel_format);
         mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         mir_spec_set_parent(spec, parent);
@@ -592,7 +592,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
@@ -601,7 +601,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
         {
             mir_spec_set_type(spec, type);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_spec_set_parent(spec, parent);
@@ -618,7 +618,7 @@ TEST_P(SurfaceNeedingParent, not_setting_parent_fails)
         {
             mir_spec_set_type(spec, type);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
@@ -634,7 +634,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
@@ -643,7 +643,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
         {
             mir_spec_set_type(spec, type);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_spec_set_parent(spec, parent);
@@ -660,7 +660,7 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
         {
             mir_spec_set_type(spec, type);
             mir_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
+            mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });

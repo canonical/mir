@@ -205,7 +205,7 @@ TEST_F(SurfaceModifications, surface_spec_resize_is_notified)
     apply_changes([&](MirWindowSpec* spec)
         {
             mir_spec_set_width(spec, new_width);
-            mir_surface_spec_set_height(spec, new_height);
+            mir_spec_set_height(spec, new_height);
         });
 }
 
@@ -229,7 +229,7 @@ TEST_F(SurfaceModifications, surface_spec_change_height_is_notified)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_height(spec, new_height);
+            mir_spec_set_height(spec, new_height);
         });
 }
 
@@ -487,7 +487,7 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
               mir_surface_spec_set_width_increment(spec, width_inc);
               mir_surface_spec_set_height_increment(spec, height_inc);
 
-              mir_surface_spec_set_height(spec, min_height);
+              mir_spec_set_height(spec, min_height);
               mir_spec_set_width(spec, min_width);
           });
 

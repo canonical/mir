@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 
     mir_spec_set_name(spec, "green");
     mir_spec_set_width(spec, 300);
-    mir_surface_spec_set_height(spec, 150);
+    mir_spec_set_height(spec, 150);
     win[1].surface = mir_surface_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 
     mir_spec_set_name(spec, "blue");
     mir_spec_set_width(spec, 150);
-    mir_surface_spec_set_height(spec, 300);
+    mir_spec_set_height(spec, 300);
     win[2].surface = mir_surface_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;

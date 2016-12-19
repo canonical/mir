@@ -178,6 +178,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_height(MirWindowSpec* spec, unsigned height)
+try
+{
+    mir::require(spec);
+    spec->height = height;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -285,7 +296,7 @@ void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 
 void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 {
-    spec->height = height;
+    mir_spec_set_height(spec, height);
 }
 
 void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width)

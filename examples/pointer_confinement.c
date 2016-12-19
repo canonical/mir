@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 
     MirWindowSpec* spec = mir_create_spec(mir_eglapp_native_connection());
     mir_spec_set_width (spec, width);
-    mir_surface_spec_set_height(spec, height);
+    mir_spec_set_height(spec, height);
 
     mir_surface_apply_spec(mir_eglapp_native_surface(), spec);
     mir_surface_spec_release(spec);
