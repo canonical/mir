@@ -241,6 +241,32 @@ void mir_spec_set_width(MirWindowSpec* spec, unsigned width);
  */
 void mir_spec_set_height(MirWindowSpec* spec, unsigned height);
 
+/**
+ * Set the requested width increment, in pixels.
+ * Defines an arithmetic progression of sizes starting with min_width (if set, otherwise 0)
+ * into which the window prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] width_inc  Requested width increment.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a window of any specific width or height.
+ */
+void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
+
+/**
+ * Set the requested height increment, in pixels
+ * Defines an arithmetic progression of sizes starting with min_height (if set, otherwise 0)
+ * into which the window prefers to be resized.
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] height_inc Requested height increment.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to
+ *          create a window of any specific width or height.
+ */
+void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -364,30 +390,16 @@ void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 __attribute__((deprecated("use mir_spec_set_height() instead")));
 
 /**
- * Set the requested width increment, in pixels.
- * Defines an arithmetic progression of sizes starting with min_width (if set, otherwise 0)
- * into which the surface prefers to be resized.
- *
- * \param [in] spec       Specification to mutate
- * \param [in] width_inc  Requested width increment.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to
- *          create a surface of any specific width or height.
+ *\deprecated use mir_spec_set_width_increment() instead
  */
-void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc);
+void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
+__attribute__((deprecated("use mir_spec_set_width_increment() instead")));
 
 /**
- * Set the requested height increment, in pixels
- * Defines an arithmetic progression of sizes starting with min_height (if set, otherwise 0)
- * into which the surface prefers to be resized.
- *
- * \param [in] spec       Specification to mutate
- * \param [in] height_inc Requested height increment.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to
- *          create a surface of any specific width or height.
+ *\deprecated use mir_spec_set_height_increment() instead
  */
-void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc);
+void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc)
+__attribute__((deprecated("use mir_spec_set_height_increment() instead")));
 
 /**
  * Set the minimum width, in pixels

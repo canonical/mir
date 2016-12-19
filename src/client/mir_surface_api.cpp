@@ -189,6 +189,28 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc)
+try
+{
+    mir::require(spec);
+    spec->width_inc = width_inc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc)
+try
+{
+    mir::require(spec);
+    spec->height_inc = height_inc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -508,23 +530,13 @@ void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
 }
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
-try
 {
-    spec->width_inc = width_inc;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_width_increment(spec, width_inc);
 }
 
 void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc)
-try
 {
-    spec->height_inc = height_inc;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_height_increment(spec, height_inc);
 }
 
 void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)

@@ -319,7 +319,7 @@ TEST_F(SurfaceModifications, surface_spec_width_inc_is_respected)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_width_increment(spec, width_inc);
+            mir_spec_set_width_increment(spec, width_inc);
         });
 
     ensure_server_has_processed_setup();
@@ -343,7 +343,7 @@ TEST_F(SurfaceModifications, surface_spec_with_min_width_and_width_inc_is_respec
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_width_increment(spec, width_inc);
+            mir_spec_set_width_increment(spec, width_inc);
             mir_surface_spec_set_min_width(spec, min_width);
         });
 
@@ -367,7 +367,7 @@ TEST_F(SurfaceModifications, surface_spec_height_inc_is_respected)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_height_increment(spec, height_inc);
+            mir_spec_set_height_increment(spec, height_inc);
         });
 
     ensure_server_has_processed_setup();
@@ -391,7 +391,7 @@ TEST_F(SurfaceModifications, surface_spec_with_min_height_and_height_inc_is_resp
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_height_increment(spec, height_inc);
+            mir_spec_set_height_increment(spec, height_inc);
             mir_surface_spec_set_min_height(spec, min_height);
         });
 
@@ -484,8 +484,8 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
               mir_surface_spec_set_max_height(spec, max_height);
               mir_surface_spec_set_max_width(spec, max_width);
 
-              mir_surface_spec_set_width_increment(spec, width_inc);
-              mir_surface_spec_set_height_increment(spec, height_inc);
+              mir_spec_set_width_increment(spec, width_inc);
+              mir_spec_set_height_increment(spec, height_inc);
 
               mir_spec_set_height(spec, min_height);
               mir_spec_set_width(spec, min_width);
