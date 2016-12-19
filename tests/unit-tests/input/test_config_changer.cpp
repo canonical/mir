@@ -237,3 +237,19 @@ TEST_F(ConfigChanger, focusing_a_session_with_attached_config_applies_config)
     session_event_sink.handle_focus_change(session1);
 }
 
+TEST_F(ConfigChanger, configuring_a_focused_session_sends_changed_config_to_client)
+{
+    auto session = std::make_shared<mtd::MockSceneSession>();
+    stub_session_container.insert_session(session);
+    session_event_sink.handle_focus_change(session);
+
+    auto changed_ptr_config = mi::PointerConfiguration{mir_pointer_handedness_right, mir_pointer_acceleration_none, 0, -1, 1};
+    auto changed_device_config = conf_for_first();
+    changed_device_config.set_pointer_configuration(changed_ptr_config);
+
+    auto changed_config = get_populated_conf(std::move(changed_device_config));
+
+    EXPECT_CALL(*session, send_input_config(Eq(changed_config)));
+    changer.configure(session, std::move(changed_config));
+}
+
