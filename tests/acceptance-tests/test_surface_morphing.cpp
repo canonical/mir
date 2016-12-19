@@ -178,7 +178,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, old_type);
+            mir_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -192,7 +192,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
 
     change_surface(surface, [&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, new_type);
+            mir_spec_set_type(spec, new_type);
         });
 }
 
@@ -203,7 +203,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -212,7 +212,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
     {
-        mir_surface_spec_set_type(spec, old_type);
+        mir_spec_set_type(spec, old_type);
         mir_surface_spec_set_width(spec, width);
         mir_surface_spec_set_height(spec, height);
         mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -226,7 +226,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     change_surface(surface, [&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, new_type);
+            mir_spec_set_type(spec, new_type);
             mir_spec_set_parent(spec, parent);
 
             // Don't wait for a notification we don't expect
@@ -244,7 +244,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -253,7 +253,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, old_type);
+            mir_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -267,7 +267,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     change_surface(surface, [&](MirWindowSpec* spec)
     {
-        mir_surface_spec_set_type(spec, new_type);
+        mir_spec_set_type(spec, new_type);
         mir_spec_set_parent(spec, parent);
     });
 }
@@ -279,7 +279,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, old_type);
+            mir_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -293,7 +293,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
 
     change_surface(surface, [&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, new_type);
+            mir_spec_set_type(spec, new_type);
 
             // Don't wait for a notification we don't expect
             // We'll wait for another change
@@ -310,7 +310,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
+            mir_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -319,7 +319,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, old_type);
+            mir_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -333,7 +333,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     change_surface(surface, [&](MirWindowSpec* spec)
     {
-        mir_surface_spec_set_type(spec, new_type);
+        mir_spec_set_type(spec, new_type);
         mir_spec_set_parent(spec, parent);
     });
 }
@@ -345,7 +345,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
        {
-           mir_surface_spec_set_type(spec, mir_surface_type_normal);
+           mir_spec_set_type(spec, mir_surface_type_normal);
            mir_surface_spec_set_width(spec, width);
            mir_surface_spec_set_height(spec, height);
            mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -354,7 +354,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, old_type);
+            mir_spec_set_type(spec, old_type);
             mir_surface_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
@@ -369,7 +369,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     change_surface(surface, [&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, new_type);
+            mir_spec_set_type(spec, new_type);
         });
 }
 

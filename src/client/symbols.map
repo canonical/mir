@@ -507,4 +507,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_specify_dialog;
     mir_create_spec;
     mir_spec_set_parent;
+    mir_spec_set_type;
 } MIR_CLIENT_0.25;

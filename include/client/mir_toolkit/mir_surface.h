@@ -187,6 +187,25 @@ MirWindowSpec* mir_create_spec(MirConnection* connection);
  */
 void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
 
+/**
+ * Update a window specification with a window type.
+ * This can be used with mir_surface_create() to create a window or with
+ * mir_surface_apply_spec() to change an existing window.
+ * \remark For use with mir_surface_apply_spec() the shell need not support
+ * arbitrary changes of type and some target types may require the setting of
+ * properties such as "parent" that are not already present on the window.
+ * The type transformations the server is required to support are:\n
+ * regular => utility, dialog or satellite\n
+ * utility => regular, dialog or satellite\n
+ * dialog => regular, utility or satellite\n
+ * satellite => regular, utility or dialog\n
+ * popup => satellite
+ *
+ * \param [in] spec         Specification to mutate
+ * \param [in] type         the target type of the window
+ */
+void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -273,7 +292,6 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 __attribute__((deprecated("Use mir_spec_set_parent() instead")));
 
 /**
- *
  *\deprecated This will soon be a property of the backing content.
  *
  * Query the swapinterval that the surface is operating with.
@@ -287,23 +305,10 @@ int mir_surface_get_swapinterval(MirSurface* surface)
 __attribute__((deprecated("This will soon be a property of the backing content")));
 
 /**
- * Update a surface specification with a surface type.
- * This can be used with mir_surface_create() to create a surface or with
- * mir_surface_apply_spec() to change an existing surface.
- * \remark For use with mir_surface_apply_spec() the shell need not support
- * arbitrary changes of type and some target types may require the setting of
- * properties such as "parent" that are not already present on the surface.
- * The type transformations the server is required to support are:\n
- * regular => utility, dialog or satellite\n
- * utility => regular, dialog or satellite\n
- * dialog => regular, utility or satellite\n
- * satellite => regular, utility or dialog\n
- * popup => satellite
- *
- * \param [in] spec         Specification to mutate
- * \param [in] type         the target type of the surface
+ *\deprecated use mir_spec_set_type() instead
  */
-void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
+void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
+__attribute__((deprecated("use mir_spec_set_type() instead")));
 
 /**
  * Set the requested name.

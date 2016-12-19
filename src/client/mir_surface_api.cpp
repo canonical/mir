@@ -145,6 +145,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type)
+try
+{
+    mir::require(spec);
+    spec->type = type;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -459,13 +470,8 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 }
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
-try
 {
-    spec->type = type;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_type(spec, type);
 }
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
