@@ -289,6 +289,28 @@ void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
  */
 void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
 
+/**
+ * Set the maximum width, in pixels
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_width  maximum width.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          window of any specific width or height.
+ */
+void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
+
+/**
+ * Set the maximum height, in pixels
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] max_height maximum height.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          window of any specific width or height.
+ */
+void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -436,26 +458,16 @@ void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
 __attribute__((deprecated("use mir_spec_set_min_height() instead")));
 
 /**
- * Set the maximum width, in pixels
- *
- * \param [in] spec       Specification to mutate
- * \param [in] max_width  Maximum width.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *\deprecated use mir_spec_set_max_width() instead
  */
-void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
+void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width)
+__attribute__((deprecated("use mir_spec_set_max_width() instead")));
 
 /**
- * Set the maximum height, in pixels
- *
- * \param [in] spec       Specification to mutate
- * \param [in] max_height Maximum height.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *\deprecated use mir_spec_set_max_height() instead
  */
-void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
+void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
+__attribute__((deprecated("use mir_spec_set_max_height() instead")));
 
 /**
  * Set the minimum aspect ratio. This is the minimum ratio of surface width to height.

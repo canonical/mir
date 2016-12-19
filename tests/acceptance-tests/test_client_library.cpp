@@ -349,7 +349,7 @@ TEST_F(ClientLibrary, can_set_surface_max_width)
     auto const spec = mir_specify_window(connection, width, height, format);
 
     int const max_width = 1024;
-    mir_surface_spec_set_max_width(spec, max_width);
+    mir_spec_set_max_width(spec, max_width);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
@@ -369,7 +369,7 @@ TEST_F(ClientLibrary, can_set_surface_max_height)
     auto const spec = mir_specify_window(connection, width, height, format);
 
     int const max_height = 1024;
-    mir_surface_spec_set_max_height(spec, max_height);
+    mir_spec_set_max_height(spec, max_height);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 

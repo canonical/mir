@@ -212,29 +212,47 @@ catch (std::exception const& ex)
 }
 
 void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width)
+try
 {
-    try
-    {
-        mir::require(spec);
-        spec->min_width = min_width;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
+    mir::require(spec);
+    spec->min_width = min_width;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height)
+try
 {
-    try
-    {
-        mir::require(spec);
-        spec->min_height = min_height;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
+    mir::require(spec);
+    spec->min_height = min_height;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width)
+try
+{
+    mir::require(spec);
+    spec->max_width = max_width;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height)
+try
+{
+    mir::require(spec);
+    spec->max_height = max_height;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 #pragma GCC diagnostic push
@@ -359,12 +377,12 @@ void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
 
 void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width)
 {
-    spec->max_width = max_width;
+    mir_spec_set_max_width(spec, max_width);
 }
 
 void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
 {
-    spec->max_height = max_height;
+    mir_spec_set_max_height(spec, max_height);
 }
 
 void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
