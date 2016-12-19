@@ -19,10 +19,8 @@
 #ifndef MIR_CLIENT_EXTENSIONS_FENCED_BUFFERS_H_
 #define MIR_CLIENT_EXTENSIONS_FENCED_BUFFERS_H_
 
-#define MIR_EXTENSION_FENCED_BUFFERS "d31d8ae9-dbd0-43b4-8d2d-30b8ff2f8586"
-#define MIR_EXTENSION_FENCED_BUFFERS_VERSION_1 1
-
 #include "mir_toolkit/client_types_nbs.h"
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,13 +86,19 @@ typedef int (*mir_buffer_wait_for_access)(
     MirBufferAccess access,
     int timeout);
 
-struct MirExtensionFencedBuffers
+typedef struct MirExtensionFencedBuffersV1
 {
     mir_buffer_get_fence get_fence;
     mir_buffer_associate_fence associate_fence;
     mir_buffer_wait_for_access wait_for_access;
-};
+} MirExtensionFencedBuffersV1;
 
+static inline MirExtensionFencedBuffersV1 const* mir_extension_fenced_buffers_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionFencedBuffersV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_fenced_buffers", 1);
+}
 #ifdef __cplusplus
 }
 #endif

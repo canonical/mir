@@ -257,15 +257,9 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 
 void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
 {
-    if (!strcmp(MIR_EXTENSION_MESA_DRM_AUTH, extension_name) &&
-        (MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 == version))
-    {
+    if (!strcmp("mir_extension_mesa_drm_auth", extension_name) && (version == 1))
         return &drm_extensions;
-    }
-    if (!strcmp(extension_name, MIR_EXTENSION_SET_GBM_DEVICE) &&
-       (version == MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
-    {
+    if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
-    }
     return nullptr;
 }
