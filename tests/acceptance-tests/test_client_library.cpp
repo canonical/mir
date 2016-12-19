@@ -407,7 +407,7 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     auto const buffer_stream = mir_surface_get_buffer_stream(surface);
 
     MirGraphicsRegion graphics_region;
-    mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region);
+    EXPECT_TRUE(mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region));
     EXPECT_THAT(graphics_region.width, Ge(min_width));
     EXPECT_THAT(graphics_region.height, Ge(min_height));
 

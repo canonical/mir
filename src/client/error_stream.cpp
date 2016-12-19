@@ -77,6 +77,10 @@ MirWaitHandle* mcl::ErrorStream::swap_buffers(std::function<void()> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
+void mcl::ErrorStream::swap_buffers_sync()
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
+}
 std::shared_ptr<mcl::MemoryRegion> mcl::ErrorStream::secure_for_cpu_write()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
