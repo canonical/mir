@@ -500,7 +500,7 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
-        if (rate > 0.0)
+        if (rate > 10.0)  // should be >0, but 10 to workaround LP: #1639725
         {
             std::chrono::nanoseconds const ns(
                 static_cast<long>(1000000000L / rate));
