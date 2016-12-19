@@ -45,9 +45,9 @@ extern "C" {
  * \param [in] format       Pixel format for the window.
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
-MirWindowSpec* mir_connection_create_window_spec_for_normal_window(MirConnection* connection,
-                                                                   int width, int height,
-                                                                   MirPixelFormat format);
+MirWindowSpec* mir_specify_window(MirConnection* connection,
+                                  int width, int height,
+                                  MirPixelFormat format);
 
 /**
  * Create a window specification for a menu window.
@@ -75,13 +75,12 @@ MirWindowSpec* mir_connection_create_window_spec_for_normal_window(MirConnection
  *                          to complete construction.
  */
 MirWindowSpec*
-mir_connection_create_window_spec_for_menu(MirConnection* connection,
-                                           int width,
-                                           int height,
-                                           MirPixelFormat format,
-                                           MirSurface* parent,
-                                           MirRectangle* rect,
-                                           MirEdgeAttachment edge);
+mir_specify_menu(MirConnection* connection,
+                 int width, int height,
+                 MirPixelFormat format,
+                 MirSurface* parent,
+                 MirRectangle* rect,
+                 MirEdgeAttachment edge);
 
 /**
  * Create a window specification for a tip window.
@@ -196,10 +195,9 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
  *\deprecated use mir_connection_create_window_spec_for_normal_window() instead
  */
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
-                                                              int width,
-                                                              int height,
+                                                              int width, int height,
                                                               MirPixelFormat format)
-__attribute__((deprecated("Use mir_connection_create_window_spec_for_normal_window() instead")));
+__attribute__((deprecated("Use mir_specify_window() instead")));
 
 /**
  *\deprecated use mir_connection_create_window_spec_for_menu() instead
@@ -212,7 +210,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirSurface* parent,
                                     MirRectangle* rect,
                                     MirEdgeAttachment edge)
-__attribute__((deprecated("Use mir_connection_create_window_spec_for_menu() instead")));
+__attribute__((deprecated("Use mir_specify_menu() instead")));
 
 /**
  *\deprecated use mir_connection_create_window_spec_for_tip() instead

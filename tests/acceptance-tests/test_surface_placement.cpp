@@ -85,8 +85,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     MirSurface* create_normal_surface(int width, int height, Specifier const& specifier) const
     {
-        auto const spec = mir_connection_create_window_spec_for_normal_window(
-            connection, width, height, pixel_format);
+        auto const spec = mir_specify_window(connection, width, height, pixel_format);
 
         specifier(spec);
 

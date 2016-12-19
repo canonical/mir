@@ -482,7 +482,7 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
 {
     mt::Signal done;
 
-    auto spec = mir_connection_create_window_spec_for_normal_window(connection, 100, 100, mir_pixel_format_abgr_8888);
+    auto spec = mir_specify_window(connection, 100, 100, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
 
     auto surface = mir_surface_create_sync(spec);
@@ -573,7 +573,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
     EventContext context;
 
-    auto spec = mir_connection_create_window_spec_for_normal_window(connection, 640, 480, mir_pixel_format_abgr_8888);
+    auto spec = mir_specify_window(connection, 640, 480, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
