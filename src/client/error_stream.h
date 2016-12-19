@@ -32,29 +32,30 @@ public:
         std::string const& error_msg, MirConnection* conn,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
 
-    MirSurfaceParameters get_parameters() const;
-    std::shared_ptr<ClientBuffer> get_current_buffer();
-    uint32_t get_current_buffer_id();
-    EGLNativeWindowType egl_native_window();
-    MirWaitHandle* swap_buffers(std::function<void()> const& done);
-    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
-    int swap_interval() const;
-    MirWaitHandle* set_swap_interval(int interval);
+    MirSurfaceParameters get_parameters() const override;
+    std::shared_ptr<ClientBuffer> get_current_buffer() override;
+    uint32_t get_current_buffer_id() override;
+    EGLNativeWindowType egl_native_window() override;
+    MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
+    int swap_interval() const override;
+    MirWaitHandle* set_swap_interval(int interval) override;
     void adopted_by(MirSurface*) override;
     void unadopted_by(MirSurface*) override;
-    MirNativeBuffer* get_current_buffer_package();
-    MirPlatformType platform_type();
-    frontend::BufferStreamId rpc_id() const;
+    MirNativeBuffer* get_current_buffer_package() override;
+    MirPlatformType platform_type() override;
+    frontend::BufferStreamId rpc_id() const override;
+    bool valid() const override;
+    void buffer_available(mir::protobuf::Buffer const& buffer) override;
+    void buffer_unavailable() override;
+    void set_size(geometry::Size) override;
+    geometry::Size size() const override;
+    MirWaitHandle* set_scale(float) override;
+    char const* get_error_message() const override;
+    MirConnection* connection() const override;
+    MirRenderSurface* render_surface() const override;
+
     MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
-    bool valid() const;
-    void buffer_available(mir::protobuf::Buffer const& buffer);
-    void buffer_unavailable();
-    void set_size(geometry::Size);
-    geometry::Size size() const;
-    MirWaitHandle* set_scale(float);
-    char const* get_error_message() const;
-    MirConnection* connection() const;
-    MirRenderSurface* render_surface() const;
 private:
     std::string const error;
     MirConnection* const connection_;
