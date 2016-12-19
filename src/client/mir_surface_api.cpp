@@ -134,7 +134,7 @@ catch (std::exception const& ex)
     std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
 }
 
-void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent)
+void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent)
 try
 {
     mir::require(spec);
@@ -455,7 +455,7 @@ catch (std::exception const& ex)
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 {
-    mir_window_spec_set_parent(spec, parent);
+    mir_spec_set_parent(spec, parent);
 }
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)

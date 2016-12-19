@@ -578,7 +578,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
         mir_surface_spec_set_height(spec, height);
         mir_surface_spec_set_pixel_format(spec, pixel_format);
         mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-        mir_window_spec_set_parent(spec, parent);
+        mir_spec_set_parent(spec, parent);
     });
 
     EXPECT_THAT(surface, Not(IsValidSurface()));
@@ -604,7 +604,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_window_spec_set_parent(spec, parent);
+            mir_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
@@ -646,7 +646,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_window_spec_set_parent(spec, parent);
+            mir_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
