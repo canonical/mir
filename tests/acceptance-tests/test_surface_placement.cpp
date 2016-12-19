@@ -476,7 +476,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, GetParam());
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -537,7 +537,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, GetParam());
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);

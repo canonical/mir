@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
     premultiply_alpha(&win[0].fill);
 
     mir_spec_set_name(spec, "green");
-    mir_surface_spec_set_width(spec, 300);
+    mir_spec_set_width(spec, 300);
     mir_surface_spec_set_height(spec, 150);
     win[1].surface = mir_surface_create_sync(spec);
     win[1].fill.r = 0x00;
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     premultiply_alpha(&win[1].fill);
 
     mir_spec_set_name(spec, "blue");
-    mir_surface_spec_set_width(spec, 150);
+    mir_spec_set_width(spec, 150);
     mir_surface_spec_set_height(spec, 300);
     win[2].surface = mir_surface_create_sync(spec);
     win[2].fill.r = 0x00;

@@ -179,7 +179,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, old_type);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -204,7 +204,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -213,7 +213,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     auto const surface = create_surface([&](MirWindowSpec* spec)
     {
         mir_spec_set_type(spec, old_type);
-        mir_surface_spec_set_width(spec, width);
+        mir_spec_set_width(spec, width);
         mir_surface_spec_set_height(spec, height);
         mir_surface_spec_set_pixel_format(spec, pixel_format);
         mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -245,7 +245,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -254,7 +254,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, old_type);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -280,7 +280,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, old_type);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -311,7 +311,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -320,7 +320,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, old_type);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -346,7 +346,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
     auto const parent = create_surface([&](MirWindowSpec* spec)
        {
            mir_spec_set_type(spec, mir_surface_type_normal);
-           mir_surface_spec_set_width(spec, width);
+           mir_spec_set_width(spec, width);
            mir_surface_spec_set_height(spec, height);
            mir_surface_spec_set_pixel_format(spec, pixel_format);
            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
@@ -355,7 +355,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_spec_set_type(spec, old_type);
-            mir_surface_spec_set_width(spec, width);
+            mir_spec_set_width(spec, width);
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);

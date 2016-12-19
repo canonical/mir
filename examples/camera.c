@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
         MirWindowSpec* changes = mir_create_spec(connection);
         win_width = cam->pix.width;
         win_height = cam->pix.height;
-        mir_surface_spec_set_width(changes, win_width);
+        mir_spec_set_width(changes, win_width);
         mir_surface_spec_set_height(changes, win_height);
         mir_surface_apply_spec(surface, changes);
         mir_surface_spec_release(changes);

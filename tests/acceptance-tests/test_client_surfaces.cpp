@@ -125,7 +125,7 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
     mir_surface_create(spec, create_surface_callback, ssync);
     wait_for_surface_create(ssync);
 
-    mir_surface_spec_set_width(spec, width_2);
+    mir_spec_set_width(spec, width_2);
     mir_surface_spec_set_height(spec, height_2);
 
     mir_surface_create(spec, create_surface_callback, ssync+1);

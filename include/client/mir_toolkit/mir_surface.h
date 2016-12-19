@@ -219,6 +219,17 @@ void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
  */
 void mir_spec_set_name(MirWindowSpec* spec, char const* name);
 
+/**
+ * Set the requested width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Requested width.
+ *
+ * \note    The requested dimensions are a hint only. The server is not
+ *          guaranteed to create a window of any specific width or height.
+ */
+void mir_spec_set_width(MirWindowSpec* spec, unsigned width);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -330,15 +341,10 @@ void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 __attribute__((deprecated("use mir_spec_set_name() instead")));
 
 /**
- * Set the requested width, in pixels
- *
- * \param [in] spec     Specification to mutate
- * \param [in] width    Requested width.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *\deprecated use mir_spec_set_width() instead
  */
-void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
+__attribute__((deprecated("use mir_spec_set_width() instead")));
 
 /**
  * Set the requested height, in pixels

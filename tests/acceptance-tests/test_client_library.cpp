@@ -442,7 +442,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_surface_release_sync(surface);
 
-    mir_surface_spec_set_width(spec, 100);
+    mir_spec_set_width(spec, 100);
     mir_surface_spec_set_height(spec, 100);
 
     surface = mir_surface_create_sync(spec);
@@ -454,7 +454,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_surface_release_sync(surface);
 
 
-    mir_surface_spec_set_width(spec, 800);
+    mir_spec_set_width(spec, 800);
     mir_surface_spec_set_height(spec, 600);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
@@ -497,7 +497,7 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
 
     for (auto const& size : sizes)
     {
-        mir_surface_spec_set_width(spec, size.width);
+        mir_spec_set_width(spec, size.width);
         mir_surface_spec_set_height(spec, size.height);
 
         surface = mir_surface_create_sync(spec);
@@ -760,7 +760,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_spec_set_name(surface_spec, name);
 
     int const width{999}, height{555};
-    mir_surface_spec_set_width(surface_spec, width);
+    mir_spec_set_width(surface_spec, width);
     mir_surface_spec_set_height(surface_spec, height);
 
     MirPixelFormat const pixel_format{mir_pixel_format_argb_8888};
