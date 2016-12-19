@@ -22,21 +22,6 @@
 #include "mir/uncaught.h"
 #include "mir/require.h"
 
-void* mir_connection_request_interface(
-    MirConnection* connection,
-    char const* interface,
-    int version)
-try
-{
-    mir::require(connection);
-    return connection->request_interface(interface, version);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
 void const* mir_connection_request_extension(
     MirConnection* connection,
     char const* interface,

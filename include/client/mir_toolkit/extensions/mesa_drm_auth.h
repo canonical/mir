@@ -55,9 +55,6 @@ typedef struct MirExtensionMesaDRMAuthV1
     mir_extension_mesa_drm_auth_magic drm_auth_magic;
 } MirExtensionMesaDRMAuthV1;
 
-//legacy compatibility
-typedef MirExtensionMesaDRMAuthV1 MirExtensionMesaDRMAuth;
-
 static inline MirExtensionMesaDRMAuthV1 const* mir_extension_mesa_drm_auth_v1(
     MirConnection* connection)
 {
