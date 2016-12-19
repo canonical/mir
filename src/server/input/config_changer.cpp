@@ -126,6 +126,7 @@ struct DeviceChangeTracker : mi::InputDeviceObserver
     mi::ConfigChanger& config_changer;
     std::vector<std::shared_ptr<mi::Device>> added;
     std::vector<MirInputDeviceId> removed;
+    bool devices_changed;
 };
 
 }
@@ -182,12 +183,7 @@ void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& sess
     if (session != focused_session.lock())
         return;
 
-    devices->for_each_mutable_input_device(
-        [&session_config](Device& device)
-        {
-            auto device_config = session_config.get_device_configuration_by_id(device.id());
-            apply_device_config(device_config, device);
-        });
+    apply_config_at_session(session_config, session);
 }
 
 void mi::ConfigChanger::set_base_configuration(InputConfiguration && config)
@@ -208,14 +204,14 @@ void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> con
 
     for (auto const dev : added)
     {
-        base.add_device_configuration(get_device_config(*dev));
+        auto initial_config = get_device_config(*dev);
+        base.add_device_configuration(initial_config);
+
+        for(auto & session_config : config_map)
+            session_config.second.add_device_configuration(initial_config);
     }
 
-    session_container->for_each(
-        [this](std::shared_ptr<ms::Session> const& session)
-        {
-            session->send_input_config(base);
-        });
+    send_base_config_to_all_sessions();
 }
 
 void mi::ConfigChanger::focus_change_handler(std::shared_ptr<ms::Session> const& session)
@@ -227,20 +223,22 @@ void mi::ConfigChanger::focus_change_handler(std::shared_ptr<ms::Session> const&
     auto const it = config_map.find(session);
     if (it != end(config_map))
     {
-        try
-        {
-            apply_config(it->second);
-        }
-        catch (std::invalid_argument const& invalid)
-        {
-            session->send_error(InputConfigurationFailedError{invalid});
-        }
+        apply_config_at_session(it->second, session);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config();
+        send_base_config_to_all_sessions();
     }
+}
 
+void mi::ConfigChanger::send_base_config_to_all_sessions()
+{
+    session_container->for_each(
+        [this](std::shared_ptr<ms::Session> const& session)
+        {
+            session->send_input_config(base);
+        });
 }
 
 void mi::ConfigChanger::no_focus_handler()
@@ -266,10 +264,22 @@ void mi::ConfigChanger::apply_config(mi::InputConfiguration const& config)
         [&config](Device& device)
         {
             auto device_config = config.get_device_configuration_by_id(device.id());
-            if (device_config)
-               apply_device_config(device_config, device);
+            apply_device_config(device_config, device);
         });
     base_configuration_applied = false;
+}
+
+void mi::ConfigChanger::apply_config_at_session(mi::InputConfiguration const& config, std::shared_ptr<mf::Session> const& session)
+{
+    try
+    {
+        apply_config(config);
+        session->send_input_config(config);
+    }
+    catch (std::invalid_argument const& invalid)
+    {
+        session->send_error(InputConfigurationFailedError{invalid});
+    }
 }
 
 void mi::ConfigChanger::apply_base_config()

@@ -56,7 +56,9 @@ public:
     void devices_updated(std::vector<std::shared_ptr<Device>> const& added, std::vector<MirInputDeviceId> const& removed);
 private:
     void apply_config(InputConfiguration const& config);
+    void apply_config_at_session(InputConfiguration const& config, std::shared_ptr<frontend::Session> const& session);
     void apply_base_config();
+    void send_base_config_to_all_sessions();
     void focus_change_handler(std::shared_ptr<scene::Session> const& session);
     void no_focus_handler();
     void session_stopping_handler(std::shared_ptr<scene::Session> const& session);
