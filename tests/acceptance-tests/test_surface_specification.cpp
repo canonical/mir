@@ -93,7 +93,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     mtf::VisibleSurface create_surface(Specifier const& specifier)
     {
         auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_connection_create_window_spec(connection), del);
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_create_spec(connection), del);
         specifier(spec.get());
         return mtf::VisibleSurface{spec.get()};
     }
@@ -158,7 +158,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
         signal_change.reset();
 
-        auto const spec = mir_connection_create_window_spec(connection);
+        auto const spec = mir_create_spec(connection);
 
         mir_surface_spec_set_name(spec, new_title);
 

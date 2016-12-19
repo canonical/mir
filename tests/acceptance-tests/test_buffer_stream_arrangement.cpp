@@ -227,7 +227,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
             stream->position().y.as_int()};
     }
 
-    auto change_spec = mir_connection_create_window_spec(connection);
+    auto change_spec = mir_create_spec(connection);
     mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
@@ -282,7 +282,7 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
             stream->position().x.as_int(),
             stream->position().y.as_int()};
     }
-    auto change_spec = mir_connection_create_window_spec(connection);
+    auto change_spec = mir_create_spec(connection);
     mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);

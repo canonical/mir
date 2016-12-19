@@ -32,7 +32,7 @@ TEST_F(BufferStreamArrangementStaging, can_set_stream_logical_and_physical_size)
     geom::Size physical_size { 133, 222 };
     mt::Stream stream(connection, physical_size, { {0, 0}, logical_size } );
 
-    auto change_spec = mir_connection_create_window_spec(connection);
+    auto change_spec = mir_create_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
@@ -49,7 +49,7 @@ TEST_F(BufferStreamArrangementStaging, can_setting_stream_physical_size_doesnt_a
     geom::Size changed_physical_size { 133, 222 };
     mt::Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
 
-    auto change_spec = mir_connection_create_window_spec(connection);
+    auto change_spec = mir_create_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
@@ -72,7 +72,7 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
     geom::Size changed_physical_size { 133, 222 };
     mt::Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
 
-    auto change_spec = mir_connection_create_window_spec(connection);
+    auto change_spec = mir_create_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);

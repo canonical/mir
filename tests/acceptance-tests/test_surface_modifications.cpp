@@ -132,7 +132,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
     template<typename Specifier>
     void apply_changes(Specifier const& specifier) const
     {
-        auto const spec = mir_connection_create_window_spec(connection);
+        auto const spec = mir_create_spec(connection);
 
         specifier(spec);
 

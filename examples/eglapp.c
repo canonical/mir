@@ -491,7 +491,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
-    spec = mir_connection_create_window_spec(connection);
+    spec = mir_create_spec(connection);
     mir_surface_spec_set_cursor_name(spec, cursor_name);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
