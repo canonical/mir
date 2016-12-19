@@ -54,9 +54,9 @@ int main(int argc, char *argv[])
 
     MirWindowSpec* const spec = mir_create_spec(connection);
     mir_spec_set_name(spec, "tooltip example");
-    mir_surface_spec_set_min_width(spec, width/2);
+    mir_spec_set_min_width(spec, width/2);
     mir_surface_spec_set_max_width(spec, width*2);
-    mir_surface_spec_set_min_height(spec, height/2);
+    mir_spec_set_min_height(spec, height/2);
     mir_surface_spec_set_max_height(spec, height*2);
     mir_surface_apply_spec(parent, spec);
     mir_surface_spec_release(spec);
@@ -107,9 +107,9 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_spec_set_name(spec, "tooltip");
-    mir_surface_spec_set_min_width(spec, width);
+    mir_spec_set_min_width(spec, width);
     mir_surface_spec_set_max_width(spec, width);
-    mir_surface_spec_set_min_height(spec, height);
+    mir_spec_set_min_height(spec, height);
     mir_surface_spec_set_max_height(spec, height);
 
     MirSurface* tooltip = mir_surface_create_sync(spec);

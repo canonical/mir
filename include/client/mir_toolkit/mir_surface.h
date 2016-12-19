@@ -267,6 +267,28 @@ void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
  */
 void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
 
+/**
+ * Set the minimum width, in pixels
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_width  Minimum width.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          window of any specific width or height.
+ */
+void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
+
+/**
+ * Set the minimum height, in pixels
+ *
+ * \param [in] spec       Specification to mutate
+ * \param [in] min_height Minimum height.
+ *
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          window of any specific width or height.
+ */
+void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -402,26 +424,17 @@ void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height
 __attribute__((deprecated("use mir_spec_set_height_increment() instead")));
 
 /**
- * Set the minimum width, in pixels
- *
- * \param [in] spec       Specification to mutate
- * \param [in] min_width  Minimum width.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *\deprecated use mir_spec_set_min_width() instead
  */
-void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
+void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width)
+__attribute__((deprecated("use mir_spec_set_min_width() instead")));
 
 /**
- * Set the minimum height, in pixels
- *
- * \param [in] spec       Specification to mutate
- * \param [in] min_height Minimum height.
- *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *\deprecated use mir_spec_set_min_height() instead
  */
-void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
+void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
+__attribute__((deprecated("use mir_spec_set_min_height() instead")));
+
 /**
  * Set the maximum width, in pixels
  *

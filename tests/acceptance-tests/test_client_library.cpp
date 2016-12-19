@@ -309,7 +309,7 @@ TEST_F(ClientLibrary, can_set_surface_min_width)
     auto const spec = mir_specify_window(connection, width, height, format);
 
     int const min_width = 480;
-    mir_surface_spec_set_min_width(spec, min_width);
+    mir_spec_set_min_width(spec, min_width);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
@@ -329,7 +329,7 @@ TEST_F(ClientLibrary, can_set_surface_min_height)
     auto const spec = mir_specify_window(connection, width, height, format);
 
     int const min_height = 480;
-    mir_surface_spec_set_min_height(spec, min_height);
+    mir_spec_set_min_height(spec, min_height);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
@@ -391,8 +391,8 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     int const min_width = 4800;
     int const min_height = 3200;
 
-    mir_surface_spec_set_min_width(spec, min_width);
-    mir_surface_spec_set_min_height(spec, min_height);
+    mir_spec_set_min_width(spec, min_width);
+    mir_spec_set_min_height(spec, min_height);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
