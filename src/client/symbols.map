@@ -469,6 +469,8 @@ MIR_CLIENT_DETAIL_0.25 {
 
 MIR_CLIENT_0.26 {  # New functions in Mir 0.26
   global:
+    mir_connection_apply_input_configuration;
+    mir_connection_set_base_input_configuration;
     mir_input_device_get_mutable_pointer_configuration;
     mir_input_device_get_mutable_touchpad_configuration;
     mir_input_device_get_pointer_configuration;

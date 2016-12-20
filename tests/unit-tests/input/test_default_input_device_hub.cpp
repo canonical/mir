@@ -82,10 +82,9 @@ struct InputDeviceHubTest : ::testing::Test
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockInputSeat> mock_seat;
-    NiceMock<mtd::MockEventSink> mock_sink;
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
     NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), cookie_authority, mt::fake_shared(mock_key_mapper), mt::fake_shared(mock_server_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
@@ -236,3 +235,57 @@ TEST_F(InputDeviceHubTest, emit_stop_receiving_input_after_last_device_added)
     observer_loop.trigger_server_actions();
 }
 
+TEST_F(InputDeviceHubTest, when_pointer_configuration_is_applied_successfully_observer_is_triggerd)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    mi::PointerConfiguration pointer_conf;
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mock_observer, device_changed(WithName("mouse")));
+    EXPECT_CALL(mock_observer, changes_complete());
+
+    dev_ptr->apply_pointer_configuration(pointer_conf);
+    observer_loop.trigger_server_actions();
+}
+
+TEST_F(InputDeviceHubTest, when_tpd_configuration_is_applied_successfully_observer_is_triggerd)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    mi::TouchpadConfiguration tpd_conf;
+
+    ON_CALL(mock_observer, device_added(WithName("tpd"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(touchpad));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mock_observer, device_changed(WithName("tpd")));
+    EXPECT_CALL(mock_observer, changes_complete());
+
+    dev_ptr->apply_touchpad_configuration(tpd_conf);
+    observer_loop.trigger_server_actions();
+}
+
+TEST_F(InputDeviceHubTest, when_configuration_attempt_fails_observer_is_not_triggerd)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    mi::TouchpadConfiguration tpd_conf;
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mock_observer, device_changed(WithName("mouse"))).Times(0);
+    EXPECT_CALL(mock_observer, changes_complete()).Times(0);
+
+    try {dev_ptr->apply_touchpad_configuration(tpd_conf); } catch (...) {}
+    observer_loop.trigger_server_actions();
+    ::testing::Mock::VerifyAndClearExpectations(&mock_observer);
+}

@@ -311,11 +311,38 @@ void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
     mir_input_config_callback callback,
     void* context)
+try
 {
     if (!connection)
         return;
     auto devices = connection->the_input_devices();
     devices->set_change_callback([connection, context, callback]{callback(connection, context);});
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_connection_apply_input_configuration(MirConnection* connection, MirInputConfig const* config) try
+{
+    if (!connection)
+        return;
+    connection->apply_input_configuration(config);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_connection_set_base_input_configuration(MirConnection* connection, MirInputConfig const* config) try
+{
+    if (!connection)
+        return;
+    connection->set_base_input_configuration(config);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_input_config_destroy(MirInputConfig const* config)
@@ -426,4 +453,3 @@ void mir_connection_set_error_callback(
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
 }
-

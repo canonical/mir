@@ -147,6 +147,14 @@ public:
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 private:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
 };

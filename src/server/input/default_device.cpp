@@ -18,6 +18,7 @@
  */
 
 #include "default_device.h"
+#include "default_input_device_hub.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
@@ -31,15 +32,22 @@
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
+                                 std::function<void(Device*)> const& callback)
     : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
-      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}
+      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}, device_changed_callback{callback}
 {
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         keyboard = mi::KeyboardConfiguration{};
         key_mapper->set_keymap_for_device(device_id, keyboard.value().device_keymap());
     }
+}
+
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
+    : DefaultDevice(id, actions, device, key_mapper, [](Device*){})
+{
 }
 
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
@@ -107,6 +115,7 @@ void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration con
                      {
                          dev->apply_settings(settings);
                      });
+    device_changed_callback(this);
 }
 
 void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration const& conf)
@@ -133,6 +142,7 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
                      {
                          dev->apply_settings(settings);
                      });
+    device_changed_callback(this);
 }
 
 mir::optional_value<mi::KeyboardConfiguration> mi::DefaultDevice::keyboard_configuration() const
@@ -148,6 +158,8 @@ void mi::DefaultDevice::apply_keyboard_configuration(mi::KeyboardConfiguration c
     if (keyboard.value().device_keymap() != conf.device_keymap())
     {
         keyboard = conf;
+
         key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
+        device_changed_callback(this);
     }
 }

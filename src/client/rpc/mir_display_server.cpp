@@ -224,3 +224,17 @@ void mclr::DisplayServer::raise_surface(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::apply_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
+void mclr::DisplayServer::set_base_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}

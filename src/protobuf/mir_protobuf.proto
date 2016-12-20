@@ -456,3 +456,7 @@ message TouchpadConfiguration {
   optional uint32 disable_with_mouse = 6;
   optional uint32 disable_while_typing = 7;
 }
+
+message InputConfigurationRequest {
+  optional string input_configuration = 1;
+}

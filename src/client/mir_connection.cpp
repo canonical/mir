@@ -44,6 +44,8 @@
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
 
+#include "mir/input/input_configuration.h"
+#include "mir/input/input_configuration_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 #include "mir_error.h"
@@ -63,6 +65,7 @@ namespace mev = mir::events;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mi = mir::input;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 
@@ -1448,4 +1451,22 @@ void* MirConnection::request_interface(char const* name, int version)
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
     return platform->request_interface(name, version);
+}
+
+void MirConnection::apply_input_configuration(MirInputConfig const* config)
+{
+    auto configuration = reinterpret_cast<mi::InputConfiguration const*>(config);
+    mp::InputConfigurationRequest req;
+    req.set_input_configuration(mi::serialize_input_configuration(*configuration));
+
+    server.apply_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
+}
+
+void MirConnection::set_base_input_configuration(MirInputConfig const* config)
+{
+    auto configuration = reinterpret_cast<mi::InputConfiguration const*>(config);
+    mp::InputConfigurationRequest req;
+    req.set_input_configuration(mi::serialize_input_configuration(*configuration));
+
+    server.set_base_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
 }

@@ -348,6 +348,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::cancel_base_display_configuration_preview, invocation);
         }
+        else if ("apply_input_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::apply_input_configuration, invocation);
+        }
+        else if ("set_base_input_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::set_base_input_configuration, invocation);
+        }
         else
         {
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());

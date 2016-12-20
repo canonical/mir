@@ -157,7 +157,7 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_coordinate_translator(),
                 the_application_not_responding_detector(),
                 the_cookie_authority(),
-                the_input_device_hub());
+                the_input_configuration_changer());
 }
 
 std::shared_ptr<mf::SessionMediatorObserver>

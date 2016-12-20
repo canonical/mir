@@ -39,10 +39,6 @@ namespace mir
 {
 class ServerActionQueue;
 class ServerStatusListener;
-namespace frontend
-{
-class EventSink;
-}
 namespace cookie
 {
 class Authority;
@@ -64,8 +60,7 @@ class KeyMapper;
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
 public:
-    DefaultInputDeviceHub(std::shared_ptr<frontend::EventSink> const& sink,
-                          std::shared_ptr<Seat> const& seat,
+    DefaultInputDeviceHub(std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<cookie::Authority> const& cookie_authority,
@@ -91,7 +86,6 @@ private:
     void emit_changed_devices();
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<Seat> const seat;
-    std::shared_ptr<frontend::EventSink> const sink;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::mutex observer_guard;
     std::shared_ptr<ServerActionQueue> const observer_queue;
@@ -128,7 +122,6 @@ private:
     };
 
     std::vector<std::shared_ptr<Device>> handles;
-    InputConfiguration config;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
     std::mutex changed_devices_guard;

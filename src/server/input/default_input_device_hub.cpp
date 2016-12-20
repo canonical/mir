@@ -21,14 +21,10 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
-#include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
 #include "mir/cookie/authority.h"
 #define MIR_LOG_COMPONENT "Input"
@@ -38,33 +34,11 @@
 
 #include <algorithm>
 #include <atomic>
+#include <memory>
 
 namespace mi = mir::input;
-namespace mf = mir::frontend;
-
-namespace
-{
-mi::DeviceConfiguration from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
-{
-    mi::DeviceConfiguration conf(device->id(), device->capabilities(), device->name(), device->unique_id());
-
-    auto ptr_conf = device->pointer_configuration();
-    auto tpd_conf = device->touchpad_configuration();
-    auto kbd_conf = device->keyboard_configuration();
-
-    if (ptr_conf.is_set())
-        conf.set_pointer_configuration(ptr_conf.value());
-    if (tpd_conf.is_set())
-        conf.set_touchpad_configuration(tpd_conf.value());
-    if (kbd_conf.is_set())
-        conf.set_keyboard_configuration(kbd_conf.value());
-
-    return conf;
-}
-}
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
-    std::shared_ptr<mf::EventSink> const& sink,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
@@ -72,7 +46,6 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
     std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
-      sink{sink},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
@@ -99,7 +72,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper);
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper, [this](Device *d){device_changed(d);});
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
             device, id, input_dispatchable, cookie_authority, handle));
@@ -270,9 +243,18 @@ void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device 
 
 void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
 {
-    std::unique_lock<std::mutex> lock(observer_guard);
-    for (auto item : handles)
-        callback(*item);
+    {
+        std::unique_lock<std::mutex> lock(changed_devices_guard);
+        changed_devices = std::make_unique<std::vector<std::shared_ptr<Device>>>();
+    }
+
+    {
+        std::unique_lock<std::mutex> lock(observer_guard);
+        for (auto const& item : handles)
+            callback(*item);
+    }
+
+    emit_changed_devices();
 }
 
 void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& element)
@@ -291,8 +273,6 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
-    config.add_device_configuration(from_handle(handle));
-    sink->handle_input_config_change(config);
 
     for (auto const& observer : observers)
     {
@@ -329,8 +309,6 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         return;
 
     handles.erase(handle_it, end(handles));
-    config.remove_device_by_id(id);
-    sink->handle_input_config_change(config);
 
     if (ready && 0 == handles.size())
     {
@@ -338,3 +316,55 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         server_status_listener->stop_receiving_input();
     }
 }
+
+void mi::DefaultInputDeviceHub::device_changed(Device* dev)
+{
+    auto more_changes_in_progress = false;
+    {
+        std::unique_lock<std::mutex> lock(changed_devices_guard);
+        if (changed_devices)
+        {
+            more_changes_in_progress = true;
+            auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
+            changed_devices->push_back(*dev_it);
+        }
+    }
+
+    if (!more_changes_in_progress)
+    {
+        std::unique_lock<std::mutex> lock(observer_guard);
+        auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
+
+        if (dev_it==end(handles))
+            return;
+
+        for (auto const& observer : observers)
+        {
+            observer->device_changed(*dev_it);
+            observer->changes_complete();
+        }
+    }
+}
+
+void mi::DefaultInputDeviceHub::emit_changed_devices()
+{
+    std::vector<std::shared_ptr<mi::Device>> devices_to_notify;
+    {
+        std::unique_lock<std::mutex> lock(changed_devices_guard);
+        if (changed_devices)
+        {
+            std::swap(devices_to_notify, *changed_devices);
+            changed_devices.reset();
+        }
+    }
+    {
+        std::unique_lock<std::mutex> lock(observer_guard);
+        for (auto const& observer : observers)
+        {
+            for (auto const& dev : devices_to_notify)
+                observer->device_changed(dev);
+            observer->changes_complete();
+        }
+    }
+}
+

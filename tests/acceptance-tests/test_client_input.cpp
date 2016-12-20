@@ -54,7 +54,6 @@ namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
 using namespace testing;
-using namespace std::chrono_literals;
 
 namespace
 {
@@ -1096,4 +1095,98 @@ TEST_F(TestClientInput, touchpad_configuration_is_mutable)
     mir_input_config_destroy(config);
 }
 
+TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
+{
+    wait_for_input_devices();
 
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+    auto increased_acceleration = 0.7f;
+
+    mir_pointer_configuration_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+    mir_pointer_configuration_set_acceleration_bias(pointer_config, increased_acceleration);
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        a_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_apply_input_configuration(a_client.connection, config);
+    mir_input_config_destroy(config);
+
+    EXPECT_THAT(changes_complete.wait_for(2s), Eq(true));
+
+    config = mir_connection_create_input_config(a_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration_bias(pointer_config), Eq(increased_acceleration));
+}
+
+TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
+{
+    wait_for_input_devices();
+
+    Client unfocused_client(new_connection(), first);
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unfocused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+
+    mir_pointer_configuration_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        unfocused_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_set_base_input_configuration(unfocused_client.connection, config);
+    mir_input_config_destroy(config);
+
+    EXPECT_THAT(changes_complete.wait_for(2s), Eq(true));
+
+    config = mir_connection_create_input_config(unfocused_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+}
+
+TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
+{
+    wait_for_input_devices();
+
+    Client unfocused_client(new_connection(), first);
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unfocused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+
+    mir_pointer_configuration_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        unfocused_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_apply_input_configuration(unfocused_client.connection, config);
+    mir_input_config_destroy(config);
+
+    EXPECT_THAT(changes_complete.wait_for(2s), Eq(false));
+    mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*) {}, nullptr);
+}
