@@ -1028,7 +1028,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     for (auto const name : cursor_names)
     {
         auto spec = mir_create_spec(client.connection);
-        mir_surface_spec_set_cursor_name(spec, name);
+        mir_spec_set_cursor_name(spec, name);
         mir_surface_apply_spec(client.surface, spec);
         mir_spec_release(spec);
 

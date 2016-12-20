@@ -201,7 +201,7 @@ public:
         if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
 
         auto spec = mir_create_spec(mir_connection);
-        mir_surface_spec_set_cursor_name(spec, mir_disabled_cursor_name);
+        mir_spec_set_cursor_name(spec, mir_disabled_cursor_name);
         mir_surface_apply_spec(mir_surface, spec);
         mir_spec_release(spec);
     }

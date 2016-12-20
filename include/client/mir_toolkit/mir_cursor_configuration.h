@@ -47,7 +47,7 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  * mir_default_cursor_name and mir_caret_cursor_name are available
  * see (mir_toolkit/cursors.h).
  * as input.
- *    \deprecated  Users should use mir_surface_spec_set_cursor_name.
+ *    \deprecated  Users should use mir_spec_set_cursor_name.
  *    \param [in] name The cursor name
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy

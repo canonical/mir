@@ -480,13 +480,20 @@ void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinement
  * that the window would fall off-screen if placed in its ideal position.
  * See \ref MirPlacementHints for details.
  */
-void mir_spec_set_placement(MirWindowSpec*     spec,
+void mir_spec_set_placement(MirWindowSpec*      spec,
                             const MirRectangle* rect,
                             MirPlacementGravity rect_gravity,
                             MirPlacementGravity window_gravity,
                             MirPlacementHints   placement_hints,
                             int                 offset_dx,
                             int                 offset_dy);
+
+/**
+ * Set the name for the cursor from the system cursor theme.
+ * \param [in] spec             The spec
+ * \param [in] name             The name, or "" to reset to default
+ */
+void mir_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
 
 /**
  * Release the resources held by a MirWindowSpec.
@@ -745,13 +752,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width, int height,
                                                             MirPixelFormat format)
 __attribute__((deprecated("use mir_specify_input_method() instead")));
-
-/**
- * Set the name for the cursor from the system cursor theme.
- * \param [in] spec             The spec
- * \param [in] name             The name, or "" to reset to default
- */
-void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
 
 /**
  * Set the requested pixel format.

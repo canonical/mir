@@ -416,6 +416,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_cursor_name(MirWindowSpec* spec, char const* name)
+try
+{
+    mir::require(spec);
+    spec->cursor_name = std::string(name);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -588,11 +599,6 @@ void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome styl
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     mir_spec_release(spec);
-}
-
-void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
-{
-    spec->cursor_name = std::string(name);
 }
 
 MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
