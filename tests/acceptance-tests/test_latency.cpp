@@ -324,7 +324,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, average_latency_is_one_frame)
+TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
 {
     using namespace testing;
 
@@ -351,6 +351,32 @@ TEST_F(ClientLatency, average_latency_is_one_frame)
     auto average_latency = display.group.average_latency();
 
     EXPECT_NEAR(1.0f, average_latency, error_margin);
+}
+
+TEST_F(ClientLatency, async_swap_buffers_latency_is_less_than_nbuffers)
+{
+    using namespace testing;
+
+    auto stream = mir_surface_get_buffer_stream(surface);
+    for (auto i = 0u; i < test_submissions; i++)
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+    }
+
+    // mir_buffer_stream_swap_buffers uses the old code path, so we check that
+    // it is queuing every client frame:
+    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
+                                     std::chrono::seconds(60)));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+
+    auto average_latency = display.group.average_latency();
+
+    // but using the old code path means it has higher latency still:
+    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
 }
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
