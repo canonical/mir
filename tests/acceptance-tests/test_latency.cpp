@@ -336,8 +336,15 @@ TEST_F(ClientLatency, average_latency_is_one_frame)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    /*
+     * We don't check the result of wait_for_posts any more, because
+     * client-side vsync turns off server-side vsync, meaning a heavily
+     * loaded compositor might miss frames when the server process hasn't
+     * been scheduled sufficiently. And that's OK, because missing a frame
+     * to catch up is better than the old behaviour of just adding more lag
+     * under the same circumstances.
+     */
+    stats.wait_for_posts(test_submissions, std::chrono::seconds(60));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
@@ -358,8 +365,7 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    stats.wait_for_posts(test_submissions, std::chrono::seconds(60));
 
     auto max_latency = display.group.max_latency();
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
@@ -373,12 +379,15 @@ TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
     mir_buffer_stream_set_swapinterval(stream, 0);
     stats.swap_interval = 0;
 
+    auto const deadline = std::chrono::steady_clock::now() +
+                          std::chrono::seconds(60);
     do
     {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
-    } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
+    } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0))
+             && std::chrono::steady_clock::now() < deadline);
 
     auto average_latency = display.group.average_latency();
     EXPECT_THAT(average_latency, Lt(0.5f));
@@ -406,8 +415,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    stats.wait_for_posts(test_submissions, std::chrono::seconds(60));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
