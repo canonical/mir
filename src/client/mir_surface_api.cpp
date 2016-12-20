@@ -697,7 +697,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
     return mir_spec_attach_to_foreign_parent(spec,
                                              parent,
                                              attachment_rect,
-                                             edge)
+                                             edge);
 }
 
 #pragma GCC diagnostic pop
