@@ -423,6 +423,15 @@ void mir_spec_set_event_handler(MirWindowSpec* spec,
                                 void* context);
 
 /**
+ * Ask the shell to customize "chrome" for this window.
+ * For example, on the phone hide indicators when this window is active.
+ *
+ * \param [in] spec The spec to accumulate the request in.
+ * \param [in] style The requested level of "chrome"
+ */
+void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -649,13 +658,10 @@ void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
 __attribute__((deprecated("use mir_spec_set_event_handler() instead")));
 
 /**
- * Ask the shell to customize "chrome" for this surface.
- * For example, on the phone hide indicators when this surface is active.
- *
- * \param [in] spec The spec to accumulate the request in.
- * \param [in] style The requested level of "chrome"
+ *\deprecated use mir_spec_set_shell_chrome() instead
  */
-void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)
+__attribute__((deprecated("use mir_spec_set_shell_chrome() instead")));
 
 /**
  * Attempts to set the pointer confinement spec for this surface

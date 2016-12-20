@@ -526,4 +526,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_release;
     mir_spec_set_input_shape;
     mir_spec_set_event_handler;
+    mir_spec_set_shell_chrome;
 } MIR_CLIENT_0.25;

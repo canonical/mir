@@ -300,7 +300,7 @@ TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
     MirPixelFormat const format{mir_pixel_format_bgr_888};
     auto surface_spec = mir_specify_window(connection, width, height, format);
 
-    mir_surface_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
+    mir_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
 
     auto const check_add_surface = [](
         std::shared_ptr<ms::Session> const& session,
@@ -337,7 +337,7 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
 
     mt::Signal received;
 
-    mir_surface_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
+    mir_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
 
     auto const check_apply_surface = [&received](
         std::shared_ptr<ms::Session> const&,

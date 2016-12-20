@@ -363,6 +363,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style)
+try
+{
+    mir::require(spec);
+    spec->shell_chrome = style;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -532,8 +543,7 @@ void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
 
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)
 {
-    mir::require(spec);
-    spec->shell_chrome = style;
+    mir_spec_set_shell_chrome(spec, style);
 }
 
 void mir_surface_spec_release(MirSurfaceSpec* spec)
