@@ -470,10 +470,9 @@ void mcl::BufferStream::swap_buffers_sync()
      * proven to be true. If we leave server-side vsync throttling to interval
      * one at the same time as using client-side, there's a risk the server
      * will not get scheduled sufficiently to drain the queue as fast as
-     * we fill it, creating lag. The acceptance test:
-     *   ClientLatency.average_latency_is_one_frame
-     * has proven this is a real problem so we must be sure to put the server
-     * in interval 0 when using client-side vsync. This guarantees that random
+     * we fill it, creating lag. The acceptance test `ClientLatency' has now
+     * proven this is a real problem so we must be sure to put the server in
+     * interval 0 when using client-side vsync. This guarantees that random
      * scheduling imperfections won't create queuing lag.
      */
     if (interval_config.swap_interval() != 0)
