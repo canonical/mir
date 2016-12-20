@@ -203,12 +203,6 @@ MirSurface::~MirSurface()
 void MirSurface::configure_frame_clock()
 {
     /*
-     * A sane default for test cases and broken systems that fail to override
-     * the period with an actual display period:
-     */
-    frame_clock->set_period(std::chrono::nanoseconds(1000000000L / 60));
-
-    /*
      * TODO: Implement frame_clock->set_resync_callback(...) when IPC to get
      *       timestamps from the server exists.
      *       Until we do, client-side vsync will perform suboptimally (it is
@@ -514,6 +508,7 @@ void MirSurface::handle_event(MirEvent const& e)
                 static_cast<long>(1000000000L / rate));
             frame_clock->set_period(ns);
         }
+        // else: we are not throttled. Impose some artificial rate?
         break;
     }
     default:

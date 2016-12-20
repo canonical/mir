@@ -28,6 +28,9 @@
 #include "mir_test_framework/visible_surface.h"
 #include "mir/options/option.h"
 #include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
+#include "mir/events/event_builders.h"
+#include "src/include/server/mir/frontend/event_sink.h"
+#include "mir/shell/shell_wrapper.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,12 +43,34 @@ namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mg = mir::graphics;
+
+using mir::shell::ShellWrapper;
+using mir::shell::Shell;
+
 namespace
 {
 
 unsigned int const expected_client_buffers = 3;
 int const refresh_rate = 60;
 std::chrono::microseconds const vblank_interval(1000000/refresh_rate);
+
+class ShellOnFakeMonitor : public ShellWrapper
+{
+public:
+    using ShellWrapper::ShellWrapper;
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto const id = ShellWrapper::create_surface(session, params, sink);
+        auto ev = mir::events::make_event(id, 96, 1.0f, refresh_rate,
+                                          mir_form_factor_monitor, 456);
+        sink->handle_event(*ev);
+        return id;
+    }
+};
 
 class Stats
 {
@@ -258,6 +283,12 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
+
+        server.wrap_shell([&](std::shared_ptr<Shell> const& wrapped)
+        {
+            return std::make_shared<ShellOnFakeMonitor>(wrapped);
+        });
+
         mtf::ConnectedClientHeadlessServer::SetUp();
 
         auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
@@ -289,7 +320,8 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     std::unique_ptr<mtf::VisibleSurface> visible_surface;
     MirSurface* surface;
 };
-}
+
+} // namespace
 
 TEST_F(ClientLatency, average_latency_is_one_frame)
 {
