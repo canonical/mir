@@ -522,4 +522,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_set_fullscreen;
     mir_spec_set_preferred_orientation;
     mir_spec_attach_to_foreign_parent;
+    mir_spec_set_state;
 } MIR_CLIENT_0.25;

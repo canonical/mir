@@ -356,7 +356,7 @@ TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, mir_surface_state_fullscreen);
+            mir_spec_set_state(spec, mir_surface_state_fullscreen);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -371,7 +371,7 @@ TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, mir_surface_state_maximized);
+            mir_spec_set_state(spec, mir_surface_state_maximized);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -393,7 +393,7 @@ TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, mir_surface_state_horizmaximized);
+            mir_spec_set_state(spec, mir_surface_state_horizmaximized);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -412,7 +412,7 @@ TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, mir_surface_state_vertmaximized);
+            mir_spec_set_state(spec, mir_surface_state_vertmaximized);
         });
 
     auto const shell_surface = latest_shell_surface();

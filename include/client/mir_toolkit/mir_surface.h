@@ -377,9 +377,19 @@ void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode 
  *          a close event.
  */
 bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
-                                               MirPersistentId* parent,
-                                               MirRectangle* attachment_rect,
-                                               MirEdgeAttachment edge);
+                                       MirPersistentId* parent,
+                                       MirRectangle* attachment_rect,
+                                       MirEdgeAttachment edge);
+
+/**
+ * Set the requested state.
+ * \param [in] spec    Specification to mutate
+ * \param [in] state   Requested state
+ *
+ * \note    If the server is unable to create a window with the requested state at
+ *          the point mir_surface_create() is called it will instead return an invalid window.
+ */
+void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -573,14 +583,10 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
 __attribute__((deprecated("use mir_spec_attach_to_foreign_parent() instead")));
 
 /**
- * Set the requested state.
- * \param [in] spec    Specification to mutate
- * \param [in] state   Requested state
- *
- * \note    If the server is unable to create a surface with the requested state at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
+ *\deprecated use mir_spec_set_state() instead
  */
-void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
+void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
+__attribute__((deprecated("use mir_spec_set_state() instead")));
 
 /**
  * Release the resources held by a MirSurfaceSpec.

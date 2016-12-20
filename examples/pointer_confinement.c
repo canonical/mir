@@ -121,7 +121,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
 
             fullscreen = !fullscreen;
 
-            mir_surface_spec_set_state(spec, state);
+            mir_spec_set_state(spec, state);
             mir_surface_apply_spec(surface, spec);
             mir_surface_spec_release(spec);
         }

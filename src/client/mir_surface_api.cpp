@@ -320,6 +320,17 @@ bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     return true;
 }
 
+void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state)
+try
+{
+    mir::require(spec);
+    spec->state = state;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -462,7 +473,7 @@ void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 {
-    spec->state = state;
+    mir_spec_set_state(spec, state);
 }
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)

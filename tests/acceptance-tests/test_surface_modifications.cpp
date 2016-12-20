@@ -527,7 +527,7 @@ TEST_F(SurfaceModifications, surface_spec_state_affects_surface_visibility)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, new_state);
+            mir_spec_set_state(spec, new_state);
         });
 }
 
@@ -541,12 +541,12 @@ TEST_P(SurfaceSpecStateCase, set_state_affects_surface_visibility)
 
     apply_changes([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_state(spec, initial_state);
+            mir_spec_set_state(spec, initial_state);
         });
 
     apply_changes([&](MirWindowSpec* spec)
        {
-           mir_surface_spec_set_state(spec, new_state);
+           mir_spec_set_state(spec, new_state);
        });
 }
 
