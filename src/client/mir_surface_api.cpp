@@ -385,6 +385,27 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_placement(MirSurfaceSpec* spec,
+                            MirRectangle const* rect,
+                            MirPlacementGravity rect_gravity,
+                            MirPlacementGravity window_gravity,
+                            MirPlacementHints placement_hints,
+                            int offset_dx, int offset_dy)
+try
+{
+    mir::require(spec);
+    spec->aux_rect = *rect;
+    spec->aux_rect_placement_gravity = rect_gravity;
+    spec->surface_placement_gravity = surface_gravity;
+    spec->placement_hints = placement_hints;
+    spec->aux_rect_placement_offset_x = offset_dx;
+    spec->aux_rect_placement_offset_y = offset_dy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -719,26 +740,20 @@ void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerCo
     mir_spec_set_pointer_confinement(spec, state);
 }
 
-void mir_surface_spec_set_placement(
-    MirSurfaceSpec*     spec,
-    MirRectangle const* rect,
-    MirPlacementGravity rect_gravity,
-    MirPlacementGravity surface_gravity,
-    MirPlacementHints   placement_hints,
-    int                 offset_dx,
-    int                 offset_dy)
-try
+void mir_surface_spec_set_placement(MirSurfaceSpec* spec,
+                                    MirRectangle const* rect,
+                                    MirPlacementGravity rect_gravity,
+                                    MirPlacementGravity window_gravity,
+                                    MirPlacementHints placement_hints,
+                                    int offset_dx, int offset_dy)
 {
-    spec->aux_rect = *rect;
-    spec->aux_rect_placement_gravity = rect_gravity;
-    spec->surface_placement_gravity = surface_gravity;
-    spec->placement_hints = placement_hints;
-    spec->aux_rect_placement_offset_x = offset_dx;
-    spec->aux_rect_placement_offset_y = offset_dy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_placement(spec,
+                           rect,
+                           rect_gravity,
+                           window_gravity,
+                           placement_hints,
+                           offset_dx,
+                           offset_dy);
 }
 
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,

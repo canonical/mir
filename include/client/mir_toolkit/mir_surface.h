@@ -442,6 +442,37 @@ void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
 void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state);
 
 /**
+ * Set the window placement on the spec.
+ *
+ * \param [in] spec             the spec to update
+ * \param [in] rect             the destination rectangle to align with
+ * \param [in] rect_gravity     the point on \p rect to align with
+ * \param [in] surface_gravity  the point on the window to align with
+ * \param [in] placement_hints  positioning hints to use when limited on space
+ * \param [in] offset_dx        horizontal offset to shift w.r.t. \p rect
+ * \param [in] offset_dy        vertical offset to shift w.r.t. \p rect
+ *
+ * Moves a window to \p rect, aligning their reference points.
+ *
+ * \p rect is relative to the top-left corner of the parent window.
+ * \p rect_gravity and \p surface_gravity determine the points on \p rect and
+ * the window to pin together. \p rect's alignment point can be offset by
+ * \p offset_dx and \p offset_dy, which is equivalent to offsetting the
+ * position of the window.
+ *
+ * \p placement_hints determine how the window should be positioned in the case
+ * that the window would fall off-screen if placed in its ideal position.
+ * See \ref MirPlacementHints for details.
+ */
+void mir_spec_set_placement(MirWindowSpec*     spec,
+                            const MirRectangle* rect,
+                            MirPlacementGravity rect_gravity,
+                            MirPlacementGravity window_gravity,
+                            MirPlacementHints   placement_hints,
+                            int                 offset_dx,
+                            int                 offset_dy);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -680,36 +711,16 @@ void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerCo
 __attribute__((deprecated("use mir_spec_set_pointer_confinement() instead")));
 
 /**
- * Set the surface placement on the spec.
- *
- * \param [in] spec             the spec to update
- * \param [in] rect             the destination rectangle to align with
- * \param [in] rect_gravity     the point on \p rect to align with
- * \param [in] surface_gravity  the point on the surface to align with
- * \param [in] placement_hints  positioning hints to use when limited on space
- * \param [in] offset_dx        horizontal offset to shift w.r.t. \p rect
- * \param [in] offset_dy        vertical offset to shift w.r.t. \p rect
- *
- * Moves a surface to \p rect, aligning their reference points.
- *
- * \p rect is relative to the top-left corner of the parent surface.
- * \p rect_gravity and \p surface_gravity determine the points on \p rect and
- * the surface to pin together. \p rect's alignment point can be offset by
- * \p offset_dx and \p offset_dy, which is equivalent to offsetting the
- * position of the surface.
- *
- * \p placement_hints determine how the window should be positioned in the case
- * that the surface would fall off-screen if placed in its ideal position.
- * See \ref MirPlacementHints for details.
+ *\deprecated use mir_spec_set_placement() instead
  */
-void mir_surface_spec_set_placement(
-    MirSurfaceSpec*     spec,
-    const MirRectangle* rect,
-    MirPlacementGravity rect_gravity,
-    MirPlacementGravity surface_gravity,
-    MirPlacementHints   placement_hints,
-    int                 offset_dx,
-    int                 offset_dy);
+void mir_surface_spec_set_placement(MirSurfaceSpec*     spec,
+                                    const MirRectangle* rect,
+                                    MirPlacementGravity rect_gravity,
+                                    MirPlacementGravity window_gravity,
+                                    MirPlacementHints   placement_hints,
+                                    int                 offset_dx,
+                                    int                 offset_dy)
+__attribute__((deprecated("use mir_spec_set_placement() instead")));
 
 /**
  * Create a surface specification for an input method surface.

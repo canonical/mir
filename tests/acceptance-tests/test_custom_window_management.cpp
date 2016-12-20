@@ -381,7 +381,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
     surface_spec = mir_specify_tip(
         connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
 
-    mir_surface_spec_set_placement(
+    mir_spec_set_placement(
         surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
 
     mt::Signal received;
@@ -462,7 +462,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
     mir_spec_release(surface_spec);
 
     surface_spec = mir_create_spec(connection);
-    mir_surface_spec_set_placement(
+    mir_spec_set_placement(
         surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
 
     mt::Signal received;
