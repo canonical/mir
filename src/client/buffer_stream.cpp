@@ -446,6 +446,13 @@ void mcl::BufferStream::wait_for_vsync()
 
 MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
 {
+    /*
+     * TODO: Remove these functions in future, after
+     *       mir_buffer_stream_swap_buffers has been converted to use
+     *       client-side vsync, and the server has been told to always use
+     *       dropping for BufferStream. Then there will be no need to ever
+     *       change the server swap interval from zero.
+     */
     buffer_depository->set_interval(i);
     return interval_config.set_swap_interval(i);
 }
@@ -507,6 +514,7 @@ int mcl::BufferStream::swap_interval() const
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
     current_swap_interval = user_swap_interval.is_set() ?
         user_swap_interval.value() : interval;
 
