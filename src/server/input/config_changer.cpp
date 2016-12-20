@@ -190,6 +190,8 @@ void mi::ConfigChanger::set_base_configuration(InputConfiguration && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     base = std::move(config);
+    apply_base_config();
+    send_base_config_to_all_sessions();
 }
 
 void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> const& added, std::vector<MirInputDeviceId> const& removed)
