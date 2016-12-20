@@ -310,7 +310,7 @@ TEST_F(ClientLatency, average_latency_is_one_frame)
 
     auto average_latency = display.group.average_latency();
 
-    EXPECT_THAT(average_latency, Le(1.0f + error_margin));
+    EXPECT_NEAR(1.0f, average_latency, error_margin);
 }
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
