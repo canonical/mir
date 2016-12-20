@@ -56,6 +56,8 @@ std::chrono::microseconds const vblank_interval(1000000/refresh_rate);
 
 class ShellOnFakeMonitor : public ShellWrapper
 {
+    // This whole class exists just to inject one fake event.
+    // Is there an easier way?
 public:
     using ShellWrapper::ShellWrapper;
 
