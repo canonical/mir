@@ -66,8 +66,9 @@ mir_specify_menu(MirConnection* connection,
                  MirRectangle* rect,
                  MirEdgeAttachment edge);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+// Functions in this pragma section are to be deprecated
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 /**
  * Create a surface specification for a normal surface.
@@ -94,7 +95,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirSurface* parent,
                                     MirRectangle* rect,
                                     MirEdgeAttachment edge)
-__attribute__((deprecated("Use mir_specify_menu() instead")));
+/* __attribute__((deprecated("Use mir_specify_menu() instead")))*/;
 
 /**
  * Create a surface specification for a tooltip surface.
@@ -642,7 +643,7 @@ MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic pop
 
 /**
  * Set the event handler to be called when events arrive for a surface.
