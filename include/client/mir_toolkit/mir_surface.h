@@ -347,6 +347,16 @@ void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned
  */
 void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
 
+/**
+ * Set the requested preferred orientation mode.
+ * \param [in] spec    Specification to mutate
+ * \param [in] mode    Requested preferred orientation
+ *
+ * \note    If the server is unable to create a window with the preferred orientation at
+ *          the point mir_surface_create() is called it will instead return an invalid window.
+ */
+void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -524,6 +534,12 @@ void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
 __attribute__((deprecated("use mir_spec_set_fullscreen() instead")));
 
 /**
+ *\deprecated use mir_spec_set_preferred_orientation() instead
+ */
+void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode)
+__attribute__((deprecated("use mir_spec_set_preferred_orientation() instead")));
+
+/**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
  * \param [in] format   Requested pixel format
@@ -544,16 +560,6 @@ void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
  *          the point mir_surface_create() is called it will instead return an invalid surface.
  */
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
-
-/**
- * Set the requested preferred orientation mode.
- * \param [in] spec    Specification to mutate
- * \param [in] mode    Requested preferred orientation
- *
- * \note    If the server is unable to create a surface with the preferred orientation at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
-void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 
 /**
  * Request that the created surface be attached to a surface of a different client.

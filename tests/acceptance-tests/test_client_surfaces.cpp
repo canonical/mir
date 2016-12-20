@@ -207,7 +207,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     ASSERT_THAT(spec, NotNull());
 
     MirOrientationMode mode{GetParam()};
-    mir_surface_spec_set_preferred_orientation(spec, mode);
+    mir_spec_set_preferred_orientation(spec, mode);
 
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
