@@ -37,6 +37,14 @@ extern "C" {
 MirBlob* mir_blob_from_display_configuration(MirDisplayConfiguration* configuration);
 
 /**
+ * Create a blob from a display config
+ *
+ * \param [in] config  The display config
+ * \return             A blob
+ */
+MirBlob* mir_blob_from_display_config(MirDisplayConfig* config);
+
+/**
  * Create a blob from a buffer.
  * \note this does not copy the data, the buffer is assumed to be available
  *       until the blob is released.
@@ -56,6 +64,16 @@ MirBlob* mir_blob_onto_buffer(void const* buffer, size_t buffer_size);
  * \return                 A display configuration
  */
 MirDisplayConfiguration* mir_blob_to_display_configuration(MirBlob* blob);
+
+/**
+ * Create a blob from a display config
+ *
+ * \warning will abort() if the blob doesn't represent a meaningful display config
+ *
+ * \param [in] blob        The blob
+ * \return                 A display config
+ */
+MirDisplayConfig* mir_blob_to_display_config(MirBlob* blob);
 
 /**
  * Get the size of a blob
