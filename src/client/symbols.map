@@ -148,8 +148,6 @@ MIR_CLIENT_9 {
     mir_surface_spec_set_type;
     mir_surface_spec_set_width;
     mir_surface_spec_set_width_increment;
-    mir_surface_spec_set_cursor_name;
-    mir_surface_spec_set_cursor_render_surface;
     mir_touch_event_action;
     mir_touch_event_axis_value;
     mir_touch_event_id;
@@ -436,24 +434,23 @@ MIR_CLIENT_0.24 {  # New functions in Mir 0.24
 
 MIR_CLIENT_0.25 {  # New functions in Mir 0.25
   global:
-    mir_buffer_stream_set_swapinterval;
-    mir_connection_cancel_base_display_configuration_preview;
     mir_connection_create_spec_for_tip;
-    mir_display_output_type_name;
     mir_event_get_surface_placement_event;
-    mir_input_device_state_event_device_pressed_keys_for_index;
     mir_output_get_current_mode_index;
-    mir_output_get_gamma;
-    mir_output_get_gamma_size;
     mir_output_get_preferred_mode_index;
     mir_output_get_subpixel_arrangement;
+    mir_output_get_gamma_size;
     mir_output_is_gamma_supported;
+    mir_output_get_gamma;
     mir_output_set_gamma;
+    mir_connection_cancel_base_display_configuration_preview;
+    mir_surface_placement_get_relative_position;
+    mir_display_output_type_name;
     mir_output_type_name;
     mir_surface_output_event_get_refresh_rate;
-    mir_surface_placement_get_relative_position;
+    mir_input_device_state_event_device_pressed_keys_for_index;
+    mir_buffer_stream_set_swapinterval;
     mir_buffer_stream_get_swapinterval;
-    mir_connection_request_interface;
     mir_buffer_stream_set_size;
     mir_buffer_stream_get_size;
 } MIR_CLIENT_0.24;
@@ -485,6 +482,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_pointer_configuration_set_handedness;
     mir_pointer_configuration_set_horizontal_scroll_scale;
     mir_pointer_configuration_set_vertical_scroll_scale;
+    mir_surface_spec_set_cursor_name;
+    mir_surface_spec_set_cursor_render_surface;
     mir_touchpad_configuration_get_button_down_scroll_button;
     mir_touchpad_configuration_get_click_modes;
     mir_touchpad_configuration_get_disable_while_typing;
@@ -499,6 +498,9 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_configuration_set_middle_mouse_button_emulation;
     mir_touchpad_configuration_set_scroll_modes;
     mir_touchpad_configuration_set_tap_to_click;
+    mir_connection_request_extension;
     mir_output_get_model;
-    mir_specify_menu;
+    mir_blob_from_display_config;
+    mir_blob_to_display_config;
+    mir_specify_menu;    
 } MIR_CLIENT_0.25;

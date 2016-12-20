@@ -237,9 +237,7 @@ TEST_F(PresentationChain, has_native_fence)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
-    auto ext = static_cast<MirExtensionFencedBuffers*>(
-        mir_connection_request_interface(
-            connection, MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1));
+    auto ext = mir_extension_fenced_buffers_v1(connection);
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->get_fence, Ne(nullptr));
 
