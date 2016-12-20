@@ -20,11 +20,11 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/input_configuration_serialization.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "event_sender.h"
 #include "mir/events/serialization.h"
 #include "message_sender.h"
@@ -101,10 +101,10 @@ void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mi
 {
     mp::EventSequence seq;
 
-    mi::InputConfiguration temp;
+    MirInputConfiguration temp;
     for(auto const& dev : devices)
     {
-        mi::DeviceConfiguration conf(dev->id(), dev->capabilities(), dev->name(), dev->unique_id());
+        MirInputDevice conf(dev->id(), dev->capabilities(), dev->name(), dev->unique_id());
         auto ptr_conf = dev->pointer_configuration();
         auto tpd_conf = dev->touchpad_configuration();
         auto kbd_conf = dev->keyboard_configuration();

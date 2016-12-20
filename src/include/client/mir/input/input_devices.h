@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_INPUT_DEVICES_H_
 #define MIR_INPUT_INPUT_DEVICES_H_
 
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 
 #include <mutex>
 #include <string>
@@ -34,11 +34,11 @@ class InputDevices
 public:
     InputDevices() = default;
     void update_devices(std::string const& device_buffer);
-    InputConfiguration clone_devices();
+    MirInputConfiguration clone_devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
     std::mutex devices_access;
-    InputConfiguration configuration;
+    MirInputConfiguration configuration;
     std::function<void()> callback;
 };
 

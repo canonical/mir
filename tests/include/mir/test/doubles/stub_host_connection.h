@@ -27,7 +27,7 @@
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 #include "mir_toolkit/mir_connection.h"
 #include <gmock/gmock.h>
 #include "mir/test/gmock_fixes.h"
@@ -93,8 +93,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new mir::input::InputConfiguration),
-                                                   mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfiguration, mir_input_config_destroy);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override

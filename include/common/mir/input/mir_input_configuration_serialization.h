@@ -21,14 +21,14 @@
 
 #include <string>
 
+class MirInputConfiguration;
 namespace mir
 {
 namespace input
 {
-class InputConfiguration;
 
-std::string serialize_input_configuration(InputConfiguration const& config);
-InputConfiguration deserialize_input_configuration(std::string const& buffer);
+std::string serialize_input_configuration(MirInputConfiguration const& config);
+MirInputConfiguration deserialize_input_configuration(std::string const& buffer);
 
 }
 }
