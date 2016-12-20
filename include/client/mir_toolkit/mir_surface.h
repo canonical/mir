@@ -187,20 +187,15 @@ MirWindowSpec* mir_create_spec(MirConnection* connection);
  */
 void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+// Functions in this pragma section are to be deprecated
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-/**
- *\deprecated use mir_specify_window() instead
- */
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,
-                                                              MirPixelFormat format)
-__attribute__((deprecated("Use mir_specify_window() instead")));
+                                                              MirPixelFormat format);
+//__attribute__((deprecated("Use mir_specify_window() instead")));
 
-/**
- *\deprecated use mir_specify_menu() instead
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_menu(MirConnection* connection,
                                     int width,
@@ -208,69 +203,48 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirPixelFormat format,
                                     MirSurface* parent,
                                     MirRectangle* rect,
-                                    MirEdgeAttachment edge)
-__attribute__((deprecated("Use mir_specify_menu() instead")));
+                                    MirEdgeAttachment edge);
+//__attribute__((deprecated("Use mir_specify_menu() instead")));
 
-/**
- *\deprecated use mir_specify_tip() instead
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_tooltip(MirConnection* connection,
                                        int width, int height,
                                        MirPixelFormat format,
                                        MirSurface* parent,
-                                       MirRectangle* zone)
-__attribute__((deprecated("Use mir_specify_tip() instead")));
+                                       MirRectangle* zone);
+//__attribute__((deprecated("Use mir_specify_tip() instead")));
 
-/**
- *\deprecated use mir_specify_tip() instead
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_tip(MirConnection* connection,
                                    int width, int height,
                                    MirPixelFormat format,
                                    MirSurface* parent,
                                    MirRectangle* rect,
-                                   MirEdgeAttachment edge)
-__attribute__((deprecated("Use mir_specify_tip() instead")));
+                                   MirEdgeAttachment edge);
+//__attribute__((deprecated("Use mir_specify_tip() instead")));
 
-/**
- *\deprecated use mir_specify_modal_dialog() instead
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
                                             int width, int height,
                                             MirPixelFormat format,
-                                            MirSurface* parent)
-__attribute__((deprecated("Use mir_specify_modal_dialog() instead")));
+                                            MirSurface* parent);
+//__attribute__((deprecated("Use mir_specify_modal_dialog() instead")));
 
-/**
- *\deprecated use mir_specify_dialog() instead
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       int width, int height,
-                                      MirPixelFormat format)
-__attribute__((deprecated("Use mir_specify_dialog() instead")));
+                                      MirPixelFormat format);
+//__attribute__((deprecated("Use mir_specify_dialog() instead")));
 
-/**
- *\deprecated use mir_create_spec() instead
- */
-MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
-__attribute__((deprecated("Use mir_create_spec() instead")));
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
+//__attribute__((deprecated("Use mir_create_spec() instead")));
 
-/**
- *\deprecated use mir_create_spec() instead
- */
 MirSurfaceSpec*
-mir_connection_create_spec_for_changes(MirConnection* connection)
-__attribute__((deprecated("Use mir_create_spec() instead")));
+mir_connection_create_spec_for_changes(MirConnection* connection);
+//__attribute__((deprecated("Use mir_create_spec() instead")));
 
-/**
- *\deprecated use mir_spec_set_parent() instead
- */
-void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
-__attribute__((deprecated("Use mir_spec_set_parent() instead")));
+void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+//__attribute__((deprecated("Use mir_spec_set_parent() instead")));
 
 /**
  *
