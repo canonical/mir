@@ -253,3 +253,14 @@ TEST_F(ConfigChanger, configuring_a_focused_session_sends_changed_config_to_clie
     changer.configure(session, std::move(changed_config));
 }
 
+TEST_F(ConfigChanger, setting_the_base_configuration_changes_the_base_configuration)
+{
+    auto changed_ptr_config = mi::PointerConfiguration{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1, -1};
+    auto changed_device_config = conf_for_first();
+    changed_device_config.set_pointer_configuration(changed_ptr_config);
+    auto changed_config = get_populated_conf(std::move(changed_device_config));
+
+    EXPECT_CALL(hub.first_device, apply_pointer_configuration(changed_ptr_config));
+
+    changer.set_base_configuration(std::move(changed_config));
+}
