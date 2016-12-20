@@ -653,7 +653,7 @@ MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
  */
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic pop
 
 /**
  * Set the event handler to be called when events arrive for a surface.
