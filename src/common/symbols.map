@@ -465,6 +465,7 @@ MIR_COMMON_0.26 {
       MirTouchscreenConfiguration::operator*;
       mir::input::deserialize_input_configuration*;
       mir::input::serialize_input_configuration*;
+      operator*;
       typeinfo?for?MirPointerConfiguration;
       typeinfo?for?MirTouchpadConfiguration;
       typeinfo?for?MirTouchscreenConfiguration;
