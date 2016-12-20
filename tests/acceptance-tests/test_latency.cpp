@@ -291,7 +291,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
+TEST_F(ClientLatency, average_latency_is_one_frame)
 {
     using namespace testing;
 
@@ -310,7 +310,7 @@ TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 
     auto average_latency = display.group.average_latency();
 
-    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
+    EXPECT_THAT(average_latency, Le(1.0f + error_margin));
 }
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)

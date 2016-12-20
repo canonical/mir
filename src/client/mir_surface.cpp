@@ -109,14 +109,7 @@ MirSurface::MirSurface(
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
 
-    /*
-     * TODO: Implement frame_clock->set_resync_callback(...) when IPC to get
-     *       timestamps from the server exists.
-     *       Until we do, client-side vsync will perform suboptimally (it is
-     *       randomly up to one frame out of phase with the real display).
-     *       However even while it's suboptimal it's dramatically lower latency
-     *       than the old approach and still totally eliminates nesting lag.
-     */
+    configure_frame_clock();
 }
 
 MirSurface::MirSurface(
@@ -177,10 +170,7 @@ MirSurface::MirSurface(
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
 
-    /*
-     * TODO: Implement frame_clock->set_resync_callback(...) here too, same as
-     *       detailed above.
-     */
+    configure_frame_clock();
 }
 
 MirSurface::~MirSurface()
@@ -208,6 +198,24 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
         close(surface->fd(i));
+}
+
+void MirSurface::configure_frame_clock()
+{
+    /*
+     * A sane default for test cases and broken systems that fail to override
+     * the period with an actual display period:
+     */
+    frame_clock->set_period(std::chrono::nanoseconds(1000000000L / 59));
+
+    /*
+     * TODO: Implement frame_clock->set_resync_callback(...) when IPC to get
+     *       timestamps from the server exists.
+     *       Until we do, client-side vsync will perform suboptimally (it is
+     *       randomly up to one frame out of phase with the real display).
+     *       However even while it's suboptimal it's dramatically lower latency
+     *       than the old approach and still totally eliminates nesting lag.
+     */
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -506,7 +514,6 @@ void MirSurface::handle_event(MirEvent const& e)
                 static_cast<long>(1000000000L / rate));
             frame_clock->set_period(ns);
         }
-        // else rendering will be unthrottled. Impose some artificial limit?
         break;
     }
     default:

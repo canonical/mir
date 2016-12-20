@@ -222,6 +222,7 @@ public:
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
+    void configure_frame_clock();
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
