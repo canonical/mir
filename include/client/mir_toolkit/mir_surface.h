@@ -311,6 +311,32 @@ void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
  */
 void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
 
+/**
+ * Set the minimum aspect ratio. This is the minimum ratio of window width to height.
+ * It is independent of orientation changes and/or preferences.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    numerator
+ * \param [in] height   denominator
+ *
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
+ *          to create a window of any specific aspect.
+ */
+void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
+
+/**
+ * Set the maximum aspect ratio. This is the maximum ratio of window width to height.
+ * It is independent of orientation changes and/or preferences.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    numerator
+ * \param [in] height   denominator
+ *
+ * \note    The requested aspect ratio is a hint only. The server is not guaranteed
+ *          to create a window of any specific aspect.
+ */
+void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -470,30 +496,16 @@ void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
 __attribute__((deprecated("use mir_spec_set_max_height() instead")));
 
 /**
- * Set the minimum aspect ratio. This is the minimum ratio of surface width to height.
- * It is independent of orientation changes and/or preferences.
- *
- * \param [in] spec     Specification to mutate
- * \param [in] width    numerator
- * \param [in] height   denominator
- *
- * \note    The requested aspect ratio is a hint only. The server is not guaranteed
- *          to create a surface of any specific aspect.
+ *\deprecated use mir_window_spec_set_min_aspect_ratio() instead
  */
-void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+__attribute__((deprecated("use mir_spec_set_min_aspect_ratio() instead")));
 
 /**
- * Set the maximum aspect ratio. This is the maximum ratio of surface width to height.
- * It is independent of orientation changes and/or preferences.
- *
- * \param [in] spec     Specification to mutate
- * \param [in] width    numerator
- * \param [in] height   denominator
- *
- * \note    The requested aspect ratio is a hint only. The server is not guaranteed
- *          to create a surface of any specific aspect.
+ *\deprecated use mir_spec_set_max_aspect_ratio() instead
  */
-void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+__attribute__((deprecated("use mir_spec_set_max_aspect_ratio() instead")));
 
 /**
  * Set the requested pixel format.

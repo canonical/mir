@@ -432,7 +432,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
             mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -462,7 +462,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
             mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -500,8 +500,8 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-            mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
-            mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
 
             mir_spec_set_min_height(spec, min_height);
             mir_spec_set_min_width(spec, min_width);

@@ -255,6 +255,28 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
+try
+{
+    mir::require(spec);
+    spec->min_aspect = {width, height};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
+try
+{
+    mir::require(spec);
+    spec->max_aspect = {width, height};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -584,23 +606,13 @@ void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height
 }
 
 void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
-try
 {
-    spec->min_aspect = {width, height};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_min_aspect_ratio(spec, width, height);
 }
 
 void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
-try
 {
-    spec->max_aspect = {width, height};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_max_aspect_ratio(spec, width, height);
 }
 
 void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
