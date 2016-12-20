@@ -21,6 +21,9 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -37,6 +40,7 @@
 #include <memory>
 
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,

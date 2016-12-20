@@ -19,7 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -1031,7 +1031,7 @@ TEST_F(TestClientInput, pointer_configuration_is_mutable)
 
 TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
 {
-    mi::TouchpadConfiguration const default_configuration;
+    MirTouchpadConfiguration const default_configuration;
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};

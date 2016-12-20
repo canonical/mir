@@ -24,10 +24,10 @@
 #include "mir/input/device.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "mir/client_visible_error.h"
 
 #include "mir_toolkit/client_types.h"
@@ -58,7 +58,7 @@ public:
     }
 };
 
-void apply_device_config(mi::DeviceConfiguration const* config, mi::Device& device)
+void apply_device_config(MirInputDevice const* config, mi::Device& device)
 {
     if (!config)
         return;
@@ -76,9 +76,9 @@ void apply_device_config(mi::DeviceConfiguration const* config, mi::Device& devi
         device.apply_keyboard_configuration(config->keyboard_configuration());
 }
 
-mi::DeviceConfiguration get_device_config(mi::Device const& device)
+MirInputDevice get_device_config(mi::Device const& device)
 {
-    mi::DeviceConfiguration cfg(device.id(), device.capabilities(), device.name(), device.unique_id());
+    MirInputDevice cfg(device.id(), device.capabilities(), device.name(), device.unique_id());
     auto ptr_conf = device.pointer_configuration();
     if (ptr_conf.is_set())
         cfg.set_pointer_configuration(ptr_conf.value());
@@ -169,13 +169,13 @@ mi::ConfigChanger::~ConfigChanger()
     devices->remove_observer(device_observer);
 }
 
-mi::InputConfiguration mi::ConfigChanger::base_configuration()
+MirInputConfiguration mi::ConfigChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     return base;
 }
 
-void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& session, InputConfiguration && config)
+void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& session, MirInputConfiguration && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     auto const& session_config = (config_map[session] = std::move(config));
@@ -186,7 +186,7 @@ void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& sess
     apply_config_at_session(session_config, session);
 }
 
-void mi::ConfigChanger::set_base_configuration(InputConfiguration && config)
+void mi::ConfigChanger::set_base_configuration(MirInputConfiguration && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     base = std::move(config);
@@ -260,7 +260,7 @@ void mi::ConfigChanger::session_stopping_handler(std::shared_ptr<ms::Session> co
     config_map.erase(session);
 }
 
-void mi::ConfigChanger::apply_config(mi::InputConfiguration const& config)
+void mi::ConfigChanger::apply_config(MirInputConfiguration const& config)
 {
     devices->for_each_mutable_input_device(
         [&config](Device& device)
@@ -271,7 +271,7 @@ void mi::ConfigChanger::apply_config(mi::InputConfiguration const& config)
     base_configuration_applied = false;
 }
 
-void mi::ConfigChanger::apply_config_at_session(mi::InputConfiguration const& config, std::shared_ptr<mf::Session> const& session)
+void mi::ConfigChanger::apply_config_at_session(MirInputConfiguration const& config, std::shared_ptr<mf::Session> const& session)
 {
     try
     {

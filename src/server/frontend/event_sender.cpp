@@ -20,11 +20,11 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/input_configuration_serialization.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "event_sender.h"
 #include "mir/events/serialization.h"
 #include "message_sender.h"
@@ -97,7 +97,7 @@ void mfd::EventSender::send_ping(int32_t serial)
     send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::handle_input_config_change(input::InputConfiguration const& config)
+void mfd::EventSender::handle_input_config_change(MirInputConfiguration const& config)
 {
     mp::EventSequence seq;
 

@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_INPUT_CONFIG_MATCHERS_H
 #define MIR_TEST_INPUT_CONFIG_MATCHERS_H
 
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 #include <gmock/gmock.h>
 
 namespace testing
@@ -27,11 +27,11 @@ namespace internal
 {
 
 class InputConfigElementsMatcher
-    : public MatcherInterface<mir::input::InputConfiguration const&>,
+    : public MatcherInterface<MirInputConfiguration const&>,
       public UnorderedElementsAreMatcherImplBase
 {
 public:
-    typedef mir::input::DeviceConfiguration Element;
+    typedef MirInputDevice Element;
 
     // Constructs the matcher from a sequence of element values or
     // element matchers.
@@ -53,7 +53,7 @@ public:
         return UnorderedElementsAreMatcherImplBase::DescribeNegationToImpl(os);
     }
 
-    virtual bool MatchAndExplain(mir::input::InputConfiguration const& container, MatchResultListener* listener) const
+    virtual bool MatchAndExplain(MirInputConfiguration const& container, MatchResultListener* listener) const
     {
         ::std::vector<string> element_printouts;
         MatchMatrix matrix = AnalyzeElements(container, &element_printouts, listener);
@@ -79,7 +79,7 @@ public:
 private:
     typedef ::std::vector<Matcher<const Element&>> MatcherVec;
 
-    MatchMatrix AnalyzeElements(mir::input::InputConfiguration const& config,
+    MatchMatrix AnalyzeElements(MirInputConfiguration const& config,
                                 ::std::vector<string>* element_printouts,
                                 MatchResultListener* listener) const
     {
@@ -87,7 +87,7 @@ private:
         ::std::vector<char> did_match;
         size_t num_elements = config.size();
         config.for_each(
-            [&](mir::input::DeviceConfiguration const& element)
+            [&](MirInputDevice const& element)
             {
                 if (listener->IsInterested())
                     element_printouts->push_back(PrintToString(element));
@@ -111,7 +111,7 @@ private:
 // Multiple specializations because gmock does not decay the parameter type to the
 // actual value type.
 template <>
-class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration const&>
+class UnorderedElementsAreMatcherImpl<MirInputConfiguration const&>
     : public InputConfigElementsMatcher
 {
 public:
@@ -119,7 +119,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration&>
+class UnorderedElementsAreMatcherImpl<MirInputConfiguration&>
     : public InputConfigElementsMatcher
 {
 public:
@@ -127,7 +127,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration>
+class UnorderedElementsAreMatcherImpl<MirInputConfiguration>
     : public InputConfigElementsMatcher
 {
 public:
@@ -135,7 +135,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<mir::input::InputConfiguration const>
+class UnorderedElementsAreMatcherImpl<MirInputConfiguration const>
     : public InputConfigElementsMatcher
 {
 public:

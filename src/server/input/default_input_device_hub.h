@@ -26,7 +26,7 @@
 #include "mir/input/seat.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_info.h"
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 
 #include "mir_toolkit/event.h"
 
@@ -122,6 +122,7 @@ private:
     };
 
     std::vector<std::shared_ptr<Device>> handles;
+    MirInputConfiguration config;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
     std::mutex changed_devices_guard;

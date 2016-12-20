@@ -364,7 +364,8 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
-typedef struct MirInputConfig MirInputConfig;
+typedef struct MirInputConfiguration MirInputConfiguration;
+typedef MirInputConfiguration MirInputConfig;
 typedef struct MirInputDevice MirInputDevice;
 typedef struct MirPointerConfiguration MirPointerConfiguration;
 typedef struct MirTouchpadConfiguration MirTouchpadConfiguration;

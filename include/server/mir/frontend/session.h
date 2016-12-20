@@ -27,6 +27,8 @@
 #include <memory>
 #include <string>
 
+class MirInputConfiguration;
+
 namespace mir
 {
 class ClientVisibleError;
@@ -37,7 +39,6 @@ class DisplayConfiguration;
 struct BufferProperties;
 class Buffer;
 }
-namespace input { class InputConfiguration; }
 
 namespace frontend
 {
@@ -63,7 +64,7 @@ public:
 
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
     virtual void send_error(ClientVisibleError const&) = 0;
-    virtual void send_input_config(input::InputConfiguration const& config) = 0;
+    virtual void send_input_config(MirInputConfiguration const& config) = 0;
 
 protected:
     Session() = default;

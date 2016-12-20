@@ -218,7 +218,7 @@ struct StubEventSink : public mf::EventSink
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
     void handle_error(mir::ClientVisibleError const&) {}
-    void handle_input_config_change(mir::input::InputConfiguration const&) {}
+    void handle_input_config_change(MirInputConfiguration const&) {}
     void send_ping(int32_t) {}
 
     std::shared_ptr<StubIpcSystem> ipc;

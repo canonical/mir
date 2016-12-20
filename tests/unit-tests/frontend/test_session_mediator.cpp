@@ -67,8 +67,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/cookie/authority.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/input_configuration_serialization.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_configuration_serialization.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 

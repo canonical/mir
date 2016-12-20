@@ -299,7 +299,7 @@ try
     mir::require(mir_connection_is_valid(connection));
 
     auto devices = connection->the_input_devices();
-    return reinterpret_cast<MirInputConfig*>(new mi::InputConfiguration{devices->clone_devices()});
+    return reinterpret_cast<MirInputConfig*>(new MirInputConfiguration{devices->clone_devices()});
 }
 catch (std::exception const& ex)
 {
@@ -347,7 +347,7 @@ catch (std::exception const& ex)
 
 void mir_input_config_destroy(MirInputConfig const* config)
 {
-    auto device_config = reinterpret_cast<mi::InputConfiguration const*>(config);
+    auto device_config = reinterpret_cast<MirInputConfiguration const*>(config);
     delete device_config;
 }
 
