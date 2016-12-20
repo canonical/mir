@@ -331,6 +331,25 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_input_shape(MirWindowSpec *spec,
+                                      MirRectangle const* rectangles,
+                                      size_t n_rects)
+try
+{
+    mir::require(spec);
+
+    std::vector<MirRectangle> copy;
+    for (auto i = 0u; i < n_rects; i++)
+    {
+        copy.emplace_back(rectangles[i]);
+    }
+    spec->input_shape = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -627,20 +646,8 @@ catch (std::exception const& ex)
 
 void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
                                       size_t n_rects)
-try
 {
-    mir::require(spec);
-
-    std::vector<MirRectangle> copy;
-    for (auto i = 0u; i < n_rects; i++)
-    {
-        copy.emplace_back(rectangles[i]);
-    }
-    spec->input_shape = copy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_input_shape(spec, rectangles, n_rects);
 }
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)

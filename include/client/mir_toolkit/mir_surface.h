@@ -392,6 +392,22 @@ bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
 void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
 
 /**
+ * Set a collection of input rectangles associated with the spec.
+ * Rectangles are specified as a list of regions relative to the top left
+ * of the specified window. If the server applies this specification
+ * to a window input which would normally go to the window but is not
+ * contained within any of the input rectangles instead passes
+ * on to the next client.
+ *
+ * \param [in] spec The spec to accumulate the request in.
+ * \param [in] rectangles An array of MirRectangles specifying the input shape.
+ * \param [in] n_rects The number of elements in the rectangles array.
+ */
+void mir_spec_set_input_shape(MirWindowSpec* spec,
+                                      MirRectangle const *rectangles,
+                                      size_t n_rects);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -602,42 +618,12 @@ void mir_surface_spec_release(MirSurfaceSpec* spec)
 __attribute__((deprecated("use mir_spec_release() instead")));
 
 /**
- * Set the streams associated with the spec.
- * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
- * On application of the spec, a stream that is present in the surface,
- * but is not in the list will be disassociated from the surface.
- * On application of the spec, a stream that is not present in the surface,
- * but is in the list will be associated with the surface.
- * Streams set a displacement from the top-left corner of the surface.
- * 
- * \warning disassociating streams from the surface will not release() them.
- * \warning It is wiser to arrange the streams within the bounds of the
- *          surface the spec is applied to. Shells can define their own
- *          behavior as to what happens to an out-of-bound stream.
- * 
- * \param [in] spec        The spec to accumulate the request in.
- * \param [in] streams     An array of non-null streams info.
- * \param [in] num_streams The number of elements in the streams array.
- */
-void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
-                                  MirBufferStreamInfo* streams,
-                                  unsigned int num_streams);
-
-/**
- * Set a collection of input rectangles assosciated with the spec.
- * Rectangles are specified as a list of regions relative to the top left
- * of the specified surface. If the server applies this specification
- * to a surface input which would normally go to the surface but is not
- * contained within any of the input rectangles instead passes
- * on to the next client.
- *
- * \param [in] spec The spec to accumulate the request in.
- * \param [in] rectangles An array of MirRectangles specifying the input shape.
- * \param [in] n_rects The number of elements in the rectangles array.
+ *\deprecated use mir_spec_set_input_shape() instead
  */
 void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,
-                                      size_t n_rects);
+                                      size_t n_rects)
+__attribute__((deprecated("use mir_spec_set_input_shape() instead")));
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -751,6 +737,28 @@ void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
  *          the point mir_surface_create() is called it will instead return an invalid surface.
  */
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+
+/**
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the surface,
+ * but is not in the list will be disassociated from the surface.
+ * On application of the spec, a stream that is not present in the surface,
+ * but is in the list will be associated with the surface.
+ * Streams set a displacement from the top-left corner of the surface.
+ *
+ * \warning disassociating streams from the surface will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          surface the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ *
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     An array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
+ */
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int num_streams);
 
 /**
  * Create a surface from a given specification

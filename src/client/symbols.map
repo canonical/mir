@@ -524,4 +524,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_attach_to_foreign_parent;
     mir_spec_set_state;
     mir_spec_release;
+    mir_spec_set_input_shape;
 } MIR_CLIENT_0.25;
