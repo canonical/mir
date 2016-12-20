@@ -40,11 +40,11 @@ void mfd::pack_protobuf_input_device_info(mp::InputDeviceInfo& device_info, mi::
     {
         auto dev_conf = optional_pointer_conf.consume();
         auto* msg_conf = device_info.mutable_pointer_configuration();
-        msg_conf->set_handedness(dev_conf.handedness);
-        msg_conf->set_acceleration(dev_conf.acceleration);
-        msg_conf->set_acceleration_bias(dev_conf.cursor_acceleration_bias);
-        msg_conf->set_horizontal_scroll_scale(dev_conf.horizontal_scroll_scale);
-        msg_conf->set_vertical_scroll_scale(dev_conf.vertical_scroll_scale);
+        msg_conf->set_handedness(dev_conf.handedness());
+        msg_conf->set_acceleration(dev_conf.acceleration());
+        msg_conf->set_acceleration_bias(dev_conf.cursor_acceleration_bias());
+        msg_conf->set_horizontal_scroll_scale(dev_conf.horizontal_scroll_scale());
+        msg_conf->set_vertical_scroll_scale(dev_conf.vertical_scroll_scale());
     }
 
     auto optional_touchpad_conf = device.touchpad_configuration();
@@ -52,12 +52,12 @@ void mfd::pack_protobuf_input_device_info(mp::InputDeviceInfo& device_info, mi::
     {
         auto dev_conf = optional_touchpad_conf.consume();
         auto* msg_conf = device_info.mutable_touchpad_configuration();
-        msg_conf->set_click_modes(dev_conf.click_mode);
-        msg_conf->set_scroll_modes(dev_conf.scroll_mode);
-        msg_conf->set_button_down_scroll_button(dev_conf.button_down_scroll_button);
-        msg_conf->set_tap_to_click(dev_conf.tap_to_click);
-        msg_conf->set_middle_mouse_button_emulation(dev_conf.middle_mouse_button_emulation);
-        msg_conf->set_disable_with_mouse(dev_conf.disable_with_mouse);
-        msg_conf->set_disable_while_typing(dev_conf.disable_while_typing);
+        msg_conf->set_click_modes(dev_conf.click_mode());
+        msg_conf->set_scroll_modes(dev_conf.scroll_mode());
+        msg_conf->set_button_down_scroll_button(dev_conf.button_down_scroll_button());
+        msg_conf->set_tap_to_click(dev_conf.tap_to_click());
+        msg_conf->set_middle_mouse_button_emulation(dev_conf.middle_mouse_button_emulation());
+        msg_conf->set_disable_with_mouse(dev_conf.disable_with_mouse());
+        msg_conf->set_disable_while_typing(dev_conf.disable_while_typing());
     }
 }

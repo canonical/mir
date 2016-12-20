@@ -83,6 +83,11 @@ struct Flags
         return flag_value == other.flag_value;
     }
 
+    constexpr bool operator!=(Flags<Enum> other) const noexcept
+    {
+        return flag_value != other.flag_value;
+    }
+
     constexpr value_type value() const noexcept
     {
         return flag_value;
