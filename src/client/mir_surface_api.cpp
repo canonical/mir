@@ -385,7 +385,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_placement(MirSurfaceSpec* spec,
+void mir_spec_set_placement(MirWindowSpec* spec,
                             MirRectangle const* rect,
                             MirPlacementGravity rect_gravity,
                             MirPlacementGravity window_gravity,
@@ -396,7 +396,7 @@ try
     mir::require(spec);
     spec->aux_rect = *rect;
     spec->aux_rect_placement_gravity = rect_gravity;
-    spec->surface_placement_gravity = surface_gravity;
+    spec->surface_placement_gravity = window_gravity;
     spec->placement_hints = placement_hints;
     spec->aux_rect_placement_offset_x = offset_dx;
     spec->aux_rect_placement_offset_y = offset_dy;
