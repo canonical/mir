@@ -432,8 +432,9 @@ void mir_spec_release(MirWindowSpec* spec)
     delete spec;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+// These functions will be deprecated soon
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,
@@ -780,7 +781,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                              edge);
 }
 
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic pop
 
 extern "C"
 void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
