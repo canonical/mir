@@ -266,9 +266,12 @@ mcl::BufferStream::BufferStream(
       render_surface_(render_surface)
 {
     /*
-     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
-     *       has been ported to use client-side vsync. And that's why
-     *       current_swap_interval is not inside BufferStreamConfiguration...
+     * Since we try to use client-side vsync where possible, a separate
+     * copy of the current swap interval is required to represent that
+     * the stream might have a non-zero interval while we want the server
+     * to use a zero interval. This is not stored inside interval_config
+     * because with some luck interval_config will eventually go away
+     * leaving just int current_swap_interval.
      */
     current_swap_interval = interval_config.swap_interval();
 
@@ -443,10 +446,6 @@ void mcl::BufferStream::wait_for_vsync()
 
 MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
 {
-    /*
-     * TODO: Deprecate this function after mir_buffer_stream_swap_buffers()
-     *       has been ported to use client-side vsync.
-     */
     buffer_depository->set_interval(i);
     return interval_config.set_swap_interval(i);
 }
@@ -468,8 +467,7 @@ void mcl::BufferStream::swap_buffers_sync()
      *   ClientLatency.average_latency_is_one_frame
      * has proven this is a real problem so we must be sure to put the server
      * in interval 0 when using client-side vsync. This guarantees that random
-     * scheduling imperfections won't create unexpected lag, and as an added
-     * bonus it also yields even lower real-world measured latency.
+     * scheduling imperfections won't create queuing lag.
      */
     if (interval_config.swap_interval() != 0)
         set_server_swap_interval(0);
@@ -509,10 +507,6 @@ int mcl::BufferStream::swap_interval() const
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    /*
-     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
-     *       has been ported to use client-side vsync.
-     */
     current_swap_interval = user_swap_interval.is_set() ?
         user_swap_interval.value() : interval;
 
