@@ -21,9 +21,9 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -44,9 +44,9 @@ namespace mf = mir::frontend;
 
 namespace
 {
-mi::DeviceConfiguration from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
+MirInputDevice from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
 {
-    mi::DeviceConfiguration conf(device->id(), device->capabilities(), device->name(), device->unique_id());
+    MirInputDevice conf(device->id(), device->capabilities(), device->name(), device->unique_id());
 
     auto ptr_conf = device->pointer_configuration();
     auto tpd_conf = device->touchpad_configuration();

@@ -47,7 +47,7 @@ public:
     void handle_lifecycle_event(MirLifecycleState state) override;
     void handle_display_config_change(graphics::DisplayConfiguration const& config) override;
     void handle_error(ClientVisibleError const& error) override;
-    void handle_input_config_change(input::InputConfiguration const& config) override;
+    void handle_input_config_change(MirInputConfiguration const& config) override;
     void send_ping(int32_t serial) override;
     void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) override;
     void add_buffer(graphics::Buffer&) override;

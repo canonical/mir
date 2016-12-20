@@ -22,7 +22,6 @@
 
 namespace mg=mir::graphics;
 namespace ms=mir::scene;
-namespace mi=mir::input;
 
 ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
@@ -47,7 +46,7 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
-void ms::GlobalEventSender::handle_input_config_change(mi::InputConfiguration const& config)
+void ms::GlobalEventSender::handle_input_config_change(MirInputConfiguration const& config)
 {
     sessions->for_each([&config](std::shared_ptr<ms::Session> const& session)
     {

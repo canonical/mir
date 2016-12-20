@@ -26,7 +26,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_report.h"
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_input_device.h"
@@ -54,20 +54,20 @@ struct TestNestedInputPlatform : Test
     NiceMock<mtd::MockInputSeat> mock_seat;
     mgn::InputPlatform platform{mt::fake_shared(mock_host_connection), mt::fake_shared(mock_input_device_registry),
                                 mr::null_input_report()};
-    mi::DeviceConfiguration a_keyboard{1, mi::DeviceCapabilities{mir_input_device_capability_keyboard}, "keys" , "keys-evdev2"};
-    mi::DeviceConfiguration a_mouse{0, mi::DeviceCapabilities{mir_input_device_capability_pointer}, "rodent", "rodent-evdev1"};
+    MirInputDevice a_keyboard{1, mi::DeviceCapabilities{mir_input_device_capability_keyboard}, "keys" , "keys-evdev2"};
+    MirInputDevice a_mouse{0, mi::DeviceCapabilities{mir_input_device_capability_pointer}, "rodent", "rodent-evdev1"};
     const mir::geometry::Rectangle source_surface{{0, 0}, {100, 100}};
 
-    auto capture_input_device(mi::DeviceConfiguration& dev)
+    auto capture_input_device(MirInputDevice& dev)
     {
         std::shared_ptr<mi::InputDevice> input_dev;
         ON_CALL(mock_input_device_registry, add_device(_))
             .WillByDefault(SaveArg<0>(&input_dev));
         platform.start();
-        mi::InputConfiguration config;
+        MirInputConfiguration config;
         config.add_device_configuration(dev);
         mgn::UniqueInputConfig input_config(
-            reinterpret_cast<MirInputConfig*>(new mi::InputConfiguration(config)),
+            new MirInputConfiguration(config),
             mir_input_config_destroy);
         mock_host_connection.device_change_callback(std::move(input_config));
 
@@ -106,11 +106,11 @@ TEST_F(TestNestedInputPlatform, registers_devices)
     EXPECT_CALL(mock_input_device_registry, add_device(MatchesDeviceData(a_mouse)));
 
     platform.start();
-    mi::InputConfiguration devices;
+    MirInputConfiguration devices;
     devices.add_device_configuration(a_keyboard);
     devices.add_device_configuration(a_mouse);
     mgn::UniqueInputConfig input_config(
-        reinterpret_cast<MirInputConfig*>(new mi::InputConfiguration(devices)),
+        new MirInputConfiguration(devices),
         mir_input_config_destroy);
     mock_host_connection.device_change_callback(std::move(input_config));
 

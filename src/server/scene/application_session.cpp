@@ -336,7 +336,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     }
 }
 
-void ms::ApplicationSession::send_input_config(input::InputConfiguration const& config)
+void ms::ApplicationSession::send_input_config(MirInputConfiguration const& config)
 {
     event_sink->handle_input_config_change(config);
 }

@@ -20,7 +20,7 @@
 #define MIR_INPUT_CONFIGURATION_CHANGER_H_
 
 #include "mir/frontend/input_configuration_changer.h"
-#include "mir/input/input_configuration.h"
+#include "mir/input/mir_input_configuration.h"
 #include <map>
 #include <mutex>
 #include <vector>
@@ -49,14 +49,14 @@ public:
                   std::shared_ptr<scene::SessionContainer> const& session_container,
                   std::shared_ptr<scene::SessionEventHandlerRegister> const& session_event_handler_register);
     ~ConfigChanger();
-    InputConfiguration base_configuration() override;
-    void configure(std::shared_ptr<frontend::Session> const&, InputConfiguration &&) override;
-    void set_base_configuration(InputConfiguration &&) override;
+    MirInputConfiguration base_configuration() override;
+    void configure(std::shared_ptr<frontend::Session> const&, MirInputConfiguration &&) override;
+    void set_base_configuration(MirInputConfiguration &&) override;
 
     void devices_updated(std::vector<std::shared_ptr<Device>> const& added, std::vector<MirInputDeviceId> const& removed);
 private:
-    void apply_config(InputConfiguration const& config);
-    void apply_config_at_session(InputConfiguration const& config, std::shared_ptr<frontend::Session> const& session);
+    void apply_config(MirInputConfiguration const& config);
+    void apply_config_at_session(MirInputConfiguration const& config, std::shared_ptr<frontend::Session> const& session);
     void apply_base_config();
     void send_base_config_to_all_sessions();
     void focus_change_handler(std::shared_ptr<scene::Session> const& session);
@@ -70,9 +70,9 @@ private:
     bool base_configuration_applied;
 
     std::weak_ptr<frontend::Session> focused_session;
-    InputConfiguration base;
+    MirInputConfiguration base;
     std::mutex config_mutex;
-    std::map<std::weak_ptr<frontend::Session>, InputConfiguration, std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
+    std::map<std::weak_ptr<frontend::Session>, MirInputConfiguration, std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
 };
 
 }
