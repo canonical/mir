@@ -529,4 +529,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_set_shell_chrome;
     mir_spec_set_pointer_confinement;
     mir_spec_set_placement;
+    mir_specify_input_method;
 } MIR_CLIENT_0.25;

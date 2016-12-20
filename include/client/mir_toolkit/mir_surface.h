@@ -166,6 +166,22 @@ mir_specify_dialog(MirConnection* connection,
                    MirPixelFormat format);
 
 /**
+ * Create a window specification for an input method window.
+ *
+ * Currently this is only appropriate for the Unity On-Screen-Keyboard.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \param [in] format       Pixel format for the window.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirWindowSpec*
+mir_specify_input_method(MirConnection* connection,
+                        int width, int height,
+                        MirPixelFormat format);
+
+/**
  * Create a window specification.
  * This can be used with mir_surface_create() to create a window or with
  * mir_surface_apply_spec() to change an existing window.
@@ -723,20 +739,12 @@ void mir_surface_spec_set_placement(MirSurfaceSpec*     spec,
 __attribute__((deprecated("use mir_spec_set_placement() instead")));
 
 /**
- * Create a surface specification for an input method surface.
- *
- * Currently this is only appropriate for the Unity On-Screen-Keyboard.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ *\deprecated use mir_specify_input_method() instead
  */
 MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
-                                                            int width,
-                                                            int height,
-                                                            MirPixelFormat format);
+                                                            int width, int height,
+                                                            MirPixelFormat format)
+__attribute__((deprecated("use mir_specify_input_method() instead")));
 
 /**
  * Set the name for the cursor from the system cursor theme.

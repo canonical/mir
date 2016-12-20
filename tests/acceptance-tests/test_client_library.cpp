@@ -954,7 +954,7 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     auto im_parent_id = mir_persistent_id_from_string(mir_persistent_id_as_string(main_surface_id));
 
     auto im_client = mir_connect_sync(new_connection().c_str(), "IM Client");
-    surface_spec = mir_connection_create_spec_for_input_method(im_client,
+    surface_spec = mir_specify_input_method(im_client,
                                                                200, 20,
                                                                mir_pixel_format_argb_8888);
     MirRectangle attachment_rect {
