@@ -374,6 +374,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state)
+try
+{
+    mir::require(spec);
+    spec->confine_pointer = state;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -704,13 +715,8 @@ void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width,
 }
 
 void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
-try
 {
-    spec->confine_pointer = state;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_spec_set_pointer_confinement(spec, state);
 }
 
 void mir_surface_spec_set_placement(

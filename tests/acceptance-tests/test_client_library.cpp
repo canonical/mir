@@ -289,7 +289,7 @@ TEST_F(ClientLibrary, can_set_pointer_confinement)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_specify_window(connection, width, height, format);
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
     surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);
 

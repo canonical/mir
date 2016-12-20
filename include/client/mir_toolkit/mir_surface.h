@@ -432,6 +432,16 @@ void mir_spec_set_event_handler(MirWindowSpec* spec,
 void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
 
 /**
+ * Attempts to set the pointer confinement spec for this window
+ *
+ * This will request the window manager to confine the pointer to the surfaces region.
+ *
+ * \param [in] spec  The spec to accumulate the request in.
+ * \param [in] state The state you would like the pointer confinement to be in.
+ */
+void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -664,14 +674,10 @@ void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome styl
 __attribute__((deprecated("use mir_spec_set_shell_chrome() instead")));
 
 /**
- * Attempts to set the pointer confinement spec for this surface
- *
- * This will request the window manager to confine the pointer to the surfaces region.
- *
- * \param [in] spec  The spec to accumulate the request in.
- * \param [in] state The state you would like the pointer confinement to be in.
+ *\deprecated use mir_spec_set_pointer_confinement() instead
  */
-void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
+__attribute__((deprecated("use mir_spec_set_pointer_confinement() instead")));
 
 /**
  * Set the surface placement on the spec.

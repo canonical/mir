@@ -78,7 +78,7 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_specify_window(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+        mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
         mir_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
         mir_spec_release(spec);
@@ -282,7 +282,7 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
 
     // Attempt to confine client_1 while client_2 is focused
     auto spec = mir_create_spec(client_1.connection);
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(client_1.surface, spec);
     mir_spec_release(spec);
