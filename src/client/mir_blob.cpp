@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "display_configuration.h"
+
 #include "mir_toolkit/mir_blob.h"
 #include "mir_protobuf.pb.h"
 
@@ -126,6 +128,21 @@ catch (std::exception const& x)
     return nullptr;
 }
 
+MirBlob* mir_blob_from_display_config(MirDisplayConfig* configuration)
+try
+{
+    auto blob = std::make_unique<MirManagedBlob>(static_cast<size_t>(configuration->ByteSize()));
+
+    configuration->SerializeWithCachedSizesToArray(blob->data());
+
+    return blob.release();
+}
+catch (std::exception const& x)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(x);
+    return nullptr;
+}
+
 MirBlob* mir_blob_onto_buffer(void const* buffer, size_t buffer_size)
 try
 {
@@ -206,6 +223,21 @@ try
     }
 
     return new_config;
+}
+catch (std::exception const& x)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(x);
+    abort();
+}
+
+MirDisplayConfig* mir_blob_to_display_config(MirBlob* blob)
+try
+{
+    auto config = new mir::protobuf::DisplayConfiguration;
+
+    config->ParseFromArray(mir_blob_data(blob), mir_blob_size(blob));
+
+    return static_cast<MirDisplayConfig*>(config);
 }
 catch (std::exception const& x)
 {
