@@ -253,6 +253,7 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       user_swap_interval(parse_env_for_swap_interval()),
+      using_client_side_vsync(false),
       interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
@@ -264,6 +265,13 @@ mcl::BufferStream::BufferStream(
       factory(factory),
       render_surface_(render_surface)
 {
+    /*
+     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
+     *       has been ported to use client-side vsync. And that's why
+     *       current_swap_interval is not inside BufferStreamConfiguration...
+     */
+    current_swap_interval = interval_config.swap_interval();
+
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -354,6 +362,10 @@ MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done
     std::unique_lock<decltype(mutex)> lock(mutex);
     perf_report->end_frame(id);
 
+    if (!using_client_side_vsync &&
+        current_swap_interval != interval_config.swap_interval())
+        set_server_swap_interval(current_swap_interval);
+
     secured_region.reset();
 
     // TODO: We can fix the strange "ID casting" used below in the second phase
@@ -408,20 +420,18 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
 
 void mcl::BufferStream::wait_for_vsync()
 {
-    mir::time::PosixTimestamp target;
+    mir::time::PosixTimestamp last, target;
+    std::shared_ptr<FrameClock> clock;
 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         if (!frame_clock)
             return;
-        /*
-         * Note: lock is held and this will sometimes call resync_callback
-         * Presently that's just a stub, and in future it will be provided by us
-         * so it's safe for now, but keep it in mind.
-         */
-        target = frame_clock->next_frame_after(last_vsync);
+        last = last_vsync;
+        clock = frame_clock;
     }
 
+    target = clock->next_frame_after(last);
     sleep_until(target);
 
     {
@@ -431,17 +441,46 @@ void mcl::BufferStream::wait_for_vsync()
     }
 }
 
+MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
+{
+    /*
+     * TODO: Deprecate this function after mir_buffer_stream_swap_buffers()
+     *       has been ported to use client-side vsync.
+     */
+    buffer_depository->set_interval(i);
+    return interval_config.set_swap_interval(i);
+}
+
 void mcl::BufferStream::swap_buffers_sync()
 {
-    swap_buffers([](){})->wait_for_all();
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = true;
+    }
 
     /*
-     * Client-side vsync:
-     * Note wait_for_vsync keeps its own timestamp so is unaffected by any
-     * additional throttling of server-side vsync while it's still present.
-     * But with this in place we no longer need the server throttling buffer
-     * returns...
+     * Until recently it seemed like server-side vsync could co-exist with
+     * client-side vsync. However my original theory that it was risky has
+     * proven to be true. If we leave server-side vsync throttling to interval
+     * one at the same time as using client-side, there's a risk the server
+     * will not get scheduled sufficiently to drain the queue as fast as
+     * we fill it, creating lag. The acceptance test:
+     *   ClientLatency.average_latency_is_one_frame
+     * has proven this is a real problem so we must be sure to put the server
+     * in interval 0 when using client-side vsync. This guarantees that random
+     * scheduling imperfections won't create unexpected lag, and as an added
+     * bonus it also yields even lower real-world measured latency.
      */
+    if (interval_config.swap_interval() != 0)
+        set_server_swap_interval(0);
+
+    swap_buffers([](){})->wait_for_all();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = false;
+    }
+
     int interval = swap_interval();
     for (int i = 0; i < interval; ++i)
         wait_for_vsync();
@@ -464,11 +503,8 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 
 int mcl::BufferStream::swap_interval() const
 {
-    /*
-     * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
-     *       has been ported to use client-side vsync.
-     */
-    return interval_config.swap_interval();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return current_swap_interval;
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
@@ -477,11 +513,10 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
      * TODO: Deprecate interval_config after mir_buffer_stream_swap_buffers()
      *       has been ported to use client-side vsync.
      */
-    if (user_swap_interval.is_set())
-        interval = user_swap_interval.value();
+    current_swap_interval = user_swap_interval.is_set() ?
+        user_swap_interval.value() : interval;
 
-    buffer_depository->set_interval(interval);
-    return interval_config.set_swap_interval(interval);
+    return set_server_swap_interval(current_swap_interval);
 }
 
 void mcl::BufferStream::adopted_by(MirSurface* surface)

@@ -137,7 +137,7 @@ private:
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
     void on_scale_set(float scale);
     void release_cpu_region();
-    MirWaitHandle* force_swap_interval(int interval);
+    MirWaitHandle* set_server_swap_interval(int i);
     void init_swap_interval();
     void wait_for_vsync();
 
@@ -148,6 +148,8 @@ private:
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
     optional_value<int> user_swap_interval;
+    int current_swap_interval;
+    bool using_client_side_vsync;
     BufferStreamConfiguration interval_config;
     float scale_;
 
