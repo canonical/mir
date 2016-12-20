@@ -332,8 +332,8 @@ catch (std::exception const& ex)
 }
 
 void mir_spec_set_input_shape(MirWindowSpec *spec,
-                                      MirRectangle const* rectangles,
-                                      size_t n_rects)
+                              MirRectangle const* rectangles,
+                              size_t n_rects)
 try
 {
     mir::require(spec);
@@ -344,6 +344,19 @@ try
         copy.emplace_back(rectangles[i]);
     }
     spec->input_shape = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_spec_set_event_handler(MirWindowSpec* spec,
+                                mir_surface_event_callback callback,
+                                void* context)
+try
+{
+    mir::require(spec);
+    spec->event_handler = MirWindowSpec::EventHandler{callback, context};
 }
 catch (std::exception const& ex)
 {
@@ -511,10 +524,10 @@ void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
 }
 
 void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
-    mir_surface_event_callback callback,
-    void* context)
+                                        mir_surface_event_callback callback,
+                                        void* context)
 {
-    spec->event_handler = MirSurfaceSpec::EventHandler{callback, context};
+    mir_spec_set_event_handler(spec, callback, context);
 }
 
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)

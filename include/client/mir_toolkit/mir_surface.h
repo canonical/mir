@@ -404,8 +404,23 @@ void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
  * \param [in] n_rects The number of elements in the rectangles array.
  */
 void mir_spec_set_input_shape(MirWindowSpec* spec,
-                                      MirRectangle const *rectangles,
-                                      size_t n_rects);
+                              MirRectangle const *rectangles,
+                              size_t n_rects);
+
+/**
+ * Set the event handler to be called when events arrive for a window.
+ *   \warning event_handler could be called from another thread. You must do
+ *            any locking appropriate to protect your data accessed in the
+ *            callback. There is also a chance that different events will be
+ *            called back in different threads, for the same window,
+ *            simultaneously.
+ * \param [in] spec       The spec to accumulate the request in.
+ * \param [in] callback   The callback function
+ * \param [in] context    Additional argument to be passed to callback
+ */
+void mir_spec_set_event_handler(MirWindowSpec* spec,
+                                mir_surface_event_callback callback,
+                                void* context);
 
 /**
  * Release the resources held by a MirWindowSpec.
@@ -626,21 +641,12 @@ void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
 __attribute__((deprecated("use mir_spec_set_input_shape() instead")));
 
 /**
- * Set the event handler to be called when events arrive for a surface.
- *   \warning event_handler could be called from another thread. You must do
- *            any locking appropriate to protect your data accessed in the
- *            callback. There is also a chance that different events will be
- *            called back in different threads, for the same surface,
- *            simultaneously.
- * \param [in] spec       The spec to accumulate the request in.
- * \param [in] callback   The callback function
- * \param [in] context    Additional argument to be passed to callback
+ *\deprecated use mir_spec_set_event_handler() instead
  */
-void mir_surface_spec_set_event_handler(
-    MirSurfaceSpec* spec,
-    mir_surface_event_callback callback,
-    void* context);
-
+void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
+                                        mir_surface_event_callback callback,
+                                        void* context)
+__attribute__((deprecated("use mir_spec_set_event_handler() instead")));
 
 /**
  * Ask the shell to customize "chrome" for this surface.

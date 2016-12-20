@@ -774,7 +774,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_surface_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_surface_output)
             {

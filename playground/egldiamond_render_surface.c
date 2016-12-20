@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     mir_spec_set_name(spec, appname);
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
-    mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);
+    mir_spec_set_event_handler(spec, resize_callback, render_surface);
 
     surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);

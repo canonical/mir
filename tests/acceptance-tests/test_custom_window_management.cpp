@@ -580,7 +580,7 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
 
     PlacementCheck placement_check{placement};
     auto surface_spec = mir_specify_window(connection, width, height, format);
-    mir_surface_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
+    mir_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
     auto surface = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);
 
