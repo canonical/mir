@@ -322,8 +322,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     std::unique_ptr<mtf::VisibleSurface> visible_surface;
     MirSurface* surface;
 };
-
-} // namespace
+}
 
 TEST_F(ClientLatency, average_latency_is_one_frame)
 {
