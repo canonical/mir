@@ -27,35 +27,28 @@
 #include <iosfwd>
 #include <memory>
 
-namespace mir
-{
-namespace input
-{
 /*
  * Keyboard device configuration.
  */
-struct KeyboardConfiguration
+struct MirKeyboardConfiguration
 {
-    KeyboardConfiguration();
-    ~KeyboardConfiguration();
-    KeyboardConfiguration(Keymap&& keymap);
-    KeyboardConfiguration(KeyboardConfiguration&& other);
-    KeyboardConfiguration(KeyboardConfiguration const& other);
-    KeyboardConfiguration& operator=(KeyboardConfiguration const& other);
+    MirKeyboardConfiguration();
+    ~MirKeyboardConfiguration();
+    MirKeyboardConfiguration(mir::input::Keymap&& keymap);
+    MirKeyboardConfiguration(MirKeyboardConfiguration&& other);
+    MirKeyboardConfiguration(MirKeyboardConfiguration const& other);
+    MirKeyboardConfiguration& operator=(MirKeyboardConfiguration const& other);
 
-    Keymap const& device_keymap() const;
-    void device_keymap(Keymap const& );
+    mir::input::Keymap const& device_keymap() const;
+    void device_keymap(mir::input::Keymap const& );
 
-    bool operator==(KeyboardConfiguration const& rhs) const;
-    bool operator!=(KeyboardConfiguration const& rhs) const;
+    bool operator==(MirKeyboardConfiguration const& rhs) const;
+    bool operator!=(MirKeyboardConfiguration const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream& operator<<(std::ostream& out, KeyboardConfiguration const& keyboard);
-
-}
-}
+std::ostream& operator<<(std::ostream& out, MirKeyboardConfiguration const& keyboard);
 
 #endif
