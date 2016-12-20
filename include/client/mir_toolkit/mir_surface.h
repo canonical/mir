@@ -337,6 +337,16 @@ void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned
  */
 void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
 
+/**
+ * \param [in] spec         Specification to mutate
+ * \param [in] output_id    ID of output to place window on. From MirDisplayOutput.output_id
+ *
+ * \note    If this call returns %true then a valid window returned from mir_surface_create() is
+ *          guaranteed to be fullscreen on the specified output. An invalid window is returned
+ *          if the server unable to, or policy prevents it from, honouring this request.
+ */
+void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -508,6 +518,12 @@ void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width,
 __attribute__((deprecated("use mir_spec_set_max_aspect_ratio() instead")));
 
 /**
+ *\deprecated use mir_spec_set_fullscreen() instead
+ */
+void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
+__attribute__((deprecated("use mir_spec_set_fullscreen() instead")));
+
+/**
  * Set the requested pixel format.
  * \param [in] spec     Specification to mutate
  * \param [in] format   Requested pixel format
@@ -528,16 +544,6 @@ void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
  *          the point mir_surface_create() is called it will instead return an invalid surface.
  */
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
-
-/**
- * \param [in] spec         Specification to mutate
- * \param [in] output_id    ID of output to place surface on. From MirDisplayOutput.output_id
- *
- * \note    If this call returns %true then a valid surface returned from mir_surface_create() is
- *          guaranteed to be fullscreen on the specified output. An invalid surface is returned
- *          if the server unable to, or policy prevents it from, honouring this request.
- */
-void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
 /**
  * Set the requested preferred orientation mode.

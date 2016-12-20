@@ -277,6 +277,18 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id)
+try
+{
+    mir::require(spec);
+    spec->output_id = output_id;
+    spec->state = mir_surface_state_fullscreen;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -424,8 +436,7 @@ void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
-    spec->output_id = output_id;
-    spec->state = mir_surface_state_fullscreen;
+    mir_spec_set_fullscreen(spec, output_id);
 }
 
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode)

@@ -482,7 +482,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_spec_set_name(spec, name);
 
     if (output_id != mir_display_output_id_invalid)
-        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+        mir_spec_set_fullscreen(spec, output_id);
 
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);

@@ -64,7 +64,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
         // Need fullscreen for the cursor events
         auto const spec = mir_create_spec(connection);
-        mir_surface_spec_set_fullscreen_on_output(spec, 1);
+        mir_spec_set_fullscreen(spec, 1);
         mir_surface_apply_spec(surface1, spec);
         mir_surface_apply_spec(surface2, spec);
         mir_surface_spec_release(spec);

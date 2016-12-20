@@ -519,4 +519,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_set_max_height;
     mir_spec_set_min_aspect_ratio;
     mir_spec_set_max_aspect_ratio;
+    mir_spec_set_fullscreen;
 } MIR_CLIENT_0.25;
