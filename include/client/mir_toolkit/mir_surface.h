@@ -357,6 +357,30 @@ void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
  */
 void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
 
+/**
+ * Request that the created window be attached to a window of a different client.
+ *
+ * This is restricted to input methods, which need to attach their suggestion window
+ * to text entry widgets of other processes.
+ *
+ * \param [in] spec             Specification to mutate
+ * \param [in] parent           A MirPersistentId reference to the parent window
+ * \param [in] attachment_rect  A rectangle specifying the region (in parent window coordinates)
+ *                              that the created window should be attached to.
+ * \param [in] edge             The preferred edge direction to attach to. Use
+ *                              mir_edge_attachment_any for no preference.
+ * \return                      False if the operation is invalid for this window type.
+ *
+ * \note    If the parent window becomes invalid before mir_surface_create() is processed,
+ *          it will return an invalid window. If the parent window is valid at the time
+ *          mir_surface_create() is called but is later closed, this window will also receive
+ *          a close event.
+ */
+bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -540,50 +564,13 @@ void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
 __attribute__((deprecated("use mir_spec_set_preferred_orientation() instead")));
 
 /**
- * Set the requested pixel format.
- * \param [in] spec     Specification to mutate
- * \param [in] format   Requested pixel format
- *
- * \note    If this call returns %true then the server is guaranteed to honour this request.
- *          If the server is unable to create a surface with this pixel format at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
-void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
-
-/**
- * Set the requested buffer usage.
- * \param [in] spec     Specification to mutate
- * \param [in] usage    Requested buffer usage
- *
- * \note    If this call returns %true then the server is guaranteed to honour this request.
- *          If the server is unable to create a surface with this buffer usage at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
-void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
-
-/**
- * Request that the created surface be attached to a surface of a different client.
- *
- * This is restricted to input methods, which need to attach their suggestion surface
- * to text entry widgets of other processes.
- *
- * \param [in] spec             Specification to mutate
- * \param [in] parent           A MirPersistentId reference to the parent surface
- * \param [in] attachment_rect  A rectangle specifying the region (in parent surface coordinates)
- *                              that the created surface should be attached to.
- * \param [in] edge             The preferred edge direction to attach to. Use
- *                              mir_edge_attachment_any for no preference.
- * \return                      False if the operation is invalid for this surface type.
- *
- * \note    If the parent surface becomes invalid before mir_surface_create() is processed,
- *          it will return an invalid surface. If the parent surface is valid at the time
- *          mir_surface_create() is called but is later closed, this surface will also receive
- *          a close event.
+ *\deprecated use mir_spec_attach_to_foreign_parent() instead
  */
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirPersistentId* parent,
                                                MirRectangle* attachment_rect,
-                                               MirEdgeAttachment edge);
+                                               MirEdgeAttachment edge)
+__attribute__((deprecated("use mir_spec_attach_to_foreign_parent() instead")));
 
 /**
  * Set the requested state.
@@ -730,6 +717,28 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
  * \param [in] name             The name, or "" to reset to default
  */
 void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
+
+/**
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ *
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this pixel format at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+
+/**
+ * Set the requested buffer usage.
+ * \param [in] spec     Specification to mutate
+ * \param [in] usage    Requested buffer usage
+ *
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this buffer usage at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
 
 /**
  * Create a surface from a given specification

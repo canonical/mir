@@ -379,7 +379,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
         mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
-    mir_surface_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
+    mir_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
 
     mir_persistent_id_release(parent_id);
 

@@ -963,7 +963,7 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
         10,
         10
     };
-    mir_surface_spec_attach_to_foreign_parent(surface_spec,
+    mir_spec_attach_to_foreign_parent(surface_spec,
                                               im_parent_id,
                                               &attachment_rect,
                                               mir_edge_attachment_any);

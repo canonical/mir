@@ -300,6 +300,26 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge)
+{
+    mir::require(mir_persistent_id_is_valid(parent));
+    mir::require(attachment_rect != nullptr);
+
+    if (!spec->type.is_set() ||
+        spec->type.value() != mir_surface_type_inputmethod)
+    {
+        return false;
+    }
+
+    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
+    spec->aux_rect = *attachment_rect;
+    spec->edge_attachment = edge;
+    return true;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -674,19 +694,10 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
 {
-    mir::require(mir_persistent_id_is_valid(parent));
-    mir::require(attachment_rect != nullptr);
-
-    if (!spec->type.is_set() ||
-        spec->type.value() != mir_surface_type_inputmethod)
-    {
-        return false;
-    }
-
-    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
-    spec->aux_rect = *attachment_rect;
-    spec->edge_attachment = edge;
-    return true;
+    return mir_spec_attach_to_foreign_parent(spec,
+                                             parent,
+                                             attachment_rect,
+                                             edge)
 }
 
 #pragma GCC diagnostic pop

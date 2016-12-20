@@ -339,7 +339,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
         10,
         10
     };
-    mir_surface_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
+    mir_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
     auto surface = mir_surface_create_sync(spec);
     EXPECT_THAT(surface, Not(IsValid()));
@@ -405,7 +405,7 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
     };
     MIR_EXPECT_DEATH(
     {
-        mir_surface_spec_attach_to_foreign_parent(spec, nullptr, &rect,
+        mir_spec_attach_to_foreign_parent(spec, nullptr, &rect,
                                                   mir_edge_attachment_any);
     }, "");
 
@@ -422,7 +422,7 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 
     MIR_EXPECT_DEATH(
     {
-        mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr,
+        mir_spec_attach_to_foreign_parent(spec, id, nullptr,
                                                   mir_edge_attachment_any);
     }, "");
 
