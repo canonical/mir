@@ -63,7 +63,7 @@ TEST_F(ClientLogging, reports_performance)
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto surf = mir_surface_create_sync(spec);
     ASSERT_THAT(surf, NotNull());
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     int const target_fps = 10;
     int const nseconds = 3;

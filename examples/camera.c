@@ -408,7 +408,7 @@ int main(int argc, char *argv[])
         mir_spec_set_width(changes, win_width);
         mir_spec_set_height(changes, win_height);
         mir_surface_apply_spec(surface, changes);
-        mir_surface_spec_release(changes);
+        mir_spec_release(changes);
     }
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);

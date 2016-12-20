@@ -112,7 +112,7 @@ MirSurface* create_surface(MirConnection* connection, const char* name, geom::Si
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_surface_spec_set_event_handler(spec, &event_callback, &mock_callback);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
     return surface;
 }
 

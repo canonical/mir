@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));

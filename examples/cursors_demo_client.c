@@ -49,7 +49,7 @@ void configure_cursor(MirConnection* connection, MirSurface *surface, unsigned i
     MirWindowSpec* spec = mir_create_spec(connection);
     mir_surface_spec_set_cursor_name(spec, cursors[real_index]);
     mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 }
 
 int main(int argc, char *argv[])

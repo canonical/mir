@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     mir_spec_set_name(spec, "ping");
 
     MirSurface *surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     if (surf == NULL || !mir_surface_is_valid(surf))
     {

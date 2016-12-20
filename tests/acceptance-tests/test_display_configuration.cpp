@@ -204,7 +204,7 @@ struct SimpleClient
 
         auto const spec = mir_specify_window(connection, 100, 100, mir_pixel_format_abgr_8888);
         surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 

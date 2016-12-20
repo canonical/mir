@@ -211,7 +211,7 @@ int main(int argc, char** argv)
     mir_surface_spec_add_render_surface(
         spec, render_surface[3], chain_width, chain_height, chain_width, chain_height);
     MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_buffers];

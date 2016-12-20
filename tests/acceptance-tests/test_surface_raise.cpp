@@ -67,7 +67,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         mir_spec_set_fullscreen(spec, 1);
         mir_surface_apply_spec(surface1, spec);
         mir_surface_apply_spec(surface2, spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
         
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]

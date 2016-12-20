@@ -391,6 +391,13 @@ bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  */
 void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
 
+/**
+ * Release the resources held by a MirWindowSpec.
+ *
+ * \param [in] spec     Specification to release
+ */
+void mir_spec_release(MirWindowSpec* spec);
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -589,11 +596,10 @@ void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 __attribute__((deprecated("use mir_spec_set_state() instead")));
 
 /**
- * Release the resources held by a MirSurfaceSpec.
- *
- * \param [in] spec     Specification to release
+ *\deprecated use mir_spec_release() instead
  */
-void mir_surface_spec_release(MirSurfaceSpec* spec);
+void mir_surface_spec_release(MirSurfaceSpec* spec)
+__attribute__((deprecated("use mir_spec_release() instead")));
 
 /**
  * Set the streams associated with the spec.

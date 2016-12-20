@@ -43,7 +43,7 @@ MirSurface* mtf::make_surface(
     auto spec = mir_specify_window(connection,
         size.width.as_int(), size.height.as_int(), f);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     if (!mir_surface_is_valid(surface))
     {

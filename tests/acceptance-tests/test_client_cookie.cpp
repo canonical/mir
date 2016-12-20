@@ -63,7 +63,7 @@ public:
         mir_spec_set_fullscreen(spec, 1);
         mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
         surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 

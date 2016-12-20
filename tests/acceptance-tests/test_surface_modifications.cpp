@@ -137,7 +137,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         specifier(spec);
 
         mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
     }
 
     MirInputDeviceId const device_id = MirInputDeviceId(7);

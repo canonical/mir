@@ -144,7 +144,7 @@ int demo_client(const char* server, int buffer_swap_count)
     puts("Surface created");
     ///\internal [surface_create_tag]
 
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     // We expect a surface handle;
     // we expect it to be valid; and,

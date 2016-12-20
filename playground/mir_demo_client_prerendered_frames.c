@@ -178,7 +178,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     int num_prerendered_frames = 20;
     MirBufferUsage usage = mir_buffer_usage_software;

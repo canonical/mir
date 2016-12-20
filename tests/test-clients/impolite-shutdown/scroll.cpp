@@ -70,7 +70,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
 
     printf("Mir chose pixel format %d\n", pixel_format);
 
-    auto deleter = [](MirWindowSpec *spec) { mir_surface_spec_release(spec); };
+    auto deleter = [](MirWindowSpec *spec) { mir_spec_release(spec); };
     std::unique_ptr<MirWindowSpec, decltype(deleter)> spec{
         mir_specify_window(connection, 640, 480, pixel_format),
         deleter

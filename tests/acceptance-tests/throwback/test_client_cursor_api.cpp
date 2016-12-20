@@ -139,7 +139,7 @@ struct CursorClient
                     1, 1, mir_pixel_format_abgr_8888);
                 mir_spec_set_name(spec, client_name.c_str());
                 auto const surface = mir_surface_create_sync(spec);
-                mir_surface_spec_release(spec);
+                mir_spec_release(spec);
 
                 mir_buffer_stream_swap_buffers_sync(
                     mir_surface_get_buffer_stream(surface));

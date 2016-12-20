@@ -331,6 +331,11 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_spec_release(MirWindowSpec* spec)
+{
+    delete spec;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -501,7 +506,7 @@ void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome styl
 
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
-    delete spec;
+    mir_spec_release(spec);
 }
 
 void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)

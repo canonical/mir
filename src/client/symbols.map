@@ -523,4 +523,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_spec_set_preferred_orientation;
     mir_spec_attach_to_foreign_parent;
     mir_spec_set_state;
+    mir_spec_release;
 } MIR_CLIENT_0.25;

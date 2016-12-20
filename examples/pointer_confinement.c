@@ -106,7 +106,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             grabbed = !grabbed;
 
             mir_surface_apply_spec(surface, spec);
-            mir_surface_spec_release(spec);
+            mir_spec_release(spec);
         }
         else if (key_code == XKB_KEY_f)
         {
@@ -123,7 +123,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
 
             mir_spec_set_state(spec, state);
             mir_surface_apply_spec(surface, spec);
-            mir_surface_spec_release(spec);
+            mir_spec_release(spec);
         }
     }
 }
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
     mir_spec_set_height(spec, height);
 
     mir_surface_apply_spec(mir_eglapp_native_surface(), spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     mouse_x = width  / 2.0;
     mouse_y = height / 2.0;
@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
     mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     // Hide cursor
     mir_surface_configure_cursor(surface, NULL);

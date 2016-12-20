@@ -487,7 +487,7 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
 
     auto surface = mir_surface_create_sync(spec);
 
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     /* This expectation will fail if the event generated during surface creation is
      * sent before the create_surface reply.
@@ -576,7 +576,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     auto spec = mir_specify_window(connection, 640, 480, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_TRUE(context.captured.wait_for(10s));
     ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_surface_output));

@@ -131,7 +131,7 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
     mir_surface_create(spec, create_surface_callback, ssync+1);
     wait_for_surface_create(ssync+1);
     
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     MirSurfaceParameters response_params;
     mir_surface_get_parameters(ssync->surface, &response_params);
@@ -171,7 +171,7 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
     {
         auto spec = mir_specify_window(connection, 1, 1, mir_pixel_format_abgr_8888);
         mir_surface_create(spec, create_surface_callback, ssync+i);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
     }
 
     for (int i = 0; i != max_surface_count; ++i)
@@ -210,7 +210,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     mir_spec_set_preferred_orientation(spec, mode);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_THAT(surface, IsValid());
     EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
@@ -235,7 +235,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     ASSERT_THAT(spec, NotNull());
 
     auto menu = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_THAT(menu, IsValid());
     EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
@@ -254,7 +254,7 @@ TEST_F(ClientSurfaces, can_be_tips)
     ASSERT_THAT(spec, NotNull());
 
     auto tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_THAT(tooltip, IsValid());
     EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
@@ -269,7 +269,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
@@ -284,7 +284,7 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
@@ -300,7 +300,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     ASSERT_THAT(spec, NotNull());
 
     auto im = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
 
@@ -313,7 +313,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
     auto surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     /*
      * Generally no windowing system ever censors window names. They are
@@ -335,7 +335,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
     mir_spec_set_name(spec, "Alice");
     mir_surface_apply_spec(surf, spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     mir_surface_release_sync(surf);
 }
@@ -384,7 +384,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
     mir_persistent_id_release(parent_id);
 
     auto im = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     mir_surface_release_sync(im);
     mir_surface_release_sync(surface);

@@ -135,7 +135,7 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
         connection, 640, 480, mir_pixel_format_abgr_8888);
 
     auto const surface  = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_TRUE(surface != NULL);
     ASSERT_THAT(surface, Not(IsValid()));

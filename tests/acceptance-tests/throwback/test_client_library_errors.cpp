@@ -218,7 +218,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
@@ -258,7 +258,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
@@ -283,7 +283,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
@@ -309,7 +309,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
         800, 600,
         mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
@@ -346,7 +346,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
 
     mir_persistent_id_release(invalid_id);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }

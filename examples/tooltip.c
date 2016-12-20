@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     mir_spec_set_min_height(spec, height/2);
     mir_spec_set_max_height(spec, height*2);
     mir_surface_apply_spec(parent, spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     MirSurface* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
     while (mir_eglapp_running())
@@ -113,7 +113,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     mir_spec_set_max_height(spec, height);
 
     MirSurface* tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     MirBufferStream* const bs = mir_surface_get_buffer_stream(tooltip);
     MirGraphicsRegion buffer;

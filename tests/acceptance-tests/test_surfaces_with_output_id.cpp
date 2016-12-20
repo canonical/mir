@@ -126,7 +126,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
+        auto del = [] (MirWindowSpec* spec) { mir_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
             mir_specify_window(connection, 
                 static_cast<int>(mode.horizontal_resolution) - 1,
@@ -141,7 +141,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
+        auto del = [] (MirWindowSpec* spec) { mir_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
             mir_specify_window(connection,
                 static_cast<int>(mode.horizontal_resolution),

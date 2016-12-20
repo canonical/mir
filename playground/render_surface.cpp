@@ -211,7 +211,7 @@ int main(int /*argc*/, char* /*argv*/[])
                                                               mir_buffer_usage_software);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);

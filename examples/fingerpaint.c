@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     if (surf != NULL)
     {

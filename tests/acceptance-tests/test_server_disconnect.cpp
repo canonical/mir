@@ -124,7 +124,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
                 auto spec = mir_specify_window(connection, 800, 600,
                     mir_pixel_format_xbgr_8888);
                 surf = mir_surface_create_sync(spec);
-                mir_surface_spec_release(spec);
+                mir_spec_release(spec);
             });
 
             configure_display.exec([&] {

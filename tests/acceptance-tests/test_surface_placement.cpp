@@ -90,7 +90,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         specifier(spec);
 
         auto const surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
 
         return surface;
     }
@@ -103,7 +103,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         specifier(spec);
 
         auto const surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
 
         return surface;
     }

@@ -485,7 +485,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         mir_spec_set_fullscreen(spec, output_id);
 
     surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
@@ -494,7 +494,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     spec = mir_create_spec(connection);
     mir_surface_spec_set_cursor_name(spec, cursor_name);
     mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);

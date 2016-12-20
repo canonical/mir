@@ -203,7 +203,7 @@ public:
         auto spec = mir_create_spec(mir_connection);
         mir_surface_spec_set_cursor_name(spec, mir_disabled_cursor_name);
         mir_surface_apply_spec(mir_surface, spec);
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
     }
 
 private:
@@ -369,7 +369,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             properties.size.width.as_int(),
             properties.size.height.as_int(),
             properties.format),
-        mir_surface_spec_release);
+        mir_spec_release);
 
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
@@ -677,7 +677,7 @@ public:
 
     ~SurfaceSpec()
     {
-        mir_surface_spec_release(spec);
+        mir_spec_release(spec);
     }
 
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override

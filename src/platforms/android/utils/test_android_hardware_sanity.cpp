@@ -119,7 +119,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
         connection, test_width, test_height, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto const surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     EXPECT_THAT(surface, IsValid());
     MirGraphicsRegion graphics_region;
@@ -174,7 +174,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     auto const spec = mir_specify_window(
         connection, test_width, test_height, select_format_for_visual_id(visual_id));
     auto const mir_surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     EXPECT_THAT(mir_surface, IsValid());
 

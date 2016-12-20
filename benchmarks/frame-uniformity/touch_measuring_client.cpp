@@ -40,7 +40,7 @@ MirSurface *create_surface(MirConnection *connection)
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
     
     if (!mir_surface_is_valid(surface))
     {

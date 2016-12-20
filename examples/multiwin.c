@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
     win[2].fill.a = alpha;
     premultiply_alpha(&win[2].fill);
 
-    mir_surface_spec_release(spec);
+    mir_spec_release(spec);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
