@@ -130,12 +130,12 @@ TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
 
     mi::PointerConfiguration pointer_conf;
-    pointer_conf.cursor_acceleration_bias = 3.0;
+    pointer_conf.cursor_acceleration_bias(3.0);
     EXPECT_THROW({dev.apply_pointer_configuration(pointer_conf);}, std::invalid_argument);
-    pointer_conf.cursor_acceleration_bias = -2.0;
+    pointer_conf.cursor_acceleration_bias(-2.0);
     EXPECT_THROW({dev.apply_pointer_configuration(pointer_conf);}, std::invalid_argument);
 
-    pointer_conf.cursor_acceleration_bias = 1.0;
+    pointer_conf.cursor_acceleration_bias(1.0);
     EXPECT_NO_THROW(dev.apply_pointer_configuration(pointer_conf));
 }
 
