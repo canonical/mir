@@ -206,7 +206,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
         surface_size.height.as_int(),
         mir_pixel_format_abgr_8888);
     mir_window_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_surface_spec_set_streams(spec, infos.data(), infos.size());
 
     surface = mir_surface_create_sync(spec);

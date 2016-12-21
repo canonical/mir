@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "red");
 
     win[0].surface = mir_surface_create_sync(spec);

@@ -438,6 +438,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
+try
+{
+    mir::require(spec);
+    spec->buffer_usage = usage;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_window_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -578,7 +589,7 @@ void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
 
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
 {
-    spec->buffer_usage = usage;
+    mir_window_spec_set_buffer_usage(spec, usage);
 }
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)

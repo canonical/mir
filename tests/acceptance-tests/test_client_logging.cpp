@@ -61,7 +61,7 @@ TEST_F(ClientLogging, reports_performance)
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_name(spec, "Rumpelstiltskin");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto surf = mir_surface_create_sync(spec);
     ASSERT_THAT(surf, NotNull());
     mir_window_spec_release(spec);

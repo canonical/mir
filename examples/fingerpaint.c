@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
 
     MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height, pixel_format);
     mir_window_spec_set_name(spec, "Mir Fingerpaint");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);

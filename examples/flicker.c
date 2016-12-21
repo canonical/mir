@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480, pixel_format);
     assert(spec != NULL);
     mir_window_spec_set_name(spec, __FILE__);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surface = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);

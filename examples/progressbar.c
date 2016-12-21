@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
         mir_window_spec_set_name(spec, name);
     }
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);

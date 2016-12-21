@@ -182,7 +182,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
@@ -207,7 +207,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
@@ -216,7 +216,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
         mir_window_spec_set_width(spec, width);
         mir_window_spec_set_height(spec, height);
         mir_window_spec_set_pixel_format(spec, pixel_format);
-        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
@@ -248,7 +248,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
@@ -257,7 +257,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
@@ -283,7 +283,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
@@ -314,7 +314,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
@@ -323,7 +323,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
@@ -349,7 +349,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
            mir_window_spec_set_width(spec, width);
            mir_window_spec_set_height(spec, height);
            mir_window_spec_set_pixel_format(spec, pixel_format);
-           mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
        });
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
@@ -358,7 +358,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));

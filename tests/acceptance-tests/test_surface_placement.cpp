@@ -479,7 +479,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -540,7 +540,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
             mir_window_spec_set_parent(spec, parent);
         });
 

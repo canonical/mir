@@ -105,7 +105,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     MirWindowSpec* const spec = mir_create_tip_window_spec(
         connection, width, height, format, parent, &zone, mir_edge_attachment_vertical);
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "tooltip");
     mir_window_spec_set_min_width(spec, width);
     mir_window_spec_set_max_width(spec, width);
