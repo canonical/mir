@@ -17,11 +17,10 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 #include <ostream>
 
-namespace mi = mir::input;
-struct mi::TouchpadConfiguration::Implementation
+struct MirTouchpadConfiguration::Implementation
 {
     Implementation() = default;
     Implementation(MirTouchpadClickModes click_mode,
@@ -49,30 +48,30 @@ struct mi::TouchpadConfiguration::Implementation
     bool disable_while_typing{false};
 };
 
-mi::TouchpadConfiguration::TouchpadConfiguration()
+MirTouchpadConfiguration::MirTouchpadConfiguration()
     : impl{std::make_unique<Implementation>()}
 {
 }
 
-mi::TouchpadConfiguration::TouchpadConfiguration(TouchpadConfiguration && other)
+MirTouchpadConfiguration::MirTouchpadConfiguration(MirTouchpadConfiguration && other)
     : impl(std::move(other.impl))
 {
 }
 
-mi::TouchpadConfiguration::TouchpadConfiguration(TouchpadConfiguration const& other)
+MirTouchpadConfiguration::MirTouchpadConfiguration(MirTouchpadConfiguration const& other)
     : impl(std::make_unique<Implementation>(*other.impl))
 {
 }
 
-mi::TouchpadConfiguration& mi::TouchpadConfiguration::operator=(TouchpadConfiguration const& other)
+MirTouchpadConfiguration& MirTouchpadConfiguration::operator=(MirTouchpadConfiguration const& other)
 {
     *impl = *other.impl;
     return *this;
 }
 
-mi::TouchpadConfiguration::~TouchpadConfiguration() = default;
+MirTouchpadConfiguration::~MirTouchpadConfiguration() = default;
 
-mi::TouchpadConfiguration::TouchpadConfiguration(MirTouchpadClickModes click_mode,
+MirTouchpadConfiguration::MirTouchpadConfiguration(MirTouchpadClickModes click_mode,
                                                  MirTouchpadScrollModes scroll_mode,
                                                  int button_down_scroll_button,
                                                  bool tap_to_click,
@@ -91,77 +90,77 @@ mi::TouchpadConfiguration::TouchpadConfiguration(MirTouchpadClickModes click_mod
 {
 }
 
-MirTouchpadClickModes mi::TouchpadConfiguration::click_mode() const
+MirTouchpadClickModes MirTouchpadConfiguration::click_mode() const
 {
     return impl->click_mode;
 }
 
-void mi::TouchpadConfiguration::click_mode(MirTouchpadClickModes modes)
+void MirTouchpadConfiguration::click_mode(MirTouchpadClickModes modes)
 {
     impl->click_mode = modes;
 }
 
-MirTouchpadScrollModes mi::TouchpadConfiguration::scroll_mode() const
+MirTouchpadScrollModes MirTouchpadConfiguration::scroll_mode() const
 {
     return impl->scroll_mode;
 }
 
-void mi::TouchpadConfiguration::scroll_mode(MirTouchpadScrollModes modes)
+void MirTouchpadConfiguration::scroll_mode(MirTouchpadScrollModes modes)
 {
     impl->scroll_mode = modes;
 }
 
-int mi::TouchpadConfiguration::button_down_scroll_button() const
+int MirTouchpadConfiguration::button_down_scroll_button() const
 {
     return impl->button_down_scroll_button;
 }
 
-void mi::TouchpadConfiguration::button_down_scroll_button(int button)
+void MirTouchpadConfiguration::button_down_scroll_button(int button)
 {
     impl->button_down_scroll_button = button;
 }
 
-bool mi::TouchpadConfiguration::tap_to_click() const
+bool MirTouchpadConfiguration::tap_to_click() const
 {
     return impl->tap_to_click;
 }
 
-void mi::TouchpadConfiguration::tap_to_click(bool enabled)
+void MirTouchpadConfiguration::tap_to_click(bool enabled)
 {
     impl->tap_to_click = enabled;
 }
 
-bool mi::TouchpadConfiguration::middle_mouse_button_emulation() const
+bool MirTouchpadConfiguration::middle_mouse_button_emulation() const
 {
     return impl->middle_mouse_button_emulation;
 }
 
-void mi::TouchpadConfiguration::middle_mouse_button_emulation(bool enabled)
+void MirTouchpadConfiguration::middle_mouse_button_emulation(bool enabled)
 {
     impl->middle_mouse_button_emulation = enabled;
 }
 
-bool mi::TouchpadConfiguration::disable_with_mouse() const
+bool MirTouchpadConfiguration::disable_with_mouse() const
 {
     return impl->disable_with_mouse;
 }
 
-void mi::TouchpadConfiguration::disable_with_mouse(bool enabled)
+void MirTouchpadConfiguration::disable_with_mouse(bool enabled)
 {
     impl->disable_with_mouse = enabled;
 }
 
-bool mi::TouchpadConfiguration::disable_while_typing() const
+bool MirTouchpadConfiguration::disable_while_typing() const
 {
     return impl->disable_while_typing;
 }
 
-void mi::TouchpadConfiguration::disable_while_typing(bool enabled)
+void MirTouchpadConfiguration::disable_while_typing(bool enabled)
 {
     impl->disable_while_typing = enabled;
 }
 
-bool mi::TouchpadConfiguration::operator==(TouchpadConfiguration const& rhs) const
+bool MirTouchpadConfiguration::operator==(MirTouchpadConfiguration const& rhs) const
 {
     return
         impl->click_mode == rhs.impl->click_mode &&
@@ -173,12 +172,12 @@ bool mi::TouchpadConfiguration::operator==(TouchpadConfiguration const& rhs) con
         impl->disable_while_typing == rhs.impl->disable_while_typing;
 }
 
-bool mi::TouchpadConfiguration::operator!=(TouchpadConfiguration const& rhs) const
+bool MirTouchpadConfiguration::operator!=(MirTouchpadConfiguration const& rhs) const
 {
     return !(*this == rhs);
 }
 
-std::ostream& mi::operator<<(std::ostream& out, TouchpadConfiguration const& conf)
+std::ostream& operator<<(std::ostream& out, MirTouchpadConfiguration const& conf)
 {
     return out << "click_mode:" << conf.click_mode()
         << " scroll_mode:" << conf.scroll_mode()

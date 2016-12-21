@@ -269,6 +269,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::screencast_buffer, invocation);
         }
+        else if ("screencast_to_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::screencast_to_buffer, invocation);
+        }
         else if ("release_screencast" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_screencast, invocation);
