@@ -500,4 +500,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_configuration_set_tap_to_click;
     mir_connection_request_extension;
     mir_output_get_model;
+    mir_blob_from_display_config;
+    mir_blob_to_display_config;
 } MIR_CLIENT_0.25;
