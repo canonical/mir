@@ -584,7 +584,7 @@ void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
 
 void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
 {
-    mir_window_spec_set_pixel_format();
+    mir_window_spec_set_pixel_format(spec, format);
 }
 
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
