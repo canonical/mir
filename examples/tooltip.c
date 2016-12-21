@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     MirConnection* const connection = mir_eglapp_native_connection();
     MirSurface* const parent = mir_eglapp_native_surface();
 
-    MirWindowSpec* const spec = mir_create_spec(connection);
+    MirWindowSpec* const spec = mir_create_window_spec(connection);
     mir_surface_spec_set_name(spec, "tooltip example");
     mir_surface_spec_set_min_width(spec, width/2);
     mir_surface_spec_set_max_width(spec, width*2);
@@ -102,7 +102,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     MirRectangle zone = { 0, 0, 10, 10 };
     int const width = 50;
     int const height = 20;
-    MirWindowSpec* const spec = mir_specify_tip(
+    MirWindowSpec* const spec = mir_create_tip_window_spec(
         connection, width, height, format, parent, &zone, mir_edge_attachment_vertical);
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);

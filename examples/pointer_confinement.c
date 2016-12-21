@@ -91,7 +91,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             // We start out grabbed
             static bool grabbed = true;
 
-            MirWindowSpec* spec = mir_create_spec(mir_eglapp_native_connection());
+            MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             if (!grabbed)
             {
                 mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
@@ -111,7 +111,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
         else if (key_code == XKB_KEY_f)
         {
             static bool fullscreen = false;
-            MirWindowSpec* spec = mir_create_spec(mir_eglapp_native_connection());
+            MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             MirSurfaceState state = mir_surface_state_restored;
 
             if (!fullscreen)
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     width  /= 2;
     height /= 2;
 
-    MirWindowSpec* spec = mir_create_spec(mir_eglapp_native_connection());
+    MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
     mir_surface_spec_set_width (spec, width);
     mir_surface_spec_set_height(spec, height);
 
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
     MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, handle_event, NULL);
 
-    spec = mir_create_spec(mir_eglapp_native_connection());
+    spec = mir_create_window_spec(mir_eglapp_native_connection());
     mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(surface, spec);

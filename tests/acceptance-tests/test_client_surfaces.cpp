@@ -249,7 +249,7 @@ TEST_F(ClientSurfaces, can_be_tips)
     auto parent = mtf::make_any_surface(connection);
     MirRectangle rect{100, 200, 100, 100};
 
-    auto spec = mir_specify_tip(connection, 640, 480,
+    auto spec = mir_create_tip_window_spec(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent, &rect, mir_edge_attachment_any);
     ASSERT_THAT(spec, NotNull());
 
@@ -265,7 +265,7 @@ TEST_F(ClientSurfaces, can_be_tips)
 
 TEST_F(ClientSurfaces, can_be_dialogs)
 {
-    auto spec = mir_specify_dialog(connection, 640, 480, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_dialog_window_spec(connection, 640, 480, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);
@@ -280,7 +280,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
 TEST_F(ClientSurfaces, can_be_modal_dialogs)
 {
     auto parent = mtf::make_any_surface(connection);
-    auto spec = mir_specify_modal_dialog(connection, 640, 480, mir_pixel_format_abgr_8888, parent);
+    auto spec = mir_create_modal_dialog_window_spec(connection, 640, 480, mir_pixel_format_abgr_8888, parent);
     ASSERT_THAT(spec, NotNull());
 
     auto dialog = mir_surface_create_sync(spec);
@@ -325,7 +325,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
      *
      * At least verify the rename completes without blocking...
      */
-    spec = mir_create_spec(connection);
+    spec = mir_create_window_spec(connection);
     ASSERT_THAT(spec, NotNull());
     mir_surface_spec_set_name(spec, "New Name");
     mir_surface_apply_spec(surf, spec);

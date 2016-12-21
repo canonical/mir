@@ -46,7 +46,7 @@ void configure_cursor(MirConnection* connection, MirSurface *surface, unsigned i
 
     size_t num_cursors = sizeof(cursors)/sizeof(*cursors);
     size_t real_index = cursor_index % num_cursors;
-    MirWindowSpec* spec = mir_create_spec(connection);
+    MirWindowSpec* spec = mir_create_window_spec(connection);
     mir_surface_spec_set_cursor_name(spec, cursors[real_index]);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);

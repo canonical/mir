@@ -504,9 +504,9 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_blob_to_display_config;
     mir_create_menu_window_spec;
     mir_create_normal_window_spec;
-    mir_specify_tip;
-    mir_specify_modal_dialog;
-    mir_specify_dialog;
-    mir_create_spec;
-    mir_spec_set_parent;
+    mir_create_tip_window_spec;
+    mir_create_modal_dialog_window_spec;
+    mir_create_dialog_window_spec;
+    mir_create_window_spec;
+    mir_window_spec_set_parent;
 } MIR_CLIENT_0.25;

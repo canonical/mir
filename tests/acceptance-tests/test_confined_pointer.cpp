@@ -101,7 +101,7 @@ struct Client
 
     void resize(int width, int height)
     {
-        auto spec = mir_create_spec(connection);
+        auto spec = mir_create_window_spec(connection);
         mir_surface_spec_set_width (spec, width);
         mir_surface_spec_set_height(spec, height);
 
@@ -281,7 +281,7 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
     Client client_2(new_connection(), second);
 
     // Attempt to confine client_1 while client_2 is focused
-    auto spec = mir_create_spec(client_1.connection);
+    auto spec = mir_create_window_spec(client_1.connection);
     mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(client_1.surface, spec);

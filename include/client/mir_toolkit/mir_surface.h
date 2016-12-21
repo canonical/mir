@@ -108,7 +108,7 @@ mir_create_menu_window_spec(MirConnection* connection,
  *                          to complete construction.
  */
 MirWindowSpec*
-mir_specify_tip(MirConnection* connection,
+mir_create_tip_window_spec(MirConnection* connection,
                 int width, int height,
                 MirPixelFormat format,
                 MirSurface* parent,
@@ -138,7 +138,7 @@ mir_specify_tip(MirConnection* connection,
  *
  */
 MirWindowSpec*
-mir_specify_modal_dialog(MirConnection* connection,
+mir_create_modal_dialog_window_spec(MirConnection* connection,
                          int width, int height,
                          MirPixelFormat format,
                          MirSurface* parent);
@@ -161,7 +161,7 @@ mir_specify_modal_dialog(MirConnection* connection,
  *
  */
 MirWindowSpec*
-mir_specify_dialog(MirConnection* connection,
+mir_create_dialog_window_spec(MirConnection* connection,
                    int width, int height,
                    MirPixelFormat format);
 
@@ -177,7 +177,7 @@ mir_specify_dialog(MirConnection* connection,
  * \return                  A handle that can ultimately be passed to
  *                          mir_surface_create() or mir_surface_apply_spec()
  */
-MirWindowSpec* mir_create_spec(MirConnection* connection);
+MirWindowSpec* mir_create_window_spec(MirConnection* connection);
 
 /**
  * Set the requested parent.
@@ -185,7 +185,7 @@ MirWindowSpec* mir_create_spec(MirConnection* connection);
  * \param [in] spec    Specification to mutate
  * \param [in] parent  A valid parent window.
  */
-void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -212,7 +212,7 @@ mir_connection_create_spec_for_tooltip(MirConnection* connection,
                                        MirPixelFormat format,
                                        MirSurface* parent,
                                        MirRectangle* zone);
-//__attribute__((deprecated("Use mir_specify_tip() instead")));
+//__attribute__((deprecated("Use mir_create_tip_window_spec() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_tip(MirConnection* connection,
@@ -221,30 +221,30 @@ mir_connection_create_spec_for_tip(MirConnection* connection,
                                    MirSurface* parent,
                                    MirRectangle* rect,
                                    MirEdgeAttachment edge);
-//__attribute__((deprecated("Use mir_specify_tip() instead")));
+//__attribute__((deprecated("Use mir_create_tip_window_spec() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
                                             int width, int height,
                                             MirPixelFormat format,
                                             MirSurface* parent);
-//__attribute__((deprecated("Use mir_specify_modal_dialog() instead")));
+//__attribute__((deprecated("Use mir_create_modal_dialog_window_spec() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_dialog(MirConnection* connection,
                                       int width, int height,
                                       MirPixelFormat format);
-//__attribute__((deprecated("Use mir_specify_dialog() instead")));
+//__attribute__((deprecated("Use mir_create_dialog_window_spec() instead")));
 
 MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
-//__attribute__((deprecated("Use mir_create_spec() instead")));
+//__attribute__((deprecated("Use mir_create_window_spec() instead")));
 
 MirSurfaceSpec*
 mir_connection_create_spec_for_changes(MirConnection* connection);
-//__attribute__((deprecated("Use mir_create_spec() instead")));
+//__attribute__((deprecated("Use mir_create_window_spec() instead")));
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
-//__attribute__((deprecated("Use mir_spec_set_parent() instead")));
+//__attribute__((deprecated("Use mir_window_spec_set_parent() instead")));
 
 /**
  *

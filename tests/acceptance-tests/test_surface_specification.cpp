@@ -93,7 +93,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     mtf::VisibleSurface create_surface(Specifier const& specifier)
     {
         auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_create_spec(connection), del);
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_create_window_spec(connection), del);
         specifier(spec.get());
         return mtf::VisibleSurface{spec.get()};
     }
@@ -158,7 +158,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
         signal_change.reset();
 
-        auto const spec = mir_create_spec(connection);
+        auto const spec = mir_create_window_spec(connection);
 
         mir_surface_spec_set_name(spec, new_title);
 
@@ -578,7 +578,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
         mir_surface_spec_set_height(spec, height);
         mir_surface_spec_set_pixel_format(spec, pixel_format);
         mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-        mir_spec_set_parent(spec, parent);
+        mir_window_spec_set_parent(spec, parent);
     });
 
     EXPECT_THAT(surface, Not(IsValidSurface()));
@@ -604,7 +604,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_spec_set_parent(spec, parent);
+            mir_window_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
@@ -646,7 +646,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
             mir_surface_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_spec_set_parent(spec, parent);
+            mir_window_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());

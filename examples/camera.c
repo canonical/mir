@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
     {
         /* Chicken or egg? init before open_camera, before size is known */
         MirConnection* connection = mir_eglapp_native_connection();
-        MirWindowSpec* changes = mir_create_spec(connection);
+        MirWindowSpec* changes = mir_create_window_spec(connection);
         win_width = cam->pix.width;
         win_height = cam->pix.height;
         mir_surface_spec_set_width(changes, win_width);

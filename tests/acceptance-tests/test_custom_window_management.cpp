@@ -181,7 +181,7 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_));
 
-    auto const spec = mir_create_spec(client.connection);
+    auto const spec = mir_create_window_spec(client.connection);
     mir_surface_spec_set_name(spec, new_title);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
@@ -335,7 +335,7 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
     auto surface = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    surface_spec = mir_create_spec(connection);
+    surface_spec = mir_create_window_spec(connection);
 
     mt::Signal received;
 
@@ -380,7 +380,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
     auto parent = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    surface_spec = mir_specify_tip(
+    surface_spec = mir_create_tip_window_spec(
         connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
 
     mir_surface_spec_set_placement(
@@ -463,7 +463,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
     auto child = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
 
-    surface_spec = mir_create_spec(connection);
+    surface_spec = mir_create_window_spec(connection);
     mir_surface_spec_set_placement(
         surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
 

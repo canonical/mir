@@ -78,7 +78,7 @@ mir_create_menu_window_spec(MirConnection* connection,
     return spec;
 }
 
-MirWindowSpec* mir_specify_tip(MirConnection* connection,
+MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
                                int width, int height,
                                MirPixelFormat format,
                                MirSurface* parent,
@@ -96,7 +96,7 @@ MirWindowSpec* mir_specify_tip(MirConnection* connection,
     return spec;
 }
 
-MirWindowSpec* mir_specify_modal_dialog(MirConnection* connection,
+MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
                                         int width, int height,
                                         MirPixelFormat format,
                                         MirSurface* parent)
@@ -111,7 +111,7 @@ MirWindowSpec* mir_specify_modal_dialog(MirConnection* connection,
 }
 
 MirWindowSpec*
-mir_specify_dialog(MirConnection* connection,
+mir_create_dialog_window_spec(MirConnection* connection,
                    int width, int height,
                    MirPixelFormat format)
 {
@@ -120,7 +120,7 @@ mir_specify_dialog(MirConnection* connection,
     return spec;
 }
 
-MirWindowSpec* mir_create_spec(MirConnection* connection)
+MirWindowSpec* mir_create_window_spec(MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
@@ -134,7 +134,7 @@ catch (std::exception const& ex)
     std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
 }
 
-void mir_spec_set_parent(MirWindowSpec* spec, MirSurface* parent)
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent)
 try
 {
     mir::require(spec);
@@ -172,7 +172,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection
                                                        MirSurface* parent,
                                                        MirRectangle* rect)
 {
-    return mir_specify_tip(connection, width, height, format, parent, rect, mir_edge_attachment_any);
+    return mir_create_tip_window_spec(connection, width, height, format, parent, rect, mir_edge_attachment_any);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
@@ -182,7 +182,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_tip(MirConnection* connection,
                                                    MirRectangle* rect,
                                                    MirEdgeAttachment edge)
 {
-    return mir_specify_tip(connection, width, height, format, parent, rect, edge);
+    return mir_create_tip_window_spec(connection, width, height, format, parent, rect, edge);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
@@ -190,7 +190,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
                                                       int height,
                                                       MirPixelFormat format)
 {
-    return mir_specify_dialog(connection, width, height, format);
+    return mir_create_dialog_window_spec(connection, width, height, format);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
@@ -208,7 +208,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
                                                            MirPixelFormat format,
                                                            MirSurface* parent)
 {
-    return mir_specify_modal_dialog(connection, width, height, format, parent);
+    return mir_create_modal_dialog_window_spec(connection, width, height, format, parent);
 }
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
@@ -327,12 +327,12 @@ void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
 
 MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
 {
-    return mir_create_spec(connection);
+    return mir_create_window_spec(connection);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
 {
-    return mir_create_spec(connection);
+    return mir_create_window_spec(connection);
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
@@ -456,7 +456,7 @@ catch (std::exception const& ex)
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 {
-    mir_spec_set_parent(spec, parent);
+    mir_window_spec_set_parent(spec, parent);
 }
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
