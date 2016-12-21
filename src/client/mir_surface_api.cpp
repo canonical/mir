@@ -51,8 +51,8 @@ void assign_result(void* result, void** context)
 
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,
-                   int width, int height,
-                   MirPixelFormat format)
+                              int width, int height,
+                              MirPixelFormat format)
 {
     auto spec = new MirWindowSpec{connection, width, height, format};
     spec->type = mir_surface_type_normal;
@@ -79,11 +79,11 @@ mir_create_menu_window_spec(MirConnection* connection,
 }
 
 MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
-                               int width, int height,
-                               MirPixelFormat format,
-                               MirSurface* parent,
-                               MirRectangle* rect,
-                               MirEdgeAttachment edge)
+                                          int width, int height,
+                                          MirPixelFormat format,
+                                          MirSurface* parent,
+                                          MirRectangle* rect,
+                                          MirEdgeAttachment edge)
 {
     mir::require(mir_surface_is_valid(parent));
     mir::require(rect != nullptr);
@@ -97,9 +97,9 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
 }
 
 MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
-                                        int width, int height,
-                                        MirPixelFormat format,
-                                        MirSurface* parent)
+                                                   int width, int height,
+                                                   MirPixelFormat format,
+                                                   MirSurface* parent)
 {
     mir::require(mir_surface_is_valid(parent));
 
@@ -112,8 +112,8 @@ MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
 
 MirWindowSpec*
 mir_create_dialog_window_spec(MirConnection* connection,
-                   int width, int height,
-                   MirPixelFormat format)
+                              int width, int height,
+                              MirPixelFormat format)
 {
     auto spec = new MirWindowSpec{connection, width, height, format};
     spec->type = mir_surface_type_dialog;
@@ -122,8 +122,8 @@ mir_create_dialog_window_spec(MirConnection* connection,
 
 MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
-                            int width, int height,
-                            MirPixelFormat format)
+                                    int width, int height,
+                                    MirPixelFormat format)
 {
     auto spec = new MirWindowSpec{connection, width, height, format};
     spec->type = mir_surface_type_inputmethod;
@@ -311,9 +311,9 @@ catch (std::exception const& ex)
 }
 
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
-                                               MirPersistentId* parent,
-                                               MirRectangle* attachment_rect,
-                                               MirEdgeAttachment edge)
+                                              MirPersistentId* parent,
+                                              MirRectangle* attachment_rect,
+                                              MirEdgeAttachment edge)
 {
     mir::require(mir_persistent_id_is_valid(parent));
     mir::require(attachment_rect != nullptr);
@@ -361,8 +361,8 @@ catch (std::exception const& ex)
 }
 
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                mir_surface_event_callback callback,
-                                void* context)
+                                       mir_surface_event_callback callback,
+                                       void* context)
 try
 {
     mir::require(spec);
@@ -396,11 +396,11 @@ catch (std::exception const& ex)
 }
 
 void mir_window_spec_set_placement(MirWindowSpec* spec,
-                            MirRectangle const* rect,
-                            MirPlacementGravity rect_gravity,
-                            MirPlacementGravity window_gravity,
-                            MirPlacementHints placement_hints,
-                            int offset_dx, int offset_dy)
+                                   MirRectangle const* rect,
+                                   MirPlacementGravity rect_gravity,
+                                   MirPlacementGravity window_gravity,
+                                   MirPlacementHints placement_hints,
+                                   int offset_dx, int offset_dy)
 try
 {
     mir::require(spec);
@@ -488,9 +488,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
-                                                           int width, int height,
-                                                           MirPixelFormat format,
-                                                           MirSurface* parent)
+                                                            int width, int height,
+                                                            MirPixelFormat format,
+                                                            MirSurface* parent)
 {
     return mir_create_modal_dialog_window_spec(connection, width, height, format, parent);
 }

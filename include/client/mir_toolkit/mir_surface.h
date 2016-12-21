@@ -46,8 +46,8 @@ extern "C" {
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
 MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
-                                  int width, int height,
-                                  MirPixelFormat format);
+                                             int width, int height,
+                                             MirPixelFormat format);
 
 /**
  * Create a window specification for a menu window.
@@ -109,11 +109,11 @@ mir_create_menu_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_tip_window_spec(MirConnection* connection,
-                int width, int height,
-                MirPixelFormat format,
-                MirSurface* parent,
-                MirRectangle* rect,
-                MirEdgeAttachment edge);
+                           int width, int height,
+                           MirPixelFormat format,
+                           MirSurface* parent,
+                           MirRectangle* rect,
+                           MirEdgeAttachment edge);
 
 /**
  * Create a window specification for a modal dialog window.
@@ -139,9 +139,9 @@ mir_create_tip_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_modal_dialog_window_spec(MirConnection* connection,
-                         int width, int height,
-                         MirPixelFormat format,
-                         MirSurface* parent);
+                                    int width, int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent);
 
 /**
  * Create a window specification for a parentless dialog window.
@@ -162,8 +162,8 @@ mir_create_modal_dialog_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_dialog_window_spec(MirConnection* connection,
-                   int width, int height,
-                   MirPixelFormat format);
+                              int width, int height,
+                              MirPixelFormat format);
 
 /**
  * Create a window specification for an input method window.
@@ -178,8 +178,8 @@ mir_create_dialog_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
-                        int width, int height,
-                        MirPixelFormat format);
+                                    int width, int height,
+                                    MirPixelFormat format);
 
 /**
  * Create a window specification.
@@ -393,9 +393,9 @@ void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientati
  *          a close event.
  */
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
-                                       MirPersistentId* parent,
-                                       MirRectangle* attachment_rect,
-                                       MirEdgeAttachment edge);
+                                              MirPersistentId* parent,
+                                              MirRectangle* attachment_rect,
+                                              MirEdgeAttachment edge);
 
 /**
  * Set the requested state.
@@ -420,8 +420,8 @@ void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
  * \param [in] n_rects The number of elements in the rectangles array.
  */
 void mir_window_spec_set_input_shape(MirWindowSpec* spec,
-                              MirRectangle const *rectangles,
-                              size_t n_rects);
+                                     MirRectangle const *rectangles,
+                                     size_t n_rects);
 
 /**
  * Set the event handler to be called when events arrive for a window.
@@ -435,8 +435,8 @@ void mir_window_spec_set_input_shape(MirWindowSpec* spec,
  * \param [in] context    Additional argument to be passed to callback
  */
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                mir_surface_event_callback callback,
-                                void* context);
+                                       mir_surface_event_callback callback,
+                                       void* context);
 
 /**
  * Ask the shell to customize "chrome" for this window.
@@ -481,12 +481,12 @@ void mir_window_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConf
  * See \ref MirPlacementHints for details.
  */
 void mir_window_spec_set_placement(MirWindowSpec*      spec,
-                            const MirRectangle* rect,
-                            MirPlacementGravity rect_gravity,
-                            MirPlacementGravity window_gravity,
-                            MirPlacementHints   placement_hints,
-                            int                 offset_dx,
-                            int                 offset_dy);
+                                   const MirRectangle* rect,
+                                   MirPlacementGravity rect_gravity,
+                                   MirPlacementGravity window_gravity,
+                                   MirPlacementHints   placement_hints,
+                                   int                 offset_dx,
+                                   int                 offset_dy);
 
 /**
  * Set the name for the cursor from the system cursor theme.
