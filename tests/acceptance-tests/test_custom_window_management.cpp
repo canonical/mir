@@ -459,8 +459,8 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_menu_window_spec(
-        connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
-    mir_window_spec_set_pixel_format(spec, format);
+        connection, width, height, parent, &dummy_rect, mir_edge_attachment_any);
+    mir_window_spec_set_pixel_format(surface_spec, format);
     auto child = mir_surface_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
