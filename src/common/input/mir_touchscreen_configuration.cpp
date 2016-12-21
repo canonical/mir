@@ -17,12 +17,10 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/touchscreen_configuration.h"
+#include "mir/input/mir_touchscreen_configuration.h"
 #include <ostream>
 
-namespace mi = mir::input;
-
-struct mi::TouchscreenConfiguration::Implementation
+struct MirTouchscreenConfiguration::Implementation
 {
     uint32_t output_id{0};
     MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_output};
@@ -33,65 +31,65 @@ struct mi::TouchscreenConfiguration::Implementation
     {}
 };
 
-mi::TouchscreenConfiguration::TouchscreenConfiguration()
+MirTouchscreenConfiguration::MirTouchscreenConfiguration()
     : impl{std::make_unique<Implementation>()}
 {
 }
 
-mi::TouchscreenConfiguration::TouchscreenConfiguration(TouchscreenConfiguration && conf)
+MirTouchscreenConfiguration::MirTouchscreenConfiguration(MirTouchscreenConfiguration && conf)
     : impl{std::move(conf.impl)}
 {
 }
 
-mi::TouchscreenConfiguration::TouchscreenConfiguration(TouchscreenConfiguration const& conf)
+MirTouchscreenConfiguration::MirTouchscreenConfiguration(MirTouchscreenConfiguration const& conf)
     : impl{std::make_unique<Implementation>(*conf.impl)}
 {
 }
 
-mi::TouchscreenConfiguration& mi::TouchscreenConfiguration::operator=(TouchscreenConfiguration const& conf)
+MirTouchscreenConfiguration& MirTouchscreenConfiguration::operator=(MirTouchscreenConfiguration const& conf)
 {
     *impl = *conf.impl;
     return *this;
 }
 
-mi::TouchscreenConfiguration::~TouchscreenConfiguration() = default;
+MirTouchscreenConfiguration::~MirTouchscreenConfiguration() = default;
 
-mi::TouchscreenConfiguration::TouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode)
+MirTouchscreenConfiguration::MirTouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode)
        : impl(std::make_unique<Implementation>(output_id, mode))
 {}
 
-uint32_t mi::TouchscreenConfiguration::output_id() const
+uint32_t MirTouchscreenConfiguration::output_id() const
 {
     return impl->output_id;
 }
 
-void mi::TouchscreenConfiguration::output_id(uint32_t output_id)
+void MirTouchscreenConfiguration::output_id(uint32_t output_id)
 {
     impl->output_id = output_id;
 }
 
-MirTouchscreenMappingMode mi::TouchscreenConfiguration::mapping_mode() const
+MirTouchscreenMappingMode MirTouchscreenConfiguration::mapping_mode() const
 {
     return impl->mapping_mode;
 }
 
-void mi::TouchscreenConfiguration::mapping_mode(MirTouchscreenMappingMode mode)
+void MirTouchscreenConfiguration::mapping_mode(MirTouchscreenMappingMode mode)
 {
     impl->mapping_mode = mode;
 }
 
-bool mi::TouchscreenConfiguration::operator==(TouchscreenConfiguration const& other) const
+bool MirTouchscreenConfiguration::operator==(MirTouchscreenConfiguration const& other) const
 {
     return impl->output_id == other.impl->output_id &&
         impl->mapping_mode == other.impl->mapping_mode;
 }
 
-bool mi::TouchscreenConfiguration::operator!=(TouchscreenConfiguration const& other) const
+bool MirTouchscreenConfiguration::operator!=(MirTouchscreenConfiguration const& other) const
 {
     return !(*this == other);
 }
 
-std::ostream& mi::operator<<(std::ostream& out, mi::TouchscreenConfiguration const& conf)
+std::ostream& operator<<(std::ostream& out, MirTouchscreenConfiguration const& conf)
 {
     return out << " mode:" << conf.mapping_mode() << " outputid:" << conf.output_id();
 }

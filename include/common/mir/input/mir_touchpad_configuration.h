@@ -26,19 +26,14 @@
 #include <memory>
 #include <iosfwd>
 
-namespace mir
+struct MirTouchpadConfiguration
 {
-namespace input
-{
-
-struct TouchpadConfiguration
-{
-    TouchpadConfiguration();
-    TouchpadConfiguration(TouchpadConfiguration && other);
-    TouchpadConfiguration(TouchpadConfiguration const& other);
-    TouchpadConfiguration& operator=(TouchpadConfiguration const& other);
-    ~TouchpadConfiguration();
-    TouchpadConfiguration(MirTouchpadClickModes click_mode,
+    MirTouchpadConfiguration();
+    MirTouchpadConfiguration(MirTouchpadConfiguration && other);
+    MirTouchpadConfiguration(MirTouchpadConfiguration const& other);
+    MirTouchpadConfiguration& operator=(MirTouchpadConfiguration const& other);
+    ~MirTouchpadConfiguration();
+    MirTouchpadConfiguration(MirTouchpadClickModes click_mode,
                           MirTouchpadScrollModes scroll_mode,
                           int button_down_scroll_button,
                           bool tap_to_click,
@@ -87,16 +82,13 @@ struct TouchpadConfiguration
     bool disable_while_typing() const;
     void disable_while_typing(bool);
 
-    bool operator==(TouchpadConfiguration const& rhs) const;
-    bool operator!=(TouchpadConfiguration const& rhs) const;
+    bool operator==(MirTouchpadConfiguration const& rhs) const;
+    bool operator!=(MirTouchpadConfiguration const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream& operator<<(std::ostream& out, TouchpadConfiguration const& conf);
-
-}
-}
+std::ostream& operator<<(std::ostream& out, MirTouchpadConfiguration const& conf);
 
 #endif
