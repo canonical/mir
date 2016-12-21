@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(*top, 0, topColour, 0, 128);
 
-        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
+        mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);

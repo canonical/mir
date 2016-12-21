@@ -522,6 +522,30 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage);
 
 /**
+ * \note To be deprecated soon. Waiting for mir_window_spec_set_render_surfaces() to land.
+ *
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the window,
+ * but is not in the list will be disassociated from the window.
+ * On application of the spec, a stream that is not present in the window,
+ * but is in the list will be associated with the window.
+ * Streams set a displacement from the top-left corner of the window.
+ *
+ * \warning disassociating streams from the window will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          window the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ *
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     An array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
+ */
+void mir_window_spec_set_streams(MirWindowSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int num_streams);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -595,7 +619,7 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
  *   \param [in] surface  The surface to operate on
  *   \return              The swapinterval value that the client is operating with.
  *                        Returns -1 if surface is invalid, or if the default stream
- *                        was removed by use of mir_surface_spec_set_streams().
+ *                        was removed by use of mir_window_spec_set_streams().
  */
 int mir_surface_get_swapinterval(MirSurface* surface)
 __attribute__((deprecated("This will soon be a property of the backing content")));
@@ -690,27 +714,10 @@ void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
 //__attribute__((deprecated("use mir_window_spec_set_buffer_usage() instead")));
 
-/**
- * Set the streams associated with the spec.
- * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
- * On application of the spec, a stream that is present in the surface,
- * but is not in the list will be disassociated from the surface.
- * On application of the spec, a stream that is not present in the surface,
- * but is in the list will be associated with the surface.
- * Streams set a displacement from the top-left corner of the surface.
- *
- * \warning disassociating streams from the surface will not release() them.
- * \warning It is wiser to arrange the streams within the bounds of the
- *          surface the spec is applied to. Shells can define their own
- *          behavior as to what happens to an out-of-bound stream.
- *
- * \param [in] spec        The spec to accumulate the request in.
- * \param [in] streams     An array of non-null streams info.
- * \param [in] num_streams The number of elements in the streams array.
- */
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   MirBufferStreamInfo* streams,
                                   unsigned int num_streams);
+//__attribute__((deprecated("use mir_window_spec_set_streams() instead")));
 
 /**
  * Create a surface from a given specification
@@ -765,12 +772,12 @@ void mir_surface_set_event_handler(MirSurface *surface,
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  *
- *   \deprecated Users should use mir_surface_spec_set_streams() to arrange
+ *   \deprecated Users should use mir_window_spec_set_streams() to arrange
  *               the content of a surface, instead of relying on a stream
  *               being created by default.
  *   \warning If the surface was created with, or modified to have a
  *            MirSurfaceSpec containing streams added through
- *            mir_surface_spec_set_streams(), the default stream will
+ *            mir_window_spec_set_streams(), the default stream will
  *            be removed, and this function will return NULL.
  *   \param[in] surface The surface
  */
@@ -856,7 +863,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \warning Only swapinterval of 0 or 1 is supported.
  *   \warning If the surface was created with, or modified to have a
  *            MirSurfaceSpec containing streams added through
- *            mir_surface_spec_set_streams(), the default stream will
+ *            mir_window_spec_set_streams(), the default stream will
  *            be removed, and this function will return NULL.
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that

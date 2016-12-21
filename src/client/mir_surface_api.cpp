@@ -449,6 +449,26 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_window_spec_set_streams(MirWindowSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
+try
+{
+    mir::require(spec);
+    std::vector<ContentInfo> copy;
+    for (auto i = 0u; i < size; i++)
+    {
+        mir::require(mir_buffer_stream_is_valid(streams[i].stream));
+        copy.emplace_back(ContentInfo{
+            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
+            streams[i].stream->rpc_id().as_value(),
+            {}});
+    }
+    spec->streams = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_window_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -649,24 +669,8 @@ catch (std::exception const& ex)
 }
 
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
-try
 {
-    mir::require(spec);
-
-    std::vector<ContentInfo> copy;
-    for (auto i = 0u; i < size; i++)
-    {
-        mir::require(mir_buffer_stream_is_valid(streams[i].stream));
-        copy.emplace_back(ContentInfo{
-            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
-            streams[i].stream->rpc_id().as_value(),
-            {}});
-    }
-    spec->streams = copy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    mir_window_spec_set_streams(spec, streams, size);
 }
 
 void mir_surface_spec_add_presentation_chain(
