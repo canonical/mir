@@ -3,6 +3,8 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(fd)
 add_subdirectory(events)
 add_subdirectory(logging)
@@ -22,6 +24,7 @@ list(APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
   posix_rw_mutex.cpp
+  edid.cpp
 )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -39,6 +42,18 @@ set(MIRCOMMON_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
+  input/input_configuration.cpp
+  input/input_configuration_serialization.cpp
+  input/touchpad_configuration.cpp
+  input/pointer_configuration.cpp
+  input/keyboard_configuration.cpp
+  input/touchscreen_configuration.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/input_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/pointer_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/touchpad_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/touchscreen_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/keyboard_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/input_configuration_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 

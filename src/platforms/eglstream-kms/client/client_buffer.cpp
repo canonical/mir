@@ -145,20 +145,6 @@ void mcle::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.fd_items = 0;
 }
 
-void mcle::ClientBuffer::set_fence(Fd, MirBufferAccess)
-{
-}
-
-mir::Fd mcle::ClientBuffer::get_fence() const
-{
-    return mir::Fd(mir::Fd::invalid);
-}
-
-bool mcle::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
-{
-    return true;
-}
-
 MirBufferPackage* mcle::ClientBuffer::package() const
 {
     return creation_package.get();

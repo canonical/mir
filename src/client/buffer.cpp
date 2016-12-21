@@ -90,19 +90,10 @@ MirGraphicsRegion mcl::Buffer::map_region()
     };
 }
 
-void mcl::Buffer::set_fence(mir::Fd native_fence, MirBufferAccess access)
+void mcl::Buffer::unmap_region()
 {
-    buffer->set_fence(native_fence, access);
-}
-
-mir::Fd mcl::Buffer::get_fence() const
-{
-    return buffer->get_fence();
-}
-
-bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
-{
-    return buffer->wait_fence(access, timeout);
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    mapped_region = nullptr;
 }
 
 MirConnection* mcl::Buffer::allocating_connection() const

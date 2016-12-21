@@ -82,7 +82,7 @@ TEST(TestDisplayConfiguration, configuration_storage)
 
     info = internal_config.copy_to_client();
     EXPECT_THAT(*info, mt::DisplayConfigMatches(new_result));
-    EXPECT_EQ(1u, called_count);
+    EXPECT_EQ(1, called_count);
 
     mcl::delete_config_storage(info);
 }

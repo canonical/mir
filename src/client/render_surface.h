@@ -39,6 +39,7 @@ namespace client
 {
 class ClientPlatform;
 class BufferStream;
+class PresentationChain;
 class RenderSurface : public MirRenderSurface
 {
 public:
@@ -51,11 +52,13 @@ public:
     mir::geometry::Size size() const override;
     void set_size(mir::geometry::Size) override;
     mir::frontend::BufferStreamId stream_id() const override;
+    char const* get_error_message() const override;
     bool valid() const override;
     MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage) override;
+    MirPresentationChain* get_presentation_chain() override;
 
 private:
     MirConnection* const connection_;
@@ -63,6 +66,7 @@ private:
     std::shared_ptr<ClientPlatform> platform;
     std::shared_ptr<mir::protobuf::BufferStream> protobuf_bs;
     std::shared_ptr<mir::client::BufferStream> stream_from_id;
+    std::shared_ptr<mir::client::PresentationChain> chain_from_id;
 
     std::mutex mutable size_mutex;
     geometry::Size desired_size;

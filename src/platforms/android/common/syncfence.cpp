@@ -86,6 +86,11 @@ mga::NativeFence mga::SyncFence::copy_native_handle() const
     return ops->dup(fence_fd);
 }
 
+mga::NativeFence mga::SyncFence::native_handle() const
+{
+    return fence_fd;
+}
+
 int mga::RealSyncFileOps::ioctl(int fd, int req, void* dat)
 {
     return ::ioctl(fd, req, dat);

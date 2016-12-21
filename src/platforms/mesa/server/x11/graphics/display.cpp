@@ -235,6 +235,7 @@ mgx::Display::Display(::Display* x_dpy,
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
+      scale{1.0f},
       report{report},
       orientation{mir_orientation_normal},
       last_frame{std::make_shared<AtomicFrame>()}
@@ -277,7 +278,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
     return std::make_unique<mgx::DisplayConfiguration>(
-        pf, actual_size, geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height}, orientation);
+        pf, actual_size, geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height}, scale, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -289,14 +290,17 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
     }
 
     MirOrientation o = mir_orientation_normal;
+    float new_scale = scale;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
         o = conf_output.orientation;
+        new_scale = conf_output.scale;
     });
 
     orientation = o;
     display_buffer->set_orientation(orientation);
+    scale = new_scale;
 }
 
 void mgx::Display::register_configuration_change_handler(

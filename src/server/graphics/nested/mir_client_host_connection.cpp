@@ -24,9 +24,13 @@
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
+#include "mir_toolkit/extensions/mesa_drm_auth.h"
+#include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -196,9 +200,10 @@ public:
     {
         if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
 
-        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_surface_configure_cursor(mir_surface, conf);
-        mir_cursor_configuration_destroy(conf);
+        auto spec = mir_connection_create_spec_for_changes(mir_connection);
+        mir_surface_spec_set_cursor_name(spec, mir_disabled_cursor_name);
+        mir_surface_apply_spec(mir_surface, spec);
+        mir_surface_spec_release(spec);
     }
 
 private:
@@ -523,12 +528,30 @@ std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() con
     return std::make_unique<Chain>(mir_connection);
 }
 
+mgn::GraphicsRegion::GraphicsRegion() :
+    handle(nullptr)
+{
+}
+
+mgn::GraphicsRegion::GraphicsRegion(MirBuffer* handle) :
+    handle(handle)
+{
+    mir_buffer_map(handle, this, &layout);
+}
+
+mgn::GraphicsRegion::~GraphicsRegion()
+{
+    if (handle)
+        mir_buffer_unmap(handle);
+}
+
 namespace
 {
 class HostBuffer : public mgn::NativeBuffer
 {
 public:
-    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties)
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
+        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
     {
         mir_connection_allocate_buffer(
             mir_connection,
@@ -552,7 +575,8 @@ public:
 
     void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
     {
-        mir_buffer_wait_for_access(handle, access, ns.count());
+        if (fence_extensions && fence_extensions->wait_for_access)
+            fence_extensions->wait_for_access(handle, access, ns.count());
     }
 
     MirBuffer* client_handle() const override
@@ -560,9 +584,9 @@ public:
         return handle;
     }
 
-    MirGraphicsRegion get_graphics_region() override
+    std::unique_ptr<mgn::GraphicsRegion> get_graphics_region() override
     {
-        return mir_buffer_get_graphics_region(handle, mir_read_write);
+        return std::make_unique<mgn::GraphicsRegion>(handle);
     }
 
     geom::Size size() const override
@@ -620,15 +644,21 @@ public:
 
     void set_fence(mir::Fd fd) override
     {
-        mir_buffer_associate_fence(handle, fd, mir_read_write);
+        if (fence_extensions && fence_extensions->associate_fence)
+            fence_extensions->associate_fence(handle, fd, mir_read_write);
     }
 
     mir::Fd fence() const override
     {
-        return mir::Fd{mir::IntOwnedFd{mir_buffer_get_fence(handle)}};
+        if (fence_extensions && fence_extensions->get_fence)
+            return mir::Fd{fence_extensions->get_fence(handle)};
+        else
+            return mir::Fd{mir::Fd::invalid};
     }
 
 private:
+    MirExtensionFencedBuffersV1 const* fence_extensions = nullptr;
+
     std::function<void()> f;
     MirBuffer* handle = nullptr;
     std::mutex mut;
@@ -692,7 +722,97 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     return true;
 }
 
-void* mgn::MirClientHostConnection::request_interface(char const* name, int version)
+namespace
 {
-    return mir_connection_request_interface(mir_connection, name, version);    
+template<typename T>
+struct AuthRequest
+{
+    std::mutex mut;
+    std::condition_variable cv;
+    bool set = false;
+    T rc;
+};
+
+template<typename T>
+void cb(T rc, void* context)
+{
+    auto request = static_cast<AuthRequest<T>*>(context);
+    std::unique_lock<decltype(request->mut)> lk(request->mut);
+    request->set = true;
+    request->rc = rc;
+    request->cv.notify_all();
+}
+void cb_fd(int fd, void* context)
+{
+    cb<mir::Fd>(mir::Fd(mir::IntOwnedFd{fd}), context);
+}
+void cb_magic(int response, void* context)
+{
+    cb<int>(response, context);
+}
+
+template<typename T>
+T auth(std::function<void(AuthRequest<T>*)> const& f)
+{
+    auto req = std::make_unique<AuthRequest<T>>();
+    f(req.get());
+    std::unique_lock<decltype(req->mut)> lk(req->mut);
+    req->cv.wait(lk, [&]{ return req->set; });
+    return req->rc;
+}
+}
+
+mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtension>>
+mgn::MirClientHostConnection::auth_extension()
+{
+    auto ext = mir_extension_mesa_drm_auth_v1(mir_connection);
+    if (!ext)
+        return {};
+
+    struct AuthExtension : MesaAuthExtension
+    {
+        AuthExtension(
+            MirConnection* connection,
+            MirExtensionMesaDRMAuthV1 const* ext) :
+            connection(connection),
+            extensions(ext)
+        {
+        }
+
+        mir::Fd auth_fd() override
+        {
+            return auth<mir::Fd>([this](auto req){ extensions->drm_auth_fd(connection, cb_fd, req); });
+        }
+
+        int auth_magic(unsigned int magic) override
+        {
+            return auth<int>([this, magic](auto req){ extensions->drm_auth_magic(connection, magic, cb_magic, req); });
+        }
+    private:
+        MirConnection* const connection;
+        MirExtensionMesaDRMAuthV1 const * const extensions;
+    };
+    return { std::make_unique<AuthExtension>(mir_connection, ext) };
+}
+
+mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>
+mgn::MirClientHostConnection::set_gbm_extension()
+{
+    auto ext = mir_extension_set_gbm_device_v1(mir_connection);
+    if (!ext)
+        return {};
+
+    struct SetGbm : SetGbmExtension
+    {
+        SetGbm(MirExtensionSetGbmDevice const* ext) :
+            ext(ext)
+        {
+        }
+        void set_gbm_device(gbm_device* dev) override
+        {
+            ext->set_gbm_device(dev, ext->context);
+        }
+        MirExtensionSetGbmDeviceV1 const* const ext;
+    };
+    return { std::make_unique<SetGbm>(ext) };
 }

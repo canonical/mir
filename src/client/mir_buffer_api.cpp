@@ -64,59 +64,35 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-int mir_buffer_get_fence(MirBuffer* b)
+bool mir_buffer_map(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {
     mir::require(b);
+    mir::require(region);
+    mir::require(layout);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->get_fence();
+    *layout = mir_buffer_layout_linear;
+    *region = buffer->map_region();
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return mir::Fd::invalid;
+    *region = MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
+    *layout = mir_buffer_layout_unknown;
+    return false;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, int fence, MirBufferAccess access)
+void mir_buffer_unmap(MirBuffer* b)
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    buffer->set_fence(mir::Fd(fence), access);
+    buffer->unmap_region();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-int mir_buffer_wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-     
-    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout)) ? 0 : -1;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return -1;
-}
-
-MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-
-    return buffer->map_region();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
 }
 
 unsigned int mir_buffer_get_width(MirBuffer* b)

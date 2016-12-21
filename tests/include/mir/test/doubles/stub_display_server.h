@@ -46,7 +46,7 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::SurfaceModifications const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
-    void next_buffer(
+    void swap_buffers(
         mir::protobuf::SurfaceId const* /*request*/,
         mir::protobuf::Buffer* /*response*/,
         google::protobuf::Closure* /*done*/) {}

@@ -77,7 +77,7 @@ try
     if (starting)
         starting = false;
     else
-        surface->request_and_wait_for_next_buffer();
+        surface->swap_buffers_sync();
 
     auto buffer = surface->get_current_buffer();
 

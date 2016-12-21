@@ -22,14 +22,17 @@
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
 #include "mir/client_buffer.h"
-#include "mir/client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "android_client_platform.h"
 #include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
 #include "native_window_report.h"
+#include "android_format_conversion-inl.h"
 
+#include <chrono>
 #include "mir/weak_egl.h"
+#include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
 
@@ -66,13 +69,102 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 
 ANativeWindow* create_anw(MirBufferStream* buffer_stream)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    return static_cast<ANativeWindow*>(bs->egl_native_window());
+    return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
 
 void destroy_anw(ANativeWindow*)
 {
 }
+
+int get_fence(MirBuffer* b) noexcept
+try
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    return native->fence();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return mir::Fd::invalid;
+}
+
+bool validate_access(MirBufferAccess access)
+{
+    return access == mir_none || access == mir_read || access == mir_read_write; 
+}
+
+void associate_fence(MirBuffer* b, int fence, MirBufferAccess access) noexcept
+try
+{
+    if (!b || !validate_access(access))
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native_buffer = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+
+    mga::NativeFence f = fence;
+    if (fence <= mir::Fd::invalid)
+        native_buffer->reset_fence();
+    else if (access == mir_read)
+        native_buffer->update_usage(f, mga::BufferAccess::read); 
+    else if (access == mir_read_write)
+        native_buffer->update_usage(f, mga::BufferAccess::write); 
+    else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("invalid MirBufferAccess"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+int wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout) noexcept
+try
+{
+    if (!b || !validate_access(access))
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native_buffer = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+
+    // could use std::chrono::floor once we're using C++17
+    auto ns = std::chrono::nanoseconds(timeout);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
+    if (ms > ns)
+        ms = ms - std::chrono::milliseconds{1};
+
+    bool rc = true;
+    if (access == mir_read)
+        rc = native_buffer->ensure_available_for(mga::BufferAccess::read, ms); 
+    if (access == mir_read_write)
+        rc = native_buffer->ensure_available_for(mga::BufferAccess::write, ms); 
+
+    return rc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
+}
+
+void create_buffer(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags,
+    mir_buffer_callback available_callback, void* available_context)
+{
+    //TODO: pass actual gralloc flags along
+    (void) gralloc_usage_flags;
+
+    mir_connection_allocate_buffer(
+        connection,
+        width, height,
+        mga::to_mir_format(hal_pixel_format),
+        mir_buffer_usage_hardware,
+        available_callback, available_context);
+}
+
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -81,7 +173,9 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     context{context},
     logger{logger},
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
-    extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb}
+    android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
+    fence_extension{get_fence, associate_fence, wait_for_access},
+    buffer_extension{create_buffer}
 {
 }
 
@@ -169,7 +263,11 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 
 void* mcla::AndroidClientPlatform::request_interface(char const* name, int version)
 {
-    if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_1))
-        return &extension;
+    if (!strcmp(name, "mir_extension_android_egl") && (version == 1))
+        return &android_types_extension;
+    if (!strcmp(name, "mir_extension_android_buffer") && (version == 1))
+        return &buffer_extension;
+    if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
+        return &fence_extension;
     return nullptr;
 }

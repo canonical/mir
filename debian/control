@@ -70,7 +70,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver42
+Package: libmirserver43
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -149,7 +149,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver42 (= ${binary:Version}),
+Depends: libmirserver43 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -169,6 +169,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon-dev (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmirserver-dev (= ${binary:Version}),
+         mir-renderer-gl-dev (= ${binary:Version}),
          ${misc:Depends},
          libboost-filesystem1.61.0 | libboost-filesystem1.58.0 | libboost-filesystem1.55.0,
          libboost-system1.61.0 | libboost-system1.58.0 | libboost-system1.55.0,

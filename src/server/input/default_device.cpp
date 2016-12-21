@@ -38,7 +38,7 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         keyboard = mi::KeyboardConfiguration{};
-        key_mapper->set_keymap_for_device(device_id, keyboard.value().device_keymap);
+        key_mapper->set_keymap_for_device(device_id, keyboard.value().device_keymap());
     }
 }
 
@@ -91,15 +91,15 @@ void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration con
     if (!pointer.is_set())
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
 
-    if (conf.cursor_acceleration_bias < -1.0 || conf.cursor_acceleration_bias > 1.0)
+    if (conf.cursor_acceleration_bias() < -1.0 || conf.cursor_acceleration_bias() > 1.0)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor acceleration bias out of range"));
 
     PointerSettings settings;
-    settings.handedness = conf.handedness;
-    settings.acceleration = conf.acceleration;
-    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias;
-    settings.vertical_scroll_scale = conf.vertical_scroll_scale;
-    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale;
+    settings.handedness = conf.handedness();
+    settings.acceleration = conf.acceleration();
+    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias();
+    settings.vertical_scroll_scale = conf.vertical_scroll_scale();
+    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale();
 
     pointer = settings;
 
@@ -114,17 +114,18 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
     if (!touchpad.is_set())
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
 
-    if (conf.scroll_mode & mir_touchpad_scroll_mode_button_down_scroll && conf.button_down_scroll_button == mi::no_scroll_button)
+    if (conf.scroll_mode() & mir_touchpad_scroll_mode_button_down_scroll &&
+        conf.button_down_scroll_button() == mi::no_scroll_button)
         BOOST_THROW_EXCEPTION(std::invalid_argument("No scroll button configured"));
 
     TouchpadSettings settings;
-    settings.click_mode = conf.click_mode;
-    settings.scroll_mode = conf.scroll_mode;
-    settings.button_down_scroll_button = conf.button_down_scroll_button;
-    settings.disable_with_mouse = conf.disable_with_mouse;
-    settings.disable_while_typing = conf.disable_while_typing;
-    settings.tap_to_click = conf.tap_to_click;
-    settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation;
+    settings.click_mode= conf.click_mode();
+    settings.scroll_mode = conf.scroll_mode();
+    settings.button_down_scroll_button = conf.button_down_scroll_button();
+    settings.disable_with_mouse = conf.disable_with_mouse();
+    settings.disable_while_typing = conf.disable_while_typing();
+    settings.tap_to_click = conf.tap_to_click();
+    settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();
 
     touchpad = settings;
 
@@ -144,9 +145,9 @@ void mi::DefaultDevice::apply_keyboard_configuration(mi::KeyboardConfiguration c
     if (!contains(info.capabilities, mi::DeviceCapability::keyboard))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a keyboard configuration"));
 
-    if (keyboard.value().device_keymap != conf.device_keymap)
+    if (keyboard.value().device_keymap() != conf.device_keymap())
     {
         keyboard = conf;
-        key_mapper->set_keymap_for_device(device_id, conf.device_keymap);
+        key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
     }
 }

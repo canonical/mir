@@ -67,9 +67,7 @@ void mcl::ErrorBuffer::submitted() THROW_EXCEPTION
 void mcl::ErrorBuffer::received(MirBufferPackage const&) THROW_EXCEPTION
 std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBuffer::client_buffer() const THROW_EXCEPTION
 MirGraphicsRegion mcl::ErrorBuffer::map_region() THROW_EXCEPTION
-void mcl::ErrorBuffer::set_fence(mir::Fd, MirBufferAccess) THROW_EXCEPTION
-mir::Fd mcl::ErrorBuffer::get_fence() const THROW_EXCEPTION
-bool mcl::ErrorBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds) THROW_EXCEPTION
+void mcl::ErrorBuffer::unmap_region() THROW_EXCEPTION
 MirBufferUsage mcl::ErrorBuffer::buffer_usage() const THROW_EXCEPTION
 MirPixelFormat mcl::ErrorBuffer::pixel_format() const THROW_EXCEPTION
 geom::Size mcl::ErrorBuffer::size() const THROW_EXCEPTION

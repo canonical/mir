@@ -187,8 +187,9 @@ void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
  *   \pre                          The buffer stream is valid
  *   \param [in] buffer_stream     The buffer stream
  *   \param [out] graphics_region  Structure to be populated
+ *   \return                       True if the region is valid, false otherwise.
  */
-void mir_buffer_stream_get_graphics_region(
+bool mir_buffer_stream_get_graphics_region(
     MirBufferStream *buffer_stream,
     MirGraphicsRegion *graphics_region);
 

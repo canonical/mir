@@ -20,6 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
+#include "mir/graphics/edid.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
@@ -28,7 +29,7 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mrl= mir::report::logging;
 
-namespace 
+namespace
 {
 auto const component = MIR_LOG_COMPONENT_FALLBACK;
 auto const severity  = ml::Severity::informational;
@@ -55,6 +56,13 @@ void mrl::DisplayConfigurationReport::configuration_applied(
 {
     logger->log(component, severity, "New display configuration:");
     log_configuration(severity, *config);
+}
+
+void mrl::DisplayConfigurationReport::base_configuration_updated(
+    std::shared_ptr<mg::DisplayConfiguration const> const& base_config)
+{
+    logger->log(component, severity, "New base display configuration:");
+    log_configuration(severity, *base_config);
 }
 
 void mrl::DisplayConfigurationReport::configuration_failed(
@@ -86,12 +94,28 @@ void mrl::DisplayConfigurationReport::log_configuration(
                     );
         if (out.connected)
         {
+            using mir::graphics::Edid;
+            if (out.edid.size() >= Edid::minimum_size)
+            {
+                auto edid = reinterpret_cast<Edid const*>(out.edid.data());
+                Edid::MonitorName name;
+                if (edid->get_monitor_name(name))
+                    logger->log(component, severity,
+                                "%sEDID monitor name: %s", indent, name);
+                Edid::Manufacturer man;
+                edid->get_manufacturer(man);
+                logger->log(component, severity,
+                            "%sEDID manufacturer: %s", indent, man);
+                logger->log(component, severity,
+                            "%sEDID product code: %hu", indent, edid->product_code());
+            }
+
             int width_mm = out.physical_size_mm.width.as_int();
             int height_mm = out.physical_size_mm.height.as_int();
             float inches =
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
 
-            logger->log(component, severity, 
+            logger->log(component, severity,
                         "%sPhysical size %.1f\" %dx%dmm",
                         indent, inches, width_mm, height_mm);
 
@@ -112,7 +136,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
                 }
-                
+
                 if (out.preferred_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
@@ -123,7 +147,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                                 mode.size.height.as_int(),
                                 mode.vrefresh_hz);
                 }
-                
+
                 static const char* const orientation[] =
                     {"normal", "left", "inverted", "right"};
                 int degrees_ccw = out.orientation;

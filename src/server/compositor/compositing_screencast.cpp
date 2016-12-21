@@ -98,6 +98,7 @@ public:
 
     std::shared_ptr<mg::Buffer> capture()
     {
+        std::lock_guard<decltype(mutex)> lk(mutex);
         //FIXME:: the client needs a better way to express it is no longer
         //using the last captured buffer
         if (last_captured_buffer)
@@ -111,6 +112,7 @@ public:
 
     void capture(std::shared_ptr<mg::Buffer> const& buffer)
     {
+        std::lock_guard<decltype(mutex)> lk(mutex);
         auto scheduled = free_queue.num_scheduled();
         free_queue.schedule(buffer);
         for(auto i = 0u; i < scheduled; i++)
@@ -122,6 +124,7 @@ public:
     }
 
 private:
+    std::mutex mutex;
     std::shared_ptr<Scene> const scene;
     QueueingSchedule free_queue;
     QueueingSchedule ready_queue;

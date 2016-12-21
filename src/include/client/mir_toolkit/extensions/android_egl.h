@@ -16,15 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
-#define MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_
-
-#define MIR_EXTENSION_ANDROID_EGL "817e4327-bdd7-495a-9d3c-b5ac7a8a831f"
-#define MIR_EXTENSION_ANDROID_EGL_VERSION_1 1
+#ifndef MIR_CLIENT_EXTENSIONS_ANDROID_EGL_H_
+#define MIR_CLIENT_EXTENSIONS_ANDROID_EGL_H_
 
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,16 +36,23 @@ typedef void (*mir_extension_destroy_anw)(struct ANativeWindow*);
 typedef struct ANativeWindowBuffer* (*mir_extension_create_anwb)(MirBuffer*);
 typedef void (*mir_extension_destroy_anwb)(struct ANativeWindowBuffer*);
 
-struct MirExtensionAndroidEGL
+typedef struct MirExtensionAndroidEGLV1
 {
     mir_extension_to_native_display_type to_display;
     mir_extension_create_anw create_window;
     mir_extension_destroy_anw destroy_window;
     mir_extension_create_anwb create_buffer;
     mir_extension_destroy_anwb destroy_buffer;
-};
+} MirExtensionAndroidEGLV1;
+
+static inline MirExtensionAndroidEGLV1 const* mir_extension_android_egl_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionAndroidEGLV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_android_egl", 1);
+}
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* MIR_CLIENT_EXTENSIONS_ANDORID_EGL_H_ */
+#endif /* MIR_CLIENT_EXTENSIONS_ANDROID_EGL_H_ */

@@ -38,9 +38,7 @@ public:
     void received(MirBufferPackage const& update_message) override;
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
-    void set_fence(mir::Fd, MirBufferAccess) override;
-    mir::Fd get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
+    void unmap_region() override;
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;

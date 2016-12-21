@@ -13,37 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
+#define MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
 
-#ifndef MIR_INPUT_KEYBOARD_CONFIGURATION_H_
-#define MIR_INPUT_KEYBOARD_CONFIGURATION_H_
-
-#include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_input_device.h"
-#include "mir/input/keymap.h"
+#include "mir/graphics/nested_context.h"
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-/*
- * Keyboard device configuration.
- */
-struct KeyboardConfiguration
+struct MockMesaExt : graphics::MesaAuthExtension
 {
-    KeyboardConfiguration() = default;
-    KeyboardConfiguration(Keymap&& keymap)
-        : device_keymap{keymap}
-    {
-    }
-
-    Keymap device_keymap;
+    MOCK_METHOD0(auth_fd, mir::Fd());
+    MOCK_METHOD1(auth_magic, int(unsigned int));
 };
 
 }
 }
-
-#endif
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_ */

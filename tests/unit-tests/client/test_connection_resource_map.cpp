@@ -20,7 +20,7 @@
 #include "src/client/mir_surface.h"
 #include "src/client/presentation_chain.h"
 #include "src/client/render_surface.h"
-#include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_mir_buffer_stream.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
 
@@ -38,7 +38,7 @@ struct ConnectionResourceMap : testing::Test
 {
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
-    std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
+    std::shared_ptr<MirBufferStream> stream{ std::make_shared<mtd::MockMirBufferStream>() }; 
     std::shared_ptr<mcl::Buffer> buffer {
         std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr, nullptr, mir_buffer_usage_software) };
     mtd::MockProtobufServer mock_server;
@@ -56,15 +56,9 @@ struct ConnectionResourceMap : testing::Test
 TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
 {
     using namespace testing;
-    auto surface_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
-    map.with_surface_do(surface_id, [&](MirSurface* surf) {
-        EXPECT_THAT(surf, Eq(surface.get()));
-        surface_called = true;
-    });
-
-    EXPECT_TRUE(surface_called);
+    EXPECT_EQ(surface, map.surface(surface_id));
 }
 
 TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
@@ -73,22 +67,15 @@ TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
     map.erase(surface_id);
-    EXPECT_THROW({
-        map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
-    }, std::runtime_error);
+    EXPECT_FALSE(map.stream(stream_id));
 }
 
 TEST_F(ConnectionResourceMap, maps_streams)
 {
     using namespace testing;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(stream_id, stream);
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
-        EXPECT_THAT(str, Eq(stream.get()));
-        stream_called = true;
-    });
-    EXPECT_TRUE(stream_called);
+    EXPECT_EQ(stream, map.stream(stream_id));
     map.erase(stream_id);
 }
 
@@ -126,11 +113,7 @@ TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)
     mcl::ConnectionSurfaceMap map;
     map.insert(buffer_id, buffer);
     map.insert(surface_id, surface);
-
-    map.with_surface_do(surface_id,
-        [this, &map](auto) {
-            EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
-        });
+    EXPECT_EQ(buffer, map.buffer(buffer_id));
 }
 
 TEST_F(ConnectionResourceMap, can_insert_retrieve_erase_render_surface)

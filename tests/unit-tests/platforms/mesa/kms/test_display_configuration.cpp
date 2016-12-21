@@ -237,7 +237,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -258,7 +259,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -279,7 +281,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         }
     };
 
@@ -360,7 +363,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {
@@ -446,7 +449,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {
@@ -589,7 +592,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -610,7 +614,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -635,7 +640,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -656,7 +662,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -790,7 +797,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -816,7 +824,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 

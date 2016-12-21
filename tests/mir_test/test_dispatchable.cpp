@@ -74,21 +74,22 @@ void mt::TestDispatchable::trigger()
 {
     using namespace testing;
     char dummy{0};
-    EXPECT_THAT(::write(write_fd, &dummy, sizeof(dummy)), Eq(sizeof(dummy)));
+    EXPECT_THAT(::write(write_fd, &dummy, sizeof(dummy)),
+                Eq(static_cast<int>(sizeof dummy)));
 }
 
 void mt::TestDispatchable::untrigger()
 {
     using namespace testing;
     char dummy{0};
-    auto val = ::read(read_fd, &dummy, sizeof(dummy));
+    int val = ::read(read_fd, &dummy, sizeof(dummy));
     if (val < 0)
     {
         EXPECT_THAT(errno, Eq(EAGAIN));
     }
     else
     {
-        EXPECT_THAT(val, Eq(sizeof(dummy)));
+        EXPECT_THAT(val, Eq(static_cast<int>(sizeof dummy)));
     }
 }
 

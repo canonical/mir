@@ -79,6 +79,13 @@ namespace geom = mir::geometry;
 
 namespace
 {
+//TODO: accept other pixel format types
+void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
+{
+    if (stream.pixel_format() != mir_pixel_format_argb_8888)
+        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
+}
+
 mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
     mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
@@ -614,6 +621,21 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().height()
         };
 
+    if (surface_specification.has_cursor_name())
+    {
+        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+    }
+
+    if (surface_specification.has_cursor_id() &&
+        surface_specification.has_hotspot_x() &&
+        surface_specification.has_hotspot_y())
+    {
+        mf::BufferStreamId id{surface_specification.cursor_id().value()};
+        throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
+        mods.stream_cursor = msh::StreamCursor{
+            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
+    }
+
     mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());
@@ -864,15 +886,6 @@ std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::pr
 
         shell->add_prompt_provider_for(prompt_session, session);
     };
-}
-
-namespace
-{
-void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
-{
-    if (stream.pixel_format() != mir_pixel_format_argb_8888)
-        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
-}
 }
 
 void mf::SessionMediator::configure_cursor(
