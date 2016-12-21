@@ -59,12 +59,12 @@ extern "C" {
  *                          to complete construction.
  */
 MirWindowSpec*
-mir_specify_menu(MirConnection* connection,
-                 int width, int height,
-                 MirPixelFormat format,
-                 MirSurface* parent,
-                 MirRectangle* rect,
-                 MirEdgeAttachment edge);
+mir_create_menu_window_spec(MirConnection* connection,
+                            int width, int height,
+                            MirPixelFormat format,
+                            MirSurface* parent,
+                            MirRectangle* rect,
+                            MirEdgeAttachment edge);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -95,7 +95,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirSurface* parent,
                                     MirRectangle* rect,
                                     MirEdgeAttachment edge)
-/* __attribute__((deprecated("Use mir_specify_menu() instead")))*/;
+/* __attribute__((deprecated("Use mir_create_menu_window_spec() instead")))*/;
 
 /**
  * Create a surface specification for a tooltip surface.
