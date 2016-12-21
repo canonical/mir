@@ -364,7 +364,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_specify_window(
+        mir_create_normal_window_spec(
             mir_connection,
             properties.size.width.as_int(),
             properties.size.height.as_int(),

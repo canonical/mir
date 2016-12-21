@@ -40,7 +40,7 @@ struct FocusSurface
     FocusSurface(MirConnection* connection) :
         connection(connection)
     {
-        auto spec = mir_specify_window(connection, 100, 100, mir_pixel_format_abgr_8888);
+        auto spec = mir_create_normal_window_spec(connection, 100, 100, mir_pixel_format_abgr_8888);
         mir_surface_spec_set_event_handler(spec, FocusSurface::handle_event, this);
 
         surface = mir_surface_create_sync(spec);

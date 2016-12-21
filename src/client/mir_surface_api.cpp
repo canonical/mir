@@ -50,7 +50,7 @@ void assign_result(void* result, void** context)
 }
 
 MirWindowSpec*
-mir_specify_window(MirConnection* connection,
+mir_create_normal_window_spec(MirConnection* connection,
                    int width, int height,
                    MirPixelFormat format)
 {
@@ -86,7 +86,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    return mir_specify_window(connection, width, height, format);
+    return mir_create_normal_window_spec(connection, width, height, format);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,

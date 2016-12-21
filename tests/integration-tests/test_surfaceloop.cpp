@@ -221,7 +221,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
     void SetUp() override
     {
         mtf::BasicClientServerFixture<BufferCounterConfig>::SetUp();
-        surface_spec = mir_specify_window(
+        surface_spec = mir_create_normal_window_spec(
             connection, 640, 480, mir_pixel_format_abgr_8888);
     }
 

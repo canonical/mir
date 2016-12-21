@@ -24,7 +24,7 @@ void mtf::ConnectedClientWithASurface::SetUp()
 {
     ConnectedClientHeadlessServer::SetUp();
 
-    auto const spec = mir_specify_window(
+    auto const spec = mir_create_normal_window_spec(
         connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
     mir_surface_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);

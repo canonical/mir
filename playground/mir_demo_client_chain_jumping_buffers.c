@@ -201,7 +201,7 @@ int main(int argc, char** argv)
     }
 
     //Arrange a 2x2 grid of chains within surface
-    MirWindowSpec* spec = mir_specify_window(connection, width, height, format);
+    MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height, format);
     mir_surface_spec_add_render_surface(
         spec, render_surface[0], chain_width, chain_height, displacement_x, displacement_y);
     mir_surface_spec_add_render_surface(
