@@ -764,7 +764,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_window_spec_set_height(surface_spec, height);
 
     MirPixelFormat const pixel_format{mir_pixel_format_argb_8888};
-    mir_surface_spec_set_pixel_format(surface_spec, pixel_format);
+    mir_window_spec_set_pixel_format(surface_spec, pixel_format);
 
     MirBufferUsage const buffer_usage{mir_buffer_usage_hardware};
     mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage);

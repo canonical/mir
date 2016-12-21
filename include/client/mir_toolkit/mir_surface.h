@@ -496,6 +496,19 @@ void mir_window_spec_set_placement(MirWindowSpec*      spec,
 void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
 
 /**
+ * \note To be deprecated soon. Only for enabling other deprecations.
+ *
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ *
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a window with this pixel format at
+ *          the point mir_surface_create() is called it will instead return an invalid window.
+ */
+void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format);
+
+/**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
@@ -658,16 +671,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             MirPixelFormat format);
 //__attribute__((deprecated("use mir_create_input_method_window_spec() instead")));
 
-/**
- * Set the requested pixel format.
- * \param [in] spec     Specification to mutate
- * \param [in] format   Requested pixel format
- *
- * \note    If this call returns %true then the server is guaranteed to honour this request.
- *          If the server is unable to create a surface with this pixel format at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
 void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+//__attribute__((deprecated("use mir_window_spec_set_pixel_format() instead")));
 
 /**
  * Set the requested buffer usage.

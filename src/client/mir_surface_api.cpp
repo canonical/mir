@@ -427,6 +427,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format)
+try
+{
+    mir::require(spec);
+    spec->pixel_format = format;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 void mir_window_spec_release(MirWindowSpec* spec)
 {
     delete spec;
@@ -562,7 +573,7 @@ void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
 
 void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
 {
-    spec->pixel_format = format;
+    mir_window_spec_set_pixel_format();
 }
 
 void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
