@@ -95,7 +95,6 @@ mir_create_menu_window_spec(MirConnection* connection,
  *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
  *                          return a window of this height.
- * \param [in] format       Pixel format for the window.
  * \param [in] parent       A valid parent window for this tip.
  * \param [in] rect         The adjacency rectangle. The server is not
  *                          guaranteed to create a window at the requested
@@ -108,7 +107,6 @@ mir_create_menu_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_tip_window_spec(MirConnection* connection,
                            int width, int height,
-                           MirPixelFormat format,
                            MirSurface* parent,
                            MirRectangle* rect,
                            MirEdgeAttachment edge);

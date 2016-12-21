@@ -251,7 +251,8 @@ TEST_F(ClientSurfaces, can_be_tips)
     MirRectangle rect{100, 200, 100, 100};
 
     auto spec = mir_create_tip_window_spec(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &rect, mir_edge_attachment_any);
+        parent, &rect, mir_edge_attachment_any);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto tooltip = mir_surface_create_sync(spec);

@@ -206,9 +206,11 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
     MirRectangle placement_hint{100, 200, 300, 400};
 
     auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    auto spec_temp = mir_create_tip_window_spec(connection, 640, 480,
+        parent.get(), &placement_hint, mir_edge_attachment_vertical);
+    mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> tooltip_spec{
-        mir_create_tip_window_spec(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &placement_hint, mir_edge_attachment_vertical),
+        spec_temp,
         spec_deleter
     };
 
