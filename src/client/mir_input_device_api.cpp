@@ -79,7 +79,7 @@ char const* mir_input_device_get_unique_id(MirInputDevice const* device) MIR_HAN
 MirPointerConfiguration const* mir_input_device_get_pointer_configuration(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (device->has_pointer_configuration())
-        return reinterpret_cast<MirPointerConfiguration const*>(&device->pointer_configuration());
+        return &device->pointer_configuration();
 
     return nullptr;
 })
@@ -112,7 +112,7 @@ MirPointerHandedness mir_pointer_configuration_get_handedness(MirPointerConfigur
 MirPointerConfiguration* mir_input_device_get_mutable_pointer_configuration(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (device->has_pointer_configuration())
-        return reinterpret_cast<MirPointerConfiguration*>(&device->pointer_configuration());
+        return &device->pointer_configuration();
     return nullptr;
 })
 
@@ -146,7 +146,7 @@ MirTouchpadConfiguration const* mir_input_device_get_touchpad_configuration(MirI
 {
 
     if (device->has_touchpad_configuration())
-        return reinterpret_cast<MirTouchpadConfiguration const*>(&device->touchpad_configuration());
+        return &device->touchpad_configuration();
     return nullptr;
 })
 
@@ -188,7 +188,7 @@ bool mir_touchpad_configuration_get_disable_while_typing(MirTouchpadConfiguratio
 MirTouchpadConfiguration* mir_input_device_get_mutable_touchpad_configuration(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (device->has_touchpad_configuration())
-        return reinterpret_cast<MirTouchpadConfiguration*>(&device->touchpad_configuration());
+        return &device->touchpad_configuration();
     return nullptr;
 })
 
