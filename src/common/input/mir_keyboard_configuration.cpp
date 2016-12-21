@@ -17,68 +17,68 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 
 #include <ostream>
 
 namespace mi = mir::input;
 
-struct mi::KeyboardConfiguration::Implementation
+struct MirKeyboardConfiguration::Implementation
 {
     Implementation() = default;
-    Implementation(Keymap && keymap)
+    Implementation(mi::Keymap && keymap)
         : device_keymap(keymap) {}
-    Keymap device_keymap;
+    mi::Keymap device_keymap;
 };
 
-mi::KeyboardConfiguration::KeyboardConfiguration()
+MirKeyboardConfiguration::MirKeyboardConfiguration()
     : impl{std::make_unique<Implementation>()}
 {}
 
-mi::KeyboardConfiguration::~KeyboardConfiguration() = default;
+MirKeyboardConfiguration::~MirKeyboardConfiguration() = default;
 
-mi::KeyboardConfiguration::KeyboardConfiguration(Keymap && keymap)
+MirKeyboardConfiguration::MirKeyboardConfiguration(mi::Keymap && keymap)
     : impl{std::make_unique<Implementation>(std::move(keymap))}
 {
 }
 
-mi::KeyboardConfiguration::KeyboardConfiguration(KeyboardConfiguration && other)
+MirKeyboardConfiguration::MirKeyboardConfiguration(MirKeyboardConfiguration && other)
     : impl{std::move(other.impl)}
 {
 }
 
-mi::KeyboardConfiguration::KeyboardConfiguration(KeyboardConfiguration const& other)
+MirKeyboardConfiguration::MirKeyboardConfiguration(MirKeyboardConfiguration const& other)
     : impl{std::make_unique<Implementation>(*other.impl)}
 {
 }
 
-mi::KeyboardConfiguration& mi::KeyboardConfiguration::operator=(KeyboardConfiguration const& other)
+MirKeyboardConfiguration& MirKeyboardConfiguration::operator=(MirKeyboardConfiguration const& other)
 {
     *impl = *other.impl;
     return *this;
 }
 
-mi::Keymap const& mi::KeyboardConfiguration::device_keymap() const
+mi::Keymap const& MirKeyboardConfiguration::device_keymap() const
 {
     return impl->device_keymap;
 }
 
-void mi::KeyboardConfiguration::device_keymap(Keymap const& keymap)
+void MirKeyboardConfiguration::device_keymap(mi::Keymap const& keymap)
 {
     impl->device_keymap = keymap;
 }
 
-bool mi::KeyboardConfiguration::operator==(KeyboardConfiguration const& rhs) const
+bool MirKeyboardConfiguration::operator==(MirKeyboardConfiguration const& rhs) const
 {
     return device_keymap() == rhs.device_keymap();
 }
 
-bool mi::KeyboardConfiguration::operator!=(KeyboardConfiguration const& rhs) const
+bool MirKeyboardConfiguration::operator!=(MirKeyboardConfiguration const& rhs) const
 {
     return !(*this == rhs);
 }
 
-std::ostream& mi::operator<<(std::ostream& out, mi::KeyboardConfiguration const& keyboard)
+std::ostream& operator<<(std::ostream& out, MirKeyboardConfiguration const& keyboard)
 {
     return out << " keymap:" << keyboard.device_keymap();
 }

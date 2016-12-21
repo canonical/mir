@@ -26,14 +26,14 @@
 
 #include <memory>
 
+class MirPointerConfiguration;
+class MirTouchpadConfiguration;
+class MirKeyboardConfiguration;
+
 namespace mir
 {
 namespace input
 {
-
-class PointerConfiguration;
-class TouchpadConfiguration;
-class KeyboardConfiguration;
 
 class Device
 {
@@ -45,14 +45,14 @@ public:
     virtual std::string name() const = 0;
     virtual std::string unique_id() const = 0;
 
-    virtual mir::optional_value<PointerConfiguration> pointer_configuration() const = 0;
-    virtual void apply_pointer_configuration(PointerConfiguration const&) = 0;
+    virtual mir::optional_value<MirPointerConfiguration> pointer_configuration() const = 0;
+    virtual void apply_pointer_configuration(MirPointerConfiguration const&) = 0;
 
-    virtual mir::optional_value<TouchpadConfiguration> touchpad_configuration() const = 0;
-    virtual void apply_touchpad_configuration(TouchpadConfiguration const&) = 0;
+    virtual mir::optional_value<MirTouchpadConfiguration> touchpad_configuration() const = 0;
+    virtual void apply_touchpad_configuration(MirTouchpadConfiguration const&) = 0;
 
-    virtual optional_value<KeyboardConfiguration> keyboard_configuration() const = 0;
-    virtual void apply_keyboard_configuration(KeyboardConfiguration const&) = 0;
+    virtual optional_value<MirKeyboardConfiguration> keyboard_configuration() const = 0;
+    virtual void apply_keyboard_configuration(MirKeyboardConfiguration const&) = 0;
 private:
     Device(Device const&) = delete;
     Device& operator=(Device const&) = delete;

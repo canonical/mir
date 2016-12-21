@@ -16,12 +16,12 @@
  * Authored By: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/input_configuration_serialization.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/touchscreen_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_touchscreen_configuration.h"
+#include "mir/input/mir_keyboard_configuration.h"
 #include "mir_input_configuration.capnp.h"
 
 #include <capnp/message.h>
@@ -30,7 +30,7 @@
 namespace mi = mir::input;
 namespace mc = mir::capnp;
 
-std::string mi::serialize_input_configuration(mi::InputConfiguration const& config)
+std::string mi::serialize_input_configuration(MirInputConfiguration const& config)
 {
     ::capnp::MallocMessageBuilder message;
     mc::InputConfiguration::Builder builder = message.initRoot<mc::InputConfiguration>();
@@ -38,7 +38,7 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
     auto device_iterator = list_builder.begin();
 
     config.for_each(
-        [&](mi::DeviceConfiguration const& conf)
+        [&](MirInputDevice const& conf)
         {
             auto device = *device_iterator++;
             device.initId().setId(conf.id());
@@ -106,7 +106,7 @@ std::string mi::serialize_input_configuration(mi::InputConfiguration const& conf
     return {reinterpret_cast<char*>(flat.asBytes().begin()), flat.asBytes().size()};
 }
 
-mi::InputConfiguration mi::deserialize_input_configuration(std::string const& buffer)
+MirInputConfiguration mi::deserialize_input_configuration(std::string const& buffer)
 {
     ::capnp::MallocMessageBuilder message;
     kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
@@ -114,19 +114,19 @@ mi::InputConfiguration mi::deserialize_input_configuration(std::string const& bu
     ::capnp::initMessageBuilderFromFlatArrayCopy(words, message);
     mc::InputConfiguration::Reader conf_reader = message.getRoot<mc::InputConfiguration>();
 
-    InputConfiguration ret;
+    MirInputConfiguration ret;
 
     for (auto const& device_config : conf_reader.getDevices())
     {
-        mi::DeviceConfiguration conf(device_config.getId().getId(),
-                                     static_cast<mi::DeviceCapabilities>(device_config.getCapabilities()),
-                                     device_config.getName(),
-                                     device_config.getUniqueId());
+        MirInputDevice conf(device_config.getId().getId(),
+                            static_cast<mi::DeviceCapabilities>(device_config.getCapabilities()),
+                            device_config.getName(),
+                            device_config.getUniqueId());
         if (device_config.hasTouchpadConfiguration())
         {
             auto tpd_conf = device_config.getTouchpadConfiguration();
             conf.set_touchpad_configuration(
-                mi::TouchpadConfiguration{
+                MirTouchpadConfiguration{
                     tpd_conf.getClickMode(),
                     tpd_conf.getScrollMode(),
                     tpd_conf.getButtonDownScrollButton(),
@@ -141,7 +141,7 @@ mi::InputConfiguration mi::deserialize_input_configuration(std::string const& bu
         {
             auto pointer_conf = device_config.getPointerConfiguration();
             conf.set_pointer_configuration(
-                mi::PointerConfiguration{
+                MirPointerConfiguration{
                     pointer_conf.getHandedness()==mc::PointerConfiguration::Handedness::RIGHT ?
                     mir_pointer_handedness_right :
                     mir_pointer_handedness_left,
@@ -159,7 +159,7 @@ mi::InputConfiguration mi::deserialize_input_configuration(std::string const& bu
             auto keyboard_conf = device_config.getKeyboardConfiguration();
             auto keymap_reader = keyboard_conf.getKeymap();
             conf.set_keyboard_configuration(
-                mi::KeyboardConfiguration{
+                MirKeyboardConfiguration{
                     Keymap{
                         keymap_reader.getModel(),
                         keymap_reader.getLayout(),
@@ -173,7 +173,7 @@ mi::InputConfiguration mi::deserialize_input_configuration(std::string const& bu
         {
             auto touchscreen_conf = device_config.getTouchscreenConfiguration();
             conf.set_touchscreen_configuration(
-                mi::TouchscreenConfiguration{
+                MirTouchscreenConfiguration{
                     touchscreen_conf.getOutputId(),
                     touchscreen_conf.getMappingMode() == mc::TouchscreenConfiguration::MappingMode::TO_OUTPUT ?
                     mir_touchscreen_mapping_mode_to_output :
