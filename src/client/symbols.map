@@ -502,6 +502,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_output_get_model;
     mir_blob_from_display_config;
     mir_blob_to_display_config;
-    mir_specify_menu;
+    mir_create_menu_window_spec;
     mir_specify_window;
 } MIR_CLIENT_0.25;

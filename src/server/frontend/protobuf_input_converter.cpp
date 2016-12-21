@@ -20,8 +20,8 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir/input/device.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
 #include "mir/input/device_capability.h"
 
 namespace mi = mir::input;

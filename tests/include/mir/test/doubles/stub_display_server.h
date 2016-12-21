@@ -90,6 +90,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::ScreencastId const* /*request*/,
         mir::protobuf::Buffer* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void screencast_to_buffer(
+        mir::protobuf::ScreencastRequest const*,
+        mir::protobuf::Void*,
+        google::protobuf::Closure*) {}
     void release_screencast(
         mir::protobuf::ScreencastId const* /*request*/,
         mir::protobuf::Void* /*response*/,

@@ -34,8 +34,8 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 #include "mir/variable_length_array.h"
 
 #include <gtest/gtest.h>
@@ -73,27 +73,27 @@ struct StubDevice : mi::Device
     {
         return device_unique_id;
     }
-    mir::optional_value<mi::PointerConfiguration> pointer_configuration() const override
+    mir::optional_value<MirPointerConfiguration> pointer_configuration() const override
     {
         return {};
     }
-    void apply_pointer_configuration(mi::PointerConfiguration const&) override
+    void apply_pointer_configuration(MirPointerConfiguration const&) override
     {
     }
 
-    mir::optional_value<mi::TouchpadConfiguration> touchpad_configuration() const override
+    mir::optional_value<MirTouchpadConfiguration> touchpad_configuration() const override
     {
         return {};
     }
-    void apply_touchpad_configuration(mi::TouchpadConfiguration const&) override
+    void apply_touchpad_configuration(MirTouchpadConfiguration const&) override
     {
     }
 
-    mir::optional_value<mi::KeyboardConfiguration> keyboard_configuration() const override
+    mir::optional_value<MirKeyboardConfiguration> keyboard_configuration() const override
     {
         return {};
     }
-    void apply_keyboard_configuration(mi::KeyboardConfiguration const&) override
+    void apply_keyboard_configuration(MirKeyboardConfiguration const&) override
     {
     }
 

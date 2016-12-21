@@ -357,6 +357,11 @@ message ScreencastId {
   required uint32 value = 1;
 }
 
+message ScreencastRequest {
+  optional ScreencastId id = 1;
+  optional uint32 buffer_id = 2;
+}
+
 message Screencast {
   optional ScreencastId screencast_id = 1;
   optional Buffer buffer = 2;

@@ -230,7 +230,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     auto parent = mtf::make_any_surface(connection);
     MirRectangle attachment_rect{100, 200, 100, 100};
 
-    auto spec = mir_specify_menu(connection, 640, 480,
+    auto spec = mir_create_menu_window_spec(connection, 640, 480,
         mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
     ASSERT_THAT(spec, NotNull());
 

@@ -75,12 +75,12 @@ MirWindowSpec* mir_specify_window(MirConnection* connection,
  *                          to complete construction.
  */
 MirWindowSpec*
-mir_specify_menu(MirConnection* connection,
-                 int width, int height,
-                 MirPixelFormat format,
-                 MirSurface* parent,
-                 MirRectangle* rect,
-                 MirEdgeAttachment edge);
+mir_create_menu_window_spec(MirConnection* connection,
+                            int width, int height,
+                            MirPixelFormat format,
+                            MirSurface* parent,
+                            MirRectangle* rect,
+                            MirEdgeAttachment edge);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
