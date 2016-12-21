@@ -37,8 +37,8 @@
 #include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
@@ -364,7 +364,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_specify_window(
+        mir_create_normal_window_spec(
             mir_connection,
             properties.size.width.as_int(),
             properties.size.height.as_int(),

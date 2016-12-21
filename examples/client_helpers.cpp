@@ -148,7 +148,7 @@ MirSurface* me::NormalSurface::create_surface(
     
     auto deleter = [](MirWindowSpec *spec) { mir_surface_spec_release(spec); };
     std::unique_ptr<MirWindowSpec, decltype(deleter)> spec{
-        mir_specify_window(connection, width, height, selected_format),
+        mir_create_normal_window_spec(connection, width, height, selected_format),
         deleter
     };
 

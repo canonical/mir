@@ -200,7 +200,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
 
     mir_surface_release_sync(surface);
 
-    auto const spec = mir_specify_window(
+    auto const spec = mir_create_normal_window_spec(
         connection,
         surface_size.width.as_int(),
         surface_size.height.as_int(),
@@ -260,7 +260,7 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
             stream->position().y.as_int()};
     }
 
-    auto spec = mir_specify_window(
+    auto spec = mir_create_normal_window_spec(
         connection, 100, 100, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_streams(spec, infos.data(), infos.size());
     auto surface = mir_surface_create_sync(spec);

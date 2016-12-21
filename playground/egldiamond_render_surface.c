@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     //once default streams are deprecated.
     //width and height are the logical width the user wants the surface to be
     MirWindowSpec *spec =
-        mir_specify_window(connection, width, height, mir_pixel_format_invalid);
+        mir_create_normal_window_spec(connection, width, height, mir_pixel_format_invalid);
 
     CHECK(spec, "Can't create a surface spec");
     mir_surface_spec_set_name(spec, appname);

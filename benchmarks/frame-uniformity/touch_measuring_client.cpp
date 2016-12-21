@@ -35,7 +35,7 @@ MirSurface *create_surface(MirConnection *connection)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
 
-    auto const spec = mir_specify_window(connection, 1024, 1024, pixel_format);
+    auto const spec = mir_create_normal_window_spec(connection, 1024, 1024, pixel_format);
     mir_surface_spec_set_name(spec, "frame-uniformity-test");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 

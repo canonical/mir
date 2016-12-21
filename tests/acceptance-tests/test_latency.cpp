@@ -262,7 +262,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 
         auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
-            mir_specify_window(connection, 100, 100, mir_pixel_format_abgr_8888),
+            mir_create_normal_window_spec(connection, 100, 100, mir_pixel_format_abgr_8888),
             del);
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;

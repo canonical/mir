@@ -17,11 +17,10 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/pointer_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
 #include <ostream>
 
-namespace mi = mir::input;
-struct mi::PointerConfiguration::Implementation
+struct MirPointerConfiguration::Implementation
 {
     MirPointerHandedness handedness{mir_pointer_handedness_right};
     MirPointerAcceleration acceleration{mir_pointer_acceleration_adaptive};
@@ -44,30 +43,30 @@ struct mi::PointerConfiguration::Implementation
     }
 };
 
-mi::PointerConfiguration::PointerConfiguration()
+MirPointerConfiguration::MirPointerConfiguration()
     : impl{std::make_unique<Implementation>()}
 {
 }
 
-mi::PointerConfiguration::~PointerConfiguration() = default;
+MirPointerConfiguration::~MirPointerConfiguration() = default;
 
-mi::PointerConfiguration::PointerConfiguration(PointerConfiguration const& cp)
+MirPointerConfiguration::MirPointerConfiguration(MirPointerConfiguration const& cp)
     : impl{std::make_unique<Implementation>(*cp.impl)}
 {
 }
 
-mi::PointerConfiguration::PointerConfiguration(PointerConfiguration && cp)
+MirPointerConfiguration::MirPointerConfiguration(MirPointerConfiguration && cp)
     : impl{std::move(cp.impl)}
 {
 }
 
-mi::PointerConfiguration& mi::PointerConfiguration::operator=(PointerConfiguration const& cp)
+MirPointerConfiguration& MirPointerConfiguration::operator=(MirPointerConfiguration const& cp)
 {
     *impl = *cp.impl;
     return *this;
 }
 
-mi::PointerConfiguration::PointerConfiguration(MirPointerHandedness handedness,
+MirPointerConfiguration::MirPointerConfiguration(MirPointerHandedness handedness,
                                                MirPointerAcceleration acceleration,
                                                double acceleration_bias,
                                                double horizontal_scroll_scale,
@@ -77,58 +76,58 @@ mi::PointerConfiguration::PointerConfiguration(MirPointerHandedness handedness,
 {
 }
 
-MirPointerHandedness mi::PointerConfiguration::handedness() const
+MirPointerHandedness MirPointerConfiguration::handedness() const
 {
     return impl->handedness;
 }
 
-void mi::PointerConfiguration::handedness(MirPointerHandedness value)
+void MirPointerConfiguration::handedness(MirPointerHandedness value)
 {
     impl->handedness = value;
 }
 
-MirPointerAcceleration mi::PointerConfiguration::acceleration() const
+MirPointerAcceleration MirPointerConfiguration::acceleration() const
 {
     return impl->acceleration;
 }
 
-void mi::PointerConfiguration::acceleration(MirPointerAcceleration acceleration)
+void MirPointerConfiguration::acceleration(MirPointerAcceleration acceleration)
 {
     impl->acceleration = acceleration;
 }
 
-double mi::PointerConfiguration::cursor_acceleration_bias() const
+double MirPointerConfiguration::cursor_acceleration_bias() const
 {
     return impl->cursor_acceleration_bias;
 }
 
-void mi::PointerConfiguration::cursor_acceleration_bias(double bias)
+void MirPointerConfiguration::cursor_acceleration_bias(double bias)
 {
     impl->cursor_acceleration_bias = bias;
 }
 
-double mi::PointerConfiguration::horizontal_scroll_scale() const
+double MirPointerConfiguration::horizontal_scroll_scale() const
 {
     return impl->horizontal_scroll_scale;
 }
 
-void mi::PointerConfiguration::horizontal_scroll_scale(double scale)
+void MirPointerConfiguration::horizontal_scroll_scale(double scale)
 {
     impl->horizontal_scroll_scale = scale;
 }
 
-double mi::PointerConfiguration::vertical_scroll_scale() const
+double MirPointerConfiguration::vertical_scroll_scale() const
 {
     return impl->vertical_scroll_scale;
 }
 
-void mi::PointerConfiguration::vertical_scroll_scale(double scale)
+void MirPointerConfiguration::vertical_scroll_scale(double scale)
 {
     impl->vertical_scroll_scale = scale;
 }
 
 
-bool mi::PointerConfiguration::operator==(PointerConfiguration const& rhs) const
+bool MirPointerConfiguration::operator==(MirPointerConfiguration const& rhs) const
 {
     return handedness() == rhs.handedness() && acceleration() == rhs.acceleration() &&
            cursor_acceleration_bias() == rhs.cursor_acceleration_bias() &&
@@ -136,12 +135,12 @@ bool mi::PointerConfiguration::operator==(PointerConfiguration const& rhs) const
            vertical_scroll_scale() == rhs.vertical_scroll_scale();
 }
 
-bool mi::PointerConfiguration::operator!=(PointerConfiguration const& rhs) const
+bool MirPointerConfiguration::operator!=(MirPointerConfiguration const& rhs) const
 {
     return !(*this == rhs);
 }
 
-std::ostream& mi::operator<<(std::ostream& out, mi::PointerConfiguration const& rhs)
+std::ostream& operator<<(std::ostream& out, MirPointerConfiguration const& rhs)
 {
     return out << " handedness:" << rhs.handedness()
         << " acceleration:" << rhs.acceleration()
