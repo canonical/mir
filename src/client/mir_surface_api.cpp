@@ -477,7 +477,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_dialog(MirConnection* connection,
                                                       int height,
                                                       MirPixelFormat format)
 {
-    return mir_specify_dialog(connection, width, height, format);
+    return mir_create_dialog_window_spec(connection, width, height, format);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
