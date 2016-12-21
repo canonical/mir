@@ -479,22 +479,22 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         if (*p == '/')
             name = p + 1;
     }
-    mir_spec_set_name(spec, name);
+    mir_window_spec_set_name(spec, name);
 
     if (output_id != mir_display_output_id_invalid)
-        mir_spec_set_fullscreen(spec, output_id);
+        mir_window_spec_set_fullscreen(spec, output_id);
 
     surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
     spec = mir_create_window_spec(connection);
-    mir_spec_set_cursor_name(spec, cursor_name);
+    mir_window_spec_set_cursor_name(spec, cursor_name);
     mir_surface_apply_spec(surface, spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);

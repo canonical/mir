@@ -68,7 +68,7 @@ void demo_client(const char* server)
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480, pixel_format);
 
     mir_wait_for(mir_surface_create(spec, surface_create_callback, NULL));
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     mir_wait_for(mir_surface_release(surface, surface_release_callback, NULL));
 }

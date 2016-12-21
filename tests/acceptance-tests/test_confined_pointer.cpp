@@ -78,10 +78,10 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
-        mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
-        mir_spec_set_name(spec, name.c_str());
+        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+        mir_window_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
         if (!mir_surface_is_valid(surface))
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
@@ -102,11 +102,11 @@ struct Client
     void resize(int width, int height)
     {
         auto spec = mir_create_window_spec(connection);
-        mir_spec_set_width (spec, width);
-        mir_spec_set_height(spec, height);
+        mir_window_spec_set_width (spec, width);
+        mir_window_spec_set_height(spec, height);
 
         mir_surface_apply_spec(surface, spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
     }
 
     void handle_surface_event(MirSurfaceEvent const* event)
@@ -282,10 +282,10 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
 
     // Attempt to confine client_1 while client_2 is focused
     auto spec = mir_create_window_spec(client_1.connection);
-    mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(client_1.surface, spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     // We have to wait since we *wont* set the seat here
     std::this_thread::sleep_for(1s);

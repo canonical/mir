@@ -121,7 +121,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
 }
 
 MirWindowSpec*
-mir_specify_input_method(MirConnection* connection,
+mir_create_input_method_window_spec(MirConnection* connection,
                             int width, int height,
                             MirPixelFormat format)
 {
@@ -155,7 +155,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type)
+void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type)
 try
 {
     mir::require(spec);
@@ -166,7 +166,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_name(MirWindowSpec* spec, char const* name)
+void mir_window_spec_set_name(MirWindowSpec* spec, char const* name)
 try
 {
     mir::require(spec);
@@ -177,7 +177,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_width(MirWindowSpec* spec, unsigned width)
+void mir_window_spec_set_width(MirWindowSpec* spec, unsigned width)
 try
 {
     mir::require(spec);
@@ -188,7 +188,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_height(MirWindowSpec* spec, unsigned height)
+void mir_window_spec_set_height(MirWindowSpec* spec, unsigned height)
 try
 {
     mir::require(spec);
@@ -199,7 +199,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc)
+void mir_window_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc)
 try
 {
     mir::require(spec);
@@ -210,7 +210,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc)
+void mir_window_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc)
 try
 {
     mir::require(spec);
@@ -221,7 +221,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width)
+void mir_window_spec_set_min_width(MirWindowSpec* spec, unsigned min_width)
 try
 {
     mir::require(spec);
@@ -232,7 +232,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height)
+void mir_window_spec_set_min_height(MirWindowSpec* spec, unsigned min_height)
 try
 {
     mir::require(spec);
@@ -243,7 +243,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width)
+void mir_window_spec_set_max_width(MirWindowSpec* spec, unsigned max_width)
 try
 {
     mir::require(spec);
@@ -254,7 +254,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height)
+void mir_window_spec_set_max_height(MirWindowSpec* spec, unsigned max_height)
 try
 {
     mir::require(spec);
@@ -265,7 +265,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
+void mir_window_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
 try
 {
     mir::require(spec);
@@ -276,7 +276,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
+void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height)
 try
 {
     mir::require(spec);
@@ -287,7 +287,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id)
+void mir_window_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id)
 try
 {
     mir::require(spec);
@@ -299,7 +299,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode)
+void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode)
 try
 {
     mir::require(spec);
@@ -310,7 +310,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
+bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
                                                MirPersistentId* parent,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
@@ -330,7 +330,7 @@ bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     return true;
 }
 
-void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state)
+void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state)
 try
 {
     mir::require(spec);
@@ -341,7 +341,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_input_shape(MirWindowSpec *spec,
+void mir_window_spec_set_input_shape(MirWindowSpec *spec,
                               MirRectangle const* rectangles,
                               size_t n_rects)
 try
@@ -360,7 +360,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_event_handler(MirWindowSpec* spec,
+void mir_window_spec_set_event_handler(MirWindowSpec* spec,
                                 mir_surface_event_callback callback,
                                 void* context)
 try
@@ -373,7 +373,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style)
+void mir_window_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style)
 try
 {
     mir::require(spec);
@@ -384,7 +384,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state)
+void mir_window_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state)
 try
 {
     mir::require(spec);
@@ -395,7 +395,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_placement(MirWindowSpec* spec,
+void mir_window_spec_set_placement(MirWindowSpec* spec,
                             MirRectangle const* rect,
                             MirPlacementGravity rect_gravity,
                             MirPlacementGravity window_gravity,
@@ -416,7 +416,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_set_cursor_name(MirWindowSpec* spec, char const* name)
+void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name)
 try
 {
     mir::require(spec);
@@ -427,7 +427,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_spec_release(MirWindowSpec* spec)
+void mir_window_spec_release(MirWindowSpec* spec)
 {
     delete spec;
 }
@@ -484,7 +484,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width, int height,
                                                             MirPixelFormat format)
 {
-    return mir_specify_input_method(connection, width, height, format);
+    return mir_create_input_method_window_spec(connection, width, height, format);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
@@ -532,32 +532,32 @@ void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 
 void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 {
-    mir_spec_set_width(spec, width);
+    mir_window_spec_set_width(spec, width);
 }
 
 void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 {
-    mir_spec_set_height(spec, height);
+    mir_window_spec_set_height(spec, height);
 }
 
 void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width)
 {
-    mir_spec_set_min_width(spec, min_width);
+    mir_window_spec_set_min_width(spec, min_width);
 }
 
 void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height)
 {
-    mir_spec_set_min_height(spec, min_height);
+    mir_window_spec_set_min_height(spec, min_height);
 }
 
 void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width)
 {
-    mir_spec_set_max_width(spec, max_width);
+    mir_window_spec_set_max_width(spec, max_width);
 }
 
 void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height)
 {
-    mir_spec_set_max_height(spec, max_height);
+    mir_window_spec_set_max_height(spec, max_height);
 }
 
 void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
@@ -572,34 +572,34 @@ void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 {
-    mir_spec_set_state(spec, state);
+    mir_window_spec_set_state(spec, state);
 }
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
-    mir_spec_set_fullscreen(spec, output_id);
+    mir_window_spec_set_fullscreen(spec, output_id);
 }
 
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode)
 {
-    mir_spec_set_preferred_orientation(spec, mode);
+    mir_window_spec_set_preferred_orientation(spec, mode);
 }
 
 void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
                                         mir_surface_event_callback callback,
                                         void* context)
 {
-    mir_spec_set_event_handler(spec, callback, context);
+    mir_window_spec_set_event_handler(spec, callback, context);
 }
 
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)
 {
-    mir_spec_set_shell_chrome(spec, style);
+    mir_window_spec_set_shell_chrome(spec, style);
 }
 
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 }
 
 MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
@@ -716,7 +716,7 @@ catch (std::exception const& ex)
 void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
                                       size_t n_rects)
 {
-    mir_spec_set_input_shape(spec, rectangles, n_rects);
+    mir_window_spec_set_input_shape(spec, rectangles, n_rects);
 }
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
@@ -726,32 +726,32 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
 {
-    mir_spec_set_type(spec, type);
+    mir_window_spec_set_type(spec, type);
 }
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
 {
-    mir_spec_set_width_increment(spec, width_inc);
+    mir_window_spec_set_width_increment(spec, width_inc);
 }
 
 void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc)
 {
-    mir_spec_set_height_increment(spec, height_inc);
+    mir_window_spec_set_height_increment(spec, height_inc);
 }
 
 void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
 {
-    mir_spec_set_min_aspect_ratio(spec, width, height);
+    mir_window_spec_set_min_aspect_ratio(spec, width, height);
 }
 
 void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
 {
-    mir_spec_set_max_aspect_ratio(spec, width, height);
+    mir_window_spec_set_max_aspect_ratio(spec, width, height);
 }
 
 void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
 {
-    mir_spec_set_pointer_confinement(spec, state);
+    mir_window_spec_set_pointer_confinement(spec, state);
 }
 
 void mir_surface_spec_set_placement(MirSurfaceSpec* spec,
@@ -761,7 +761,7 @@ void mir_surface_spec_set_placement(MirSurfaceSpec* spec,
                                     MirPlacementHints placement_hints,
                                     int offset_dx, int offset_dy)
 {
-    mir_spec_set_placement(spec,
+    mir_window_spec_set_placement(spec,
                            rect,
                            rect_gravity,
                            window_gravity,
@@ -775,7 +775,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
 {
-    return mir_spec_attach_to_foreign_parent(spec,
+    return mir_window_spec_attach_to_foreign_parent(spec,
                                              parent,
                                              attachment_rect,
                                              edge);

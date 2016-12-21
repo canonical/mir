@@ -77,9 +77,9 @@ struct MockClient
         auto const spec = mir_create_normal_window_spec(
             connection_, 800, 600, mir_pixel_format_bgr_888);
 
-        mir_spec_set_fullscreen(spec, output_id);
+        mir_window_spec_set_fullscreen(spec, output_id);
         auto const surface = mir_surface_create_sync(spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
 
         mir_surface_set_event_handler(surface, on_surface_event, this);
 
@@ -249,10 +249,10 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
     auto surface = client.create_surface(1);
 
     MirWindowSpec* spec = mir_create_window_spec(client.connection());
-    mir_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
     mir_surface_apply_spec(surface, spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     mt::spin_wait_for_condition_or_timeout([this]
     {

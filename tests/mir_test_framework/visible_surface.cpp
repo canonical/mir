@@ -22,7 +22,7 @@ namespace mtf = mir_test_framework;
 mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
     visible{false}
 {
-    mir_spec_set_event_handler(spec, VisibleSurface::event_callback, this);
+    mir_window_spec_set_event_handler(spec, VisibleSurface::event_callback, this);
     surface = mir_surface_create_sync(spec);
     // Swap buffers to ensure surface is visible for event based tests
     if (mir_surface_is_valid(surface))

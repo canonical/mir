@@ -177,7 +177,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
 MirWindowSpec*
-mir_specify_input_method(MirConnection* connection,
+mir_create_input_method_window_spec(MirConnection* connection,
                         int width, int height,
                         MirPixelFormat format);
 
@@ -220,7 +220,7 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
  * \param [in] spec         Specification to mutate
  * \param [in] type         the target type of the window
  */
-void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
+void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
 
 /**
  * Set the requested name.
@@ -233,7 +233,7 @@ void mir_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
  * \param [in] name     Requested name. This must be valid UTF-8.
  *                      Copied into spec; clients can free the buffer passed after this call.
  */
-void mir_spec_set_name(MirWindowSpec* spec, char const* name);
+void mir_window_spec_set_name(MirWindowSpec* spec, char const* name);
 
 /**
  * Set the requested width, in pixels
@@ -244,7 +244,7 @@ void mir_spec_set_name(MirWindowSpec* spec, char const* name);
  * \note    The requested dimensions are a hint only. The server is not
  *          guaranteed to create a window of any specific width or height.
  */
-void mir_spec_set_width(MirWindowSpec* spec, unsigned width);
+void mir_window_spec_set_width(MirWindowSpec* spec, unsigned width);
 
 /**
  * Set the requested height, in pixels
@@ -255,7 +255,7 @@ void mir_spec_set_width(MirWindowSpec* spec, unsigned width);
  * \note    The requested dimensions are a hint only. The server is not
  *          guaranteed to create a window of any specific width or height.
  */
-void mir_spec_set_height(MirWindowSpec* spec, unsigned height);
+void mir_window_spec_set_height(MirWindowSpec* spec, unsigned height);
 
 /**
  * Set the requested width increment, in pixels.
@@ -268,7 +268,7 @@ void mir_spec_set_height(MirWindowSpec* spec, unsigned height);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
  *          create a window of any specific width or height.
  */
-void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
+void mir_window_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
 
 /**
  * Set the requested height increment, in pixels
@@ -281,7 +281,7 @@ void mir_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
  *          create a window of any specific width or height.
  */
-void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
+void mir_window_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
 
 /**
  * Set the minimum width, in pixels
@@ -292,7 +292,7 @@ void mir_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          window of any specific width or height.
  */
-void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
+void mir_window_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
 
 /**
  * Set the minimum height, in pixels
@@ -303,7 +303,7 @@ void mir_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          window of any specific width or height.
  */
-void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
+void mir_window_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
 
 /**
  * Set the maximum width, in pixels
@@ -314,7 +314,7 @@ void mir_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          window of any specific width or height.
  */
-void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
+void mir_window_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
 
 /**
  * Set the maximum height, in pixels
@@ -325,7 +325,7 @@ void mir_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          window of any specific width or height.
  */
-void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
+void mir_window_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
 
 /**
  * Set the minimum aspect ratio. This is the minimum ratio of window width to height.
@@ -338,7 +338,7 @@ void mir_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
  * \note    The requested aspect ratio is a hint only. The server is not guaranteed
  *          to create a window of any specific aspect.
  */
-void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
+void mir_window_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
 
 /**
  * Set the maximum aspect ratio. This is the maximum ratio of window width to height.
@@ -351,7 +351,7 @@ void mir_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned
  * \note    The requested aspect ratio is a hint only. The server is not guaranteed
  *          to create a window of any specific aspect.
  */
-void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
+void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
 
 /**
  * \param [in] spec         Specification to mutate
@@ -361,7 +361,7 @@ void mir_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned
  *          guaranteed to be fullscreen on the specified output. An invalid window is returned
  *          if the server unable to, or policy prevents it from, honouring this request.
  */
-void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
+void mir_window_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
 
 /**
  * Set the requested preferred orientation mode.
@@ -371,7 +371,7 @@ void mir_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
  * \note    If the server is unable to create a window with the preferred orientation at
  *          the point mir_surface_create() is called it will instead return an invalid window.
  */
-void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
+void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
 
 /**
  * Request that the created window be attached to a window of a different client.
@@ -392,7 +392,7 @@ void mir_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode 
  *          mir_surface_create() is called but is later closed, this window will also receive
  *          a close event.
  */
-bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
+bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
                                        MirPersistentId* parent,
                                        MirRectangle* attachment_rect,
                                        MirEdgeAttachment edge);
@@ -405,7 +405,7 @@ bool mir_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  * \note    If the server is unable to create a window with the requested state at
  *          the point mir_surface_create() is called it will instead return an invalid window.
  */
-void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
+void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
 
 /**
  * Set a collection of input rectangles associated with the spec.
@@ -419,7 +419,7 @@ void mir_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
  * \param [in] rectangles An array of MirRectangles specifying the input shape.
  * \param [in] n_rects The number of elements in the rectangles array.
  */
-void mir_spec_set_input_shape(MirWindowSpec* spec,
+void mir_window_spec_set_input_shape(MirWindowSpec* spec,
                               MirRectangle const *rectangles,
                               size_t n_rects);
 
@@ -434,7 +434,7 @@ void mir_spec_set_input_shape(MirWindowSpec* spec,
  * \param [in] callback   The callback function
  * \param [in] context    Additional argument to be passed to callback
  */
-void mir_spec_set_event_handler(MirWindowSpec* spec,
+void mir_window_spec_set_event_handler(MirWindowSpec* spec,
                                 mir_surface_event_callback callback,
                                 void* context);
 
@@ -445,7 +445,7 @@ void mir_spec_set_event_handler(MirWindowSpec* spec,
  * \param [in] spec The spec to accumulate the request in.
  * \param [in] style The requested level of "chrome"
  */
-void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
+void mir_window_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
 
 /**
  * Attempts to set the pointer confinement spec for this window
@@ -455,7 +455,7 @@ void mir_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
  * \param [in] spec  The spec to accumulate the request in.
  * \param [in] state The state you would like the pointer confinement to be in.
  */
-void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state);
+void mir_window_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state);
 
 /**
  * Set the window placement on the spec.
@@ -480,7 +480,7 @@ void mir_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinement
  * that the window would fall off-screen if placed in its ideal position.
  * See \ref MirPlacementHints for details.
  */
-void mir_spec_set_placement(MirWindowSpec*      spec,
+void mir_window_spec_set_placement(MirWindowSpec*      spec,
                             const MirRectangle* rect,
                             MirPlacementGravity rect_gravity,
                             MirPlacementGravity window_gravity,
@@ -493,14 +493,14 @@ void mir_spec_set_placement(MirWindowSpec*      spec,
  * \param [in] spec             The spec
  * \param [in] name             The name, or "" to reset to default
  */
-void mir_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
+void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
 
 /**
  * Release the resources held by a MirWindowSpec.
  *
  * \param [in] spec     Specification to release
  */
-void mir_spec_release(MirWindowSpec* spec);
+void mir_window_spec_release(MirWindowSpec* spec);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -575,74 +575,74 @@ int mir_surface_get_swapinterval(MirSurface* surface)
 __attribute__((deprecated("This will soon be a property of the backing content")));
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
-//__attribute__((deprecated("use mir_spec_set_type() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_type() instead")));
 
 void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
-//__attribute__((deprecated("use mir_spec_set_name() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_name() instead")));
 
 void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
-//__attribute__((deprecated("use mir_spec_set_width() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_width() instead")));
 
 void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
-//__attribute__((deprecated("use mir_spec_set_height() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_height() instead")));
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc);
-//__attribute__((deprecated("use mir_spec_set_width_increment() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_width_increment() instead")));
 
 void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc);
-//__attribute__((deprecated("use mir_spec_set_height_increment() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_height_increment() instead")));
 
 void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
-//__attribute__((deprecated("use mir_spec_set_min_width() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_min_width() instead")));
 
 void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
-//__attribute__((deprecated("use mir_spec_set_min_height() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_min_height() instead")));
 
 void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
-//__attribute__((deprecated("use mir_spec_set_max_width() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_max_width() instead")));
 
 void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
-//__attribute__((deprecated("use mir_spec_set_max_height() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_max_height() instead")));
 
 void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
-//__attribute__((deprecated("use mir_spec_set_min_aspect_ratio() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_min_aspect_ratio() instead")));
 
 void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
-//__attribute__((deprecated("use mir_spec_set_max_aspect_ratio() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_max_aspect_ratio() instead")));
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
-//__attribute__((deprecated("use mir_spec_set_fullscreen() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_fullscreen() instead")));
 
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
-//__attribute__((deprecated("use mir_spec_set_preferred_orientation() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_preferred_orientation() instead")));
 
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirPersistentId* parent,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge);
-//__attribute__((deprecated("use mir_spec_attach_to_foreign_parent() instead")));
+//__attribute__((deprecated("use mir_window_spec_attach_to_foreign_parent() instead")));
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
-//__attribute__((deprecated("use mir_spec_set_state() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_state() instead")));
 
 void mir_surface_spec_release(MirSurfaceSpec* spec);
-//__attribute__((deprecated("use mir_spec_release() instead")));
+//__attribute__((deprecated("use mir_window_spec_release() instead")));
 
 void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,
                                       size_t n_rects);
-//__attribute__((deprecated("use mir_spec_set_input_shape() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_input_shape() instead")));
 
 void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
                                         mir_surface_event_callback callback,
                                         void* context);
-//__attribute__((deprecated("use mir_spec_set_event_handler() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_event_handler() instead")));
 
 void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
-//__attribute__((deprecated("use mir_spec_set_shell_chrome() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_shell_chrome() instead")));
 
 void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
-//__attribute__((deprecated("use mir_spec_set_pointer_confinement() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_pointer_confinement() instead")));
 
 void mir_surface_spec_set_placement(MirSurfaceSpec*     spec,
                                     const MirRectangle* rect,
@@ -651,12 +651,12 @@ void mir_surface_spec_set_placement(MirSurfaceSpec*     spec,
                                     MirPlacementHints   placement_hints,
                                     int                 offset_dx,
                                     int                 offset_dy);
-//__attribute__((deprecated("use mir_spec_set_placement() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_placement() instead")));
 
 MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
                                                             int width, int height,
                                                             MirPixelFormat format);
-//__attribute__((deprecated("use mir_specify_input_method() instead")));
+//__attribute__((deprecated("use mir_create_input_method_window_spec() instead")));
 
 /**
  * Set the requested pixel format.

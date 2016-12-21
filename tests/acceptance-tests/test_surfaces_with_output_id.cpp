@@ -126,14 +126,14 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto del = [] (MirWindowSpec* spec) { mir_spec_release(spec); };
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
             mir_create_normal_window_spec(connection, 
                 static_cast<int>(mode.horizontal_resolution) - 1,
                 static_cast<int>(mode.vertical_resolution) + 1,
                 mir_pixel_format_abgr_8888),
             del);
-        mir_spec_set_fullscreen(spec.get(), output.output_id);
+        mir_window_spec_set_fullscreen(spec.get(), output.output_id);
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 
@@ -141,14 +141,14 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto del = [] (MirWindowSpec* spec) { mir_spec_release(spec); };
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
             mir_create_normal_window_spec(connection,
                 static_cast<int>(mode.horizontal_resolution),
                 static_cast<int>(mode.vertical_resolution),
                 mir_pixel_format_abgr_8888),
             del);
-        mir_spec_set_fullscreen(spec.get(), output.output_id);
+        mir_window_spec_set_fullscreen(spec.get(), output.output_id);
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 

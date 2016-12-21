@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     }
 
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    mir_spec_set_name(spec, "red");
+    mir_window_spec_set_name(spec, "red");
 
     win[0].surface = mir_surface_create_sync(spec);
     win[0].fill.r = 0xff;
@@ -261,9 +261,9 @@ int main(int argc, char *argv[])
     win[0].fill.a = alpha;
     premultiply_alpha(&win[0].fill);
 
-    mir_spec_set_name(spec, "green");
-    mir_spec_set_width(spec, 300);
-    mir_spec_set_height(spec, 150);
+    mir_window_spec_set_name(spec, "green");
+    mir_window_spec_set_width(spec, 300);
+    mir_window_spec_set_height(spec, 150);
     win[1].surface = mir_surface_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
@@ -271,9 +271,9 @@ int main(int argc, char *argv[])
     win[1].fill.a = alpha;
     premultiply_alpha(&win[1].fill);
 
-    mir_spec_set_name(spec, "blue");
-    mir_spec_set_width(spec, 150);
-    mir_spec_set_height(spec, 300);
+    mir_window_spec_set_name(spec, "blue");
+    mir_window_spec_set_width(spec, 150);
+    mir_window_spec_set_height(spec, 300);
     win[2].surface = mir_surface_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
     win[2].fill.a = alpha;
     premultiply_alpha(&win[2].fill);
 
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);

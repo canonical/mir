@@ -146,13 +146,13 @@ MirSurface* me::NormalSurface::create_surface(
         }
     }
     
-    auto deleter = [](MirWindowSpec *spec) { mir_spec_release(spec); };
+    auto deleter = [](MirWindowSpec *spec) { mir_window_spec_release(spec); };
     std::unique_ptr<MirWindowSpec, decltype(deleter)> spec{
         mir_create_normal_window_spec(connection, width, height, selected_format),
         deleter
     };
 
-    mir_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
+    mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
     mir_surface_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
     auto surface = mir_surface_create_sync(spec.get());
     return surface;

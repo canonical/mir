@@ -181,7 +181,7 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     MirRectangle attachment_rect{100, 200, 300, 400};
     MirEdgeAttachment edge{mir_edge_attachment_horizontal};
 
-    auto spec_deleter = [](MirWindowSpec* spec) {mir_spec_release(spec);};
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
         mir_create_menu_window_spec(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &attachment_rect, edge),
@@ -203,7 +203,7 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
     MirRectangle placement_hint{100, 200, 300, 400};
 
-    auto spec_deleter = [](MirWindowSpec* spec) {mir_spec_release(spec);};
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> tooltip_spec{
         mir_create_tip_window_spec(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &placement_hint, mir_edge_attachment_vertical),
@@ -219,7 +219,7 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
 TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
-    auto spec_deleter = [](MirWindowSpec* spec) {mir_spec_release(spec);};
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
         mir_create_dialog_window_spec(connection, 640, 480, mir_pixel_format_abgr_8888),
         spec_deleter
@@ -237,7 +237,7 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
-    auto spec_deleter = [](MirWindowSpec* spec) {mir_spec_release(spec);};
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
         mir_create_modal_dialog_window_spec(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get()),

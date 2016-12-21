@@ -115,7 +115,7 @@ public:
         MirRectangle input_rectangles[] = {{0, 0, 500, 150}, {0, 0, 150, 500},
                                            {350, 0, 150, 500}, {0, 350, 500, 150}};
         auto spec = mir_create_window_spec(connection);
-        mir_spec_set_input_shape(spec, input_rectangles, 4);
+        mir_window_spec_set_input_shape(spec, input_rectangles, 4);
         mir_surface_apply_spec(surface, spec);
     }
 

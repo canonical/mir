@@ -227,7 +227,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 
     void TearDown() override
     {
-        mir_spec_release(surface_spec);
+        mir_window_spec_release(surface_spec);
 
         mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 

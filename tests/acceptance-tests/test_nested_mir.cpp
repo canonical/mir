@@ -675,7 +675,7 @@ struct ClientWithAPaintedSurface : virtual Client
         auto const spec = mir_create_window_spec(connection);
         changer(spec);
         mir_surface_apply_spec(surface, spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
 
     }
 
@@ -774,7 +774,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_surface_output)
             {
@@ -788,7 +788,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         &surface_event_received);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));
 
@@ -1028,9 +1028,9 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     for (auto const name : cursor_names)
     {
         auto spec = mir_create_window_spec(client.connection);
-        mir_spec_set_cursor_name(spec, name);
+        mir_window_spec_set_cursor_name(spec, name);
         mir_surface_apply_spec(client.surface, spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();

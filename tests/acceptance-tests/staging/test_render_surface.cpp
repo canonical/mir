@@ -152,7 +152,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
     mir_surface_spec_add_render_surface(
         spec, rs, logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     auto surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_THAT(surface, IsValid());
     EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
@@ -175,7 +175,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
     auto spec = mir_create_normal_window_spec(connection, width, height, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
     auto bs = mir_render_surface_get_buffer_stream(rs,
                                                    640, 480,
                                                    format,
@@ -238,7 +238,7 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
     auto spec = mir_create_normal_window_spec(connection, width, height, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
     auto pc = mir_render_surface_get_presentation_chain(rs);
 
     EXPECT_THAT(surface, IsValid());

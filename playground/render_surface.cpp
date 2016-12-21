@@ -197,7 +197,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     auto spec = mir_create_normal_window_spec(connection, width, height, mir_pixel_format_invalid);
 
-    mir_spec_set_name(spec, "Stream");
+    mir_window_spec_set_name(spec, "Stream");
 
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
@@ -211,7 +211,7 @@ int main(int /*argc*/, char* /*argv*/[])
                                                               mir_buffer_usage_software);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);

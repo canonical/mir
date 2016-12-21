@@ -201,9 +201,9 @@ public:
         if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
 
         auto spec = mir_create_window_spec(mir_connection);
-        mir_spec_set_cursor_name(spec, mir_disabled_cursor_name);
+        mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
         mir_surface_apply_spec(mir_surface, spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
     }
 
 private:
@@ -369,14 +369,14 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             properties.size.width.as_int(),
             properties.size.height.as_int(),
             properties.format),
-        mir_spec_release);
+        mir_window_spec_release);
 
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
-    mir_spec_set_name(spec.get(), name);
+    mir_window_spec_set_name(spec.get(), name);
     mir_surface_spec_set_buffer_usage(spec.get(), usage);
-    mir_spec_set_fullscreen(spec.get(), output_id);
+    mir_window_spec_set_fullscreen(spec.get(), output_id);
     MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
     mir_surface_spec_set_streams(spec.get(), &info, 1);
 
@@ -675,7 +675,7 @@ public:
 
     ~SurfaceSpec()
     {
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
     }
 
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override

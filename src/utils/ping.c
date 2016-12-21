@@ -87,10 +87,10 @@ int main(int argc, char *argv[])
 
     MirWindowSpec *spec = mir_create_normal_window_spec(conn, 1, 1, formats[0]);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    mir_spec_set_name(spec, "ping");
+    mir_window_spec_set_name(spec, "ping");
 
     MirSurface *surf = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     if (surf == NULL || !mir_surface_is_valid(surf))
     {

@@ -28,11 +28,11 @@ void mtf::ConnectedClientWithASurface::SetUp()
         connection,
         surface_size.width.as_int(), surface_size.height.as_int(),
         mir_pixel_format_abgr_8888);
-    mir_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
+    mir_window_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
     ASSERT_TRUE(mir_surface_is_valid(surface));
 }
 

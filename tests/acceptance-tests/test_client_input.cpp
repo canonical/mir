@@ -95,9 +95,9 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
-        mir_spec_set_name(spec, name.c_str());
+        mir_window_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
-        mir_spec_release(spec);
+        mir_window_spec_release(spec);
         if (!mir_surface_is_valid(surface))
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
                 mir_surface_get_error_message(surface)});
@@ -857,9 +857,9 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     MirRectangle input_rects[] = {{1, 1, 10, 10}};
 
     auto spec = mir_create_window_spec(client.connection);
-    mir_spec_set_input_shape(spec, input_rects, 1);
+    mir_window_spec_set_input_shape(spec, input_rects, 1);
     mir_surface_apply_spec(client.surface, spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_TRUE(shell->wait_for_modify_surface(5s));
 

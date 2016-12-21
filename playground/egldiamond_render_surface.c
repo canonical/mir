@@ -234,13 +234,13 @@ int main(int argc, char *argv[])
         mir_create_normal_window_spec(connection, width, height, mir_pixel_format_invalid);
 
     CHECK(spec, "Can't create a surface spec");
-    mir_spec_set_name(spec, appname);
+    mir_window_spec_set_name(spec, appname);
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
-    mir_spec_set_event_handler(spec, resize_callback, render_surface);
+    mir_window_spec_set_event_handler(spec, resize_callback, render_surface);
 
     surface = mir_surface_create_sync(spec);
-    mir_spec_release(spec);
+    mir_window_spec_release(spec);
 
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 

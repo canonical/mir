@@ -405,10 +405,10 @@ int main(int argc, char *argv[])
         MirWindowSpec* changes = mir_create_window_spec(connection);
         win_width = cam->pix.width;
         win_height = cam->pix.height;
-        mir_spec_set_width(changes, win_width);
-        mir_spec_set_height(changes, win_height);
+        mir_window_spec_set_width(changes, win_width);
+        mir_window_spec_set_height(changes, win_height);
         mir_surface_apply_spec(surface, changes);
-        mir_spec_release(changes);
+        mir_window_spec_release(changes);
     }
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
