@@ -182,9 +182,11 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     MirEdgeAttachment edge{mir_edge_attachment_horizontal};
 
     auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    auto spec_temp = mir_create_menu_window_spec(connection, 640, 480,
+        parent.get(), &attachment_rect, edge);
+    mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
-        mir_create_menu_window_spec(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect, edge),
+        spec_temp,
         spec_deleter
     };
 

@@ -231,7 +231,8 @@ TEST_F(ClientSurfaces, can_be_menus)
     MirRectangle attachment_rect{100, 200, 100, 100};
 
     auto spec = mir_create_menu_window_spec(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
+        parent, &attachment_rect, mir_edge_attachment_vertical);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto menu = mir_surface_create_sync(spec);

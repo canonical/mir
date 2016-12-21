@@ -62,7 +62,6 @@ mir_create_normal_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_menu_window_spec(MirConnection* connection,
                             int width, int height,
-                            MirPixelFormat format,
                             MirSurface* parent,
                             MirRectangle* rect,
                             MirEdgeAttachment edge)
@@ -70,7 +69,7 @@ mir_create_menu_window_spec(MirConnection* connection,
     mir::require(mir_surface_is_valid(parent));
     mir::require(rect != nullptr);
 
-    auto spec = new MirWindowSpec{connection, width, height, format};
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
     spec->type = mir_surface_type_menu;
     spec->parent = parent;
     spec->aux_rect = *rect;
@@ -487,12 +486,12 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
                                                     int width, int height,
-                                                    MirPixelFormat format,
+                                                    MirPixelFormat /* format */,
                                                     MirSurface* parent,
                                                     MirRectangle* rect,
                                                     MirEdgeAttachment edge)
 {
-    return mir_create_menu_window_spec(connection, width, height, format, parent, rect, edge);
+    return mir_create_menu_window_spec(connection, width, height, parent, rect, edge);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
