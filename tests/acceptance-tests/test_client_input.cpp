@@ -19,7 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -94,7 +94,7 @@ struct Client
                 std::runtime_error{std::string{"Failed to connect to test server: "} +
                 mir_connection_get_error_message(connection)});
         }
-        auto spec = mir_specify_window(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
+        auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height, mir_pixel_format_abgr_8888);
         mir_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
         mir_spec_release(spec);
@@ -856,7 +856,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
 
     MirRectangle input_rects[] = {{1, 1, 10, 10}};
 
-    auto spec = mir_create_spec(client.connection);
+    auto spec = mir_create_window_spec(client.connection);
     mir_spec_set_input_shape(spec, input_rects, 1);
     mir_surface_apply_spec(client.surface, spec);
     mir_spec_release(spec);
@@ -1031,7 +1031,7 @@ TEST_F(TestClientInput, pointer_configuration_is_mutable)
 
 TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
 {
-    mi::TouchpadConfiguration const default_configuration;
+    MirTouchpadConfiguration const default_configuration;
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};

@@ -672,7 +672,7 @@ struct ClientWithAPaintedSurface : virtual Client
 
     void update_surface_spec(void (*changer)(MirWindowSpec* spec))
     {
-        auto const spec = mir_create_spec(connection);
+        auto const spec = mir_create_window_spec(connection);
         changer(spec);
         mir_surface_apply_spec(surface, spec);
         mir_spec_release(spec);
@@ -770,7 +770,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     Client client{nested_mir};
 
-    auto spec = mir_specify_window(client.connection, 800, 600,
+    auto spec = mir_create_normal_window_spec(client.connection, 800, 600,
         mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
@@ -1027,7 +1027,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto spec = mir_create_spec(client.connection);
+        auto spec = mir_create_window_spec(client.connection);
         mir_spec_set_cursor_name(spec, name);
         mir_surface_apply_spec(client.surface, spec);
         mir_spec_release(spec);

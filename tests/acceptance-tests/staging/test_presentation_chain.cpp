@@ -107,7 +107,7 @@ struct SurfaceWithChainFromStart : SurfaceWithChain
 private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
-        auto spec = mir_specify_window(
+        auto spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int(), pf);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
@@ -130,11 +130,11 @@ struct SurfaceWithChainFromReassociation : SurfaceWithChain
 private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
-        MirWindowSpec* spec = mir_specify_window(
+        MirWindowSpec* spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int(), pf);
         auto surface = mir_surface_create_sync(spec);
         mir_spec_release(spec);
-        spec = mir_create_spec(connection);
+        spec = mir_create_window_spec(connection);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
         mir_surface_apply_spec(surface, spec);
@@ -376,12 +376,12 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     auto stream = mir_connection_create_buffer_stream_sync(connection, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
 
-    auto spec = mir_specify_window(
+    auto spec = mir_create_normal_window_spec(
         connection, size.width.as_int(), size.height.as_int(), pf);
     auto surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);
 
-    spec = mir_create_spec(connection);
+    spec = mir_create_window_spec(connection);
     mir_surface_spec_add_presentation_chain(
         spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
     mir_surface_apply_spec(surface, spec);
@@ -396,7 +396,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     context.unavailable();
     mir_presentation_chain_submit_buffer(chain, context.buffer());
 
-    spec = mir_create_spec(connection);
+    spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(spec, 0, 0, size.width.as_int(), size.height.as_int(), stream);
     mir_surface_apply_spec(surface, spec);
     mir_spec_release(spec);

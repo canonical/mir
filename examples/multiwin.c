@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MirWindowSpec *spec = mir_specify_window(conn, 225, 225, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225, pixel_format);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");

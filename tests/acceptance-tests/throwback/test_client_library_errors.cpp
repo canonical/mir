@@ -216,7 +216,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);
 
@@ -256,7 +256,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);
 
@@ -281,7 +281,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);
 
@@ -304,7 +304,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_specify_window(
+    auto spec = mir_create_normal_window_spec(
         connection,
         800, 600,
         mir_pixel_format_xbgr_8888);

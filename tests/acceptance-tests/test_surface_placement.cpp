@@ -85,7 +85,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     MirSurface* create_normal_surface(int width, int height, Specifier const& specifier) const
     {
-        auto const spec = mir_specify_window(connection, width, height, pixel_format);
+        auto const spec = mir_create_normal_window_spec(connection, width, height, pixel_format);
 
         specifier(spec);
 
@@ -98,7 +98,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     MirSurface* create_surface(Specifier const& specifier) const
     {
-        auto const spec = mir_create_spec(connection);
+        auto const spec = mir_create_window_spec(connection);
 
         specifier(spec);
 
@@ -541,7 +541,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
             mir_spec_set_height(spec, height);
             mir_surface_spec_set_pixel_format(spec, pixel_format);
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_spec_set_parent(spec, parent);
+            mir_window_spec_set_parent(spec, parent);
         });
 
     auto const shell_surface = latest_shell_surface();

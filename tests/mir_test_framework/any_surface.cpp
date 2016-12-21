@@ -40,7 +40,7 @@ MirSurface* mtf::make_surface(
 {
     using namespace std::literals::string_literals;
 
-    auto spec = mir_specify_window(connection,
+    auto spec = mir_create_normal_window_spec(connection,
         size.width.as_int(), size.height.as_int(), f);
     auto surface = mir_surface_create_sync(spec);
     mir_spec_release(spec);

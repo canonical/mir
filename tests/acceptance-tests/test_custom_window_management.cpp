@@ -75,7 +75,7 @@ struct Client
 
     auto surface_create() const -> MirSurface*
     {
-        auto spec = mir_specify_window(connection, 800, 600, mir_pixel_format_bgr_888);
+        auto spec = mir_create_normal_window_spec(connection, 800, 600, mir_pixel_format_bgr_888);
         auto surface = mir_surface_create_sync(spec);
         mir_spec_release(spec);
 
@@ -181,7 +181,7 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_));
 
-    auto const spec = mir_create_spec(client.connection);
+    auto const spec = mir_create_window_spec(client.connection);
     mir_spec_set_name(spec, new_title);
     mir_surface_apply_spec(surface, spec);
     mir_spec_release(spec);
@@ -298,7 +298,9 @@ TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
 
     int const width{800}, height{600};
     MirPixelFormat const format{mir_pixel_format_bgr_888};
-    auto surface_spec = mir_specify_window(connection, width, height, format);
+    auto surface_spec = mir_create_normal_window_spec(connection,
+                                                      width, height,
+                                                      format);
 
     mir_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
 
@@ -328,12 +330,12 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
 
     int const width{800}, height{600};
     MirPixelFormat const format{mir_pixel_format_bgr_888};
-    auto surface_spec = mir_specify_window(connection, width, height, format);
+    auto surface_spec = mir_create_normal_window_spec(connection, width, height, format);
 
     auto surface = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);
 
-    surface_spec = mir_create_spec(connection);
+    surface_spec = mir_create_window_spec(connection);
 
     mt::Signal received;
 
@@ -374,11 +376,11 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
 
     start_server();
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface_spec = mir_specify_window(connection, width, height, format);
+    auto surface_spec = mir_create_normal_window_spec(connection, width, height, format);
     auto parent = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);
 
-    surface_spec = mir_specify_tip(
+    surface_spec = mir_create_tip_window_spec(
         connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
 
     mir_spec_set_placement(
@@ -452,16 +454,16 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
 
     start_server();
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface_spec = mir_specify_window(connection, width, height, format);
+    auto surface_spec = mir_create_normal_window_spec(connection, width, height, format);
     auto parent = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);
 
-    surface_spec = mir_specify_menu(
+    surface_spec = mir_create_menu_window_spec(
         connection, width, height, format, parent, &dummy_rect, mir_edge_attachment_any);
     auto child = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);
 
-    surface_spec = mir_create_spec(connection);
+    surface_spec = mir_create_window_spec(connection);
     mir_spec_set_placement(
         surface_spec, &aux_rect, rect_gravity, surface_gravity, placement_hints, offset_dx, offset_dy);
 
@@ -579,7 +581,7 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     PlacementCheck placement_check{placement};
-    auto surface_spec = mir_specify_window(connection, width, height, format);
+    auto surface_spec = mir_create_normal_window_spec(connection, width, height, format);
     mir_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
     auto surface = mir_surface_create_sync(surface_spec);
     mir_spec_release(surface_spec);

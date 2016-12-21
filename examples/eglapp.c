@@ -469,7 +469,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_display_config_destroy(display_config);
 
     MirWindowSpec *spec =
-        mir_specify_window(connection, *width, *height, pixel_format);
+        mir_create_normal_window_spec(connection, *width, *height, pixel_format);
 
     CHECK(spec != NULL, "Can't create a surface spec");
 
@@ -491,7 +491,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
     
-    spec = mir_create_spec(connection);
+    spec = mir_create_window_spec(connection);
     mir_spec_set_cursor_name(spec, cursor_name);
     mir_surface_apply_spec(surface, spec);
     mir_spec_release(spec);

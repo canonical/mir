@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 
     int width = 500;
     int height = 500;
-    MirWindowSpec *spec = mir_specify_window(conn, width, height, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height, pixel_format);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");
