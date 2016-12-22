@@ -132,7 +132,8 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
 
 using BasicFixture = mtf::BasicClientServerFixture<StubServerConfig>;
 
-struct StaleFrames : BasicFixture
+struct StaleFrames : BasicFixture,
+                     ::testing::WithParamInterface<int>
 {
     void SetUp()
     {
@@ -175,7 +176,7 @@ struct StaleFrames : BasicFixture
 
 }
 
-TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
+TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
 {
     using namespace testing;
 
@@ -186,6 +187,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
 
     auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
@@ -206,13 +208,14 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
 }
 
-TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
+TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 {
     using namespace testing;
 
     stop_compositor();
 
     auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 
@@ -225,3 +228,5 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }
+
+INSTANTIATE_TEST_CASE_P(SwapIntervals, StaleFrames, ::testing::Values(0,1));
