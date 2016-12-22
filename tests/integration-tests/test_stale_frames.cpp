@@ -229,4 +229,4 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }
 
-INSTANTIATE_TEST_CASE_P(SwapIntervals, StaleFrames, ::testing::Values(0,1));
+INSTANTIATE_TEST_CASE_P(PerSwapInterval, StaleFrames, ::testing::Values(0,1));
