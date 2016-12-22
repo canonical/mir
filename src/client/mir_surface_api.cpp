@@ -95,12 +95,11 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
 
 MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
                                                    int width, int height,
-                                                   MirPixelFormat format,
                                                    MirSurface* parent)
 {
     mir::require(mir_surface_is_valid(parent));
 
-    auto spec = new MirWindowSpec{connection, width, height, format};
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
     spec->type = mir_surface_type_dialog;
     spec->parent = parent;
 
@@ -537,7 +536,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
                                                             MirPixelFormat format,
                                                             MirSurface* parent)
 {
-    return mir_create_modal_dialog_window_spec(connection, width, height, format, parent);
+    auto spec = mir_create_modal_dialog_window_spec(connection, width, height, parent);
+    mir_window_spec_set_pixel_format(spec, format);
+    return spec;
 }
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
