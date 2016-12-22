@@ -107,7 +107,8 @@ MirSurface* create_surface(MirConnection* connection, const char* name, geom::Si
     testing::NiceMock<MockVisibilityCallback>& mock_callback)
 {
     auto const spec = mir_create_normal_window_spec(
-        connection, size.width.as_int(), size.height.as_int(), mir_pixel_format_bgr_888);
+        connection, size.width.as_int(), size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
     mir_window_spec_set_name(spec, name);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_window_spec_set_event_handler(spec, &event_callback, &mock_callback);

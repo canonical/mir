@@ -131,8 +131,8 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_THAT(connection, IsValid());
 
-    auto const spec = mir_create_normal_window_spec(
-        connection, 640, 480, mir_pixel_format_abgr_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 640, 480);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto const surface  = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);

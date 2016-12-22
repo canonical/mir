@@ -108,7 +108,8 @@ private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
         auto spec = mir_create_normal_window_spec(
-            connection, size.width.as_int(), size.height.as_int(), pf);
+            connection, size.width.as_int(), size.height.as_int());
+        mir_window_spec_set_pixel_format(spec, pf);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
         auto surface = mir_surface_create_sync(spec);
@@ -131,7 +132,8 @@ private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
         MirWindowSpec* spec = mir_create_normal_window_spec(
-            connection, size.width.as_int(), size.height.as_int(), pf);
+            connection, size.width.as_int(), size.height.as_int());
+        mir_window_spec_set_pixel_format(spec, pf);
         auto surface = mir_surface_create_sync(spec);
         mir_window_spec_release(spec);
         spec = mir_create_window_spec(connection);
@@ -377,7 +379,8 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
 
     auto spec = mir_create_normal_window_spec(
-        connection, size.width.as_int(), size.height.as_int(), pf);
+        connection, size.width.as_int(), size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, pf);
     auto surface = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);
 

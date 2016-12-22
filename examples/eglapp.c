@@ -469,9 +469,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_display_config_destroy(display_config);
 
     MirWindowSpec *spec =
-        mir_create_normal_window_spec(connection, *width, *height, pixel_format);
+        mir_create_normal_window_spec(connection, *width, *height);
 
     CHECK(spec != NULL, "Can't create a surface spec");
+
+    mir_window_spec_set_pixel_format(spec, pixel_format);
 
     char const* name = argv[0];
     for (char const* p = name; *p; p++)

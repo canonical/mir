@@ -57,9 +57,9 @@ struct ClientLogging : ConnectedClientHeadlessServer
 
 TEST_F(ClientLogging, reports_performance)
 {
-    auto spec = mir_create_normal_window_spec(
-                   connection, 123, 456, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 123, 456);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_name(spec, "Rumpelstiltskin");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto surf = mir_surface_create_sync(spec);

@@ -42,12 +42,11 @@ extern "C" {
  * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
- * \param [in] format       Pixel format for the window.
+ *
  * \return                  A handle that can be passed to mir_surface_create() to complete construction.
  */
 MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
-                                             int width, int height,
-                                             MirPixelFormat format);
+                                             int width, int height);
 
 /**
  * Create a window specification for a menu window.

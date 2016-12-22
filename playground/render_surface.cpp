@@ -195,7 +195,7 @@ int main(int /*argc*/, char* /*argv*/[])
         throw std::runtime_error(
                   std::string(mir_render_surface_get_error_message(render_surface)));
 
-    auto spec = mir_create_normal_window_spec(connection, width, height, mir_pixel_format_invalid);
+    auto spec = mir_create_normal_window_spec(connection, width, height);
 
     mir_window_spec_set_name(spec, "Stream");
 

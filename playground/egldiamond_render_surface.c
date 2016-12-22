@@ -227,11 +227,9 @@ int main(int argc, char *argv[])
         eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
 
     //The format field is only used for default-created streams.
-    //We can safely set invalid as the pixel format, and the field needs to be deprecated
-    //once default streams are deprecated.
     //width and height are the logical width the user wants the surface to be
     MirWindowSpec *spec =
-        mir_create_normal_window_spec(connection, width, height, mir_pixel_format_invalid);
+        mir_create_normal_window_spec(connection, width, height);
 
     CHECK(spec, "Can't create a surface spec");
     mir_window_spec_set_name(spec, appname);

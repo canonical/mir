@@ -367,13 +367,13 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
         mir_create_normal_window_spec(
             mir_connection,
             properties.size.width.as_int(),
-            properties.size.height.as_int(),
-            properties.format),
+            properties.size.height.as_int()),
         mir_window_spec_release);
 
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
+    mir_window_spec_set_pixel_format(spec.get(), properties.format);
     mir_window_spec_set_name(spec.get(), name);
     mir_window_spec_set_buffer_usage(spec.get(), usage);
     mir_window_spec_set_fullscreen(spec.get(), output_id);

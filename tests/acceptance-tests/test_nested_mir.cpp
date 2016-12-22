@@ -770,8 +770,8 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     Client client{nested_mir};
 
-    auto spec = mir_create_normal_window_spec(client.connection, 800, 600,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(client.connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
     mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)

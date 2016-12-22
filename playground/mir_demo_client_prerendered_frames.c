@@ -168,7 +168,8 @@ int main(int argc, char** argv)
 #endif
     }
 
-    MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height, format);
+    MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(
         spec, render_surface, width, height, displacement_x, displacement_y);
     MirSurface* surface = mir_surface_create_sync(spec);

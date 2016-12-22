@@ -129,7 +129,8 @@ TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_han
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto const spec = mir_create_normal_window_spec(connection, 100, 100, mir_pixel_format_argb_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
     auto const wh = mir_surface_create(spec, create_surface_callback, this);
     mir_window_spec_release(spec);
     mir_wait_for(wh);

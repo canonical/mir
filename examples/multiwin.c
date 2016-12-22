@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");
@@ -251,6 +251,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    mir_window_spec_set_pixel_format(spec, pixel_format);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "red");
 
