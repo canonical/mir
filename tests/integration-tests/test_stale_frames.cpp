@@ -38,6 +38,7 @@
 #include <mutex>
 #include <condition_variable>
 
+using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
@@ -165,12 +166,22 @@ public:
         ++submissions_pending; 
         cond.notify_one();
     }
-    void wait_for_submissions(int count)
+    bool wait_for_submissions(int count, std::chrono::seconds timeout)
     {
         std::unique_lock<std::mutex> lock(mutex);
+        std::cv_status status = std::cv_status::no_timeout;
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
         while (submissions_pending < count)
-            cond.wait(lock);
-        submissions_pending -= count;
+            status = cond.wait_until(lock, deadline);
+        if (status == std::cv_status::timeout)
+        {
+            return false;
+        }
+        else
+        {
+            submissions_pending -= count;
+            return true;
+        }
     }
 private:
     std::mutex mutex;
@@ -226,9 +237,10 @@ struct StaleFrames : BasicFixture,
         server_configuration.the_compositor()->start();
     }
 
-    void wait_for_the_server_to_receive_frames(int n)
+    bool wait_for_the_server_to_receive_frames(int nframes,
+                                               std::chrono::seconds timeout)
     {
-        sm_observer->wait_for_submissions(n);
+        return sm_observer->wait_for_submissions(nframes, timeout);
     }
 
     MirSurface* surface;
@@ -260,7 +272,7 @@ TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    wait_for_the_server_to_receive_frames(3);
+    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
     start_compositor();
 
     // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
@@ -285,7 +297,7 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    wait_for_the_server_to_receive_frames(3);
+    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
