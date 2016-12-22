@@ -35,7 +35,7 @@ extern "C" {
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_surface_create() or mir_surface_apply_spec()
+ *                          mir_surface_create() or mir_window_apply_spec()
  */
 MirScreencastSpec* mir_create_screencast_spec(MirConnection* connection);
 

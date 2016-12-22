@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
     mir_window_spec_release(spec);
 
     assert(surface != NULL);
-    assert(mir_surface_is_valid(surface));
+    assert(mir_window_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
     puts("Surface created");
 

@@ -193,8 +193,8 @@ TEST_F(SystemCompositorWindowManager, when_output_is_valid_surfaces_creation_suc
     auto surface1 = client.create_surface(1);
     auto surface2 = client.create_surface(2);
 
-    EXPECT_TRUE(mir_surface_is_valid(surface1));
-    EXPECT_TRUE(mir_surface_is_valid(surface2));
+    EXPECT_TRUE(mir_window_is_valid(surface1));
+    EXPECT_TRUE(mir_window_is_valid(surface2));
 }
 
 TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_creation_fails)
@@ -203,7 +203,7 @@ TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_crea
 
     auto surface = client.create_surface(0);
 
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("An output ID must be specified"));
 }
 
@@ -251,7 +251,7 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
     MirWindowSpec* spec = mir_create_window_spec(client.connection());
     mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(surface, spec);
+    mir_window_apply_spec(surface, spec);
     mir_window_spec_release(spec);
 
     mt::spin_wait_for_condition_or_timeout([this]

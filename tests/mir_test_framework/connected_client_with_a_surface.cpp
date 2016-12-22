@@ -33,7 +33,7 @@ void mtf::ConnectedClientWithASurface::SetUp()
 
     surface = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);
-    ASSERT_TRUE(mir_surface_is_valid(surface));
+    ASSERT_TRUE(mir_window_is_valid(surface));
 }
 
 void mtf::ConnectedClientWithASurface::TearDown()

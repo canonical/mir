@@ -38,7 +38,8 @@ extern "C" {
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface;
+typedef struct MirSurface MirSurface /* __attribute__((deprecated("Use MirWindow instead"))) */;
+typedef struct MirSurface MirWindow;
 typedef struct MirSurfaceSpec MirSurfaceSpec /* __attribute__((deprecated("Use MirWindowSpec instead"))) */;
 typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
@@ -85,7 +86,9 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
+typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
+/* __attribute__((deprecated("Use mir_window_callback instead"))) */;
+typedef void (*mir_window_callback)(MirWindow *window, void *client_context);
 
 /**
  * Callback to be passed when calling:

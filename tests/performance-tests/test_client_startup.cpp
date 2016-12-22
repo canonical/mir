@@ -75,7 +75,7 @@ MirSurface* make_surface(MirConnection* connection)
 
     mir_window_spec_release(spec);
 
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         std::string error_msg{"Could not create surface: "};
         error_msg.append(mir_surface_get_error_message(surface));

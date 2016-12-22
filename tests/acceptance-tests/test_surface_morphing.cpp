@@ -119,7 +119,7 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
         mir_window_spec_release(spec);
         signal_change.wait_for(1s);
     }

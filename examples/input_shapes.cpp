@@ -116,7 +116,7 @@ public:
                                            {350, 0, 150, 500}, {0, 350, 500, 150}};
         auto spec = mir_create_window_spec(connection);
         mir_window_spec_set_input_shape(spec, input_rectangles, 4);
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
     }
 
     SurfaceWithAHole(SurfaceWithAHole const&) = delete;

@@ -222,7 +222,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     mir_surface_release_sync(surface);
@@ -289,7 +289,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     bool callback_called{false};
@@ -313,7 +313,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     mir_surface_release_sync(surface);

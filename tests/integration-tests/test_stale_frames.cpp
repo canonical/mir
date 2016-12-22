@@ -151,7 +151,7 @@ struct StaleFrames : BasicFixture
     void client_create_surface()
     {
         surface = mtf::make_any_surface(connection);
-        ASSERT_TRUE(mir_surface_is_valid(surface));
+        ASSERT_TRUE(mir_window_is_valid(surface));
     }
 
     std::vector<mg::BufferID> wait_for_new_rendered_buffers()

@@ -136,7 +136,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
         specifier(spec);
 
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
         mir_window_spec_release(spec);
     }
 

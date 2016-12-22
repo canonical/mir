@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_max_width(spec, width*2);
     mir_window_spec_set_min_height(spec, height/2);
     mir_window_spec_set_max_height(spec, height*2);
-    mir_surface_apply_spec(parent, spec);
+    mir_window_apply_spec(parent, spec);
     mir_window_spec_release(spec);
 
     MirSurface* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));

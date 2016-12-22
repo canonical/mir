@@ -151,7 +151,7 @@ int demo_client(const char* server, int buffer_swap_count)
     // we expect it to be valid; and,
     // we don't expect an error description
     assert(mcd.surface != NULL);
-    if(!mir_surface_is_valid(mcd.surface))
+    if(!mir_window_is_valid(mcd.surface))
     {
         fprintf(stderr, "Failed to create surface: %s",
                 mir_surface_get_error_message(mcd.surface));

@@ -335,13 +335,13 @@ TEST_F(ClientSurfaces, can_be_renamed)
     spec = mir_create_window_spec(connection);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_name(spec, "New Name");
-    mir_surface_apply_spec(surf, spec);
+    mir_window_apply_spec(surf, spec);
 
     mir_window_spec_set_name(spec, "");
-    mir_surface_apply_spec(surf, spec);
+    mir_window_apply_spec(surf, spec);
 
     mir_window_spec_set_name(spec, "Alice");
-    mir_surface_apply_spec(surf, spec);
+    mir_window_apply_spec(surf, spec);
     mir_window_spec_release(spec);
 
     mir_surface_release_sync(surf);

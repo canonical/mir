@@ -152,7 +152,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     set_surface_placement(surface_location);
 
     auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    ASSERT_TRUE(mir_window_is_valid(surf));
 
     int screen_x, screen_y, x, y;
     x = 35, y = 21;
@@ -168,7 +168,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     set_surface_placement(surface_location);
 
     surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    ASSERT_TRUE(mir_window_is_valid(surf));
 
     ASSERT_TRUE(mir_debug_surface_coords_to_screen(surf, x, y, &screen_x, &screen_y));
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
@@ -182,7 +182,7 @@ TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
     start_server_with_debug(false);
 
     auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    ASSERT_TRUE(mir_window_is_valid(surf));
 
     int screen_x, screen_y;
 
@@ -202,7 +202,7 @@ TEST_F(DebugAPI, is_overrideable)
     start_server_with_debug(false);
 
     auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    ASSERT_TRUE(mir_window_is_valid(surf));
 
     int screen_x, screen_y;
 

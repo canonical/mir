@@ -198,7 +198,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
     auto surface = mtf::make_any_surface(connection);
 
     ASSERT_TRUE(surface != NULL);
-    EXPECT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_TRUE(mir_window_is_valid(surface));
     EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
     /*

@@ -169,7 +169,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_fullscreen_surface_for(config->outputs[n]);
-        EXPECT_TRUE(mir_surface_is_valid(*surface));
+        EXPECT_TRUE(mir_window_is_valid(*surface));
         surfaces.push_back(surface);
     }
 
@@ -190,7 +190,7 @@ TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size
     {
         auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
 
-        EXPECT_TRUE(mir_surface_is_valid(*surface));
+        EXPECT_TRUE(mir_window_is_valid(*surface));
         surfaces.push_back(surface);
 
         auto expected_mode = config->outputs[n].modes[config->outputs[n].current_mode];

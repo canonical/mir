@@ -211,7 +211,7 @@ struct InputEvents : testing::Test
         mir_window_spec_set_pixel_format(spec, pixel_format);
         auto const surface = mir_surface_create_sync(spec);
         mir_window_spec_release(spec);
-        if (!mir_surface_is_valid(surface))
+        if (!mir_window_is_valid(surface))
             throw std::runtime_error("Failed to create MirSurface");
 
         mir_surface_set_event_handler(surface, handle_input, handler);

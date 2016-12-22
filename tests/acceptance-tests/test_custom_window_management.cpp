@@ -184,7 +184,7 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
 
     auto const spec = mir_create_window_spec(client.connection);
     mir_window_spec_set_name(spec, new_title);
-    mir_surface_apply_spec(surface, spec);
+    mir_window_apply_spec(surface, spec);
     mir_window_spec_release(spec);
 
     mir_surface_release_sync(surface);
@@ -353,7 +353,7 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_apply_surface));
 
-    mir_surface_apply_spec(surface, surface_spec);
+    mir_window_apply_spec(surface, surface_spec);
     mir_window_spec_release(surface_spec);
 
     EXPECT_TRUE(received.wait_for(400ms));
@@ -513,7 +513,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
         };
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_placement));
-    mir_surface_apply_spec(child, surface_spec);
+    mir_window_apply_spec(child, surface_spec);
     mir_window_spec_release(surface_spec);
 
     EXPECT_TRUE(received.wait_for(400ms));
