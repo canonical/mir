@@ -225,11 +225,12 @@ TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
     auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
-        mir_create_dialog_window_spec(connection, 640, 480, mir_pixel_format_abgr_8888),
+        mir_create_dialog_window_spec(connection, 640, 480),
         spec_deleter
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
+    mir_window_spec_set_pixel_format(dialog_spec.get(), mir_pixel_format_abgr_8888);
 
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), NoParentSet()),_));
     create_surface(dialog_spec.get());

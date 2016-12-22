@@ -270,8 +270,9 @@ TEST_F(ClientSurfaces, can_be_tips)
 
 TEST_F(ClientSurfaces, can_be_dialogs)
 {
-    auto spec = mir_create_dialog_window_spec(connection, 640, 480, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_dialog_window_spec(connection, 640, 480);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto dialog = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);

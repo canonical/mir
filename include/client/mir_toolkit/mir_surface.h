@@ -150,13 +150,10 @@ mir_create_modal_dialog_window_spec(MirConnection* connection,
  *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
  *                          return a window of this height.
- * \param [in] format       Pixel format for the window.
- *
  */
 MirWindowSpec*
 mir_create_dialog_window_spec(MirConnection* connection,
-                              int width, int height,
-                              MirPixelFormat format);
+                              int width, int height);
 
 /**
  * Create a window specification for an input method window.
