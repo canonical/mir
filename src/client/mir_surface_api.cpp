@@ -832,7 +832,7 @@ void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callba
 
 bool mir_surface_is_valid(MirSurface* surface)
 {
-    mir_window_is_valid(surface);
+    return mir_window_is_valid(surface);
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)
