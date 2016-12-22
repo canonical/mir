@@ -109,11 +109,11 @@ mir_create_menu_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_tip_window_spec(MirConnection* connection,
-                int width, int height,
-                MirPixelFormat format,
-                MirSurface* parent,
-                MirRectangle* rect,
-                MirEdgeAttachment edge);
+                           int width, int height,
+                           MirPixelFormat format,
+                           MirSurface* parent,
+                           MirRectangle* rect,
+                           MirEdgeAttachment edge);
 
 /**
  * Create a window specification for a modal dialog window.
@@ -139,9 +139,9 @@ mir_create_tip_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_modal_dialog_window_spec(MirConnection* connection,
-                         int width, int height,
-                         MirPixelFormat format,
-                         MirSurface* parent);
+                                    int width, int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent);
 
 /**
  * Create a window specification for a parentless dialog window.
@@ -162,8 +162,8 @@ mir_create_modal_dialog_window_spec(MirConnection* connection,
  */
 MirWindowSpec*
 mir_create_dialog_window_spec(MirConnection* connection,
-                   int width, int height,
-                   MirPixelFormat format);
+                              int width, int height,
+                              MirPixelFormat format);
 
 /**
  * Create a window specification.
