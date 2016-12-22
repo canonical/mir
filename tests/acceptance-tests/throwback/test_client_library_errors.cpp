@@ -331,9 +331,8 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     // An ID that parses as valid, but doesn't correspond to any
     auto invalid_id = mir_persistent_id_from_string("05f223a2-39e5-48b9-9416-b0ce837351b6");
 
-    auto spec = mir_create_input_method_window_spec(connection,
-                                                            200, 200,
-                                                            mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 200, 200);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
     MirRectangle rect{
         100,
         100,
@@ -396,7 +395,8 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto spec = mir_create_input_method_window_spec(connection, 100, 100, mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
 
     MirRectangle rect{
         100,
@@ -417,7 +417,8 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto spec = mir_create_input_method_window_spec(connection, 100, 100, mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
 
     auto id = mir_persistent_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
 

@@ -302,9 +302,9 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
 
 TEST_F(ClientSurfaces, can_be_input_methods)
 {
-    auto spec = mir_create_input_method_window_spec(connection, 640, 480,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 640, 480);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto im = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);
@@ -382,8 +382,8 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());
 
-    auto spec = mir_create_input_method_window_spec(im_connection, 100, 20,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_input_method_window_spec(im_connection, 100, 20);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     mir_window_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);

@@ -117,10 +117,9 @@ mir_create_dialog_window_spec(MirConnection* connection,
 
 MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
-                                    int width, int height,
-                                    MirPixelFormat format)
+                                    int width, int height)
 {
-    auto spec = new MirWindowSpec{connection, width, height, format};
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
     spec->type = mir_surface_type_inputmethod;
     return spec;
 }
@@ -530,7 +529,9 @@ MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* conne
                                                             int width, int height,
                                                             MirPixelFormat format)
 {
-    return mir_create_input_method_window_spec(connection, width, height, format);
+    auto spec = mir_create_input_method_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
+    return spec;
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
