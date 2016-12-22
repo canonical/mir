@@ -52,11 +52,6 @@ std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
-#pragma GCC diagnostic push
-// Even though it's not the 'struct MirSurfaceSpec' type marked deprecated
-// (it is MirSurfaceSpec), clang seems to get confused due to the same name.
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 MirSurfaceSpec::MirSurfaceSpec(
     MirConnection* connection, int width, int height, MirPixelFormat format)
     : connection{connection},
@@ -81,7 +76,6 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters c
         state = mir_surface_state_fullscreen;
     }
 }
-#pragma GCC diagnostic pop
 
 MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}

@@ -111,7 +111,7 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirSurface* parent,
                                     MirRectangle* rect,
                                     MirEdgeAttachment edge);
-// __attribute__((deprecated("Use mir_specify_menu() instead")));
+// __attribute__((deprecated("Use mir_create_menu_window_spec() instead")));
 
 /**
  * Create a surface specification for a tooltip surface.
