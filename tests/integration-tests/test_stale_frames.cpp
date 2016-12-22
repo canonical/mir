@@ -198,6 +198,15 @@ TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    /*
+     * For this to be a valid test the compositor needs to have been paused
+     * long enough for the client's submissions to actually reach the server
+     * queue, so we sleep here. This ensures the server doesn't receive the
+     * new buffers after start_compositor() in which case they would get
+     * queued normally and not dropped.
+     * TODO: Replace this sleep with a more reliable means to count.
+     */
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     start_compositor();
 
     // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
@@ -222,6 +231,15 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    /*
+     * For this to be a valid test the compositor needs to have been paused
+     * long enough for the client's submissions to actually reach the server
+     * queue, so we sleep here. This ensures the server doesn't receive the
+     * new buffers after start_compositor() in which case they would get
+     * queued normally and not dropped.
+     * TODO: Replace this sleep with a more reliable means to count.
+     */
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
