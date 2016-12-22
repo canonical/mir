@@ -164,6 +164,7 @@ MirWindowSpec*
 mir_create_dialog_window_spec(MirConnection* connection,
                               int width, int height,
                               MirPixelFormat format);
+<<<<<<< TREE
 
 /**
  * Create a window specification for an input method window.
@@ -180,6 +181,8 @@ MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
                                     int width, int height,
                                     MirPixelFormat format);
+=======
+>>>>>>> MERGE-SOURCE
 
 /**
  * Create a window specification.
