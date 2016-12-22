@@ -164,28 +164,23 @@ public:
     {
         std::unique_lock<std::mutex> lock(mutex);
         ++submissions_pending; 
-        cond.notify_one();
+        submitted.notify_one();
     }
     bool wait_for_submissions(int count, std::chrono::seconds timeout)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        std::cv_status status = std::cv_status::no_timeout;
         auto const deadline = std::chrono::steady_clock::now() + timeout;
         while (submissions_pending < count)
-            status = cond.wait_until(lock, deadline);
-        if (status == std::cv_status::timeout)
         {
-            return false;
+            if (submitted.wait_until(lock, deadline) == std::cv_status::timeout)
+                return false;
         }
-        else
-        {
-            submissions_pending -= count;
-            return true;
-        }
+        submissions_pending -= count;
+        return true;
     }
 private:
     std::mutex mutex;
-    std::condition_variable cond;
+    std::condition_variable submitted;
     int submissions_pending = 0;
 };
 
