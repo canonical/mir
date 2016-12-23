@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
     }
     mir_window_spec_release(spec);
     close(signal_watch);

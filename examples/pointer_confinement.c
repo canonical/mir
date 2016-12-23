@@ -105,7 +105,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
 
             grabbed = !grabbed;
 
-            mir_surface_apply_spec(surface, spec);
+            mir_window_apply_spec(surface, spec);
             mir_window_spec_release(spec);
         }
         else if (key_code == XKB_KEY_f)
@@ -122,7 +122,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             fullscreen = !fullscreen;
 
             mir_window_spec_set_state(spec, state);
-            mir_surface_apply_spec(surface, spec);
+            mir_window_apply_spec(surface, spec);
             mir_window_spec_release(spec);
         }
     }
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
     mir_window_spec_set_width (spec, width);
     mir_window_spec_set_height(spec, height);
 
-    mir_surface_apply_spec(mir_eglapp_native_surface(), spec);
+    mir_window_apply_spec(mir_eglapp_native_surface(), spec);
     mir_window_spec_release(spec);
 
     mouse_x = width  / 2.0;
@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     spec = mir_create_window_spec(mir_eglapp_native_connection());
     mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(surface, spec);
+    mir_window_apply_spec(surface, spec);
     mir_window_spec_release(spec);
 
     // Hide cursor

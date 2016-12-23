@@ -91,7 +91,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
              {
                 auto const surface = mtf::make_any_surface(connection);
 
-                EXPECT_TRUE(mir_surface_is_valid(surface));
+                EXPECT_TRUE(mir_window_is_valid(surface));
                 mir_surface_release_sync(surface);
 
                 if (i == 0)

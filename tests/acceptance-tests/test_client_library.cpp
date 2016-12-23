@@ -232,7 +232,7 @@ TEST_F(ClientLibrary, creates_surface)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(surface, NotNull());
-    EXPECT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_TRUE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
 
     MirSurfaceParameters response_params;
@@ -591,7 +591,7 @@ TEST_F(ClientLibrary, fully_synchronous_client)
     surface = mtf::make_any_surface(connection);
 
     mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-    EXPECT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_TRUE(mir_window_is_valid(surface));
     EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
     mir_surface_release_sync(surface);

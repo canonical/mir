@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     MirSurface *surf = mir_surface_create_sync(spec);
     mir_window_spec_release(spec);
 
-    if (surf == NULL || !mir_surface_is_valid(surf))
+    if (surf == NULL || !mir_window_is_valid(surf))
     {
         fprintf(stderr, "Could not create a surface.\n");
         mir_connection_release(conn);

@@ -113,7 +113,7 @@ public:
           mir_surface{
               mir_surface_create_sync(spec)}
     {
-        if (!mir_surface_is_valid(mir_surface))
+        if (!mir_window_is_valid(mir_surface))
         {
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(mir_surface_get_error_message(mir_surface)));
@@ -128,7 +128,7 @@ public:
 
     void apply_spec(mgn::HostSurfaceSpec& spec) override
     {
-        mir_surface_apply_spec(mir_surface, spec.handle());
+        mir_window_apply_spec(mir_surface, spec.handle());
     }
 
     EGLNativeWindowType egl_native_window() override
@@ -202,7 +202,7 @@ public:
 
         auto spec = mir_create_window_spec(mir_connection);
         mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
-        mir_surface_apply_spec(mir_surface, spec);
+        mir_window_apply_spec(mir_surface, spec);
         mir_window_spec_release(spec);
     }
 

@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
         win_height = cam->pix.height;
         mir_window_spec_set_width(changes, win_width);
         mir_window_spec_set_height(changes, win_height);
-        mir_surface_apply_spec(surface, changes);
+        mir_window_apply_spec(surface, changes);
         mir_window_spec_release(changes);
     }
 

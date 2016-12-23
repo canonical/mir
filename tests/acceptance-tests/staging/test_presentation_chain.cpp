@@ -139,7 +139,7 @@ private:
         spec = mir_create_window_spec(connection);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
         mir_window_spec_release(spec);
         return surface;
     }
@@ -387,7 +387,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     spec = mir_create_window_spec(connection);
     mir_surface_spec_add_presentation_chain(
         spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-    mir_surface_apply_spec(surface, spec);
+    mir_window_apply_spec(surface, spec);
     mir_window_spec_release(spec);
 
     MirBufferSync context;
@@ -401,7 +401,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
 
     spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(spec, 0, 0, size.width.as_int(), size.height.as_int(), stream);
-    mir_surface_apply_spec(surface, spec);
+    mir_window_apply_spec(surface, spec);
     mir_window_spec_release(spec);
     mir_presentation_chain_release(chain);
     mir_buffer_stream_swap_buffers_sync(stream);

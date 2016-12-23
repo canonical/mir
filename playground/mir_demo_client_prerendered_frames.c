@@ -173,7 +173,7 @@ int main(int argc, char** argv)
     mir_surface_spec_add_render_surface(
         spec, render_surface, width, height, displacement_x, displacement_y);
     MirSurface* surface = mir_surface_create_sync(spec);
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         printf("could not create MirSurface\n");
         return -1;

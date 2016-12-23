@@ -99,7 +99,7 @@ struct Client
         mir_window_spec_set_name(spec, name.c_str());
         surface = mir_surface_create_sync(spec);
         mir_window_spec_release(spec);
-        if (!mir_surface_is_valid(surface))
+        if (!mir_window_is_valid(surface))
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
                 mir_surface_get_error_message(surface)});
 
@@ -859,7 +859,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
 
     auto spec = mir_create_window_spec(client.connection);
     mir_window_spec_set_input_shape(spec, input_rects, 1);
-    mir_surface_apply_spec(client.surface, spec);
+    mir_window_apply_spec(client.surface, spec);
     mir_window_spec_release(spec);
 
     ASSERT_TRUE(shell->wait_for_modify_surface(5s));

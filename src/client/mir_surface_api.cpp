@@ -65,7 +65,7 @@ mir_create_menu_window_spec(MirConnection* connection,
                             MirRectangle* rect,
                             MirEdgeAttachment edge)
 {
-    mir::require(mir_surface_is_valid(parent));
+    mir::require(mir_window_is_valid(parent));
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
@@ -82,7 +82,7 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
                                           MirRectangle* rect,
                                           MirEdgeAttachment edge)
 {
-    mir::require(mir_surface_is_valid(parent));
+    mir::require(mir_window_is_valid(parent));
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
@@ -97,7 +97,7 @@ MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
                                                    int width, int height,
                                                    MirSurface* parent)
 {
-    mir::require(mir_surface_is_valid(parent));
+    mir::require(mir_window_is_valid(parent));
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
     spec->type = mir_surface_type_dialog;
@@ -468,6 +468,25 @@ void mir_window_spec_release(MirWindowSpec* spec)
     delete spec;
 }
 
+void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec)
+try
+{
+    mir::require(mir_window_is_valid(window));
+    mir::require(spec);
+
+    window->modify(*spec);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    // Keep calm and carry on
+}
+
+bool mir_window_is_valid(MirWindow* window)
+{
+    return MirWindow::is_valid(window);
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -662,17 +681,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection
 }
 
 void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
-try
 {
-    mir::require(mir_surface_is_valid(surface));
-    mir::require(spec);
-
-    surface->modify(*spec);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    // Keep calm and carry on
+    mir_window_apply_spec(surface, spec);
 }
 
 void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
@@ -814,18 +824,15 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                              edge);
 }
 
-//#pragma GCC diagnostic pop
-
 extern "C"
 void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
 {
     surface->set_event_handler(callback, context);
 }
 
-
 bool mir_surface_is_valid(MirSurface* surface)
 {
-    return MirSurface::is_valid(surface);
+    return mir_window_is_valid(surface);
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)
@@ -1040,7 +1047,7 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 {
-    mir::require(mir_surface_is_valid(surf));
+    mir::require(mir_window_is_valid(surf));
 
     MirOrientationMode mode = mir_orientation_mode_any;
 
@@ -1058,7 +1065,7 @@ MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
 {
-    mir::require(mir_surface_is_valid(surf));
+    mir::require(mir_window_is_valid(surf));
 
     MirWaitHandle *result{nullptr};
     try
@@ -1075,7 +1082,7 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
 
 void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 {
-    mir::require(mir_surface_is_valid(surf));
+    mir::require(mir_window_is_valid(surf));
 
     try
     {
@@ -1100,7 +1107,7 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
-    mir::require(mir_surface_is_valid(surface));
+    mir::require(mir_window_is_valid(surface));
 
     return surface->request_persistent_id(callback, context);
 }
@@ -1116,7 +1123,7 @@ void assign_surface_id_result(MirSurface*, MirPersistentId* id, void* context)
 
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
-    mir::require(mir_surface_is_valid(surface));
+    mir::require(mir_window_is_valid(surface));
 
     MirPersistentId* result = nullptr;
     mir_wait_for(mir_surface_request_persistent_id(surface,
@@ -1124,6 +1131,8 @@ MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
                                                    &result));
     return result;
 }
+
+//#pragma GCC diagnostic pop
 
 bool mir_persistent_id_is_valid(MirPersistentId* id)
 {

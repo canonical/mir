@@ -162,7 +162,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
         mir_window_spec_set_name(spec, new_title);
 
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
         mir_window_spec_release(spec);
         signal_change.wait_for(1s);
     }
@@ -188,7 +188,7 @@ MATCHER(IsValidSurface, "")
 {
     if (arg == nullptr) return false;
 
-    if (!mir_surface_is_valid(arg)) return false;
+    if (!mir_window_is_valid(arg)) return false;
 
     return true;
 }

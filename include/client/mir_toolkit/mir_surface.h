@@ -172,14 +172,14 @@ mir_create_input_method_window_spec(MirConnection* connection,
 /**
  * Create a window specification.
  * This can be used with mir_surface_create() to create a window or with
- * mir_surface_apply_spec() to change an existing window.
+ * mir_window_apply_spec() to change an existing window.
  * \remark For use with mir_surface_create() at least the type, width, height,
  * format and buffer_usage must be set. (And for types requiring a parent that
  * too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_surface_create() or mir_surface_apply_spec()
+ *                          mir_surface_create() or mir_window_apply_spec()
  */
 MirWindowSpec* mir_create_window_spec(MirConnection* connection);
 
@@ -194,8 +194,8 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
 /**
  * Update a window specification with a window type.
  * This can be used with mir_surface_create() to create a window or with
- * mir_surface_apply_spec() to change an existing window.
- * \remark For use with mir_surface_apply_spec() the shell need not support
+ * mir_window_apply_spec() to change an existing window.
+ * \remark For use with mir_window_apply_spec() the shell need not support
  * arbitrary changes of type and some target types may require the setting of
  * properties such as "parent" that are not already present on the window.
  * The type transformations the server is required to support are:\n
@@ -530,8 +530,8 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
  * \param [in] num_streams The number of elements in the streams array.
  */
 void mir_window_spec_set_streams(MirWindowSpec* spec,
-                                  MirBufferStreamInfo* streams,
-                                  unsigned int num_streams);
+                                 MirBufferStreamInfo* streams,
+                                 unsigned int num_streams);
 
 /**
  * Release the resources held by a MirWindowSpec.
@@ -539,6 +539,23 @@ void mir_window_spec_set_streams(MirWindowSpec* spec,
  * \param [in] spec     Specification to release
  */
 void mir_window_spec_release(MirWindowSpec* spec);
+
+/**
+ * Request changes to the specification of a window. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] window  The window to mutate
+ *   \param [in] spec    Spec with the requested changes applied
+ */
+void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec);
+
+/**
+ * Test for a valid window
+ *   \param [in] window   The window
+ *   \return              True if the supplied window is valid, or
+ *                        false otherwise.
+ */
+bool mir_window_is_valid(MirWindow *window);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -707,6 +724,12 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
                                   unsigned int num_streams);
 //__attribute__((deprecated("use mir_window_spec_set_streams() instead")));
 
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
+//__attribute__((deprecated("use mir_window_apply_spec() instead")));
+
+bool mir_surface_is_valid(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_is_valid() instead")));
+
 /**
  * Create a surface from a given specification
  *
@@ -729,17 +752,6 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
  *                                      in the case of error.
  */
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
-
-/**
- * Request changes to the specification of a surface. The server will decide
- * whether and how the request can be honoured.
- *
- *   \param [in] surface  The surface to rename
- *   \param [in] spec     Spec with the requested changes applied
- */
-void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
-
-//#pragma GCC diagnostic pop
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -770,14 +782,6 @@ void mir_surface_set_event_handler(MirSurface *surface,
  *   \param[in] surface The surface
  */
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
-
-/**
- * Test for a valid surface
- *   \param [in] surface  The surface
- *   \return              True if the supplied surface is valid, or
- *                        false otherwise.
- */
-bool mir_surface_is_valid(MirSurface *surface);
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -942,6 +946,17 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
 
 /**
+ * Attempts to raise the surface to the front.
+ *
+ * \param [in] surface The surface to raise
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
+void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
+
+//#pragma GCC diagnostic pop
+
+/**
  * \brief Check the validity of a MirPersistentId
  * \param [in] id  The MirPersistentId
  * \return True iff the MirPersistentId contains a valid ID value.
@@ -974,15 +989,6 @@ char const* mir_persistent_id_as_string(MirPersistentId* id);
  * \return The deserialised MirSurfaceId
  */
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
-
-/**
- * Attempts to raise the surface to the front.
- *
- * \param [in] surface The surface to raise
- * \param [in] cookie  A cookie instance obtained from an input event.
- *                     An invalid cookie will terminate the client connection.
- */
-void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 #ifdef __cplusplus
 }
