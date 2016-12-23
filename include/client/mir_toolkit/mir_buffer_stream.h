@@ -219,7 +219,6 @@ void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scal
 /**
  * Set the swapinterval for the stream.
  *   \warning EGL users should use eglSwapInterval directly.
- *   \warning Only swapinterval of 0 or 1 is supported.
  *   \param [in] stream   The buffer stream
  *   \param [in] interval The number of vblank signals that
  *                        mir_buffer_stream_swap_buffers will wait for

@@ -36,7 +36,10 @@ typedef enum MirSurfaceAttrib
     /* Do not specify values...code relies on 0...N ordering. */
     mir_surface_attrib_type,
     mir_surface_attrib_state,
-    mir_surface_attrib_swapinterval,
+    mir_surface_attrib_swapinterval, /**< \deprecated  Do not listen for events
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
