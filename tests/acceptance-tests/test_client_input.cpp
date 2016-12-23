@@ -19,7 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -1032,7 +1032,7 @@ TEST_F(TestClientInput, pointer_configuration_is_mutable)
 
 TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
 {
-    mi::TouchpadConfiguration const default_configuration;
+    MirTouchpadConfiguration const default_configuration;
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
@@ -1048,13 +1048,13 @@ TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
 
     auto touchpad_config = mir_input_device_get_touchpad_configuration(touchpad);
 
-    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(default_configuration.click_mode));
-    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode));
-    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button));
-    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click));
-    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing));
+    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(default_configuration.click_mode()));
+    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode()));
+    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button()));
+    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click()));
+    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation()));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
+    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
 
     mir_input_config_destroy(config);
 }

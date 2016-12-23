@@ -19,8 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_SET_GBM_DEVICE_H_
 #define MIR_CLIENT_EXTENSIONS_SET_GBM_DEVICE_H_
 
-#define MIR_EXTENSION_SET_GBM_DEVICE "6d38bfa6-1257-4b31-8e6d-910e7769093d"
-#define MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1 1
+#include "mir_toolkit/mir_extension_core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +31,20 @@ struct gbm_device;
 //  \param [in] device    The gbm_device.
 //  \param [in] context   The context to set the gbm device.
 typedef void (*set_gbm_dev)(struct gbm_device*, void* const context);
-struct MirExtensionSetGbmDevice
+struct MirExtensionSetGbmDeviceV1
 {
     set_gbm_dev set_gbm_device;
     void* const context;
 };
+//legacy compatibility
+typedef MirExtensionSetGbmDeviceV1 MirExtensionSetGbmDevice;
+
+static inline MirExtensionSetGbmDeviceV1 const* mir_extension_set_gbm_device_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionSetGbmDeviceV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_set_gbm_device", 1);
+}
 
 #ifdef __cplusplus
 }

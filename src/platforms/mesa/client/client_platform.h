@@ -60,7 +60,7 @@ private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
     EGLNativeDisplayContainer& display_container;
     gbm_device* gbm_dev;
-    MirExtensionMesaDRMAuth drm_extensions;
+    MirExtensionMesaDRMAuthV1 drm_extensions;
     MirExtensionSetGbmDevice mesa_auth;
     MirExtensionGbmBuffer gbm_buffer;
 };
