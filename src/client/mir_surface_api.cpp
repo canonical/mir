@@ -138,7 +138,7 @@ catch (std::exception const& ex)
     std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
 }
 
-void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent)
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent)
 try
 {
     mir::require(spec);

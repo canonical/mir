@@ -75,7 +75,7 @@ MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_menu_window_spec(MirConnection* connection,
                             int width, int height,
-                            MirSurface* parent,
+                            MirWindow* parent,
                             MirRectangle* rect,
                             MirEdgeAttachment edge);
 
@@ -106,7 +106,7 @@ mir_create_menu_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_tip_window_spec(MirConnection* connection,
                            int width, int height,
-                           MirSurface* parent,
+                           MirWindow* parent,
                            MirRectangle* rect,
                            MirEdgeAttachment edge);
 
@@ -134,7 +134,7 @@ mir_create_tip_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_modal_dialog_window_spec(MirConnection* connection,
                                     int width, int height,
-                                    MirSurface* parent);
+                                    MirWindow* parent);
 
 /**
  * Create a window specification for a parentless dialog window.
@@ -189,7 +189,7 @@ MirWindowSpec* mir_create_window_spec(MirConnection* connection);
  * \param [in] spec    Specification to mutate
  * \param [in] parent  A valid parent window.
  */
-void mir_window_spec_set_parent(MirWindowSpec* spec, MirSurface* parent);
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
 
 /**
  * Update a window specification with a window type.
