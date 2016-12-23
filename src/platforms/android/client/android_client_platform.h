@@ -53,9 +53,9 @@ private:
     std::shared_ptr<logging::Logger> const logger;
 
     std::shared_ptr<EGLNativeDisplayType> const native_display;
-    MirExtensionAndroidEGL android_types_extension;
-    MirExtensionFencedBuffers fence_extension;
-    MirExtensionAndroidBuffer buffer_extension;
+    MirExtensionAndroidEGLV1 android_types_extension;
+    MirExtensionFencedBuffersV1 fence_extension;
+    MirExtensionAndroidBufferV1 buffer_extension;
 };
 
 }

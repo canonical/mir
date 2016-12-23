@@ -282,13 +282,11 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 
 void* mcla::AndroidClientPlatform::request_interface(char const* name, int version)
 {
-    if (!strcmp(name, MIR_EXTENSION_FENCED_BUFFERS) && version == MIR_EXTENSION_FENCED_BUFFERS_VERSION_1)
-        return &fence_extension;
-
-    if (!strcmp(name, MIR_EXTENSION_ANDROID_EGL) && (version == MIR_EXTENSION_ANDROID_EGL_VERSION_1))
+    if (!strcmp(name, "mir_extension_android_egl") && (version == 1))
         return &android_types_extension;
-
-    if (!strcmp(name, MIR_EXTENSION_ANDROID_BUFFER) && (version == MIR_EXTENSION_ANDROID_BUFFER_VERSION_1))
+    if (!strcmp(name, "mir_extension_android_buffer") && (version == 1))
         return &buffer_extension;
+    if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
+        return &fence_extension;
     return nullptr;
 }
