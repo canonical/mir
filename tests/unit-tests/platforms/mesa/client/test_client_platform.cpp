@@ -20,13 +20,22 @@
 #include "mir/shared_library.h"
 #include "mir/raii.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "src/client/mir_connection.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir_protobuf.pb.h"
+#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir/test/doubles/stub_connection_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
+
+#include "gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -175,4 +184,30 @@ TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_sur
 {
     auto egl_native_window = platform->create_egl_native_window(nullptr);
     EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(MesaClientPlatformTest, can_allocate_buffer)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::StubConnectionConfiguration conf(platform);
+    MirConnection connection(conf);
+    mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+
+    int width = 32;
+    int height = 90;
+    auto ext = static_cast<MirExtensionGbmBuffer*>(
+        platform->request_interface(
+            MIR_EXTENSION_GBM_BUFFER,MIR_EXTENSION_GBM_BUFFER_VERSION_1));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_gbm, Ne(nullptr));
+
+    auto call_count = conf.channel->channel_call_count;
+    ext->allocate_buffer_gbm(
+        &connection,
+        width, height,
+        GBM_FORMAT_ARGB8888, 0,
+        [] (::MirBuffer*, void*) {}, nullptr);
+    EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
 }
