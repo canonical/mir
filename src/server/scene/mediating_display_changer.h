@@ -75,6 +75,7 @@ public:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
+    void remove_session_configuration(std::shared_ptr<frontend::Session> const& session) override;
     void preview_base_configuration(
         std::weak_ptr<frontend::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
