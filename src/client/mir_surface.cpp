@@ -753,6 +753,5 @@ MirConnection* MirSurface::connection() const
 
 std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
     return frame_clock;
 }
