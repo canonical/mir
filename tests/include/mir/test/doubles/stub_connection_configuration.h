@@ -45,7 +45,8 @@ struct StubConnectionConfiguration : client::DefaultConnectionConfiguration
         mir::Fd watch_fd() const
         {
             int fd[2];
-            pipe(fd);
+            if (pipe(fd))
+                return {};
             mir::Fd{fd[1]};
             return mir::Fd{fd[0]};
         }
