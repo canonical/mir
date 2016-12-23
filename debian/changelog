@@ -2327,7 +2327,7 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
         difficult to recover. (LP: #1189770)
       . Frame rates of GL clients are limited to 60Hz on Android, even with
         swapinterval=0. (LP: #1206400)
-      . mir_window_is_valid(NULL) crashes instead of returning false.
+      . mir_surface_is_valid(NULL) crashes instead of returning false.
         (LP: #1248474)
       . [regression] tests/unit-tests/shell/test_mediating_display_changer.cpp
         is not compiled and executed. (LP: #1312832)
