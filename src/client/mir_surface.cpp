@@ -508,7 +508,11 @@ void MirSurface::handle_event(MirEvent const& e)
                 static_cast<long>(1000000000L / rate));
             frame_clock->set_period(ns);
         }
-        // else: we are not throttled. Impose some artificial rate?
+        // else: The graphics driver hass not provided valid timing.
+        //       Presently as a fallback we just see interval 0 behaviour then.
+        //       Or would people prefer some different fallback?
+        //         * Re-enable server-side vsync?
+        //         * Rate limit to 60Hz?
         break;
     }
     default:
