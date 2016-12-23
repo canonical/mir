@@ -697,14 +697,17 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             }
 
             mir::frontend::BufferStreamId id(stream.stream_id);
-            if (auto bs = map->stream(id))
-                new_streams.insert(bs);
-            /* else: we could implement stream ID validation here, which we've
-             * never had before.
-             * The only problem with that plan is that we have some tests
-             * that rely on the ability to pass in invalid stream IDs so those
-             * need fixing.
-             */
+            if (map)
+            {
+                if (auto bs = map->stream(id))
+                    new_streams.insert(bs);
+                /* else: we could implement stream ID validation here, which we've
+                 * never had before.
+                 * The only problem with that plan is that we have some tests
+                 * that rely on the ability to pass in invalid stream IDs so those
+                 * need fixing.
+                 */
+            }
         }
 
         // Worth optimizing and avoiding the intersection of both sets?....
