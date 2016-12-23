@@ -435,7 +435,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_displa
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_window_spec_set_fullscreen(spec, 1);
+            mir_window_spec_set_fullscreen_on_output(spec, 1);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -450,7 +450,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
 {
     auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
-            mir_window_spec_set_fullscreen(spec, 2);
+            mir_window_spec_set_fullscreen_on_output(spec, 2);
         });
 
     auto const shell_surface = latest_shell_surface();

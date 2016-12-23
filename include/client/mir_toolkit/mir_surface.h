@@ -349,7 +349,7 @@ void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, u
  *          guaranteed to be fullscreen on the specified output. An invalid window is returned
  *          if the server unable to, or policy prevents it from, honouring this request.
  */
-void mir_window_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id);
+void mir_window_spec_set_fullscreen_on_output(MirWindowSpec* spec, uint32_t output_id);
 
 /**
  * Set the requested preferred orientation mode.
@@ -666,7 +666,7 @@ void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width,
 //__attribute__((deprecated("use mir_window_spec_set_max_aspect_ratio() instead")));
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
-//__attribute__((deprecated("use mir_window_spec_set_fullscreen() instead")));
+//__attribute__((deprecated("use mir_window_spec_set_fullscreen_on_output() instead")));
 
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
 //__attribute__((deprecated("use mir_window_spec_set_preferred_orientation() instead")));

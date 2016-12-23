@@ -805,7 +805,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     auto const requested_output = configuration->outputs[0];
 
-    mir_window_spec_set_fullscreen(surface_spec, requested_output.output_id);
+    mir_window_spec_set_fullscreen_on_output(surface_spec, requested_output.output_id);
 
     auto surface = mir_surface_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);

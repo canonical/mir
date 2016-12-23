@@ -523,7 +523,7 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_spec_set_max_height;
     mir_window_spec_set_min_aspect_ratio;
     mir_window_spec_set_max_aspect_ratio;
-    mir_window_spec_set_fullscreen;
+    mir_window_spec_set_fullscreen_on_output;
     mir_window_spec_set_preferred_orientation;
     mir_window_spec_attach_to_foreign_parent;
     mir_window_spec_set_state;

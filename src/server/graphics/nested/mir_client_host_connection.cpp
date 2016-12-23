@@ -376,7 +376,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
     mir_window_spec_set_pixel_format(spec.get(), properties.format);
     mir_window_spec_set_name(spec.get(), name);
     mir_window_spec_set_buffer_usage(spec.get(), usage);
-    mir_window_spec_set_fullscreen(spec.get(), output_id);
+    mir_window_spec_set_fullscreen_on_output(spec.get(), output_id);
     MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
     mir_window_spec_set_streams(spec.get(), &info, 1);
 

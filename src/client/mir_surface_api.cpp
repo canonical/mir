@@ -281,7 +281,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_window_spec_set_fullscreen(MirWindowSpec* spec, uint32_t output_id)
+void mir_window_spec_set_fullscreen_on_output(MirWindowSpec* spec, uint32_t output_id)
 try
 {
     mir::require(spec);
@@ -645,7 +645,7 @@ void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
-    mir_window_spec_set_fullscreen(spec, output_id);
+    mir_window_spec_set_fullscreen_on_output(spec, output_id);
 }
 
 void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode)

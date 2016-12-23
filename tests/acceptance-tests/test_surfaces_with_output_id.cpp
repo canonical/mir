@@ -133,7 +133,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
                 static_cast<int>(mode.vertical_resolution) + 1),
             del);
         mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
-        mir_window_spec_set_fullscreen(spec.get(), output.output_id);
+        mir_window_spec_set_fullscreen_on_output(spec.get(), output.output_id);
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 
@@ -148,7 +148,7 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
                 static_cast<int>(mode.vertical_resolution)),
             del);
         mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
-        mir_window_spec_set_fullscreen(spec.get(), output.output_id);
+        mir_window_spec_set_fullscreen_on_output(spec.get(), output.output_id);
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 
