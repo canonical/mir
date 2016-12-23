@@ -37,6 +37,7 @@ public:
         MirMirrorMode mirror_mode) override;
     void destroy_session(frontend::ScreencastSessionId id) override;
     std::shared_ptr<graphics::Buffer> capture(frontend::ScreencastSessionId id) override;
+    void capture(ScreencastSessionId id, std::shared_ptr<graphics::Buffer> const& buffer) override;
 };
 
 }

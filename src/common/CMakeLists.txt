@@ -3,6 +3,8 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(fd)
 add_subdirectory(events)
 add_subdirectory(logging)
@@ -40,6 +42,18 @@ set(MIRCOMMON_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
+  input/mir_input_configuration.cpp
+  input/mir_input_configuration_serialization.cpp
+  input/mir_touchpad_configuration.cpp
+  input/mir_pointer_configuration.cpp
+  input/mir_keyboard_configuration.cpp
+  input/mir_touchscreen_configuration.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_configuration.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_configuration_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 

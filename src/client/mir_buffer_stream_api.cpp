@@ -125,20 +125,16 @@ catch (std::exception const& ex)
 }
 
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream* buffer_stream)
+try
 {
-    /*
-     * NOTE: In the case that the vault already has a free buffer waiting
-     *       for us this will return immediately. This means we rely on
-     *       mir_wait_for() not blocking on any un-signalled MirWaitHandle,
-     *       which does not work if you were to call mir_wait_for_one()
-     *       instead.
-     */
-    mir_wait_for(mir_buffer_stream_swap_buffers(buffer_stream,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        nullptr));
+    buffer_stream->swap_buffers_sync();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_buffer_stream_get_graphics_region(
+bool mir_buffer_stream_get_graphics_region(
     MirBufferStream *buffer_stream,
     MirGraphicsRegion *region_out)
 try
@@ -149,10 +145,12 @@ try
     region_out->stride = secured_region->stride.as_uint32_t();
     region_out->pixel_format = secured_region->format;
     region_out->vaddr = secured_region->vaddr.get();
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream* buffer_stream)

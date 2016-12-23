@@ -21,6 +21,9 @@
 
 #include <memory>
 
+class MirTouchpadConfiguration;
+class MirPointerConfiguration;
+
 namespace mir
 {
 namespace protobuf
@@ -32,8 +35,6 @@ class InputDeviceSetting;
 namespace input
 {
 class Device;
-class TouchpadConfiguration;
-class PointerConfiguration;
 }
 
 namespace frontend
