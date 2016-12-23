@@ -21,6 +21,8 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/renderer/renderer_factory.h"
+#include "mir/frontend/session_mediator_observer.h"
+#include "mir/observer_registrar.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -36,6 +38,7 @@
 #include <mutex>
 #include <condition_variable>
 
+using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
@@ -130,10 +133,69 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
     mir::CachedPtr<StubRendererFactory> stub_renderer_factory;
 };
 
+using mir::frontend::SessionMediatorObserver;
+class StubSessionMediatorObserver : public SessionMediatorObserver
+{
+public:
+    void session_connect_called(std::string const&) override {}
+    void session_create_surface_called(std::string const&) override {}
+    void session_submit_buffer_called(std::string const&) override {}
+    void session_allocate_buffers_called(std::string const&) override {}
+    void session_release_buffers_called(std::string const&) override {}
+    void session_release_surface_called(std::string const&) override {}
+    void session_disconnect_called(std::string const&) override {}
+    void session_configure_surface_called(std::string const&) override {}
+    void session_configure_surface_cursor_called(std::string const&) override {}
+    void session_configure_display_called(std::string const&) override {}
+    void session_set_base_display_configuration_called(std::string const&) override {}
+    void session_preview_base_display_configuration_called(std::string const&) override {}
+    void session_confirm_base_display_configuration_called(std::string const&) override {}
+    void session_start_prompt_session_called(std::string const&, pid_t) override {}
+    void session_stop_prompt_session_called(std::string const&) override {}
+    void session_create_buffer_stream_called(std::string const&) override {}
+    void session_release_buffer_stream_called(std::string const&) override {}
+    void session_error(std::string const&, char const*, std::string const&) override {}
+};
+
+class CountingSessionMediatorObserver : public StubSessionMediatorObserver
+{
+public:
+    void session_submit_buffer_called(std::string const&) override
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        ++submissions_pending; 
+        submitted.notify_one();
+    }
+    bool wait_for_submissions(int count, std::chrono::seconds timeout)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+        while (submissions_pending < count)
+        {
+            if (submitted.wait_until(lock, deadline) == std::cv_status::timeout)
+                return false;
+        }
+        submissions_pending -= count;
+        return true;
+    }
+private:
+    std::mutex mutex;
+    std::condition_variable submitted;
+    int submissions_pending = 0;
+};
+
 using BasicFixture = mtf::BasicClientServerFixture<StubServerConfig>;
 
-struct StaleFrames : BasicFixture
+struct StaleFrames : BasicFixture,
+                     ::testing::WithParamInterface<int>
 {
+    StaleFrames()
+        : sm_observer(std::make_shared<CountingSessionMediatorObserver>())
+    {
+        auto reg = server_configuration.the_session_mediator_observer_registrar();
+        reg->register_interest(sm_observer);
+    }
+
     void SetUp()
     {
         BasicFixture::SetUp();
@@ -170,12 +232,20 @@ struct StaleFrames : BasicFixture
         server_configuration.the_compositor()->start();
     }
 
+    bool wait_for_the_server_to_receive_frames(int nframes,
+                                               std::chrono::seconds timeout)
+    {
+        return sm_observer->wait_for_submissions(nframes, timeout);
+    }
+
     MirSurface* surface;
+private:
+    std::shared_ptr<CountingSessionMediatorObserver> sm_observer;
 };
 
 }
 
-TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
+TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
 {
     using namespace testing;
 
@@ -186,6 +256,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
 
     auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
@@ -196,6 +267,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
     start_compositor();
 
     // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
@@ -206,22 +278,26 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
 }
 
-TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
+TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 {
     using namespace testing;
 
     stop_compositor();
 
     auto bs = mir_surface_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
     ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }
+
+INSTANTIATE_TEST_CASE_P(PerSwapInterval, StaleFrames, ::testing::Values(0,1));
