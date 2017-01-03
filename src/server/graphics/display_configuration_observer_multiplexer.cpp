@@ -38,6 +38,19 @@ void mg::DisplayConfigurationObserverMultiplexer::base_configuration_updated(
     for_each_observer(&mg::DisplayConfigurationObserver::base_configuration_updated, base_config);
 }
 
+void mg::DisplayConfigurationObserverMultiplexer::session_configuration_applied(
+    std::shared_ptr<frontend::Session> const& session,
+    std::shared_ptr<DisplayConfiguration> const& config)
+{
+    for_each_observer(&mg::DisplayConfigurationObserver::session_configuration_applied, session, config);
+}
+
+void mg::DisplayConfigurationObserverMultiplexer::session_configuration_removed(
+    std::shared_ptr<frontend::Session> const& session)
+{
+    for_each_observer(&mg::DisplayConfigurationObserver::session_configuration_removed, session);
+}
+
 void mg::DisplayConfigurationObserverMultiplexer::configuration_failed(
     std::shared_ptr<mg::DisplayConfiguration const> const& attempted,
     std::exception const& error)
