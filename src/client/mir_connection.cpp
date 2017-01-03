@@ -1288,7 +1288,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
-            protobuf_bs->set_error("no ID in response");
+            protobuf_bs->set_error("no ID in response (disconnected?)");
     }
 
     if (protobuf_bs->has_error())

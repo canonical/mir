@@ -393,8 +393,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_object_is_invalid_after_creation_exc
     auto rs = connection->connection_surface_map()->render_surface(callback.resulting_render_surface);
 
     EXPECT_THAT(rs->get_error_message(),
-        StrEq("Error processing buffer stream response during render "
-              "surface creation: no ID in response (disconnected?)"));
+        StrEq("Error creating MirRenderSurface: no ID in response (disconnected?)"));
     EXPECT_FALSE(reinterpret_cast<mcl::RenderSurface*>(rs->valid()));
 }
 
