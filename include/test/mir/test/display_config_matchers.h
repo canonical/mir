@@ -111,6 +111,11 @@ bool compare_display_configurations(
     MirDisplayConfig const* config1,
     MirDisplayConfig const* config2);
 
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    std::shared_ptr<graphics::DisplayConfiguration> const& config1,
+    MirDisplayConfig const* config2);
+
 MATCHER_P(DisplayConfigMatches, config, "")
 {
     return compare_display_configurations(result_listener, arg, config);
