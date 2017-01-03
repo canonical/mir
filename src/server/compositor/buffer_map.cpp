@@ -46,7 +46,7 @@ mc::BufferMap::BufferMap(
 {
 }
 
-mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
+mg::BufferID mc::BufferMap::add_buffer(mg::BufferRequestMessage const& properties)
 {
     try
     {
@@ -58,8 +58,8 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
         return buffer->id();
     } catch (std::exception& e)
     {
-        if (auto s = sink.lock())
-            s->error_buffer(properties, e.what());
+//        if (auto s = sink.lock())
+//            s->error_buffer(properties, e.what());
         throw;
     }
 }

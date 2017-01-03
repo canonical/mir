@@ -108,3 +108,9 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
 
     return pixel_formats;
 }
+
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferRequestMessage const& ipc_msg)
+{
+    (void)ipc_msg;
+    return nullptr;
+}

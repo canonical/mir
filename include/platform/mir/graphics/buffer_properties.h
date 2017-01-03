@@ -39,7 +39,9 @@ enum class BufferUsage
     /** rendering using GL */
     hardware,
     /** rendering using direct pixel access */
-    software
+    software,
+
+    opaque
 };
 
 /**

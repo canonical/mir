@@ -86,6 +86,11 @@ public:
         }
     }
 
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferRequestMessage const&)
+    {
+        return nullptr;
+    }
+
     std::vector<MirPixelFormat> supported_pixel_formats() override
     {
         return guest_allocator->supported_pixel_formats();

@@ -65,3 +65,8 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
     // Lazy
     return {mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888};
 }
+
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(BufferRequestMessage const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers\n"));
+} 

@@ -320,3 +320,9 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 
     return pixel_formats;
 }
+
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(BufferRequestMessage const& ipc_msg)
+{
+    (void)ipc_msg;
+    BOOST_THROW_EXCEPTION(std::runtime_error("BLAM\n"));
+} 

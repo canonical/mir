@@ -131,6 +131,11 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
             return allocator->supported_pixel_formats();
         }
 
+        std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferRequestMessage const& ipc_msg) override
+        {
+            return allocator->alloc_buffer(ipc_msg);
+        }
+
         std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     };
 

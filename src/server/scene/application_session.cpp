@@ -434,7 +434,7 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     surface_stack->remove_surface(surface);
 }
 
-mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
+mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferRequestMessage const& properties)
 {
     return buffers->add_buffer(properties);
 }
