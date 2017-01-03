@@ -41,6 +41,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <mutex>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -108,6 +109,11 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
             expectations.push_back({{}, configuration});
             return expectations.back().notifier.get_future();
         }
+
+        MOCK_METHOD2(session_configuration_applied, void(
+            std::shared_ptr<mf::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&));
+        MOCK_METHOD1(session_configuration_removed, void(std::shared_ptr<mf::Session> const&));
 
     protected:
         void initial_configuration(
@@ -187,6 +193,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     testing::NiceMock<MockDisplay> mock_display;
     std::shared_ptr<NotifyingConfigurationObserver> observer{std::make_shared<NotifyingConfigurationObserver>()};
     StubAuthorizer stub_authorizer;
+    mir::test::Signal observed_changed;
 };
 
 TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
