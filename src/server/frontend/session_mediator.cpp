@@ -646,7 +646,7 @@ void mf::SessionMediator::modify_surface(
 }
 
 void mf::SessionMediator::configure_display(
-    const ::mir::protobuf::DisplayConfiguration* request,
+    ::mir::protobuf::DisplayConfiguration const* request,
     ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
 {
@@ -662,6 +662,21 @@ void mf::SessionMediator::configure_display(
 
     auto display_config = display_changer->base_configuration();
     mfd::pack_protobuf_display_configuration(*response, *display_config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::remove_session_configuration(
+    ::mir::protobuf::Void const* /*request*/,
+    ::mir::protobuf::Void* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->remove_session_configuration(session);
 
     done->Run();
 }

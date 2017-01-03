@@ -423,3 +423,12 @@ bool mt::compare_display_configurations(
     TestDisplayConfiguration translated_config_two{config2};
     return compare_display_configurations(listener, translated_config_one, translated_config_two);
 }
+
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    std::shared_ptr<mg::DisplayConfiguration> const& config1,
+    MirDisplayConfig const* config2)
+{
+    TestDisplayConfiguration translated_config_two{config2};
+    return compare_display_configurations(listener, *config1, translated_config_two);
+}

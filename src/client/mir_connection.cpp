@@ -1054,19 +1054,37 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
 
 namespace
 {
-struct HandleErrorVoid
+template <class T>
+struct HandleError
 {
-    std::unique_ptr<mp::Void> result;
-    std::function<void(mp::Void const&)> on_error;
+    std::unique_ptr<T> result;
+    std::function<void(T const&)> on_error;
 };
 
-void handle_structured_error(HandleErrorVoid* handler)
+template <class T>
+void handle_structured_error(HandleError<T>* handler)
 {
     if (handler->result->has_structured_error())
     {
         handler->on_error(*handler->result);
     }
     delete handler;
+}
+
+template <class T>
+HandleError<T>* create_stored_error_result(std::shared_ptr<mcl::ErrorHandler> const& error_handler)
+{
+    auto store_error_result = new HandleError<T>;
+    store_error_result->result = std::make_unique<T>();
+    store_error_result->on_error = [error_handler](T const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        (*error_handler)(&error);
+    };
+
+    return store_error_result;
 }
 }
 
@@ -1079,15 +1097,7 @@ void MirConnection::preview_base_display_configuration(
     request.mutable_configuration()->CopyFrom(configuration);
     request.set_timeout(timeout.count());
 
-    auto store_error_result = new HandleErrorVoid;
-    store_error_result->result = std::make_unique<mp::Void>();
-    store_error_result->on_error = [this](mp::Void const& message)
-    {
-        MirError const error{
-            static_cast<MirErrorDomain>(message.structured_error().domain()),
-            message.structured_error().code()};
-        (*error_handler)(&error);
-    };
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
     server.preview_base_display_configuration(
         &request,
@@ -1099,17 +1109,30 @@ void MirConnection::cancel_base_display_configuration_preview()
 {
     mp::Void request;
 
-    auto store_error_result = new HandleErrorVoid;
-    store_error_result->result = std::make_unique<mp::Void>();
-    store_error_result->on_error = [this](mp::Void const& message)
-    {
-        MirError const error{
-            static_cast<MirErrorDomain>(message.structured_error().domain()),
-            message.structured_error().code()};
-        (*error_handler)(&error);
-    };
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
     server.cancel_base_display_configuration_preview(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::configure_session_display(mp::DisplayConfiguration const& configuration)
+{
+    auto store_error_result = create_stored_error_result<mp::DisplayConfiguration>(error_handler);
+
+    server.configure_display(
+        &configuration,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::remove_session_display()
+{
+    mp::Void request;
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    server.remove_session_configuration(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
