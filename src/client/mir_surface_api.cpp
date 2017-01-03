@@ -595,7 +595,7 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
 
 void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 {
-    mir_surface_spec_set_name(spec, name);
+    mir_window_spec_set_name(spec, name);
 }
 
 void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
