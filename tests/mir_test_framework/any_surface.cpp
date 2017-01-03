@@ -42,7 +42,7 @@ MirSurface* mtf::make_surface(
 
     auto spec = mir_create_normal_window_spec(connection, size.width.as_int(), size.height.as_int());
     mir_window_spec_set_pixel_format(spec, f);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     if (!mir_window_is_valid(surface))

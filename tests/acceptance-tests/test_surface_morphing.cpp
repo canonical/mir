@@ -104,7 +104,7 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        auto const surface = mir_surface_create_sync(spec);
+        auto const surface = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
         return SurfaceHandle{surface};

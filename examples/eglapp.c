@@ -486,7 +486,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     if (output_id != mir_display_output_id_invalid)
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
-    surface = mir_surface_create_sync(spec);
+    surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     CHECK(mir_window_is_valid(surface), "Can't create a surface");

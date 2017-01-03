@@ -77,7 +77,7 @@ struct Client
     {
         auto spec = mir_create_normal_window_spec(connection, 800, 600);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
-        auto surface = mir_surface_create_sync(spec);
+        auto surface = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
         return surface;
@@ -315,7 +315,7 @@ TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
 
     EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(check_add_surface));
 
-    auto surface = mir_surface_create_sync(surface_spec);
+    auto surface = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     mir_surface_release_sync(surface);
@@ -333,7 +333,7 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
 
-    auto surface = mir_surface_create_sync(surface_spec);
+    auto surface = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_window_spec(connection);
@@ -379,7 +379,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
-    auto parent = mir_surface_create_sync(surface_spec);
+    auto parent = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_tip_window_spec(
@@ -432,7 +432,7 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
 
     EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(check_placement));
 
-    auto child = mir_surface_create_sync(surface_spec);
+    auto child = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     EXPECT_TRUE(received.wait_for(400ms));
@@ -459,13 +459,13 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
-    auto parent = mir_surface_create_sync(surface_spec);
+    auto parent = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_menu_window_spec(
         connection, width, height, parent, &dummy_rect, mir_edge_attachment_any);
     mir_window_spec_set_pixel_format(surface_spec, format);
-    auto child = mir_surface_create_sync(surface_spec);
+    auto child = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_window_spec(connection);
@@ -589,7 +589,7 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
     mir_window_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
-    auto surface = mir_surface_create_sync(surface_spec);
+    auto surface = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     scene_surface->placed_relative(placement_);

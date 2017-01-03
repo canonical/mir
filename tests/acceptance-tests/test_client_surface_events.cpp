@@ -486,7 +486,7 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
 
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
 
     mir_window_spec_release(spec);
 
@@ -577,7 +577,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     auto spec = mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_TRUE(context.captured.wait_for(10s));

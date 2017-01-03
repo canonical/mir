@@ -92,24 +92,11 @@ private:
 
 struct SurfaceSync
 {
-    void surface_created(MirSurface * new_surface)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        surface = new_surface;
-        signal.notify_all();
-    }
-
     void surface_released(MirSurface * /*released_surface*/)
     {
         std::unique_lock<std::mutex> lock(guard);
         surface = NULL;
         signal.notify_all();
-    }
-
-    void wait_for_surface_create()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        signal.wait(lock, [&]{ return !!surface; });
     }
 
     void wait_for_surface_release()
@@ -123,21 +110,10 @@ struct SurfaceSync
     MirSurface * surface{nullptr};
 };
 
-void create_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_created(surface);
-}
-
 void release_surface_callback(MirSurface* surface, void * context)
 {
     SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
     config->surface_released(surface);
-}
-
-void wait_for_surface_create(SurfaceSync* context)
-{
-    context->wait_for_surface_create();
 }
 
 void wait_for_surface_release(SurfaceSync* context)
@@ -246,10 +222,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_create(ssync+i);
+        ssync[i].surface = mir_window_create_sync(surface_spec);
 
     for (int i = 0; i != max_surface_count; ++i)
         mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
@@ -261,8 +234,5 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_create(ssync+i);
+        ssync[i].surface = mir_window_create_sync(surface_spec);
 }

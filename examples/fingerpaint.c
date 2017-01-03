@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "Mir Fingerpaint");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surf = mir_surface_create_sync(spec);
+    surf = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     if (surf != NULL)

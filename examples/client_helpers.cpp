@@ -155,7 +155,7 @@ MirSurface* me::NormalSurface::create_surface(
     mir_window_spec_set_pixel_format(spec.get(), selected_format);
     mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
     mir_window_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
-    auto surface = mir_surface_create_sync(spec.get());
+    auto surface = mir_window_create_sync(spec.get());
     return surface;
 }
 

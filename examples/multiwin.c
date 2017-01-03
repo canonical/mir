@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "red");
 
-    win[0].surface = mir_surface_create_sync(spec);
+    win[0].surface = mir_window_create_sync(spec);
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "green");
     mir_window_spec_set_width(spec, 300);
     mir_window_spec_set_height(spec, 150);
-    win[1].surface = mir_surface_create_sync(spec);
+    win[1].surface = mir_window_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "blue");
     mir_window_spec_set_width(spec, 150);
     mir_window_spec_set_height(spec, 300);
-    win[2].surface = mir_surface_create_sync(spec);
+    win[2].surface = mir_window_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;

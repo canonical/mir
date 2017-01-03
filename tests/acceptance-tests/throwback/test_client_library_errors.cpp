@@ -218,7 +218,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
@@ -259,7 +259,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     mir_surface_release_sync(surface);
@@ -285,7 +285,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
@@ -309,7 +309,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
@@ -341,7 +341,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     };
     mir_window_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
-    auto surface = mir_surface_create_sync(spec);
+    auto surface = mir_window_create_sync(spec);
     EXPECT_THAT(surface, Not(IsValid()));
     EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
 

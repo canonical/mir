@@ -67,12 +67,6 @@ static void connection_callback(MirConnection *new_connection, void *context)
     ((MirDemoState*)context)->connection = new_connection;
 }
 
-// Callback to update MirDemoState on surface_create
-static void surface_create_callback(MirSurface *new_surface, void *context)
-{
-    ((MirDemoState*)context)->surface = new_surface;
-}
-
 // Callback to update MirDemoState on surface_release
 static void surface_release_callback(MirSurface *old_surface, void *context)
 {
@@ -140,8 +134,8 @@ int demo_client(const char* server, int buffer_swap_count)
     mir_window_spec_set_name(spec, __FILE__);
 
     ///\internal [surface_create_tag]
-    // ...we create a surface using that format and wait for callback to complete.
-    mir_wait_for(mir_surface_create(spec, surface_create_callback, &mcd));
+    // ...we create a surface using that format.
+    mcd.surface = mir_window_create_sync(spec);
     puts("Surface created");
     ///\internal [surface_create_tag]
 

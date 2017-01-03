@@ -62,7 +62,7 @@ public:
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_fullscreen_on_output(spec, 1);
         mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
-        surface = mir_surface_create_sync(spec);
+        surface = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));

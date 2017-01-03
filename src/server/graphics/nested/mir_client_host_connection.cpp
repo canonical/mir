@@ -111,7 +111,7 @@ public:
         MirWindowSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
-              mir_surface_create_sync(spec)}
+              mir_window_create_sync(spec)}
     {
         if (!mir_window_is_valid(mir_surface))
         {
