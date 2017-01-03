@@ -183,6 +183,9 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
+    void configure_session_display(mir::protobuf::DisplayConfiguration const& configuration);
+    void remove_session_display();
+
     MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
     void preview_base_display_configuration(
         mir::protobuf::DisplayConfiguration const& configuration,

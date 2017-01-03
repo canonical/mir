@@ -38,8 +38,8 @@
 #include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
@@ -570,9 +570,7 @@ class HostBuffer : public mgn::NativeBuffer
 {
 public:
     HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
-        fence_extensions(static_cast<MirExtensionFencedBuffers*>(
-            mir_connection_request_interface(mir_connection, 
-                MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1)))
+        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
     {
         mir_connection_allocate_buffer(
             mir_connection,
@@ -678,7 +676,7 @@ public:
     }
 
 private:
-    MirExtensionFencedBuffers* fence_extensions = nullptr;
+    MirExtensionFencedBuffersV1 const* fence_extensions = nullptr;
 
     std::function<void()> f;
     MirBuffer* handle = nullptr;
@@ -788,9 +786,7 @@ T auth(std::function<void(AuthRequest<T>*)> const& f)
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtension>>
 mgn::MirClientHostConnection::auth_extension()
 {
-    auto ext = static_cast<MirExtensionMesaDRMAuth*>(
-        mir_connection_request_interface(mir_connection, 
-        MIR_EXTENSION_MESA_DRM_AUTH, MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1));
+    auto ext = mir_extension_mesa_drm_auth_v1(mir_connection);
     if (!ext)
         return {};
 
@@ -798,7 +794,7 @@ mgn::MirClientHostConnection::auth_extension()
     {
         AuthExtension(
             MirConnection* connection,
-            MirExtensionMesaDRMAuth* ext) :
+            MirExtensionMesaDRMAuthV1 const* ext) :
             connection(connection),
             extensions(ext)
         {
@@ -815,7 +811,7 @@ mgn::MirClientHostConnection::auth_extension()
         }
     private:
         MirConnection* const connection;
-        MirExtensionMesaDRMAuth* const extensions;
+        MirExtensionMesaDRMAuthV1 const * const extensions;
     };
     return { std::make_unique<AuthExtension>(mir_connection, ext) };
 }
@@ -823,15 +819,13 @@ mgn::MirClientHostConnection::auth_extension()
 mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>
 mgn::MirClientHostConnection::set_gbm_extension()
 {
-    auto ext = static_cast<MirExtensionSetGbmDevice*>(
-        mir_connection_request_interface(mir_connection, 
-            MIR_EXTENSION_SET_GBM_DEVICE, MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1));
+    auto ext = mir_extension_set_gbm_device_v1(mir_connection);
     if (!ext)
         return {};
 
     struct SetGbm : SetGbmExtension
     {
-        SetGbm(MirExtensionSetGbmDevice* ext) :
+        SetGbm(MirExtensionSetGbmDevice const* ext) :
             ext(ext)
         {
         }
@@ -839,7 +833,7 @@ mgn::MirClientHostConnection::set_gbm_extension()
         {
             ext->set_gbm_device(dev, ext->context);
         }
-        MirExtensionSetGbmDevice* const ext;
+        MirExtensionSetGbmDeviceV1 const* const ext;
     };
     return { std::make_unique<SetGbm>(ext) };
 }

@@ -35,12 +35,12 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-char const* favorite_flavor_0_1()
+char const* favorite_flavor_1()
 {
     static char const* favorite = "banana";
     return favorite;
 }
-char const* favorite_flavor_2_2()
+char const* favorite_flavor_9()
 {
     static char const* favorite = "rhubarb";
     return favorite;
@@ -59,8 +59,8 @@ int get_fence(MirBuffer*)
 
 mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
     context{context},
-    flavor_ext_0_1{favorite_flavor_0_1},
-    flavor_ext_2_2{favorite_flavor_2_2},
+    flavor_ext_1{favorite_flavor_1},
+    flavor_ext_9{favorite_flavor_9},
     animal_ext{animal_name},
     fence_ext{get_fence, nullptr, nullptr}
 {
@@ -149,29 +149,14 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
 
 void* mtf::StubClientPlatform::request_interface(char const* name, int version)
 {
-    if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
-        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_1))
-    {
-        return &flavor_ext_0_1;
-    }
-
-    if (!strcmp(name, MIR_EXTENSION_FAVORITE_FLAVOR) &&
-        (version == MIR_EXTENSION_FAVORITE_FLAVOR_VERSION_2))
-    {
-        return &flavor_ext_2_2;
-    }
-
-    if (!strcmp(name, MIR_EXTENSION_ANIMAL_NAME) &&
-        (version == MIR_EXTENSION_ANIMAL_NAME_VERSION_9))
-    {
+    if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 1))
+        return &flavor_ext_1;
+    if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 9))
+        return &flavor_ext_9;
+    if (!strcmp(name, "mir_extension_animal_names") && (version == 1))
         return &animal_ext;
-    }
-
-    if (!strcmp(name, MIR_EXTENSION_FENCED_BUFFERS) &&
-        (version == MIR_EXTENSION_FENCED_BUFFERS_VERSION_1))
-    {
+    if (!strcmp(name, "mir_extension_fenced_buffers") && (version == 1))
         return &fence_ext;
-    }
     return nullptr;
 }
 

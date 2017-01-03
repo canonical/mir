@@ -18,8 +18,8 @@
 
 #include "src/server/input/default_device.h"
 #include "mir/input/input_device.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/pointer_configuration.h"
+#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_pointer_configuration.h"
 #include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/test/fake_shared.h"
@@ -83,7 +83,7 @@ struct DefaultDevice : Test
 TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 {
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
-    mi::TouchpadConfiguration touch_conf;
+    MirTouchpadConfiguration touch_conf;
 
     EXPECT_THROW({dev.apply_touchpad_configuration(touch_conf);}, std::invalid_argument);
 }
@@ -91,8 +91,8 @@ TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 {
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard, mt::fake_shared(key_mapper));
-    mi::TouchpadConfiguration touch_conf;
-    mi::PointerConfiguration pointer_conf;
+    MirTouchpadConfiguration touch_conf;
+    MirPointerConfiguration pointer_conf;
 
     EXPECT_THROW({dev.apply_touchpad_configuration(touch_conf);}, std::invalid_argument);
     EXPECT_THROW({dev.apply_pointer_configuration(pointer_conf);}, std::invalid_argument);
@@ -102,7 +102,7 @@ TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 {
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
-    mi::PointerConfiguration pointer_conf;
+    MirPointerConfiguration pointer_conf;
 
     EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_)));
 
@@ -113,8 +113,8 @@ TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 {
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
-    mi::TouchpadConfiguration touch_conf;
-    mi::PointerConfiguration pointer_conf;
+    MirTouchpadConfiguration touch_conf;
+    MirPointerConfiguration pointer_conf;
 
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_)));
@@ -129,13 +129,13 @@ TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
 {
     mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
 
-    mi::PointerConfiguration pointer_conf;
-    pointer_conf.cursor_acceleration_bias = 3.0;
+    MirPointerConfiguration pointer_conf;
+    pointer_conf.cursor_acceleration_bias(3.0);
     EXPECT_THROW({dev.apply_pointer_configuration(pointer_conf);}, std::invalid_argument);
-    pointer_conf.cursor_acceleration_bias = -2.0;
+    pointer_conf.cursor_acceleration_bias(-2.0);
     EXPECT_THROW({dev.apply_pointer_configuration(pointer_conf);}, std::invalid_argument);
 
-    pointer_conf.cursor_acceleration_bias = 1.0;
+    pointer_conf.cursor_acceleration_bias(1.0);
     EXPECT_NO_THROW(dev.apply_pointer_configuration(pointer_conf));
 }
 

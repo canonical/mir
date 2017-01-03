@@ -84,7 +84,6 @@ MIR_SERVER_0.26 {
     mir::input::InputDispatcher::?InputDispatcher*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
-    mir::input::KeyboardConfiguration::KeyboardConfiguration*;
     mir::input::SeatObserver::?SeatObserver*;
     mir::input::Surface::operator*;
     mir::input::Surface::?Surface*;
@@ -519,11 +518,8 @@ MIR_SERVER_0.26 {
     typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
     typeinfo?for?mir::input::InputManager;
-    typeinfo?for?mir::input::KeyboardConfiguration;
-    typeinfo?for?mir::input::PointerConfiguration;
     typeinfo?for?mir::input::SeatObserver;
     typeinfo?for?mir::input::Surface;
-    typeinfo?for?mir::input::TouchpadConfiguration;
     typeinfo?for?mir::input::TouchVisualizer;
     typeinfo?for?mir::input::TouchVisualizer::Spot;
     typeinfo?for?mir::LockableCallback;
@@ -605,11 +601,8 @@ MIR_SERVER_0.26 {
     vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
     vtable?for?mir::input::InputManager;
-    vtable?for?mir::input::KeyboardConfiguration;
-    vtable?for?mir::input::PointerConfiguration;
     vtable?for?mir::input::SeatObserver;
     vtable?for?mir::input::Surface;
-    vtable?for?mir::input::TouchpadConfiguration;
     vtable?for?mir::input::TouchVisualizer;
     vtable?for?mir::input::TouchVisualizer::Spot;
     vtable?for?mir::LockableCallback;
