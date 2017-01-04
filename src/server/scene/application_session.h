@@ -104,6 +104,7 @@ public:
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
     graphics::BufferID create_buffer(graphics::BufferRequestMessage const& properties) override;
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
     void destroy_buffer(graphics::BufferID) override;
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:

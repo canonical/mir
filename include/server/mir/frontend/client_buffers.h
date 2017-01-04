@@ -24,12 +24,18 @@
 
 namespace mir
 {
-namespace graphics { class Buffer; class BufferRequestMessage; }
+namespace graphics
+{
+class Buffer;
+class BufferRequestMessage;
+class BufferProperties;
+}
 namespace frontend
 {
 class ClientBuffers
 {
 public:
+    virtual graphics::BufferID add_buffer(graphics::BufferProperties const& properties) = 0;
     virtual graphics::BufferID add_buffer(graphics::BufferRequestMessage const& properties) = 0;
     virtual void remove_buffer(graphics::BufferID id) = 0;
     virtual std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) = 0;

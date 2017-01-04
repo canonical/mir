@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/frontend/buffer_sink.h"
 #include "buffer_map.h"
 #include <boost/throw_exception.hpp>
@@ -58,8 +59,26 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferRequestMessage const& propertie
         return buffer->id();
     } catch (std::exception& e)
     {
-//        if (auto s = sink.lock())
-//            s->error_buffer(properties, e.what());
+        if (auto s = sink.lock())
+            s->error_buffer(mg::BufferProperties{}, e.what());
+        throw;
+    }
+}
+
+mg::BufferID mc::BufferMap::add_buffer(graphics::BufferProperties const& properties)
+{
+    try
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        auto buffer = allocator->alloc_buffer(properties);
+        buffers[buffer->id()] = {buffer, Owner::client};
+        if (auto s = sink.lock())
+            s->add_buffer(*buffer);
+        return buffer->id();
+    } catch (std::exception& e)
+    {
+        if (auto s = sink.lock())
+            s->error_buffer(properties, e.what());
         throw;
     }
 }

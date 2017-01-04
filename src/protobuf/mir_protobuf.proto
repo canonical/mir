@@ -182,7 +182,6 @@ message Buffer {
   optional uint32 flags = 6;
   optional int32  width = 7;
   optional int32  height = 8;
-  optional uint32 format = 9;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;

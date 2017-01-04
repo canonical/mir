@@ -22,7 +22,6 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
-#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 #include <vector>
 
@@ -34,10 +33,8 @@ namespace graphics
 struct BufferRequestMessage
 {
     geometry::Size size;
-    mir::optional_value<MirPixelFormat> format;
-//    mir::optional_value<MirBufferUsage> usage;
-    mir::optional_value<unsigned int> native_format;
-    mir::optional_value<unsigned int> native_flags;
+    unsigned int native_format;
+    unsigned int native_flags;
 };
 
 class BufferIpcMessage

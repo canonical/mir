@@ -407,30 +407,28 @@ void mf::SessionMediator::allocate_buffers(
     {
         auto const& req = request->buffer_requests(i);
 
-        mg::BufferRequestMessage r;
-
+        mg::BufferID id;
         if (req.has_flags() && req.has_native_format())
         {
-//            mir::protobuf::Buffer protobuf_buffer;
-//            mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-//            packer.pack_size({req.width(), req.height()});;
-//            packer.pack_format(req.native_format());
-//            packer.pack_flags(req.flags());
+            id = session->create_buffer({ {req.width(), req.height()} , req.native_format(), req.flags() });
         }
         else if (req.has_buffer_usage() && req.has_pixel_format())
         {
-//        mg::BufferProperties properties(
-//            geom::Size{req.width(), req.height()},
-//            static_cast<MirPixelFormat>(req.pixel_format()),
-//           static_cast<mg::BufferUsage>(req.buffer_usage()));
-//            packer.pack_usage(req.buffer_usage());
+            id = session->create_buffer(
+                mg::BufferProperties(
+                    geom::Size{req.width(), req.height()},
+                    static_cast<MirPixelFormat>(req.pixel_format()),
+                    static_cast<mg::BufferUsage>(req.buffer_usage())));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
         }
 
-//        auto id = session->create_buffer(packer);
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-//            stream->associate_buffer(id);
+            stream->associate_buffer(id);
         }
     }
     done->Run();
