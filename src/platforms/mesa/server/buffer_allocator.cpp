@@ -28,6 +28,7 @@
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -252,23 +253,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
         bo_flags |= GBM_BO_USE_SCANOUT;
     }
 
-    gbm_bo *bo_raw = gbm_bo_create(
-        device,
-        buffer_properties.size.width.as_uint32_t(),
-        buffer_properties.size.height.as_uint32_t(),
-        gbm_format,
-        bo_flags);
-
-    if (!bo_raw)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
-
-    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
-
-    /* Create the GBMBuffer */
-    auto const buffer =
-        std::make_shared<GBMBuffer>(bo, bo_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
-
-    return buffer;
+    return alloc_buffer(BufferRequestMessage{buffer_properties.size, gbm_format, bo_flags});
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
@@ -321,8 +306,23 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(BufferRequestMessage const& ipc_msg)
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(BufferRequestMessage const& req)
 {
-    (void)ipc_msg;
-    BOOST_THROW_EXCEPTION(std::runtime_error("BLAM\n"));
+    gbm_bo *bo_raw = gbm_bo_create(
+        device,
+        req.size.width.as_uint32_t(),
+        req.size.height.as_uint32_t(),
+        req.native_format,
+        req.native_flags);
+
+    if (!bo_raw)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
+
+    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
+
+    /* Create the GBMBuffer */
+    auto const buffer =
+        std::make_shared<GBMBuffer>(bo, req.native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
+
+    return buffer;
 } 
