@@ -75,7 +75,7 @@ public:
 private:
     MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
     std::function<void(MirSurface*)> const surface_deleter{
-        [](MirSurface* surface) { mir_surface_release_sync(surface); }
+        [](MirSurface* surface) { mir_window_release_sync(surface); }
     };
     std::unique_ptr<MirSurface, decltype(surface_deleter)> surface;
     NormalSurface(NormalSurface const&) = delete;

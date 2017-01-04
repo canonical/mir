@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to malloc canvas\n");
         }
 
-        mir_surface_release_sync(surf);
+        mir_window_release_sync(surf);
     }
     else
     {

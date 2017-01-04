@@ -90,7 +90,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
                 mir_surface_get_buffer_stream(surface));
         }
 
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
         mir_connection_release(connection);
     }
 }
@@ -134,7 +134,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
             });
 
             disconnect.exec([&] {
-                mir_surface_release_sync(surf);
+                mir_window_release_sync(surf);
                 mir_connection_release(connection);
             });
         });

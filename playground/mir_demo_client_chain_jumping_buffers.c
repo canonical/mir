@@ -267,7 +267,7 @@ int main(int argc, char** argv)
         mir_buffer_release(buffer_available[i].buffer);
     for (unsigned int i = 0u; i < num_chains; i++)
         mir_render_surface_release(render_surface[i]);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
     return 0;
 }

@@ -37,7 +37,7 @@ mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
 
 mtf::VisibleSurface::~VisibleSurface()
 {
-    if (surface) mir_surface_release_sync(surface);
+    if (surface) mir_window_release_sync(surface);
 }
 
 void mtf::VisibleSurface::event_callback(MirSurface* surf, MirEvent const* ev, void* context)

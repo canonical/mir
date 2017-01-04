@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         if (interval) sleep(interval);
     }
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
     mir_connection_release(conn);
 
     return 0;

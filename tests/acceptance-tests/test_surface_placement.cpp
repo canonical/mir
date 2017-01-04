@@ -195,7 +195,7 @@ TEST_F(SurfacePlacement, small_window_is_optically_centered_on_first_display)
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, which_second_display_acive_small_window_is_optically_centered_on_it)
@@ -218,7 +218,7 @@ TEST_F(SurfacePlacement, which_second_display_acive_small_window_is_optically_ce
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, medium_window_fitted_onto_first_display)
@@ -233,7 +233,7 @@ TEST_F(SurfacePlacement, medium_window_fitted_onto_first_display)
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
     EXPECT_THAT(shell_surface->size(),     Eq(first_display.size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, big_window_keeps_top_on_first_display)
@@ -247,7 +247,7 @@ TEST_F(SurfacePlacement, big_window_keeps_top_on_first_display)
     EXPECT_THAT(shell_surface->top_left(), Eq(Point{-width/4, 0}));
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, second_window_is_on_same_display_as_first)
@@ -264,8 +264,8 @@ TEST_F(SurfacePlacement, second_window_is_on_same_display_as_first)
 
     EXPECT_TRUE(second_display.contains({shell_surface2->input_bounds()}));
 
-    mir_surface_release_sync(surface1);
-    mir_surface_release_sync(surface2);
+    mir_window_release_sync(surface1);
+    mir_window_release_sync(surface2);
 }
 
 // Cascaded, horizontally and/or vertically, relative to another window means:
@@ -301,8 +301,8 @@ TEST_F(SurfacePlacement, second_window_is_cascaded_wrt_first)
 
     EXPECT_THAT(shell_surface2->size(), Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface1);
-    mir_surface_release_sync(surface2);
+    mir_window_release_sync(surface1);
+    mir_window_release_sync(surface2);
 }
 
 // This is what is currently in the spec, but I think it's wrong
@@ -325,8 +325,8 @@ TEST_F(SurfacePlacement, DISABLED_medium_second_window_is_sized_when_cascaded_wr
     EXPECT_TRUE(first_display.contains({shell_surface2->input_bounds()}));
     EXPECT_THAT(shell_surface2->size(), Ne(Size{width, height}));
 
-    mir_surface_release_sync(surface1);
-    mir_surface_release_sync(surface2);
+    mir_window_release_sync(surface1);
+    mir_window_release_sync(surface2);
 }
 
 // This is not what is currently in the spec, but I think it's right
@@ -349,8 +349,8 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     EXPECT_TRUE(first_display.overlaps({shell_surface2->input_bounds()}));
     EXPECT_THAT(shell_surface2->size(), Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface1);
-    mir_surface_release_sync(surface2);
+    mir_window_release_sync(surface1);
+    mir_window_release_sync(surface2);
 }
 
 TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
@@ -365,7 +365,7 @@ TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
     EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
     EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
@@ -387,7 +387,7 @@ TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
 
     EXPECT_THAT(shell_surface->size(), Eq(expected_size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
@@ -406,7 +406,7 @@ TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
     EXPECT_THAT(shell_surface->size().height, Eq(Height{10}));
     EXPECT_THAT(shell_surface->size().width, Eq(first_display.size.width));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
@@ -428,7 +428,7 @@ TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
 
     EXPECT_THAT(shell_surface->size(), Eq(expected_size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_display)
@@ -443,7 +443,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_displa
     EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
     EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_display)
@@ -458,7 +458,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
     EXPECT_THAT(shell_surface->top_left(), Eq(second_display.top_left));
     EXPECT_THAT(shell_surface->size(), Eq(second_display.size));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 struct UnparentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
@@ -489,7 +489,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
@@ -551,8 +551,8 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
     EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
 
-    mir_surface_release_sync(surface);
-    mir_surface_release_sync(parent);
+    mir_window_release_sync(surface);
+    mir_window_release_sync(parent);
 }
 
 INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,

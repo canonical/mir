@@ -44,30 +44,10 @@ namespace mg = mir::geometry;
 
 namespace
 {
-struct SurfaceSync
-{
-    void surface_released(MirSurface * /*released_surface*/)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        surface = nullptr;
-        signal.notify_all();
-    }
-
-    void wait_for_surface_release()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        signal.wait(lock, [&]{ return !surface; });
-    }
-
-    std::mutex guard;
-    std::condition_variable signal;
-    MirSurface * surface{nullptr};
-};
-
 struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
-    SurfaceSync ssync[max_surface_count];
+    MirWindow* window[max_surface_count] = {nullptr};
 
     void SetUp() override
     {
@@ -80,17 +60,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 
     testing::NiceMock<mtd::MockWindowManager> window_manager;
 };
-
-extern "C" void release_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_released(surface);
-}
-
-void wait_for_surface_release(SurfaceSync* context)
-{
-    context->wait_for_surface_release();
-}
 }
 
 TEST_F(ClientSurfaces, are_created_with_correct_size)
@@ -99,33 +68,30 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
     
     auto spec = mir_create_normal_window_spec(connection, width_1, height_1);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    ssync[0].surface = mir_window_create_sync(spec);
+    window[0] = mir_window_create_sync(spec);
 
     mir_window_spec_set_width(spec, width_2);
     mir_window_spec_set_height(spec, height_2);
 
-    ssync[1].surface = mir_window_create_sync(spec);
+    window[1] = mir_window_create_sync(spec);
     
     mir_window_spec_release(spec);
 
     MirSurfaceParameters response_params;
-    mir_surface_get_parameters(ssync->surface, &response_params);
+    mir_surface_get_parameters(window[0], &response_params);
     EXPECT_EQ(640, response_params.width);
     EXPECT_EQ(480, response_params.height);
     EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
     EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
-    mir_surface_get_parameters(ssync[1].surface, &response_params);
+    mir_surface_get_parameters(window[1], &response_params);
     EXPECT_EQ(1600, response_params.width);
     EXPECT_EQ(1200, response_params.height);
     EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
     EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
-    mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
-    wait_for_surface_release(ssync+1);
-
-    mir_surface_release(ssync->surface, release_surface_callback, ssync);
-    wait_for_surface_release(ssync);
+    mir_window_release_sync(window[1]);
+    mir_window_release_sync(window[0]);
 }
 
 TEST_F(ClientSurfaces, have_distinct_ids)
@@ -136,8 +102,8 @@ TEST_F(ClientSurfaces, have_distinct_ids)
     EXPECT_NE(mir_debug_surface_id(surface_1),
         mir_debug_surface_id(surface_2));
 
-    mir_surface_release_sync(surface_1);
-    mir_surface_release_sync(surface_2);
+    mir_window_release_sync(surface_1);
+    mir_window_release_sync(surface_2);
 }
 
 TEST_F(ClientSurfaces, creates_need_not_be_serialized)
@@ -146,7 +112,7 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
     {
         auto spec = mir_create_normal_window_spec(connection, 1, 1);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-        ssync[i].surface = mir_window_create_sync(spec);
+        window[i] = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
     }
 
@@ -156,20 +122,17 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
         {
             if (i == j)
                 EXPECT_EQ(
-                    mir_debug_surface_id(ssync[i].surface),
-                    mir_debug_surface_id(ssync[j].surface));
+                    mir_debug_surface_id(window[i]),
+                    mir_debug_surface_id(window[j]));
             else
                 EXPECT_NE(
-                    mir_debug_surface_id(ssync[i].surface),
-                    mir_debug_surface_id(ssync[j].surface));
+                    mir_debug_surface_id(window[i]),
+                    mir_debug_surface_id(window[j]));
         }
     }
 
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_release(ssync+i);
+        mir_window_release_sync(window[i]);
 }
 
 struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrientationMode> {};
@@ -189,7 +152,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     ASSERT_THAT(surface, IsValid());
     EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 INSTANTIATE_TEST_CASE_P(ClientSurfaces,
@@ -215,8 +178,8 @@ TEST_F(ClientSurfaces, can_be_menus)
     ASSERT_THAT(menu, IsValid());
     EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
 
-    mir_surface_release_sync(parent);
-    mir_surface_release_sync(menu);
+    mir_window_release_sync(parent);
+    mir_window_release_sync(menu);
 }
 
 TEST_F(ClientSurfaces, can_be_tips)
@@ -235,8 +198,8 @@ TEST_F(ClientSurfaces, can_be_tips)
     ASSERT_THAT(tooltip, IsValid());
     EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
 
-    mir_surface_release_sync(parent);
-    mir_surface_release_sync(tooltip);
+    mir_window_release_sync(parent);
+    mir_window_release_sync(tooltip);
 }
 
 TEST_F(ClientSurfaces, can_be_dialogs)
@@ -251,7 +214,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
 
-    mir_surface_release_sync(dialog);
+    mir_window_release_sync(dialog);
 }
 
 TEST_F(ClientSurfaces, can_be_modal_dialogs)
@@ -267,8 +230,8 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
 
-    mir_surface_release_sync(parent);
-    mir_surface_release_sync(dialog);
+    mir_window_release_sync(parent);
+    mir_window_release_sync(dialog);
 }
 
 TEST_F(ClientSurfaces, can_be_input_methods)
@@ -282,7 +245,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
 
     EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
 
-    mir_surface_release_sync(im);
+    mir_window_release_sync(im);
 }
 
 TEST_F(ClientSurfaces, can_be_renamed)
@@ -315,7 +278,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_window_apply_spec(surf, spec);
     mir_window_spec_release(spec);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
@@ -364,8 +327,8 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
     auto im = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_surface_release_sync(im);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(im);
+    mir_window_release_sync(surface);
 
     mir_connection_release(im_connection);
 }

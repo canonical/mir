@@ -123,7 +123,7 @@ public:
     ~MirClientHostSurface()
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
-        mir_surface_release_sync(mir_surface);
+        mir_window_release_sync(mir_surface);
     }
 
     void apply_spec(mgn::HostSurfaceSpec& spec) override

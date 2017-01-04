@@ -109,7 +109,7 @@ TEST_F(ClientStartupPerformance, create_surface_and_swap)
     auto max_expected_time = 80ms;
     EXPECT_THAT(diff.count(), Lt(max_expected_time.count()));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
     mir_connection_release(conn);
 }
 

@@ -149,7 +149,7 @@ struct Client
         // to the tests (e.g. pointer leave events when the surface is destroyed),
         // which can cause test expectations to fail.
         mir_surface_set_event_handler(surface, null_event_handler, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
         mir_connection_release(connection);
     }
 

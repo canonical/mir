@@ -218,5 +218,5 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
         [this] { return number_of_executed_render_operations() > 0; },
         std::chrono::seconds{5});
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }

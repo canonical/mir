@@ -118,7 +118,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
     eglDestroySurface(disp, egl_surface);
     eglDestroyContext(disp, context);
     
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     puts("Surface released");
 }
 

@@ -140,7 +140,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
     void TearDown() override
     {
-        mir_surface_release_sync(other_surface);
+        mir_window_release_sync(other_surface);
         scene_surface.reset();
 
         mtf::ConnectedClientWithASurface::TearDown();
@@ -379,7 +379,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
         },
         &unfocus_received);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     EXPECT_TRUE(unfocus_received.wait_for(10s));
 }
@@ -431,7 +431,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
 
     unfocus_received.reset();
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     EXPECT_FALSE(unfocus_received.wait_for(1s));
 }
@@ -499,7 +499,7 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
      */
     EXPECT_TRUE(done.wait_for(std::chrono::seconds{10}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 struct EventContext
@@ -591,5 +591,5 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     EXPECT_THAT(mir_surface_output_event_get_refresh_rate(surface_event),
                 Eq(current_mode[id].vrefresh_hz));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }

@@ -572,6 +572,29 @@ void mir_window_create(MirWindowSpec* requested_specification,
 MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification);
 
 /**
+ * Release the supplied window and any associated buffer.
+ *
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
+ *   \param [in] window       The window
+ *   \param [in] callback     Callback function to be invoked when the request
+ *                            completes
+ *   \param [in,out] context  User data passed to the callback function
+ */
+void mir_window_release(
+    MirWindow* window,
+    mir_window_callback callback,
+    void *context);
+
+/**
+ * Release the specified window like in mir_window_release(), but also wait
+ * for the operation to complete.
+ *   \param [in] window  The window to be released
+ */
+void mir_window_release_sync(MirWindow* window);
+
+/**
  * Test for a valid window
  *   \param [in] window   The window
  *   \return              True if the supplied window is valid, or
@@ -759,6 +782,15 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
 //__attribute__((deprecated("use mir_window_create_sync() instead")));
 
+MirWaitHandle *mir_surface_release(
+    MirSurface *surface,
+    mir_surface_callback callback,
+    void *context);
+//__attribute__((deprecated("use mir_window_release() instead")));
+
+void mir_surface_release_sync(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_release_sync() instead")));
+
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
@@ -807,30 +839,6 @@ char const *mir_surface_get_error_message(MirSurface *surface);
  *   \param [out] parameters  Structure to be populated
  */
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
-
-/**
- * Release the supplied surface and any associated buffer. The returned wait
- * handle remains valid until the connection to the server is released.
- *   \warning callback could be called from another thread. You must do any
- *            locking appropriate to protect your data accessed in the
- *            callback.
- *   \param [in] surface      The surface
- *   \param [in] callback     Callback function to be invoked when the request
- *                            completes
- *   \param [in,out] context  User data passed to the callback function
- *   \return                  A handle that can be passed to mir_wait_for
- */
-MirWaitHandle *mir_surface_release(
-    MirSurface *surface,
-    mir_surface_callback callback,
-    void *context);
-
-/**
- * Release the specified surface like in mir_surface_release(), but also wait
- * for the operation to complete.
- *   \param [in] surface  The surface to be released
- */
-void mir_surface_release_sync(MirSurface *surface);
 
 /**
  * Get the type (purpose) of a surface.

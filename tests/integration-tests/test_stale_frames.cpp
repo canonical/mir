@@ -143,7 +143,7 @@ struct StaleFrames : BasicFixture
 
     void TearDown()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
 
         BasicFixture::TearDown();
     }

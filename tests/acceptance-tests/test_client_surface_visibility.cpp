@@ -128,7 +128,7 @@ struct Surface
     ~Surface()
     {
         mir_surface_set_event_handler(surface, null_event_callback, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
     }
 
     void expect_surface_visibility_event_after(

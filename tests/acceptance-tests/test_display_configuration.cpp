@@ -211,7 +211,7 @@ struct SimpleClient
 
     void disconnect()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
         mir_connection_release(connection);
     }
 

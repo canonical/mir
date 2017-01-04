@@ -50,5 +50,5 @@ TEST_F(ServerWithoutActiveOutputs, creates_valid_client_surface)
     EXPECT_THAT(mir_window_is_valid(surface), Eq(true))
         << mir_surface_get_error_message(surface);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }

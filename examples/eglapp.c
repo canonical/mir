@@ -50,7 +50,7 @@ void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     surface = NULL;
     mir_connection_release(connection);
     connection = NULL;

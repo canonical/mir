@@ -129,5 +129,5 @@ TEST_F(ClientLogging, reports_performance)
 
     EXPECT_THAT(reports, Ge(nseconds-1));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 }

@@ -141,6 +141,6 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
     ASSERT_THAT(surface, Not(IsValid()));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(test_exception_text));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }

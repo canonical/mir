@@ -66,13 +66,6 @@ static void connection_callback(MirConnection *new_connection, void *context)
 {
     ((MirDemoState*)context)->connection = new_connection;
 }
-
-// Callback to update MirDemoState on surface_release
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    ((MirDemoState*)context)->surface = 0;
-}
 ///\internal [Callback_tag]
 
 int demo_client(const char* server, int buffer_swap_count)
@@ -180,7 +173,7 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [surface_release_tag]
     // We should release our surface
-    mir_wait_for(mir_surface_release(mcd.surface, surface_release_callback, &mcd));
+    mir_window_release_sync(mcd.surface);
     puts("Surface released");
     ///\internal [surface_release_tag]
 

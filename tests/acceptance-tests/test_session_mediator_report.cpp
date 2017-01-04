@@ -142,7 +142,7 @@ TEST_F(SessionMediatorReportTest, session_create_and_release_surface_called)
 
     ON_CALL(*report, session_release_surface_called(_))
         .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     EXPECT_TRUE(report_received->wait_for(10s));
 }
 
@@ -161,7 +161,7 @@ TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
     auto const surface = mtf::make_any_surface(connection);
     auto const buffer_stream = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     EXPECT_TRUE(report_received->wait_for(10s));
 }
 

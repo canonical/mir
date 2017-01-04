@@ -33,13 +33,6 @@ static void connection_callback(MirConnection *new_connection, void *context)
     connection = new_connection;
 }
 
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    (void)context;
-    surface = 0;
-}
-
 static void close_connection()
 {
     if (connection)
@@ -65,7 +58,7 @@ void demo_client(const char* server)
     surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_wait_for(mir_surface_release(surface, surface_release_callback, NULL));
+    mir_window_release_sync(surface);
 }
 
 int main(int argc, char* argv[])

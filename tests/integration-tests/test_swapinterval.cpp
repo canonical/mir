@@ -120,7 +120,7 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     void TearDown()
     {
         mir_buffer_stream_release_sync(stream);
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
         mtf::BasicClientServerFixture<ServerConfig>::TearDown();
     }
 

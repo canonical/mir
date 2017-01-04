@@ -161,7 +161,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 
     surface_location.top_left = {100, 250};
 
@@ -174,7 +174,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 }
 
 TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
@@ -188,7 +188,7 @@ TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
 
     EXPECT_FALSE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 }
 
 TEST_F(DebugAPI, is_overrideable)
@@ -210,5 +210,5 @@ TEST_F(DebugAPI, is_overrideable)
     EXPECT_EQ(testpoint.x.as_int(), screen_x);
     EXPECT_EQ(testpoint.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(surf);
 }

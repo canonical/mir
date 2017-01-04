@@ -146,7 +146,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     });
     EXPECT_TRUE(valid_content);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -207,7 +207,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
         valid_content = green_pattern.check(region);
     });
     EXPECT_TRUE(valid_content);
-    mir_surface_release_sync(mir_surface);
+    mir_window_release_sync(mir_surface);
     mir_connection_release(connection);
 }
 

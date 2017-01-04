@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     {
     }
 
-    mir_surface_release_sync(tooltip);
+    mir_window_release_sync(tooltip);
     mir_eglapp_cleanup();
 
     return 0;

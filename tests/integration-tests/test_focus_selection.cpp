@@ -134,7 +134,7 @@ TEST_F(FocusSelection, when_surface_gets_valid_contents_input_focus_is_set)
 
     auto const surface = mtf::make_any_surface(connection);
     mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     mir_connection_release(connection);
 }

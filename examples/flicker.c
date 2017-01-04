@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
         mir_buffer_stream_swap_buffers_sync(bs);
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     puts("Surface released");
 
     mir_connection_release(connection);

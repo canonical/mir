@@ -225,7 +225,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -262,7 +262,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
     auto surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -293,7 +293,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     bool callback_called{false};
-    mir_surface_release(surface, &recording_surface_callback, &callback_called);
+    mir_window_release(surface, &recording_surface_callback, &callback_called);
     EXPECT_TRUE(callback_called);
     mir_connection_release(connection);
 }
@@ -316,7 +316,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -347,7 +347,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 
     mir_persistent_id_release(invalid_id);
     mir_window_spec_release(spec);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 

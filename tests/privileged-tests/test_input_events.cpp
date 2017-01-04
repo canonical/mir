@@ -220,7 +220,7 @@ struct InputEvents : testing::Test
 
         wait_for_surface_to_become_focused_and_exposed(surface);
 
-        return MirSurfaceUPtr(surface, mir_surface_release_sync);
+        return MirSurfaceUPtr(surface, mir_window_release_sync);
     }
 
     static int const key_down = 1;

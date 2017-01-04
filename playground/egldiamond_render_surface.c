@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
     else
         eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
     return 0;
 }

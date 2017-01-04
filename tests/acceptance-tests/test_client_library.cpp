@@ -48,10 +48,12 @@ namespace
 {
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
-    std::set<MirSurface*> surfaces;
+    std::set<MirWindow*> surfaces;
     MirConnection* connection = nullptr;
-    MirSurface* surface  = nullptr;
+    MirWindow* surface  = nullptr;
     std::atomic<int> buffers{0};
+    std::mutex guard;
+    std::condition_variable signal;
 
     static void connection_callback(MirConnection* connection, void* context)
     {
@@ -84,8 +86,17 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
 
     virtual void surface_created(MirSurface* new_surface)
     {
+        std::unique_lock<std::mutex> lock(guard);
         surfaces.insert(new_surface);
         surface = new_surface;
+        signal.notify_all();
+    }
+
+    void wait_for_window_create()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        surface = nullptr;
+        signal.wait(lock, [&]{ return !!surface; });
     }
 
     virtual void swap_buffers(MirBufferStream*)
@@ -95,8 +106,16 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
 
     void surface_released(MirSurface* old_surface)
     {
+        std::unique_lock<std::mutex> lock(guard);
         surfaces.erase(old_surface);
         surface = NULL;
+        signal.notify_all();
+    }
+
+    void wait_for_window_release()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        signal.wait(lock, [&]{ return !surface; });
     }
 
     MirSurface* any_surface()
@@ -242,7 +261,7 @@ TEST_F(ClientLibrary, creates_surface)
     EXPECT_EQ(request_format, response_params.pixel_format);
     EXPECT_EQ(request_buffer_usage, response_params.buffer_usage);
 
-    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -254,7 +273,7 @@ TEST_F(ClientLibrary, can_set_surface_state)
         mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    surface_created(mir_window_create_sync(spec));
+    surface = mir_window_create_sync(spec);
 
     mir_window_spec_release(spec);
 
@@ -281,7 +300,7 @@ TEST_F(ClientLibrary, can_set_surface_state)
         ASSERT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -299,7 +318,7 @@ TEST_F(ClientLibrary, can_set_pointer_confinement)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -320,7 +339,7 @@ TEST_F(ClientLibrary, can_set_surface_min_width)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -341,7 +360,7 @@ TEST_F(ClientLibrary, can_set_surface_min_height)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -362,7 +381,7 @@ TEST_F(ClientLibrary, can_set_surface_max_width)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -383,7 +402,7 @@ TEST_F(ClientLibrary, can_set_surface_max_height)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -412,7 +431,7 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     EXPECT_THAT(graphics_region.width, Ge(min_width));
     EXPECT_THAT(graphics_region.height, Ge(min_height));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -429,7 +448,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     // Expect zero (not wired up to detect the physical display yet)
     EXPECT_THAT(mir_surface_get_dpi(surface), Eq(0));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -449,7 +468,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     mir_window_spec_set_width(spec, 100);
     mir_window_spec_set_height(spec, 100);
@@ -460,7 +479,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
 
     mir_window_spec_set_width(spec, 800);
@@ -473,7 +492,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
@@ -483,7 +502,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     mir_window_spec_release(spec);
     mir_connection_release(connection);
@@ -525,7 +544,7 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
         EXPECT_THAT(native->width, Eq(size.width));
         ASSERT_THAT(native->height, Eq(size.height));
 
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
     }
 
     mir_window_spec_release(spec);
@@ -548,7 +567,8 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
     {
         old_surface_count = current_surface_count();
 
-        surface_created(mir_window_create_sync(spec));
+        mir_window_create(spec, create_surface_callback, this);
+        wait_for_window_create();
 
         ASSERT_THAT(current_surface_count(), Eq(old_surface_count + 1));
     }
@@ -558,8 +578,9 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
 
         ASSERT_THAT(old_surface_count, Ne(0u));
 
-        MirSurface * surface = any_surface();
-        mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+        surface = any_surface();
+        mir_window_release(surface, release_surface_callback, this);
+        wait_for_window_release();
 
         ASSERT_THAT(current_surface_count(), Eq(old_surface_count - 1));
     }
@@ -578,7 +599,8 @@ TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
     mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), swap_buffers_callback, this));
     EXPECT_THAT(buffers, Eq(1));
 
-    mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
+    mir_window_release(surface, release_surface_callback, this);
+    wait_for_window_release();
 
     ASSERT_THAT(surface, IsNull());
 
@@ -595,7 +617,7 @@ TEST_F(ClientLibrary, fully_synchronous_client)
     EXPECT_TRUE(mir_window_is_valid(surface));
     EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     EXPECT_TRUE(mir_connection_is_valid(connection));
     EXPECT_STREQ("", mir_connection_get_error_message(connection));
@@ -618,7 +640,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
 
     EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_minimized));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     EXPECT_TRUE(mir_connection_is_valid(connection));
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
@@ -691,8 +713,10 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 
     close(canary_fd);
 
-    mir_wait_for(mir_surface_release(surf_one, release_surface_callback, this));
-    mir_wait_for(mir_surface_release(surf_two, release_surface_callback, this));
+    mir_window_release(surf_one, release_surface_callback, this);
+    wait_for_window_release();
+    mir_window_release(surf_two, release_surface_callback, this);
+    wait_for_window_release();
 
     ASSERT_THAT(current_surface_count(), testing::Eq(0u));
 
@@ -731,7 +755,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     EXPECT_THAT(native_buffer->height, Eq(height));
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -744,7 +768,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
 
-    surface_created(mir_window_create_sync(surface_spec));
+    surface = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
@@ -757,7 +781,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     EXPECT_THAT(native_buffer->height, Eq(height));
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -788,7 +812,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
 
     EXPECT_THAT(surface, IsValid());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -827,7 +851,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 // TODO: This is racy. Fix in subsequent "send all the things on construction" branch
 //    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_display_config_destroy(configuration);
     mir_connection_release(connection);
 }
@@ -863,7 +887,7 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_hardware_surface)
 
     EXPECT_THAT(native_buffer, Not(Eq(nullptr)));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -891,7 +915,7 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_software_surface)
 
     EXPECT_THAT(graphics_region.vaddr, Not(Eq(nullptr)));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -930,7 +954,7 @@ TEST_F(ClientLibrary, can_change_event_delegate)
     mir_surface_set_event_handler(surface, &dummy_event_handler_one, nullptr);
     mir_surface_set_event_handler(surface, &dummy_event_handler_two, nullptr);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -948,7 +972,7 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
     auto surface_id = mir_surface_request_persistent_id_sync(surface);
     EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_persistent_id_release(surface_id);
     mir_connection_release(connection);
 }
@@ -990,8 +1014,8 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     mir_window_spec_release(surface_spec);
     mir_persistent_id_release(main_surface_id);
     mir_persistent_id_release(im_parent_id);
-    mir_surface_release_sync(main_surface);
-    mir_surface_release_sync(im_surface);
+    mir_window_release_sync(main_surface);
+    mir_window_release_sync(im_surface);
     mir_connection_release(first_client);
     mir_connection_release(im_client);
 }

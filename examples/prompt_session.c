@@ -127,7 +127,7 @@ void stop_session(MirDemoState* mcd, const char* name)
     if (mcd->surface)
     {
         // We should release our surface
-        mir_surface_release_sync(mcd->surface);
+        mir_window_release_sync(mcd->surface);
         mcd->surface = 0;
         printf("%s: Surface released\n", name);
     }

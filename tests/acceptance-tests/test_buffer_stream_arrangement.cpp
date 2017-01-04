@@ -198,7 +198,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
             stream->position().y.as_int()};
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 
     auto const spec = mir_create_normal_window_spec(
         connection,

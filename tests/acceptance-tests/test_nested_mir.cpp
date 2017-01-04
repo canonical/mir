@@ -669,7 +669,7 @@ struct ClientWithAPaintedSurface : virtual Client
 
     ~ClientWithAPaintedSurface()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
     }
 
     void update_surface_spec(void (*changer)(MirWindowSpec* spec))
@@ -794,7 +794,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -889,7 +889,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
         mir_connection_release(connection);
 
         wait.wait_for(timeout);

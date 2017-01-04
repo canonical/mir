@@ -38,6 +38,6 @@ void mtf::ConnectedClientWithASurface::SetUp()
 
 void mtf::ConnectedClientWithASurface::TearDown()
 {
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     ConnectedClientHeadlessServer::TearDown();
 }

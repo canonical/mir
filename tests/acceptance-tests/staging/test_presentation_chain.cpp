@@ -80,7 +80,7 @@ public:
 
     ~SurfaceWithChain()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(surface);
     }
 protected:
     SurfaceWithChain(MirConnection* connection, std::function<MirSurface*(Chain&)> const& fn) :
@@ -409,7 +409,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     ASSERT_TRUE(context.wait_for_buffer(10s));
 
     mir_buffer_stream_release_sync(stream);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
 }
 
 TEST_F(PresentationChain, can_access_basic_buffer_properties)

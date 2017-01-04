@@ -110,7 +110,7 @@ void TouchMeasuringClient::run(std::string const& connect_string)
 
     collect_input_and_frame_timing(surface, client_ready, touch_duration, results_);
     
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 

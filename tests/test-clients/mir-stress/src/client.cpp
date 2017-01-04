@@ -87,7 +87,7 @@ void UnacceleratedClient::release_surface()
 {
     if (surface_ != nullptr)
     {
-        mir_surface_release_sync(surface_);
+        mir_window_release_sync(surface_);
         surface_ = nullptr;
     }
 }

@@ -349,7 +349,7 @@ TEST_F(SubmitBuffer, fds_can_be_sent_back)
 
     ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 
     auto server_received_fd = *last_unpacked_fd;
@@ -375,7 +375,7 @@ TEST_F(SubmitBuffer, submissions_happen)
         ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -390,7 +390,7 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
     EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), surface, timeout))
         << "failed to see the last scheduled buffer become the current one";
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -406,7 +406,7 @@ TEST_F(SubmitBuffer, allocate_buffers_doesnt_time_out)
     mp::BufferAllocation request;
     EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }
 
@@ -421,6 +421,6 @@ TEST_F(SubmitBuffer, release_buffers_doesnt_time_out)
     mp::BufferRelease request;
     EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(surface);
     mir_connection_release(connection);
 }

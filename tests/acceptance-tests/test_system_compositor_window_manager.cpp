@@ -44,7 +44,7 @@ class SurfaceHandle
 {
 public:
     explicit SurfaceHandle(MirSurface* surface) : surface{surface} {}
-    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
+    ~SurfaceHandle() { if (surface) mir_window_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
 

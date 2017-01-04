@@ -90,37 +90,6 @@ private:
     mtd::StubDisplaySyncGroup display_sync_group;
 };
 
-struct SurfaceSync
-{
-    void surface_released(MirSurface * /*released_surface*/)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        surface = NULL;
-        signal.notify_all();
-    }
-
-    void wait_for_surface_release()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        signal.wait(lock, [&]{ return !surface; });
-    }
-
-    std::mutex guard;
-    std::condition_variable signal;
-    MirSurface * surface{nullptr};
-};
-
-void release_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_released(surface);
-}
-
-void wait_for_surface_release(SurfaceSync* context)
-{
-    context->wait_for_surface_release();
-}
-
 struct BufferCounterConfig : mtf::StubbedServerConfiguration
 {
     class CountingStubBuffer : public mtd::StubBuffer
@@ -191,7 +160,7 @@ int BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 {
     static const int max_surface_count = 5;
-    SurfaceSync ssync[max_surface_count];
+    MirWindow* window[max_surface_count];
     MirWindowSpec* surface_spec;
 
     void SetUp() override
@@ -222,17 +191,14 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        ssync[i].surface = mir_window_create_sync(surface_spec);
+        window[i] = mir_window_create_sync(surface_spec);
 
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_release(ssync+i);
+        mir_window_release_sync(window[i]);
 }
 
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        ssync[i].surface = mir_window_create_sync(surface_spec);
+        window[i] = mir_window_create_sync(surface_spec);
 }
