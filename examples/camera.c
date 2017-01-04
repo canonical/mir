@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
     if (ultrafast)
     {
         pref = camera_pref_speed;
-        mir_surface_set_swapinterval(mir_eglapp_native_surface(), 0);
+        mir_surface_set_swapinterval(mir_eglapp_native_window(), 0);
     }
     Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
@@ -397,7 +397,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    MirSurface* surface = mir_eglapp_native_surface();
+    MirSurface* surface = mir_eglapp_native_window();
     if (win_width == 1)  /* Fullscreen was not chosen */
     {
         /* Chicken or egg? init before open_camera, before size is known */

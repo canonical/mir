@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
 
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
-    me::NormalSurface surface{connection, 200, 200, true, false};
+    me::NormalWindow surface{connection, 200, 200, true, false};
     MirBufferStream* surface_stream = mir_surface_get_buffer_stream(surface);
     int topSize = 100, dTopSize = 2;
     auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);

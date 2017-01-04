@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
     mir_window_spec_set_width (spec, width);
     mir_window_spec_set_height(spec, height);
 
-    mir_window_apply_spec(mir_eglapp_native_surface(), spec);
+    mir_window_apply_spec(mir_eglapp_native_window(), spec);
     mir_window_spec_release(spec);
 
     mouse_x = width  / 2.0;
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
 
     glUseProgram(prog);
 
-    MirSurface* surface = mir_eglapp_native_surface();
+    MirSurface* surface = mir_eglapp_native_window();
     mir_surface_set_event_handler(surface, handle_event, NULL);
 
     spec = mir_create_window_spec(mir_eglapp_native_connection());

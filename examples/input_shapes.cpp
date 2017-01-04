@@ -122,7 +122,7 @@ public:
     SurfaceWithAHole(SurfaceWithAHole const&) = delete;
     SurfaceWithAHole& operator=(SurfaceWithAHole const&) = delete;
 private:
-    me::NormalSurface surface;
+    me::NormalWindow surface;
     me::Context context;
     RenderProgram program;
 

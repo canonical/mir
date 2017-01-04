@@ -33,7 +33,7 @@ float mir_eglapp_background_opacity = 1.0f;
 static const char* appname = "egldemo";
 
 static MirConnection *connection;
-static MirWindow *window;
+static MirWindow* window;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
@@ -151,11 +151,11 @@ double mir_eglapp_display_hz(void)
     return refresh_rate;
 }
 
-void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* unused)
+void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused)
 {
-    (void) surface;
+    (void) window;
     (void) unused;
-    
+
     switch (mir_event_get_type(ev))
     {
     case mir_event_type_input:
@@ -492,7 +492,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     CHECK(mir_window_is_valid(window), "Can't create a window");
 
     mir_surface_set_event_handler(window, mir_eglapp_handle_event, NULL);
-    
+
     spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_name(spec, cursor_name);
     mir_window_apply_spec(window, spec);
@@ -526,7 +526,7 @@ struct MirConnection* mir_eglapp_native_connection()
     return connection;
 }
 
-struct MirSurface* mir_eglapp_native_surface()
+MirWindow* mir_eglapp_native_window()
 {
     return window;
 }

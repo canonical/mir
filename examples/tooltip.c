@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     mir_eglapp_swap_buffers();
 
     MirConnection* const connection = mir_eglapp_native_connection();
-    MirSurface* const parent = mir_eglapp_native_surface();
+    MirSurface* const parent = mir_eglapp_native_window();
 
     MirWindowSpec* const spec = mir_create_window_spec(connection);
     mir_window_spec_set_name(spec, "tooltip example");

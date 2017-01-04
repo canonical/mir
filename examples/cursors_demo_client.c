@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     unsigned int cursor_index = 0;
     while (mir_eglapp_running())
     {
-        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_surface(), cursor_index++);
+        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_window(), cursor_index++);
         usleep(100000);
     }
 

@@ -29,7 +29,7 @@ namespace mt = mir::test;
 namespace
 {
 
-MirWindow *create_surface(MirConnection *connection)
+MirWindow *create_window(MirConnection *connection)
 {
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
@@ -45,7 +45,7 @@ MirWindow *create_surface(MirConnection *connection)
     
     if (!mir_window_is_valid(window))
     {
-        std::cerr << "Surface creation failed: " << mir_surface_get_error_message(window) << std::endl;
+        std::cerr << "Window creation failed: " << mir_surface_get_error_message(window) << std::endl;
         exit(1);
     }
 
@@ -106,7 +106,7 @@ void TouchMeasuringClient::run(std::string const& connect_string)
      */
     mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
     
-    auto window = create_surface(connection);
+    auto window = create_window(connection);
 
     collect_input_and_frame_timing(window, client_ready, touch_duration, results_);
     

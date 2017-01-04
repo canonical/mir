@@ -108,17 +108,17 @@ MirBufferStream* me::BufferStream::create_stream(
         hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
 }
 
-me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
-    window{create_surface(connection, width, height, prefers_alpha, hardware), surface_deleter}
+me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
+    window{create_window(connection, width, height, prefers_alpha, hardware), window_deleter}
 {
 }
 
-me::NormalSurface::operator MirWindow*() const
+me::NormalWindow::operator MirWindow*() const
 {
     return window.get();
 }
 
-MirWindow* me::NormalSurface::create_surface(
+MirWindow* me::NormalWindow::create_window(
     MirConnection* connection,
     unsigned int width,
     unsigned int height,

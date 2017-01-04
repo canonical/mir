@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
         return 3;
     }
 
-    MirSurface *surface = mir_eglapp_native_surface();
+    MirSurface *surface = mir_eglapp_native_window();
     mir_surface_set_event_handler(surface, on_event, &state);
 
     while (true)

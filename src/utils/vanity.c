@@ -751,7 +751,7 @@ int main(int argc, char* argv[])
         false,
         false
     };
-    MirSurface* surface = mir_eglapp_native_surface();
+    MirSurface* surface = mir_eglapp_native_window();
     mir_surface_set_event_handler(surface, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");

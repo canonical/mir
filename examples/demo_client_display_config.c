@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
     }
 
     MirConnection *connection = mir_eglapp_native_connection();
-    MirSurface *surface = mir_eglapp_native_surface();
+    MirSurface *surface = mir_eglapp_native_window();
 
     struct ClientContext ctx = {connection, configuration_mode_unknown, 0, 1, 0};
     mir_connection_set_display_config_change_callback(

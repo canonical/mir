@@ -151,7 +151,7 @@ private:
         unsigned int const height;
     } const dimensions;
 
-    me::NormalSurface surface;
+    me::NormalWindow surface;
     me::Context context;
     RenderProgram program;
 
