@@ -37,12 +37,11 @@ void mir_connection_allocate_buffer(
     MirConnection* connection, 
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage usage,
     mir_buffer_callback cb, void* context)
 try
 {
     mir::require(connection);
-    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, mir_buffer_usage_software, cb, context);
 }
 catch (std::exception const& ex)
 {

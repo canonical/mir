@@ -19,9 +19,6 @@
 #ifndef MIR_CLIENT_EXTENSIONS_GBM_BUFFER_H_
 #define MIR_CLIENT_EXTENSIONS_GBM_BUFFER_H_
 
-#define MIR_EXTENSION_GBM_BUFFER "mir_extension_gbm_buffer"
-#define MIR_EXTENSION_GBM_BUFFER_VERSION_1 1
-
 #include "mir_toolkit/mir_connection.h"
 #include <mir_toolkit/client_types_nbs.h>
 #include "mir_toolkit/mir_buffer.h"
@@ -56,10 +53,17 @@ typedef void (*mir_connection_allocate_buffer_gbm)(
     unsigned int gbm_bo_flags,
     mir_buffer_callback available_callback, void* available_context);
 
-struct MirExtensionGbmBuffer
+struct MirExtensionGbmBufferV1
 {
     mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
 };
+
+static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionGbmBufferV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_gbm_buffer", 1);
+}
 
 #ifdef __cplusplus
 }
