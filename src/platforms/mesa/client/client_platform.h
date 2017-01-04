@@ -61,8 +61,8 @@ private:
     EGLNativeDisplayContainer& display_container;
     gbm_device* gbm_dev;
     MirExtensionMesaDRMAuthV1 drm_extensions;
-    MirExtensionSetGbmDevice mesa_auth;
-    MirExtensionGbmBuffer gbm_buffer;
+    MirExtensionSetGbmDeviceV1 mesa_auth;
+    MirExtensionGbmBufferV1 gbm_buffer;
 };
 
 }
