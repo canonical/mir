@@ -82,10 +82,7 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         std::unique_lock<std::mutex> lock(mutex);
         auto call = pending_calls.find(result.id());
         if (call != pending_calls.end())
-        {
             completion = call->second;
-            pending_calls.erase(call);
-        }
     }
 
     if (!completion.complete)
@@ -97,6 +94,16 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         rpc_report->complete_response(result);
         completion.complete->Run();
     }
+
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto call = pending_calls.find(result.id());
+        if (call != pending_calls.end())
+        {
+            pending_calls.erase(call);
+            pending_calls_shrank.notify_all();
+        }
+    }
 }
 
 void mclrd::PendingCallCache::force_completion()
@@ -105,10 +112,11 @@ void mclrd::PendingCallCache::force_completion()
     for (auto& call : pending_calls)
     {
         auto& completion = call.second;
-        completion.complete->Run();
+        completion.complete->Run();  // XXX Still locked. Is that a bug?
     }
 
     pending_calls.erase(pending_calls.begin(), pending_calls.end());
+    pending_calls_shrank.notify_all();
 }
 
 
@@ -119,7 +127,12 @@ bool mclrd::PendingCallCache::empty() const
     return pending_calls.empty();
 }
 
-
+void mclrd::PendingCallCache::wait_till_empty() const
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    while (!pending_calls.empty())
+        pending_calls_shrank.wait(lock);
+}
 
 mclr::MirBasicRpcChannel::MirBasicRpcChannel() :
     next_message_id(0),
