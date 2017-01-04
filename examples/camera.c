@@ -85,7 +85,6 @@ static GLuint load_shader(const char *src, GLenum type)
 
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
-    (void)surface;
     State *state = (State*)context;
     bool handled = true;
 
@@ -397,7 +396,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    MirSurface* surface = mir_eglapp_native_window();
+    MirWindow* window = mir_eglapp_native_window();
     if (win_width == 1)  /* Fullscreen was not chosen */
     {
         /* Chicken or egg? init before open_camera, before size is known */
@@ -407,7 +406,7 @@ int main(int argc, char *argv[])
         win_height = cam->pix.height;
         mir_window_spec_set_width(changes, win_width);
         mir_window_spec_set_height(changes, win_height);
-        mir_window_apply_spec(surface, changes);
+        mir_window_apply_spec(window, changes);
         mir_window_spec_release(changes);
     }
 
@@ -469,7 +468,7 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         true
     };
-    mir_surface_set_event_handler(surface, on_event, &state);
+    mir_surface_set_event_handler(window, on_event, &state);
 
     bool first_frame = true;
     while (mir_eglapp_running())
@@ -562,7 +561,7 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_surface_set_event_handler(surface, NULL, NULL);
+    mir_surface_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
     close_camera(cam);
 

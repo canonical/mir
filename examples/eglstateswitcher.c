@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
-    MirSurface* const window = mir_eglapp_native_window();
+    MirWindow* const window = mir_eglapp_native_window();
     MirSurfaceState state = mir_surface_get_state(window);
 
     /* This is probably the simplest GL you can do */
