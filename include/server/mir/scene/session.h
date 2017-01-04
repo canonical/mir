@@ -30,6 +30,7 @@ namespace mir
 namespace frontend { class EventSink; }
 namespace shell { struct StreamSpecification; }
 namespace input { class Device; }
+namespace graphics { class BufferAttribute; }
 namespace scene
 {
 class Surface;
@@ -70,6 +71,7 @@ public:
     virtual void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
 
     virtual graphics::BufferID create_buffer(graphics::BufferProperties const& properties) = 0;
+    virtual graphics::BufferID create_buffer(graphics::BufferAttribute const& properties) = 0;
     virtual void destroy_buffer(graphics::BufferID) = 0;
     virtual std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) = 0;
 };

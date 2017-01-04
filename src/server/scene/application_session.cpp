@@ -439,6 +439,11 @@ mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& p
     return buffers->add_buffer(properties);
 }
 
+mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferAttribute const& properties)
+{
+    return buffers->add_buffer(properties);
+}
+
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
 {
     buffers->remove_buffer(id);
