@@ -88,7 +88,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
     assert(window != NULL);
     assert(mir_window_is_valid(window));
     assert(strcmp(mir_surface_get_error_message(window), "") == 0);
-    puts("Surface created");
+    puts("Window created");
 
     EGLNativeWindowType native_window =
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(
@@ -119,7 +119,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
     eglDestroyContext(disp, context);
     
     mir_window_release_sync(window);
-    puts("Surface released");
+    puts("Window released");
 }
 
 static void shutdown(int signum)

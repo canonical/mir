@@ -118,7 +118,7 @@ static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
     switch (attrib)
     {
     case mir_surface_attrib_visibility:
-        printf("Surface %s\n", value == mir_surface_visibility_exposed ?
+        printf("Window %s\n", value == mir_surface_visibility_exposed ?
                                "exposed" : "occluded");
         break;
     case mir_surface_attrib_dpi:
@@ -138,7 +138,7 @@ static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
 
     refresh_rate = mir_surface_output_event_get_refresh_rate(out);
 
-    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
+    printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
            mir_surface_output_event_get_output_id(out),
            mir_surface_output_event_get_dpi(out),
            mir_surface_output_event_get_scale(out),

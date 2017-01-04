@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
     assert(window != NULL);
     assert(mir_window_is_valid(window));
     assert(strcmp(mir_surface_get_error_message(window), "") == 0);
-    puts("Surface created");
+    puts("Window created");
 
     mir_surface_set_swapinterval(window, swapinterval);
 
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     }
 
     mir_window_release_sync(window);
-    puts("Surface released");
+    puts("Window released");
 
     mir_connection_release(connection);
     puts("Connection released");
