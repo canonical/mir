@@ -309,8 +309,11 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
-    channel->discard_future_calls();
-    channel->wait_for_outstanding_calls();
+    if (channel)  // some tests don't have one
+    {
+        channel->discard_future_calls();
+        channel->wait_for_outstanding_calls();
+    }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     surface_map.reset();
@@ -642,7 +645,8 @@ MirWaitHandle* MirConnection::disconnect()
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-    channel->discard_future_calls();
+    if (channel)
+        channel->discard_future_calls();
 
     return &disconnect_wait_handle;
 }
