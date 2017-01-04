@@ -49,6 +49,9 @@ public:
 
     /**
      * The supported buffer pixel formats.
+     * \note: once the above is deprecated, this is really only (marginally) useful 
+     *        for the software allocation path.
+     *        (and we could probably move software/cpu buffers up to libmirserver)
      */
     virtual std::vector<MirPixelFormat> supported_pixel_formats() = 0;
 
