@@ -29,6 +29,7 @@
 #include "buffer.h"
 #include "device_quirks.h"
 #include "egl_sync_fence.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -57,7 +58,8 @@ mga::GraphicBufferAllocator::GraphicBufferAllocator(
     std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
     std::shared_ptr<DeviceQuirks> const& quirks)
     : egl_extensions(std::make_shared<mg::EGLExtensions>()),
-    cmdstream_sync_factory(cmdstream_sync_factory)
+    cmdstream_sync_factory(cmdstream_sync_factory),
+    quirks(quirks)
 {
     int err;
 
@@ -80,21 +82,43 @@ mga::GraphicBufferAllocator::GraphicBufferAllocator(
         alloc_dev_ptr, cmdstream_sync_factory, quirks);
 }
 
+namespace
+{
+uint32_t convert_to_android_usage(mg::BufferUsage usage)
+{
+    switch (usage)
+    {
+    case mg::BufferUsage::hardware:
+        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+    case mg::BufferUsage::software:
+        return (GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE);
+    default:
+        return -1;
+    }
+}
+}
+
 std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
     mg::BufferProperties const& properties)
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),
-        alloc_device->alloc_buffer(properties.size, properties.format, properties.usage),
+        alloc_device->alloc_buffer(
+            properties.size, 
+            mga::to_android_format(properties.format),
+            convert_to_android_usage(properties.usage)),
         egl_extensions);
 }
 
 std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_framebuffer(
-    geometry::Size sz, MirPixelFormat pf)
+    geometry::Size size, MirPixelFormat pf)
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),
-        alloc_device->alloc_framebuffer(sz, pf),
+        alloc_device->alloc_buffer(
+            size, 
+            mga::to_android_format(pf),
+            quirks->fb_gralloc_bits()),
         egl_extensions);
 }
 
@@ -110,10 +134,23 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferAttribute const& req)
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+    geometry::Size size, MirPixelFormat format)
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),
-        alloc_device->alloc_buffer(req.size, req.native_format, req.native_flags),
+        alloc_device->alloc_buffer(
+            size,
+            mga::to_android_format(format),
+            convert_to_android_usage(mg::BufferUsage::software)),
+        egl_extensions);
+}
+
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+    geometry::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_buffer(size, native_format, native_flags),
         egl_extensions);
 }
