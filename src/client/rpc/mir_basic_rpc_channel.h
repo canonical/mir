@@ -24,6 +24,7 @@
 #include <mutex>
 #include <atomic>
 #include <vector>
+#include <condition_variable>
 
 namespace google
 {
@@ -77,6 +78,8 @@ public:
 
     bool empty() const;
 
+    void wait_till_empty() const;
+
 private:
 
     struct PendingCall
@@ -94,6 +97,7 @@ private:
     };
 
     std::mutex mutable mutex;
+    std::condition_variable mutable pending_calls_shrank;
     std::map<int, PendingCall> pending_calls;
     std::shared_ptr<RpcReport> const rpc_report;
 };
@@ -109,6 +113,9 @@ public:
         google::protobuf::MessageLite const* parameters,
         google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) = 0;
+
+    virtual void discard_future_calls() = 0;
+    virtual void wait_for_outstanding_calls() = 0;
 
 protected:
     MirBasicRpcChannel();

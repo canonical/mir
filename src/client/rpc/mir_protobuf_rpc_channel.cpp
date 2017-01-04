@@ -197,6 +197,20 @@ void mclr::MirProtobufRpcChannel::call_method(
     google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
+    if (discard)
+    {
+       /*
+        * Until recently we had no explicit plan for what to do in this case.
+        * Callbacks would race with destruction of the MirConnection and either
+        * succeed, deadlock, crash or corrupt memory. However the one apparent
+        * intent in the old plan was that we close all closures so that the
+        * user doesn't leak any memory. So do that...
+        */
+       if (complete)
+           complete->Run();
+       return;
+    }
+
     // Only send message when details saved for handling response
     std::vector<mir::Fd> fds;
     if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
@@ -226,6 +240,16 @@ void mclr::MirProtobufRpcChannel::call_method(
     }
 
     send_message(invocation, invocation, fds);
+}
+
+void mclr::MirProtobufRpcChannel::discard_future_calls()
+{
+    discard = true;
+}
+
+void mclr::MirProtobufRpcChannel::wait_for_outstanding_calls()
+{
+    pending_calls.wait_till_empty();
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
