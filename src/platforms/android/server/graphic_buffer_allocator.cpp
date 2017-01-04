@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "cmdstream_sync_factory.h"
 #include "sync_fence.h"
 #include "android_native_buffer.h"
@@ -109,8 +110,10 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferRequestMessage const& ipc_msg)
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferRequestMessage const& req)
 {
-    (void)ipc_msg;
-    return nullptr;
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_buffer(req.size, req.native_format, req.native_flags),
+        egl_extensions);
 }
