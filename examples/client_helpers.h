@@ -71,13 +71,13 @@ class NormalSurface
 public:
     NormalSurface(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false, bool hardware = true);
 
-    operator MirSurface*() const;
+    operator MirWindow*() const;
 private:
-    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
-    std::function<void(MirSurface*)> const surface_deleter{
-        [](MirSurface* surface) { mir_window_release_sync(surface); }
+    MirWindow* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
+    std::function<void(MirWindow*)> const surface_deleter{
+        [](MirWindow* window) { mir_window_release_sync(window); }
     };
-    std::unique_ptr<MirSurface, decltype(surface_deleter)> surface;
+    std::unique_ptr<MirWindow, decltype(surface_deleter)> window;
     NormalSurface(NormalSurface const&) = delete;
     NormalSurface& operator=(NormalSurface const&) = delete;
 };

@@ -77,10 +77,10 @@ struct Client
     {
         auto spec = mir_create_normal_window_spec(connection, 800, 600);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
-        auto surface = mir_window_create_sync(spec);
+        auto window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
-        return surface;
+        return window;
     }
 
     void disconnect()
@@ -167,9 +167,9 @@ TEST_F(CustomWindowManagement, surface_create_adds_surface)
 
     EXPECT_CALL(window_manager, add_surface(_,_,_));
 
-    auto const surface = client.surface_create();
+    auto const window = client.surface_create();
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
@@ -178,16 +178,16 @@ TEST_F(CustomWindowManagement, surface_rename_modifies_surface)
 
     start_server();
     auto const client = connect_client();
-    auto const surface = client.surface_create();
+    auto const window = client.surface_create();
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_));
 
     auto const spec = mir_create_window_spec(client.connection);
     mir_window_spec_set_name(spec, new_title);
-    mir_window_apply_spec(surface, spec);
+    mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 TEST_F(CustomWindowManagement, surface_release_removes_surface)
@@ -195,11 +195,11 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
     start_server();
 
     auto const client = connect_client();
-    auto const surface = client.surface_create();
+    auto const window = client.surface_create();
 
     EXPECT_CALL(window_manager, remove_surface(_,_));
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 
     Mock::VerifyAndClearExpectations(&window_manager);
 }
@@ -237,8 +237,8 @@ TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
         EXPECT_CALL(window_manager, add_surface(WeakPtrEq(session[i]),_,_));
         EXPECT_CALL(window_manager, remove_surface(WeakPtrEq(session[i]),_));
 
-        auto const surface = client[i].surface_create();
-        mir_window_release_sync(surface);
+        auto const window = client[i].surface_create();
+        mir_window_release_sync(window);
 
         // verify expectations for each client in turn
         Mock::VerifyAndClearExpectations(&window_manager);
@@ -274,7 +274,7 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
 
     for (int i = 0; i != no_of_surfaces; ++i)
     {
-        // verify expectations for each surface in turn
+        // verify expectations for each window in turn
         Mock::VerifyAndClearExpectations(&window_manager);
 
         mt::Signal received;
@@ -287,8 +287,8 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
         received.wait_for(400ms);
     }
 
-    for (auto const surface : client_surface)
-        mir_window_release_sync(surface);
+    for (auto const window : client_surface)
+        mir_window_release_sync(window);
 }
 
 TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
@@ -315,10 +315,10 @@ TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
 
     EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(check_add_surface));
 
-    auto surface = mir_window_create_sync(surface_spec);
+    auto window = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -333,7 +333,7 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
 
-    auto surface = mir_window_create_sync(surface_spec);
+    auto window = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     surface_spec = mir_create_window_spec(connection);
@@ -353,12 +353,12 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
 
     EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_apply_surface));
 
-    mir_window_apply_spec(surface, surface_spec);
+    mir_window_apply_spec(window, surface_spec);
     mir_window_spec_release(surface_spec);
 
     EXPECT_TRUE(received.wait_for(400ms));
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -549,7 +549,7 @@ private:
     mt::Signal received;
 };
 
-void surface_placement_event_callback(MirSurface* /*surface*/, MirEvent const* event, void* context)
+void surface_placement_event_callback(MirSurface* /*window*/, MirEvent const* event, void* context)
 {
     if (mir_event_get_type(event) == mir_event_type_surface_placement)
     {
@@ -589,11 +589,11 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
     mir_window_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
-    auto surface = mir_window_create_sync(surface_spec);
+    auto window = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
     scene_surface->placed_relative(placement_);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }

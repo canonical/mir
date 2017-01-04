@@ -78,17 +78,17 @@ public:
             dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context, nullptr);
     }
 
-    void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*surface*/) override
+    void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*window*/) override
     {
     }
 
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *surface) override
+    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *window) override
     {
         if (should_fail<Method::create_egl_native_window, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return stub_platform->create_egl_native_window(surface);
+        return stub_platform->create_egl_native_window(window);
     }
 
     void populate(MirPlatformPackage& package) const override
@@ -218,14 +218,14 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_window_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+    ASSERT_NE(window, nullptr);
+    EXPECT_FALSE(mir_window_is_valid(window));
+    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -259,10 +259,10 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -285,15 +285,15 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_window_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+    ASSERT_NE(window, nullptr);
+    EXPECT_FALSE(mir_window_is_valid(window));
+    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
 
     bool callback_called{false};
-    mir_window_release(surface, &recording_surface_callback, &callback_called);
+    mir_window_release(window, &recording_surface_callback, &callback_called);
     EXPECT_TRUE(callback_called);
     mir_connection_release(connection);
 }
@@ -309,14 +309,14 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_window_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+    ASSERT_NE(window, nullptr);
+    EXPECT_FALSE(mir_window_is_valid(window));
+    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -341,13 +341,13 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     };
     mir_window_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
-    auto surface = mir_window_create_sync(spec);
-    EXPECT_THAT(surface, Not(IsValid()));
-    EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
+    auto window = mir_window_create_sync(spec);
+    EXPECT_THAT(window, Not(IsValid()));
+    EXPECT_THAT(mir_surface_get_error_message(window), MatchesRegex(".*Lookup.*failed.*"));
 
     mir_persistent_id_release(invalid_id);
     mir_window_spec_release(spec);
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 

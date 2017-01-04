@@ -56,7 +56,7 @@
 typedef struct MirDemoState
 {
     MirConnection *connection;
-    MirSurface *surface;
+    MirWindow* window;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -72,7 +72,7 @@ int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
     mcd.connection = 0;
-    mcd.surface = 0;
+    mcd.window = 0;
 
     puts("Starting");
 
@@ -128,8 +128,8 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format.
-    mcd.surface = mir_window_create_sync(spec);
-    puts("Surface created");
+    mcd.window = mir_window_create_sync(spec);
+    puts("Window created");
     ///\internal [surface_create_tag]
 
     mir_window_spec_release(spec);
@@ -137,18 +137,18 @@ int demo_client(const char* server, int buffer_swap_count)
     // We expect a surface handle;
     // we expect it to be valid; and,
     // we don't expect an error description
-    assert(mcd.surface != NULL);
-    if(!mir_window_is_valid(mcd.surface))
+    assert(mcd.window != NULL);
+    if(!mir_window_is_valid(mcd.window))
     {
         fprintf(stderr, "Failed to create surface: %s",
-                mir_surface_get_error_message(mcd.surface));
+                mir_surface_get_error_message(mcd.window));
         return 1;
     }
     else
-        assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
+        assert(strcmp(mir_surface_get_error_message(mcd.window), "") == 0);
 
     MirBufferStream *bs =
-        mir_surface_get_buffer_stream(mcd.surface);
+        mir_surface_get_buffer_stream(mcd.window);
 
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)
@@ -173,8 +173,8 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [surface_release_tag]
     // We should release our surface
-    mir_window_release_sync(mcd.surface);
-    puts("Surface released");
+    mir_window_release_sync(mcd.window);
+    puts("Window released");
     ///\internal [surface_release_tag]
 
     ///\internal [connection_release_tag]

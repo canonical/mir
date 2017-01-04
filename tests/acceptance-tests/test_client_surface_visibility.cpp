@@ -56,22 +56,22 @@ public:
         std::shared_ptr<mf::EventSink> const& sink) override
     {
         auto const result = msh::ShellWrapper::create_surface(session, params, sink);
-        auto const surface = session->surface(result);
-        surface->move_to({0, 0});
-        surfaces.push_back(surface);
+        auto const window = session->surface(result);
+        window->move_to({0, 0});
+        surfaces.push_back(window);
         return result;
     }
 
     using msh::ShellWrapper::raise;
 
-    std::shared_ptr<ms::Surface> surface(int index)
+    std::shared_ptr<ms::Surface> window(int index)
     {
         return surfaces[index].lock();
     }
 
     void raise(int index)
     {
-        wrapped->raise_surface(nullptr, surface(index), 0);
+        wrapped->raise_surface(nullptr, window(index), 0);
     }
 
 private:
@@ -88,7 +88,7 @@ void null_event_callback(MirSurface*, MirEvent const*, void*)
 {
 }
 
-void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
+void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
 {
     if (mir_event_get_type(event) != mir_event_type_surface)
         return;
@@ -99,7 +99,7 @@ void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     auto const mock_callback =
         reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
     mock_callback->handle(
-        surface,
+        window,
         static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
 }
 
@@ -112,23 +112,23 @@ MirSurface* create_surface(MirConnection* connection, const char* name, geom::Si
     mir_window_spec_set_name(spec, name);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_window_spec_set_event_handler(spec, &event_callback, &mock_callback);
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
-    return surface;
+    return window;
 }
 
 struct Surface
 {
     Surface(MirConnection* connection, char const* name, geom::Size size) :
-        surface(create_surface(connection, name, size, callback))
+        window(create_surface(connection, name, size, callback))
     {
         wait_for_visible_and_focused();
     }
 
     ~Surface()
     {
-        mir_surface_set_event_handler(surface, null_event_callback, nullptr);
-        mir_window_release_sync(surface);
+        mir_surface_set_event_handler(window, null_event_callback, nullptr);
+        mir_window_release_sync(window);
     }
 
     void expect_surface_visibility_event_after(
@@ -141,7 +141,7 @@ struct Surface
 
         Mock::VerifyAndClearExpectations(&callback);
 
-        EXPECT_CALL(callback, handle(surface, visibility))
+        EXPECT_CALL(callback, handle(window, visibility))
             .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
                 {
                     EXPECT_EQ(visibility, mir_surface_get_visibility(s));
@@ -161,18 +161,18 @@ private:
             mir_surface_visibility_exposed,
             [this]
             {
-                mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+                mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
             });
 
         // GMock is behaving strangely, checking expectations after they
         // have been cleared, so we use spin_wait() instead.
         mt::spin_wait_for_condition_or_timeout(
-            [this] { return mir_surface_get_focus(surface) == mir_surface_focused; },
+            [this] { return mir_surface_get_focus(window) == mir_surface_focused; },
             std::chrono::seconds{2});
     }
 
     testing::NiceMock<MockVisibilityCallback> callback;
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
@@ -187,12 +187,12 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
             });
 
         mtf::ConnectedClientHeadlessServer::SetUp();
-        surface = std::make_unique<Surface>(connection, "small", small_size);
+        window = std::make_unique<Surface>(connection, "small", small_size);
     }
 
     void TearDown() override
     {
-        surface.reset();
+        window.reset();
         second_surface.reset();
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
@@ -205,7 +205,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
     std::shared_ptr<ms::Surface> server_surface(size_t index)
     {
-        return shell.lock()->surface(index);
+        return shell.lock()->window(index);
     }
 
     void move_surface_off_screen()
@@ -227,12 +227,12 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
         MirSurfaceVisibility visibility,
         std::function<void()> const& action)
     {
-        surface->expect_surface_visibility_event_after(visibility, action);
+        window->expect_surface_visibility_event_after(visibility, action);
     }
 
     geom::Size const small_size {640, 480};
     geom::Size const large_size {800, 600};
-    std::unique_ptr<Surface> surface;
+    std::unique_ptr<Surface> window;
     std::unique_ptr<Surface> second_surface;
     std::weak_ptr<StoringShell> shell;
 };

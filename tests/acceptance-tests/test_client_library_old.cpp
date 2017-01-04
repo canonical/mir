@@ -72,8 +72,8 @@ TEST_F(ClientLibraryThread, handles_no_signals)
                 FAIL() << "Failed to send SIGIO signal";
 
             // Make a roundtrip to the server to ensure the SIGIO has time to be handled
-            auto surface = mtf::make_any_surface(conn);
-            mir_window_release_sync(surface);
+            auto window = mtf::make_any_surface(conn);
+            mir_window_release_sync(window);
             mir_connection_release(conn);
 
             EXPECT_FALSE(signalled);

@@ -146,13 +146,13 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     MirOrientationMode mode{GetParam()};
     mir_window_spec_set_preferred_orientation(spec, mode);
 
-    auto surface = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    ASSERT_THAT(surface, IsValid());
-    EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
+    ASSERT_THAT(window, IsValid());
+    EXPECT_EQ(mir_surface_get_preferred_orientation(window), mode);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 INSTANTIATE_TEST_CASE_P(ClientSurfaces,
@@ -253,7 +253,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
     auto spec = mir_create_normal_window_spec(connection, 123, 456);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    auto surf = mir_window_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     /*
@@ -269,16 +269,16 @@ TEST_F(ClientSurfaces, can_be_renamed)
     spec = mir_create_window_spec(connection);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_name(spec, "New Name");
-    mir_window_apply_spec(surf, spec);
+    mir_window_apply_spec(window, spec);
 
     mir_window_spec_set_name(spec, "");
-    mir_window_apply_spec(surf, spec);
+    mir_window_apply_spec(window, spec);
 
     mir_window_spec_set_name(spec, "Alice");
-    mir_window_apply_spec(surf, spec);
+    mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
 
-    mir_window_release_sync(surf);
+    mir_window_release_sync(window);
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
@@ -309,9 +309,9 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
         return builder(session, params);
     }));
 
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
-    auto parent_id = mir_surface_request_persistent_id_sync(surface);
+    auto parent_id = mir_surface_request_persistent_id_sync(window);
 
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());
@@ -328,7 +328,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
     mir_window_spec_release(spec);
 
     mir_window_release_sync(im);
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 
     mir_connection_release(im_connection);
 }

@@ -25,7 +25,7 @@
 #include <getopt.h>
 
 static MirConnection *connection = 0;
-static MirSurface *surface = 0;
+static MirWindow *window = 0;
 
 static void connection_callback(MirConnection *new_connection, void *context)
 {
@@ -55,10 +55,10 @@ void demo_client(const char* server)
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, pixel_format);
 
-    surface = mir_window_create_sync(spec);
+    window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_window_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 int main(int argc, char* argv[])
