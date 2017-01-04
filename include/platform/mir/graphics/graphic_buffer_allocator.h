@@ -30,7 +30,7 @@ namespace graphics
 {
 
 struct BufferProperties;
-struct BufferRequestMessage;
+struct BufferAttribute;
 
 /**
  * Interface to graphic buffer allocation.
@@ -47,7 +47,7 @@ public:
      */
     virtual std::shared_ptr<Buffer> alloc_buffer(BufferProperties const& buffer_properties) = 0;
 
-    virtual std::shared_ptr<Buffer> alloc_buffer(BufferRequestMessage const& request) = 0;
+    virtual std::shared_ptr<Buffer> alloc_buffer(BufferAttribute const& request) = 0;
 
     /**
      * The supported buffer pixel formats.

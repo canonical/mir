@@ -52,7 +52,7 @@ public:
     BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
 
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
-    std::shared_ptr<Buffer> alloc_buffer(BufferRequestMessage const& ipc_msg) override; 
+    std::shared_ptr<Buffer> alloc_buffer(BufferAttribute const& ipc_msg) override; 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
 private:

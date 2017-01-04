@@ -47,7 +47,7 @@ mc::BufferMap::BufferMap(
 {
 }
 
-mg::BufferID mc::BufferMap::add_buffer(mg::BufferRequestMessage const& properties)
+mg::BufferID mc::BufferMap::add_buffer(mg::BufferAttribute const& properties)
 {
     try
     {

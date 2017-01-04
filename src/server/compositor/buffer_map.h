@@ -37,7 +37,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
-    graphics::BufferID add_buffer(graphics::BufferRequestMessage const& properties) override;
+    graphics::BufferID add_buffer(graphics::BufferAttribute const& properties) override;
     void remove_buffer(graphics::BufferID id) override;
 
     void receive_buffer(graphics::BufferID id) override;

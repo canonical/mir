@@ -85,7 +85,7 @@ public:
         }
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferRequestMessage const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferAttribute const& properties)
     {
         if (passthrough_candidate(properties.size))
         {

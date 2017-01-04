@@ -86,7 +86,7 @@ public:
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, MirPixelFormat) override;
-    std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferRequestMessage const& request) override;
+    std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferAttribute const& request) override;
     bool supports_passthrough() override;
 
     optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;

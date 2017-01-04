@@ -110,7 +110,7 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferRequestMessage const& req)
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(BufferAttribute const& req)
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),

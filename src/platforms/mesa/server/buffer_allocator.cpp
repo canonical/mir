@@ -253,7 +253,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
         bo_flags |= GBM_BO_USE_SCANOUT;
     }
 
-    return alloc_buffer(BufferRequestMessage{buffer_properties.size, gbm_format, bo_flags});
+    return alloc_buffer(BufferAttribute{buffer_properties.size, gbm_format, bo_flags});
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
@@ -306,7 +306,7 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(BufferRequestMessage const& req)
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(BufferAttribute const& req)
 {
     gbm_bo *bo_raw = gbm_bo_create(
         device,

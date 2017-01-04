@@ -747,7 +747,7 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferRequestMessage const& request)
+    mg::BufferAttribute const& request)
 {
     if (auto ext = mir_extension_gbm_buffer_v1(mir_connection))
     {

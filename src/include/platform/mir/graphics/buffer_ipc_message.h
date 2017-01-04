@@ -30,7 +30,7 @@ namespace mir
 namespace graphics
 {
 
-struct BufferRequestMessage
+struct BufferAttribute
 {
     geometry::Size size;
     unsigned int native_format;

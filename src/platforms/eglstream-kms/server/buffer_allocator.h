@@ -38,7 +38,7 @@ public:
     BufferAllocator();
 
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
-    std::shared_ptr<Buffer> alloc_buffer(BufferRequestMessage const& req) override; 
+    std::shared_ptr<Buffer> alloc_buffer(BufferAttribute const& req) override; 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 };
 
