@@ -68,5 +68,5 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(BufferRequestMessage const&)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers\n"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers"));
 } 
