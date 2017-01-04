@@ -36,6 +36,8 @@ namespace
 struct MockBufferAllocator : public mg::GraphicBufferAllocator
 {
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
+    MOCK_METHOD2(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, uint32_t, uint32_t));
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
@@ -48,6 +50,17 @@ struct StubBufferAllocator : public mg::GraphicBufferAllocator
         ids.push_back(b->id());
         return b;
     }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(geom::Size, uint32_t, uint32_t)
+    {
+        return alloc_buffer(mg::BufferProperties{});
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(geom::Size, MirPixelFormat)
+    {
+        return alloc_buffer(mg::BufferProperties{});
+    }
+
     std::vector<MirPixelFormat> supported_pixel_formats()
     {
         return {};
