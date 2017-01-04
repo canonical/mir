@@ -181,16 +181,14 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
             size,
             buffer_stream->pixel_format(),
             mg::BufferUsage::software
-        })//,
-//        front_buffer(session->create_buffer(properties)),
-//        back_buffer(session->create_buffer(properties))
+        }),
+        front_buffer(session->create_buffer(properties)),
+        back_buffer(session->create_buffer(properties))
     {
     }
 
     void paint(int intensity) override
     {
-    (void)intensity;
-#if 0
         auto buffer = session->get_buffer(back_buffer);
 
         auto const format = buffer->pixel_format();
@@ -202,13 +200,12 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
         buffer_stream->submit_buffer(buffer);
 
         std::swap(front_buffer, back_buffer);
-#endif
     }
 
     ~AllocatingPainter()
     {
-//        session->destroy_buffer(front_buffer);
-//        session->destroy_buffer(back_buffer);
+        session->destroy_buffer(front_buffer);
+        session->destroy_buffer(back_buffer);
     }
 
     std::shared_ptr<frontend::BufferStream> const buffer_stream;

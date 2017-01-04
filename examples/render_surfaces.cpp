@@ -399,7 +399,6 @@ public:
                 {ms::StreamInfo{stream, {}, {}}}, params);
             surface_stack->add_surface(surface, params.input_mode);
 
-#if 0
             {
                 auto buffer_id = buffers->add_buffer(properties);
                 auto buffer = (*buffers)[buffer_id];
@@ -418,7 +417,6 @@ public:
                 }
                 surface->primary_buffer_stream()->submit_buffer(buffer);
             }
-#endif
 
             /*
              * Place each surface at a different starting location and give it a
