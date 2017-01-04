@@ -78,7 +78,7 @@ public:
         if ((buffer_properties.size.width >= mir::geometry::Width{480}) &&
             (buffer_properties.size.height >= mir::geometry::Height{480}))
         {
-            return std::make_shared<mgn::Buffer>(connection, buffer_properties);
+            return std::make_shared<mgn::Buffer>(connection, buffer_properties.size, buffer_properties.format);
         }
         else
         {
