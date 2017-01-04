@@ -22,20 +22,12 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
-#include "mir_toolkit/common.h"
 #include <vector>
 
 namespace mir
 {
 namespace graphics
 {
-
-struct BufferAttribute
-{
-    geometry::Size size;
-    unsigned int native_format;
-    unsigned int native_flags;
-};
 
 class BufferIpcMessage
 {
