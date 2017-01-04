@@ -877,7 +877,8 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \return              A wait handle that can be passed to mir_wait_for,
  *                        or NULL if the interval could not be supported
  */
-MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval)
+__attribute__((deprecated("This will soon be a property of the backing content")));
 
 /**
  * Query the DPI value of the surface (dots per inch). This will vary depending

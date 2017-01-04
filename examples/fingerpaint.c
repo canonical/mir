@@ -475,7 +475,8 @@ int main(int argc, char *argv[])
 
     if (window != NULL)
     {
-        mir_surface_set_swapinterval(window, swap_interval);
+        MirBufferStream* bs = mir_surface_get_buffer_stream(window);
+        mir_buffer_stream_set_swapinterval(bs, swap_interval);
         mir_surface_set_event_handler(window, &on_event, &canvas);
     
         canvas.width = width;
@@ -491,8 +492,6 @@ int main(int argc, char *argv[])
             signal(SIGHUP, shutdown);
         
             clear_region(&canvas, &background);
-        
-            MirBufferStream *bs = mir_surface_get_buffer_stream(window);
 
             while (running)
             {
