@@ -40,8 +40,8 @@
 /// Opens a mir connection and creates a prompt session
 /// before closing the prompt session and connection.
 ///\section prompt_session_app prompt_session_app()
-/// Opens a mir connection and creates a surface
-/// before releasing the surface and closing the connection.
+/// Opens a mir connection and creates a window
+/// before releasing the window and closing the connection.
 ///\example prompt_session.c A mir client demonstrating prompt sessions.
 ///\section PsMirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
@@ -56,7 +56,7 @@
 typedef struct MirDemoState
 {
     MirConnection *connection;
-    MirSurface *surface;
+    MirWindow *window;
     MirPromptSession *prompt_session;
     pid_t  child_pid;
     MirPromptSessionState state;
@@ -124,12 +124,12 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
 
 void stop_session(MirDemoState* mcd, const char* name)
 {
-    if (mcd->surface)
+    if (mcd->window)
     {
-        // We should release our surface
-        mir_window_release_sync(mcd->surface);
-        mcd->surface = 0;
-        printf("%s: Surface released\n", name);
+        // We should release our window
+        mir_window_release_sync(mcd->window);
+        mcd->window = 0;
+        printf("%s: Window released\n", name);
     }
 
     // We should release our connection
@@ -141,7 +141,7 @@ void helper(const char* server)
 {
     MirDemoState mcd;
     mcd.connection = 0;
-    mcd.surface = 0;
+    mcd.window = 0;
     mcd.prompt_session = 0;
     mcd.state = mir_prompt_session_state_stopped;
     mcd.client_fd_count = 0;

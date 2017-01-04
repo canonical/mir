@@ -181,7 +181,7 @@ int main(int argc, char** argv)
         render_surface[i] = mir_connection_create_render_surface_sync(connection, chain_width, chain_height);
         if (!mir_render_surface_is_valid(render_surface[i]))
         {
-            printf("could not create render window\n");
+            printf("could not create render surface\n");
             return -1;
         }
 

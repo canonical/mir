@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     CHECK(neglconfigs > 0, "No EGL config available");
 
     render_surface = mir_connection_create_render_surface_sync(connection, width, height);
-    CHECK(mir_render_surface_is_valid(render_surface), "could not create render window");
+    CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
     if (use_shim)

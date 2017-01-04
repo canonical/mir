@@ -25,7 +25,7 @@
 #include <getopt.h>
 
 static MirConnection *connection = 0;
-static MirWindow *window = 0;
+static MirWindow* window = 0;
 
 static void connection_callback(MirConnection *new_connection, void *context)
 {

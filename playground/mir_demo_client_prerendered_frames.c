@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     MirWindow* window = mir_window_create_sync(spec);
     if (!mir_window_is_valid(window))
     {
-        printf("could not create MirSurface\n");
+        printf("could not create a window\n");
         return -1;
     }
 
