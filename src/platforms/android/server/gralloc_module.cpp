@@ -61,7 +61,7 @@ mga::GrallocModule::GrallocModule(
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
-    geometry::Size size, unsigned int format, unsigned int usage_flag)
+    geometry::Size size, uint32_t format, uint32_t usage_flag)
 {
     buffer_handle_t buf_handle = NULL;
     auto stride = 0;

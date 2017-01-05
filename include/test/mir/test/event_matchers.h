@@ -586,6 +586,11 @@ MATCHER_P2(DeviceStateWithPosition, x, y, "")
         y == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
 }
 
+MATCHER_P(RectanglesMatches, rectangles, "")
+{
+    return arg == rectangles;
+}
+
 }
 }
 
