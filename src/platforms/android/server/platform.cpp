@@ -126,7 +126,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
             return allocator->alloc_buffer(buffer_properties);
         }
 
-        std::vector<MirPixelFormat> supported_pixel_formats() override
+        std::vector<MirPixelFormat> supported_pixel_formats()
         {
             return allocator->supported_pixel_formats();
         }
