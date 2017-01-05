@@ -267,11 +267,8 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{
-        MIR_BYTES_PER_PIXEL(format) *
-        size.width.as_uint32_t()};
-    size_t const size_in_bytes = 
-        stride.as_int() * size.height.as_int();
+    auto const stride = geom::Stride{MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t()};
+    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
     return std::make_shared<mgm::SoftwareBuffer>(
         std::make_unique<mgc::AnonymousShmFile>(size_in_bytes), size, format);
 }
