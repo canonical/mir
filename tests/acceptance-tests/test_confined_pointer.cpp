@@ -248,26 +248,32 @@ TEST_F(PointerConfinement, test_we_generate_relative_after_boundary)
 TEST_F(PointerConfinement, test_we_update_our_confined_region_on_a_resize)
 {
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+
+    geom::Rectangles main_region{{positions[first]}};
+    EXPECT_CALL(*mock_seat_observer, seat_set_confinement_region_called(mt::RectanglesMatches(main_region)))
+        .Times(1);
+
     Client client(new_connection(), first);
 
     auto fake = mt::fake_shared(surface_observer);
     latest_shell_surface()->add_observer(fake);
 
-    geom::Size new_size = {surface_width + 100, surface_height};
+    geom::Size new_size = {surface_width * 2, surface_height};
     EXPECT_CALL(surface_observer, resized_to(new_size)).Times(1);
 
-    EXPECT_CALL(*mock_seat_observer, seat_set_confinement_region_called(_)).
-            WillRepeatedly(InvokeWithoutArgs([&] { change_observed(); }));
+    geom::Rectangles confinement_region{{{0, 0}, new_size}};
+    EXPECT_CALL(*mock_seat_observer, seat_set_confinement_region_called(mt::RectanglesMatches(confinement_region)))
+        .WillRepeatedly(InvokeWithoutArgs([&] { change_observed(); }));
 
-    client.resize(surface_width + 100, surface_height);
+    client.resize(surface_width * 2, surface_height);
     resized_signaled.wait_for(1s);
 
     InSequence seq;
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(surface_width + 100 - 1, 0)));
-    EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width + 100 - 1, 0), mt::PointerEventWithDiff(10, 0))))
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(surface_width * 2 - 1, 0)));
+    EXPECT_CALL(client, handle_input(AllOf(mt::PointerEventWithPosition(surface_width * 2 - 1, 0), mt::PointerEventWithDiff(10, 0))))
         .WillOnce(mt::WakeUp(&client.all_events_received));
 
-    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width + 101, 0));
+    fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width * 2 + 1, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(10, 0));
 
     client.all_events_received.wait_for(10s);

@@ -33,9 +33,9 @@ The following operations are supported:
  - Close surface: *Ctrl-F4*
  - Move window: *Alt-leftmousebutton* drag
  - Resize window: *Alt-middle_button* drag
- - Maximize/restore current window: Alt-F11
- - Maximize/restore current window: Shift-F11
- - Maximize/restore current window: Ctrl-F11
+ - Maximize/restore current window: *Alt-F11*
+ - Vertically maximize/restore current window: *Shift-F11*
+ - Horizontally maximize/restore current window: *Ctrl-F11*
 
 For those writing client code request to set the surface attribute
 `mir_surface_attrib_state` are honoured:
