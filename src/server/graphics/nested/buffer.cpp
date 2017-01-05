@@ -163,9 +163,9 @@ private:
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
-    geom::Size size, unsigned int native_format, unsigned int native_flags) :
+    geom::Size size, uint32_t native_format, uint32_t native_flags) :
     connection(connection),
-    buffer(connection->create_buffer(mg::BufferAttribute{size, native_format, native_flags})),
+    buffer(connection->create_buffer(size, native_format, native_flags)),
     native_base(std::make_shared<TextureAccess>(*this, buffer, connection))
 {
 }

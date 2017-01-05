@@ -747,18 +747,16 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferAttribute const& request)
+    geom::Size size, uint32_t native_format, uint32_t native_flags)
 {
     if (auto ext = mir_extension_gbm_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(
-            mir_connection, ext, request.size, request.native_format, request.native_flags);
+        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     if (auto ext = mir_extension_android_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(
-            mir_connection, ext, request.size, request.native_format, request.native_flags);
+        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));

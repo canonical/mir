@@ -39,7 +39,6 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
-class BufferAttribute;
 namespace nested
 {
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
@@ -76,7 +75,7 @@ public:
     virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(mir::geometry::Size, MirPixelFormat format) = 0;
-    virtual std::shared_ptr<NativeBuffer> create_buffer(BufferAttribute const& request) = 0;
+    virtual std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) = 0;
     virtual bool supports_passthrough() = 0;
 
 protected:

@@ -61,19 +61,7 @@ mga::GrallocModule::GrallocModule(
 }
 
 std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
-    geometry::Size size, MirPixelFormat pf, BufferUsage usage)
-{
-    return alloc_buffer(size, mga::to_android_format(pf), convert_to_android_usage(usage));
-}
-
-std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_framebuffer(
-    geometry::Size size, MirPixelFormat pf)
-{
-    return alloc_buffer(size, mga::to_android_format(pf), quirks->fb_gralloc_bits());
-}
-
-std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
-    geometry::Size size, unsigned int format, unsigned int usage_flag)
+    geometry::Size size, uint32_t format, uint32_t usage_flag)
 {
     buffer_handle_t buf_handle = NULL;
     auto stride = 0;
@@ -112,17 +100,4 @@ std::shared_ptr<mga::NativeBuffer> mga::GrallocModule::alloc_buffer(
     return std::make_shared<mga::AndroidNativeBuffer>(anwb,
         sync_factory->create_command_stream_sync(),
         fence, mga::BufferAccess::read);
-}
-
-unsigned int mga::GrallocModule::convert_to_android_usage(BufferUsage usage)
-{
-    switch (usage)
-    {
-    case mg::BufferUsage::hardware:
-        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
-    case mg::BufferUsage::software:
-        return (GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE);
-    default:
-        return -1;
-    }
 }
