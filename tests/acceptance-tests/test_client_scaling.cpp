@@ -79,11 +79,10 @@ public:
             throw std::runtime_error("timeout waiting for empty composition");
     }
 
-    void wait_until_entries_number_at_least(unsigned int number, std::chrono::seconds timeout)
+    bool wait_until_entries_number_at_least(unsigned int number, std::chrono::seconds timeout)
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!cv.wait_for(lk, timeout, [this, number] { return entries.size() >= number; }))
-            throw std::runtime_error("timeout waiting for a certain number of entries");
+        return cv.wait_for(lk, timeout, [this, number] { return entries.size() >= number; });
     }
 
     void clear_record()
@@ -132,7 +131,8 @@ private:
     std::shared_ptr<SizeWatcher> const watch;
 };
 
-struct SurfaceScaling : mtf::ConnectedClientWithASurface
+struct SurfaceScaling : mtf::ConnectedClientWithASurface,
+                        ::testing::WithParamInterface<int>
 {
     SurfaceScaling() :
         watch(std::make_shared<SizeWatcher>())
@@ -156,18 +156,25 @@ struct SurfaceScaling : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
+TEST_P(SurfaceScaling, compositor_sees_size_different_when_scaled)
 {
     using namespace std::literals::chrono_literals;
     auto scale = 2.0f;
     auto stream = mir_surface_get_buffer_stream(window);
+    mir_buffer_stream_set_swapinterval(stream, GetParam());
     mir_buffer_stream_set_scale(stream, scale);
 
     mir_buffer_stream_swap_buffers_sync(stream);
-    //submits scaled size
-    mir_buffer_stream_swap_buffers_sync(stream);
 
-    watch->wait_until_entries_number_at_least(2, 5s);
+    int frames = 0;
+    int const max_frames = 30;
+    do
+    {
+        mir_buffer_stream_swap_buffers_sync(stream);
+        ++frames;
+    } while (!watch->wait_until_entries_number_at_least(2, 1s) &&
+             frames < max_frames);
+
     auto entries = watch->size_entries();
     ASSERT_THAT(entries, SizeIs(Ge(1u)));
 
@@ -181,3 +188,5 @@ TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
     }
     EXPECT_TRUE(an_entry_with_differing_size);
 }
+
+INSTANTIATE_TEST_CASE_P(PerSwapInterval, SurfaceScaling, ::testing::Values(0,1));
