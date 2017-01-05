@@ -649,7 +649,7 @@ char const* mir_window_get_error_message(MirWindow* window);
  *   \param [in]  window      The window
  *   \param [out] parameters  Structure to be populated
  */
-void mir_window_get_parameters(MirWindow* window, MirSurfaceParameters *parameters);
+void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push

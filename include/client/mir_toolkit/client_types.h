@@ -189,7 +189,9 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters;
+} MirSurfaceParameters; /* __attribute__((deprecated("Use MirWindowParameters instead"))) */
+
+typedef MirSurfaceParameters MirWindowParameters;
 
 enum { mir_platform_package_max = 32 };
 

@@ -600,7 +600,7 @@ char const* mir_window_get_error_message(MirWindow* window)
     return window->get_error_message();
 }
 
-void mir_window_get_parameters(MirWindow* window, MirSurfaceParameters* parameters)
+void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
 {
     *parameters = window->get_parameters();
 }

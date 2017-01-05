@@ -86,7 +86,7 @@ struct MirSurfaceSpec
 {
     MirSurfaceSpec() = default;
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
-    MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
+    MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params);
 
     struct AspectRatio { unsigned width; unsigned height; };
 
@@ -179,7 +179,7 @@ public:
 
     ~MirSurface();
 
-    MirSurfaceParameters get_parameters() const;
+    MirWindowParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
 

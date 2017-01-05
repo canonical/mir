@@ -254,7 +254,7 @@ TEST_F(ClientLibrary, creates_surface)
     EXPECT_TRUE(mir_window_is_valid(window));
     EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));
 
-    MirSurfaceParameters response_params;
+    MirWindowParameters response_params;
     mir_window_get_parameters(window, &response_params);
     EXPECT_EQ(request_width, response_params.width);
     EXPECT_EQ(request_height, response_params.height);

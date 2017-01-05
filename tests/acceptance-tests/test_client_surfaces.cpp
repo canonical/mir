@@ -77,7 +77,7 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
     
     mir_window_spec_release(spec);
 
-    MirSurfaceParameters response_params;
+    MirWindowParameters response_params;
     mir_window_get_parameters(window[0], &response_params);
     EXPECT_EQ(640, response_params.width);
     EXPECT_EQ(480, response_params.height);
