@@ -438,12 +438,15 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
 
 mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
 {
-    try{
-    auto buffer = gralloc->alloc_buffer(properties);
-
-    
-    return buffers->add_buffer(buffer);
-    } catch (...) { printf("BAM\n"); throw; }
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_buffer(properties));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(properties, e.what());
+        throw;
+    }
 }
 
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
