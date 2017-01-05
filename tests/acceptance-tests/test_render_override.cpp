@@ -126,7 +126,7 @@ protected:
 TEST_F(DisplayBufferCompositorOverride, composite_called_with_surface)
 {
     MirSurfaceParameters surface_params;
-    mir_surface_get_parameters(window, &surface_params);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+    mir_window_get_parameters(window, &surface_params);
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     EXPECT_TRUE(tracker->wait_until_surface_is_rendered_with_size({surface_params.width, surface_params.height}));
 }

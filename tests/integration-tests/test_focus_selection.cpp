@@ -133,7 +133,7 @@ TEST_F(FocusSelection, when_surface_gets_valid_contents_input_focus_is_set)
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
     auto const window = mtf::make_any_surface(connection);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     mir_window_release_sync(window);
 
     mir_connection_release(connection);

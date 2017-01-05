@@ -78,7 +78,7 @@ MirSurface* make_surface(MirConnection* connection)
     if (!mir_window_is_valid(window))
     {
         std::string error_msg{"Could not create window: "};
-        error_msg.append(mir_surface_get_error_message(window));
+        error_msg.append(mir_window_get_error_message(window));
         throw std::runtime_error(error_msg);
     }
     return window;
@@ -92,7 +92,7 @@ TEST_F(ClientStartupPerformance, create_surface_and_swap)
 
     auto conn = create_connection();
     auto window = make_surface(conn);
-    auto stream  = mir_surface_get_buffer_stream(window);
+    auto stream  = mir_window_get_buffer_stream(window);
     if (!mir_buffer_stream_is_valid(stream))
     {
         std::string error_msg{"Could not get buffer stream from window: "};

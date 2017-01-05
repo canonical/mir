@@ -160,7 +160,7 @@ TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
 {
     using namespace std::literals::chrono_literals;
     auto scale = 2.0f;
-    auto stream = mir_surface_get_buffer_stream(window);
+    auto stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_set_scale(stream, scale);
 
     mir_buffer_stream_swap_buffers_sync(stream);

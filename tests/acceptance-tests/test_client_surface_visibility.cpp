@@ -161,7 +161,7 @@ private:
             mir_surface_visibility_exposed,
             [this]
             {
-                mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+                mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
             });
 
         // GMock is behaving strangely, checking expectations after they

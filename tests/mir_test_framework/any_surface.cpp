@@ -48,7 +48,7 @@ MirSurface* mtf::make_surface(
     if (!mir_window_is_valid(window))
     {
         BOOST_THROW_EXCEPTION((
-            std::runtime_error{"Failed to create window: "s + mir_surface_get_error_message(window)}));
+            std::runtime_error{"Failed to create window: "s + mir_window_get_error_message(window)}));
     }
     
     return window;

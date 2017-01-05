@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
     if (ultrafast)
     {
         pref = camera_pref_speed;
-        MirBufferStream* bs = mir_surface_get_buffer_stream(mir_eglapp_native_window());
+        MirBufferStream* bs = mir_window_get_buffer_stream(mir_eglapp_native_window());
         mir_buffer_stream_set_swapinterval(bs, 0);
     }
     Camera *cam = open_camera(dev_video, pref, 1);

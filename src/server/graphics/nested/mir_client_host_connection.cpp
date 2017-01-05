@@ -116,7 +116,7 @@ public:
         if (!mir_window_is_valid(mir_surface))
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error(mir_surface_get_error_message(mir_surface)));
+                std::runtime_error(mir_window_get_error_message(mir_surface)));
         }
     }
 
@@ -134,7 +134,7 @@ public:
     EGLNativeWindowType egl_native_window() override
     {
         return reinterpret_cast<EGLNativeWindowType>(
-            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
+            mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
     }
 
     void set_event_handler(mir_surface_event_callback cb, void* context) override

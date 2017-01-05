@@ -211,7 +211,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
 
     window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
-    EXPECT_TRUE(mir_window_is_valid(window)) << mir_surface_get_error_message(window);
+    EXPECT_TRUE(mir_window_is_valid(window)) << mir_window_get_error_message(window);
 }
 
 
@@ -266,12 +266,12 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
     auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
     EXPECT_TRUE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), StrEq(""));
+    EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));
 }
 
 TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_stream_gives_null)
 {
-    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_surface_get_buffer_stream(window)));
+    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_window_get_buffer_stream(window)));
 
     std::vector<MirBufferStreamInfo> infos(streams.size());
     auto i = 0u;
@@ -287,5 +287,5 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
     mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
-    EXPECT_THAT(mir_surface_get_buffer_stream(window), Eq(nullptr));
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
 }

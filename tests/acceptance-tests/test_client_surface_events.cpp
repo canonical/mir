@@ -361,7 +361,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
         &focus_received);
 
     // Swap buffers to get the window into the scene so it can be focused.
-    auto buffer_stream = mir_surface_get_buffer_stream(window);
+    auto buffer_stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
@@ -405,7 +405,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
         &focus_received);
 
     // Swap buffers to get the window into the scene so it can be focused.
-    auto buffer_stream = mir_surface_get_buffer_stream(window);
+    auto buffer_stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
@@ -425,7 +425,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
 
     // Add a new window that will take focus.
     auto focus_grabbing_surface = mtf::make_any_surface(connection);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(focus_grabbing_surface));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(focus_grabbing_surface));
 
     ASSERT_TRUE(unfocus_received.wait_for(10s));
 

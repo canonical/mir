@@ -116,7 +116,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     MirSurface* tooltip = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    MirBufferStream* const bs = mir_surface_get_buffer_stream(tooltip);
+    MirBufferStream* const bs = mir_window_get_buffer_stream(tooltip);
     MirGraphicsRegion buffer;
     mir_buffer_stream_get_graphics_region(bs, &buffer);
 

@@ -584,6 +584,27 @@ void mir_window_set_event_handler(MirWindow* window,
     window->set_event_handler(callback, context);
 }
 
+MirBufferStream *mir_window_get_buffer_stream(MirWindow* window)
+try
+{
+    return window->get_buffer_stream();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+char const* mir_window_get_error_message(MirWindow* window)
+{
+    return window->get_error_message();
+}
+
+void mir_window_get_parameters(MirWindow* window, MirSurfaceParameters* parameters)
+{
+    *parameters = window->get_parameters();
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -914,12 +935,12 @@ bool mir_surface_is_valid(MirSurface* surface)
 
 char const* mir_surface_get_error_message(MirSurface* surface)
 {
-    return surface->get_error_message();
+    return mir_window_get_error_message(surface);
 }
 
 void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
 {
-    *parameters = surface->get_parameters();
+    mir_window_get_parameters(surface, parameters);
 }
 
 MirWaitHandle* mir_surface_release(
@@ -1160,15 +1181,9 @@ void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
     }
 }
 
-MirBufferStream *mir_surface_get_buffer_stream(MirSurface *surface)
-try
+MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
 {
-    return surface->get_buffer_stream();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
+    return mir_window_get_buffer_stream(surface);
 }
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)

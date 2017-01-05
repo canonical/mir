@@ -50,7 +50,7 @@ public:
 
     void post_buffer()
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     SurfaceHandle(SurfaceHandle const&& that) : window{that.window} { window = nullptr; }
@@ -204,7 +204,7 @@ TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_crea
     auto window = client.create_surface(0);
 
     EXPECT_FALSE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), HasSubstr("An output ID must be specified"));
+    EXPECT_THAT(mir_window_get_error_message(window), HasSubstr("An output ID must be specified"));
 }
 
 TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)

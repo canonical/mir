@@ -48,7 +48,7 @@ TEST_F(ServerWithoutActiveOutputs, creates_valid_client_surface)
     auto const window = mtf::make_any_surface(connection);
 
     EXPECT_THAT(mir_window_is_valid(window), Eq(true))
-        << mir_surface_get_error_message(window);
+        << mir_window_get_error_message(window);
 
     mir_window_release_sync(window);
 }

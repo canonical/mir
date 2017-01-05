@@ -55,12 +55,12 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
        surface1 = mtf::make_any_surface(connection);
         mir_window_set_event_handler(surface1, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface1));
+            mir_window_get_buffer_stream(surface1));
 
         surface2 = mtf::make_any_surface(connection);
         mir_window_set_event_handler(surface2, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface2));
+            mir_window_get_buffer_stream(surface2));
 
         // Need fullscreen for the cursor events
         auto const spec = mir_create_window_spec(connection);

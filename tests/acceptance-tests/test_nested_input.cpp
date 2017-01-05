@@ -134,7 +134,7 @@ public:
         connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
         window = mtf::make_any_surface(connection);
         mir_window_set_event_handler(window, handle_event, this);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));

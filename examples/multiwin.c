@@ -164,7 +164,7 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(win->window);
+    MirBufferStream *bs = mir_window_get_buffer_stream(win->window);
 
     mir_buffer_stream_get_graphics_region(bs, &region);
     clear_region(&region, &win->fill);

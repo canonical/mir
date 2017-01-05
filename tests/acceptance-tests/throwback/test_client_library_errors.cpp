@@ -223,7 +223,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_NE(window, nullptr);
     EXPECT_FALSE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
+    EXPECT_THAT(mir_window_get_error_message(window), testing::HasSubstr(exception_text));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -290,7 +290,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_NE(window, nullptr);
     EXPECT_FALSE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
+    EXPECT_THAT(mir_window_get_error_message(window), testing::HasSubstr(exception_text));
 
     bool callback_called{false};
     mir_window_release(window, &recording_surface_callback, &callback_called);
@@ -314,7 +314,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_NE(window, nullptr);
     EXPECT_FALSE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(exception_text));
+    EXPECT_THAT(mir_window_get_error_message(window), testing::HasSubstr(exception_text));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -343,7 +343,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 
     auto window = mir_window_create_sync(spec);
     EXPECT_THAT(window, Not(IsValid()));
-    EXPECT_THAT(mir_surface_get_error_message(window), MatchesRegex(".*Lookup.*failed.*"));
+    EXPECT_THAT(mir_window_get_error_message(window), MatchesRegex(".*Lookup.*failed.*"));
 
     mir_persistent_id_release(invalid_id);
     mir_window_spec_release(spec);

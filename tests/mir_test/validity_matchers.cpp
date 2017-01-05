@@ -25,7 +25,7 @@ bool IsValidMatcher::MatchAndExplain(MirSurface* surface, MatchResultListener* l
     }
     if (!mir_window_is_valid(surface))
     {
-        *listener << "error is: " << mir_surface_get_error_message(surface);
+        *listener << "error is: " << mir_window_get_error_message(surface);
         return false;
     }
     return true;

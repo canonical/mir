@@ -617,6 +617,40 @@ void mir_window_set_event_handler(MirWindow* window,
                                   mir_window_event_callback callback,
                                   void* context);
 
+/**
+ * Retrieve the primary MirBufferStream associated with a window (to advance buffers,
+ * obtain EGLNativeWindow, etc...)
+ *
+ *   \deprecated Users should use mir_window_spec_set_streams() to arrange
+ *               the content of a window, instead of relying on a stream
+ *               being created by default.
+ *   \warning If the window was created with, or modified to have a
+ *            MirWindowSpec containing streams added through
+ *            mir_window_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
+ *   \param[in] window The window
+ */
+MirBufferStream* mir_window_get_buffer_stream(MirWindow* window);
+
+/**
+ * Retrieve a text description of the error. The returned string is owned by
+ * the library and remains valid until the window or the associated
+ * connection has been released.
+ *   \param [in] window  The window
+ *   \return              A text description of any error resulting in an
+ *                        invalid window, or the empty string "" if the
+ *                        connection is valid.
+ */
+char const* mir_window_get_error_message(MirWindow* window);
+
+/**
+ * Get a window's parameters.
+ *   \pre                     The window is valid
+ *   \param [in]  window      The window
+ *   \param [out] parameters  Structure to be populated
+ */
+void mir_window_get_parameters(MirWindow* window, MirSurfaceParameters *parameters);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -811,39 +845,14 @@ void mir_surface_set_event_handler(MirSurface *surface,
                                    void* context);
 //__attribute__((deprecated("use mir_window_set_event_handler() instead")));
 
-/**
- * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
- * obtain EGLNativeWindow, etc...)
- *
- *   \deprecated Users should use mir_window_spec_set_streams() to arrange
- *               the content of a surface, instead of relying on a stream
- *               being created by default.
- *   \warning If the surface was created with, or modified to have a
- *            MirSurfaceSpec containing streams added through
- *            mir_window_spec_set_streams(), the default stream will
- *            be removed, and this function will return NULL.
- *   \param[in] surface The surface
- */
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_buffer_stream() instead")));
 
-/**
- * Retrieve a text description of the error. The returned string is owned by
- * the library and remains valid until the surface or the associated
- * connection has been released.
- *   \param [in] surface  The surface
- *   \return              A text description of any error resulting in an
- *                        invalid surface, or the empty string "" if the
- *                        connection is valid.
- */
-char const *mir_surface_get_error_message(MirSurface *surface);
+char const* mir_surface_get_error_message(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_error_message() instead")));
 
-/**
- * Get a surface's parameters.
- *   \pre                     The surface is valid
- *   \param [in] surface      The surface
- *   \param [out] parameters  Structure to be populated
- */
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
+//__attribute__((deprecated("use mir_window_get_parameters() instead")));
 
 /**
  * Get the type (purpose) of a surface.

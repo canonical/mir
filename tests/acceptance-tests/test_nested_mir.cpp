@@ -657,14 +657,14 @@ struct ClientWithAPaintedSurface : virtual Client
         Client(nested_mir),
         window(mtf::make_surface(connection, size, format))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
         Client(nested_mir),
         window(mtf::make_any_surface(connection))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     ~ClientWithAPaintedSurface()
@@ -875,7 +875,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         wait.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());

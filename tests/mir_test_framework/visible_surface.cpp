@@ -27,7 +27,7 @@ mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
     // Swap buffers to ensure window is visible for event based tests
     if (mir_window_is_valid(window))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         std::unique_lock<std::mutex> lk(mutex);
         if (!cv.wait_for(lk, std::chrono::seconds(5), [this] { return visible; }))

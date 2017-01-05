@@ -252,10 +252,10 @@ TEST_F(ClientLibrary, creates_surface)
 
     ASSERT_THAT(window, NotNull());
     EXPECT_TRUE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_surface_get_error_message(window), StrEq(""));
+    EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));
 
     MirSurfaceParameters response_params;
-    mir_surface_get_parameters(window, &response_params);
+    mir_window_get_parameters(window, &response_params);
     EXPECT_EQ(request_width, response_params.width);
     EXPECT_EQ(request_height, response_params.height);
     EXPECT_EQ(request_format, response_params.pixel_format);
@@ -424,7 +424,7 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    auto const buffer_stream = mir_surface_get_buffer_stream(window);
+    auto const buffer_stream = mir_window_get_buffer_stream(window);
 
     MirGraphicsRegion graphics_region;
     EXPECT_TRUE(mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region));
@@ -463,7 +463,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     window = mir_window_create_sync(spec);
 
     MirNativeBuffer *native;
-    auto bs = mir_surface_get_buffer_stream(window);
+    auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -474,7 +474,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_window_spec_set_height(spec, 100);
 
     window = mir_window_create_sync(spec);
-    bs = mir_surface_get_buffer_stream(window);
+    bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -487,7 +487,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     window = mir_window_create_sync(spec);
-    bs = mir_surface_get_buffer_stream(window);
+    bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -497,7 +497,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     window = mir_window_create_sync(spec);
-    bs = mir_surface_get_buffer_stream(window);
+    bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -530,7 +530,7 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
         mir_window_spec_set_height(spec, size.height);
 
         window = mir_window_create_sync(spec);
-        auto bs = mir_surface_get_buffer_stream(window);
+        auto bs = mir_window_get_buffer_stream(window);
 
         MirNativeBuffer *native = NULL;
         mir_buffer_stream_get_current_buffer(bs, &native);
@@ -596,7 +596,7 @@ TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
     window = mtf::make_any_surface(connection);
 
     buffers = 0;
-    mir_wait_for(mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(window), swap_buffers_callback, this));
+    mir_wait_for(mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, this));
     EXPECT_THAT(buffers, Eq(1));
 
     mir_window_release(window, release_surface_callback, this);
@@ -613,9 +613,9 @@ TEST_F(ClientLibrary, fully_synchronous_client)
 
     window = mtf::make_any_surface(connection);
 
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     EXPECT_TRUE(mir_window_is_valid(window));
-    EXPECT_STREQ(mir_surface_get_error_message(window), "");
+    EXPECT_STREQ(mir_window_get_error_message(window), "");
 
     mir_window_release_sync(window);
 
@@ -696,9 +696,9 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     while (buffers < 1024)
     {
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surf_one));
+            mir_window_get_buffer_stream(surf_one));
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surf_two));
+            mir_window_get_buffer_stream(surf_two));
 
         buffers++;
     }
@@ -749,7 +749,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 
     MirNativeBuffer* native_buffer;
     mir_buffer_stream_get_current_buffer(
-        mir_surface_get_buffer_stream(window), &native_buffer);
+        mir_window_get_buffer_stream(window), &native_buffer);
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
@@ -775,7 +775,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 
     MirNativeBuffer* native_buffer;
     mir_buffer_stream_get_current_buffer(
-        mir_surface_get_buffer_stream(window), &native_buffer);
+        mir_window_get_buffer_stream(window), &native_buffer);
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
@@ -839,7 +839,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     MirNativeBuffer* native_buffer;
     mir_buffer_stream_get_current_buffer(
-        mir_surface_get_buffer_stream(window), &native_buffer);
+        mir_window_get_buffer_stream(window), &native_buffer);
 
     int const mode_width =
         requested_output.modes[requested_output.current_mode].  horizontal_resolution;
@@ -883,7 +883,7 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_hardware_surface)
     // We use the fact that our stub client platform returns NULL if asked for a native
     // buffer on a window with mir_buffer_usage_software set.
     mir_buffer_stream_get_current_buffer(
-        mir_surface_get_buffer_stream(window), &native_buffer);
+        mir_window_get_buffer_stream(window), &native_buffer);
 
     EXPECT_THAT(native_buffer, Not(Eq(nullptr)));
 
@@ -911,7 +911,7 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_software_surface)
     // We use the fact that our stub client platform returns a NULL vaddr if
     // asked to map a hardware buffer.
     mir_buffer_stream_get_graphics_region(
-        mir_surface_get_buffer_stream(window), &graphics_region);
+        mir_window_get_buffer_stream(window), &graphics_region);
 
     EXPECT_THAT(graphics_region.vaddr, Not(Eq(nullptr)));
 

@@ -124,9 +124,9 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
 
     EXPECT_THAT(window, IsValid());
     MirGraphicsRegion graphics_region;
-    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(window), &graphics_region);
+    mir_buffer_stream_get_graphics_region(mir_window_get_buffer_stream(window), &graphics_region);
     draw_pattern.draw(graphics_region);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
     auto scene = runner->config.the_scene();
     auto seq = scene->scene_elements_for(this);
@@ -181,7 +181,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     EXPECT_THAT(mir_surface, IsValid());
 
     auto native_window = static_cast<EGLNativeWindowType>(
-        mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
+        mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);

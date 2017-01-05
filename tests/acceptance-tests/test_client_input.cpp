@@ -101,11 +101,11 @@ struct Client
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
-                mir_surface_get_error_message(window)});
+                mir_window_get_error_message(window)});
 
         mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(window));
+            mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
