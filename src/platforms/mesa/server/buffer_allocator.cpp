@@ -258,6 +258,25 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
+    geom::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    gbm_bo *bo_raw = gbm_bo_create(
+        device,
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        native_format,
+        native_flags);
+
+    if (!bo_raw)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
+
+    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
+
+    return std::make_shared<GBMBuffer>(
+        bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
+} 
+
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
     geom::Size size, MirPixelFormat format)
 {
     if (!mgc::ShmBuffer::supports(format))
@@ -298,22 +317,3 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 
     return pixel_formats;
 }
-
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
-    geom::Size size, uint32_t native_format, uint32_t native_flags)
-{
-    gbm_bo *bo_raw = gbm_bo_create(
-        device,
-        size.width.as_uint32_t(),
-        size.height.as_uint32_t(),
-        native_format,
-        native_flags);
-
-    if (!bo_raw)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
-
-    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
-
-    return std::make_shared<GBMBuffer>(
-        bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
-} 
