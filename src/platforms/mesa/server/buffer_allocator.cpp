@@ -28,6 +28,7 @@
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -219,7 +220,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
     std::shared_ptr<mg::Buffer> buffer;
 
     if (buffer_properties.usage == BufferUsage::software)
-        buffer = alloc_software_buffer(buffer_properties);
+        buffer = alloc_buffer(buffer_properties.size, buffer_properties.format);
     else
         buffer = alloc_hardware_buffer(buffer_properties);
 
@@ -240,9 +241,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
      * Also try to avoid allocating scanout buffers for small surfaces that
      * are unlikely to ever be fullscreen.
      *
-     * TODO: Be more intelligent about when to apply GBM_BO_USE_SCANOUT. That
-     *       may have to come after buffer reallocation support (surface
-     *       resizing). We may also want to check for
+     * TODO: The client will have to be more intelligent about when to use
+     *       GBM_BO_USE_SCANOUT in conjunction with mir_extension_gbm_buffer.
+     *       That may have to come after buffer reallocation support (surface
+     *       resizing). The client may also want to check for
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
     if ((bypass_option == mgm::BypassOption::allowed) &&
@@ -252,29 +254,13 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
         bo_flags |= GBM_BO_USE_SCANOUT;
     }
 
-    gbm_bo *bo_raw = gbm_bo_create(
-        device,
-        buffer_properties.size.width.as_uint32_t(),
-        buffer_properties.size.height.as_uint32_t(),
-        gbm_format,
-        bo_flags);
-
-    if (!bo_raw)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
-
-    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
-
-    /* Create the GBMBuffer */
-    auto const buffer =
-        std::make_shared<GBMBuffer>(bo, bo_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
-
-    return buffer;
+    return alloc_buffer(buffer_properties.size, gbm_format, bo_flags);
 }
 
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
-    BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
+    geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(buffer_properties.format))
+    if (!mgc::ShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
@@ -282,17 +268,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     }
 
     auto const stride = geom::Stride{
-        MIR_BYTES_PER_PIXEL(buffer_properties.format) *
-        buffer_properties.size.width.as_uint32_t()};
+        MIR_BYTES_PER_PIXEL(format) *
+        size.width.as_uint32_t()};
     size_t const size_in_bytes = 
-        stride.as_int() * buffer_properties.size.height.as_int();
-    auto shm_file =
-        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
-
+        stride.as_int() * size.height.as_int();
     return std::make_shared<mgm::SoftwareBuffer>(
-        std::move(shm_file),
-        buffer_properties.size,
-        buffer_properties.format);
+        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes), size, format);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
@@ -320,3 +301,22 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 
     return pixel_formats;
 }
+
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
+    geom::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    gbm_bo *bo_raw = gbm_bo_create(
+        device,
+        size.width.as_uint32_t(),
+        size.height.as_uint32_t(),
+        native_format,
+        native_flags);
+
+    if (!bo_raw)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
+
+    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
+
+    return std::make_shared<GBMBuffer>(
+        bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
+} 
