@@ -41,7 +41,7 @@ public:
         std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
         std::shared_ptr<DeviceQuirks> const& quirks);
     std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size,
-            unsigned int android_format, unsigned int usage_bitmask) override;
+            uint32_t android_format, uint32_t usage_bitmask) override;
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;

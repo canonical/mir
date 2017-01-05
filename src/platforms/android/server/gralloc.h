@@ -33,7 +33,7 @@ class Gralloc
 {
 public:
     virtual std::shared_ptr<NativeBuffer> alloc_buffer(
-        geometry::Size size, unsigned int android_format, unsigned int usage_bitmask) = 0;
+        geometry::Size size, uint32_t android_format, uint32_t usage_bitmask) = 0;
 protected:
     Gralloc() = default;
     virtual ~Gralloc() {}
