@@ -107,6 +107,9 @@ typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client
  */
 typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
+/* __attribute__((deprecated("Use mir_window_event_callback instead"))) */
+typedef void (*mir_window_event_callback)(
+    MirWindow* window, MirEvent const* event, void* context);
 
 /**
  * Callback called when a lifecycle event/callback is requested

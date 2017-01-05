@@ -133,7 +133,7 @@ public:
         // Ensure the nested server posts a frame
         connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
         window = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(window, handle_event, this);
+        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
     }
 
@@ -173,7 +173,7 @@ public:
     static void null_event_handler(MirSurface*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
-        mir_surface_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
         mir_window_release_sync(window);
         mir_connection_release(connection);
     }

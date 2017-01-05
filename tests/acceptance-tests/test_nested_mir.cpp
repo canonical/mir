@@ -420,7 +420,7 @@ public:
 
     void wait_until_surface_ready(MirWindow* window)
     {
-        mir_surface_set_event_handler(window, wait_for_key_a_event, this);
+        mir_window_set_event_handler(window, wait_for_key_a_event, this);
 
         auto const dummy_events_received = mt::spin_wait_for_condition_or_timeout(
             [this]
@@ -436,7 +436,7 @@ public:
 
         EXPECT_TRUE(dummy_events_received);
 
-        mir_surface_set_event_handler(window, nullptr, nullptr);
+        mir_window_set_event_handler(window, nullptr, nullptr);
     }
 
 protected:

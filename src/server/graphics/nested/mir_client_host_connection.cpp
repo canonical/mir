@@ -139,7 +139,7 @@ public:
 
     void set_event_handler(mir_surface_event_callback cb, void* context) override
     {
-        mir_surface_set_event_handler(mir_surface, cb, context);
+        mir_window_set_event_handler(mir_surface, cb, context);
     }
 
     void set_cursor_image(mg::CursorImage const& image)

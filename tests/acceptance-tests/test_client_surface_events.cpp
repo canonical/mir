@@ -128,12 +128,12 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        mir_surface_set_event_handler(window, &event_callback, this);
+        mir_window_set_event_handler(window, &event_callback, this);
 
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
+        mir_window_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }
@@ -306,7 +306,7 @@ TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 {
     set_event_filter(mir_event_type_close_surface);
 
-    mir_surface_set_event_handler(window, nullptr, nullptr);
+    mir_window_set_event_handler(window, nullptr, nullptr);
     scene_surface->request_client_surface_close();
 
     EXPECT_FALSE(wait_for_event(std::chrono::seconds(1)));
@@ -348,7 +348,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     auto window = mtf::make_any_surface(connection);
 
     mt::Signal focus_received;
-    mir_surface_set_event_handler(
+    mir_window_set_event_handler(
         window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
@@ -367,7 +367,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     ASSERT_TRUE(focus_received.wait_for(10s));
 
     mt::Signal unfocus_received;
-    mir_surface_set_event_handler(
+    mir_window_set_event_handler(
         window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
@@ -392,7 +392,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     auto window = mtf::make_any_surface(connection);
 
     mt::Signal focus_received;
-    mir_surface_set_event_handler(
+    mir_window_set_event_handler(
         window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
@@ -411,7 +411,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     ASSERT_TRUE(focus_received.wait_for(10s));
 
     mt::Signal unfocus_received;
-    mir_surface_set_event_handler(
+    mir_window_set_event_handler(
         window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {

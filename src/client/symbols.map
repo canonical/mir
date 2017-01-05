@@ -544,4 +544,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_release;
     mir_window_release_sync;
     mir_window_is_valid;
+    mir_window_set_event_handler;
 } MIR_CLIENT_0.25;

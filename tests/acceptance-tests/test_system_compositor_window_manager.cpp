@@ -81,7 +81,7 @@ struct MockClient
         auto const window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
-        mir_surface_set_event_handler(window, on_surface_event, this);
+        mir_window_set_event_handler(window, on_surface_event, this);
 
         return SurfaceHandle{window};
     };

@@ -423,7 +423,7 @@ void mir_window_spec_set_input_shape(MirWindowSpec* spec,
  * \param [in] context    Additional argument to be passed to callback
  */
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                       mir_surface_event_callback callback,
+                                       mir_window_event_callback callback,
                                        void* context);
 
 /**
@@ -600,7 +600,22 @@ void mir_window_release_sync(MirWindow* window);
  *   \return              True if the supplied window is valid, or
  *                        false otherwise.
  */
-bool mir_window_is_valid(MirWindow *window);
+bool mir_window_is_valid(MirWindow* window);
+
+/**
+ * Set the event handler to be called when events arrive for a window.
+ *   \warning event_handler could be called from another thread. You must do
+ *            any locking appropriate to protect your data accessed in the
+ *            callback. There is also a chance that different events will be
+ *            called back in different threads, for the same window,
+ *            simultaneously.
+ *   \param [in] window         The window
+ *   \param [in] callback       The callback function
+ *   \param [in] context        Additional argument to be passed to callback
+ */
+void mir_window_set_event_handler(MirWindow* window,
+                                  mir_window_event_callback callback,
+                                  void* context);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -791,20 +806,10 @@ MirWaitHandle *mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_release_sync() instead")));
 
-/**
- * Set the event handler to be called when events arrive for a surface.
- *   \warning event_handler could be called from another thread. You must do
- *            any locking appropriate to protect your data accessed in the
- *            callback. There is also a chance that different events will be
- *            called back in different threads, for the same surface,
- *            simultaneously.
- *   \param [in] surface        The surface
- *   \param [in] callback       The callback function
- *   \param [in] context        Additional argument to be passed to callback
- */
 void mir_surface_set_event_handler(MirSurface *surface,
                                    mir_surface_event_callback callback,
                                    void* context);
+//__attribute__((deprecated("use mir_window_set_event_handler() instead")));
 
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,

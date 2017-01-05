@@ -751,7 +751,7 @@ int main(int argc, char* argv[])
         false
     };
     MirWindow* window = mir_eglapp_native_window();
-    mir_surface_set_event_handler(window, on_event, &state);
+    mir_window_set_event_handler(window, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");
 
@@ -890,7 +890,7 @@ int main(int argc, char* argv[])
         last_swap_time = swap_time;
     }
 
-    mir_surface_set_event_handler(window, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);

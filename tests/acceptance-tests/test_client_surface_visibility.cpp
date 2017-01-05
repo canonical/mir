@@ -127,7 +127,7 @@ struct Surface
 
     ~Surface()
     {
-        mir_surface_set_event_handler(window, null_event_callback, nullptr);
+        mir_window_set_event_handler(window, null_event_callback, nullptr);
         mir_window_release_sync(window);
     }
 

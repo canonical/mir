@@ -89,7 +89,7 @@ struct Client
                 mir_surface_get_error_message(window)});
         }
 
-        mir_surface_set_event_handler(window, handle_event, this);
+        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(window));
 
@@ -148,7 +148,7 @@ struct Client
         // Remove the event handler to avoid handling spurious events unrelated
         // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
-        mir_surface_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
         mir_window_release_sync(window);
         mir_connection_release(connection);
     }

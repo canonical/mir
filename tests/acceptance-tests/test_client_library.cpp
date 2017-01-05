@@ -951,8 +951,8 @@ TEST_F(ClientLibrary, can_change_event_delegate)
      *
      * Without manual dispatch, it's racy to try and test that.
      */
-    mir_surface_set_event_handler(window, &dummy_event_handler_one, nullptr);
-    mir_surface_set_event_handler(window, &dummy_event_handler_two, nullptr);
+    mir_window_set_event_handler(window, &dummy_event_handler_one, nullptr);
+    mir_window_set_event_handler(window, &dummy_event_handler_two, nullptr);
 
     mir_window_release_sync(window);
     mir_connection_release(connection);

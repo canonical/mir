@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         true
     };
-    mir_surface_set_event_handler(window, on_event, &state);
+    mir_window_set_event_handler(window, on_event, &state);
 
     bool first_frame = true;
     while (mir_eglapp_running())
@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_surface_set_event_handler(window, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
     close_camera(cam);
 

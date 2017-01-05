@@ -343,7 +343,7 @@ catch (std::exception const& ex)
 }
 
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                       mir_surface_event_callback callback,
+                                       mir_window_event_callback callback,
                                        void* context)
 try
 {
@@ -575,6 +575,13 @@ void mir_window_release_sync(MirWindow* window)
 bool mir_window_is_valid(MirWindow* window)
 {
     return MirWindow::is_valid(window);
+}
+
+void mir_window_set_event_handler(MirWindow* window,
+                                  mir_window_event_callback callback,
+                                  void* context)
+{
+    window->set_event_handler(callback, context);
 }
 
 // These functions will be deprecated soon
@@ -876,12 +883,12 @@ void mir_surface_spec_set_placement(MirSurfaceSpec* spec,
                                     int offset_dx, int offset_dy)
 {
     mir_window_spec_set_placement(spec,
-                           rect,
-                           rect_gravity,
-                           window_gravity,
-                           placement_hints,
-                           offset_dx,
-                           offset_dy);
+                                  rect,
+                                  rect_gravity,
+                                  window_gravity,
+                                  placement_hints,
+                                  offset_dx,
+                                  offset_dy);
 }
 
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
@@ -890,15 +897,14 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                MirEdgeAttachment edge)
 {
     return mir_window_spec_attach_to_foreign_parent(spec,
-                                             parent,
-                                             attachment_rect,
-                                             edge);
+                                                    parent,
+                                                    attachment_rect,
+                                                    edge);
 }
 
-extern "C"
 void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
 {
-    surface->set_event_handler(callback, context);
+    mir_window_set_event_handler(surface, callback, context);
 }
 
 bool mir_surface_is_valid(MirSurface* surface)
