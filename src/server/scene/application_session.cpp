@@ -32,6 +32,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -58,7 +59,7 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const&) : 
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) : 
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -68,6 +69,7 @@ ms::ApplicationSession::ApplicationSession(
     session_listener(session_listener),
     event_sink(sink),
     buffers(buffer_stream_factory->create_buffer_map(sink)),
+    gralloc(gralloc),
     next_surface_id(0)
 {
     assert(surface_stack);
@@ -436,7 +438,12 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
 
 mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
 {
-    return buffers->add_buffer(properties);
+    try{
+    auto buffer = gralloc->alloc_buffer(properties);
+
+    
+    return buffers->add_buffer(buffer);
+    } catch (...) { printf("BAM\n"); throw; }
 }
 
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
