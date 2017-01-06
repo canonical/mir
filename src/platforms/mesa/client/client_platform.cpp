@@ -24,6 +24,7 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
 #include "mir/weak_egl.h"
+#include "mir/platform_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
 #include "gbm_format_conversions.h"
@@ -72,12 +73,8 @@ void auth_fd_cb(
     AuthFdContext* ctx = reinterpret_cast<AuthFdContext*>(context);
     int auth_fd{-1};
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirPlatformMessageFds fds = mir_platform_message_get_fds(reply);
-#pragma GCC diagnostic pop
-    if (fds.num_fds == 1)
-        auth_fd = fds.fds[0];
+    if (reply->fds.size() == 1)
+        auth_fd = reply->fds[0];
     ctx->cb(auth_fd, ctx->context);
     delete ctx;
 }
@@ -85,13 +82,9 @@ void auth_fd_cb(
 void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
+    MirPlatformMessage msg(MirMesaPlatformOperation::auth_fd);
     auto ctx = new AuthFdContext{cb, context};
-    connection->platform_operation(msg, auth_fd_cb, ctx);
-    mir_platform_message_release(msg);
-#pragma GCC diagnostic pop
+    connection->platform_operation(&msg, auth_fd_cb, ctx);
 }
 
 struct AuthMagicContext
@@ -104,13 +97,8 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
 {
     AuthMagicContext* ctx = reinterpret_cast<AuthMagicContext*>(context);
     int auth_magic_response{-1};
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirPlatformMessageData data = mir_platform_message_get_data(reply);
-#pragma GCC diagnostic pop
-    if (data.size == sizeof(auth_magic_response))
-        memcpy(&auth_magic_response, data.data, sizeof(auth_magic_response));
+    if (reply->data.size() == sizeof(auth_magic_response))
+        memcpy(&auth_magic_response, reply->data.data(), sizeof(auth_magic_response));
     ctx->cb(auth_magic_response, ctx->context);
     delete ctx;
 }
@@ -118,14 +106,11 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
 void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
-    mir_platform_message_set_data(msg, &magic, sizeof(magic));
+    MirPlatformMessage msg(MirMesaPlatformOperation::auth_magic);
+    auto m = reinterpret_cast<char*>(&magic);
+    msg.data.assign(m, m + sizeof(magic));
     auto ctx = new AuthMagicContext{cb, context};
-    connection->platform_operation(msg, auth_magic_cb, ctx);
-    mir_platform_message_release(msg);
-#pragma GCC diagnostic pop
+    connection->platform_operation(&msg, auth_magic_cb, ctx);
 }
 
 void set_device(gbm_device* device, void* context)
@@ -230,28 +215,24 @@ void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
 MirPlatformMessage* mclm::ClientPlatform::platform_operation(
     MirPlatformMessage const* msg)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto const op = mir_platform_message_get_opcode(msg);
-    auto const msg_data = mir_platform_message_get_data(msg);
-
-    if (op == MirMesaPlatformOperation::set_gbm_device &&
-        msg_data.size == sizeof(MirMesaSetGBMDeviceRequest))
+    if (msg->opcode == MirMesaPlatformOperation::set_gbm_device &&
+        msg->data.size() == sizeof(MirMesaSetGBMDeviceRequest))
     {
         MirMesaSetGBMDeviceRequest set_gbm_device_request{nullptr};
-        std::memcpy(&set_gbm_device_request, msg_data.data, msg_data.size);
+        std::memcpy(&set_gbm_device_request, msg->data.data(), msg->data.size());
 
         gbm_dev = set_gbm_device_request.device;
 
         static int const success{0};
-        MirMesaSetGBMDeviceResponse const response{success};
-        auto const response_msg = mir_platform_message_create(op);
-        mir_platform_message_set_data(response_msg, &response, sizeof(response));
+        MirMesaSetGBMDeviceResponse response{success};
+
+        auto response_msg = new MirPlatformMessage(msg->opcode);
+        auto r = reinterpret_cast<char*>(&response);
+        response_msg->data.assign(r, r + sizeof(response));
 
         return response_msg;
     }
 
-#pragma GCC diagnostic pop
     return nullptr;
 }
 
