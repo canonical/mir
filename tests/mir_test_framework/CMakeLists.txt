@@ -26,6 +26,7 @@ string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_library(mir-public-test-framework OBJECT
+  ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/any_surface.h
   any_surface.cpp
   async_server_runner.cpp
   command_line_server_configuration.cpp
@@ -43,16 +44,20 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stub_client_platform_factory.h
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp
   stub_surface.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stubbed_server_configuration.h
   stubbed_server_configuration.cpp
   testing_client_options.cpp
   testing_server_options.cpp
   temporary_environment_value.cpp
   using_stub_client_platform.cpp
   visible_surface.cpp
+  stub_client_platform_options.cpp
+  ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/stub_client_platform_options.h
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
