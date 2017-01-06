@@ -70,14 +70,21 @@ TEST_F(Screencast, with_invalid_params_fails)
 
     MirScreencastParameters params = default_screencast_params;
     params.width = params.height = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &params);
+#pragma GCC diagnostic pop
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
 
     params = default_screencast_params;
     params.region.width = params.region.height = 0;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     screencast = mir_connection_create_screencast_sync(connection, &params);
+#pragma GCC diagnostic push
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
@@ -85,7 +92,10 @@ TEST_F(Screencast, with_invalid_params_fails)
     params = default_screencast_params;
     params.pixel_format = mir_pixel_format_invalid;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     screencast = mir_connection_create_screencast_sync(connection, &params);
+#pragma GCC diagnostic pop
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
@@ -101,7 +111,10 @@ TEST_F(Screencast, when_unauthorized_fails)
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+#pragma GCC diagnostic pop
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);

@@ -135,11 +135,14 @@ char const *mir_screencast_get_error_message(MirScreencast *screencast);
  *
  * A screencast allows clients to read the contents of the screen.
  *
+ *   \deprecated See mir_screencast_create_sync
+ *
  *   \warning This request may be denied.
  *   \param [in] connection  The connection
  *   \param [in] parameters  The screencast parameters
  *   \return                 The resulting screencast
  */
+__attribute__ ((deprecated))
 MirScreencast* mir_connection_create_screencast_sync(
     MirConnection* connection,
     MirScreencastParameters* parameters);

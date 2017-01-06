@@ -528,9 +528,12 @@ try
     double capture_rate_limit = get_capture_rate_limit(*display_config, params);
     double capture_fps = capture_rate_limit/capture_interval;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto const mir_screencast = mir::raii::deleter_for(
         mir_connection_create_screencast_sync(connection.get(), &params),
         [](MirScreencast* s) { if (s) mir_screencast_release_sync(s); });
+#pragma GCC diagnostic pop
 
     if (mir_screencast == nullptr)
         throw std::runtime_error("Failed to create screencast");

@@ -121,7 +121,10 @@ TEST_F(Screencast, contacts_server_screencast_for_create_and_release)
 
     EXPECT_CALL(mock_screencast(), destroy_session(screencast_session_id));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+#pragma GCC diagnostic pop
     ASSERT_NE(nullptr, screencast);
     ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
@@ -151,7 +154,10 @@ TEST_F(Screencast, contacts_server_screencast_with_provided_params)
 
     EXPECT_CALL(mock_screencast(), destroy_session(_));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+#pragma GCC diagnostic pop
     ASSERT_NE(nullptr, screencast);
     ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
@@ -171,7 +177,10 @@ TEST_F(Screencast, gets_valid_egl_native_window)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_screencast(), destroy_session(_));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+#pragma GCC diagnostic pop
     ASSERT_NE(nullptr, screencast);
     ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
@@ -189,7 +198,10 @@ TEST_F(Screencast, fails_on_client_when_server_request_fails)
     EXPECT_CALL(mock_screencast(), create_session(_, _, _, _, _))
         .WillOnce(Throw(std::runtime_error(an_error_message)));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+#pragma GCC diagnostic pop
     ASSERT_NE(nullptr, screencast);
     ASSERT_FALSE(mir_screencast_is_valid(screencast));
 
