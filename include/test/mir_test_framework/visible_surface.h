@@ -29,7 +29,7 @@ namespace mir_test_framework
 class VisibleSurface
 {
 public:
-    explicit VisibleSurface(MirSurfaceSpec* spec);
+    explicit VisibleSurface(MirWindowSpec* spec);
     VisibleSurface(VisibleSurface&&);
     VisibleSurface& operator=(VisibleSurface&&);
     VisibleSurface(VisibleSurface const&) = delete;

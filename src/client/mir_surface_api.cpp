@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "MirSurfaceAPI"
+#define MIR_LOG_COMPONENT "MirWindowAPI"
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
@@ -49,6 +49,29 @@ void assign_result(void* result, void** context)
 
 }
 
+MirWindowSpec*
+mir_create_menu_window_spec(MirConnection* connection,
+                            int width, int height,
+                            MirPixelFormat format,
+                            MirSurface* parent,
+                            MirRectangle* rect,
+                            MirEdgeAttachment edge)
+{
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
+
+    auto spec = new MirWindowSpec{connection, width, height, format};
+    spec->type = mir_surface_type_menu;
+    spec->parent = parent;
+    spec->aux_rect = *rect;
+    spec->edge_attachment = edge;
+    return spec;
+}
+
+// These functions will be deprecated soon
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,
                                                               MirPixelFormat format)
@@ -59,22 +82,13 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_menu(MirConnection* connection,
-                                                    int width,
-                                                    int height,
+                                                    int width, int height,
                                                     MirPixelFormat format,
                                                     MirSurface* parent,
                                                     MirRectangle* rect,
                                                     MirEdgeAttachment edge)
 {
-    mir::require(mir_surface_is_valid(parent));
-    mir::require(rect != nullptr);
-
-    auto spec = new MirSurfaceSpec{connection, width, height, format};
-    spec->type = mir_surface_type_menu;
-    spec->parent = parent;
-    spec->aux_rect = *rect;
-    spec->edge_attachment = edge;
-    return spec;
+    return mir_create_menu_window_spec(connection, width, height, format, parent, rect, edge);
 }
 
 MirSurfaceSpec* mir_connection_create_spec_for_tooltip(MirConnection* connection,
@@ -249,6 +263,264 @@ void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
 }
+
+void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
+{
+    spec->cursor_name = std::string(name);
+}
+
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
+try
+{
+    mir::require(mir_connection_is_valid(connection));
+    auto const spec = new MirSurfaceSpec{};
+    spec->connection = connection;
+    return spec;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
+{
+    return mir_create_surface_spec(connection);
+}
+
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
+try
+{
+    mir::require(mir_surface_is_valid(surface));
+    mir::require(spec);
+
+    surface->modify(*spec);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    // Keep calm and carry on
+}
+
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
+try
+{
+    mir::require(spec);
+
+    std::vector<ContentInfo> copy;
+    for (auto i = 0u; i < size; i++)
+    {
+        mir::require(mir_buffer_stream_is_valid(streams[i].stream));
+        copy.emplace_back(ContentInfo{
+            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
+            streams[i].stream->rpc_id().as_value(),
+            {}});
+    }
+    spec->streams = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_presentation_chain(
+    MirSurfaceSpec* spec,
+    int width, int height,
+    int displacement_x, int displacement_y,
+    MirPresentationChain* client_chain)
+try
+{
+    mir::require(spec && client_chain);
+    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
+
+    ContentInfo info{
+        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_buffer_stream(
+    MirSurfaceSpec* spec,
+    int displacement_x, int displacement_y,
+    int width, int height,
+    MirBufferStream* stream)
+try
+{
+    mir::require(spec && stream);
+    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_render_surface(
+    MirSurfaceSpec* spec,
+    MirRenderSurface* render_surface,
+    int /*logical_width*/, int /*logical_height*/,
+    int displacement_x, int displacement_y)
+try
+{
+    mir::require(spec && render_surface);
+    auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
+
+    if (rs->stream_id().as_value() < 0)
+        BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
+    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
+                                      size_t n_rects)
+try
+{
+    mir::require(spec);
+
+    std::vector<MirRectangle> copy;
+    for (auto i = 0u; i < n_rects; i++)
+    {
+        copy.emplace_back(rectangles[i]);
+    }
+    spec->input_shape = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
+try
+{
+    mir::require(spec);
+    spec->parent = parent;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
+try
+{
+    spec->type = type;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
+try
+{
+    spec->width_inc = width_inc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc)
+try
+{
+    spec->height_inc = height_inc;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->min_aspect = {width, height};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
+try
+{
+    spec->max_aspect = {width, height};
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
+try
+{
+    spec->confine_pointer = state;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_placement(
+    MirSurfaceSpec*     spec,
+    MirRectangle const* rect,
+    MirPlacementGravity rect_gravity,
+    MirPlacementGravity surface_gravity,
+    MirPlacementHints   placement_hints,
+    int                 offset_dx,
+    int                 offset_dy)
+try
+{
+    spec->aux_rect = *rect;
+    spec->aux_rect_placement_gravity = rect_gravity;
+    spec->surface_placement_gravity = surface_gravity;
+    spec->placement_hints = placement_hints;
+    spec->aux_rect_placement_offset_x = offset_dx;
+    spec->aux_rect_placement_offset_y = offset_dy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge)
+{
+    mir::require(mir_persistent_id_is_valid(parent));
+    mir::require(attachment_rect != nullptr);
+
+    if (!spec->type.is_set() ||
+        spec->type.value() != mir_surface_type_inputmethod)
+    {
+        return false;
+    }
+
+    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
+    spec->aux_rect = *attachment_rect;
+    spec->edge_attachment = edge;
+    return true;
+}
+
+//#pragma GCC diagnostic pop
 
 extern "C"
 void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
@@ -455,11 +727,6 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
     return state;
 }
 
-void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name)
-{
-    spec->cursor_name = std::string(name);
-}
-
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;
@@ -537,238 +804,6 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection)
-try
-{
-    mir::require(mir_connection_is_valid(connection));
-    auto const spec = new MirSurfaceSpec{};
-    spec->connection = connection;
-    return spec;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    std::abort();  // If we just failed to allocate a MirSurfaceSpec returning isn't safe
-}
-
-MirSurfaceSpec* mir_connection_create_spec_for_changes(MirConnection* connection)
-{
-    return mir_create_surface_spec(connection);
-}
-
-void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec)
-try
-{
-    mir::require(mir_surface_is_valid(surface));
-    mir::require(spec);
-
-    surface->modify(*spec);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    // Keep calm and carry on
-}
-
-void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
-try
-{
-    mir::require(spec);
-
-    std::vector<ContentInfo> copy;
-    for (auto i = 0u; i < size; i++)
-    {
-        mir::require(mir_buffer_stream_is_valid(streams[i].stream));
-        copy.emplace_back(ContentInfo{
-            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
-            streams[i].stream->rpc_id().as_value(),
-            {}});
-    }
-    spec->streams = copy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_presentation_chain(
-    MirSurfaceSpec* spec,
-    int width, int height,
-    int displacement_x, int displacement_y,
-    MirPresentationChain* client_chain)
-try
-{
-    mir::require(spec && client_chain);
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
-
-    ContentInfo info{
-        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info}; 
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_buffer_stream(
-    MirSurfaceSpec* spec,
-    int displacement_x, int displacement_y,
-    int width, int height,
-    MirBufferStream* stream)
-try
-{
-    mir::require(spec && stream);
-    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
-
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info}; 
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_render_surface(
-    MirSurfaceSpec* spec,
-    MirRenderSurface* render_surface,
-    int /*logical_width*/, int /*logical_height*/,
-    int displacement_x, int displacement_y)
-try
-{
-    mir::require(spec && render_surface);
-    auto rs = spec->connection->connection_surface_map()->render_surface(render_surface);
-
-    if (rs->stream_id().as_value() < 0)
-        BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
-
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
-                                      size_t n_rects)
-try
-{
-    mir::require(spec);
-
-    std::vector<MirRectangle> copy;
-    for (auto i = 0u; i < n_rects; i++)
-    {
-        copy.emplace_back(rectangles[i]);
-    }
-    spec->input_shape = copy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
-try
-{
-    mir::require(spec);
-    spec->parent = parent;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
-try
-{
-    spec->type = type;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
-try
-{
-    spec->width_inc = width_inc;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc)
-try
-{
-    spec->height_inc = height_inc;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
-try
-{
-    spec->min_aspect = {width, height};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height)
-try
-{
-    spec->max_aspect = {width, height};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
-try
-{
-    spec->confine_pointer = state;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_set_placement(
-    MirSurfaceSpec*     spec,
-    MirRectangle const* rect,
-    MirPlacementGravity rect_gravity,
-    MirPlacementGravity surface_gravity,
-    MirPlacementHints   placement_hints,
-    int                 offset_dx,
-    int                 offset_dy)
-try
-{
-    spec->aux_rect = *rect;
-    spec->aux_rect_placement_gravity = rect_gravity;
-    spec->surface_placement_gravity = surface_gravity;
-    spec->placement_hints = placement_hints;
-    spec->aux_rect_placement_offset_x = offset_dx;
-    spec->aux_rect_placement_offset_y = offset_dy;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
     mir::require(mir_surface_is_valid(surface));
@@ -804,26 +839,6 @@ bool mir_persistent_id_is_valid(MirPersistentId* id)
 void mir_persistent_id_release(MirPersistentId* id)
 {
     delete id;
-}
-
-bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
-                                               MirPersistentId* parent,
-                                               MirRectangle* attachment_rect,
-                                               MirEdgeAttachment edge)
-{
-    mir::require(mir_persistent_id_is_valid(parent));
-    mir::require(attachment_rect != nullptr);
-
-    if (!spec->type.is_set() ||
-        spec->type.value() != mir_surface_type_inputmethod)
-    {
-        return false;
-    }
-
-    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
-    spec->aux_rect = *attachment_rect;
-    spec->edge_attachment = edge;
-    return true;
 }
 
 char const* mir_persistent_id_as_string(MirPersistentId *id)

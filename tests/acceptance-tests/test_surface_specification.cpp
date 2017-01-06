@@ -92,8 +92,8 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     mtf::VisibleSurface create_surface(Specifier const& specifier)
     {
-        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(mir_create_surface_spec(connection), del);
+        auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_create_surface_spec(connection), del);
         specifier(spec.get());
         return mtf::VisibleSurface{spec.get()};
     }
@@ -208,7 +208,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
 {
     auto const min_width = 17;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -233,7 +233,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
 {
     auto const min_height = 19;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -258,7 +258,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
 {
     auto const max_width = 23;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -283,7 +283,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
 {
     auto const max_height = 29;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -308,7 +308,7 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
 {
     auto const width_inc = 13;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -337,7 +337,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
     auto const width_inc = 13;
     auto const min_width = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -366,7 +366,7 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
 {
     auto const height_inc = 13;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -395,7 +395,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
     auto const height_inc = 13;
     auto const min_height = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -425,7 +425,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
     auto const aspect_width = 11;
     auto const aspect_height = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -455,7 +455,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
     auto const aspect_width = 7;
     auto const aspect_height = 11;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -492,7 +492,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
     auto const height_inc = 7;
     auto const expected_aspect_ratio = FloatEq(float(aspect_width)/aspect_height);
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -546,7 +546,7 @@ TEST_P(SurfaceWithoutParent, not_setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, type);
             mir_surface_spec_set_width(spec, width);
@@ -562,7 +562,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -571,7 +571,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
     {
         mir_surface_spec_set_type(spec, type);
         mir_surface_spec_set_width(spec, width);
@@ -588,7 +588,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -597,7 +597,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, type);
             mir_surface_spec_set_width(spec, width);
@@ -614,7 +614,7 @@ TEST_P(SurfaceNeedingParent, not_setting_parent_fails)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, type);
             mir_surface_spec_set_width(spec, width);
@@ -630,7 +630,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, mir_surface_type_normal);
             mir_surface_spec_set_width(spec, width);
@@ -639,7 +639,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
             mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, type);
             mir_surface_spec_set_width(spec, width);
@@ -656,7 +656,7 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, type);
             mir_surface_spec_set_width(spec, width);

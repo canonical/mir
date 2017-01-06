@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MirSurfaceSpec *spec =
+    MirWindowSpec *spec =
         mir_connection_create_spec_for_normal_surface(conn, 225, 225, pixel_format);
     if (spec == NULL)
     {

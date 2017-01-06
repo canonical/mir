@@ -107,7 +107,7 @@ struct OnScopeExit
     std::function<void()> const f;
 };
 
-mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
+mir::protobuf::SurfaceParameters serialize_spec(MirWindowSpec const& spec)
 {
     mp::SurfaceParameters message;
 
@@ -325,7 +325,7 @@ MirConnection::~MirConnection() noexcept
 }
 
 MirWaitHandle* MirConnection::create_surface(
-    MirSurfaceSpec const& spec,
+    MirWindowSpec const& spec,
     mir_surface_callback callback,
     void * context)
 {

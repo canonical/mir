@@ -34,6 +34,43 @@ extern "C" {
 #endif
 
 /**
+ * Create a window specification for a menu window.
+ *
+ * Positioning of the window is specified with respect to the parent window
+ * via an adjacency rectangle. The server will attempt to choose an edge of the
+ * adjacency rectangle on which to place the window taking in to account
+ * screen-edge proximity or similar constraints. In addition, the server can use
+ * the edge affinity hint to consider only horizontal or only vertical adjacency
+ * edges in the given rectangle.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to
+ *                          return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to
+ *                          return a window of this height.
+ * \param [in] format       Pixel format for the window.
+ * \param [in] parent       A valid parent window for this menu.
+ * \param [in] rect         The adjacency rectangle. The server is not
+ *                          guaranteed to create a window at the requested
+ *                          location.
+ * \param [in] edge         The preferred edge direction to attach to. Use
+ *                          mir_edge_attachment_any for no preference.
+ * \return                  A handle that can be passed to mir_surface_create()
+ *                          to complete construction.
+ */
+MirWindowSpec*
+mir_create_menu_window_spec(MirConnection* connection,
+                            int width, int height,
+                            MirPixelFormat format,
+                            MirSurface* parent,
+                            MirRectangle* rect,
+                            MirEdgeAttachment edge);
+
+// Functions in this pragma section are to be deprecated
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+/**
  * Create a surface specification for a normal surface.
  *
  * A normal surface is suitable for most application windows. It has no special semantics.
@@ -50,31 +87,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int height,
                                                               MirPixelFormat format);
 
-/**
- * Create a surface specification for a menu surface.
- *
- * Positioning of the surface is specified with respect to the parent surface
- * via an adjacency rectangle. The server will attempt to choose an edge of the
- * adjacency rectangle on which to place the surface taking in to account
- * screen-edge proximity or similar constraints. In addition, the server can use
- * the edge affinity hint to consider only horizontal or only vertical adjacency
- * edges in the given rectangle.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this menu.
- * \param [in] rect         The adjacency rectangle. The server is not
- *                          guaranteed to create a surface at the requested
- *                          location.
- * \param [in] edge         The preferred edge direction to attach to. Use
- *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_surface_create()
- *                          to complete construction.
- */
 MirSurfaceSpec*
 mir_connection_create_spec_for_menu(MirConnection* connection,
                                     int width,
@@ -82,7 +94,8 @@ mir_connection_create_spec_for_menu(MirConnection* connection,
                                     MirPixelFormat format,
                                     MirSurface* parent,
                                     MirRectangle* rect,
-                                    MirEdgeAttachment edge);
+                                    MirEdgeAttachment edge)
+/* __attribute__((deprecated("Use mir_create_menu_window_spec() instead")))*/;
 
 /**
  * Create a surface specification for a tooltip surface.
@@ -228,29 +241,6 @@ MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
  */
 MirSurfaceSpec*
 mir_connection_create_spec_for_changes(MirConnection* connection);
-
-/**
- * Create a surface from a given specification
- *
- *
- * \param [in] requested_specification  Specification of the attributes for the created surface
- * \param [in] callback                 Callback function to be invoked when creation is complete
- * \param [in, out] context             User data passed to callback function.
- *                                      This callback is guaranteed to be called, and called with a
- *                                      non-null MirSurface*, but the surface may be invalid in
- *                                      case of an error.
- * \return                              A handle that can be passed to mir_wait_for()
- */
-MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
-                                  mir_surface_callback callback, void* context);
-
-/**
- * Create a surface from a given specification and wait for the result.
- * \param [in] requested_specification  Specification of the attributes for the created surface
- * \return                              The new surface. This is guaranteed non-null, but may be invalid
- *                                      in the case of error.
- */
-MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
 
 /**
  * Set the requested parent.
@@ -599,11 +589,61 @@ void mir_surface_spec_set_placement(
     int                 offset_dy);
 
 /**
+ * Create a surface specification for an input method surface.
+ *
+ * Currently this is only appropriate for the Unity On-Screen-Keyboard.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                            int width,
+                                                            int height,
+                                                            MirPixelFormat format);
+
+/**
  * Set the name for the cursor from the system cursor theme.
  * \param [in] spec             The spec
  * \param [in] name             The name, or "" to reset to default
  */
 void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
+
+/**
+ * Create a surface from a given specification
+ *
+ *
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \param [in] callback                 Callback function to be invoked when creation is complete
+ * \param [in, out] context             User data passed to callback function.
+ *                                      This callback is guaranteed to be called, and called with a
+ *                                      non-null MirSurface*, but the surface may be invalid in
+ *                                      case of an error.
+ * \return                              A handle that can be passed to mir_wait_for()
+ */
+MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
+                                  mir_surface_callback callback, void* context);
+
+/**
+ * Create a surface from a given specification and wait for the result.
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \return                              The new surface. This is guaranteed non-null, but may be invalid
+ *                                      in the case of error.
+ */
+MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Request changes to the specification of a surface. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] surface  The surface to rename
+ *   \param [in] spec     Spec with the requested changes applied
+ */
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
+
+//#pragma GCC diagnostic pop
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -791,31 +831,6 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOri
  *   \return              The preferred orientation modes
  */
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
-
-/**
- * Create a surface specification for an input method surface.
- *
- * Currently this is only appropriate for the Unity On-Screen-Keyboard.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \return                  A handle that can be passed to mir_surface_create() to complete construction.
- */
-MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
-                                                            int width,
-                                                            int height,
-                                                            MirPixelFormat format);
-
-/**
- * Request changes to the specification of a surface. The server will decide
- * whether and how the request can be honoured.
- *
- *   \param [in] surface  The surface to rename
- *   \param [in] spec     Spec with the requested changes applied
- */
-void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
  * \brief Request an ID for the surface that can be shared cross-process and

@@ -111,7 +111,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 
     MirSurface* create_normal_surface(int width, int height) const
     {
-        return create_normal_surface(width, height, [](MirSurfaceSpec*){});
+        return create_normal_surface(width, height, [](MirWindowSpec*){});
     }
 
     void make_active(Rectangle const& display)
@@ -355,7 +355,7 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
 
 TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_state(spec, mir_surface_state_fullscreen);
         });
@@ -370,7 +370,7 @@ TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
 
 TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_state(spec, mir_surface_state_maximized);
         });
@@ -392,7 +392,7 @@ TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
 
 TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_state(spec, mir_surface_state_horizmaximized);
         });
@@ -411,7 +411,7 @@ TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
 
 TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_state(spec, mir_surface_state_vertmaximized);
         });
@@ -433,7 +433,7 @@ TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
 
 TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_fullscreen_on_output(spec, 1);
         });
@@ -448,7 +448,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_displa
 
 TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_display)
 {
-    auto const surface = create_normal_surface(10, 10, [](MirSurfaceSpec* spec)
+    auto const surface = create_normal_surface(10, 10, [](MirWindowSpec* spec)
         {
             mir_surface_spec_set_fullscreen_on_output(spec, 2);
         });
@@ -474,7 +474,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
     auto const optically_centred = geometric_centre -
                                    DeltaY{(first_display.size.height.as_int()-height)/6};
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, GetParam());
             mir_surface_spec_set_width(spec, width);
@@ -535,7 +535,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     auto const optically_centred = geometric_centre -
                                    DeltaY{(shell_parent->size().height.as_int()-height)/6};
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
             mir_surface_spec_set_type(spec, GetParam());
             mir_surface_spec_set_width(spec, width);

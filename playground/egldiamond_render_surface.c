@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
     //We can safely set invalid as the pixel format, and the field needs to be deprecated
     //once default streams are deprecated.
     //width and height are the logical width the user wants the surface to be
-    MirSurfaceSpec *spec =
+    MirWindowSpec *spec =
         mir_connection_create_spec_for_normal_surface(
             connection, width, height,
             mir_pixel_format_invalid);

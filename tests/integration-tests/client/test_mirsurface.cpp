@@ -148,12 +148,12 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
         spec.pref_orientation = mir_orientation_mode_landscape;
     }
 
-    std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirSurfaceSpec* spec)
+    std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirWindowSpec* spec)
     {
         return {mir_surface_create_sync(spec), [](MirSurface *surf){mir_surface_release_sync(surf);}};
     }
 
-    MirSurfaceSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    MirWindowSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};
     std::shared_ptr<msh::Shell> wrapped_shell;
     std::shared_ptr<MockShell> mock_shell;
 };
@@ -181,11 +181,10 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     MirRectangle attachment_rect{100, 200, 300, 400};
     MirEdgeAttachment edge{mir_edge_attachment_horizontal};
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> menu_spec{
-        mir_connection_create_spec_for_menu(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
-            edge),
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
+        mir_create_menu_window_spec(connection, 640, 480,
+            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect, edge),
         spec_deleter
     };
 
@@ -204,8 +203,8 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
     MirRectangle placement_hint{100, 200, 300, 400};
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> tooltip_spec{
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> tooltip_spec{
         mir_connection_create_spec_for_tip(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get(), &placement_hint, mir_edge_attachment_vertical),
         spec_deleter
@@ -220,8 +219,8 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
 TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
         mir_connection_create_spec_for_dialog(connection, 640, 480, mir_pixel_format_abgr_8888),
         spec_deleter
     };
@@ -238,8 +237,8 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_surface_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
         mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
             mir_pixel_format_abgr_8888, parent.get()),
         spec_deleter

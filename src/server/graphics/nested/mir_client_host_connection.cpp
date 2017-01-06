@@ -108,7 +108,7 @@ class MirClientHostSurface : public mgn::HostSurface
 public:
     MirClientHostSurface(
         MirConnection* mir_connection,
-        MirSurfaceSpec* spec)
+        MirWindowSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
               mir_surface_create_sync(spec)}
@@ -692,12 +692,12 @@ public:
             size.width.as_int(), size.height.as_int(), stream.handle());
     }
 
-    MirSurfaceSpec* handle() override
+    MirWindowSpec* handle() override
     {
         return spec;
     }
 private:
-    MirSurfaceSpec* spec;
+    MirWindowSpec* spec;
 };
 }
 

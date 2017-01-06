@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     mir_connection_get_available_surface_formats(conn, formats, 1,
                                                  &valid_formats);
 
-    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, 1, 1, formats[0]);
+    MirWindowSpec *spec = mir_connection_create_spec_for_normal_surface(conn, 1, 1, formats[0]);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_surface_spec_set_name(spec, "ping");
 

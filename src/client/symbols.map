@@ -504,4 +504,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_connection_remove_session_display_configuration;
     mir_blob_from_display_config;
     mir_blob_to_display_config;
+    mir_create_menu_window_spec;    
 } MIR_CLIENT_0.25;
