@@ -1805,11 +1805,11 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
     observed_changed.wait_for(10s);
     observed_changed.reset();
 
-    mir_connection_remove_session_display_configuration(connection);
-
     EXPECT_CALL(*observer, session_configuration_removed(_))
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_remove_session_display_configuration(connection);
 
     observed_changed.wait_for(10s);
 
