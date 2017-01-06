@@ -217,7 +217,10 @@ public:
     }
 
     void allocate_buffer(
-        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir::geometry::Size size, MirPixelFormat format,
+        mir_buffer_callback callback, void* context);
+    void allocate_buffer(
+        mir::geometry::Size size, uint32_t native_format, uint32_t native_flags,
         mir_buffer_callback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 

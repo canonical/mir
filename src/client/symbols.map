@@ -464,6 +464,13 @@ MIR_CLIENT_DETAIL_0.25 {
     };
 } MIR_CLIENT_DETAIL_0.24;
 
+MIR_CLIENT_DETAIL_0.26 {
+  global:
+    extern "C++" {
+        mir::client::to_client_context*;
+    };
+} MIR_CLIENT_DETAIL_0.25;
+
 MIR_CLIENT_0.26 {  # New functions in Mir 0.26
   global:
     mir_input_device_get_mutable_pointer_configuration;

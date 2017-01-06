@@ -43,6 +43,9 @@ struct MockClientContext : public client::ClientContext
     MOCK_METHOD1(populate_graphics_module, void(MirModuleProperties&));
     MOCK_METHOD3(platform_operation, MirWaitHandle*(
         MirPlatformMessage const*, mir_platform_operation_callback, void*));
+    MOCK_METHOD4(allocate_buffer, void(geometry::Size, MirPixelFormat, mir_buffer_callback, void*));
+    MOCK_METHOD5(allocate_buffer, void(geometry::Size, uint32_t, uint32_t, mir_buffer_callback, void*));
+    MOCK_METHOD1(release_buffer, void(mir::client::MirBuffer*));
 };
 
 }
