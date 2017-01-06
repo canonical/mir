@@ -260,7 +260,7 @@ TEST_F(EventSender, can_send_error_buffer)
                 sent_buffer.resize(size);
                 memcpy(sent_buffer.data(), data, size); 
             }));
-    event_sender.error_buffer(properties, error_msg);
+    event_sender.error_buffer(properties.size, properties.format, error_msg);
     ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
     EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
 }

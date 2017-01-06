@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer.h"
 #include "mir/frontend/buffer_sink.h"
 #include "buffer_map.h"
 #include <boost/throw_exception.hpp>
@@ -38,20 +38,16 @@ enum class BufferMap::Owner
 }
 }
 
-mc::BufferMap::BufferMap(
-    std::shared_ptr<mf::BufferSink> const& sink,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-    sink(sink),
-    allocator(allocator)
+mc::BufferMap::BufferMap(std::shared_ptr<mf::BufferSink> const& sink) :
+    sink(sink)
 {
 }
 
-mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
+mg::BufferID mc::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     try
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
-        auto buffer = allocator->alloc_buffer(properties);
         buffers[buffer->id()] = {buffer, Owner::client};
         if (auto s = sink.lock())
             s->add_buffer(*buffer);
@@ -59,7 +55,7 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
     } catch (std::exception& e)
     {
         if (auto s = sink.lock())
-            s->error_buffer(properties, e.what());
+            s->error_buffer(buffer->size(), buffer->pixel_format(), e.what());
         throw;
     }
 }
