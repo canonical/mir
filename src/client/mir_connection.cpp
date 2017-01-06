@@ -650,7 +650,7 @@ MirWaitHandle* MirConnection::disconnect()
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    auto reply = std::make_unique<MirPlatformMessage>(platform_operation_reply->opcode());
+    auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
 
     set_error_message(platform_operation_reply->error());
 
@@ -660,7 +660,7 @@ void MirConnection::done_platform_operation(
         platform_operation_reply->fd().data(),
         platform_operation_reply->fd().data() + platform_operation_reply->fd().size());
 
-    callback(this, reply.get(), context);
+    callback(this, reply, context);
 
     platform_operation_wait_handle.result_received();
 }
