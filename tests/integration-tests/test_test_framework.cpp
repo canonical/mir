@@ -18,7 +18,6 @@
 
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"

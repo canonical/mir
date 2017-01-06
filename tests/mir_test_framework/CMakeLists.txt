@@ -54,7 +54,6 @@ add_library(mir-public-test-framework OBJECT
   testing_client_options.cpp
   testing_server_options.cpp
   temporary_environment_value.cpp
-  using_stub_client_platform.cpp
   visible_surface.cpp
   stub_client_platform_options.cpp
   ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/stub_client_platform_options.h

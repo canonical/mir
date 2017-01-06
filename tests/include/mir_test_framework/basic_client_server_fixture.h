@@ -22,7 +22,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 
 #include "boost/throw_exception.hpp"
 

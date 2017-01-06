@@ -20,7 +20,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/deferred_in_process_server.h"
 
 #include "mir/test/doubles/stub_ipc_factory.h"

@@ -19,7 +19,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/spin_wait.h"
 

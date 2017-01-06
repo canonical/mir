@@ -30,7 +30,6 @@
 #include "mir/test/doubles/mock_prompt_session_listener.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/popen.h"
 
 #include <gtest/gtest.h>
