@@ -656,17 +656,9 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.event_handler.is_set())
     {
-        handle_event_callback = std::bind(
+        set_event_handler(
             spec.event_handler.value().callback,
-            this,
-            std::placeholders::_1,
             spec.event_handler.value().context);
-
-        if (surface->fd_size() > 0)
-        {
-            input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch",
-                input_platform->create_input_receiver(surface->fd(0), keymapper, handle_event_callback));
-        }
     }
 
     modify_wait_handle.expect_result();
