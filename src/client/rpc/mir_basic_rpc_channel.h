@@ -98,6 +98,7 @@ private:
 
     std::mutex mutable mutex;
     std::condition_variable mutable pending_calls_shrank;
+    int running_callbacks = 0;
     std::map<int, PendingCall> pending_calls;
     std::shared_ptr<RpcReport> const rpc_report;
 };

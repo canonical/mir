@@ -86,6 +86,7 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
             completion = call->second;
             pending_calls.erase(call);
         }
+        ++running_callbacks;
     }
 
     if (!completion.complete)
@@ -98,17 +99,25 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         completion.complete->Run();
     }
 
-    pending_calls_shrank.notify_all();
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        --running_callbacks;
+        pending_calls_shrank.notify_all();
+    }
 }
 
 void mclrd::PendingCallCache::force_completion()
 {
     std::unique_lock<std::mutex> lock(mutex);
+    ++running_callbacks;
     for (auto& call : pending_calls)
     {
         auto& completion = call.second;
-        completion.complete->Run();  // XXX Still locked. Is that a bug?
+        lock.unlock();
+        completion.complete->Run();
+        lock.lock();
     }
+    --running_callbacks;
 
     pending_calls.erase(pending_calls.begin(), pending_calls.end());
     pending_calls_shrank.notify_all();
@@ -125,7 +134,7 @@ bool mclrd::PendingCallCache::empty() const
 void mclrd::PendingCallCache::wait_till_empty() const
 {
     std::unique_lock<std::mutex> lock(mutex);
-    while (!pending_calls.empty())
+    while (running_callbacks || !pending_calls.empty())
         pending_calls_shrank.wait(lock);
 }
 
