@@ -54,8 +54,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
                                      std::shared_ptr<mircv::XKBMapper> const& keymapper,
                                      std::function<void(MirEvent*)> const& event_handling_callback,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report)
-  :
-    wake_fd{valid_fd_or_system_error(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE),
+  : wake_fd{valid_fd_or_system_error(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE),
         "Failed to create IO wakeup notifier")},
     input_channel(input_channel),
     handler{event_handling_callback},
