@@ -72,7 +72,10 @@ void auth_fd_cb(
     AuthFdContext* ctx = reinterpret_cast<AuthFdContext*>(context);
     int auth_fd{-1};
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirPlatformMessageFds fds = mir_platform_message_get_fds(reply);
+#pragma GCC diagnostic pop
     if (fds.num_fds == 1)
         auth_fd = fds.fds[0];
     ctx->cb(auth_fd, ctx->context);
@@ -82,10 +85,13 @@ void auth_fd_cb(
 void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
     auto ctx = new AuthFdContext{cb, context};
     connection->platform_operation(msg, auth_fd_cb, ctx);
     mir_platform_message_release(msg);
+#pragma GCC diagnostic pop
 }
 
 struct AuthMagicContext
@@ -99,7 +105,10 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
     AuthMagicContext* ctx = reinterpret_cast<AuthMagicContext*>(context);
     int auth_magic_response{-1};
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirPlatformMessageData data = mir_platform_message_get_data(reply);
+#pragma GCC diagnostic pop
     if (data.size == sizeof(auth_magic_response))
         memcpy(&auth_magic_response, data.data, sizeof(auth_magic_response));
     ctx->cb(auth_magic_response, ctx->context);
@@ -109,11 +118,14 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
 void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto msg = mir_platform_message_create(MirMesaPlatformOperation::auth_fd);
     mir_platform_message_set_data(msg, &magic, sizeof(magic));
     auto ctx = new AuthMagicContext{cb, context};
     connection->platform_operation(msg, auth_magic_cb, ctx);
     mir_platform_message_release(msg);
+#pragma GCC diagnostic pop
 }
 
 void set_device(gbm_device* device, void* context)
@@ -218,6 +230,8 @@ void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
 MirPlatformMessage* mclm::ClientPlatform::platform_operation(
     MirPlatformMessage const* msg)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto const op = mir_platform_message_get_opcode(msg);
     auto const msg_data = mir_platform_message_get_data(msg);
 
@@ -237,6 +251,7 @@ MirPlatformMessage* mclm::ClientPlatform::platform_operation(
         return response_msg;
     }
 
+#pragma GCC diagnostic pop
     return nullptr;
 }
 

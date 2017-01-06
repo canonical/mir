@@ -400,6 +400,8 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     unsigned int op, mg::PlatformOperationMessage const& request)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto const msg = mir::raii::deleter_for(
         mir_platform_message_create(op),
         mir_platform_message_release);
@@ -424,6 +426,7 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
         {static_cast<uint8_t const*>(reply_data.data),
          static_cast<uint8_t const*>(reply_data.data) + reply_data.size},
         {reply_fds.fds, reply_fds.fds + reply_fds.num_fds}};
+#pragma GCC diagnostic pop
 }
 
 void mgn::MirClientHostConnection::set_cursor_image(mg::CursorImage const& image)

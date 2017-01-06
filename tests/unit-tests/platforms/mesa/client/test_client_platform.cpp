@@ -68,6 +68,8 @@ struct StubClientContext : mcl::ClientContext
     }
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MesaClientPlatformTest : testing::Test
 {
     MirPlatformMessage* set_gbm_device(gbm_device* dev)
@@ -210,3 +212,4 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
         [] (::MirBuffer*, void*) {}, nullptr);
     EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
 }
+#pragma GCC diagnostic pop

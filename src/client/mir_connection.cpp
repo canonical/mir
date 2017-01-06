@@ -649,6 +649,8 @@ MirWaitHandle* MirConnection::disconnect()
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto reply = mir_platform_message_create(platform_operation_reply->opcode());
 
     set_error_message(platform_operation_reply->error());
@@ -664,6 +666,7 @@ void MirConnection::done_platform_operation(
         platform_operation_reply->fd().size());
 
     callback(this, reply, context);
+#pragma GCC diagnostic pop
 
     platform_operation_wait_handle.result_received();
 }
@@ -682,9 +685,12 @@ MirWaitHandle* MirConnection::platform_operation(
 
     mp::PlatformOperationMessage protobuf_request;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     protobuf_request.set_opcode(mir_platform_message_get_opcode(request));
     auto const request_data = mir_platform_message_get_data(request);
     auto const request_fds = mir_platform_message_get_fds(request);
+#pragma GCC diagnostic pop
 
     protobuf_request.set_data(request_data.data, request_data.size);
     for (size_t i = 0; i != request_fds.num_fds; ++i)
