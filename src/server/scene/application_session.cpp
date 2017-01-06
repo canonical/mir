@@ -444,7 +444,7 @@ mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& p
     }
     catch (std::exception& e)
     {
-        event_sink->error_buffer(properties, e.what());
+        event_sink->error_buffer(properties.size, properties.format, e.what());
         throw;
     }
 }

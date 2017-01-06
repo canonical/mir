@@ -54,10 +54,8 @@ mg::BufferID mc::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer
         return buffer->id();
     } catch (std::exception& e)
     {
-        printf("FIFI\n");
-        ////FIXME BEFORE MP
         if (auto s = sink.lock())
-            s->error_buffer({buffer->size(), buffer->pixel_format(), mg::BufferUsage::hardware}, e.what());
+            s->error_buffer(buffer->size(), buffer->pixel_format(), e.what());
         throw;
     }
 }
