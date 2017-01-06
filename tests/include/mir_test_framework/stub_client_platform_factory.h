@@ -24,6 +24,10 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_test_framework/stub_platform_extension.h"
+#include "mir_test_framework/stub_client_platform_options.h"
+
+#include <unordered_map>
+#include <exception>
 
 namespace mir_test_framework
 {
@@ -31,6 +35,10 @@ namespace mir_test_framework
 struct StubClientPlatform : public mir::client::ClientPlatform
 {
     StubClientPlatform(mir::client::ClientContext* context);
+    StubClientPlatform(
+        mir::client::ClientContext* context,
+        std::unordered_map<FailurePoint, std::exception_ptr>&& fail_at);
+
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
@@ -48,6 +56,8 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirExtensionFavoriteFlavorV9 flavor_ext_9;
     MirExtensionAnimalNamesV1 animal_ext;
     MirExtensionFencedBuffersV1 fence_ext;
+
+    std::unordered_map<FailurePoint, std::exception_ptr> const fail_at;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory
