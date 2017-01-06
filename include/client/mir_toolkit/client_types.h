@@ -157,6 +157,9 @@ typedef void (*mir_client_fd_callback)(
 
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context);
+/* __attribute__((deprecated("Use mir_window_id_callback instead"))) */
+typedef void (*mir_window_id_callback)(
+    MirWindow* window, MirPersistentId* id, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -190,7 +193,6 @@ typedef struct MirSurfaceParameters
      */
     uint32_t output_id;
 } MirSurfaceParameters; /* __attribute__((deprecated("Use MirWindowParameters instead"))) */
-
 typedef MirSurfaceParameters MirWindowParameters;
 
 enum { mir_platform_package_max = 32 };
