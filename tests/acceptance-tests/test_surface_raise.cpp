@@ -52,23 +52,25 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     {
         ConnectedClientHeadlessServer::SetUp();
 
-       surface1 = mtf::make_any_surface(connection);
+        surface1 = mtf::make_any_surface(connection);
         mir_surface_set_event_handler(surface1, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(surface1));
 
         surface2 = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(surface2, &cookie_capturing_callback, this);
-        mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface2));
 
         // Need fullscreen for the cursor events
         auto const spec = mir_connection_create_spec_for_changes(connection);
         mir_surface_spec_set_fullscreen_on_output(spec, 1);
         mir_surface_apply_spec(surface1, spec);
+
+        mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
         mir_surface_apply_spec(surface2, spec);
         mir_surface_spec_release(spec);
-        
+
+        mir_buffer_stream_swap_buffers_sync(
+            mir_surface_get_buffer_stream(surface2));
+
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
             {
