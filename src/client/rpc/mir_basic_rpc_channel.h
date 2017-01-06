@@ -78,7 +78,7 @@ public:
 
     bool empty() const;
 
-    void wait_till_empty() const;
+    void wait_till_complete() const;
 
 private:
 

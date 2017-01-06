@@ -83,7 +83,7 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         auto call = pending_calls.find(result.id());
         if (call != pending_calls.end())
         {
-            completion = call->second;
+            completion = std::move(call->second);
             pending_calls.erase(call);
         }
         ++running_callbacks;
@@ -110,20 +110,18 @@ void mclrd::PendingCallCache::force_completion()
 {
     std::unique_lock<std::mutex> lock(mutex);
     ++running_callbacks;
-    for (auto& call : pending_calls)
+    while (!pending_calls.empty())
     {
-        auto& completion = call.second;
+        auto i = pending_calls.begin();
+        auto completion = std::move(i->second);
+        pending_calls.erase(i);
         lock.unlock();
         completion.complete->Run();
         lock.lock();
     }
     --running_callbacks;
-
-    pending_calls.erase(pending_calls.begin(), pending_calls.end());
     pending_calls_shrank.notify_all();
 }
-
-
 
 bool mclrd::PendingCallCache::empty() const
 {
@@ -131,7 +129,7 @@ bool mclrd::PendingCallCache::empty() const
     return pending_calls.empty();
 }
 
-void mclrd::PendingCallCache::wait_till_empty() const
+void mclrd::PendingCallCache::wait_till_complete() const
 {
     std::unique_lock<std::mutex> lock(mutex);
     while (running_callbacks || !pending_calls.empty())
