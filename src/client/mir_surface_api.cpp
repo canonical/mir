@@ -605,6 +605,25 @@ void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameter
     *parameters = window->get_parameters();
 }
 
+MirOrientation mir_window_get_orientation(MirWindow* window)
+{
+    return window->get_orientation();
+}
+
+void mir_window_raise(MirWindow* window, MirCookie const* cookie)
+{
+    mir::require(mir_window_is_valid(window));
+
+    try
+    {
+        window->raise_surface(cookie);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1014,7 +1033,7 @@ MirSurfaceState mir_surface_get_state(MirSurface* surf)
 
 MirOrientation mir_surface_get_orientation(MirSurface *surface)
 {
-    return surface->get_orientation();
+    return mir_window_get_orientation(surface);
 }
 
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
@@ -1169,16 +1188,7 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
 
 void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 {
-    mir::require(mir_window_is_valid(surf));
-
-    try
-    {
-        surf->raise_surface(cookie);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
+    mir_window_raise(surf, cookie);
 }
 
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)

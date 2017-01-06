@@ -651,6 +651,22 @@ char const* mir_window_get_error_message(MirWindow* window);
  */
 void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters);
 
+/**
+ * Get the orientation of a window.
+ *   \param [in] window  The window to query
+ *   \return              The orientation of the window
+ */
+MirOrientation mir_window_get_orientation(MirWindow* window);
+
+/**
+ * Attempts to raise the window to the front.
+ *
+ * \param [in] window The window to raise
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
+void mir_window_raise(MirWindow* window, MirCookie const* cookie);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -927,12 +943,8 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
  */
 MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
 
-/**
- * Get the orientation of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The orientation of the surface
- */
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_orientation() instead")));
 
 /**
  * Request to set the preferred orientations of a surface.
@@ -974,14 +986,8 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
  */
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
 
-/**
- * Attempts to raise the surface to the front.
- *
- * \param [in] surface The surface to raise
- * \param [in] cookie  A cookie instance obtained from an input event.
- *                     An invalid cookie will terminate the client connection.
- */
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
+//__attribute__((deprecated("use mir_window_raise() instead")));
 
 //#pragma GCC diagnostic pop
 

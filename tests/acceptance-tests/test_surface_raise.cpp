@@ -171,7 +171,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 
 bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
 {
-    mir_surface_raise(surface, cookie);
+    mir_window_raise(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [&surface]
         {
@@ -215,7 +215,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
-        mir_surface_raise(surface1, cookie);
+        mir_window_raise(surface1, cookie);
 
         mir_cookie_release(cookie);
 

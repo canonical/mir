@@ -548,4 +548,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_get_buffer_stream;
     mir_window_get_error_message;
     mir_window_get_parameters;
+    mir_window_get_orientation;
+    mir_window_raise;
 } MIR_CLIENT_0.25;

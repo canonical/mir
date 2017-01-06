@@ -226,7 +226,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 
         EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
-        EXPECT_THAT(mir_surface_get_orientation(window), Eq(direction));
+        EXPECT_THAT(mir_window_get_orientation(window), Eq(direction));
     }
 }
 
