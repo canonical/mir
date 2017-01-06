@@ -152,6 +152,16 @@ mir::graphics::BufferID mtd::StubSession::create_buffer(mir::graphics::BufferPro
     return mir::graphics::BufferID(3);
 }
 
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, uint32_t, uint32_t)
+{
+    return mir::graphics::BufferID(3);
+}
+
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, MirPixelFormat)
+{
+    return mir::graphics::BufferID(3);
+}
+
 void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
 {
 }

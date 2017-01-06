@@ -25,19 +25,15 @@
 
 namespace mir
 {
-namespace graphics { class GraphicBufferAllocator; }
 namespace frontend { class BufferSink; }
 namespace compositor
 {
 class BufferMap : public frontend::ClientBuffers
 {
 public:
-    BufferMap(
-        std::shared_ptr<frontend::BufferSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+    BufferMap(std::shared_ptr<frontend::BufferSink> const& sink);
 
-    graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
-    graphics::BufferID add_buffer(graphics::BufferAttribute const& properties) override;
+    graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
     void remove_buffer(graphics::BufferID id) override;
 
     void receive_buffer(graphics::BufferID id) override;
@@ -62,7 +58,6 @@ private:
     //would be better to schedule the async buffer callbacks in the ipc subsystem,
     //instead of driving from within the compositor threads (LP: #1395421)
     std::weak_ptr<frontend::BufferSink> const sink;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };
 }
 }

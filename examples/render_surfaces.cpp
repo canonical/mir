@@ -26,6 +26,8 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/buffer_stream_factory.h"
@@ -354,6 +356,7 @@ public:
 
         auto const display = the_display();
         auto const buffer_stream_factory = the_buffer_stream_factory();
+        auto const gralloc = the_graphics_platform()->create_buffer_allocator();
         auto const surface_factory = the_surface_factory();
         auto const surface_stack = the_surface_stack();
         auto const gl_context = as_context_source(the_display().get())->create_gl_context();
@@ -390,7 +393,7 @@ public:
                 void add_buffer(mg::Buffer&) override {}
                 void remove_buffer(mg::Buffer&) override {}
                 void update_buffer(mg::Buffer&) override {}
-                void error_buffer(mg::BufferProperties const&, std::string const&) override {}
+                void error_buffer(geom::Size, MirPixelFormat, std::string const&) override {}
             };
 
             auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
@@ -400,8 +403,7 @@ public:
             surface_stack->add_surface(surface, params.input_mode);
 
             {
-                auto buffer_id = buffers->add_buffer(properties);
-                auto buffer = (*buffers)[buffer_id];
+                auto buffer = gralloc->alloc_buffer(properties);
 
                 {
                     gl_context->make_current();

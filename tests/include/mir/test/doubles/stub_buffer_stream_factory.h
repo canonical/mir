@@ -32,7 +32,7 @@ namespace doubles
 
 struct StubClientBuffers : frontend::ClientBuffers
 {
-    graphics::BufferID add_buffer(graphics::BufferProperties const&) override
+    graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const&) override
     {
         return {};
     }

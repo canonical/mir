@@ -410,15 +410,22 @@ void mf::SessionMediator::allocate_buffers(
         mg::BufferID id;
         if (req.has_flags() && req.has_native_format())
         {
-            id = session->create_buffer({ {req.width(), req.height()} , req.native_format(), req.flags() });
+            id = session->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
         }
         else if (req.has_buffer_usage() && req.has_pixel_format())
         {
-            id = session->create_buffer(
-                mg::BufferProperties(
-                    geom::Size{req.width(), req.height()},
-                    static_cast<MirPixelFormat>(req.pixel_format()),
-                    static_cast<mg::BufferUsage>(req.buffer_usage())));
+            auto const usage = static_cast<mg::BufferUsage>(req.buffer_usage());
+            geom::Size const size{req.width(), req.height()};
+            auto const pf = static_cast<MirPixelFormat>(req.pixel_format());
+            if (usage == mg::BufferUsage::software)
+            {
+                id = session->create_buffer(size, pf); 
+            }
+            else
+            {
+                //legacy route, server-selected pf and usage
+                id = session->create_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
+            }
         }
         else
         {

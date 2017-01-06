@@ -49,7 +49,7 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    mg::BufferID add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const&)
     {
         return mg::BufferID{};
     }
