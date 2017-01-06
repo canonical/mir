@@ -68,17 +68,18 @@ struct StubClientContext : mcl::ClientContext
     }
 };
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MesaClientPlatformTest : testing::Test
 {
     MirPlatformMessage* set_gbm_device(gbm_device* dev)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto request_msg = mir::raii::deleter_for(
             mir_platform_message_create(MirMesaPlatformOperation::set_gbm_device),
             &mir_platform_message_release);
         MirMesaSetGBMDeviceRequest const request{dev};
         mir_platform_message_set_data(request_msg.get(), &request, sizeof(request));
+#pragma GCC diagnostic pop
 
         return platform->platform_operation(request_msg.get());
     }
@@ -113,12 +114,15 @@ TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
     int const success{0};
     auto const gbm_dev_dummy = reinterpret_cast<gbm_device*>(this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto response_msg = mir::raii::deleter_for(
         set_gbm_device(gbm_dev_dummy),
         &mir_platform_message_release);
 
     ASSERT_THAT(response_msg, NotNull());
     auto const response_data = mir_platform_message_get_data(response_msg.get());
+#pragma GCC diagnostic pop
     ASSERT_THAT(response_data.size, Eq(sizeof(MirMesaSetGBMDeviceResponse)));
 
     MirMesaSetGBMDeviceResponse response{-1};
@@ -135,9 +139,12 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
     int const previous_data_count{pkg.data_items};
     auto const gbm_dev_dummy = reinterpret_cast<gbm_device*>(this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto response_msg = mir::raii::deleter_for(
         set_gbm_device(gbm_dev_dummy),
         &mir_platform_message_release);
+#pragma GCC diagnostic pop
 
     platform->populate(pkg);
     EXPECT_THAT(pkg.data_items,
@@ -212,4 +219,3 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
         [] (::MirBuffer*, void*) {}, nullptr);
     EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
 }
-#pragma GCC diagnostic pop
