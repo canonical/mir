@@ -177,7 +177,6 @@ struct DemoPrivateProtobuf : mtf::InProcessServer
     mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
 
     DemoServerConfiguration my_server_config;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<DemoConnectionCreator> demo_connection_creator;
 

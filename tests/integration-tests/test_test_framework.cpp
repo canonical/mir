@@ -48,7 +48,6 @@ struct DemoInProcessServer : mir_test_framework::InProcessServer
 
 struct DemoInProcessServerWithStubClientPlatform : DemoInProcessServer
 {
-    mir_test_framework::UsingStubClientPlatform using_stub_client_platform;
 };
 }
 

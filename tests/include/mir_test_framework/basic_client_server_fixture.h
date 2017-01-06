@@ -34,7 +34,6 @@ template<class TestServerConfiguration>
 struct BasicClientServerFixture : InProcessServer
 {
     TestServerConfiguration server_configuration;
-    UsingStubClientPlatform using_stub_client_platform;
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 

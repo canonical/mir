@@ -66,7 +66,6 @@ struct ConnectionErrorServer : mtd::StubDisplayServer
 struct ErrorReporting : mtf::DeferredInProcessServer
 {
     std::unique_ptr<mir::DefaultServerConfiguration> server_configuration;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     void start_server_with_config(std::unique_ptr<mir::DefaultServerConfiguration> config)
     {

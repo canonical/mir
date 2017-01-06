@@ -101,8 +101,6 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         std::this_thread::sleep_for(10ms);
         surface = nullptr;
     }
-
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 }

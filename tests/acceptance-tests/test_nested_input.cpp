@@ -104,8 +104,7 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     }
     
     mtd::NestedMockEGL mock_egl;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-    
+
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };

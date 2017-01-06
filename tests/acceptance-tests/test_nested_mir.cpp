@@ -483,7 +483,6 @@ private:
 struct NestedServer : mtf::HeadlessInProcessServer
 {
     mtd::NestedMockEGL mock_egl;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     mt::Signal condition;
     mt::Signal test_processed_result;
 

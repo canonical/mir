@@ -107,7 +107,6 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
     MirConnection* application_connection{nullptr};
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     mir::CachedPtr<mtd::MockPromptSessionListener> mock_prompt_session_listener;
     mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;

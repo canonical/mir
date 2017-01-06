@@ -57,7 +57,6 @@ namespace
 struct ServerShutdown : testing::Test, mtf::ServerRunner
 {
     std::unique_ptr<mir::DefaultServerConfiguration> server_configuration;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     mir::DefaultServerConfiguration& server_config() override
     {

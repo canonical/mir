@@ -67,8 +67,6 @@ struct LargeMessages : mir_test_framework::InProcessServer
     {
         return large_messages_server_config;
     }
-
-    mir_test_framework::UsingStubClientPlatform using_stub_client_platform;
 };
 
 struct ConnectionContext

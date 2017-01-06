@@ -44,8 +44,6 @@ struct ServerDisconnect : mtf::InterprocessClientServerTest
         mtf::InterprocessClientServerTest::SetUp();
         run_in_server([]{});
     }
-
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 struct MockEventHandler

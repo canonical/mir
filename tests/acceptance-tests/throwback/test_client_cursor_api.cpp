@@ -266,7 +266,6 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
     std::string const client_cursor_2{"cursor-2"};
 
     mir::test::Signal expectations_satisfied;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})

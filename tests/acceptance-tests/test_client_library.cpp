@@ -123,8 +123,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
                                             mir_surface_state_minimized));
         }
     }
-    
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 auto const* const protocol_version_override = "MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION";

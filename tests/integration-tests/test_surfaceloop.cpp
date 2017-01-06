@@ -178,32 +178,6 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
             return std::make_shared<CountingStubBuffer>();
         }
     };
-
-    class StubPlatform : public mtd::NullPlatform
-    {
-    public:
-        mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
-        {
-            return mir::make_module_ptr<StubGraphicBufferAllocator>();
-        }
-
-        mir::UniqueModulePtr<mg::Display> create_display(
-            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-            std::shared_ptr<mg::GLConfig> const&) override
-        {
-            return mir::make_module_ptr<StubDisplay>();
-        }
-    };
-
-    std::shared_ptr<mg::Platform> the_graphics_platform()
-    {
-        if (!platform)
-            platform = std::make_shared<StubPlatform>();
-
-        return platform;
-    }
-
-    std::shared_ptr<mg::Platform> platform;
 };
 
 std::mutex BufferCounterConfig::CountingStubBuffer::buffers_mutex;

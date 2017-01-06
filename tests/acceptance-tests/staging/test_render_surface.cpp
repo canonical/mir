@@ -35,7 +35,6 @@ namespace
 {
 struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 {
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     geom::Size const logical_size{640, 480};
 };
 }
