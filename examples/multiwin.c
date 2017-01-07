@@ -243,8 +243,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(conn, 225, 225, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");
@@ -252,8 +251,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    mir_surface_spec_set_name(spec, "red");
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_name(spec, "red");
 
     win[0].surface = mir_surface_create_sync(spec);
     win[0].fill.r = 0xff;
@@ -262,9 +262,9 @@ int main(int argc, char *argv[])
     win[0].fill.a = alpha;
     premultiply_alpha(&win[0].fill);
 
-    mir_surface_spec_set_name(spec, "green");
-    mir_surface_spec_set_width(spec, 300);
-    mir_surface_spec_set_height(spec, 150);
+    mir_window_spec_set_name(spec, "green");
+    mir_window_spec_set_width(spec, 300);
+    mir_window_spec_set_height(spec, 150);
     win[1].surface = mir_surface_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
@@ -272,9 +272,9 @@ int main(int argc, char *argv[])
     win[1].fill.a = alpha;
     premultiply_alpha(&win[1].fill);
 
-    mir_surface_spec_set_name(spec, "blue");
-    mir_surface_spec_set_width(spec, 150);
-    mir_surface_spec_set_height(spec, 300);
+    mir_window_spec_set_name(spec, "blue");
+    mir_window_spec_set_width(spec, 150);
+    mir_window_spec_set_height(spec, 300);
     win[2].surface = mir_surface_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     win[2].fill.a = alpha;
     premultiply_alpha(&win[2].fill);
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);

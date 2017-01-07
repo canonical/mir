@@ -134,10 +134,10 @@ int demo_client(const char* server, int buffer_swap_count)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
 
-    MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(mcd.connection, 640, 480);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __FILE__);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, __FILE__);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
@@ -145,13 +145,13 @@ int demo_client(const char* server, int buffer_swap_count)
     puts("Surface created");
     ///\internal [surface_create_tag]
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     // We expect a surface handle;
     // we expect it to be valid; and,
     // we don't expect an error description
     assert(mcd.surface != NULL);
-    if(!mir_surface_is_valid(mcd.surface))
+    if(!mir_window_is_valid(mcd.surface))
     {
         fprintf(stderr, "Failed to create surface: %s",
                 mir_surface_get_error_message(mcd.surface));

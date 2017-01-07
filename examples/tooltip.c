@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
     MirConnection* const connection = mir_eglapp_native_connection();
     MirSurface* const parent = mir_eglapp_native_surface();
 
-    MirWindowSpec* const spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_name(spec, "tooltip example");
-    mir_surface_spec_set_min_width(spec, width/2);
-    mir_surface_spec_set_max_width(spec, width*2);
-    mir_surface_spec_set_min_height(spec, height/2);
-    mir_surface_spec_set_max_height(spec, height*2);
-    mir_surface_apply_spec(parent, spec);
-    mir_surface_spec_release(spec);
+    MirWindowSpec* const spec = mir_create_window_spec(connection);
+    mir_window_spec_set_name(spec, "tooltip example");
+    mir_window_spec_set_min_width(spec, width/2);
+    mir_window_spec_set_max_width(spec, width*2);
+    mir_window_spec_set_min_height(spec, height/2);
+    mir_window_spec_set_max_height(spec, height*2);
+    mir_window_apply_spec(parent, spec);
+    mir_window_spec_release(spec);
 
     MirSurface* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
     while (mir_eglapp_running())
@@ -102,18 +102,19 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     MirRectangle zone = { 0, 0, 10, 10 };
     int const width = 50;
     int const height = 20;
-    MirWindowSpec* const spec = mir_connection_create_spec_for_tip(
-        connection, width, height, format, parent, &zone, mir_edge_attachment_vertical);
+    MirWindowSpec* const spec = mir_create_tip_window_spec(
+        connection, width, height, parent, &zone, mir_edge_attachment_vertical);
+    mir_window_spec_set_pixel_format(spec, format);
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    mir_surface_spec_set_name(spec, "tooltip");
-    mir_surface_spec_set_min_width(spec, width);
-    mir_surface_spec_set_max_width(spec, width);
-    mir_surface_spec_set_min_height(spec, height);
-    mir_surface_spec_set_max_height(spec, height);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_name(spec, "tooltip");
+    mir_window_spec_set_min_width(spec, width);
+    mir_window_spec_set_max_width(spec, width);
+    mir_window_spec_set_min_height(spec, height);
+    mir_window_spec_set_max_height(spec, height);
 
     MirSurface* tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     MirBufferStream* const bs = mir_surface_get_buffer_stream(tooltip);
     MirGraphicsRegion buffer;

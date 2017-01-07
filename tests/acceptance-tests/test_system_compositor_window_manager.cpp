@@ -74,12 +74,12 @@ struct MockClient
 
     auto create_surface(int output_id) -> SurfaceHandle
     {
-        auto const spec = mir_connection_create_spec_for_normal_surface(
-                connection_, 800, 600, mir_pixel_format_bgr_888);
+        auto const spec = mir_create_normal_window_spec(connection_, 800, 600);
 
-        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
+        mir_window_spec_set_fullscreen_on_output(spec, output_id);
         auto const surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_window_spec_release(spec);
 
         mir_surface_set_event_handler(surface, on_surface_event, this);
 
@@ -193,8 +193,8 @@ TEST_F(SystemCompositorWindowManager, when_output_is_valid_surfaces_creation_suc
     auto surface1 = client.create_surface(1);
     auto surface2 = client.create_surface(2);
 
-    EXPECT_TRUE(mir_surface_is_valid(surface1));
-    EXPECT_TRUE(mir_surface_is_valid(surface2));
+    EXPECT_TRUE(mir_window_is_valid(surface1));
+    EXPECT_TRUE(mir_window_is_valid(surface2));
 }
 
 TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_creation_fails)
@@ -203,7 +203,7 @@ TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_crea
 
     auto surface = client.create_surface(0);
 
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("An output ID must be specified"));
 }
 
@@ -248,11 +248,11 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
 
     auto surface = client.create_surface(1);
 
-    MirWindowSpec* spec = mir_connection_create_spec_for_changes(client.connection());
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    MirWindowSpec* spec = mir_create_window_spec(client.connection());
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(surface, spec);
+    mir_window_spec_release(spec);
 
     mt::spin_wait_for_condition_or_timeout([this]
     {

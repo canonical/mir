@@ -216,15 +216,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection,
-        800, 600,
-        mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     mir_surface_release_sync(surface);
@@ -259,12 +257,10 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection,
-        800, 600,
-        mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
@@ -287,15 +283,13 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection,
-        800, 600,
-        mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     bool callback_called{false};
@@ -313,15 +307,13 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     ASSERT_THAT(connection, IsValid());
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection,
-        800, 600,
-        mir_pixel_format_xbgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_NE(surface, nullptr);
-    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_FALSE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 
     mir_surface_release_sync(surface);
@@ -339,23 +331,22 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     // An ID that parses as valid, but doesn't correspond to any
     auto invalid_id = mir_persistent_id_from_string("05f223a2-39e5-48b9-9416-b0ce837351b6");
 
-    auto spec = mir_connection_create_spec_for_input_method(connection,
-                                                            200, 200,
-                                                            mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 200, 200);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
     MirRectangle rect{
         100,
         100,
         10,
         10
     };
-    mir_surface_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
+    mir_window_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
     auto surface = mir_surface_create_sync(spec);
     EXPECT_THAT(surface, Not(IsValid()));
     EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
 
     mir_persistent_id_release(invalid_id);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
@@ -404,7 +395,8 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto spec = mir_connection_create_spec_for_input_method(connection, 100, 100, mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
 
     MirRectangle rect{
         100,
@@ -414,7 +406,7 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
     };
     MIR_EXPECT_DEATH(
     {
-        mir_surface_spec_attach_to_foreign_parent(spec, nullptr, &rect,
+        mir_window_spec_attach_to_foreign_parent(spec, nullptr, &rect,
                                                   mir_edge_attachment_any);
     }, "");
 
@@ -425,13 +417,14 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto spec = mir_connection_create_spec_for_input_method(connection, 100, 100, mir_pixel_format_argb_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
 
     auto id = mir_persistent_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
 
     MIR_EXPECT_DEATH(
     {
-        mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr,
+        mir_window_spec_attach_to_foreign_parent(spec, id, nullptr,
                                                   mir_edge_attachment_any);
     }, "");
 

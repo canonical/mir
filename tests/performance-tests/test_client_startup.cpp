@@ -69,13 +69,13 @@ MirSurface* make_surface(MirConnection* connection)
 {
     auto format = find_pixel_format(connection);
 
-    auto spec = mir_connection_create_spec_for_normal_surface(connection,
-            720, 1280, format);
+    auto spec = mir_create_normal_window_spec(connection, 720, 1280);
+    mir_window_spec_set_pixel_format(spec, format);
     auto surface = mir_surface_create_sync(spec);
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         std::string error_msg{"Could not create surface: "};
         error_msg.append(mir_surface_get_error_message(surface));

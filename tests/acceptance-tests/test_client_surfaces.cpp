@@ -121,17 +121,18 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
 {
     int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
     
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, width_1, height_1, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, width_1, height_1);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_surface_create(spec, create_surface_callback, ssync);
     wait_for_surface_create(ssync);
 
-    mir_surface_spec_set_width(spec, width_2);
-    mir_surface_spec_set_height(spec, height_2);
+    mir_window_spec_set_width(spec, width_2);
+    mir_window_spec_set_height(spec, height_2);
 
     mir_surface_create(spec, create_surface_callback, ssync+1);
     wait_for_surface_create(ssync+1);
     
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     MirSurfaceParameters response_params;
     mir_surface_get_parameters(ssync->surface, &response_params);
@@ -169,9 +170,10 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
 {
     for (int i = 0; i != max_surface_count; ++i)
     {
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+        auto spec = mir_create_normal_window_spec(connection, 1, 1);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_surface_create(spec, create_surface_callback, ssync+i);
-        mir_surface_spec_release(spec);
+        mir_window_spec_release(spec);
     }
 
     for (int i = 0; i != max_surface_count; ++i)
@@ -203,14 +205,15 @@ struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrient
 
 TEST_P(WithOrientation, have_requested_preferred_orientation)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 1, 1);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     MirOrientationMode mode{GetParam()};
-    mir_surface_spec_set_preferred_orientation(spec, mode);
+    mir_window_spec_set_preferred_orientation(spec, mode);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_THAT(surface, IsValid());
     EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
@@ -231,11 +234,12 @@ TEST_F(ClientSurfaces, can_be_menus)
     MirRectangle attachment_rect{100, 200, 100, 100};
 
     auto spec = mir_create_menu_window_spec(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &attachment_rect, mir_edge_attachment_vertical);
+        parent, &attachment_rect, mir_edge_attachment_vertical);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto menu = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_THAT(menu, IsValid());
     EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
@@ -244,39 +248,18 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_surface_release_sync(menu);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST_F(ClientSurfaces, can_be_tooltips)
-{
-    auto parent = mtf::make_any_surface(connection);
-    MirRectangle zone_rect{100, 200, 100, 100};
-
-    auto spec = mir_connection_create_spec_for_tooltip(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &zone_rect);
-    ASSERT_THAT(spec, NotNull());
-
-    auto tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
-    ASSERT_THAT(tooltip, IsValid());
-    EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
-
-    mir_surface_release_sync(parent);
-    mir_surface_release_sync(tooltip);
-}
-#pragma GCC diagnostic pop
-
 TEST_F(ClientSurfaces, can_be_tips)
 {
     auto parent = mtf::make_any_surface(connection);
     MirRectangle rect{100, 200, 100, 100};
 
-    auto spec = mir_connection_create_spec_for_tip(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent, &rect, mir_edge_attachment_any);
+    auto spec = mir_create_tip_window_spec(connection, 640, 480,
+        parent, &rect, mir_edge_attachment_any);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
     auto tooltip = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_THAT(tooltip, IsValid());
     EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
@@ -287,12 +270,12 @@ TEST_F(ClientSurfaces, can_be_tips)
 
 TEST_F(ClientSurfaces, can_be_dialogs)
 {
-    auto spec = mir_connection_create_spec_for_dialog(connection, 640, 480,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_dialog_window_spec(connection, 640, 480);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto dialog = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
@@ -303,12 +286,12 @@ TEST_F(ClientSurfaces, can_be_dialogs)
 TEST_F(ClientSurfaces, can_be_modal_dialogs)
 {
     auto parent = mtf::make_any_surface(connection);
-    auto spec = mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
-        mir_pixel_format_abgr_8888, parent);
+    auto spec = mir_create_modal_dialog_window_spec(connection, 640, 480, parent);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto dialog = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
     EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
@@ -319,12 +302,12 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
 
 TEST_F(ClientSurfaces, can_be_input_methods)
 {
-    auto spec = mir_connection_create_spec_for_input_method(connection, 640, 480,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_input_method_window_spec(connection, 640, 480);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto im = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
 
@@ -333,11 +316,11 @@ TEST_F(ClientSurfaces, can_be_input_methods)
 
 TEST_F(ClientSurfaces, can_be_renamed)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(
-                   connection, 123, 456, mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(connection, 123, 456);
     ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     auto surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     /*
      * Generally no windowing system ever censors window names. They are
@@ -349,17 +332,17 @@ TEST_F(ClientSurfaces, can_be_renamed)
      *
      * At least verify the rename completes without blocking...
      */
-    spec = mir_connection_create_spec_for_changes(connection);
+    spec = mir_create_window_spec(connection);
     ASSERT_THAT(spec, NotNull());
-    mir_surface_spec_set_name(spec, "New Name");
-    mir_surface_apply_spec(surf, spec);
+    mir_window_spec_set_name(spec, "New Name");
+    mir_window_apply_spec(surf, spec);
 
-    mir_surface_spec_set_name(spec, "");
-    mir_surface_apply_spec(surf, spec);
+    mir_window_spec_set_name(spec, "");
+    mir_window_apply_spec(surf, spec);
 
-    mir_surface_spec_set_name(spec, "Alice");
-    mir_surface_apply_spec(surf, spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_set_name(spec, "Alice");
+    mir_window_apply_spec(surf, spec);
+    mir_window_spec_release(spec);
 
     mir_surface_release_sync(surf);
 }
@@ -399,16 +382,16 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());
 
-    auto spec = mir_connection_create_spec_for_input_method(im_connection, 100, 20,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_input_method_window_spec(im_connection, 100, 20);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
-    mir_surface_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
+    mir_window_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
 
     mir_persistent_id_release(parent_id);
 
     auto im = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     mir_surface_release_sync(im);
     mir_surface_release_sync(surface);

@@ -168,17 +168,18 @@ int main(int argc, char** argv)
 #endif
     }
 
-    MirWindowSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(
         spec, render_surface, width, height, displacement_x, displacement_y);
     MirSurface* surface = mir_surface_create_sync(spec);
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         printf("could not create MirSurface\n");
         return -1;
     }
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     int num_prerendered_frames = 20;
     MirBufferUsage usage = mir_buffer_usage_software;

@@ -200,15 +200,18 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
 
     mir_surface_release_sync(surface);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+    auto const spec = mir_create_normal_window_spec(
+        connection,
+        surface_size.width.as_int(),
+        surface_size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_window_spec_set_streams(spec, infos.data(), infos.size());
 
     surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
+    mir_window_spec_release(spec);
+    EXPECT_TRUE(mir_window_is_valid(surface)) << mir_surface_get_error_message(surface);
 }
 
 
@@ -224,10 +227,10 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
             stream->position().y.as_int()};
     }
 
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
+    auto change_spec = mir_create_window_spec(connection);
+    mir_window_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_window_apply_spec(surface, change_spec);
+    mir_window_spec_release(change_spec);
 
     std::vector<mt::RelativeRectangle> positions;
     i = 0;
@@ -257,12 +260,12 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
             stream->position().y.as_int()};
     }
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection, 100, 100, mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+    auto spec = mir_create_normal_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_streams(spec, infos.data(), infos.size());
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    EXPECT_TRUE(mir_surface_is_valid(surface));
+    mir_window_spec_release(spec);
+    EXPECT_TRUE(mir_window_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
 }
 
@@ -279,10 +282,10 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
             stream->position().x.as_int(),
             stream->position().y.as_int()};
     }
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
+    auto change_spec = mir_create_window_spec(connection);
+    mir_window_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_window_apply_spec(surface, change_spec);
+    mir_window_spec_release(change_spec);
 
     EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
 }

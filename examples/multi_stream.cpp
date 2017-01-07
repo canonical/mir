@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
 
-    auto spec = mir_connection_create_spec_for_changes(connection);
+    auto spec = mir_create_window_spec(connection);
 
     int baseColour = 255, dbase = 1;
     int topColour = 255, dtop = 1;
@@ -276,13 +276,13 @@ int main(int argc, char* argv[])
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(*top, 0, topColour, 0, 128);
 
-        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
+        mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);
-        mir_surface_apply_spec(surface, spec);
+        mir_window_apply_spec(surface, spec);
     }
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
     close(signal_watch);
 
     std::cout << "Quitting; have a nice day." << std::endl;

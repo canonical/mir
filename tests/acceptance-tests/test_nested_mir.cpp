@@ -674,10 +674,10 @@ struct ClientWithAPaintedSurface : virtual Client
 
     void update_surface_spec(void (*changer)(MirWindowSpec* spec))
     {
-        auto const spec = mir_connection_create_spec_for_changes(connection);
+        auto const spec = mir_create_window_spec(connection);
         changer(spec);
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
+        mir_window_apply_spec(surface, spec);
+        mir_window_spec_release(spec);
 
     }
 
@@ -772,12 +772,11 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     Client client{nested_mir};
 
-    auto spec = mir_connection_create_spec_for_normal_surface(client.connection,
-        800, 600,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(client.connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_surface_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_surface_output)
             {
@@ -791,7 +790,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         &surface_event_received);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));
 
@@ -1030,10 +1029,10 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto spec = mir_connection_create_spec_for_changes(client.connection);
-        mir_surface_spec_set_cursor_name(spec, name);
-        mir_surface_apply_spec(client.surface, spec);
-        mir_surface_spec_release(spec);
+        auto spec = mir_create_window_spec(client.connection);
+        mir_window_spec_set_cursor_name(spec, name);
+        mir_window_apply_spec(client.surface, spec);
+        mir_window_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();

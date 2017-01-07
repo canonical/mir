@@ -35,15 +35,15 @@ MirSurface *create_surface(MirConnection *connection)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 1024, 1024, pixel_format);
-    mir_surface_spec_set_name(spec, "frame-uniformity-test");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    auto const spec = mir_create_normal_window_spec(connection, 1024, 1024);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, "frame-uniformity-test");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
     
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         std::cerr << "Surface creation failed: " << mir_surface_get_error_message(surface) << std::endl;
         exit(1);

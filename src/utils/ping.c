@@ -85,14 +85,15 @@ int main(int argc, char *argv[])
     mir_connection_get_available_surface_formats(conn, formats, 1,
                                                  &valid_formats);
 
-    MirWindowSpec *spec = mir_connection_create_spec_for_normal_surface(conn, 1, 1, formats[0]);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    mir_surface_spec_set_name(spec, "ping");
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 1, 1);
+    mir_window_spec_set_pixel_format(spec, formats[0]);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_name(spec, "ping");
 
     MirSurface *surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
-    if (surf == NULL || !mir_surface_is_valid(surf))
+    if (surf == NULL || !mir_window_is_valid(surf))
     {
         fprintf(stderr, "Could not create a surface.\n");
         mir_connection_release(conn);

@@ -402,14 +402,13 @@ int main(int argc, char *argv[])
     {
         /* Chicken or egg? init before open_camera, before size is known */
         MirConnection* connection = mir_eglapp_native_connection();
-        MirWindowSpec* changes =
-            mir_connection_create_spec_for_changes(connection);
+        MirWindowSpec* changes = mir_create_window_spec(connection);
         win_width = cam->pix.width;
         win_height = cam->pix.height;
-        mir_surface_spec_set_width(changes, win_width);
-        mir_surface_spec_set_height(changes, win_height);
-        mir_surface_apply_spec(surface, changes);
-        mir_surface_spec_release(changes);
+        mir_window_spec_set_width(changes, win_width);
+        mir_window_spec_set_height(changes, win_height);
+        mir_window_apply_spec(surface, changes);
+        mir_window_spec_release(changes);
     }
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);

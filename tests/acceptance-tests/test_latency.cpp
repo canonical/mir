@@ -256,11 +256,12 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        auto del = [] (MirWindowSpec* spec) { mir_surface_spec_release(spec); };
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
-            mir_connection_create_spec_for_normal_surface(
-                connection, 100, 100, mir_pixel_format_abgr_8888),
+            mir_create_normal_window_spec(connection, 100, 100),
             del);
+        mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
+
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;
 

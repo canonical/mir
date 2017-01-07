@@ -241,7 +241,7 @@ void mir_output_set_pixel_format(MirOutput* output, MirPixelFormat format);
  * Get the ID of an output
  *
  * This can be used to refer to the output in other parts of the API, such as
- * mir_surface_spec_set_fullscreen_on_output().
+ * mir_window_spec_set_fullscreen_on_output().
  *
  * \param [in]  output  The MirOutput to query.
  * \returns     The ID of output, which may be used to refer to it in other

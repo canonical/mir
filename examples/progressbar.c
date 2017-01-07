@@ -250,26 +250,25 @@ int main(int argc, char *argv[])
 
     int width = 500;
     int height = 500;
-    MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");
         mir_connection_release(conn);
         return 1;
     }
-
+    mir_window_spec_set_pixel_format(spec, pixel_format);
     {
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
         name[sizeof(name)-1] = '\0';
-        mir_surface_spec_set_name(spec, name);
+        mir_window_spec_set_name(spec, name);
     }
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
     surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     if (surf != NULL)
     {

@@ -65,11 +65,11 @@ void demo_client(const char* server)
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
-    MirWindowSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
 
     mir_wait_for(mir_surface_create(spec, surface_create_callback, NULL));
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     mir_wait_for(mir_surface_release(surface, surface_release_callback, NULL));
 }
