@@ -24,18 +24,20 @@ void mtf::ConnectedClientWithASurface::SetUp()
 {
     ConnectedClientHeadlessServer::SetUp();
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    auto const spec = mir_create_normal_window_spec(
+        connection,
+        surface_size.width.as_int(), surface_size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    ASSERT_TRUE(mir_surface_is_valid(surface));
+    window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
+    ASSERT_TRUE(mir_window_is_valid(window));
 }
 
 void mtf::ConnectedClientWithASurface::TearDown()
 {
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     ConnectedClientHeadlessServer::TearDown();
 }

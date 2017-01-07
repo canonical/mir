@@ -84,9 +84,9 @@ struct ContentInfo
 
 struct MirSurfaceSpec
 {
-    MirSurfaceSpec();
+    MirSurfaceSpec() = default;
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
-    MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
+    MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params);
 
     struct AspectRatio { unsigned width; unsigned height; };
 
@@ -174,12 +174,12 @@ public:
         mir::client::rpc::DisplayServerDebug* debug,
         std::shared_ptr<MirBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto,
+        MirWindowSpec const& spec, mir::protobuf::Surface const& surface_proto,
         std::shared_ptr<MirWaitHandle> const& handle);
 
     ~MirSurface();
 
-    MirSurfaceParameters get_parameters() const;
+    MirWindowParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
 
@@ -208,7 +208,7 @@ public:
 
     MirBufferStream* get_buffer_stream();
 
-    MirWaitHandle* modify(MirSurfaceSpec const& changes);
+    MirWaitHandle* modify(MirWindowSpec const& changes);
 
     static bool is_valid(MirSurface* query);
 

@@ -52,24 +52,24 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     {
         ConnectedClientHeadlessServer::SetUp();
 
-        surface1 = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(surface1, &cookie_capturing_callback, this);
+       surface1 = mtf::make_any_surface(connection);
+        mir_window_set_event_handler(surface1, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface1));
+            mir_window_get_buffer_stream(surface1));
 
         surface2 = mtf::make_any_surface(connection);
 
         // Need fullscreen for the cursor events
-        auto const spec = mir_connection_create_spec_for_changes(connection);
-        mir_surface_spec_set_fullscreen_on_output(spec, 1);
-        mir_surface_apply_spec(surface1, spec);
+        auto const spec = mir_create_window_spec(connection);
+        mir_window_spec_set_fullscreen_on_output(spec, 1);
+        mir_window_apply_spec(surface1, spec);
 
-        mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
-        mir_surface_apply_spec(surface2, spec);
-        mir_surface_spec_release(spec);
+        mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
+        mir_window_apply_spec(surface2, spec);
+        mir_window_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface2));
+            mir_window_get_buffer_stream(surface2));
 
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
@@ -173,7 +173,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 
 bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
 {
-    mir_surface_raise(surface, cookie);
+    mir_window_raise(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [&surface]
         {
@@ -217,7 +217,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
-        mir_surface_raise(surface1, cookie);
+        mir_window_raise(surface1, cookie);
 
         mir_cookie_release(cookie);
 

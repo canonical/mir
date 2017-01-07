@@ -50,10 +50,10 @@ public:
         std::shared_ptr<mf::EventSink> const& sink) override
     {
         auto const result = msh::ShellWrapper::create_surface(session, params, sink);
-        auto const surface = session->surface(result);
+        auto const window = session->surface(result);
 
-        surface->move_to(placement.top_left);
-        surface->resize(placement.size);
+        window->move_to(placement.top_left);
+        window->resize(placement.size);
 
         return result;
     }
@@ -72,7 +72,7 @@ class SimpleCoordinateTranslator : public mir::scene::CoordinateTranslator
 {
 public:
     mir::geometry::Point surface_to_screen(
-        std::shared_ptr<mir::frontend::Surface> /*surface*/,
+        std::shared_ptr<mir::frontend::Surface> /*window*/,
         int32_t /*x*/,
         int32_t /*y*/) override
     {
@@ -151,44 +151,44 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     set_surface_placement(surface_location);
 
-    auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    auto window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
 
     int screen_x, screen_y, x, y;
     x = 35, y = 21;
 
-    ASSERT_TRUE(mir_debug_surface_coords_to_screen(surf, x, y, &screen_x, &screen_y));
+    ASSERT_TRUE(mir_debug_surface_coords_to_screen(window, x, y, &screen_x, &screen_y));
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
 
     surface_location.top_left = {100, 250};
 
     set_surface_placement(surface_location);
 
-    surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
 
-    ASSERT_TRUE(mir_debug_surface_coords_to_screen(surf, x, y, &screen_x, &screen_y));
+    ASSERT_TRUE(mir_debug_surface_coords_to_screen(window, x, y, &screen_x, &screen_y));
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
 }
 
 TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
 {
     start_server_with_debug(false);
 
-    auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    auto window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
 
     int screen_x, screen_y;
 
-    EXPECT_FALSE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
+    EXPECT_FALSE(mir_debug_surface_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
 }
 
 TEST_F(DebugAPI, is_overrideable)
@@ -201,14 +201,14 @@ TEST_F(DebugAPI, is_overrideable)
 
     start_server_with_debug(false);
 
-    auto surf = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(surf));
+    auto window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
 
     int screen_x, screen_y;
 
-    EXPECT_TRUE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
+    EXPECT_TRUE(mir_debug_surface_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
     EXPECT_EQ(testpoint.x.as_int(), screen_x);
     EXPECT_EQ(testpoint.y.as_int(), screen_y);
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
 }
