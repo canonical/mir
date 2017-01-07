@@ -435,5 +435,5 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 TEST_F(ClientLibraryErrorsDeathTest, creating_screencast_with_invalid_connection)
 {
     MirScreencastParameters params{{0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-    EXPECT_DEATH(mir_connection_create_screencast_sync(nullptr, &params), "");
+    MIR_EXPECT_DEATH(mir_connection_create_screencast_sync(nullptr, &params), "");
 }
