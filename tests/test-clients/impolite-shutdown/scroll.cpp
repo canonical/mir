@@ -82,17 +82,17 @@ void create_and_run_scroll_surface(MirConnection *connection)
     mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
     mir_window_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
 
-    MirSurface *surface = mir_surface_create_sync(spec.get());
+    MirWindow *window = mir_window_create_sync(spec.get());
     spec.reset();
 
-    assert(surface != NULL);
-    assert(mir_window_is_valid(surface));
-    assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
-    puts("Surface created");
+    assert(window != NULL);
+    assert(mir_window_is_valid(window));
+    assert(strcmp(mir_surface_get_error_message(window), "") == 0);
+    puts("Window created");
 
     EGLNativeWindowType native_window =
         (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(
-            mir_surface_get_buffer_stream(surface));
+            mir_surface_get_buffer_stream(window));
     assert(native_window != (EGLNativeWindowType)NULL);
 
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
@@ -118,8 +118,8 @@ void create_and_run_scroll_surface(MirConnection *connection)
     eglDestroySurface(disp, egl_surface);
     eglDestroyContext(disp, context);
     
-    mir_surface_release_sync(surface);
-    puts("Surface released");
+    mir_window_release_sync(window);
+    puts("Window released");
 }
 
 static void shutdown(int signum)

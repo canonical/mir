@@ -210,7 +210,7 @@ int main(int /*argc*/, char* /*argv*/[])
                                                               pixel_format,
                                                               mir_buffer_usage_software);
 
-    auto surface = mir_surface_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);
@@ -241,7 +241,7 @@ int main(int /*argc*/, char* /*argv*/[])
     }
 
     mir_render_surface_release(render_surface);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     close(signal_watch);
 
     return 0;

@@ -43,7 +43,7 @@ private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    MirSurface* surface;
+    MirWindow* window;
     bool visible;
 };
 

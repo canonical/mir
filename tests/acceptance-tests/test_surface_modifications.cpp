@@ -70,8 +70,8 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const scene_surface = shell_surface.lock();
         scene_surface->add_observer(mt::fake_shared(surface_observer));
 
-        // Swap buffers to ensure surface is visible for event based tests
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        // Swap buffers to ensure window is visible for event based tests
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
     }
 
     void generate_alt_click_at(Point const& click_position)
@@ -136,7 +136,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
         specifier(spec);
 
-        mir_window_apply_spec(surface, spec);
+        mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
     }
 
@@ -572,8 +572,8 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
 
-    mir_wait_for(mir_surface_set_state(surface, initial_state));
-    mir_wait_for(mir_surface_set_state(surface, new_state));
+    mir_wait_for(mir_surface_set_state(window, initial_state));
+    mir_wait_for(mir_surface_set_state(window, new_state));
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,

@@ -77,7 +77,7 @@ bool UnacceleratedClient::create_surface()
     mir_window_spec_set_name(spec, __PRETTY_FUNCTION__);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surface_ = mir_surface_create_sync(spec);
+    surface_ = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     return true;
@@ -87,7 +87,7 @@ void UnacceleratedClient::release_surface()
 {
     if (surface_ != nullptr)
     {
-        mir_surface_release_sync(surface_);
+        mir_window_release_sync(surface_);
         surface_ = nullptr;
     }
 }

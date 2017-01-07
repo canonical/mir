@@ -71,17 +71,17 @@ MirSurface* make_surface(MirConnection* connection)
 
     auto spec = mir_create_normal_window_spec(connection, 720, 1280);
     mir_window_spec_set_pixel_format(spec, format);
-    auto surface = mir_surface_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
 
     mir_window_spec_release(spec);
 
-    if (!mir_window_is_valid(surface))
+    if (!mir_window_is_valid(window))
     {
-        std::string error_msg{"Could not create surface: "};
-        error_msg.append(mir_surface_get_error_message(surface));
+        std::string error_msg{"Could not create window: "};
+        error_msg.append(mir_surface_get_error_message(window));
         throw std::runtime_error(error_msg);
     }
-    return surface;
+    return window;
 }
 }
 
@@ -91,11 +91,11 @@ TEST_F(ClientStartupPerformance, create_surface_and_swap)
     auto start = std::chrono::steady_clock::now();
 
     auto conn = create_connection();
-    auto surf = make_surface(conn);
-    auto stream  = mir_surface_get_buffer_stream(surf);
+    auto window = make_surface(conn);
+    auto stream  = mir_surface_get_buffer_stream(window);
     if (!mir_buffer_stream_is_valid(stream))
     {
-        std::string error_msg{"Could not get buffer stream from surface: "};
+        std::string error_msg{"Could not get buffer stream from window: "};
         error_msg.append(mir_buffer_stream_get_error_message(stream));
         throw std::runtime_error(error_msg);
     }
@@ -109,7 +109,7 @@ TEST_F(ClientStartupPerformance, create_surface_and_swap)
     auto max_expected_time = 80ms;
     EXPECT_THAT(diff.count(), Lt(max_expected_time.count()));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
     mir_connection_release(conn);
 }
 

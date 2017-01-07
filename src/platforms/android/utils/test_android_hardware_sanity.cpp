@@ -119,14 +119,14 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
         connection, test_width, test_height);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    auto const surface = mir_surface_create_sync(spec);
+    auto const window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    EXPECT_THAT(surface, IsValid());
+    EXPECT_THAT(window, IsValid());
     MirGraphicsRegion graphics_region;
-    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
+    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(window), &graphics_region);
     draw_pattern.draw(graphics_region);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
 
     auto scene = runner->config.the_scene();
     auto seq = scene->scene_elements_for(this);
@@ -146,7 +146,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     });
     EXPECT_TRUE(valid_content);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -175,7 +175,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     auto const spec = mir_create_normal_window_spec(connection, test_width, test_height);
     mir_window_spec_set_pixel_format(spec, select_format_for_visual_id(visual_id));
 
-    auto const mir_surface = mir_surface_create_sync(spec);
+    auto const mir_surface = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_THAT(mir_surface, IsValid());
@@ -207,7 +207,7 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
         valid_content = green_pattern.check(region);
     });
     EXPECT_TRUE(valid_content);
-    mir_surface_release_sync(mir_surface);
+    mir_window_release_sync(mir_surface);
     mir_connection_release(connection);
 }
 

@@ -63,7 +63,7 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
     {
         mt::Signal buffers_swapped;
 
-        mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), swap_buffers_callback, &buffers_swapped);
+        mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(window), swap_buffers_callback, &buffers_swapped);
 
         /*
          * ASSERT instead of EXPECT, since if we continue we will block in future
@@ -137,5 +137,5 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
 TEST_F(SwapBuffersDoesntBlockOnSubmission, can_swap_nbuffers_times_without_blocking)
 {
     for (auto i = 0u; i != nbuffers; ++i)
-        mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), nullptr, nullptr);
+        mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(window), nullptr, nullptr);
 }

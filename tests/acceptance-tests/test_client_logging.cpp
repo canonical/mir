@@ -62,14 +62,14 @@ TEST_F(ClientLogging, reports_performance)
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_name(spec, "Rumpelstiltskin");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    auto surf = mir_surface_create_sync(spec);
-    ASSERT_THAT(surf, NotNull());
+    auto window = mir_window_create_sync(spec);
+    ASSERT_THAT(window, NotNull());
     mir_window_spec_release(spec);
 
     int const target_fps = 10;
     int const nseconds = 3;
     auto const target_render_time = std::chrono::milliseconds(3);
-    auto bs = mir_surface_get_buffer_stream(surf);
+    auto bs = mir_surface_get_buffer_stream(window);
     for (int s = 0; s < nseconds; ++s)
     {
         for (int f = 0; f < target_fps; ++f)
@@ -118,7 +118,7 @@ TEST_F(ClientLogging, reports_performance)
 
             // In order to see all three buffers the client must be rendering
             // at least in bursts faster than the compositor consumes them.
-            // On the surface of it the above render loop should appear to
+            // On the window of it the above render loop should appear to
             // do that, but in reality we're feeding an unthottled fake
             // compositor here so may never hit all three buffers...
             EXPECT_THAT(nbuffers, Ge(2));
@@ -129,5 +129,5 @@ TEST_F(ClientLogging, reports_performance)
 
     EXPECT_THAT(reports, Ge(nseconds-1));
 
-    mir_surface_release_sync(surf);
+    mir_window_release_sync(window);
 }

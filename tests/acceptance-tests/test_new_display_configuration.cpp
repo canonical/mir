@@ -268,13 +268,13 @@ struct SimpleClient
         auto const spec = mir_create_normal_window_spec(connection, 100, 100);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_event_handler(spec, &handle_event, this);
-        surface = mir_surface_create_sync(spec);
+        window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
     static void handle_event(MirSurface*, MirEvent const* ev, void* context)
@@ -296,7 +296,7 @@ struct SimpleClient
 
     void disconnect()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
 
@@ -307,7 +307,7 @@ struct SimpleClient
 
     std::string mir_test_socket;
     MirConnection* connection{nullptr};
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
     mutable std::mutex mutex;
     mir::test::Signal ready_to_accept_events;
     bool focused{false};

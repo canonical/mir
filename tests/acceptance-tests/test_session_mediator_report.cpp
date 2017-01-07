@@ -135,14 +135,14 @@ TEST_F(SessionMediatorReportTest, session_create_and_release_surface_called)
     auto report_received = std::make_shared<mt::Signal>();
     ON_CALL(*report, session_create_surface_called(_))
         .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
-    auto const surface = mtf::make_any_surface(connection);
+    auto const window = mtf::make_any_surface(connection);
     EXPECT_TRUE(report_received->wait_for(10s));
 
     report_received->reset();
 
     ON_CALL(*report, session_release_surface_called(_))
         .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     EXPECT_TRUE(report_received->wait_for(10s));
 }
 
@@ -158,10 +158,10 @@ TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
 
     connect_client();
 
-    auto const surface = mtf::make_any_surface(connection);
-    auto const buffer_stream = mir_surface_get_buffer_stream(surface);
+    auto const window = mtf::make_any_surface(connection);
+    auto const buffer_stream = mir_surface_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     EXPECT_TRUE(report_received->wait_for(10s));
 }
 

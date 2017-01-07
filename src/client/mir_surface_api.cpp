@@ -37,18 +37,6 @@
 
 namespace mcl = mir::client;
 
-namespace
-{
-
-// assign_result is compatible with all 2-parameter callbacks
-void assign_result(void* result, void** context)
-{
-    if (context)
-        *context = result;
-}
-
-}
-
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
@@ -482,6 +470,108 @@ catch (std::exception const& ex)
     // Keep calm and carry on
 }
 
+namespace
+{
+static MirWaitHandle* window_create_helper(MirWindowSpec* requested_specification,
+                                           mir_window_callback callback, void* context)
+{
+    mir::require(requested_specification != nullptr);
+    mir::require(requested_specification->type.is_set());
+
+    auto conn = requested_specification->connection;
+    mir::require(mir_connection_is_valid(conn));
+
+    try
+    {
+        return conn->create_surface(*requested_specification, callback, context);
+    }
+    catch (std::exception const& error)
+    {
+        return nullptr;
+    }
+}
+
+static MirWaitHandle* window_release_helper(
+    MirWindow* window,
+    mir_window_callback callback, void* context)
+{
+    mir::require(window);
+
+    auto connection = window->connection();
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        return connection->release_surface(window, callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
+class WindowSync
+{
+public:
+    void set_result(MirWindow* result)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        window = result;
+        cv.notify_all();
+    }
+
+    MirWindow* wait_for_result()
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        cv.wait(lk, [this] { return window; });
+        return window;
+    }
+
+private:
+    MirWindow* window = nullptr;
+    std::mutex mutex;
+    std::condition_variable cv;
+};
+
+void set_result(MirWindow* result, WindowSync* context)
+{
+    context->set_result(result);
+}
+}
+
+void mir_window_create(MirWindowSpec* requested_specification,
+                       mir_window_callback callback, void* context)
+{
+    window_create_helper(requested_specification, callback, context);
+}
+
+MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification)
+{
+    WindowSync ws;
+    mir_window_create(requested_specification,
+                      reinterpret_cast<mir_window_callback>(set_result),
+                      &ws);
+    return ws.wait_for_result();
+}
+
+void mir_window_release(
+    MirWindow* window,
+    mir_window_callback callback,
+    void *context)
+{
+    window_release_helper(window, callback, context);
+}
+
+void mir_window_release_sync(MirWindow* window)
+{
+    WindowSync ws;
+    mir_window_release(window,
+                       reinterpret_cast<mir_window_callback>(set_result),
+                       &ws);
+    ws.wait_for_result();
+}
+
 bool mir_window_is_valid(MirWindow* window)
 {
     return MirWindow::is_valid(window);
@@ -565,32 +655,13 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
-    MirSurface* surface = nullptr;
-
-    mir_wait_for(mir_surface_create(requested_specification,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        &surface));
-
-    return surface;
+    return mir_window_create_sync(requested_specification);
 }
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
-    mir::require(requested_specification != nullptr);
-    mir::require(requested_specification->type.is_set());
-
-    auto conn = requested_specification->connection;
-    mir::require(mir_connection_is_valid(conn));
-
-    try
-    {
-        return conn->create_surface(*requested_specification, callback, context);
-    }
-    catch (std::exception const& error)
-    {
-        return nullptr;
-    }
+    return window_create_helper(requested_specification, callback, context);
 }
 
 void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
@@ -849,23 +920,12 @@ MirWaitHandle* mir_surface_release(
     MirSurface* surface,
     mir_surface_callback callback, void* context)
 {
-    auto connection = surface->connection();
-    try
-    {
-        return connection->release_surface(surface, callback, context);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
+    return window_release_helper(surface, callback, context);
 }
 
 void mir_surface_release_sync(MirSurface* surface)
 {
-    mir_wait_for(mir_surface_release(surface,
-        reinterpret_cast<mir_surface_callback>(assign_result),
-        nullptr));
+    mir_window_release_sync(surface);
 }
 
 MirSurfaceType mir_surface_get_type(MirSurface* surf)

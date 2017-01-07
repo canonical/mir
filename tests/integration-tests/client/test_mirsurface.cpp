@@ -150,7 +150,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
 
     std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirWindowSpec* spec)
     {
-        return {mir_surface_create_sync(spec), [](MirSurface *surf){mir_surface_release_sync(surf);}};
+        return {mir_window_create_sync(spec), [](MirWindow *window){mir_window_release_sync(window);}};
     }
 
     MirWindowSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};
@@ -164,7 +164,7 @@ TEST_F(ClientMirSurface, sends_optional_params)
 
     auto surf = create_surface(&spec);
 
-    // A valid surface is needed to be specified as a parent
+    // A valid window is needed to be specified as a parent
     ASSERT_THAT(surf.get(), IsValid());
     spec.parent = surf.get();
 

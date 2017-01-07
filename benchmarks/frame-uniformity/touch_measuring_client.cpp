@@ -29,7 +29,7 @@ namespace mt = mir::test;
 namespace
 {
 
-MirSurface *create_surface(MirConnection *connection)
+MirWindow *create_window(MirConnection *connection)
 {
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
@@ -40,16 +40,16 @@ MirSurface *create_surface(MirConnection *connection)
     mir_window_spec_set_name(spec, "frame-uniformity-test");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-    auto surface = mir_surface_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
     
-    if (!mir_window_is_valid(surface))
+    if (!mir_window_is_valid(window))
     {
-        std::cerr << "Surface creation failed: " << mir_surface_get_error_message(surface) << std::endl;
+        std::cerr << "Window creation failed: " << mir_surface_get_error_message(window) << std::endl;
         exit(1);
     }
 
-    return surface;
+    return window;
 }
 
 void input_callback(MirSurface * /* surface */, MirEvent const* event, void* context)
@@ -106,11 +106,11 @@ void TouchMeasuringClient::run(std::string const& connect_string)
      */
     mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
     
-    auto surface = create_surface(connection);
+    auto window = create_window(connection);
 
-    collect_input_and_frame_timing(surface, client_ready, touch_duration, results_);
+    collect_input_and_frame_timing(window, client_ready, touch_duration, results_);
     
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 

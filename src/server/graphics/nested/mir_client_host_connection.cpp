@@ -111,7 +111,7 @@ public:
         MirWindowSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
-              mir_surface_create_sync(spec)}
+              mir_window_create_sync(spec)}
     {
         if (!mir_window_is_valid(mir_surface))
         {
@@ -123,7 +123,7 @@ public:
     ~MirClientHostSurface()
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
-        mir_surface_release_sync(mir_surface);
+        mir_window_release_sync(mir_surface);
     }
 
     void apply_spec(mgn::HostSurfaceSpec& spec) override

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     mir_eglapp_swap_buffers();
 
     MirConnection* const connection = mir_eglapp_native_connection();
-    MirSurface* const parent = mir_eglapp_native_surface();
+    MirWindow* const parent = mir_eglapp_native_window();
 
     MirWindowSpec* const spec = mir_create_window_spec(connection);
     mir_window_spec_set_name(spec, "tooltip example");
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     {
     }
 
-    mir_surface_release_sync(tooltip);
+    mir_window_release_sync(tooltip);
     mir_eglapp_cleanup();
 
     return 0;
@@ -113,7 +113,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     mir_window_spec_set_min_height(spec, height);
     mir_window_spec_set_max_height(spec, height);
 
-    MirSurface* tooltip = mir_surface_create_sync(spec);
+    MirSurface* tooltip = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
     MirBufferStream* const bs = mir_surface_get_buffer_stream(tooltip);

@@ -112,7 +112,7 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     void SetUp()
     {
         mtf::BasicClientServerFixture<ServerConfig>::SetUp();
-        surface = mtf::make_any_surface(connection);
+        window = mtf::make_any_surface(connection);
         stream = mir_connection_create_buffer_stream_sync(
             connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     }
@@ -120,7 +120,7 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     void TearDown()
     {
         mir_buffer_stream_release_sync(stream);
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mtf::BasicClientServerFixture<ServerConfig>::TearDown();
     }
 
@@ -129,7 +129,7 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
         return server_configuration.framedropping_enabled;
     }
 
-    MirSurface* surface;
+    MirWindow* window;
     MirBufferStream* stream;
 };
 

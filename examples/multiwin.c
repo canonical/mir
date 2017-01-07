@@ -30,7 +30,7 @@ typedef struct
 
 typedef struct
 {
-    MirSurface *surface;
+    MirWindow *window;
     Color fill;
 } Window;
 
@@ -164,7 +164,7 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(win->surface);
+    MirBufferStream *bs = mir_surface_get_buffer_stream(win->window);
 
     mir_buffer_stream_get_graphics_region(bs, &region);
     clear_region(&region, &win->fill);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225);
     if (spec == NULL)
     {
-        fprintf(stderr, "Could not create a surface spec.\n");
+        fprintf(stderr, "Could not create a window spec.\n");
         mir_connection_release(conn);
         return 1;
     }
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "red");
 
-    win[0].surface = mir_surface_create_sync(spec);
+    win[0].window = mir_window_create_sync(spec);
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "green");
     mir_window_spec_set_width(spec, 300);
     mir_window_spec_set_height(spec, 150);
-    win[1].surface = mir_surface_create_sync(spec);
+    win[1].window = mir_window_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "blue");
     mir_window_spec_set_width(spec, 150);
     mir_window_spec_set_height(spec, 300);
-    win[2].surface = mir_surface_create_sync(spec);
+    win[2].window = mir_window_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
@@ -295,9 +295,9 @@ int main(int argc, char *argv[])
             draw_window(win + w);
     }
 
-    mir_surface_release_sync(win[0].surface);
-    mir_surface_release_sync(win[1].surface);
-    mir_surface_release_sync(win[2].surface);
+    mir_window_release_sync(win[0].window);
+    mir_window_release_sync(win[1].window);
+    mir_window_release_sync(win[2].window);
     mir_connection_release(conn);
 
     return 0;

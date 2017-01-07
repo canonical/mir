@@ -43,14 +43,14 @@ namespace
 class SurfaceHandle
 {
 public:
-    explicit SurfaceHandle(MirSurface* surface) : surface{surface} {}
-    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
+    explicit SurfaceHandle(MirWindow* window) : window{window} {}
+    ~SurfaceHandle() { if (window) mir_window_release_sync(window); }
 
-    operator MirSurface*() const { return surface; }
-    SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
+    operator MirWindow*() const { return window; }
+    SurfaceHandle(SurfaceHandle&& that) : window{that.window} { that.window = nullptr; }
 private:
     SurfaceHandle(SurfaceHandle const&) = delete;
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 class MockSurfaceObserver : public ms::NullSurfaceObserver
@@ -104,14 +104,14 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        auto const surface = mir_surface_create_sync(spec);
+        auto const window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
 
-        return SurfaceHandle{surface};
+        return SurfaceHandle{window};
     }
 
     template<typename Specifier>
-    void change_surface(MirSurface* surface, Specifier const& specifier)
+    void change_surface(MirWindow* window, Specifier const& specifier)
     {
         signal_change.reset();
 
@@ -119,19 +119,19 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        mir_window_apply_spec(surface, spec);
+        mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
         signal_change.wait_for(1s);
     }
 
-    void wait_for_arbitrary_change(MirSurface* surface)
+    void wait_for_arbitrary_change(MirWindow* window)
     {
         auto const new_title = __PRETTY_FUNCTION__;
 
         EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
             WillOnce(InvokeWithoutArgs([&]{ change_observed(); }));
 
-        change_surface(surface, [&](MirWindowSpec* spec)
+        change_surface(window, [&](MirWindowSpec* spec)
             {
                 mir_window_spec_set_name(spec, new_title);
             });
@@ -176,7 +176,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, old_type);
             mir_window_spec_set_width(spec, width);
@@ -190,7 +190,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, new_type);
         });
@@ -210,7 +210,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
             mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
     {
         mir_window_spec_set_type(spec, old_type);
         mir_window_spec_set_width(spec, width);
@@ -224,7 +224,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         Times(0);
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, new_type);
             mir_window_spec_set_parent(spec, parent);
@@ -234,7 +234,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
             change_observed();
         });
 
-    wait_for_arbitrary_change(surface);
+    wait_for_arbitrary_change(window);
 }
 
 TEST_P(TargetNeedingParent, setting_parent_succeeds)
@@ -251,7 +251,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
             mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, old_type);
             mir_window_spec_set_width(spec, width);
@@ -265,7 +265,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
     {
         mir_window_spec_set_type(spec, new_type);
         mir_window_spec_set_parent(spec, parent);
@@ -277,7 +277,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
     auto const old_type = GetParam().from;
     auto const new_type = GetParam().to;
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, old_type);
             mir_window_spec_set_width(spec, width);
@@ -291,7 +291,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         Times(0);
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, new_type);
 
@@ -300,7 +300,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
             change_observed();
         });
 
-    wait_for_arbitrary_change(surface);
+    wait_for_arbitrary_change(window);
 }
 
 TEST_P(TargetMayHaveParent, setting_parent_succeeds)
@@ -317,7 +317,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
             mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, old_type);
             mir_window_spec_set_width(spec, width);
@@ -331,7 +331,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
     EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
     {
         mir_window_spec_set_type(spec, new_type);
         mir_window_spec_set_parent(spec, parent);
@@ -352,7 +352,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
        });
 
-    auto const surface = create_surface([&](MirWindowSpec* spec)
+    auto const window = create_surface([&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, old_type);
             mir_window_spec_set_width(spec, width);
@@ -367,7 +367,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
     WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
 
-    change_surface(surface, [&](MirWindowSpec* spec)
+    change_surface(window, [&](MirWindowSpec* spec)
         {
             mir_window_spec_set_type(spec, new_type);
         });

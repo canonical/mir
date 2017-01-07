@@ -89,10 +89,10 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
              for (int i = 0; i < 16; ++i)
              {
-                auto const surface = mtf::make_any_surface(connection);
+                auto const window = mtf::make_any_surface(connection);
 
-                EXPECT_TRUE(mir_window_is_valid(surface));
-                mir_surface_release_sync(surface);
+                EXPECT_TRUE(mir_window_is_valid(window));
+                mir_window_release_sync(window);
 
                 if (i == 0)
                 {
@@ -113,7 +113,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
     // Investigation revealed we leak a differing number of fds (3, 0) on
     // Mesa/Android over the entire lifetime of the client library. So we
     // verify here only that we don't leak any FDs beyond those created up to
-    // the lifetime of the first surface.
+    // the lifetime of the first window.
     //
     // Note that when using NBS, not all FDs are guaranteed to have been closed
     // when mir_connection_release() returns, due to the asynchronous nature

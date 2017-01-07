@@ -34,7 +34,7 @@ TEST_F(BufferStreamArrangementStaging, can_set_stream_logical_and_physical_size)
 
     auto change_spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_window_apply_spec(surface, change_spec);
+    mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
     std::vector<mt::RelativeRectangle> positions { { {0,0}, logical_size, physical_size } };
@@ -51,7 +51,7 @@ TEST_F(BufferStreamArrangementStaging, can_setting_stream_physical_size_doesnt_a
 
     auto change_spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_window_apply_spec(surface, change_spec);
+    mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
     stream.set_size(changed_physical_size);
@@ -74,7 +74,7 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
 
     auto change_spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
-    mir_window_apply_spec(surface, change_spec);
+    mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
     EXPECT_THAT(stream.physical_size(), Eq(original_physical_size));

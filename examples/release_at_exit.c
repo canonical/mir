@@ -25,25 +25,12 @@
 #include <getopt.h>
 
 static MirConnection *connection = 0;
-static MirSurface *surface = 0;
+static MirWindow* window = 0;
 
 static void connection_callback(MirConnection *new_connection, void *context)
 {
     (void)context;
     connection = new_connection;
-}
-
-static void surface_create_callback(MirSurface *new_surface, void *context)
-{
-    (void)context;
-    surface = new_surface;
-}
-
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    (void)context;
-    surface = 0;
 }
 
 static void close_connection()
@@ -68,10 +55,10 @@ void demo_client(const char* server)
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, pixel_format);
 
-    mir_wait_for(mir_surface_create(spec, surface_create_callback, NULL));
+    window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    mir_wait_for(mir_surface_release(surface, surface_release_callback, NULL));
+    mir_window_release_sync(window);
 }
 
 int main(int argc, char* argv[])
