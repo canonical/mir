@@ -167,14 +167,14 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(window), "") == 0);
     puts("Window created");
 
-    mir_surface_set_swapinterval(window, swapinterval);
+    MirBufferStream* bs = mir_surface_get_buffer_stream(window);
+    mir_buffer_stream_set_swapinterval(bs, swapinterval);
 
     uint32_t pattern[2] = {0};
     fill_pattern(pattern, pixel_format);
 
     MirGraphicsRegion graphics_region;
     int i=0;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(window);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);

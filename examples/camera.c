@@ -16,13 +16,13 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#include "mir_toolkit/mir_client_library.h"
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
 #include <fcntl.h>
 #include <GLES2/gl2.h>
-#include <mir_toolkit/mir_surface.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -387,7 +387,8 @@ int main(int argc, char *argv[])
     if (ultrafast)
     {
         pref = camera_pref_speed;
-        mir_surface_set_swapinterval(mir_eglapp_native_window(), 0);
+        MirBufferStream* bs = mir_surface_get_buffer_stream(mir_eglapp_native_window());
+        mir_buffer_stream_set_swapinterval(bs, 0);
     }
     Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
