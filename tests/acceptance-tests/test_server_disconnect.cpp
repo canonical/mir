@@ -87,7 +87,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
         while (!signalled.load() && clock::now() < time_limit)
         {
             mir_buffer_stream_swap_buffers_sync(
-                mir_surface_get_buffer_stream(window));
+                mir_window_get_buffer_stream(window));
         }
 
         mir_window_release_sync(window);

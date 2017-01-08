@@ -45,7 +45,7 @@ MirWindow *create_window(MirConnection *connection)
     
     if (!mir_window_is_valid(window))
     {
-        std::cerr << "Window creation failed: " << mir_surface_get_error_message(window) << std::endl;
+        std::cerr << "Window creation failed: " << mir_window_get_error_message(window) << std::endl;
         exit(1);
     }
 
@@ -61,7 +61,7 @@ void input_callback(MirSurface * /* surface */, MirEvent const* event, void* con
 
 void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
-    mir_surface_set_event_handler(surface, input_callback, results.get());
+    mir_window_set_event_handler(surface, input_callback, results.get());
     
     client_ready.ready();
 
@@ -69,7 +69,7 @@ void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_rea
     auto end_time = std::chrono::high_resolution_clock::now() + duration;
     while (std::chrono::high_resolution_clock::now() < end_time)
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(surface));
         results->record_frame_time(std::chrono::high_resolution_clock::now());
     }
 }

@@ -150,7 +150,7 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
     window = mtf::make_any_surface(connection);
 
     auto const wh = mir_buffer_stream_swap_buffers(
-        mir_surface_get_buffer_stream(window), swap_buffers_callback, this);
+        mir_window_get_buffer_stream(window), swap_buffers_callback, this);
     mir_wait_for(wh);
 
     EXPECT_THAT(buffers, Eq(1));

@@ -32,7 +32,7 @@ namespace doubles
 
 struct MockEGLNativeSurface : public client::EGLNativeSurface
 {
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(swap_buffers_sync, void());
     MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib,int));

@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
     glUseProgram(prog);
 
     MirWindow* window = mir_eglapp_native_window();
-    mir_surface_set_event_handler(window, handle_event, NULL);
+    mir_window_set_event_handler(window, handle_event, NULL);
 
     spec = mir_create_window_spec(mir_eglapp_native_connection());
     mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);

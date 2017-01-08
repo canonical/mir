@@ -34,7 +34,7 @@ struct MockMirBufferStream : public MirBufferStream
 {
     MOCK_METHOD2(release, MirWaitHandle*(mir_buffer_stream_callback, void*));
     
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(get_current_buffer_id, uint32_t());
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());

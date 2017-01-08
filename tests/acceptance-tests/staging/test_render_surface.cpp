@@ -154,7 +154,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
     mir_window_spec_release(spec);
 
     EXPECT_THAT(window, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(window), Eq(nullptr));
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
 
     mir_render_surface_release(rs);
     mir_window_release_sync(window);
@@ -182,7 +182,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
                                                    usage);
 
     EXPECT_THAT(window, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(window), Eq(nullptr));
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
 
     mir_render_surface_release(rs);
@@ -243,7 +243,7 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
     auto pc = mir_render_surface_get_presentation_chain(rs);
 
     EXPECT_THAT(window, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(window), Eq(nullptr));
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
     EXPECT_TRUE(mir_presentation_chain_is_valid(pc));
 
     mir_render_surface_release(rs);

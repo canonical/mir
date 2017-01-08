@@ -109,7 +109,7 @@ public:
         context{connection, window, swap_interval},
         program{context, dimensions.width, dimensions.height}
     {
-        mir_surface_set_event_handler(window, &on_event, this);
+        mir_window_set_event_handler(window, &on_event, this);
     }
 
     void on_event(MirEvent const* ev)

@@ -127,7 +127,7 @@ struct Surface
 
     ~Surface()
     {
-        mir_surface_set_event_handler(window, null_event_callback, nullptr);
+        mir_window_set_event_handler(window, null_event_callback, nullptr);
         mir_window_release_sync(window);
     }
 
@@ -161,7 +161,7 @@ private:
             mir_surface_visibility_exposed,
             [this]
             {
-                mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+                mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
             });
 
         // GMock is behaving strangely, checking expectations after they

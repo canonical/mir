@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
     if (ultrafast)
     {
         pref = camera_pref_speed;
-        MirBufferStream* bs = mir_surface_get_buffer_stream(mir_eglapp_native_window());
+        MirBufferStream* bs = mir_window_get_buffer_stream(mir_eglapp_native_window());
         mir_buffer_stream_set_swapinterval(bs, 0);
     }
     Camera *cam = open_camera(dev_video, pref, 1);
@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         true
     };
-    mir_surface_set_event_handler(window, on_event, &state);
+    mir_window_set_event_handler(window, on_event, &state);
 
     bool first_frame = true;
     while (mir_eglapp_running())
@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_surface_set_event_handler(window, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
     close_camera(cam);
 

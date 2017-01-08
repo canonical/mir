@@ -163,7 +163,7 @@ me::Context::Context(Connection& connection, MirWindow* window, int swap_interva
     native_display(reinterpret_cast<EGLNativeDisplayType>(
         mir_connection_get_egl_native_display(connection))),
     native_window(reinterpret_cast<EGLNativeWindowType>(
-        mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(window)))),
+        mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)))),
     display(native_display),
     config(chooseconfig(display.disp)),
     surface(display.disp, config, native_window),

@@ -96,13 +96,13 @@ struct ClientWithSurface
     void swap_sync()
     {
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(window));
+            mir_window_get_buffer_stream(window));
     }
 
     void swap_async()
     {
         mir_buffer_stream_swap_buffers(
-            mir_surface_get_buffer_stream(window),
+            mir_window_get_buffer_stream(window),
             null_buffer_stream_callback, nullptr);
     }
 

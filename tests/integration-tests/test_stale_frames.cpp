@@ -185,7 +185,7 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
 
-    auto bs = mir_surface_get_buffer_stream(window);
+    auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(bs);
 
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
@@ -212,7 +212,7 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 
     stop_compositor();
 
-    auto bs = mir_surface_get_buffer_stream(window);
+    auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 

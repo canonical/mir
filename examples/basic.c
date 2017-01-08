@@ -141,14 +141,14 @@ int demo_client(const char* server, int buffer_swap_count)
     if (!mir_window_is_valid(mcd.window))
     {
         fprintf(stderr, "Failed to create surface: %s",
-        mir_surface_get_error_message(mcd.window));
+        mir_window_get_error_message(mcd.window));
         return 1;
     }
     else
-        assert(strcmp(mir_surface_get_error_message(mcd.window), "") == 0);
+        assert(strcmp(mir_window_get_error_message(mcd.window), "") == 0);
 
     MirBufferStream *bs =
-        mir_surface_get_buffer_stream(mcd.window);
+        mir_window_get_buffer_stream(mcd.window);
 
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)

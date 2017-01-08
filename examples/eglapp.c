@@ -491,7 +491,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     CHECK(mir_window_is_valid(window), "Can't create a window");
 
-    mir_surface_set_event_handler(window, mir_eglapp_handle_event, NULL);
+    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
 
     spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_name(spec, cursor_name);
@@ -499,7 +499,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_window_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(window)), NULL);
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)), NULL);
     
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 

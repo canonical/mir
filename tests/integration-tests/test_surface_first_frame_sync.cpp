@@ -199,7 +199,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
 
     ASSERT_TRUE(window != NULL);
     EXPECT_TRUE(mir_window_is_valid(window));
-    EXPECT_STREQ(mir_surface_get_error_message(window), "");
+    EXPECT_STREQ(mir_window_get_error_message(window), "");
 
     /*
      * This test uses a synchronous compositor (instead of the default
@@ -211,7 +211,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
     EXPECT_EQ(0, number_of_executed_render_operations());
 
     mir_buffer_stream_swap_buffers_sync(
-        mir_surface_get_buffer_stream(window));
+        mir_window_get_buffer_stream(window));
 
     /* After submitting the buffer we should get some render operations */
     mir::test::spin_wait_for_condition_or_timeout(

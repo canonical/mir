@@ -62,7 +62,7 @@ MirSurfaceSpec::MirSurfaceSpec(
 {
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params)
+MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params)
     : connection{connection},
       width{params.width},
       height{params.height},
@@ -172,7 +172,7 @@ MirSurface::~MirSurface()
         close(surface->fd(i));
 }
 
-MirSurfaceParameters MirSurface::get_parameters() const
+MirWindowParameters MirSurface::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 

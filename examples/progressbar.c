@@ -184,7 +184,7 @@ static void copy_region(const MirGraphicsRegion *dest,
 static void redraw(MirWindow *window, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(window);
+    MirBufferStream *bs = mir_window_get_buffer_stream(window);
 
     mir_buffer_stream_get_graphics_region(bs, &backbuffer);
     clear_region(&backbuffer, background);

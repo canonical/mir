@@ -139,7 +139,7 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
 
     ASSERT_TRUE(window != NULL);
     ASSERT_THAT(window, Not(IsValid()));
-    EXPECT_THAT(mir_surface_get_error_message(window), testing::HasSubstr(test_exception_text));
+    EXPECT_THAT(mir_window_get_error_message(window), testing::HasSubstr(test_exception_text));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);

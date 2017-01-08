@@ -214,9 +214,9 @@ struct InputEvents : testing::Test
         if (!mir_window_is_valid(window))
             throw std::runtime_error("Failed to create MirSurface");
 
-        mir_surface_set_event_handler(window, handle_input, handler);
+        mir_window_set_event_handler(window, handle_input, handler);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(window));
+            mir_window_get_buffer_stream(window));
 
         wait_for_surface_to_become_focused_and_exposed(window);
 

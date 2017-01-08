@@ -164,10 +164,10 @@ int main(int argc, char* argv[])
 
     assert(window != NULL);
     assert(mir_window_is_valid(window));
-    assert(strcmp(mir_surface_get_error_message(window), "") == 0);
+    assert(strcmp(mir_window_get_error_message(window), "") == 0);
     puts("Window created");
 
-    MirBufferStream* bs = mir_surface_get_buffer_stream(window);
+    MirBufferStream* bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_set_swapinterval(bs, swapinterval);
 
     uint32_t pattern[2] = {0};

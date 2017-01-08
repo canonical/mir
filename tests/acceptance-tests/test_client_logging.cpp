@@ -69,7 +69,7 @@ TEST_F(ClientLogging, reports_performance)
     int const target_fps = 10;
     int const nseconds = 3;
     auto const target_render_time = std::chrono::milliseconds(3);
-    auto bs = mir_surface_get_buffer_stream(window);
+    auto bs = mir_window_get_buffer_stream(window);
     for (int s = 0; s < nseconds; ++s)
     {
         for (int f = 0; f < target_fps; ++f)

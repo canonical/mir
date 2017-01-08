@@ -270,7 +270,7 @@ struct SimpleClient
         mir_window_spec_set_event_handler(spec, &handle_event, this);
         window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(window));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())

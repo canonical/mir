@@ -475,9 +475,9 @@ int main(int argc, char *argv[])
 
     if (window != NULL)
     {
-        MirBufferStream* bs = mir_surface_get_buffer_stream(window);
+        MirBufferStream* bs = mir_window_get_buffer_stream(window);
         mir_buffer_stream_set_swapinterval(bs, swap_interval);
-        mir_surface_set_event_handler(window, &on_event, &canvas);
+        mir_window_set_event_handler(window, &on_event, &canvas);
     
         canvas.width = width;
         canvas.height = height;
@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(window, NULL, NULL);
+            mir_window_set_event_handler(window, NULL, NULL);
             free(canvas.vaddr);
         }
         else
