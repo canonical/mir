@@ -1,9 +1,5 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-)
-
 set(
   SOURCES
 
@@ -17,7 +13,6 @@ set(
   test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
-  test_client_library.cpp
   test_client_library_callbacks.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
