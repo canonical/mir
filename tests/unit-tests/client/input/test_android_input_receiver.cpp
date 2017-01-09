@@ -236,8 +236,6 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
                                    std::make_shared<mircv::NullInputReceiverReport>()};
     TestingInputProducer producer(channel.server_fd());
 
-    nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 59;
-
     producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
     flush_channels();
