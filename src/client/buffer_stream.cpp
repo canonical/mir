@@ -408,11 +408,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
-MirSurfaceParameters mcl::BufferStream::get_parameters() const
+MirWindowParameters mcl::BufferStream::get_parameters() const
 {
     auto size = buffer_depository->size();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "",
         size.width.as_int(),
         size.height.as_int(),

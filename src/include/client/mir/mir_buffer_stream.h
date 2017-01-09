@@ -77,7 +77,7 @@ struct MirBufferStream
 public:
     virtual ~MirBufferStream() = default;
 
-    virtual MirSurfaceParameters get_parameters() const = 0;
+    virtual MirWindowParameters get_parameters() const = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;

@@ -57,7 +57,7 @@ mir::frontend::BufferStreamId mcl::ErrorStream::rpc_id() const
     return id;
 }
 
-MirSurfaceParameters mcl::ErrorStream::get_parameters() const
+MirWindowParameters mcl::ErrorStream::get_parameters() const
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
