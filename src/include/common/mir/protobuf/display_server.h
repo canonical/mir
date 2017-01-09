@@ -63,6 +63,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) = 0;
+    virtual void remove_session_configuration(
+        mir::protobuf::Void const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
     virtual void set_base_display_configuration(
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
@@ -86,6 +90,10 @@ public:
     virtual void screencast_buffer(
         mir::protobuf::ScreencastId const* request,
         mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) = 0;
+    virtual void screencast_to_buffer(
+        mir::protobuf::ScreencastRequest const* request,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
     virtual void release_screencast(
         mir::protobuf::ScreencastId const* request,

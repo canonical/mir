@@ -127,6 +127,8 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationObserver
 {
     MOCK_METHOD1(initial_configuration, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
     MOCK_METHOD1(configuration_applied, void (std::shared_ptr<mg::DisplayConfiguration const> const& configuration));
+    MOCK_METHOD2(session_configuration_applied, void (std::shared_ptr<mf::Session> const& session, std::shared_ptr<mg::DisplayConfiguration> const& configuration));
+    MOCK_METHOD1(session_configuration_removed, void (std::shared_ptr<mf::Session> const& session));
     MOCK_METHOD1(base_configuration_updated, void (std::shared_ptr<mg::DisplayConfiguration const> const& base_config));
     MOCK_METHOD2(configuration_failed, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
     MOCK_METHOD2(catastrophic_configuration_error, void(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&));
@@ -341,46 +343,46 @@ struct ObservantShell : msh::Shell
         std::shared_ptr<mf::EventSink> const& sink) override
     {
         auto id = wrapped->create_surface(session, params, sink);
-        auto surface = session->surface(id);
-        surface->add_observer(surface_observer);
+        auto window = session->surface(id);
+        window->add_observer(surface_observer);
         return id;
     }
 
     void modify_surface(
         std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& surface,
+        std::shared_ptr<msc::Surface> const& window,
         msh::SurfaceSpecification  const& modifications) override
     {
-        wrapped->modify_surface(session, surface, modifications);
+        wrapped->modify_surface(session, window, modifications);
     }
 
-    void destroy_surface(std::shared_ptr<msc::Session> const& session, mf::SurfaceId surface) override
+    void destroy_surface(std::shared_ptr<msc::Session> const& session, mf::SurfaceId window) override
     {
-        wrapped->destroy_surface(session, surface);
+        wrapped->destroy_surface(session, window);
     }
 
     int set_surface_attribute(
         std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& surface,
+        std::shared_ptr<msc::Surface> const& window,
         MirSurfaceAttrib attrib,
         int value) override
     {
-        return wrapped->set_surface_attribute(session, surface, attrib, value);
+        return wrapped->set_surface_attribute(session, window, attrib, value);
     }
 
     int get_surface_attribute(
-        std::shared_ptr<msc::Surface> const& surface,
+        std::shared_ptr<msc::Surface> const& window,
         MirSurfaceAttrib attrib) override
     {
-        return wrapped->get_surface_attribute(surface, attrib);
+        return wrapped->get_surface_attribute(window, attrib);
     }
 
     void raise_surface(
         std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& surface,
+        std::shared_ptr<msc::Surface> const& window,
         uint64_t timestamp) override
     {
-        return wrapped->raise_surface(session, surface, timestamp);
+        return wrapped->raise_surface(session, window, timestamp);
     }
 
 private:
@@ -416,9 +418,9 @@ public:
             { return std::make_shared<NiceMock<MockDisplayConfigurationPolicy>>(); });
     }
 
-    void wait_until_surface_ready(MirSurface* surface)
+    void wait_until_surface_ready(MirWindow* window)
     {
-        mir_surface_set_event_handler(surface, wait_for_key_a_event, this);
+        mir_window_set_event_handler(window, wait_for_key_a_event, this);
 
         auto const dummy_events_received = mt::spin_wait_for_condition_or_timeout(
             [this]
@@ -434,7 +436,7 @@ public:
 
         EXPECT_TRUE(dummy_events_received);
 
-        mir_surface_set_event_handler(surface, nullptr, nullptr);
+        mir_window_set_event_handler(window, nullptr, nullptr);
     }
 
 protected:
@@ -653,33 +655,33 @@ struct ClientWithAPaintedSurface : virtual Client
 {
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir, geom::Size size, MirPixelFormat format) :
         Client(nested_mir),
-        surface(mtf::make_surface(connection, size, format))
+        window(mtf::make_surface(connection, size, format))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
         Client(nested_mir),
-        surface(mtf::make_any_surface(connection))
+        window(mtf::make_any_surface(connection))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     ~ClientWithAPaintedSurface()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
     }
 
-    void update_surface_spec(void (*changer)(MirSurfaceSpec* spec))
+    void update_surface_spec(void (*changer)(MirWindowSpec* spec))
     {
-        auto const spec = mir_connection_create_spec_for_changes(connection);
+        auto const spec = mir_create_window_spec(connection);
         changer(spec);
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
 
     }
 
-    MirSurface* const surface;
+    MirWindow* window;
 };
 
 struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPaintedSurface
@@ -770,12 +772,11 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     Client client{nested_mir};
 
-    auto spec = mir_connection_create_spec_for_normal_surface(client.connection,
-        800, 600,
-        mir_pixel_format_abgr_8888);
+    auto spec = mir_create_normal_window_spec(client.connection, 800, 600);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_surface_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_surface_output)
             {
@@ -788,12 +789,12 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         },
         &surface_event_received);
 
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -840,10 +841,10 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     ClientWithAPaintedSurface client(nested_mir);
 
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
-        [surface = client.surface]
+        [window = client.window]
         {
-            return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
-                && mir_surface_get_focus(surface) == mir_surface_focused;
+            return mir_surface_get_visibility(window) == mir_surface_visibility_exposed
+                && mir_surface_get_focus(window) == mir_surface_focused;
         },
         timeout);
 
@@ -854,19 +855,19 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
 {
     auto const number_of_nested_surfaces = 2;
     auto const number_of_cursor_streams = number_of_nested_surfaces;
-    // No post on surface creation for the display surfaces - but preparing the cursor is fine
+    // No post on window creation for the display surfaces - but preparing the cursor is fine
     EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(number_of_cursor_streams);
     NestedMirRunner nested_mir{new_connection()};
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = mtf::make_any_surface(connection);
+    auto const window = mtf::make_any_surface(connection);
 
-    // NB there is no synchronization to guarantee that a spurious post on surface creation will have
+    // NB there is no synchronization to guarantee that a spurious post on window creation will have
     // been seen by this point (although in testing it was invariably the case). However, any missed post
     // would be included in one of the later counts and cause a test failure.
     Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
 
-    // One post on each output when surface drawn
+    // One post on each output when window drawn
     {
         mt::Signal wait;
 
@@ -874,13 +875,13 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         wait.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
     }
 
-    // One post on each output when surface released
+    // One post on each output when window released
     {
         mt::Signal wait;
 
@@ -888,7 +889,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
 
         wait.wait_for(timeout);
@@ -959,7 +960,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
-    nested_mir.wait_until_surface_ready(client.surface);
+    nested_mir.wait_until_surface_ready(client.window);
 
     auto const mock_cursor = the_mock_cursor();
 
@@ -979,7 +980,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
+    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1004,7 +1005,7 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurface client(nested_mir);
-    nested_mir.wait_until_surface_ready(client.surface);
+    nested_mir.wait_until_surface_ready(client.window);
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
@@ -1028,10 +1029,10 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        auto spec = mir_connection_create_spec_for_changes(client.connection);
-        mir_surface_spec_set_cursor_name(spec, name);
-        mir_surface_apply_spec(client.surface, spec);
-        mir_surface_spec_release(spec);
+        auto spec = mir_create_window_spec(client.connection);
+        mir_window_spec_set_cursor_name(spec, name);
+        mir_window_apply_spec(client.window, spec);
+        mir_window_spec_release(spec);
 
         EXPECT_TRUE(condition.wait_for(long_timeout));
         condition.reset();
@@ -1047,7 +1048,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
 
     ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
-    nested_mir.wait_until_surface_ready(client.surface);
+    nested_mir.wait_until_surface_ready(client.window);
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
@@ -1061,7 +1062,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
+    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);
@@ -1078,7 +1079,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     }
 
     // Need to verify before test server teardown deletes the
-    // surface as the host cursor then reverts to default.
+    // window as the host cursor then reverts to default.
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
 
@@ -1088,7 +1089,7 @@ TEST_F(NestedServer, showing_a_0x0_cursor_image_sets_disabled_cursor)
     NestedMirRunner nested_mir{new_connection()};
 
     ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
-    nested_mir.wait_until_surface_ready(client.surface);
+    nested_mir.wait_until_surface_ready(client.window);
     auto const mock_cursor = the_mock_cursor();
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
@@ -1105,7 +1106,7 @@ TEST_F(NestedServer, showing_a_0x0_cursor_image_sets_disabled_cursor)
     EXPECT_TRUE(stub_observer->wait_for_removal());
 
     // Need to verify before test server teardown deletes the
-    // surface as the host cursor then reverts to default.
+    // window as the host cursor then reverts to default.
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
 
@@ -1539,6 +1540,6 @@ TEST_F(NestedServer, uses_passthrough_when_surface_size_is_appropriate)
     NestedMirRunner nested_mir{new_connection()};
     ClientWithAPaintedSurface client(
         nested_mir, display_geometry.front().size, mir_pixel_format_xbgr_8888);
-    nested_mir.wait_until_surface_ready(client.surface);
+    nested_mir.wait_until_surface_ready(client.window);
     EXPECT_TRUE(nested_mir.passthrough_tracker->wait_for_passthrough_frames(1, 5s));
 }

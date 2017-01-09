@@ -299,7 +299,7 @@ try
     mir::require(mir_connection_is_valid(connection));
 
     auto devices = connection->the_input_devices();
-    return new MirInputConfiguration{devices->clone_devices()};
+    return new MirInputConfiguration{devices->devices()};
 }
 catch (std::exception const& ex)
 {
@@ -426,3 +426,22 @@ void mir_connection_set_error_callback(
     }
 }
 
+void mir_connection_apply_session_display_configuration(MirConnection* connection, MirDisplayConfig const* display_config)
+try
+{
+    connection->configure_session_display(*display_config);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_connection_remove_session_display_configuration(MirConnection* connection)
+try
+{
+    connection->remove_session_display();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}

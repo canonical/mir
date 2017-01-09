@@ -57,7 +57,7 @@ mir::frontend::BufferStreamId mcl::ErrorStream::rpc_id() const
     return id;
 }
 
-MirSurfaceParameters mcl::ErrorStream::get_parameters() const
+MirWindowParameters mcl::ErrorStream::get_parameters() const
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
@@ -74,6 +74,10 @@ EGLNativeWindowType mcl::ErrorStream::egl_native_window()
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 MirWaitHandle* mcl::ErrorStream::swap_buffers(std::function<void()> const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error(error));
+}
+void mcl::ErrorStream::swap_buffers_sync()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }

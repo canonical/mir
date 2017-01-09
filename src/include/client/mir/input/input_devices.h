@@ -34,7 +34,7 @@ class InputDevices
 public:
     InputDevices() = default;
     void update_devices(std::string const& device_buffer);
-    MirInputConfiguration clone_devices();
+    MirInputConfiguration devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
     std::mutex devices_access;

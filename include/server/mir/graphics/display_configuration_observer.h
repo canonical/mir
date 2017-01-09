@@ -24,6 +24,10 @@
 
 namespace mir
 {
+namespace frontend
+{
+class Session;
+}
 namespace graphics
 {
 class DisplayConfiguration;
@@ -56,6 +60,21 @@ public:
      * \param [in] config   The configuration that has just been updated.
      */
     virtual void base_configuration_updated(std::shared_ptr<DisplayConfiguration const> const& base_config) = 0;
+
+    /**
+     * Notification after updating the session display configuration.
+     *
+     * \param [in] session  The session that is updating its display configuration.
+     * \param [in] config   The configuration that is being applied to the session.
+     */
+    virtual void session_configuration_applied(std::shared_ptr<frontend::Session> const& session,
+        std::shared_ptr<DisplayConfiguration> const& config) = 0;
+    /**
+     * Notification after removing the session display configuration.
+     *
+     * \param [in] session  The session that is removing its display configuration.
+     */
+    virtual void session_configuration_removed(std::shared_ptr<frontend::Session> const& session) = 0;
 
     /**
      * Notification after every failed display configuration attempt.
