@@ -29,27 +29,27 @@ namespace mt = mir::test;
 namespace
 {
 
-MirSurface *create_surface(MirConnection *connection)
+MirWindow *create_window(MirConnection *connection)
 {
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 1024, 1024, pixel_format);
-    mir_surface_spec_set_name(spec, "frame-uniformity-test");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    auto const spec = mir_create_normal_window_spec(connection, 1024, 1024);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, "frame-uniformity-test");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
     
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(window))
     {
-        std::cerr << "Surface creation failed: " << mir_surface_get_error_message(surface) << std::endl;
+        std::cerr << "Window creation failed: " << mir_window_get_error_message(window) << std::endl;
         exit(1);
     }
 
-    return surface;
+    return window;
 }
 
 void input_callback(MirSurface * /* surface */, MirEvent const* event, void* context)
@@ -61,7 +61,7 @@ void input_callback(MirSurface * /* surface */, MirEvent const* event, void* con
 
 void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
-    mir_surface_set_event_handler(surface, input_callback, results.get());
+    mir_window_set_event_handler(surface, input_callback, results.get());
     
     client_ready.ready();
 
@@ -69,7 +69,7 @@ void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_rea
     auto end_time = std::chrono::high_resolution_clock::now() + duration;
     while (std::chrono::high_resolution_clock::now() < end_time)
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(surface));
         results->record_frame_time(std::chrono::high_resolution_clock::now());
     }
 }
@@ -106,11 +106,11 @@ void TouchMeasuringClient::run(std::string const& connect_string)
      */
     mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
     
-    auto surface = create_surface(connection);
+    auto window = create_window(connection);
 
-    collect_input_and_frame_timing(surface, client_ready, touch_duration, results_);
+    collect_input_and_frame_timing(window, client_ready, touch_duration, results_);
     
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 

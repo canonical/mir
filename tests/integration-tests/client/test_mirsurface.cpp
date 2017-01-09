@@ -148,12 +148,12 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
         spec.pref_orientation = mir_orientation_mode_landscape;
     }
 
-    std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirSurfaceSpec* spec)
+    std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirWindowSpec* spec)
     {
-        return {mir_surface_create_sync(spec), [](MirSurface *surf){mir_surface_release_sync(surf);}};
+        return {mir_window_create_sync(spec), [](MirWindow *window){mir_window_release_sync(window);}};
     }
 
-    MirSurfaceSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    MirWindowSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};
     std::shared_ptr<msh::Shell> wrapped_shell;
     std::shared_ptr<MockShell> mock_shell;
 };
@@ -164,7 +164,7 @@ TEST_F(ClientMirSurface, sends_optional_params)
 
     auto surf = create_surface(&spec);
 
-    // A valid surface is needed to be specified as a parent
+    // A valid window is needed to be specified as a parent
     ASSERT_THAT(surf.get(), IsValid());
     spec.parent = surf.get();
 
@@ -181,11 +181,12 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     MirRectangle attachment_rect{100, 200, 300, 400};
     MirEdgeAttachment edge{mir_edge_attachment_horizontal};
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> menu_spec{
-        mir_connection_create_spec_for_menu(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &attachment_rect,
-            edge),
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    auto spec_temp = mir_create_menu_window_spec(connection, 640, 480,
+        parent.get(), &attachment_rect, edge);
+    mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
+        spec_temp,
         spec_deleter
     };
 
@@ -204,10 +205,12 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
     MirRectangle placement_hint{100, 200, 300, 400};
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> tooltip_spec{
-        mir_connection_create_spec_for_tip(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get(), &placement_hint, mir_edge_attachment_vertical),
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    auto spec_temp = mir_create_tip_window_spec(connection, 640, 480,
+        parent.get(), &placement_hint, mir_edge_attachment_vertical);
+    mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> tooltip_spec{
+        spec_temp,
         spec_deleter
     };
 
@@ -220,13 +223,14 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
 
 TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 {
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
-        mir_connection_create_spec_for_dialog(connection, 640, 480, mir_pixel_format_abgr_8888),
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
+        mir_create_dialog_window_spec(connection, 640, 480),
         spec_deleter
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
+    mir_window_spec_set_pixel_format(dialog_spec.get(), mir_pixel_format_abgr_8888);
 
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), NoParentSet()),_));
     create_surface(dialog_spec.get());
@@ -238,14 +242,14 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
-    auto spec_deleter = [](MirSurfaceSpec* spec) {mir_surface_spec_release(spec);};
-    std::unique_ptr<MirSurfaceSpec, decltype(spec_deleter)> dialog_spec{
-        mir_connection_create_spec_for_modal_dialog(connection, 640, 480,
-            mir_pixel_format_abgr_8888, parent.get()),
+    auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
+    std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> dialog_spec{
+        mir_create_modal_dialog_window_spec(connection, 640, 480, parent.get()),
         spec_deleter
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
+    mir_window_spec_set_pixel_format(dialog_spec.get(), mir_pixel_format_abgr_8888);
 
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), HasParent(parent.get())),_));
     create_surface(dialog_spec.get());

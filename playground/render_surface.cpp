@@ -195,12 +195,9 @@ int main(int /*argc*/, char* /*argv*/[])
         throw std::runtime_error(
                   std::string(mir_render_surface_get_error_message(render_surface)));
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection,
-        width, height,
-        mir_pixel_format_invalid);
+    auto spec = mir_create_normal_window_spec(connection, width, height);
 
-    mir_surface_spec_set_name(spec, "Stream");
+    mir_window_spec_set_name(spec, "Stream");
 
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
@@ -213,8 +210,8 @@ int main(int /*argc*/, char* /*argv*/[])
                                                               pixel_format,
                                                               mir_buffer_usage_software);
 
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
@@ -244,7 +241,7 @@ int main(int /*argc*/, char* /*argv*/[])
     }
 
     mir_render_surface_release(render_surface);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     close(signal_watch);
 
     return 0;
