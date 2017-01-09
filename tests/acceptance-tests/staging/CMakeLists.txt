@@ -1,5 +1,4 @@
 include_directories(
-  ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/client
 )
 

@@ -57,20 +57,43 @@ set(
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
   test_client_extensions.cpp
+  test_client_cursor_api.cpp
+  test_client_library_errors.cpp
+  test_shell_control_of_surface_configuration.cpp
+  test_client_library.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
-add_subdirectory(throwback)
+# BEGIN "throwbacks"
+# The following tests use still files we have chosen not to support in the public API
+# TODO update these "throwback" tests to rely only on the public APIs
+
+  # uses BasicWindowManager<>
+  set_source_files_properties(test_client_cursor_api.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+  # uses UsingClientPlatform
+  set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR} -I ${PROJECT_SOURCE_DIR}/src/include/client -I ${PROJECT_SOURCE_DIR}/tests/include")
+
+  # uses CanonicalWindowManager
+  set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+  # uses src/include/common/mir/protobuf/protocol_version.h
+  set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
+# END "throwbacks"
+
 add_subdirectory(staging)
 
 mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
-  $<TARGET_OBJECTS:acceptance-test-throwback>
   $<TARGET_OBJECTS:acceptance-test-staging>
 )
 
