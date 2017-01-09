@@ -270,12 +270,12 @@ TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const spec = mir_connection_create_spec_for_normal_surface(
         connection, 123, 456, mir_pixel_format_abgr_8888);
-    surface = mir_surface_create_sync(spec);
+    window = mir_window_create_sync(spec);
     mir_surface_spec_release(spec);
 
-    EXPECT_THAT(surface, IsValid());
+    EXPECT_THAT(window, IsValid());
 
-    mir_surface_release(surface, [](MirSurface*, void*){ sleep(1); }, NULL);
+    mir_window_release(window, [](MirWindow*, void*){ sleep(1); }, NULL);
     mir_connection_release(connection);
 }
 
