@@ -261,6 +261,12 @@ struct FakeRpcChannel : public mir::client::rpc::MirBasicRpcChannel
     {
         delete closure;
     }
+    void discard_future_calls() override
+    {
+    }
+    void wait_for_outstanding_calls() override
+    {
+    }
 };
 
 void null_connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
