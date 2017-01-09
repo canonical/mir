@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     mir_eglapp_swap_buffers();
 
     MirBufferStream* stream = make_cursor_stream(mir_eglapp_native_connection(),
-        mir_eglapp_native_surface());
+        mir_eglapp_native_window());
 
     while (mir_eglapp_running())
     {

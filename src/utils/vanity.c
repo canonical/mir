@@ -160,7 +160,6 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
     bool handled = true;
 
-    (void)surface;
     State* state = (State*)context;
 
     // FIXME: We presently need to know that events come in on a different
@@ -751,8 +750,8 @@ int main(int argc, char* argv[])
         false,
         false
     };
-    MirSurface* surface = mir_eglapp_native_surface();
-    mir_surface_set_event_handler(surface, on_event, &state);
+    MirWindow* window = mir_eglapp_native_window();
+    mir_window_set_event_handler(window, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");
 
@@ -891,7 +890,7 @@ int main(int argc, char* argv[])
         last_swap_time = swap_time;
     }
 
-    mir_surface_set_event_handler(surface, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);

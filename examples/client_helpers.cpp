@@ -108,17 +108,17 @@ MirBufferStream* me::BufferStream::create_stream(
         hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
 }
 
-me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
-    surface{create_surface(connection, width, height, prefers_alpha, hardware), surface_deleter}
+me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
+    window{create_window(connection, width, height, prefers_alpha, hardware), window_deleter}
 {
 }
 
-me::NormalSurface::operator MirSurface*() const
+me::NormalWindow::operator MirWindow*() const
 {
-    return surface.get();
+    return window.get();
 }
 
-MirSurface* me::NormalSurface::create_surface(
+MirWindow* me::NormalWindow::create_window(
     MirConnection* connection,
     unsigned int width,
     unsigned int height,
@@ -146,23 +146,24 @@ MirSurface* me::NormalSurface::create_surface(
         }
     }
     
-    auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
-    std::unique_ptr<MirSurfaceSpec, decltype(deleter)> spec{
-        mir_connection_create_spec_for_normal_surface(connection, width, height, selected_format),
+    auto deleter = [](MirWindowSpec *spec) { mir_window_spec_release(spec); };
+    std::unique_ptr<MirWindowSpec, decltype(deleter)> spec{
+        mir_create_normal_window_spec(connection, width, height),
         deleter
     };
 
-    mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
-    mir_surface_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
-    auto surface = mir_surface_create_sync(spec.get());
-    return surface;
+    mir_window_spec_set_pixel_format(spec.get(), selected_format);
+    mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
+    mir_window_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
+    auto window = mir_window_create_sync(spec.get());
+    return window;
 }
 
-me::Context::Context(Connection& connection, MirSurface* surface, int swap_interval) :
+me::Context::Context(Connection& connection, MirWindow* window, int swap_interval) :
     native_display(reinterpret_cast<EGLNativeDisplayType>(
         mir_connection_get_egl_native_display(connection))),
     native_window(reinterpret_cast<EGLNativeWindowType>(
-        mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)))),
+        mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)))),
     display(native_display),
     config(chooseconfig(display.disp)),
     surface(display.disp, config, native_window),

@@ -156,6 +156,9 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         complete->Run();
     }
 
+    MOCK_METHOD0(discard_future_calls, void());
+    MOCK_METHOD0(wait_for_outstanding_calls, void());
+
     MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
@@ -719,11 +722,17 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
         {
             delete closure;
         }
+        void discard_future_calls() override
+        {
+        }
+        void wait_for_outstanding_calls() override
+        {
+        }
     };
     TestConnectionConfiguration conf{
         mock_platform, std::make_shared<NiceMock<FakeRpcChannel>>(), mock_buffer_allocator };
     MirConnection connection(conf);
-    MirSurfaceSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
+    MirWindowSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
 
     auto wait_handle = connection.create_surface(spec, nullptr, nullptr);
     auto expected_end = std::chrono::steady_clock::now() + pause_time;

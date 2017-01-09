@@ -56,7 +56,7 @@
 typedef struct MirDemoState
 {
     MirConnection *connection;
-    MirSurface *surface;
+    MirWindow* window;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -66,26 +66,13 @@ static void connection_callback(MirConnection *new_connection, void *context)
 {
     ((MirDemoState*)context)->connection = new_connection;
 }
-
-// Callback to update MirDemoState on surface_create
-static void surface_create_callback(MirSurface *new_surface, void *context)
-{
-    ((MirDemoState*)context)->surface = new_surface;
-}
-
-// Callback to update MirDemoState on surface_release
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    ((MirDemoState*)context)->surface = 0;
-}
 ///\internal [Callback_tag]
 
 int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
     mcd.connection = 0;
-    mcd.surface = 0;
+    mcd.window = 0;
 
     puts("Starting");
 
@@ -134,34 +121,34 @@ int demo_client(const char* server, int buffer_swap_count)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
 
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(mcd.connection, 640, 480);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __FILE__);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, __FILE__);
 
     ///\internal [surface_create_tag]
-    // ...we create a surface using that format and wait for callback to complete.
-    mir_wait_for(mir_surface_create(spec, surface_create_callback, &mcd));
-    puts("Surface created");
+    // ...we create a surface using that format.
+    mcd.window = mir_window_create_sync(spec);
+    puts("Window created");
     ///\internal [surface_create_tag]
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     // We expect a surface handle;
     // we expect it to be valid; and,
     // we don't expect an error description
-    assert(mcd.surface != NULL);
-    if(!mir_surface_is_valid(mcd.surface))
+    assert(mcd.window != NULL);
+    if (!mir_window_is_valid(mcd.window))
     {
         fprintf(stderr, "Failed to create surface: %s",
-                mir_surface_get_error_message(mcd.surface));
+        mir_window_get_error_message(mcd.window));
         return 1;
     }
     else
-        assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
+        assert(strcmp(mir_window_get_error_message(mcd.window), "") == 0);
 
     MirBufferStream *bs =
-        mir_surface_get_buffer_stream(mcd.surface);
+        mir_window_get_buffer_stream(mcd.window);
 
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)
@@ -186,8 +173,8 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [surface_release_tag]
     // We should release our surface
-    mir_wait_for(mir_surface_release(mcd.surface, surface_release_callback, &mcd));
-    puts("Surface released");
+    mir_window_release_sync(mcd.window);
+    puts("Window released");
     ///\internal [surface_release_tag]
 
     ///\internal [connection_release_tag]
