@@ -34,7 +34,7 @@ namespace mcl = mir::client;
 
 namespace
 {
-std::unordered_map<mtf::FailurePoint, std::exception_ptr> next_error_set;
+std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> next_error_set;
 }
 
 extern "C" void add_client_platform_error(mtf::FailurePoint where, std::exception_ptr what)

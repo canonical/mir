@@ -23,7 +23,13 @@
 
 namespace mir_test_framework
 {
-enum class FailurePoint
+/*
+ * TODO: This should be an enum class, but gcc < 6 doesn't implement the
+ * C++14 DR requiring that std::unordered_map<enum, FOO> works, and using
+ * a raw enum means we can pass std::hash<int> rather than adding an extra
+ * hash implementation.
+ */
+enum FailurePoint
 {
     create_client_platform,
     create_egl_native_window,

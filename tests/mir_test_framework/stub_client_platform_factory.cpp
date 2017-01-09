@@ -57,7 +57,7 @@ int get_fence(MirBuffer*)
 }
 
 void throw_exception_if_requested(
-    std::unordered_map<mtf::FailurePoint, std::exception_ptr> const& fail_at,
+    std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
     mtf::FailurePoint here)
 {
     if (fail_at.count(here))
@@ -68,13 +68,13 @@ void throw_exception_if_requested(
 }
 
 mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context)
-    : StubClientPlatform(context, std::unordered_map<FailurePoint, std::exception_ptr>{})
+    : StubClientPlatform(context, std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{})
 {
 }
 
 mtf::StubClientPlatform::StubClientPlatform(
     mir::client::ClientContext* context,
-    std::unordered_map<FailurePoint, std::exception_ptr>&& fail_at) :
+    std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>&& fail_at) :
     context{context},
     flavor_ext_1{favorite_flavor_1},
     flavor_ext_9{favorite_flavor_9},
@@ -186,6 +186,6 @@ mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* conte
 {
     return std::make_shared<StubClientPlatform>(
         context,
-        std::unordered_map<FailurePoint, std::exception_ptr>{});
+        std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{});
 }
 

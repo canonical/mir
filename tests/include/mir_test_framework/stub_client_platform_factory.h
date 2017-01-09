@@ -37,7 +37,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     StubClientPlatform(mir::client::ClientContext* context);
     StubClientPlatform(
         mir::client::ClientContext* context,
-        std::unordered_map<FailurePoint, std::exception_ptr>&& fail_at);
+        std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>&& fail_at);
 
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
@@ -57,7 +57,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirExtensionAnimalNamesV1 animal_ext;
     MirExtensionFencedBuffersV1 fence_ext;
 
-    std::unordered_map<FailurePoint, std::exception_ptr> const fail_at;
+    std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>> const fail_at;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory
