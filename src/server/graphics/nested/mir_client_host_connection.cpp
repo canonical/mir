@@ -111,38 +111,38 @@ class MirClientHostSurface : public mgn::HostSurface
 public:
     MirClientHostSurface(
         MirConnection* mir_connection,
-        MirSurfaceSpec* spec)
+        MirWindowSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
-              mir_surface_create_sync(spec)}
+              mir_window_create_sync(spec)}
     {
-        if (!mir_surface_is_valid(mir_surface))
+        if (!mir_window_is_valid(mir_surface))
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error(mir_surface_get_error_message(mir_surface)));
+                std::runtime_error(mir_window_get_error_message(mir_surface)));
         }
     }
 
     ~MirClientHostSurface()
     {
         if (cursor) mir_buffer_stream_release_sync(cursor);
-        mir_surface_release_sync(mir_surface);
+        mir_window_release_sync(mir_surface);
     }
 
     void apply_spec(mgn::HostSurfaceSpec& spec) override
     {
-        mir_surface_apply_spec(mir_surface, spec.handle());
+        mir_window_apply_spec(mir_surface, spec.handle());
     }
 
     EGLNativeWindowType egl_native_window() override
     {
         return reinterpret_cast<EGLNativeWindowType>(
-            mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
+            mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
     }
 
     void set_event_handler(mir_surface_event_callback cb, void* context) override
     {
-        mir_surface_set_event_handler(mir_surface, cb, context);
+        mir_window_set_event_handler(mir_surface, cb, context);
     }
 
     void set_cursor_image(mg::CursorImage const& image)
@@ -203,10 +203,10 @@ public:
     {
         if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
 
-        auto spec = mir_connection_create_spec_for_changes(mir_connection);
-        mir_surface_spec_set_cursor_name(spec, mir_disabled_cursor_name);
-        mir_surface_apply_spec(mir_surface, spec);
-        mir_surface_spec_release(spec);
+        auto spec = mir_create_window_spec(mir_connection);
+        mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
+        mir_window_apply_spec(mir_surface, spec);
+        mir_window_spec_release(spec);
     }
 
 private:
@@ -367,21 +367,21 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_connection_create_spec_for_normal_surface(
+        mir_create_normal_window_spec(
             mir_connection,
             properties.size.width.as_int(),
-            properties.size.height.as_int(),
-            properties.format),
-        mir_surface_spec_release);
+            properties.size.height.as_int()),
+        mir_window_spec_release);
 
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
-    mir_surface_spec_set_name(spec.get(), name);
-    mir_surface_spec_set_buffer_usage(spec.get(), usage);
-    mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
+    mir_window_spec_set_pixel_format(spec.get(), properties.format);
+    mir_window_spec_set_name(spec.get(), name);
+    mir_window_spec_set_buffer_usage(spec.get(), usage);
+    mir_window_spec_set_fullscreen_on_output(spec.get(), output_id);
     MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
-    mir_surface_spec_set_streams(spec.get(), &info, 1);
+    mir_window_spec_set_streams(spec.get(), &info, 1);
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, spec.get()),
@@ -708,13 +708,13 @@ class SurfaceSpec : public mgn::HostSurfaceSpec
 {
 public:
     SurfaceSpec(MirConnection* connection) :
-        spec(mir_connection_create_spec_for_changes(connection))
+        spec(mir_create_window_spec(connection))
     {
     }
 
     ~SurfaceSpec()
     {
-        mir_surface_spec_release(spec);
+        mir_window_spec_release(spec);
     }
 
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
@@ -731,12 +731,12 @@ public:
             size.width.as_int(), size.height.as_int(), stream.handle());
     }
 
-    MirSurfaceSpec* handle() override
+    MirWindowSpec* handle() override
     {
         return spec;
     }
 private:
-    MirSurfaceSpec* spec;
+    MirWindowSpec* spec;
 };
 }
 

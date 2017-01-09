@@ -39,7 +39,7 @@ namespace mtd=mir::test::doubles;
 
 struct MockMirSurface : public mcl::EGLNativeSurface
 {
-    MockMirSurface(MirSurfaceParameters params) :
+    MockMirSurface(MirWindowParameters params) :
         params(params),
         client_buffer(std::make_shared<mtd::MockClientBuffer>()),
         buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
@@ -54,12 +54,12 @@ struct MockMirSurface : public mcl::EGLNativeSurface
                 std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
     }
 
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
     MOCK_METHOD0(swap_buffers_sync, void());
     MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
-    MirSurfaceParameters params;
+    MirWindowParameters params;
     std::shared_ptr<mtd::MockClientBuffer> client_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> buffer;
 };
@@ -79,7 +79,7 @@ protected:
             .WillByDefault(Return(std::make_shared<mtd::StubAndroidNativeBuffer>()));
     }
 
-    MirSurfaceParameters surf_params;
+    MirWindowParameters surf_params;
     std::shared_ptr<mtd::MockClientBuffer> mock_client_buffer;
 };
 
@@ -243,8 +243,8 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
 TEST_F(AndroidInterpreter, returns_proper_usage_bits_based_on_surface)
 {
     using namespace testing;
-    MirSurfaceParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
-    MirSurfaceParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
+    MirWindowParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
+    MirWindowParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);

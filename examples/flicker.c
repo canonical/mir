@@ -105,7 +105,7 @@ static void shutdown(int signum)
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
-    MirSurface *surface = 0;
+    MirWindow *window = 0;
     int swapinterval = 1;
 
     int arg;
@@ -153,28 +153,28 @@ int main(int argc, char* argv[])
     mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
     assert(spec != NULL);
-    mir_surface_spec_set_name(spec, __FILE__);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, __FILE__);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    assert(surface != NULL);
-    assert(mir_surface_is_valid(surface));
-    assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
-    puts("Surface created");
+    assert(window != NULL);
+    assert(mir_window_is_valid(window));
+    assert(strcmp(mir_window_get_error_message(window), "") == 0);
+    puts("Window created");
 
-    mir_surface_set_swapinterval(surface, swapinterval);
+    MirBufferStream* bs = mir_window_get_buffer_stream(window);
+    mir_buffer_stream_set_swapinterval(bs, swapinterval);
 
     uint32_t pattern[2] = {0};
     fill_pattern(pattern, pixel_format);
 
     MirGraphicsRegion graphics_region;
     int i=0;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
@@ -188,8 +188,8 @@ int main(int argc, char* argv[])
         mir_buffer_stream_swap_buffers_sync(bs);
     }
 
-    mir_surface_release_sync(surface);
-    puts("Surface released");
+    mir_window_release_sync(window);
+    puts("Window released");
 
     mir_connection_release(connection);
     puts("Connection released");
