@@ -69,15 +69,6 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     /*
      * 59Hz by default. This ensures the input rate never gets ahead of the
      * typical display rate, which would be seen as visible lag.
-     *
-     * TODO: Although we could now replace this with the real refresh rate of
-     *       the display (which MirSurface knows), it would be better to
-     *       use real display timestamps (when we have them) for even greater
-     *       precision. And better again to delete all the input resampling
-     *       logic since client-side vsync now means Qt can safely remove
-     *       the QML_NO_TOUCH_COMPRESSION=1 workaround and use its own
-     *       resampling. Because client-side vsync should make the Qt
-     *       algorithm safe to use with Mir nesting.
      */
     event_rate_hz = 59;
     auto env = getenv("MIR_CLIENT_INPUT_RATE");

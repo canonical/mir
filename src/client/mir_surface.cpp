@@ -178,7 +178,6 @@ MirSurface::~MirSurface()
     StreamSet old_streams;
 
     {
-        // Is this sensible? If we need locking in a destructor we're in trouble
         std::lock_guard<decltype(mutex)> lock(mutex);
         old_streams = std::move(streams);
     }
