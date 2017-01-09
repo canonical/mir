@@ -441,9 +441,5 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_screencast_with_invalid_connection)
 {
-    MirScreencastParameters params{{0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MIR_EXPECT_DEATH(mir_connection_create_screencast_sync(nullptr, &params), "");
-#pragma GCC diagnostic pop
+    MIR_EXPECT_DEATH(mir_create_screencast_spec(nullptr), "");
 }
