@@ -35,7 +35,7 @@ void mi::InputDevices::update_devices(std::string const& config_buffer)
         stored_callback();
 }
 
-MirInputConfiguration mi::InputDevices::clone_devices()
+MirInputConfiguration mi::InputDevices::devices()
 {
     std::unique_lock<std::mutex> lock(devices_access);
     return configuration;

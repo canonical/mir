@@ -53,9 +53,9 @@ static void shutdown(int signum)
     }
 
 //The client arranges the scene in the subscene
-void resize_callback(MirSurface* surface, MirEvent const* event, void* context)
+void resize_callback(MirWindow* window, MirEvent const* event, void* context)
 {
-    (void) surface;
+    (void) window;
     MirEventType type = mir_event_get_type(event);
     if (type == mir_event_type_resize)
     {
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     EGLint neglconfigs;
     EGLBoolean ok;
     MirConnection* connection = NULL;
-    MirSurface* surface = NULL;
+    MirWindow* window = NULL;
     MirRenderSurface* render_surface = NULL;
 
     signal(SIGINT, shutdown);
@@ -227,22 +227,18 @@ int main(int argc, char *argv[])
         eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
 
     //The format field is only used for default-created streams.
-    //We can safely set invalid as the pixel format, and the field needs to be deprecated
-    //once default streams are deprecated.
-    //width and height are the logical width the user wants the surface to be
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(
-            connection, width, height,
-            mir_pixel_format_invalid);
+    //width and height are the logical width the user wants the window to be
+    MirWindowSpec *spec =
+        mir_create_normal_window_spec(connection, width, height);
 
-    CHECK(spec, "Can't create a surface spec");
-    mir_surface_spec_set_name(spec, appname);
+    CHECK(spec, "Can't create a window spec");
+    mir_window_spec_set_name(spec, appname);
     mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
-    mir_surface_spec_set_event_handler(spec, resize_callback, render_surface);
+    mir_window_spec_set_event_handler(spec, resize_callback, render_surface);
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
@@ -313,7 +309,7 @@ int main(int argc, char *argv[])
     else
         eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
     return 0;
 }

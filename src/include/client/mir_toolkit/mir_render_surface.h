@@ -147,7 +147,7 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface);
 
 /**
- * Set the MirSurfaceSpec to display content contained in a render surface
+ * Set the MirWindowSpec to display content contained in a render surface
  *
  * \warning: The initial call to mir_surface_spec_add_render_surface will set
  *           the bottom-most content, and subsequent calls will stack the
@@ -163,13 +163,13 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
  * \param displacement_y   The y displacement from the top-left corner of the MirSurface
  */
 void mir_surface_spec_add_render_surface(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int logical_width, int logical_height,
     int displacement_x, int displacement_y);
 
 /**
- * Set the MirSurfaceSpec to contain a specific cursor. 
+ * Set the MirWindowSpec to contain a specific cursor.
  *
  * \param [in] spec             The spec
  * \param [in] render_surface   The rendersurface to set, or nullptr to reset to default cursor.
@@ -177,7 +177,7 @@ void mir_surface_spec_add_render_surface(
  * \param [in] hotspot_y        The y-coordinate to use as the cursor's hotspot
  */
 void mir_surface_spec_set_cursor_render_surface(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y);
 

@@ -132,9 +132,9 @@ public:
     {
         // Ensure the nested server posts a frame
         connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
-        surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(surface, handle_event, this);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        window = mtf::make_any_surface(connection);
+        mir_window_set_event_handler(window, handle_event, this);
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
@@ -173,8 +173,8 @@ public:
     static void null_event_handler(MirSurface*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
-        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
     mir::test::Signal ready_to_accept_events;
@@ -185,7 +185,7 @@ protected:
     
 private:
     MirConnection *connection;
-    MirSurface *surface;
+    MirWindow *window;
     bool exposed{false};
     bool focused{false};
 };
@@ -213,7 +213,7 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     ExposedSurface client(nested_mir.new_connection());
 
     // Because we are testing a nested setup, it's difficult to guarantee
-    // that the nested framebuffer surface (and consenquently the client surface
+    // that the nested framebuffer window (and consenquently the client window
     // contained in it) is going to be ready (i.e., exposed and focused) to receive
     // events when we send them. We work around this issue by first sending some
     // dummy events and waiting until we receive one of them.

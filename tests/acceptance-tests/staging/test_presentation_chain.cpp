@@ -70,7 +70,7 @@ public:
 
     operator MirSurface*()
     {
-        return surface;
+        return window;
     }
 
     Chain& chain()
@@ -80,17 +80,17 @@ public:
 
     ~SurfaceWithChain()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
     }
 protected:
     SurfaceWithChain(MirConnection* connection, std::function<MirSurface*(Chain&)> const& fn) :
         chain_(connection),
-        surface(fn(chain_))
+        window(fn(chain_))
     {
     }
 private:
     Chain chain_;
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 struct SurfaceWithChainFromStart : SurfaceWithChain
@@ -107,13 +107,14 @@ struct SurfaceWithChainFromStart : SurfaceWithChain
 private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
-        auto spec = mir_connection_create_spec_for_normal_surface(
-            connection, size.width.as_int(), size.height.as_int(), pf);
+        auto spec = mir_create_normal_window_spec(
+            connection, size.width.as_int(), size.height.as_int());
+        mir_window_spec_set_pixel_format(spec, pf);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-        auto surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        return surface;
+        auto window = mir_window_create_sync(spec);
+        mir_window_spec_release(spec);
+        return window;
     }
 };
 
@@ -130,16 +131,17 @@ struct SurfaceWithChainFromReassociation : SurfaceWithChain
 private:
     MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
-        MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(
-            connection, size.width.as_int(), size.height.as_int(), pf);
-        auto surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        spec = mir_create_surface_spec(connection);
+        MirWindowSpec* spec = mir_create_normal_window_spec(
+            connection, size.width.as_int(), size.height.as_int());
+        mir_window_spec_set_pixel_format(spec, pf);
+        auto window = mir_window_create_sync(spec);
+        mir_window_spec_release(spec);
+        spec = mir_create_window_spec(connection);
         mir_surface_spec_add_presentation_chain(
             spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
-        return surface;
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        return window;
     }
 };
 
@@ -199,7 +201,7 @@ void buffer_callback(MirBuffer* buffer, void* context)
 
 TEST_F(PresentationChain, allocation_calls_callback)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -213,7 +215,7 @@ TEST_F(PresentationChain, allocation_calls_callback)
 
 TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -235,11 +237,9 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 
 TEST_F(PresentationChain, has_native_fence)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
-    auto ext = static_cast<MirExtensionFencedBuffers*>(
-        mir_connection_request_interface(
-            connection, MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1));
+    auto ext = mir_extension_fenced_buffers_v1(connection);
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->get_fence, Ne(nullptr));
 
@@ -259,7 +259,7 @@ TEST_F(PresentationChain, has_native_fence)
 
 TEST_F(PresentationChain, can_map_for_cpu_render)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirGraphicsRegion region;
     MirBufferLayout region_layout = mir_buffer_layout_unknown;
@@ -285,7 +285,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -302,7 +302,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
 
     for(auto i = 0u; i < num_iterations; i++)
     {
-        mir_presentation_chain_submit_buffer(surface.chain(), contexts[i % num_buffers].buffer());
+        mir_presentation_chain_submit_buffer(window.chain(), contexts[i % num_buffers].buffer());
         contexts[i % num_buffers].unavailable();
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
@@ -314,7 +314,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
 {
-    SurfaceWithChainFromReassociation surface(connection, size, pf);
+    SurfaceWithChainFromReassociation window(connection, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -331,7 +331,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
 
     for(auto i = 0u; i < num_iterations; i++)
     {
-        mir_presentation_chain_submit_buffer(surface.chain(), contexts[i % num_buffers].buffer());
+        mir_presentation_chain_submit_buffer(window.chain(), contexts[i % num_buffers].buffer());
         contexts[i % num_buffers].unavailable();
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
@@ -342,7 +342,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
 
 TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -352,13 +352,13 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
     ASSERT_THAT(context.buffer(), Ne(nullptr));
-    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
+    mir_presentation_chain_submit_buffer(window.chain(), context.buffer());
     mir_buffer_release(context.buffer());
 }
 
 TEST_F(PresentationChain, buffers_can_be_flushed)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -378,16 +378,17 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     auto stream = mir_connection_create_buffer_stream_sync(connection, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection, size.width.as_int(), size.height.as_int(), pf);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto spec = mir_create_normal_window_spec(
+        connection, size.width.as_int(), size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, pf);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    spec = mir_connection_create_spec_for_changes(connection);
+    spec = mir_create_window_spec(connection);
     mir_surface_spec_add_presentation_chain(
         spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -398,17 +399,17 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     context.unavailable();
     mir_presentation_chain_submit_buffer(chain, context.buffer());
 
-    spec = mir_connection_create_spec_for_changes(connection);
+    spec = mir_create_window_spec(connection);
     mir_surface_spec_add_buffer_stream(spec, 0, 0, size.width.as_int(), size.height.as_int(), stream);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
     mir_presentation_chain_release(chain);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
 
     mir_buffer_stream_release_sync(stream);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 TEST_F(PresentationChain, can_access_basic_buffer_properties)
@@ -419,7 +420,7 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     auto format = mir_pixel_format_abgr_8888;
     auto usage = mir_buffer_usage_software;
 
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
     mir_connection_allocate_buffer(
         connection, width.as_int(), height.as_int(), format, usage,
         buffer_callback, &context);
@@ -465,7 +466,7 @@ void another_buffer_callback(MirBuffer* buffer, void* context)
 }
 TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 {
-    SurfaceWithChainFromStart surface(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, size, pf);
 
     MirBufferSync second_buffer_context;
     MirBufferSync context;
@@ -486,9 +487,9 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 
     mir_buffer_set_callback(context.buffer(), another_buffer_callback, &another_context);
 
-    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
+    mir_presentation_chain_submit_buffer(window.chain(), context.buffer());
     //flush the 1st buffer out
-    mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
+    mir_presentation_chain_submit_buffer(window.chain(), second_buffer_context.buffer());
 
     ASSERT_TRUE(another_context.wait_for_buffer(10s));
     ASSERT_THAT(another_context.buffer(), Ne(nullptr));
