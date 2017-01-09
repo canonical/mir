@@ -134,23 +134,23 @@ struct CursorClient
                 connection =
                     mir_connect_sync(connect_string.c_str(), client_name.c_str());
 
-                auto spec = mir_connection_create_spec_for_normal_surface(connection,
-                    1, 1, mir_pixel_format_abgr_8888);
-                mir_surface_spec_set_name(spec, client_name.c_str());
-                auto const surface = mir_surface_create_sync(spec);
-                mir_surface_spec_release(spec);
+                auto spec = mir_create_normal_window_spec(connection, 1, 1);
+                mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+                mir_window_spec_set_name(spec, client_name.c_str());
+                auto const window = mir_window_create_sync(spec);
+                mir_window_spec_release(spec);
 
                 mir_buffer_stream_swap_buffers_sync(
-                    mir_surface_get_buffer_stream(surface));
+                    mir_window_get_buffer_stream(window));
 
-                wait_for_surface_to_become_focused_and_exposed(surface);
+                wait_for_surface_to_become_focused_and_exposed(window);
 
-                setup_cursor(surface);
+                setup_cursor(window);
 
                 setup_done.raise();
 
                 teardown.wait_for(std::chrono::seconds{10});
-                mir_surface_release_sync(surface);
+                mir_window_release_sync(window);
                 mir_connection_release(connection);
             }};
 
@@ -161,18 +161,18 @@ struct CursorClient
     {
     }
 
-    void wait_for_surface_to_become_focused_and_exposed(MirSurface* surface)
+    void wait_for_surface_to_become_focused_and_exposed(MirWindow* window)
     {
         bool success = mt::spin_wait_for_condition_or_timeout(
-            [surface]
+            [window]
             {
-                return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
-                    mir_surface_get_focus(surface) == mir_surface_focused;
+                return mir_surface_get_visibility(window) == mir_surface_visibility_exposed &&
+                    mir_surface_get_focus(window) == mir_surface_focused;
             },
             std::chrono::seconds{5});
 
         if (!success)
-            throw std::runtime_error("Timeout waiting for surface to become focused and exposed");
+            throw std::runtime_error("Timeout waiting for window to become focused and exposed");
     }
 
     std::string const connect_string;
@@ -188,13 +188,13 @@ struct DisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void setup_cursor(MirSurface* surface) override
+    void setup_cursor(MirWindow* window) override
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
-        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_wait_for(mir_surface_configure_cursor(window, conf));
         mir_cursor_configuration_destroy(conf);
     }
 };
@@ -210,13 +210,13 @@ struct NamedCursorClient : CursorClient
     {
     }
 
-    void setup_cursor(MirSurface* surface) override
+    void setup_cursor(MirWindow* window) override
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(cursor_name.c_str());
 #pragma GCC diagnostic pop
-        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_wait_for(mir_surface_configure_cursor(window, conf));
         mir_cursor_configuration_destroy(conf);
     }
 
@@ -275,9 +275,9 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
 }
 
-// In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
-// over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
-// to enter the bounds of the first surface, we should observe it being disabled.
+// In this set we create a 1x1 client window at the point (1,0). The client requests to disable the cursor
+// over this window. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
+// to enter the bounds of the first window, we should observe it being disabled.
 TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
@@ -380,7 +380,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
     {
         using NamedCursorClient::NamedCursorClient;
 
-        void setup_cursor(MirSurface* surface) override
+        void setup_cursor(MirWindow* window) override
         {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -388,8 +388,8 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
             auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
 
-            mir_wait_for(mir_surface_configure_cursor(surface, conf1));
-            mir_wait_for(mir_surface_configure_cursor(surface, conf2));
+            mir_wait_for(mir_surface_configure_cursor(window, conf1));
+            mir_wait_for(mir_surface_configure_cursor(window, conf2));
 
             mir_cursor_configuration_destroy(conf1);
             mir_cursor_configuration_destroy(conf2);
@@ -423,7 +423,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
     {
         using CursorClient::CursorClient;
 
-        void setup_cursor(MirSurface* surface) override
+        void setup_cursor(MirWindow* window) override
         {
             auto stream = mir_connection_create_buffer_stream_sync(
                 connection, 24, 24, mir_pixel_format_argb_8888,
@@ -432,7 +432,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
             mir_buffer_stream_swap_buffers_sync(stream);
 
-            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_wait_for(mir_surface_configure_cursor(window, conf));
             
             mir_cursor_configuration_destroy(conf);            
             
@@ -465,25 +465,25 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 namespace
 {
 // The nested server fixture we use is using the 'CanonicalWindowManager' which will place
-// surfaces in the center...in order to ensure the surface appears under the cursor we use
+// surfaces in the center...in order to ensure the window appears under the cursor we use
 // the fullscreen state.
 struct FullscreenDisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void setup_cursor(MirSurface* surface) override
+    void setup_cursor(MirWindow* window) override
     {
         // Workaround race condition (lp:1525003). I've tried, but I've not
         // found a better way to ensure that the host Mir server is "ready"
         // for the test logic. - alan_g
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
-        mir_surface_set_state(surface, mir_surface_state_fullscreen);
+        mir_surface_set_state(window, mir_surface_state_fullscreen);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
-        mir_surface_configure_cursor(surface, conf);
+        mir_surface_configure_cursor(window, conf);
         mir_cursor_configuration_destroy(conf);
     }
 };

@@ -33,7 +33,7 @@ float mir_eglapp_background_opacity = 1.0f;
 static const char* appname = "egldemo";
 
 static MirConnection *connection;
-static MirSurface *surface;
+static MirWindow* window;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
@@ -50,8 +50,8 @@ void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    mir_surface_release_sync(surface);
-    surface = NULL;
+    mir_window_release_sync(window);
+    window = NULL;
     mir_connection_release(connection);
     connection = NULL;
 }
@@ -118,7 +118,7 @@ static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
     switch (attrib)
     {
     case mir_surface_attrib_visibility:
-        printf("Surface %s\n", value == mir_surface_visibility_exposed ?
+        printf("Window %s\n", value == mir_surface_visibility_exposed ?
                                "exposed" : "occluded");
         break;
     case mir_surface_attrib_dpi:
@@ -138,7 +138,7 @@ static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
 
     refresh_rate = mir_surface_output_event_get_refresh_rate(out);
 
-    printf("Surface is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
+    printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
            mir_surface_output_event_get_output_id(out),
            mir_surface_output_event_get_dpi(out),
            mir_surface_output_event_get_scale(out),
@@ -151,11 +151,11 @@ double mir_eglapp_display_hz(void)
     return refresh_rate;
 }
 
-void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* unused)
+void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused)
 {
-    (void) surface;
+    (void) window;
     (void) unused;
-    
+
     switch (mir_event_get_type(ev))
     {
     case mir_event_type_input:
@@ -354,7 +354,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         {"-n", "!", &no_vsync, "Don't sync to vblank"},
         {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
         {"-q", "!", &quiet, "Quiet mode (no messages output)"},
-        {"-s <width>x<height>", "=", &dims, "Force surface size"},
+        {"-s <width>x<height>", "=", &dims, "Force window size"},
         {"--", "$", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL}
     };
@@ -468,10 +468,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     mir_display_config_destroy(display_config);
 
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
+    MirWindowSpec *spec =
+        mir_create_normal_window_spec(connection, *width, *height);
 
-    CHECK(spec != NULL, "Can't create a surface spec");
+    CHECK(spec != NULL, "Can't create a window spec");
+
+    mir_window_spec_set_pixel_format(spec, pixel_format);
 
     char const* name = argv[0];
     for (char const* p = name; *p; p++)
@@ -479,25 +481,25 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         if (*p == '/')
             name = p + 1;
     }
-    mir_surface_spec_set_name(spec, name);
+    mir_window_spec_set_name(spec, name);
 
     if (output_id != mir_display_output_id_invalid)
-        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+        mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    CHECK(mir_surface_is_valid(surface), "Can't create a surface");
+    CHECK(mir_window_is_valid(window), "Can't create a window");
 
-    mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
-    
-    spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_cursor_name(spec, cursor_name);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
+
+    spec = mir_create_window_spec(connection);
+    mir_window_spec_set_cursor_name(spec, cursor_name);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)), NULL);
     
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
@@ -524,7 +526,7 @@ struct MirConnection* mir_eglapp_native_connection()
     return connection;
 }
 
-struct MirSurface* mir_eglapp_native_surface()
+MirWindow* mir_eglapp_native_window()
 {
-    return surface;
+    return window;
 }

@@ -143,20 +143,19 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_spec_for_normal_surface(
+    auto spec = mir_create_normal_window_spec(
         connection,
-        physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_invalid);
+        physical_size.width.as_int(), physical_size.height.as_int());
     mir_surface_spec_add_render_surface(
         spec, rs, logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    EXPECT_THAT(surface, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+    EXPECT_THAT(window, IsValid());
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
 
     mir_render_surface_release(rs);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -170,23 +169,22 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_spec_for_normal_surface(connection,
-                                                              width, height,
-                                                              format);
+    auto spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
     auto bs = mir_render_surface_get_buffer_stream(rs,
                                                    640, 480,
                                                    format,
                                                    usage);
 
-    EXPECT_THAT(surface, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+    EXPECT_THAT(window, IsValid());
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
 
     mir_render_surface_release(rs);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -235,20 +233,19 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
 
     auto rs = mir_connection_create_render_surface_sync(
         connection, logical_size.width.as_int(), logical_size.height.as_int());
-    auto spec = mir_connection_create_spec_for_normal_surface(connection,
-                                                              width, height,
-                                                              format);
+    auto spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
     auto pc = mir_render_surface_get_presentation_chain(rs);
 
-    EXPECT_THAT(surface, IsValid());
-    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+    EXPECT_THAT(window, IsValid());
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
     EXPECT_TRUE(mir_presentation_chain_is_valid(pc));
 
     mir_render_surface_release(rs);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 

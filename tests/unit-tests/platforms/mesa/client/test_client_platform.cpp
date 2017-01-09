@@ -197,9 +197,8 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
 
     int width = 32;
     int height = 90;
-    auto ext = static_cast<MirExtensionGbmBuffer*>(
-        platform->request_interface(
-            MIR_EXTENSION_GBM_BUFFER,MIR_EXTENSION_GBM_BUFFER_VERSION_1));
+    auto ext = static_cast<MirExtensionGbmBufferV1*>(
+        platform->request_interface("mir_extension_gbm_buffer", 1));
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->allocate_buffer_gbm, Ne(nullptr));
 

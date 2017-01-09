@@ -316,12 +316,12 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
     mp::BufferRequest buffer_request; 
 };
 template<class Clock>
-bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_point<Clock> const& pt)
+bool spin_wait_for_id(mg::BufferID id, MirWindow* window, std::chrono::time_point<Clock> const& pt)
 {
     while(Clock::now() < pt)
     {
-        //auto z = mir_debug_surface_current_buffer_id(surface);
-        if (mir_debug_surface_current_buffer_id(surface) == id.as_value())
+        //auto z = mir_debug_surface_current_buffer_id(window);
+        if (mir_debug_surface_current_buffer_id(window) == id.as_value())
             return true;
         std::this_thread::yield();
     }
@@ -344,7 +344,7 @@ TEST_F(SubmitBuffer, fds_can_be_sent_back)
     EXPECT_THAT(write(file, test_string.c_str(), test_string.size()), Gt(0));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
     mclr::DisplayServer server(rpc_channel);
@@ -356,7 +356,7 @@ TEST_F(SubmitBuffer, fds_can_be_sent_back)
 
     ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 
     auto server_received_fd = *last_unpacked_fd;
@@ -370,7 +370,7 @@ TEST_F(SubmitBuffer, fds_can_be_sent_back)
 TEST_F(SubmitBuffer, submissions_happen)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
     mclr::DisplayServer server(rpc_channel);
@@ -382,7 +382,7 @@ TEST_F(SubmitBuffer, submissions_happen)
         ASSERT_THAT(submit_buffer(server, buffer_request), DidNotTimeOut());
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -391,13 +391,13 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
     using namespace testing;
     using namespace std::literals::chrono_literals;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     auto timeout = std::chrono::steady_clock::now() + 5s;
-    EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), surface, timeout))
+    EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), window, timeout))
         << "failed to see the last scheduled buffer become the current one";
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -405,7 +405,7 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
 TEST_F(SubmitBuffer, allocate_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
     mclr::DisplayServer server(rpc_channel);
@@ -413,14 +413,14 @@ TEST_F(SubmitBuffer, allocate_buffers_doesnt_time_out)
     mp::BufferAllocation request;
     EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
 TEST_F(SubmitBuffer, release_buffers_doesnt_time_out)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
     mclr::DisplayServer server(rpc_channel);
@@ -428,6 +428,6 @@ TEST_F(SubmitBuffer, release_buffers_doesnt_time_out)
     mp::BufferRelease request;
     EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }

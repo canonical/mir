@@ -68,7 +68,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
 
         auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
         mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
-        auto surface = mtf::make_any_surface(connection);
+        auto window = mtf::make_any_surface(connection);
 
         std::atomic<bool> signalled(false);
 
@@ -84,10 +84,10 @@ TEST_F(ServerDisconnect, is_detected_by_client)
         while (!signalled.load() && clock::now() < time_limit)
         {
             mir_buffer_stream_swap_buffers_sync(
-                mir_surface_get_buffer_stream(surface));
+                mir_window_get_buffer_stream(window));
         }
 
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
 }
@@ -115,15 +115,13 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
                                                             nullptr);
             });
 
-            MirSurface* surf;
+            MirWindow* window;
 
             create_surface.exec([&] {
-                auto spec = mir_connection_create_spec_for_normal_surface(
-                    connection,
-                    800, 600,
-                    mir_pixel_format_xbgr_8888);
-                surf = mir_surface_create_sync(spec);
-                mir_surface_spec_release(spec);
+                auto spec = mir_create_normal_window_spec(connection, 800, 600);
+                mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+                window = mir_window_create_sync(spec);
+                mir_window_spec_release(spec);
             });
 
             configure_display.exec([&] {
@@ -133,7 +131,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
             });
 
             disconnect.exec([&] {
-                mir_surface_release_sync(surf);
+                mir_window_release_sync(window);
                 mir_connection_release(connection);
             });
         });
@@ -142,7 +140,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
     {
         connect();
         stop_server();
-        /* While trying to create a surface the connection break will be detected */
+        /* While trying to create a window the connection break will be detected */
         create_surface();
 
         /* Trying to configure the display shouldn't block */
@@ -183,7 +181,7 @@ TEST_F(ServerDisconnectDeathTest, causes_client_to_terminate_by_default)
         stop_server();
 
         /*
-         * While trying to create a surface the connection break will be detected
+         * While trying to create a window the connection break will be detected
          * and the client should self-terminate.
          */
         create_surface_sync.signal_ready();

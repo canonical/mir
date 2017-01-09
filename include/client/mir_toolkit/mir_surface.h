@@ -34,239 +34,170 @@ extern "C" {
 #endif
 
 /**
- * Create a surface specification for a normal surface.
+ * Create a window specification for a normal window.
  *
- * A normal surface is suitable for most application windows. It has no special semantics.
+ * A normal window is suitable for most application windows. It has no special semantics.
  * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
  *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ *
+ * \return                  A handle that can be passed to mir_window_create() to complete construction.
  */
-MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
-                                                              int width,
-                                                              int height,
-                                                              MirPixelFormat format);
+MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
+                                             int width, int height);
 
 /**
- * Create a surface specification for a menu surface.
+ * Create a window specification for a menu window.
  *
- * Positioning of the surface is specified with respect to the parent surface
+ * Positioning of the window is specified with respect to the parent window
  * via an adjacency rectangle. The server will attempt to choose an edge of the
- * adjacency rectangle on which to place the surface taking in to account
+ * adjacency rectangle on which to place the window taking in to account
  * screen-edge proximity or similar constraints. In addition, the server can use
  * the edge affinity hint to consider only horizontal or only vertical adjacency
  * edges in the given rectangle.
  *
- * \param [in] connection   Connection the surface will be created on
+ * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
+ *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this menu.
+ *                          return a window of this height.
+ * \param [in] parent       A valid parent window for this menu.
  * \param [in] rect         The adjacency rectangle. The server is not
- *                          guaranteed to create a surface at the requested
+ *                          guaranteed to create a window at the requested
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_surface_create()
+ * \return                  A handle that can be passed to mir_window_create()
  *                          to complete construction.
  */
-MirSurfaceSpec*
-mir_connection_create_spec_for_menu(MirConnection* connection,
-                                    int width,
-                                    int height,
-                                    MirPixelFormat format,
-                                    MirSurface* parent,
-                                    MirRectangle* rect,
-                                    MirEdgeAttachment edge);
+MirWindowSpec*
+mir_create_menu_window_spec(MirConnection* connection,
+                            int width, int height,
+                            MirWindow* parent,
+                            MirRectangle* rect,
+                            MirEdgeAttachment edge);
 
 /**
- * Create a surface specification for a tooltip surface.
+ * Create a window specification for a tip window.
  *
- * A tooltip surface becomes visible when the pointer hovers the specified
- * target zone. A tooltip surface has no input focus and will be closed when
- * the pointer moves out of the target zone or the parent closes, moves or hides
- *
- * The tooltip parent cannot be another tooltip surface.
- *
- * The tooltip position is decided by the server but typically it will appear
- * near the pointer.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this tooltip.
- * \param [in] zone         A target zone relative to parent.
- * \return                  A handle that can be passed to mir_surface_create()
- *                          to complete construction.
- *\deprecated use mir_connection_create_spec_for_tip() instead
- */
-MirSurfaceSpec*
-mir_connection_create_spec_for_tooltip(MirConnection* connection,
-                                       int width,
-                                       int height,
-                                       MirPixelFormat format,
-                                       MirSurface* parent,
-                                       MirRectangle* zone)
-    __attribute__((deprecated));
-
-/**
- * Create a surface specification for a tip surface.
- *
- * Positioning of the surface is specified with respect to the parent surface
+ * Positioning of the window is specified with respect to the parent window
  * via an adjacency rectangle. The server will attempt to choose an edge of the
- * adjacency rectangle on which to place the surface taking in to account
+ * adjacency rectangle on which to place the window taking in to account
  * screen-edge proximity or similar constraints. In addition, the server can use
  * the edge affinity hint to consider only horizontal or only vertical adjacency
  * edges in the given rectangle.
  *
- * \param [in] connection   Connection the surface will be created on
+ * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
+ *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface for this tip.
+ *                          return a window of this height.
+ * \param [in] parent       A valid parent window for this tip.
  * \param [in] rect         The adjacency rectangle. The server is not
- *                          guaranteed to create a surface at the requested
+ *                          guaranteed to create a window at the requested
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_surface_create()
+ * \return                  A handle that can be passed to mir_window_create()
  *                          to complete construction.
  */
-MirSurfaceSpec*
-mir_connection_create_spec_for_tip(MirConnection* connection,
-                                   int width,
-                                   int height,
-                                   MirPixelFormat format,
-                                   MirSurface* parent,
-                                   MirRectangle* rect,
-                                   MirEdgeAttachment edge);
+MirWindowSpec*
+mir_create_tip_window_spec(MirConnection* connection,
+                           int width, int height,
+                           MirWindow* parent,
+                           MirRectangle* rect,
+                           MirEdgeAttachment edge);
 
 /**
- * Create a surface specification for a modal dialog surface.
+ * Create a window specification for a modal dialog window.
  *
- * The dialog surface will have input focus; the parent can still be moved,
+ * The dialog window will have input focus; the parent can still be moved,
  * resized or hidden/minimized but no interaction is possible until the dialog
  * is dismissed.
  *
  * A dialog will typically have no close/maximize button decorations.
  *
- * During surface creation, if the specified parent is another dialog surface
+ * During window creation, if the specified parent is another dialog window
  * the server may choose to close the specified parent in order to show this
- * new dialog surface.
+ * new dialog window.
  *
- * \param [in] connection   Connection the surface will be created on
+ * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
+ *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \param [in] parent       A valid parent surface.
+ *                          return a window of this height.
+ * \param [in] parent       A valid parent window.
  *
  */
-MirSurfaceSpec*
-mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
-                                            int width,
-                                            int height,
-                                            MirPixelFormat format,
-                                            MirSurface* parent);
+MirWindowSpec*
+mir_create_modal_dialog_window_spec(MirConnection* connection,
+                                    int width, int height,
+                                    MirWindow* parent);
 
 /**
- * Create a surface specification for a parentless dialog surface.
+ * Create a window specification for a parentless dialog window.
  *
- * A parentless dialog surface is similar to a normal surface, but it cannot
+ * A parentless dialog window is similar to a normal window, but it cannot
  * be fullscreen and typically won't have any maximize/close button decorations.
  *
  * A parentless dialog is not allowed to have other dialog children. The server
  * may decide to close the parent and show the child dialog only.
  *
- * \param [in] connection   Connection the surface will be created on
+ * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to
- *                          return a surface of this width.
+ *                          return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to
- *                          return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- *
+ *                          return a window of this height.
  */
-MirSurfaceSpec*
-mir_connection_create_spec_for_dialog(MirConnection* connection,
-                                      int width,
-                                      int height,
-                                      MirPixelFormat format);
+MirWindowSpec*
+mir_create_dialog_window_spec(MirConnection* connection,
+                              int width, int height);
 
 /**
- * Create a surface specification.
- * This can be used with mir_surface_create() to create a surface or with
- * mir_surface_apply_spec() to change an existing surface.
- * \remark For use with mir_surface_create() at least the type, width, height,
+ * Create a window specification for an input method window.
+ *
+ * Currently this is only appropriate for the Unity On-Screen-Keyboard.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \return                  A handle that can be passed to mir_window_create() to complete construction.
+ */
+MirWindowSpec*
+mir_create_input_method_window_spec(MirConnection* connection,
+                                    int width, int height);
+
+/**
+ * Create a window specification.
+ * This can be used with mir_window_create() to create a window or with
+ * mir_window_apply_spec() to change an existing window.
+ * \remark For use with mir_window_create() at least the type, width, height,
  * format and buffer_usage must be set. (And for types requiring a parent that
  * too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_surface_create() or mir_surface_apply_spec()
+ *                          mir_window_create() or mir_window_apply_spec()
  */
-MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
-
-/**
- * Create a surface specification for updating a surface.
- *
- * This can be applied to one or more target surfaces using
- * mir_surface_apply_spec(...).
- *
- * \param [in] connection   a valid mir connection
- *
- */
-MirSurfaceSpec*
-mir_connection_create_spec_for_changes(MirConnection* connection);
-
-/**
- * Create a surface from a given specification
- *
- *
- * \param [in] requested_specification  Specification of the attributes for the created surface
- * \param [in] callback                 Callback function to be invoked when creation is complete
- * \param [in, out] context             User data passed to callback function.
- *                                      This callback is guaranteed to be called, and called with a
- *                                      non-null MirSurface*, but the surface may be invalid in
- *                                      case of an error.
- * \return                              A handle that can be passed to mir_wait_for()
- */
-MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
-                                  mir_surface_callback callback, void* context);
-
-/**
- * Create a surface from a given specification and wait for the result.
- * \param [in] requested_specification  Specification of the attributes for the created surface
- * \return                              The new surface. This is guaranteed non-null, but may be invalid
- *                                      in the case of error.
- */
-MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+MirWindowSpec* mir_create_window_spec(MirConnection* connection);
 
 /**
  * Set the requested parent.
  *
  * \param [in] spec    Specification to mutate
- * \param [in] parent  A valid parent surface.
+ * \param [in] parent  A valid parent window.
  */
-void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
 
 /**
- * Update a surface specification with a surface type.
- * This can be used with mir_surface_create() to create a surface or with
- * mir_surface_apply_spec() to change an existing surface.
- * \remark For use with mir_surface_apply_spec() the shell need not support
+ * Update a window specification with a window type.
+ * This can be used with mir_window_create() to create a window or with
+ * mir_window_apply_spec() to change an existing window.
+ * \remark For use with mir_window_apply_spec() the shell need not support
  * arbitrary changes of type and some target types may require the setting of
- * properties such as "parent" that are not already present on the surface.
+ * properties such as "parent" that are not already present on the window.
  * The type transformations the server is required to support are:\n
  * regular => utility, dialog or satellite\n
  * utility => regular, dialog or satellite\n
@@ -275,14 +206,14 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
  * popup => satellite
  *
  * \param [in] spec         Specification to mutate
- * \param [in] type         the target type of the surface
+ * \param [in] type         the target type of the window
  */
-void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
+void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
 
 /**
  * Set the requested name.
  *
- * The surface name helps the user to distinguish between multiple surfaces
+ * The window name helps the user to distinguish between multiple surfaces
  * from the same application. A typical desktop shell may use it to provide
  * text in the window titlebar, in an alt-tab switcher, or equivalent.
  *
@@ -290,7 +221,7 @@ void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
  * \param [in] name     Requested name. This must be valid UTF-8.
  *                      Copied into spec; clients can free the buffer passed after this call.
  */
-void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+void mir_window_spec_set_name(MirWindowSpec* spec, char const* name);
 
 /**
  * Set the requested width, in pixels
@@ -298,10 +229,10 @@ void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
  * \param [in] spec     Specification to mutate
  * \param [in] width    Requested width.
  *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ * \note    The requested dimensions are a hint only. The server is not
+ *          guaranteed to create a window of any specific width or height.
  */
-void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+void mir_window_spec_set_width(MirWindowSpec* spec, unsigned width);
 
 /**
  * Set the requested height, in pixels
@@ -309,36 +240,36 @@ void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
  * \param [in] spec     Specification to mutate
  * \param [in] height   Requested height.
  *
- * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ * \note    The requested dimensions are a hint only. The server is not
+ *          guaranteed to create a window of any specific width or height.
  */
-void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+void mir_window_spec_set_height(MirWindowSpec* spec, unsigned height);
 
 /**
  * Set the requested width increment, in pixels.
  * Defines an arithmetic progression of sizes starting with min_width (if set, otherwise 0)
- * into which the surface prefers to be resized.
+ * into which the window prefers to be resized.
  *
  * \param [in] spec       Specification to mutate
  * \param [in] width_inc  Requested width increment.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
- *          create a surface of any specific width or height.
+ *          create a window of any specific width or height.
  */
-void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc);
+void mir_window_spec_set_width_increment(MirWindowSpec* spec, unsigned width_inc);
 
 /**
  * Set the requested height increment, in pixels
  * Defines an arithmetic progression of sizes starting with min_height (if set, otherwise 0)
- * into which the surface prefers to be resized.
+ * into which the window prefers to be resized.
  *
  * \param [in] spec       Specification to mutate
  * \param [in] height_inc Requested height increment.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to
- *          create a surface of any specific width or height.
+ *          create a window of any specific width or height.
  */
-void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc);
+void mir_window_spec_set_height_increment(MirWindowSpec* spec, unsigned height_inc);
 
 /**
  * Set the minimum width, in pixels
@@ -347,9 +278,9 @@ void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height
  * \param [in] min_width  Minimum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *          window of any specific width or height.
  */
-void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
+void mir_window_spec_set_min_width(MirWindowSpec* spec, unsigned min_width);
 
 /**
  * Set the minimum height, in pixels
@@ -358,33 +289,34 @@ void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
  * \param [in] min_height Minimum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *          window of any specific width or height.
  */
-void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
+void mir_window_spec_set_min_height(MirWindowSpec* spec, unsigned min_height);
+
 /**
  * Set the maximum width, in pixels
  *
  * \param [in] spec       Specification to mutate
- * \param [in] max_width  Maximum width.
+ * \param [in] max_width  maximum width.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *          window of any specific width or height.
  */
-void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
+void mir_window_spec_set_max_width(MirWindowSpec* spec, unsigned max_width);
 
 /**
  * Set the maximum height, in pixels
  *
  * \param [in] spec       Specification to mutate
- * \param [in] max_height Maximum height.
+ * \param [in] max_height maximum height.
  *
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
- *          surface of any specific width or height.
+ *          window of any specific width or height.
  */
-void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
+void mir_window_spec_set_max_height(MirWindowSpec* spec, unsigned max_height);
 
 /**
- * Set the minimum aspect ratio. This is the minimum ratio of surface width to height.
+ * Set the minimum aspect ratio. This is the minimum ratio of window width to height.
  * It is independent of orientation changes and/or preferences.
  *
  * \param [in] spec     Specification to mutate
@@ -392,12 +324,12 @@ void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
  * \param [in] height   denominator
  *
  * \note    The requested aspect ratio is a hint only. The server is not guaranteed
- *          to create a surface of any specific aspect.
+ *          to create a window of any specific aspect.
  */
-void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+void mir_window_spec_set_min_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
 
 /**
- * Set the maximum aspect ratio. This is the maximum ratio of surface width to height.
+ * Set the maximum aspect ratio. This is the maximum ratio of window width to height.
  * It is independent of orientation changes and/or preferences.
  *
  * \param [in] spec     Specification to mutate
@@ -405,120 +337,69 @@ void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width,
  * \param [in] height   denominator
  *
  * \note    The requested aspect ratio is a hint only. The server is not guaranteed
- *          to create a surface of any specific aspect.
+ *          to create a window of any specific aspect.
  */
-void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
-
-/**
- * Set the requested pixel format.
- * \param [in] spec     Specification to mutate
- * \param [in] format   Requested pixel format
- *
- * \note    If this call returns %true then the server is guaranteed to honour this request.
- *          If the server is unable to create a surface with this pixel format at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
-void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
-
-/**
- * Set the requested buffer usage.
- * \param [in] spec     Specification to mutate
- * \param [in] usage    Requested buffer usage
- *
- * \note    If this call returns %true then the server is guaranteed to honour this request.
- *          If the server is unable to create a surface with this buffer usage at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
- */
-void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, unsigned height);
 
 /**
  * \param [in] spec         Specification to mutate
- * \param [in] output_id    ID of output to place surface on. From MirDisplayOutput.output_id
+ * \param [in] output_id    ID of output to place window on. From MirDisplayOutput.output_id
  *
- * \note    If this call returns %true then a valid surface returned from mir_surface_create() is
- *          guaranteed to be fullscreen on the specified output. An invalid surface is returned
+ * \note    If this call returns %true then a valid window returned from mir_window_create() is
+ *          guaranteed to be fullscreen on the specified output. An invalid window is returned
  *          if the server unable to, or policy prevents it from, honouring this request.
  */
-void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
+void mir_window_spec_set_fullscreen_on_output(MirWindowSpec* spec, uint32_t output_id);
 
 /**
  * Set the requested preferred orientation mode.
  * \param [in] spec    Specification to mutate
  * \param [in] mode    Requested preferred orientation
  *
- * \note    If the server is unable to create a surface with the preferred orientation at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
+ * \note    If the server is unable to create a window with the preferred orientation at
+ *          the point mir_window_create() is called it will instead return an invalid window.
  */
-void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
+void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
 
 /**
- * Request that the created surface be attached to a surface of a different client.
+ * Request that the created window be attached to a window of a different client.
  *
- * This is restricted to input methods, which need to attach their suggestion surface
+ * This is restricted to input methods, which need to attach their suggestion window
  * to text entry widgets of other processes.
  *
  * \param [in] spec             Specification to mutate
- * \param [in] parent           A MirPersistentId reference to the parent surface
- * \param [in] attachment_rect  A rectangle specifying the region (in parent surface coordinates)
- *                              that the created surface should be attached to.
+ * \param [in] parent           A MirPersistentId reference to the parent window
+ * \param [in] attachment_rect  A rectangle specifying the region (in parent window coordinates)
+ *                              that the created window should be attached to.
  * \param [in] edge             The preferred edge direction to attach to. Use
  *                              mir_edge_attachment_any for no preference.
- * \return                      False if the operation is invalid for this surface type.
+ * \return                      False if the operation is invalid for this window type.
  *
- * \note    If the parent surface becomes invalid before mir_surface_create() is processed,
- *          it will return an invalid surface. If the parent surface is valid at the time
- *          mir_surface_create() is called but is later closed, this surface will also receive
+ * \note    If the parent window becomes invalid before mir_window_create() is processed,
+ *          it will return an invalid window. If the parent window is valid at the time
+ *          mir_window_create() is called but is later closed, this window will also receive
  *          a close event.
  */
-bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
-                                               MirPersistentId* parent,
-                                               MirRectangle* attachment_rect,
-                                               MirEdgeAttachment edge);
+bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
+                                              MirPersistentId* parent,
+                                              MirRectangle* attachment_rect,
+                                              MirEdgeAttachment edge);
 
 /**
  * Set the requested state.
  * \param [in] spec    Specification to mutate
  * \param [in] state   Requested state
  *
- * \note    If the server is unable to create a surface with the requested state at
- *          the point mir_surface_create() is called it will instead return an invalid surface.
+ * \note    If the server is unable to create a window with the requested state at
+ *          the point mir_window_create() is called it will instead return an invalid window.
  */
-void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
+void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
 
 /**
- * Release the resources held by a MirSurfaceSpec.
- *
- * \param [in] spec     Specification to release
- */
-void mir_surface_spec_release(MirSurfaceSpec* spec);
-
-/**
- * Set the streams associated with the spec.
- * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
- * On application of the spec, a stream that is present in the surface,
- * but is not in the list will be disassociated from the surface.
- * On application of the spec, a stream that is not present in the surface,
- * but is in the list will be associated with the surface.
- * Streams set a displacement from the top-left corner of the surface.
- * 
- * \warning disassociating streams from the surface will not release() them.
- * \warning It is wiser to arrange the streams within the bounds of the
- *          surface the spec is applied to. Shells can define their own
- *          behavior as to what happens to an out-of-bound stream.
- * 
- * \param [in] spec        The spec to accumulate the request in.
- * \param [in] streams     An array of non-null streams info.
- * \param [in] num_streams The number of elements in the streams array.
- */
-void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
-                                  MirBufferStreamInfo* streams,
-                                  unsigned int num_streams);
-
-/**
- * Set a collection of input rectangles assosciated with the spec.
+ * Set a collection of input rectangles associated with the spec.
  * Rectangles are specified as a list of regions relative to the top left
- * of the specified surface. If the server applies this specification
- * to a surface input which would normally go to the surface but is not
+ * of the specified window. If the server applies this specification
+ * to a window input which would normally go to the window but is not
  * contained within any of the input rectangles instead passes
  * on to the next client.
  *
@@ -526,165 +407,468 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
  * \param [in] rectangles An array of MirRectangles specifying the input shape.
  * \param [in] n_rects The number of elements in the rectangles array.
  */
-void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
-                                      MirRectangle const *rectangles,
-                                      size_t n_rects);
+void mir_window_spec_set_input_shape(MirWindowSpec* spec,
+                                     MirRectangle const *rectangles,
+                                     size_t n_rects);
 
 /**
- * Set the event handler to be called when events arrive for a surface.
+ * Set the event handler to be called when events arrive for a window.
  *   \warning event_handler could be called from another thread. You must do
  *            any locking appropriate to protect your data accessed in the
  *            callback. There is also a chance that different events will be
- *            called back in different threads, for the same surface,
+ *            called back in different threads, for the same window,
  *            simultaneously.
  * \param [in] spec       The spec to accumulate the request in.
  * \param [in] callback   The callback function
  * \param [in] context    Additional argument to be passed to callback
  */
-void mir_surface_spec_set_event_handler(
-    MirSurfaceSpec* spec,
-    mir_surface_event_callback callback,
-    void* context);
-
+void mir_window_spec_set_event_handler(MirWindowSpec* spec,
+                                       mir_window_event_callback callback,
+                                       void* context);
 
 /**
- * Ask the shell to customize "chrome" for this surface.
- * For example, on the phone hide indicators when this surface is active.
+ * Ask the shell to customize "chrome" for this window.
+ * For example, on the phone hide indicators when this window is active.
  *
  * \param [in] spec The spec to accumulate the request in.
  * \param [in] style The requested level of "chrome"
  */
-void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
+void mir_window_spec_set_shell_chrome(MirWindowSpec* spec, MirShellChrome style);
 
 /**
- * Attempts to set the pointer confinement spec for this surface
+ * Attempts to set the pointer confinement spec for this window
  *
  * This will request the window manager to confine the pointer to the surfaces region.
  *
  * \param [in] spec  The spec to accumulate the request in.
  * \param [in] state The state you would like the pointer confinement to be in.
  */
-void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+void mir_window_spec_set_pointer_confinement(MirWindowSpec* spec, MirPointerConfinementState state);
 
 /**
- * Set the surface placement on the spec.
+ * Set the window placement on the spec.
  *
  * \param [in] spec             the spec to update
  * \param [in] rect             the destination rectangle to align with
  * \param [in] rect_gravity     the point on \p rect to align with
- * \param [in] surface_gravity  the point on the surface to align with
+ * \param [in] surface_gravity  the point on the window to align with
  * \param [in] placement_hints  positioning hints to use when limited on space
  * \param [in] offset_dx        horizontal offset to shift w.r.t. \p rect
  * \param [in] offset_dy        vertical offset to shift w.r.t. \p rect
  *
- * Moves a surface to \p rect, aligning their reference points.
+ * Moves a window to \p rect, aligning their reference points.
  *
- * \p rect is relative to the top-left corner of the parent surface.
+ * \p rect is relative to the top-left corner of the parent window.
  * \p rect_gravity and \p surface_gravity determine the points on \p rect and
- * the surface to pin together. \p rect's alignment point can be offset by
+ * the window to pin together. \p rect's alignment point can be offset by
  * \p offset_dx and \p offset_dy, which is equivalent to offsetting the
- * position of the surface.
+ * position of the window.
  *
  * \p placement_hints determine how the window should be positioned in the case
- * that the surface would fall off-screen if placed in its ideal position.
+ * that the window would fall off-screen if placed in its ideal position.
  * See \ref MirPlacementHints for details.
  */
-void mir_surface_spec_set_placement(
-    MirSurfaceSpec*     spec,
-    const MirRectangle* rect,
-    MirPlacementGravity rect_gravity,
-    MirPlacementGravity surface_gravity,
-    MirPlacementHints   placement_hints,
-    int                 offset_dx,
-    int                 offset_dy);
+void mir_window_spec_set_placement(MirWindowSpec*      spec,
+                                   const MirRectangle* rect,
+                                   MirPlacementGravity rect_gravity,
+                                   MirPlacementGravity window_gravity,
+                                   MirPlacementHints   placement_hints,
+                                   int                 offset_dx,
+                                   int                 offset_dy);
 
 /**
  * Set the name for the cursor from the system cursor theme.
  * \param [in] spec             The spec
  * \param [in] name             The name, or "" to reset to default
  */
-void mir_surface_spec_set_cursor_name(MirSurfaceSpec* spec, char const* name);
+void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
 
 /**
- * Set the event handler to be called when events arrive for a surface.
- *   \warning event_handler could be called from another thread. You must do
- *            any locking appropriate to protect your data accessed in the
- *            callback. There is also a chance that different events will be
- *            called back in different threads, for the same surface,
- *            simultaneously.
- *   \param [in] surface        The surface
- *   \param [in] callback       The callback function
- *   \param [in] context        Additional argument to be passed to callback
- */
-void mir_surface_set_event_handler(MirSurface *surface,
-                                   mir_surface_event_callback callback,
-                                   void* context);
-
-/**
- * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
- * obtain EGLNativeWindow, etc...)
+ * \note To be deprecated soon. Only for enabling other deprecations.
  *
- *   \deprecated Users should use mir_surface_spec_set_streams() to arrange
- *               the content of a surface, instead of relying on a stream
- *               being created by default.
- *   \warning If the surface was created with, or modified to have a
- *            MirSurfaceSpec containing streams added through
- *            mir_surface_spec_set_streams(), the default stream will
- *            be removed, and this function will return NULL.
- *   \param[in] surface The surface
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ *
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a window with this pixel format at
+ *          the point mir_window_create() is called it will instead return an invalid window.
  */
-MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
+void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format);
 
 /**
- * Test for a valid surface
- *   \param [in] surface  The surface
- *   \return              True if the supplied surface is valid, or
- *                        false otherwise.
+ * \note To be deprecated soon. Only for enabling other deprecations.
+ *
+ * Set the requested buffer usage.
+ * \param [in] spec     Specification to mutate
+ * \param [in] usage    Requested buffer usage
+ *
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a window with this buffer usage at
+ *          the point mir_window_create() is called it will instead return an invalid window.
  */
-bool mir_surface_is_valid(MirSurface *surface);
+void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage);
 
 /**
- * Retrieve a text description of the error. The returned string is owned by
- * the library and remains valid until the surface or the associated
- * connection has been released.
- *   \param [in] surface  The surface
- *   \return              A text description of any error resulting in an
- *                        invalid surface, or the empty string "" if the
- *                        connection is valid.
+ * \note To be deprecated soon. Waiting for mir_window_spec_set_render_surfaces() to land.
+ *
+ * Set the streams associated with the spec.
+ * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
+ * On application of the spec, a stream that is present in the window,
+ * but is not in the list will be disassociated from the window.
+ * On application of the spec, a stream that is not present in the window,
+ * but is in the list will be associated with the window.
+ * Streams set a displacement from the top-left corner of the window.
+ *
+ * \warning disassociating streams from the window will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          window the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ *
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     An array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
  */
-char const *mir_surface_get_error_message(MirSurface *surface);
+void mir_window_spec_set_streams(MirWindowSpec* spec,
+                                 MirBufferStreamInfo* streams,
+                                 unsigned int num_streams);
 
 /**
- * Get a surface's parameters.
- *   \pre                     The surface is valid
- *   \param [in] surface      The surface
- *   \param [out] parameters  Structure to be populated
+ * Release the resources held by a MirWindowSpec.
+ *
+ * \param [in] spec     Specification to release
  */
-void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
+void mir_window_spec_release(MirWindowSpec* spec);
 
 /**
- * Release the supplied surface and any associated buffer. The returned wait
- * handle remains valid until the connection to the server is released.
+ * Request changes to the specification of a window. The server will decide
+ * whether and how the request can be honoured.
+ *
+ *   \param [in] window  The window to mutate
+ *   \param [in] spec    Spec with the requested changes applied
+ */
+void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec);
+
+/**
+ * Create a window from a given specification
+ *
+ *
+ * \param [in] requested_specification  Specification of the attributes for the created window
+ * \param [in] callback                 Callback function to be invoked when creation is complete
+ * \param [in, out] context             User data passed to callback function.
+ *                                      This callback is guaranteed to be called, and called with a
+ *                                      non-null MirWindow*, but the window may be invalid in
+ *                                      case of an error.
+ */
+void mir_window_create(MirWindowSpec* requested_specification,
+                       mir_window_callback callback, void* context);
+
+/**
+ * Create a window from a given specification and wait for the result.
+ * \param [in] requested_specification  Specification of the attributes for the created window
+ * \return                              The new window. This is guaranteed non-null, but may be invalid
+ *                                      in the case of error.
+ */
+MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification);
+
+/**
+ * Release the supplied window and any associated buffer.
+ *
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
- *   \param [in] surface      The surface
+ *   \param [in] window       The window
  *   \param [in] callback     Callback function to be invoked when the request
  *                            completes
  *   \param [in,out] context  User data passed to the callback function
- *   \return                  A handle that can be passed to mir_wait_for
  */
+void mir_window_release(
+    MirWindow* window,
+    mir_window_callback callback,
+    void *context);
+
+/**
+ * Release the specified window like in mir_window_release(), but also wait
+ * for the operation to complete.
+ *   \param [in] window  The window to be released
+ */
+void mir_window_release_sync(MirWindow* window);
+
+/**
+ * Test for a valid window
+ *   \param [in] window   The window
+ *   \return              True if the supplied window is valid, or
+ *                        false otherwise.
+ */
+bool mir_window_is_valid(MirWindow* window);
+
+/**
+ * Set the event handler to be called when events arrive for a window.
+ *   \warning event_handler could be called from another thread. You must do
+ *            any locking appropriate to protect your data accessed in the
+ *            callback. There is also a chance that different events will be
+ *            called back in different threads, for the same window,
+ *            simultaneously.
+ *   \param [in] window         The window
+ *   \param [in] callback       The callback function
+ *   \param [in] context        Additional argument to be passed to callback
+ */
+void mir_window_set_event_handler(MirWindow* window,
+                                  mir_window_event_callback callback,
+                                  void* context);
+
+/**
+ * Retrieve the primary MirBufferStream associated with a window (to advance buffers,
+ * obtain EGLNativeWindow, etc...)
+ *
+ *   \deprecated Users should use mir_window_spec_set_streams() to arrange
+ *               the content of a window, instead of relying on a stream
+ *               being created by default.
+ *   \warning If the window was created with, or modified to have a
+ *            MirWindowSpec containing streams added through
+ *            mir_window_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
+ *   \param[in] window The window
+ */
+MirBufferStream* mir_window_get_buffer_stream(MirWindow* window);
+
+/**
+ * Retrieve a text description of the error. The returned string is owned by
+ * the library and remains valid until the window or the associated
+ * connection has been released.
+ *   \param [in] window  The window
+ *   \return              A text description of any error resulting in an
+ *                        invalid window, or the empty string "" if the
+ *                        connection is valid.
+ */
+char const* mir_window_get_error_message(MirWindow* window);
+
+/**
+ * Get a window's parameters.
+ *   \pre                     The window is valid
+ *   \param [in]  window      The window
+ *   \param [out] parameters  Structure to be populated
+ */
+void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters);
+
+/**
+ * Get the orientation of a window.
+ *   \param [in] window  The window to query
+ *   \return              The orientation of the window
+ */
+MirOrientation mir_window_get_orientation(MirWindow* window);
+
+/**
+ * Attempts to raise the window to the front.
+ *
+ * \param [in] window The window to raise
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
+void mir_window_raise(MirWindow* window, MirCookie const* cookie);
+
+// Functions in this pragma section are to be deprecated
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
+                                                              int width, int height,
+                                                              MirPixelFormat format);
+//__attribute__((deprecated("Use mir_create_normal_window_spec() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_menu(MirConnection* connection,
+                                    int width,
+                                    int height,
+                                    MirPixelFormat format,
+                                    MirSurface* parent,
+                                    MirRectangle* rect,
+                                    MirEdgeAttachment edge);
+//__attribute__((deprecated("Use mir_specify_menu() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_tooltip(MirConnection* connection,
+                                       int width, int height,
+                                       MirPixelFormat format,
+                                       MirSurface* parent,
+                                       MirRectangle* zone);
+//__attribute__((deprecated("Use mir_create_tip_window_spec() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_tip(MirConnection* connection,
+                                   int width, int height,
+                                   MirPixelFormat format,
+                                   MirSurface* parent,
+                                   MirRectangle* rect,
+                                   MirEdgeAttachment edge);
+//__attribute__((deprecated("Use mir_create_tip_window_spec() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_modal_dialog(MirConnection* connection,
+                                            int width, int height,
+                                            MirPixelFormat format,
+                                            MirSurface* parent);
+//__attribute__((deprecated("Use mir_create_modal_dialog_window_spec() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_dialog(MirConnection* connection,
+                                      int width, int height,
+                                      MirPixelFormat format);
+//__attribute__((deprecated("Use mir_create_dialog_window_spec() instead")));
+
+MirSurfaceSpec* mir_create_surface_spec(MirConnection* connection);
+//__attribute__((deprecated("Use mir_create_window_spec() instead")));
+
+MirSurfaceSpec*
+mir_connection_create_spec_for_changes(MirConnection* connection);
+//__attribute__((deprecated("Use mir_create_window_spec() instead")));
+
+void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent);
+//__attribute__((deprecated("Use mir_window_spec_set_parent() instead")));
+
+/**
+ *\deprecated This will soon be a property of the backing content.
+ *
+ * Query the swapinterval that the surface is operating with.
+ * The default interval is 1.
+ *   \param [in] surface  The surface to operate on
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if surface is invalid, or if the default stream
+ *                        was removed by use of mir_window_spec_set_streams().
+ */
+int mir_surface_get_swapinterval(MirSurface* surface)
+__attribute__((deprecated("This will soon be a property of the backing content")));
+
+void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type);
+//__attribute__((deprecated("use mir_window_spec_set_type() instead")));
+
+void mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+//__attribute__((deprecated("use mir_window_spec_set_name() instead")));
+
+void mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+//__attribute__((deprecated("use mir_window_spec_set_width() instead")));
+
+void mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+//__attribute__((deprecated("use mir_window_spec_set_height() instead")));
+
+void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc);
+//__attribute__((deprecated("use mir_window_spec_set_width_increment() instead")));
+
+void mir_surface_spec_set_height_increment(MirSurfaceSpec* spec, unsigned height_inc);
+//__attribute__((deprecated("use mir_window_spec_set_height_increment() instead")));
+
+void mir_surface_spec_set_min_width(MirSurfaceSpec* spec, unsigned min_width);
+//__attribute__((deprecated("use mir_window_spec_set_min_width() instead")));
+
+void mir_surface_spec_set_min_height(MirSurfaceSpec* spec, unsigned min_height);
+//__attribute__((deprecated("use mir_window_spec_set_min_height() instead")));
+
+void mir_surface_spec_set_max_width(MirSurfaceSpec* spec, unsigned max_width);
+//__attribute__((deprecated("use mir_window_spec_set_max_width() instead")));
+
+void mir_surface_spec_set_max_height(MirSurfaceSpec* spec, unsigned max_height);
+//__attribute__((deprecated("use mir_window_spec_set_max_height() instead")));
+
+void mir_surface_spec_set_min_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+//__attribute__((deprecated("use mir_window_spec_set_min_aspect_ratio() instead")));
+
+void mir_surface_spec_set_max_aspect_ratio(MirSurfaceSpec* spec, unsigned width, unsigned height);
+//__attribute__((deprecated("use mir_window_spec_set_max_aspect_ratio() instead")));
+
+void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
+//__attribute__((deprecated("use mir_window_spec_set_fullscreen_on_output() instead")));
+
+void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
+//__attribute__((deprecated("use mir_window_spec_set_preferred_orientation() instead")));
+
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge);
+//__attribute__((deprecated("use mir_window_spec_attach_to_foreign_parent() instead")));
+
+void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state);
+//__attribute__((deprecated("use mir_window_spec_set_state() instead")));
+
+void mir_surface_spec_release(MirSurfaceSpec* spec);
+//__attribute__((deprecated("use mir_window_spec_release() instead")));
+
+void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
+                                      MirRectangle const *rectangles,
+                                      size_t n_rects);
+//__attribute__((deprecated("use mir_window_spec_set_input_shape() instead")));
+
+void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
+                                        mir_surface_event_callback callback,
+                                        void* context);
+//__attribute__((deprecated("use mir_window_spec_set_event_handler() instead")));
+
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
+//__attribute__((deprecated("use mir_window_spec_set_shell_chrome() instead")));
+
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state);
+//__attribute__((deprecated("use mir_window_spec_set_pointer_confinement() instead")));
+
+void mir_surface_spec_set_placement(MirSurfaceSpec*     spec,
+                                    const MirRectangle* rect,
+                                    MirPlacementGravity rect_gravity,
+                                    MirPlacementGravity window_gravity,
+                                    MirPlacementHints   placement_hints,
+                                    int                 offset_dx,
+                                    int                 offset_dy);
+//__attribute__((deprecated("use mir_window_spec_set_placement() instead")));
+
+MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
+                                                            int width, int height,
+                                                            MirPixelFormat format);
+//__attribute__((deprecated("use mir_create_input_method_window_spec() instead")));
+
+void mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+//__attribute__((deprecated("use mir_window_spec_set_pixel_format() instead")));
+
+void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+//__attribute__((deprecated("use mir_window_spec_set_buffer_usage() instead")));
+
+void mir_surface_spec_set_streams(MirSurfaceSpec* spec,
+                                  MirBufferStreamInfo* streams,
+                                  unsigned int num_streams);
+//__attribute__((deprecated("use mir_window_spec_set_streams() instead")));
+
+void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
+//__attribute__((deprecated("use mir_window_apply_spec() instead")));
+
+bool mir_surface_is_valid(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_is_valid() instead")));
+
+MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
+                                  mir_surface_callback callback, void* context);
+//__attribute__((deprecated("use mir_window_create() instead")));
+
+MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+//__attribute__((deprecated("use mir_window_create_sync() instead")));
+
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
     mir_surface_callback callback,
     void *context);
+//__attribute__((deprecated("use mir_window_release() instead")));
 
-/**
- * Release the specified surface like in mir_surface_release(), but also wait
- * for the operation to complete.
- *   \param [in] surface  The surface to be released
- */
 void mir_surface_release_sync(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_release_sync() instead")));
+
+void mir_surface_set_event_handler(MirSurface *surface,
+                                   mir_surface_event_callback callback,
+                                   void* context);
+//__attribute__((deprecated("use mir_window_set_event_handler() instead")));
+
+MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_buffer_stream() instead")));
+
+char const* mir_surface_get_error_message(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_error_message() instead")));
+
+void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
+//__attribute__((deprecated("use mir_window_get_parameters() instead")));
 
 /**
  * Get the type (purpose) of a surface.
@@ -715,7 +899,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \warning Only swapinterval of 0 or 1 is supported.
  *   \warning If the surface was created with, or modified to have a
  *            MirSurfaceSpec containing streams added through
- *            mir_surface_spec_set_streams(), the default stream will
+ *            mir_window_spec_set_streams(), the default stream will
  *            be removed, and this function will return NULL.
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that
@@ -723,17 +907,8 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \return              A wait handle that can be passed to mir_wait_for,
  *                        or NULL if the interval could not be supported
  */
-MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
-
-/**
- * Query the swapinterval that the surface is operating with.
- * The default interval is 1.
- *   \param [in] surface  The surface to operate on
- *   \return              The swapinterval value that the client is operating with.
- *                        Returns -1 if surface is invalid, or if the default stream
- *                        was removed by use of mir_surface_spec_set_streams().
- */
-int mir_surface_get_swapinterval(MirSurface* surface);
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval)
+__attribute__((deprecated("Swap interval should be set on the backing content")));
 
 /**
  * Query the DPI value of the surface (dots per inch). This will vary depending
@@ -768,12 +943,8 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
  */
 MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
 
-/**
- * Get the orientation of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The orientation of the surface
- */
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_orientation() instead")));
 
 /**
  * Request to set the preferred orientations of a surface.
@@ -791,31 +962,6 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOri
  *   \return              The preferred orientation modes
  */
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
-
-/**
- * Create a surface specification for an input method surface.
- *
- * Currently this is only appropriate for the Unity On-Screen-Keyboard.
- *
- * \param [in] connection   Connection the surface will be created on
- * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
- * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
- * \param [in] format       Pixel format for the surface.
- * \return                  A handle that can be passed to mir_surface_create() to complete construction.
- */
-MirSurfaceSpec* mir_connection_create_spec_for_input_method(MirConnection* connection,
-                                                            int width,
-                                                            int height,
-                                                            MirPixelFormat format);
-
-/**
- * Request changes to the specification of a surface. The server will decide
- * whether and how the request can be honoured.
- *
- *   \param [in] surface  The surface to rename
- *   \param [in] spec     Spec with the requested changes applied
- */
-void mir_surface_apply_spec(MirSurface* surface, MirSurfaceSpec* spec);
 
 /**
  * \brief Request an ID for the surface that can be shared cross-process and
@@ -839,6 +985,11 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
  *         be freed with a call to mir_persistent_id_release()
  */
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
+
+void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
+//__attribute__((deprecated("use mir_window_raise() instead")));
+
+//#pragma GCC diagnostic pop
 
 /**
  * \brief Check the validity of a MirPersistentId
@@ -873,15 +1024,6 @@ char const* mir_persistent_id_as_string(MirPersistentId* id);
  * \return The deserialised MirSurfaceId
  */
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
-
-/**
- * Attempts to raise the surface to the front.
- *
- * \param [in] surface The surface to raise
- * \param [in] cookie  A cookie instance obtained from an input event.
- *                     An invalid cookie will terminate the client connection.
- */
-void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 #ifdef __cplusplus
 }

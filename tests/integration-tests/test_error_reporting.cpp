@@ -129,16 +129,16 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_THAT(connection, IsValid());
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 640, 480, mir_pixel_format_abgr_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 640, 480);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    auto const surface  = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto const window  = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    ASSERT_TRUE(surface != NULL);
-    ASSERT_THAT(surface, Not(IsValid()));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(test_exception_text));
+    ASSERT_TRUE(window != NULL);
+    ASSERT_THAT(window, Not(IsValid()));
+    EXPECT_THAT(mir_window_get_error_message(window), testing::HasSubstr(test_exception_text));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }

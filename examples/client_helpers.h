@@ -66,20 +66,20 @@ private:
     BufferStream& operator=(BufferStream const&) = delete;
 };
 
-class NormalSurface
+class NormalWindow
 {
 public:
-    NormalSurface(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false, bool hardware = true);
+    NormalWindow(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false, bool hardware = true);
 
-    operator MirSurface*() const;
+    operator MirWindow*() const;
 private:
-    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
-    std::function<void(MirSurface*)> const surface_deleter{
-        [](MirSurface* surface) { mir_surface_release_sync(surface); }
+    MirWindow* create_window(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
+    std::function<void(MirWindow*)> const window_deleter{
+        [](MirWindow* window) { mir_window_release_sync(window); }
     };
-    std::unique_ptr<MirSurface, decltype(surface_deleter)> surface;
-    NormalSurface(NormalSurface const&) = delete;
-    NormalSurface& operator=(NormalSurface const&) = delete;
+    std::unique_ptr<MirWindow, decltype(window_deleter)> window;
+    NormalWindow(NormalWindow const&) = delete;
+    NormalWindow& operator=(NormalWindow const&) = delete;
 };
 
 class Context

@@ -288,12 +288,8 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &drm_extensions;
     if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
-
-    if (!strcmp(extension_name, MIR_EXTENSION_GBM_BUFFER) &&
-       (version == MIR_EXTENSION_GBM_BUFFER_VERSION_1))
-    {
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
         return &gbm_buffer;
-    }
 
     return nullptr;
 }

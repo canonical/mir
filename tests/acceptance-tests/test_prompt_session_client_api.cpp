@@ -405,8 +405,8 @@ TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
     InSequence seq;
     EXPECT_CALL(*this, process_line(StrEq("Starting")));
     EXPECT_CALL(*this, process_line(StrEq("Connected")));
-    EXPECT_CALL(*this, process_line(StrEq("Surface created")));
-    EXPECT_CALL(*this, process_line(StrEq("Surface released")));
+    EXPECT_CALL(*this, process_line(StrEq("Window created")));
+    EXPECT_CALL(*this, process_line(StrEq("Window released")));
     EXPECT_CALL(*this, process_line(StrEq("Connection released")));
 
     auto const command = mtf::executable_path() + "/mir_demo_client_basic -m" + fd_connect_string(actual_fds[0]);
