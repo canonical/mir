@@ -114,31 +114,22 @@ char const* mir_connection_get_error_message(MirConnection* connection)
 void mir_connection_release(MirConnection* connection)
 try
 {
+    std::unique_ptr<MirConnection> scoped_deleter{connection};
     if (!mcl::ErrorConnections::instance().contains(connection))
     {
-        try
-        {
-            auto wait_handle = connection->disconnect();
-            wait_handle->wait_for_all();
-        }
-        catch (std::exception const& ex)
-        {
-            // We're implementing a C API so no exceptions are to be
-            // propagated. And that's OK because if disconnect() fails,
-            // we don't care why. We're finished with the connection anyway.
-
-            MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        }
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
     }
     else
     {
         mcl::ErrorConnections::instance().remove(connection);
     }
-
-    delete connection;
 }
 catch (std::exception const& ex)
 {
+    // We're implementing a C API so no exceptions are to be
+    // propagated. And that's OK because if disconnect() fails,
+    // we don't care why. We're finished with the connection anyway.
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
