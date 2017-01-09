@@ -256,11 +256,12 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
-            mir_connection_create_spec_for_normal_surface(
-                connection, 100, 100, mir_pixel_format_abgr_8888),
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(
+            mir_create_normal_window_spec(connection, 100, 100),
             del);
+        mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
+
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;
 
@@ -289,7 +290,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 {
-    auto stream = mir_surface_get_buffer_stream(surface);
+    auto stream = mir_window_get_buffer_stream(surface);
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -312,7 +313,7 @@ TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 {
-    auto stream = mir_surface_get_buffer_stream(surface);
+    auto stream = mir_window_get_buffer_stream(surface);
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -331,7 +332,7 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 
 TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
 {
-    auto stream = mir_surface_get_buffer_stream(surface);
+    auto stream = mir_window_get_buffer_stream(surface);
     mir_buffer_stream_set_swapinterval(stream, 0);
     stats.swap_interval = 0;
     auto const deadline = steady_clock::now() + 60s;
@@ -353,12 +354,78 @@ TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
         display.group.dump_latency();
 }
 
+TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+
+    auto average_latency = display.group.average_latency();
+
+    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
+}
+
+TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    auto max_latency = display.group.max_latency();
+    EXPECT_THAT(max_latency, Le(expected_client_buffers));
+}
+
+TEST_F(ClientLatency, async_swap_dropping_latency_is_closer_to_zero_than_one)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(stream, 0);
+    stats.swap_interval = 0;
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    auto average_latency = display.group.average_latency();
+    EXPECT_THAT(average_latency, Lt(0.5f));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+}
+
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     int const throttled_input_rate = refresh_rate * 3 / 4;
     microseconds const input_interval(1000000/throttled_input_rate);
     auto next_input_event = high_resolution_clock::now();
-    auto stream = mir_surface_get_buffer_stream(surface);
+    auto stream = mir_window_get_buffer_stream(surface);
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&

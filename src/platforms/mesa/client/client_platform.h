@@ -21,6 +21,7 @@
 #include "mir/client_platform.h"
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
 
 struct gbm_device;
 
@@ -60,7 +61,8 @@ private:
     EGLNativeDisplayContainer& display_container;
     gbm_device* gbm_dev;
     MirExtensionMesaDRMAuthV1 drm_extensions;
-    MirExtensionSetGbmDevice mesa_auth;
+    MirExtensionSetGbmDeviceV1 mesa_auth;
+    MirExtensionGbmBufferV1 gbm_buffer;
 };
 
 }

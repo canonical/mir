@@ -20,11 +20,13 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
+#include "mir/frontend/session.h"
 #include "mir/graphics/edid.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
 
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mrl= mir::report::logging;
@@ -63,6 +65,18 @@ void mrl::DisplayConfigurationReport::base_configuration_updated(
 {
     logger->log(component, severity, "New base display configuration:");
     log_configuration(severity, *base_config);
+}
+
+void mrl::DisplayConfigurationReport::session_configuration_applied(std::shared_ptr<mf::Session> const& session,
+                                   std::shared_ptr<mg::DisplayConfiguration> const& config)
+{
+    logger->log(component, severity, "Session %s applied display configuration", session->name().c_str());
+    log_configuration(severity, *config);
+}
+
+void mrl::DisplayConfigurationReport::session_configuration_removed(std::shared_ptr<frontend::Session> const& session)
+{
+    logger->log(component, severity, "Session %s removed display configuration", session->name().c_str());
 }
 
 void mrl::DisplayConfigurationReport::configuration_failed(
@@ -123,7 +137,7 @@ void mrl::DisplayConfigurationReport::log_configuration(
                 {"on", "in standby", "suspended", "off"};
             logger->log(component, severity,
                         "%sPower is %s", indent, power_mode[out.power_mode]);
-            
+
             if (out.used)
             {
                 if (out.current_mode_index < out.modes.size())

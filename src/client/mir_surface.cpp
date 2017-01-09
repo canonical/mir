@@ -62,7 +62,7 @@ MirSurfaceSpec::MirSurfaceSpec(
 {
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params)
+MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params)
     : connection{connection},
       width{params.width},
       height{params.height},
@@ -111,7 +111,7 @@ MirSurface::MirSurface(
     mclr::DisplayServerDebug* debug,
     std::shared_ptr<MirBufferStream> const& buffer_stream,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
-    MirSurfaceSpec const& spec,
+    MirWindowSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
     std::shared_ptr<MirWaitHandle> const& handle)
     : server{&the_server},
@@ -172,7 +172,7 @@ MirSurface::~MirSurface()
         close(surface->fd(i));
 }
 
-MirSurfaceParameters MirSurface::get_parameters() const
+MirWindowParameters MirSurface::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -523,7 +523,7 @@ void MirSurface::on_modified()
     modify_wait_handle.result_received();
 }
 
-MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
+MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
 {
     mp::SurfaceModifications mods;
 

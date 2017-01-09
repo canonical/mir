@@ -69,6 +69,13 @@ ACTION_P(WakeUp, signal)
 {
     signal->raise();
 }
+ACTION_P2(WakeUpWhenZero, signal, atomic_int)
+{
+    if (atomic_int->fetch_sub(1) == 1)
+    {
+        signal->raise();
+    }
+}
 
 }
 }

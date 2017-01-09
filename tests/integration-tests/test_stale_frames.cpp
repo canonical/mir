@@ -205,15 +205,15 @@ struct StaleFrames : BasicFixture,
 
     void TearDown()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
 
         BasicFixture::TearDown();
     }
 
     void client_create_surface()
     {
-        surface = mtf::make_any_surface(connection);
-        ASSERT_TRUE(mir_surface_is_valid(surface));
+        window = mtf::make_any_surface(connection);
+        ASSERT_TRUE(mir_window_is_valid(window));
     }
 
     std::vector<mg::BufferID> wait_for_new_rendered_buffers()
@@ -239,6 +239,7 @@ struct StaleFrames : BasicFixture,
     }
 
     MirSurface* surface;
+    MirWindow* window;
 private:
     std::shared_ptr<CountingSessionMediatorObserver> sm_observer;
 };
@@ -253,18 +254,18 @@ TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
 
     std::set<mg::BufferID> stale_buffers;
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
+    stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
 
-    auto bs = mir_surface_get_buffer_stream(surface);
+    auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
+    stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
     mir_buffer_stream_swap_buffers_sync(bs);
 
     EXPECT_THAT(stale_buffers.size(), Eq(2u));
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
     ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
@@ -284,12 +285,12 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 
     stop_compositor();
 
-    auto bs = mir_surface_get_buffer_stream(surface);
+    auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
     ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
