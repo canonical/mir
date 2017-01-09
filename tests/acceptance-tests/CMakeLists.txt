@@ -61,6 +61,9 @@ set(
   test_client_library_errors.cpp
   test_shell_control_of_surface_configuration.cpp
   test_client_library.cpp
+  test_presentation_chain.cpp
+  test_render_surface.cpp
+  test_buffer_stream_arrangement1.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -88,13 +91,23 @@ endif()
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 # END "throwbacks"
 
-add_subdirectory(staging)
+# BEGIN "staging"
+# The following tests use files we do not yet to support in the public API
+# TODO update the public APIs
+  set_source_files_properties(test_presentation_chain.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+
+  set_source_files_properties(test_render_surface.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+
+  set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+# END "staging"
 
 mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
-  $<TARGET_OBJECTS:acceptance-test-staging>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
