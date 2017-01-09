@@ -249,7 +249,7 @@ void mclr::MirProtobufRpcChannel::discard_future_calls()
 
 void mclr::MirProtobufRpcChannel::wait_for_outstanding_calls()
 {
-    pending_calls.wait_till_empty();
+    pending_calls.wait_till_complete();
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
