@@ -119,8 +119,8 @@ public:
 
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;
-    int configure(MirSurfaceAttrib attrib, int value) override;
-    int query(MirSurfaceAttrib attrib) const override;
+    int configure(MirWindowAttrib attrib, int value) override;
+    int query(MirWindowAttrib attrib) const override;
     void hide() override;
     void show() override;
     

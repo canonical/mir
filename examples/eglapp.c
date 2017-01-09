@@ -112,16 +112,16 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
 
 static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
+    MirWindowAttrib attrib = (MirWindowAttrib)mir_surface_event_get_attribute(sev);
     int value = mir_surface_event_get_attribute_value(sev);
 
     switch (attrib)
     {
-    case mir_surface_attrib_visibility:
+    case mir_window_attrib_visibility:
         printf("Window %s\n", value == mir_surface_visibility_exposed ?
                                "exposed" : "occluded");
         break;
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:

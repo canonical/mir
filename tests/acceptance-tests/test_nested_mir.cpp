@@ -364,7 +364,7 @@ struct ObservantShell : msh::Shell
     int set_surface_attribute(
         std::shared_ptr<msc::Session> const& session,
         std::shared_ptr<msc::Surface> const& window,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) override
     {
         return wrapped->set_surface_attribute(session, window, attrib, value);
@@ -372,7 +372,7 @@ struct ObservantShell : msh::Shell
 
     int get_surface_attribute(
         std::shared_ptr<msc::Surface> const& window,
-        MirSurfaceAttrib attrib) override
+        MirWindowAttrib attrib) override
     {
         return wrapped->get_surface_attribute(window, attrib);
     }

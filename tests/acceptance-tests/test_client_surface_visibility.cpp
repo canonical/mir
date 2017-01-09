@@ -93,7 +93,8 @@ void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
     if (mir_event_get_type(event) != mir_event_type_window)
         return;
     auto sev = mir_event_get_surface_event(event);
-    if (mir_surface_event_get_attribute(sev) != mir_surface_attrib_visibility)
+    auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(sev));
+    if (attrib != mir_window_attrib_visibility)
         return;
 
     auto const mock_callback =

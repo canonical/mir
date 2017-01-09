@@ -43,7 +43,25 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
-} MirSurfaceAttrib;
+} MirSurfaceAttrib; /* __attribute__ ((deprecated("use MirWindowAttrib"))); */
+
+/**
+ * Attributes of a window that the client and server/shell may wish to
+ * get or set over the wire.
+ */
+typedef enum MirWindowAttrib
+{
+    /* Do not specify values...code relies on 0...N ordering. */
+    mir_window_attrib_type,
+    mir_window_attrib_state,
+    mir_window_attrib_swapinterval,
+    mir_window_attrib_focus,
+    mir_window_attrib_dpi,
+    mir_window_attrib_visibility,
+    mir_window_attrib_preferred_orientation,
+    /* Must be last */
+    mir_window_attribs
+} MirWindowAttrib;
 
 typedef enum MirSurfaceType
 {

@@ -114,14 +114,14 @@ struct Client
 
     void handle_surface_event(MirSurfaceEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(event));
         auto const value = mir_surface_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
+        if (mir_window_attrib_visibility == attrib &&
             mir_surface_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
+        if (mir_window_attrib_focus == attrib &&
             mir_surface_focused == value)
             focused = true;
 

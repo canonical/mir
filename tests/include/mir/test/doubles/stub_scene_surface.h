@@ -93,8 +93,8 @@ public:
 
     bool supports_input() const override { return true;}
     int client_input_fd() const override { return fd;}
-    int configure(MirSurfaceAttrib, int) override { return 0; }
-    int query(MirSurfaceAttrib) const override { return 0; }
+    int configure(MirWindowAttrib, int) override { return 0; }
+    int query(MirWindowAttrib) const override { return 0; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }

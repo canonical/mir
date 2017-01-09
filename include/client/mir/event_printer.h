@@ -35,6 +35,7 @@ std::ostream& operator<<(std::ostream& out, MirPromptSessionState state);
 std::ostream& operator<<(std::ostream& out, MirOrientation orientation);
 
 std::ostream& operator<<(std::ostream& out, MirSurfaceAttrib attribute);
+std::ostream& operator<<(std::ostream& out, MirWindowAttrib attribute);
 std::ostream& operator<<(std::ostream& out, MirSurfaceFocusState state);
 std::ostream& operator<<(std::ostream& out, MirSurfaceVisibility state);
 std::ostream& operator<<(std::ostream& out, MirSurfaceType type);

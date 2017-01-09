@@ -49,7 +49,7 @@ namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 
-void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceObservers::attrib_changed(MirWindowAttrib attrib, int value)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->attrib_changed(attrib, value); });
@@ -478,7 +478,7 @@ MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
         type_ = t;
         lg.unlock();
 
-        observers.attrib_changed(mir_surface_attrib_type, type_); 
+        observers.attrib_changed(mir_window_attrib_type, type_); 
     }
 
     return t;
@@ -500,7 +500,7 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
     {
         state_ = s;
         lg.unlock();
-        observers.attrib_changed(mir_surface_attrib_state, s);
+        observers.attrib_changed(mir_window_attrib_state, s);
     }
 
     return s;
@@ -522,7 +522,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
             info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
-        observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
+        observers.attrib_changed(mir_window_attrib_swapinterval, interval);
     }
 
     return interval;
@@ -542,7 +542,7 @@ MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_
         focus_ = new_state;
 
         lg.unlock();
-        observers.attrib_changed(mir_surface_attrib_focus, new_state);
+        observers.attrib_changed(mir_window_attrib_focus, new_state);
     }
 
     return new_state;
@@ -561,36 +561,36 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
         pref_orientation_mode = new_orientation_mode;
         lg.unlock();
 
-        observers.attrib_changed(mir_surface_attrib_preferred_orientation, new_orientation_mode);
+        observers.attrib_changed(mir_window_attrib_preferred_orientation, new_orientation_mode);
     }
 
     return new_orientation_mode;
 }
 
-int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
+int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
 {
     int result = value;
     switch (attrib)
     {
-    case mir_surface_attrib_type:
+    case mir_window_attrib_type:
         result = set_type(static_cast<MirSurfaceType>(result));
         break;
-    case mir_surface_attrib_state:
+    case mir_window_attrib_state:
         result = set_state(static_cast<MirSurfaceState>(result));
         break;
-    case mir_surface_attrib_focus:
+    case mir_window_attrib_focus:
         result = set_focus_state(static_cast<MirSurfaceFocusState>(result));
         break;
-    case mir_surface_attrib_swapinterval:
+    case mir_window_attrib_swapinterval:
         result = set_swap_interval(result);
         break;
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         result = set_dpi(result);
         break;
-    case mir_surface_attrib_visibility:
+    case mir_window_attrib_visibility:
         result = set_visibility(static_cast<MirSurfaceVisibility>(result));
         break;
-    case mir_surface_attrib_preferred_orientation:
+    case mir_window_attrib_preferred_orientation:
         result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
         break;
     default:
@@ -600,18 +600,18 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
     return result;
 }
 
-int ms::BasicSurface::query(MirSurfaceAttrib attrib) const
+int ms::BasicSurface::query(MirWindowAttrib attrib) const
 {
     std::unique_lock<std::mutex> lg(guard);
     switch (attrib)
     {
-        case mir_surface_attrib_type: return type_;
-        case mir_surface_attrib_state: return state_;
-        case mir_surface_attrib_swapinterval: return swapinterval_;
-        case mir_surface_attrib_focus: return focus_;
-        case mir_surface_attrib_dpi: return dpi_;
-        case mir_surface_attrib_visibility: return visibility_;
-        case mir_surface_attrib_preferred_orientation: return pref_orientation_mode;
+        case mir_window_attrib_type: return type_;
+        case mir_window_attrib_state: return state_;
+        case mir_window_attrib_swapinterval: return swapinterval_;
+        case mir_window_attrib_focus: return focus_;
+        case mir_window_attrib_dpi: return dpi_;
+        case mir_window_attrib_visibility: return visibility_;
+        case mir_window_attrib_preferred_orientation: return pref_orientation_mode;
         default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                         "attribute."));
     }
@@ -742,7 +742,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     {
         dpi_ = new_dpi;
         lg.unlock();
-        observers.attrib_changed(mir_surface_attrib_dpi, new_dpi);
+        observers.attrib_changed(mir_window_attrib_dpi, new_dpi);
     }
     
     return new_dpi;
@@ -766,7 +766,7 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
             for (auto& info : layers)
                 info.stream->drop_old_buffers();
         }
-        observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
+        observers.attrib_changed(mir_window_attrib_visibility, visibility_);
     }
 
     return new_visibility;

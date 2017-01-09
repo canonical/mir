@@ -48,7 +48,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
     MOCK_METHOD1(resized_to, void(Size const& size));
 };
 

@@ -113,18 +113,18 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
     if (event_type == mir_event_type_window)
     {
         auto event = mir_event_get_surface_event(ev);
-        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(event));
         auto const value = mir_surface_event_get_attribute_value(event);
 
         std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
 
-        if (attrib == mir_surface_attrib_visibility &&
+        if (attrib == mir_window_attrib_visibility &&
             value == mir_surface_visibility_exposed)
         {
             raise_surfaces->exposed = true;
         }
 
-        if (attrib == mir_surface_attrib_focus &&
+        if (attrib == mir_window_attrib_focus &&
             value == mir_surface_focused)
         {
             raise_surfaces->focused = true;

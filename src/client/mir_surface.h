@@ -183,7 +183,7 @@ public:
     char const * get_error_message();
     int id() const;
 
-    MirWaitHandle* configure(MirSurfaceAttrib a, int value);
+    MirWaitHandle* configure(MirWindowAttrib a, int value);
 
     // TODO: Some sort of extension mechanism so that this can be moved
     //       out into a separate class in the libmirclient-debug DSO.
@@ -191,7 +191,7 @@ public:
                                          int* screen_x, int* screen_y);
     
     // Non-blocking
-    int attrib(MirSurfaceAttrib a) const;
+    int attrib(MirWindowAttrib a) const;
 
     MirOrientation get_orientation() const;
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
@@ -204,7 +204,7 @@ public:
                            void* context);
     void handle_event(MirEvent const& e);
 
-    void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
+    void request_and_wait_for_configure(MirWindowAttrib a, int value);
 
     MirBufferStream* get_buffer_stream();
 
@@ -248,7 +248,7 @@ private:
     std::unique_ptr<mir::protobuf::SurfaceSetting> const configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
-    int attrib_cache[mir_surface_attribs];
+    int attrib_cache[mir_window_attribs];
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;

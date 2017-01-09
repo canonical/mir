@@ -210,13 +210,13 @@ struct MockServerPackageGenerator : public mt::StubServerTool
 };
 
 std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
-    { mir_surface_attrib_type, mir_surface_type_normal },
-    { mir_surface_attrib_state, mir_surface_state_restored },
-    { mir_surface_attrib_swapinterval, 1 },
-    { mir_surface_attrib_focus, mir_surface_focused },
-    { mir_surface_attrib_dpi, 19 },
-    { mir_surface_attrib_visibility, mir_surface_visibility_exposed },
-    { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
+    { mir_window_attrib_type, mir_surface_type_normal },
+    { mir_window_attrib_state, mir_surface_state_restored },
+    { mir_window_attrib_swapinterval, 1 },
+    { mir_window_attrib_focus, mir_surface_focused },
+    { mir_window_attrib_dpi, 19 },
+    { mir_window_attrib_visibility, mir_surface_visibility_exposed },
+    { mir_window_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
 struct StubClientInputPlatform : public mircv::InputPlatform
@@ -389,9 +389,9 @@ TEST_F(MirClientSurfaceTest, attributes_set_on_surface_creation)
 
     auto surface = create_and_wait_for_surface_with(*client_comm_channel);
     
-    for (int i = 0; i < mir_surface_attribs; i++)
+    for (int i = 0; i < mir_window_attribs; i++)
     {
-        EXPECT_EQ(MockServerPackageGenerator::sent_surface_attributes[i], surface->attrib(static_cast<MirSurfaceAttrib>(i)));
+        EXPECT_EQ(MockServerPackageGenerator::sent_surface_attributes[i], surface->attrib(static_cast<MirWindowAttrib>(i)));
     }
 }
 
@@ -492,7 +492,7 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
 
     auto const surface = create_surface_with(unresponsive_server);
 
-    auto configure_wait_handle = surface->configure(mir_surface_attrib_dpi, 100);
+    auto configure_wait_handle = surface->configure(mir_window_attrib_dpi, 100);
 
     auto expected_end = std::chrono::steady_clock::now() + pause_time;
     configure_wait_handle->wait_for_pending(pause_time);

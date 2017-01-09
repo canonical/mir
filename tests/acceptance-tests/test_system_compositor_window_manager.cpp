@@ -178,10 +178,10 @@ MATCHER_P(MirFocusEvent, expected, "")
         return false;
 
     auto surface_event = mir_event_get_surface_event(arg);
-    auto attrib = mir_surface_event_get_attribute(surface_event);
+    auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(surface_event));
     auto value = mir_surface_event_get_attribute_value(surface_event);
 
-    return (attrib == mir_surface_attrib_focus)
+    return (attrib == mir_window_attrib_focus)
         && (value == expected);
 }
 }

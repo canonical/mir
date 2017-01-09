@@ -983,7 +983,7 @@ MirSurfaceType mir_surface_get_type(MirSurface* surf)
         // Only the client will ever change the type of a surface so it is
         // safe to get the type from a local cache surf->attrib().
 
-        int t = surf->attrib(mir_surface_attrib_type);
+        int t = surf->attrib(mir_window_attrib_type);
         type = static_cast<MirSurfaceType>(t);
     }
 
@@ -994,7 +994,7 @@ MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
 {
     try
     {
-        return surf ? surf->configure(mir_surface_attrib_state, state) : nullptr;
+        return surf ? surf->configure(mir_window_attrib_state, state) : nullptr;
     }
     catch (std::exception const& ex)
     {
@@ -1011,13 +1011,13 @@ MirSurfaceState mir_surface_get_state(MirSurface* surf)
     {
         if (surf)
         {
-            int s = surf->attrib(mir_surface_attrib_state);
+            int s = surf->attrib(mir_window_attrib_state);
 
             if (s == mir_surface_state_unknown)
             {
-                surf->configure(mir_surface_attrib_state,
+                surf->configure(mir_window_attrib_state,
                                 mir_surface_state_unknown)->wait_for_all();
-                s = surf->attrib(mir_surface_attrib_state);
+                s = surf->attrib(mir_window_attrib_state);
             }
 
             state = static_cast<MirSurfaceState>(s);
@@ -1085,7 +1085,7 @@ int mir_surface_get_dpi(MirSurface* surf)
     {
         if (surf)
         {
-            dpi = surf->attrib(mir_surface_attrib_dpi);
+            dpi = surf->attrib(mir_window_attrib_dpi);
         }
     }
     catch (std::exception const& ex)
@@ -1104,7 +1104,7 @@ MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
     {
         if (surf)
         {
-            state = static_cast<MirSurfaceFocusState>(surf->attrib(mir_surface_attrib_focus));
+            state = static_cast<MirSurfaceFocusState>(surf->attrib(mir_window_attrib_focus));
         }
     }
     catch (std::exception const& ex)
@@ -1123,7 +1123,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
     {
         if (surf)
         {
-            state = static_cast<MirSurfaceVisibility>(surf->attrib(mir_surface_attrib_visibility));
+            state = static_cast<MirSurfaceVisibility>(surf->attrib(mir_window_attrib_visibility));
         }
     }
     catch (std::exception const& ex)
@@ -1159,7 +1159,7 @@ MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 
     try
     {
-        mode = static_cast<MirOrientationMode>(surf->attrib(mir_surface_attrib_preferred_orientation));
+        mode = static_cast<MirOrientationMode>(surf->attrib(mir_window_attrib_preferred_orientation));
     }
     catch (std::exception const& ex)
     {

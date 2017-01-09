@@ -57,7 +57,7 @@ struct MockMirSurface : public mcl::EGLNativeSurface
     MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
     MOCK_METHOD0(swap_buffers_sync, void());
-    MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
+    MOCK_METHOD2(request_and_wait_for_configure, void(MirWindowAttrib, int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
     MirWindowParameters params;
     std::shared_ptr<mtd::MockClientBuffer> client_buffer;
@@ -223,8 +223,8 @@ TEST_F(AndroidInterpreter, requests_swapinterval_change)
 {
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     testing::InSequence seq;
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 1));
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 0));
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval, 1));
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval, 0));
 
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
     interpreter.sync_to_display(true); 

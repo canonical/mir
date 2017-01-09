@@ -309,7 +309,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> 
     RecursiveReadLock lg(guard);
     for (auto &surface : surfaces)
     {
-        if (surface->query(mir_surface_attrib_visibility) ==
+        if (surface->query(mir_window_attrib_visibility) ==
             MirSurfaceVisibility::mir_surface_visibility_exposed)
         {
             callback(surface);

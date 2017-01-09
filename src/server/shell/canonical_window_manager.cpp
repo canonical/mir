@@ -334,7 +334,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
                 throw std::runtime_error("Target surface type requires parent");
         }
 
-        surface->configure(mir_surface_attrib_type, new_type);
+        surface->configure(mir_window_attrib_type, new_type);
     }
 
     #define COPY_IF_SET(field)\
@@ -406,7 +406,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     if (modifications.state.is_set())
     {
         auto const state = handle_set_state(surface, modifications.state.value());
-        surface->configure(mir_surface_attrib_state, state);
+        surface->configure(mir_window_attrib_state, state);
     }
 
     if (modifications.confine_pointer.is_set())
@@ -780,7 +780,7 @@ void msh::CanonicalWindowManagerPolicy::toggle(MirSurfaceState state)
             state = mir_surface_state_restored;
 
         auto const value = handle_set_state(surface, MirSurfaceState(state));
-        surface->configure(mir_surface_attrib_state, value);
+        surface->configure(mir_window_attrib_state, value);
     }
 }
 

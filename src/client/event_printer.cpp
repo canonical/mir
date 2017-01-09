@@ -146,6 +146,22 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
+{
+    switch (attribute)
+    {
+    PRINT(mir_window_attrib,type);
+    PRINT(mir_window_attrib,dpi);
+    PRINT(mir_window_attrib,focus);
+    PRINT(mir_window_attrib,state);
+    PRINT(mir_window_attrib,visibility);
+    PRINT(mir_window_attrib,swapinterval);
+    PRINT(mir_window_attrib,preferred_orientation);
+    default:
+        return out << static_cast<int>(attribute) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
 {
     switch (state)

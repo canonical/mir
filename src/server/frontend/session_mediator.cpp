@@ -350,13 +350,13 @@ void mf::SessionMediator::create_surface(
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
     
-    for (unsigned int i = 0; i < mir_surface_attribs; i++)
+    for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirWindowAttrib>(i)));
     }
 
     if (legacy_stream)
@@ -508,7 +508,7 @@ void mf::SessionMediator::configure_surface(
     mir::protobuf::SurfaceSetting* response,
     google::protobuf::Closure* done)
 {
-    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
+    auto attrib = static_cast<MirWindowAttrib>(request->attrib());
 
     // Required response fields:
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());

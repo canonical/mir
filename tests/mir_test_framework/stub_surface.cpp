@@ -141,12 +141,12 @@ MirSurfaceState mtd::StubSurface::state() const
     return MirSurfaceState::mir_surface_state_fullscreen;
 }
 
-int mtd::StubSurface::configure(MirSurfaceAttrib /*attrib*/, int value)
+int mtd::StubSurface::configure(MirWindowAttrib /*attrib*/, int value)
 {
     return value;
 }
 
-int mtd::StubSurface::query(MirSurfaceAttrib /*attrib*/) const
+int mtd::StubSurface::query(MirWindowAttrib /*attrib*/) const
 {
     return 0;
 }

@@ -48,7 +48,7 @@ TEST_F(RenderingTrackerTest, occludes_surface_when_occluded_in_single_compositor
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
+        configure(mir_window_attrib_visibility, mir_surface_visibility_occluded));
 
     tracker.active_compositors(compositors);
 
@@ -63,7 +63,7 @@ TEST_F(RenderingTrackerTest, exposes_surface_when_rendered_in_single_compositor)
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed));
+        configure(mir_window_attrib_visibility, mir_surface_visibility_exposed));
 
     tracker.active_compositors(compositors);
 
@@ -78,7 +78,7 @@ TEST_F(RenderingTrackerTest, exposes_surface_when_rendered_in_one_of_many_compos
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed));
+        configure(mir_window_attrib_visibility, mir_surface_visibility_exposed));
 
     tracker.active_compositors(compositors);
 
@@ -94,7 +94,7 @@ TEST_F(RenderingTrackerTest, does_not_occlude_surface_when_not_occluded_in_all_c
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded))
+        configure(mir_window_attrib_visibility, mir_surface_visibility_occluded))
         .Times(0);
 
     tracker.active_compositors(compositors);
@@ -111,7 +111,7 @@ TEST_F(RenderingTrackerTest, occludes_surface_when_occluded_in_all_compositors)
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
+        configure(mir_window_attrib_visibility, mir_surface_visibility_occluded));
 
     tracker.active_compositors(compositors);
 
@@ -136,7 +136,7 @@ TEST_F(RenderingTrackerTest, occludes_surface_when_occluded_in_remaining_composi
 
     EXPECT_CALL(
         *mock_surface,
-        configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
+        configure(mir_window_attrib_visibility, mir_surface_visibility_occluded));
 
     compositors.erase(compositor_id3);
     tracker.active_compositors(compositors);

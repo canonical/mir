@@ -57,7 +57,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
 };
 
 struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
@@ -187,7 +187,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -221,7 +221,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         Times(0);
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -262,7 +262,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -288,7 +288,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         Times(0);
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -328,7 +328,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -363,7 +363,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
     WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
 

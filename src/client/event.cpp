@@ -183,7 +183,7 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_
 {
     expect_event_type(ev, mir_event_type_window);
 
-    return ev->attrib();
+    return static_cast<MirSurfaceAttrib>(ev->attrib());
 })
 
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(

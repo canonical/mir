@@ -42,12 +42,12 @@ struct MockWindowManager : msh::CanonicalWindowManager
     MOCK_METHOD4(set_surface_attribute,
         int(std::shared_ptr<ms::Session> const& session,
             std::shared_ptr<ms::Surface> const& surface,
-            MirSurfaceAttrib attrib,
+            MirWindowAttrib attrib,
             int value));
 
     int real_set_surface_attribute(std::shared_ptr<ms::Session> const& session,
                 std::shared_ptr<ms::Surface> const& surface,
-                MirSurfaceAttrib attrib,
+                MirWindowAttrib attrib,
                 int value)
     {
         return msh::CanonicalWindowManager::set_surface_attribute(session, surface, attrib, value);
@@ -70,7 +70,7 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
                         mock_window_manager.get(), &MockWindowManager::real_set_surface_attribute));
 
                 EXPECT_CALL(*mock_window_manager,
-                    set_surface_attribute(_, _, Ne(mir_surface_attrib_state), _))
+                    set_surface_attribute(_, _, Ne(mir_window_attrib_state), _))
                     .Times(AnyNumber());
 
                 return mock_window_manager;
@@ -86,7 +86,7 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
 TEST_F(ShellSurfaceConfiguration, the_window_manager_is_notified_of_attribute_changes)
 {
     EXPECT_CALL(*mock_window_manager,
-        set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)));
+        set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_surface_state_maximized)));
 
     mir_wait_for(mir_surface_set_state(window, mir_surface_state_maximized));
 
@@ -98,7 +98,7 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribut
     auto const set_to_vertmax = [this](
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& surface,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int /*value*/)
     {
         return mock_window_manager->real_set_surface_attribute(
@@ -106,7 +106,7 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribut
     };
 
     EXPECT_CALL(*mock_window_manager,
-        set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)))
+        set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_surface_state_maximized)))
         .WillOnce(Invoke(set_to_vertmax));
 
     mir_wait_for(mir_surface_set_state(window, mir_surface_state_maximized));
