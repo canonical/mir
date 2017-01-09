@@ -365,7 +365,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirConnection> connection;
 
-    MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
+    MirWindowSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::MockMirBufferStream> stub_buffer_stream{std::make_shared<mtd::MockMirBufferStream>()};
     std::shared_ptr<StubClientInputPlatform> const input_platform =
         std::make_shared<StubClientInputPlatform>();
@@ -537,7 +537,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
 
-    MirSurfaceSpec spec;
+    MirWindowSpec spec;
     std::vector<ContentInfo> info =
         { ContentInfo{ geom::Displacement{0,0}, 2, geom::Size{1,1}} };
     spec.streams = info;

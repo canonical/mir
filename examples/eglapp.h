@@ -23,9 +23,7 @@
 extern "C" {
 #endif
 
-struct MirConnection;
-struct MirSurface;
-struct MirEvent;
+#include <mir_toolkit/client_types.h>
 
 typedef int mir_eglapp_bool;
 
@@ -46,11 +44,11 @@ void            mir_eglapp_swap_buffers(void);
 void            mir_eglapp_quit(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_cleanup(void);
-void            mir_eglapp_handle_event(struct MirSurface* surface, struct MirEvent const* ev, void* unused);
+void            mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused);
 double          mir_eglapp_display_hz(void);
 
-struct MirConnection* mir_eglapp_native_connection();
-struct MirSurface*    mir_eglapp_native_surface();
+MirConnection* mir_eglapp_native_connection();
+MirWindow*     mir_eglapp_native_window();
 #ifdef __cplusplus
 }
 #endif
