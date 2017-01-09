@@ -406,12 +406,18 @@ TEST_F(ThreadedDispatcherDeathTest, destroying_dispatcher_from_a_callback_is_an_
 
     MIR_EXPECT_EXIT(
     {
-        md::ThreadedDispatcher* dispatcher;
+        std::atomic<md::ThreadedDispatcher*> dispatcher;
 
-        auto dispatchable = std::make_shared<mt::TestDispatchable>([&dispatcher]() { delete dispatcher; });
+        auto dispatchable = std::make_shared<mt::TestDispatchable>(
+            [&dispatcher]()
+            {
+                delete dispatcher.load();
+            });
+
+        dispatcher = new md::ThreadedDispatcher("Death thread", dispatchable);
 
         dispatchable->trigger();
-        dispatcher = new md::ThreadedDispatcher("Death thread", dispatchable);
+
         std::this_thread::sleep_for(10s);
     }, KilledBySignal(SIGABRT), ".*Destroying ThreadedDispatcher.*");
 }
