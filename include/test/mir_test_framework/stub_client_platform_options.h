@@ -31,10 +31,10 @@ enum class FailurePoint
 };
 
 /**
+ * Add an exception to the client platform created by the \b next call to create_client_platform
  *
- *
- * \param [in] where
- * \param [in] what
+ * \param [in]      where   The platform call that will throw an exception
+ * \param [in,out]  what    The exception to throw
  */
 void add_client_platform_error(FailurePoint where, std::exception_ptr what);
 }
