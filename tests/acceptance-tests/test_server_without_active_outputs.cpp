@@ -45,10 +45,10 @@ TEST_F(ServerWithoutActiveOutputs, creates_valid_client_surface)
 {
     using namespace testing;
 
-    auto const surface = mtf::make_any_surface(connection);
+    auto const window = mtf::make_any_surface(connection);
 
-    EXPECT_THAT(mir_surface_is_valid(surface), Eq(true))
-        << mir_surface_get_error_message(surface);
+    EXPECT_THAT(mir_window_is_valid(window), Eq(true))
+        << mir_window_get_error_message(window);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }

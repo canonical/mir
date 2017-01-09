@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
-    MirSurface *surf;
+    MirWindow* window;
     MirGraphicsRegion canvas;
     unsigned int f;
     int swap_interval = 0;
@@ -461,17 +461,19 @@ int main(int argc, char *argv[])
 
     mir_display_config_destroy(display_config);
 
-    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
-    mir_surface_spec_set_name(spec, "Mir Fingerpaint");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, "Mir Fingerpaint");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
-    if (surf != NULL)
+    if (window != NULL)
     {
-        mir_surface_set_swapinterval(surf, swap_interval);
-        mir_surface_set_event_handler(surf, &on_event, &canvas);
+        MirBufferStream* bs = mir_window_get_buffer_stream(window);
+        mir_buffer_stream_set_swapinterval(bs, swap_interval);
+        mir_window_set_event_handler(window, &on_event, &canvas);
     
         canvas.width = width;
         canvas.height = height;
@@ -486,8 +488,6 @@ int main(int argc, char *argv[])
             signal(SIGHUP, shutdown);
         
             clear_region(&canvas, &background);
-        
-            MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
 
             while (running)
             {
@@ -505,7 +505,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(surf, NULL, NULL);
+            mir_window_set_event_handler(window, NULL, NULL);
             free(canvas.vaddr);
         }
         else
@@ -513,7 +513,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to malloc canvas\n");
         }
 
-        mir_surface_release_sync(surf);
+        mir_window_release_sync(window);
     }
     else
     {
