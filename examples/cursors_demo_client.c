@@ -46,10 +46,10 @@ void configure_cursor(MirConnection* connection, MirSurface *surface, unsigned i
 
     size_t num_cursors = sizeof(cursors)/sizeof(*cursors);
     size_t real_index = cursor_index % num_cursors;
-    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_cursor_name(spec, cursors[real_index]);
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    MirWindowSpec* spec = mir_create_window_spec(connection);
+    mir_window_spec_set_cursor_name(spec, cursors[real_index]);
+    mir_window_apply_spec(surface, spec);
+    mir_window_spec_release(spec);
 }
 
 int main(int argc, char *argv[])
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     unsigned int cursor_index = 0;
     while (mir_eglapp_running())
     {
-        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_surface(), cursor_index++);
+        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_window(), cursor_index++);
         usleep(100000);
     }
 

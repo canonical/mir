@@ -35,7 +35,7 @@ public:
     explicit NativeSurface(EGLNativeSurface*);
 
     int advance_buffer(MirBufferPackage* buffer_package);
-    int get_parameters(MirSurfaceParameters* surface_parameters);
+    int get_parameters(MirWindowParameters* surface_parameters);
     int set_swapinterval(int interval);
     void use_native_surface(EGLNativeSurface* native_surface);
 
