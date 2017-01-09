@@ -430,7 +430,7 @@ void MirSurface::handle_event(MirEvent const& e)
 
     switch (mir_event_get_type(&e))
     {
-    case mir_event_type_surface:
+    case mir_event_type_window:
     {
         auto sev = mir_event_get_surface_event(&e);
         auto a = mir_surface_event_get_attribute(sev);

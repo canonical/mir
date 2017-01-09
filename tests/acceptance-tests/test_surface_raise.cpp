@@ -110,7 +110,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
     auto const event_type = mir_event_get_type(ev);
     auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
 
-    if (event_type == mir_event_type_surface)
+    if (event_type == mir_event_type_window)
     {
         auto event = mir_event_get_surface_event(ev);
         auto const attrib = mir_surface_event_get_attribute(event);

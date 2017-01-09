@@ -57,7 +57,7 @@ struct FocusSurface
 
     static void handle_event(MirWindow* window, MirEvent const* ev, void* context)
     {
-        if (mir_event_type_surface == mir_event_get_type(ev))
+        if (mir_event_type_window == mir_event_get_type(ev))
         {
             auto surface_ev = mir_event_get_surface_event(ev);
             if (mir_surface_attrib_focus == mir_surface_event_get_attribute(surface_ev))

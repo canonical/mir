@@ -31,24 +31,31 @@
 extern "C" {
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
     mir_event_type_key,
     mir_event_type_motion,
-    mir_event_type_surface,
+    mir_event_type_surface __attribute__ ((deprecated)),
+    mir_event_type_window = mir_event_type_surface,
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
     mir_event_type_orientation,
-    mir_event_type_close_surface,
+    mir_event_type_close_surface __attribute__ ((deprecated)),
+    mir_event_type_close_window = mir_event_type_close_surface,
     /* Type for new style input event will be returned from mir_event_get_type
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
     mir_event_type_keymap,
     mir_event_type_input_configuration,
-    mir_event_type_surface_output,
+    mir_event_type_surface_output __attribute__ ((deprecated)),
+    mir_event_type_window_output = mir_event_type_surface_output,
     mir_event_type_input_device_state,
-    mir_event_type_surface_placement,
+    mir_event_type_surface_placement __attribute__ ((deprecated)),
+    mir_event_type_window_placement = mir_event_type_surface_placement,
 } MirEventType;
+#pragma GCC diagnostic pop
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
 typedef struct MirResizeEvent MirResizeEvent;

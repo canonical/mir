@@ -778,7 +778,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
     mt::Signal surface_event_received;
     mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
-            if (mir_event_get_type(event) == mir_event_type_surface_output)
+            if (mir_event_get_type(event) == mir_event_type_window_output)
             {
                 auto surface_event = mir_event_get_surface_output_event(event);
                 EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(expected_form_factor));
