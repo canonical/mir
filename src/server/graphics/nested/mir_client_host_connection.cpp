@@ -31,10 +31,13 @@
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
+#include "mir_toolkit/extensions/android_buffer.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/mir_pointer_configuration.h"
@@ -550,15 +553,16 @@ namespace
 class HostBuffer : public mgn::NativeBuffer
 {
 public:
-    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
+    //software
+    HostBuffer(MirConnection* mir_connection, geom::Size size, MirPixelFormat format) :
         fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
     {
         mir_connection_allocate_buffer(
             mir_connection,
-            properties.size.width.as_int(),
-            properties.size.height.as_int(),
-            properties.format,
-            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
+            size.width.as_int(),
+            size.height.as_int(),
+            format,
+            mir_buffer_usage_software,
             buffer_available, this);
         std::unique_lock<std::mutex> lk(mut);
         cv.wait(lk, [&]{ return handle; });
@@ -568,6 +572,41 @@ public:
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
         }
     }
+
+    HostBuffer(MirConnection* mir_connection,
+        MirExtensionGbmBufferV1 const* ext,
+        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
+        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
+    {
+        ext->allocate_buffer_gbm(
+            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
+        {
+            mir_buffer_release(handle);
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+    }
+
+    HostBuffer(MirConnection* mir_connection,
+        MirExtensionAndroidBufferV1 const* ext,
+        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
+        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
+    {
+        ext->allocate_buffer_android(
+            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
+        {
+            mir_buffer_release(handle);
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+    }
+
     ~HostBuffer()
     {
         mir_buffer_release(handle);
@@ -702,9 +741,25 @@ private:
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
-    mg::BufferProperties const& properties)
+    geom::Size size, MirPixelFormat format)
 {
-    return std::make_shared<HostBuffer>(mir_connection, properties);
+    return std::make_shared<HostBuffer>(mir_connection, size, format);
+}
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
+    geom::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    if (auto ext = mir_extension_gbm_buffer_v1(mir_connection))
+    {
+        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+    }
+
+    if (auto ext = mir_extension_android_buffer_v1(mir_connection))
+    {
+        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));
 }
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
@@ -714,8 +769,7 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
 
 bool mgn::MirClientHostConnection::supports_passthrough()
 {
-    auto buffer = create_buffer(mg::BufferProperties(geom::Size{1, 1} , mir_pixel_format_abgr_8888, mg::BufferUsage::software));
-
+    auto buffer = create_buffer(geom::Size{1, 1} , mir_pixel_format_abgr_8888);
     auto hints = buffer->egl_image_creation_hints();
     if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
         return false;
