@@ -16,7 +16,7 @@ set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FL
 
 # uses CanonicalWindowManager
 set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
-        "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server -I ${PROJECT_SOURCE_DIR}/src/include/client")
+        "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
 
 # uses src/include/common/mir/protobuf/protocol_version.h
 set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
