@@ -225,11 +225,11 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
 }
 
 void mir_surface_spec_set_cursor_render_surface(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
 {
     auto connection = connection_map.connection(surface);
     auto rs = connection->connection_surface_map()->render_surface(surface);
-    spec->rendersurface_cursor = MirSurfaceSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
+    spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }

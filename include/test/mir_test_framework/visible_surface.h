@@ -29,7 +29,7 @@ namespace mir_test_framework
 class VisibleSurface
 {
 public:
-    explicit VisibleSurface(MirSurfaceSpec* spec);
+    explicit VisibleSurface(MirWindowSpec* spec);
     VisibleSurface(VisibleSurface&&);
     VisibleSurface& operator=(VisibleSurface&&);
     VisibleSurface(VisibleSurface const&) = delete;
@@ -43,7 +43,7 @@ private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    MirSurface* surface;
+    MirWindow* window;
     bool visible;
 };
 

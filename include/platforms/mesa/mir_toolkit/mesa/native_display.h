@@ -49,7 +49,7 @@ struct MirMesaEGLNativeSurface
     int (*surface_advance_buffer)(MirMesaEGLNativeSurface* surface,
                                   MirBufferPackage* buffer_package);
     int (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
-                                  MirSurfaceParameters* surface_parameters);
+                                  MirWindowParameters* surface_parameters);
 };
 
 #ifdef __cplusplus

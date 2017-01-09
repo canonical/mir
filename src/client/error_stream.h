@@ -32,7 +32,7 @@ public:
         std::string const& error_msg, MirConnection* conn,
         frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
 
-    MirSurfaceParameters get_parameters() const override;
+    MirWindowParameters get_parameters() const override;
     std::shared_ptr<ClientBuffer> get_current_buffer() override;
     uint32_t get_current_buffer_id() override;
     EGLNativeWindowType egl_native_window() override;
