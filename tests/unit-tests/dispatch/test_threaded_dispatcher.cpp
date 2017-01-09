@@ -259,7 +259,6 @@ TEST_F(ThreadedDispatcherDeathTest, exceptions_in_threadpool_trigger_termination
     using namespace testing;
     using namespace std::chrono_literals;
 
-    FLAGS_gtest_death_test_style = "threadsafe";
     constexpr char const* exception_msg = "Ducks! Ducks attack!";
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>([]()
