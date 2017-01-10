@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #ifndef MIR_TOOLKIT_WINDOW_OUTPUT_EVENT_H_
