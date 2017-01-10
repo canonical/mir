@@ -267,6 +267,7 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \return           The associated MirSurfacePlacementEvent
  */
 MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
+/* __attribute__((deprecated("use mir_event_get_window_placement_event))) */
 
 /**
  * Retrieve the MirWindowPlacementEvent associated with a MirEvent of

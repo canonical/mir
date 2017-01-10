@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #ifndef MIR_TOOLKIT_WINDOW_PLACEMENT_H_
@@ -28,8 +29,6 @@
  */
 extern "C" {
 #endif
-
-typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 /**
  * Retrieve the relative position from a placement notification
