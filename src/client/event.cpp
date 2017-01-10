@@ -419,12 +419,12 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
 
 MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return event->to_surface_placement();
+    return mir_event_get_window_placement_event(event);
 })
 
 MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return event->placement();
+    return mir_window_placement_get_relative_position(event);
 })
 
 MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
