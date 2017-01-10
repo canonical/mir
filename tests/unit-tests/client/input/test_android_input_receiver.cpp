@@ -204,14 +204,19 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     TestingInputProducer producer(channel.server_fd());
 
     // Produce 3 motion events before client handles any.
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
+    int const nevents = 3;
+    for (int i = 0; i < nevents; ++i)
+        producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
 
     flush_channels();
 
-    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
-    receiver.dispatch(md::FdEvent::readable);
+    // Consume 3+1 times, since we'll only notice we're drained on the 4th
+    for (int j = 0; j < nevents+1; ++j)
+    {
+        EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(),
+                                            next_event_timeout));
+        receiver.dispatch(md::FdEvent::readable);
+    }
 
     // Now there should be no events
     EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
