@@ -83,9 +83,9 @@ mf::SurfaceId msh::FrontendShell::create_surface(
     //       in the surface spec requirements (eg: regular surface has no parent,
     //       dialog may have a parent, gloss must have a parent).
     if (populated_params.parent.lock() &&
-        populated_params.type.value() != mir_surface_type_inputmethod)
+        populated_params.type.value() != mir_window_type_inputmethod)
     {
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Foreign parents may only be set on surfaces of type mir_surface_type_inputmethod"));
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Foreign parents may only be set on surfaces of type mir_window_type_inputmethod"));
     }
 
     if (populated_params.parent_id.is_set())

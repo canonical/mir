@@ -457,17 +457,17 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     observers.reception_mode_set_to(mode);
 }
 
-MirSurfaceType ms::BasicSurface::type() const
+MirWindowType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);
     return type_;
 }
 
-MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
+MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 {
     std::unique_lock<std::mutex> lg(guard);
     
-    if (t < 0 || t > mir_surface_types)
+    if (t < 0 || t > mir_window_types)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
             "type."));
@@ -573,7 +573,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
     switch (attrib)
     {
     case mir_window_attrib_type:
-        result = set_type(static_cast<MirSurfaceType>(result));
+        result = set_type(static_cast<MirWindowType>(result));
         break;
     case mir_window_attrib_state:
         result = set_state(static_cast<MirSurfaceState>(result));

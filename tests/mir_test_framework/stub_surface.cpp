@@ -131,9 +131,9 @@ int mtd::StubSurface::buffers_ready_for_compositor(void const* /*compositor_id*/
     return 0;
 }
 
-MirSurfaceType mtd::StubSurface::type() const
+MirWindowType mtd::StubSurface::type() const
 {
-    return MirSurfaceType::mir_surface_type_normal;
+    return MirWindowType::mir_window_type_normal;
 }
 
 MirSurfaceState mtd::StubSurface::state() const

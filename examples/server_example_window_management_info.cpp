@@ -59,17 +59,17 @@ bool me::SurfaceInfo::can_be_active() const
 {
     switch (type)
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+    case mir_window_type_normal:       /**< AKA "regular"                       */
+    case mir_window_type_utility:      /**< AKA "floating"                      */
+    case mir_window_type_dialog:
+    case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_window_type_freestyle:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         return true;
 
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    case mir_window_type_gloss:
+    case mir_window_type_tip:          /**< AKA "tooltip"                       */
     default:
         // Cannot have input focus
         return false;
@@ -80,10 +80,10 @@ bool me::SurfaceInfo::must_have_parent() const
 {
     switch (type)
     {
-    case mir_surface_type_overlay:;
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_satellite:
-    case mir_surface_type_tip:
+    case mir_window_type_gloss:;
+    case mir_window_type_inputmethod:
+    case mir_window_type_satellite:
+    case mir_window_type_tip:
         return true;
 
     default:
@@ -91,19 +91,19 @@ bool me::SurfaceInfo::must_have_parent() const
     }
 }
 
-bool me::SurfaceInfo::can_morph_to(MirSurfaceType new_type) const
+bool me::SurfaceInfo::can_morph_to(MirWindowType new_type) const
 {
     switch (new_type)
     {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
-    case mir_surface_type_satellite:
+    case mir_window_type_normal:
+    case mir_window_type_utility:
+    case mir_window_type_satellite:
         switch (type)
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-        case mir_surface_type_dialog:
-        case mir_surface_type_satellite:
+        case mir_window_type_normal:
+        case mir_window_type_utility:
+        case mir_window_type_dialog:
+        case mir_window_type_satellite:
             return true;
 
         default:
@@ -111,14 +111,14 @@ bool me::SurfaceInfo::can_morph_to(MirSurfaceType new_type) const
         }
         break;
 
-    case mir_surface_type_dialog:
+    case mir_window_type_dialog:
         switch (type)
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-        case mir_surface_type_dialog:
-        case mir_surface_type_popover:
-        case mir_surface_type_satellite:
+        case mir_window_type_normal:
+        case mir_window_type_utility:
+        case mir_window_type_dialog:
+        case mir_window_type_popover:
+        case mir_window_type_satellite:
             return true;
 
         default:
@@ -137,8 +137,8 @@ bool me::SurfaceInfo::must_not_have_parent() const
 {
     switch (type)
     {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
+    case mir_window_type_normal:
+    case mir_window_type_utility:
         return true;
 
     default:
@@ -356,15 +356,15 @@ void me::SurfaceInfo::constrain_resize(
     requested_size = new_size;
 }
 
-bool me::SurfaceInfo::needs_titlebar(MirSurfaceType type)
+bool me::SurfaceInfo::needs_titlebar(MirWindowType type)
 {
     switch (type)
     {
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:
+    case mir_window_type_freestyle:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:
+    case mir_window_type_gloss:
+    case mir_window_type_tip:
         // No decorations for these surface types
         return false;
     default:

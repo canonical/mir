@@ -68,7 +68,7 @@ public:
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
-    virtual MirSurfaceType type() const = 0;
+    virtual MirWindowType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;

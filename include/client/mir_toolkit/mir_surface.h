@@ -208,7 +208,7 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
  * \param [in] spec         Specification to mutate
  * \param [in] type         the target type of the window
  */
-void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
+void mir_window_spec_set_type(MirWindowSpec* spec, MirWindowType type);
 
 /**
  * Set the requested name.
@@ -667,6 +667,13 @@ MirOrientation mir_window_get_orientation(MirWindow* window);
  */
 void mir_window_raise(MirWindow* window, MirCookie const* cookie);
 
+/**
+ * Get the type (purpose) of a window.
+ *   \param [in] window  The window to query
+ *   \return              The type of the window
+ */
+MirWindowType mir_window_get_type(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -870,12 +877,8 @@ char const* mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 //__attribute__((deprecated("use mir_window_get_parameters() instead")));
 
-/**
- * Get the type (purpose) of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The type of the surface
- */
-MirSurfaceType mir_surface_get_type(MirSurface *surface);
+MirSurfaceType mir_surface_get_type(MirSurface* surface);
+//__attribute__((deprecated("use mir_window_get_type() instead")));
 
 /**
  * Change the state of a surface.

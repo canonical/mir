@@ -54,7 +54,7 @@ struct StubSurface : scene::Surface
     bool visible() const override;
     graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
-    MirSurfaceType type() const override;
+    MirWindowType type() const override;
     MirSurfaceState state() const override;
     int configure(MirWindowAttrib attrib, int value) override;
     int query(MirWindowAttrib attrib) const override;

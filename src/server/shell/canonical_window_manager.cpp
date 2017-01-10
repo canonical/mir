@@ -41,12 +41,12 @@ int const title_bar_height = 10;
 // but is currently used when placing the surface before construction.
 // Which implies we need some rework so that we can construct metadata
 // before the surface.
-bool must_not_have_parent(MirSurfaceType type)
+bool must_not_have_parent(MirWindowType type)
 {
     switch (type)
     {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
+    case mir_window_type_normal:
+    case mir_window_type_utility:
         return true;
 
     default:
@@ -58,13 +58,13 @@ bool must_not_have_parent(MirSurfaceType type)
 // but is currently used when placing the surface before construction.
 // Which implies we need some rework so that we can construct metadata
 // before the surface.
-bool must_have_parent(MirSurfaceType type)
+bool must_have_parent(MirWindowType type)
 {
     switch (type)
     {
-    case mir_surface_type_overlay:;
-    case mir_surface_type_satellite:
-    case mir_surface_type_tip:
+    case mir_window_type_gloss:;
+    case mir_window_type_satellite:
+    case mir_window_type_tip:
         return true;
 
     default:

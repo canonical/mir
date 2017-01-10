@@ -42,7 +42,7 @@ mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_normal;
+    spec->type = mir_window_type_normal;
     return spec;
 }
 
@@ -57,7 +57,7 @@ mir_create_menu_window_spec(MirConnection* connection,
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_menu;
+    spec->type = mir_window_type_menu;
     spec->parent = parent;
     spec->aux_rect = *rect;
     spec->edge_attachment = edge;
@@ -74,7 +74,7 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_tip;
+    spec->type = mir_window_type_tip;
     spec->parent = parent;
     spec->aux_rect = *rect;
     spec->edge_attachment = edge;
@@ -88,7 +88,7 @@ MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
     mir::require(mir_window_is_valid(parent));
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_dialog;
+    spec->type = mir_window_type_dialog;
     spec->parent = parent;
 
     return spec;
@@ -99,7 +99,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
                               int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_dialog;
+    spec->type = mir_window_type_dialog;
     return spec;
 }
 
@@ -108,7 +108,7 @@ mir_create_input_method_window_spec(MirConnection* connection,
                                     int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_inputmethod;
+    spec->type = mir_window_type_inputmethod;
     return spec;
 }
 
@@ -137,7 +137,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type)
+void mir_window_spec_set_type(MirWindowSpec* spec, MirWindowType type)
 try
 {
     mir::require(spec);
@@ -301,7 +301,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     mir::require(attachment_rect != nullptr);
 
     if (!spec->type.is_set() ||
-        spec->type.value() != mir_surface_type_inputmethod)
+        spec->type.value() != mir_window_type_inputmethod)
     {
         return false;
     }
@@ -624,6 +624,22 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie)
     }
 }
 
+MirWindowType mir_window_get_type(MirWindow* window)
+{
+    MirWindowType type = mir_window_type_normal;
+
+    if (window)
+    {
+        // Only the client will ever change the type of a window so it is
+        // safe to get the type from a local cache surf->attrib().
+
+        int t = window->attrib(mir_window_attrib_type);
+        type = static_cast<MirWindowType>(t);
+    }
+
+    return type;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -887,7 +903,7 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
 {
-    mir_window_spec_set_type(spec, type);
+    mir_window_spec_set_type(spec, static_cast<MirWindowType>(type));
 }
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
@@ -976,18 +992,7 @@ void mir_surface_release_sync(MirSurface* surface)
 
 MirSurfaceType mir_surface_get_type(MirSurface* surf)
 {
-    MirSurfaceType type = mir_surface_type_normal;
-
-    if (surf)
-    {
-        // Only the client will ever change the type of a surface so it is
-        // safe to get the type from a local cache surf->attrib().
-
-        int t = surf->attrib(mir_window_attrib_type);
-        type = static_cast<MirSurfaceType>(t);
-    }
-
-    return type;
+    return static_cast<MirSurfaceType>(mir_window_get_type(surf));
 }
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)

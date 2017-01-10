@@ -528,8 +528,8 @@ AttributeTestParameters const surface_visibility_test_parameters{
 
 AttributeTestParameters const surface_type_test_parameters{
     mir_window_attrib_type,
-    mir_surface_type_normal,
-    mir_surface_type_freestyle,
+    mir_window_type_normal,
+    mir_window_type_freestyle,
     -1
 };
 

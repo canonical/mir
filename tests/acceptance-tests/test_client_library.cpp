@@ -767,7 +767,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    EXPECT_THAT(mir_surface_get_type(window), Eq(mir_surface_type_normal));
+    EXPECT_THAT(mir_window_get_type(window), Eq(mir_window_type_normal));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -793,7 +793,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    EXPECT_THAT(mir_surface_get_type(window), Eq(mir_surface_type_normal));
+    EXPECT_THAT(mir_window_get_type(window), Eq(mir_window_type_normal));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);

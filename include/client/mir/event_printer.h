@@ -40,6 +40,8 @@ std::ostream& operator<<(std::ostream& out, MirWindowAttrib attribute);
 std::ostream& operator<<(std::ostream& out, MirSurfaceFocusState state);
 std::ostream& operator<<(std::ostream& out, MirSurfaceVisibility state);
 std::ostream& operator<<(std::ostream& out, MirSurfaceType type);
+/* __attribute__ ((deprecated("use << with MirWindowType instead")); */
+std::ostream& operator<<(std::ostream& out, MirWindowType type);
 std::ostream& operator<<(std::ostream& out, MirSurfaceState state);
 
 std::ostream& operator<<(std::ostream& out, MirPromptSessionEvent const& event);

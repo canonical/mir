@@ -80,17 +80,17 @@ MATCHER_P(MatchesOptional, spec, "")
 
 MATCHER(IsAMenu, "")
 {
-    return arg.type == mir_surface_type_menu;
+    return arg.type == mir_window_type_menu;
 }
 
 MATCHER(IsATooltip, "")
 {
-    return arg.type == mir_surface_type_tip;
+    return arg.type == mir_window_type_tip;
 }
 
 MATCHER(IsADialog, "")
 {
-    return arg.type == mir_surface_type_dialog;
+    return arg.type == mir_window_type_dialog;
 }
 
 MATCHER_P(HasParent, parent, "")
@@ -143,7 +143,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
         spec.buffer_usage = mir_buffer_usage_software;
         spec.surface_name = "test_surface";
         spec.output_id = mir_display_output_id_invalid;
-        spec.type = mir_surface_type_dialog;
+        spec.type = mir_window_type_dialog;
         spec.state = mir_surface_state_minimized;
         spec.pref_orientation = mir_orientation_mode_landscape;
     }

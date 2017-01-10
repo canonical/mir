@@ -92,7 +92,7 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_output_id(
 }
 
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_type(MirSurfaceType the_type)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_type(MirWindowType the_type)
 {
     type = the_type;
     return *this;
