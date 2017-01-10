@@ -54,7 +54,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
                                      std::shared_ptr<mircv::XKBMapper> const& keymapper,
                                      std::function<void(MirEvent*)> const& event_handling_callback,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report)
-  : wake_fd{valid_fd_or_system_error(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE),
+  : wake_fd{valid_fd_or_system_error(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK),
         "Failed to create IO wakeup notifier")},
     input_channel(input_channel),
     handler{event_handling_callback},
@@ -62,14 +62,10 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
 {
-    dispatcher.add_watch(wake_fd, [this]()
-    {
-        consume_wake_notification(wake_fd);
-        process_and_maybe_send_event();
-    });
-
+    dispatcher.add_watch(wake_fd,
+                         [this]() { woke(); });
     dispatcher.add_watch(mir::Fd{mir::IntOwnedFd{input_channel->getFd()}},
-                         [this]() { process_and_maybe_send_event(); });
+                         [this]() { woke(); });
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
@@ -117,24 +113,33 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 
 }
 
-void mircva::InputReceiver::process_and_maybe_send_event()
+void mircva::InputReceiver::woke()
 {
+    uint64_t dummy;
+
+    /*
+     * We never care about the cause of the wakeup. Either real input or a
+     * wake(). Either way the only requirement is that we woke() after each
+     * wake() or real input channel event.
+     */
+    if (read(wake_fd, &dummy, sizeof(dummy)) != sizeof(dummy) &&
+        errno != EAGAIN)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 "Failed to consume notification"}));
+    }
+
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
 
-    auto frame_time = std::chrono::nanoseconds(-1);
-
-    /*
-     * It appears we may have had some races before. Multiple raw events
-     * occur as a single wakeup and after consuming the first, neither
-     * hasDeferredEvent() nor hasPendingBatches() are true. So we need
-     * to repeatedly consume until they're all done (droidinput::WOULD_BLOCK).
-     */
-    while (droidinput::OK == input_consumer->consume(&event_factory,
+    auto const frame_time = std::chrono::nanoseconds(-1);
+    auto result = input_consumer->consume(&event_factory,
                                           true,
                                           frame_time,
                                           &event_sequence_id,
-                                          &android_event))
+                                          &android_event);
+    if (result == droidinput::OK)
     {
         auto ev = mia::Lexicon::translate(android_event);
         map_key_event(xkb_mapper, *ev);
@@ -146,29 +151,14 @@ void mircva::InputReceiver::process_and_maybe_send_event()
         //       get passed on to someone else - passed into here:
         input_consumer->sendFinishedSignal(event_sequence_id, true);
     }
-    if (input_consumer->hasDeferredEvent())
-    {
-        // input_consumer->consume() can read an event from the fd and find that the event cannot
-        // be added to the current batch.
-        //
-        // In this case, it emits the current batch and leaves the new event pending.
-        // This means we have an event we need to dispatch, but as it has already been read from
-        // the fd we cannot rely on being woken by the fd being readable.
-        //
-        // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
-        wake();
-    }
-}
 
-void mircva::InputReceiver::consume_wake_notification(mir::Fd const& fd)
-{
-    uint64_t dummy;
-    if (read(fd, &dummy, sizeof(dummy)) != sizeof(dummy))
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to consume notification"}));
-    }
+    /*
+     * droidinput::OK means one OR MORE events pending. And they are probably
+     * not batched or deferred so we must wake() until we get something other
+     * than OK (WOULD_BLOCK or an error).
+     */
+    if (result == droidinput::OK || input_consumer->hasDeferredEvent())
+        wake();
 }
 
 void mircva::InputReceiver::wake()

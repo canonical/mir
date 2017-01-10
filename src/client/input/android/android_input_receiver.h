@@ -87,8 +87,7 @@ private:
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
 
-    void process_and_maybe_send_event();
-    static void consume_wake_notification(mir::Fd const& fd);
+    void woke();
     void wake();
 };
 
