@@ -237,6 +237,23 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowState state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_state,unknown);
+    PRINT(mir_window_state,restored);
+    PRINT(mir_window_state,minimized);
+    PRINT(mir_window_state,maximized);
+    PRINT(mir_window_state,vertmaximized);
+    PRINT(mir_window_state,fullscreen);
+    PRINT(mir_window_state,horizmaximized);
+    PRINT(mir_window_state,hidden);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
 #undef PRINT
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)

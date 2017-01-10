@@ -562,4 +562,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_output_event_get_refresh_rate;
     mir_event_get_window_placement_event;
     mir_window_placement_get_relative_position;
+    mir_window_set_state;
+    mir_window_get_state;
 } MIR_CLIENT_0.25;

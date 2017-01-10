@@ -640,6 +640,47 @@ MirWindowType mir_window_get_type(MirWindow* window)
     return type;
 }
 
+MirWaitHandle* mir_window_set_state(MirWindow* window, MirWindowState state)
+{
+    try
+    {
+        return window ? window->configure(mir_window_attrib_state, state) : nullptr;
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
+MirWindowState mir_window_get_state(MirWindow* window)
+{
+    MirWindowState state = mir_window_state_unknown;
+
+    try
+    {
+        if (window)
+        {
+            int s = window->attrib(mir_window_attrib_state);
+
+            if (s == mir_window_state_unknown)
+            {
+                window->configure(mir_window_attrib_state,
+                    mir_window_state_unknown)->wait_for_all();
+                s = window->attrib(mir_window_attrib_state);
+            }
+
+            state = static_cast<MirWindowState>(s);
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -774,7 +815,7 @@ void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 {
-    mir_window_spec_set_state(spec, state);
+    mir_window_spec_set_state(spec, static_cast<MirWindowState>(state));
 }
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
@@ -997,43 +1038,12 @@ MirSurfaceType mir_surface_get_type(MirSurface* surf)
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
 {
-    try
-    {
-        return surf ? surf->configure(mir_window_attrib_state, state) : nullptr;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
+    return mir_window_set_state(surf, static_cast<MirWindowState>(state));
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface* surf)
 {
-    MirSurfaceState state = mir_surface_state_unknown;
-
-    try
-    {
-        if (surf)
-        {
-            int s = surf->attrib(mir_window_attrib_state);
-
-            if (s == mir_surface_state_unknown)
-            {
-                surf->configure(mir_window_attrib_state,
-                                mir_surface_state_unknown)->wait_for_all();
-                s = surf->attrib(mir_window_attrib_state);
-            }
-
-            state = static_cast<MirSurfaceState>(s);
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceState>(mir_window_get_state(surf));
 }
 
 MirOrientation mir_surface_get_orientation(MirSurface *surface)

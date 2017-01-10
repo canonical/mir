@@ -674,6 +674,22 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie);
  */
 MirWindowType mir_window_get_type(MirWindow* window);
 
+/**
+ * Change the state of a window.
+ *   \param [in] window  The window to operate on
+ *   \param [in] state   The new state of the window
+ *   \return             A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_window_set_state(MirWindow* window,
+                                     MirWindowState state);
+
+/**
+ * Get the current state of a window.
+ *   \param [in] window  The window to query
+ *   \return             The state of the window
+ */
+MirWindowState mir_window_get_state(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -880,21 +896,12 @@ void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *param
 MirSurfaceType mir_surface_get_type(MirSurface* surface);
 //__attribute__((deprecated("use mir_window_get_type() instead")));
 
-/**
- * Change the state of a surface.
- *   \param [in] surface  The surface to operate on
- *   \param [in] state    The new state of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
- */
 MirWaitHandle* mir_surface_set_state(MirSurface *surface,
                                      MirSurfaceState state);
+//__attribute__((deprecated("use mir_window_set_state() instead")));
 
-/**
- * Get the current state of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The state of the surface
- */
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_state() instead")));
 
 /**
  * Set the swapinterval for the default stream.

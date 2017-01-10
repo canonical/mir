@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         return 1;
 
     MirWindow* const window = mir_eglapp_native_window();
-    MirWindowState state = mir_surface_get_state(window);
+    MirWindowState state = mir_window_get_state(window);
 
     /* This is probably the simplest GL you can do */
     while (mir_eglapp_running())
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
 void toggle_surface_state(MirSurface* const surface, MirWindowState* state)
 {
-    switch (mir_surface_get_state(surface))
+    switch (mir_window_get_state(surface))
     {
     PRINT_STATE(mir_window_state_unknown);
     PRINT_STATE(mir_window_state_restored);
@@ -115,5 +115,5 @@ void toggle_surface_state(MirSurface* const surface, MirWindowState* state)
         NEW_STATE(mir_window_state_maximized);
         break;
     }
-    mir_surface_set_state(surface, *state);
+    mir_window_set_state(surface, *state);
 }
