@@ -67,7 +67,8 @@ typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
-typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
+typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
+typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
 
@@ -89,6 +90,7 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/input_configuration_event.h"
 #include "mir_toolkit/events/surface_output_event.h"
+#include "mir_toolkit/events/window_output_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 
 #ifdef __cplusplus
@@ -227,6 +229,22 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \return           The associated MirSurfaceOutputEvent
  */
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event);
+/* __attribute__((deprecated("use mir_event_get_window_output_event))) */
+
+/**
+ * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
+ * mir_event_type_window_output. The event signifies that the properties
+ * of the output the window is displayed upon have changed.
+ *
+ * A MirWindowOutputEvent is generated either when the properties of the
+ * output the window is primarily on change (for example: by user configuration
+ * of resolution) or when the output the window is primarily on changes
+ * (for example: when a user moves the window from one monitor to another).
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowOutputEvent
+ */
+MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* event);
 
 /**
  * Retrieve the MirInputDeviceStateEvent associated with a MirEvent of

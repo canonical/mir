@@ -897,11 +897,11 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
 
     if (mir_event_get_type(arg) != mir_event_type_window_output)
     {
-        *result_listener << "Event is not a MirSurfaceOutputEvent";
+        *result_listener << "Event is not a MirWindowOutputEvent";
         return 0;
     }
 
-    auto const event = mir_event_get_surface_output_event(arg);
+    auto const event = mir_event_get_window_output_event(arg);
 
     if (output.output.current_mode_index >= output.output.modes.size())
         return false;
@@ -911,23 +911,23 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
     return
         ExplainMatchResult(
             Eq(output.dpi),
-            mir_surface_output_event_get_dpi(event),
+            mir_window_output_event_get_dpi(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.form_factor),
-            mir_surface_output_event_get_form_factor(event),
+            mir_window_output_event_get_form_factor(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.scale),
-            mir_surface_output_event_get_scale(event),
+            mir_window_output_event_get_scale(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(mode.vrefresh_hz),
-            mir_surface_output_event_get_refresh_rate(event),
+            mir_window_output_event_get_refresh_rate(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.id),
-            mir_surface_output_event_get_output_id(event),
+            mir_window_output_event_get_output_id(event),
             result_listener);
 }
 }

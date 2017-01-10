@@ -177,6 +177,13 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
     return ev->to_surface_output();
 })
 
+MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+
+    return ev->to_surface_output();
+})
+
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input_device_state);
@@ -312,6 +319,38 @@ double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev
 })
 
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+    return ev->output_id();
+})
+
+/* Window output event accessors */
+
+int mir_window_output_event_get_dpi(MirWindowOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+    return ev->dpi();
+})
+
+MirFormFactor mir_window_output_event_get_form_factor(MirWindowOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+    return ev->form_factor();
+})
+
+float mir_window_output_event_get_scale(MirWindowOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+    return ev->scale();
+})
+
+double mir_window_output_event_get_refresh_rate(MirWindowOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window_output);
+    return ev->refresh_rate();
+})
+
+uint32_t mir_window_output_event_get_output_id(MirWindowOutputEvent const *ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_window_output);
     return ev->output_id();

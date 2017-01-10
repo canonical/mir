@@ -336,14 +336,14 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
     EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_window_output));
-    auto output_event = mir_event_get_surface_output_event(last_event);
+    auto output_event = mir_event_get_window_output_event(last_event);
 
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(output_event), FloatEq(scale));
+    EXPECT_THAT(mir_window_output_event_get_form_factor(output_event), Eq(form_factor));
+    EXPECT_THAT(mir_window_output_event_get_scale(output_event), FloatEq(scale));
 
-    auto id = mir_surface_output_event_get_output_id(output_event);
+    auto id = mir_window_output_event_get_output_id(output_event);
     ASSERT_THAT(current_mode.find(id), Ne(current_mode.end()));
-    EXPECT_THAT(mir_surface_output_event_get_refresh_rate(output_event), Eq(current_mode[id].vrefresh_hz));
+    EXPECT_THAT(mir_window_output_event_get_refresh_rate(output_event), Eq(current_mode[id].vrefresh_hz));
 }
 
 TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
@@ -627,13 +627,13 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
     ASSERT_TRUE(context.captured.wait_for(10s));
     ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_window_output));
-    auto surface_event = mir_event_get_surface_output_event(context.event);
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));
-    auto id = mir_surface_output_event_get_output_id(surface_event);
+    auto window_event = mir_event_get_window_output_event(context.event);
+    EXPECT_THAT(mir_window_output_event_get_form_factor(window_event), Eq(form_factor));
+    EXPECT_THAT(mir_window_output_event_get_scale(window_event), Eq(scale));
+    auto id = mir_window_output_event_get_output_id(window_event);
     EXPECT_THAT(display_ids, Contains(Eq(id)));
     ASSERT_THAT(current_mode.find(id), Ne(current_mode.end()));
-    EXPECT_THAT(mir_surface_output_event_get_refresh_rate(surface_event),
+    EXPECT_THAT(mir_window_output_event_get_refresh_rate(window_event),
                 Eq(current_mode[id].vrefresh_hz));
 
     mir_window_release_sync(window);
