@@ -56,7 +56,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     MirSurface* other_surface;
 
     std::mutex last_event_mutex;
-    MirEventType event_filter{mir_event_type_surface};
+    MirEventType event_filter{mir_event_type_window};
     std::condition_variable last_event_cv;
     MirEvent const* last_event = nullptr;
     MirSurface* last_event_surface = nullptr;
@@ -232,7 +232,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 
 TEST_F(ClientSurfaceEvents, surface_receives_close_event)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
     scene_surface->request_client_surface_close();
 
@@ -241,7 +241,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_close_event)
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
     EXPECT_THAT(last_event_surface, Eq(window));
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_surface));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_window));
 }
 
 TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
@@ -281,7 +281,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     ASSERT_FALSE(current_mode.empty());
 
-    set_event_filter(mir_event_type_surface_output);
+    set_event_filter(mir_event_type_window_output);
     reset_last_event();
 
     auto display_controller = server.the_display_configuration_controller();
@@ -291,7 +291,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_surface_output));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_window_output));
     auto output_event = mir_event_get_surface_output_event(last_event);
 
     EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
@@ -304,7 +304,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
 TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
     mir_window_set_event_handler(window, nullptr, nullptr);
     scene_surface->request_client_surface_close();
@@ -316,7 +316,7 @@ namespace
 {
 bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state)
 {
-    if (mir_event_get_type(event) != mir_event_type_surface)
+    if (mir_event_get_type(event) != mir_event_type_window)
     {
         return false;
     }
@@ -467,7 +467,7 @@ class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
 
 void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_close_surface)
+    if (mir_event_get_type(ev) == mir_event_type_close_window)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -521,7 +521,7 @@ struct EventContext
 
 void surface_output_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface_output)
+    if (mir_event_get_type(ev) == mir_event_type_window_output)
     {
         auto out_event = reinterpret_cast<EventContext*>(ctx);
         out_event->event = mir_event_ref(ev);
@@ -558,7 +558,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
         ASSERT_FALSE(current_mode.empty());
 
-        set_event_filter(mir_event_type_surface_output);
+        set_event_filter(mir_event_type_window_output);
         reset_last_event();
 
         auto const display_controller = server.the_display_configuration_controller();
@@ -581,7 +581,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     mir_window_spec_release(spec);
 
     ASSERT_TRUE(context.captured.wait_for(10s));
-    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_surface_output));
+    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_window_output));
     auto surface_event = mir_event_get_surface_output_event(context.event);
     EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));

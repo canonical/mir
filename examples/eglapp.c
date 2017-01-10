@@ -161,10 +161,10 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     case mir_event_type_input:
         mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
         break;
-    case mir_event_type_surface:
+    case mir_event_type_window:
         mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
         break;
-    case mir_event_type_surface_output:
+    case mir_event_type_window_output:
         handle_surface_output_event(mir_event_get_surface_output_event(ev));
         break;
     case mir_event_type_resize:
@@ -182,7 +182,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
                    mir_resize_event_get_height(resize));
         }
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         printf("Received close event from server.\n");
         running = 0;
         break;
