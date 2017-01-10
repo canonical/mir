@@ -194,7 +194,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     EXPECT_TRUE(producer.must_receive_handled_signal());
 }
 
-TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
+TEST_F(AndroidInputReceiverSetup, receiver_consumes_all_motion_events)
 {
     mircva::InputReceiver receiver{channel.client_fd(),
                                    std::make_shared<mircv::XKBMapper>(),
