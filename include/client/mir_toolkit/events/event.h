@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -70,7 +70,8 @@ typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
-typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent; /* __attribute__ ((deprecated("use MirWindowPlacementEvent instead"))); */
+typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
 
@@ -266,6 +267,16 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \return           The associated MirSurfacePlacementEvent
  */
 MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
+
+/**
+ * Retrieve the MirWindowPlacementEvent associated with a MirEvent of
+ * type mir_event_type_window_placement. The event signifies that the
+ * the server has fulfilled a request for relative window placement.
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowPlacementEvent
+ */
+MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event);
 
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

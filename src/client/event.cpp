@@ -33,6 +33,7 @@
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 #include "mir_toolkit/events/surface_placement.h"
+#include "mir_toolkit/events/window_placement.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -422,6 +423,16 @@ MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent c
 })
 
 MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return event->placement();
+})
+
+MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return event->to_surface_placement();
+})
+
+MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return event->placement();
 })
