@@ -110,10 +110,10 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
     running = 0;
 }
 
-static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
 {
-    MirWindowAttrib attrib = (MirWindowAttrib)mir_surface_event_get_attribute(sev);
-    int value = mir_surface_event_get_attribute_value(sev);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(sev);
+    int value = mir_window_event_get_attribute_value(sev);
 
     switch (attrib)
     {
@@ -162,7 +162,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
         mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
         break;
     case mir_event_type_window:
-        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        mir_eglapp_handle_window_event(mir_event_get_window_event(ev));
         break;
     case mir_event_type_window_output:
         handle_surface_output_event(mir_event_get_surface_output_event(ev));

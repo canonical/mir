@@ -92,8 +92,8 @@ void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
 {
     if (mir_event_get_type(event) != mir_event_type_window)
         return;
-    auto sev = mir_event_get_surface_event(event);
-    auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(sev));
+    auto sev = mir_event_get_window_event(event);
+    auto attrib = mir_window_event_get_attribute(sev);
     if (attrib != mir_window_attrib_visibility)
         return;
 
@@ -101,7 +101,7 @@ void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
         reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
     mock_callback->handle(
         window,
-        static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
+        static_cast<MirSurfaceVisibility>(mir_window_event_get_attribute_value(sev)));
 }
 
 MirSurface* create_surface(MirConnection* connection, const char* name, geom::Size size,

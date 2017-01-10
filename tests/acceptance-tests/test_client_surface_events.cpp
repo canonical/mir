@@ -158,14 +158,14 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
     }
 
     {
         mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
     }
 
     reset_last_event();
@@ -175,7 +175,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_window_attrib_state, mir_surface_state_vertmaximized));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_vertmaximized));
     }
 
     reset_last_event();
@@ -321,13 +321,13 @@ bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state
         return false;
     }
 
-    auto surface_event = mir_event_get_surface_event(event);
-    auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(surface_event));
+    auto window_event = mir_event_get_window_event(event);
+    auto attrib = mir_window_event_get_attribute(window_event);
     if (attrib != mir_window_attrib_focus)
     {
         return false;
     }
-    return mir_surface_event_get_attribute_value(surface_event) == state;
+    return mir_window_event_get_attribute_value(window_event) == state;
 }
 
 bool is_focus_event(MirEvent const* event)

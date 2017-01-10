@@ -82,6 +82,7 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/surface_event.h"
+#include "mir_toolkit/events/window_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
@@ -126,6 +127,17 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  * \return           The associated MirSurfaceEvent
  */
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event);
+/* __attribute__ ((deprecated("use mir_event_get_window_event instead"))); */
+
+/**
+ * Retrieve the MirWindowEvent associated with a MirEvent of
+ * type mir_event_type_window. See <mir_toolkit/events/surface_event.h>
+ * for accessors.
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowEvent
+ */
+MirWindowEvent const* mir_event_get_window_event(MirEvent const* event);
 
 /**
  * Retrieve the MirResizeEvent associated with a MirEvent of
