@@ -159,7 +159,7 @@ public:
         {
             void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
             void add_stream(graphics::nested::HostStream&, geometry::Displacement, geometry::Size) override {}
-            MirSurfaceSpec* handle() { return nullptr; }
+            MirWindowSpec* handle() { return nullptr; }
         }; 
         return std::make_unique<NullSpec>();
     }

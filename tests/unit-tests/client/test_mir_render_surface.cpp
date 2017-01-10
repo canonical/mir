@@ -87,6 +87,9 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         complete->Run();
     }
 
+    MOCK_METHOD0(discard_future_calls, void());
+    MOCK_METHOD0(wait_for_outstanding_calls, void());
+
     MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());

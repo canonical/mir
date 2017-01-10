@@ -84,30 +84,30 @@ struct ClientWithSurface
         // override it
         mir_connection_set_lifecycle_event_callback(
             connection, null_lifecycle_callback, nullptr);
-        surface = mtf::make_any_surface(connection);
+        window = mtf::make_any_surface(connection);
     }
 
     ~ClientWithSurface()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
 
     void swap_sync()
     {
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface));
+            mir_window_get_buffer_stream(window));
     }
 
     void swap_async()
     {
         mir_buffer_stream_swap_buffers(
-            mir_surface_get_buffer_stream(surface),
+            mir_window_get_buffer_stream(window),
             null_buffer_stream_callback, nullptr);
     }
 
     MirConnection* const connection;
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 }
