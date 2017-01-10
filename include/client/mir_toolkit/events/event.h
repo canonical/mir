@@ -62,7 +62,7 @@ typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
-typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent /* __attribute__ ((deprecated("use MirCloseWindowEvent instead"))); */
+typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent; /* __attribute__ ((deprecated("use MirCloseWindowEvent instead"))); */
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
