@@ -137,7 +137,7 @@ static bool on_input_event(MirInputEvent const* ievent, State* state)
 
 static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
 {
-    MirWindowAttrib attrib = mir_surface_event_get_attribute(sevent);
+    MirWindowAttrib attrib = (MirWindowAttrib)mir_surface_event_get_attribute(sevent);
     int value = mir_surface_event_get_attribute_value(sevent);
 
     if (attrib == mir_window_attrib_visibility)
