@@ -396,6 +396,13 @@ message PromptSessionParameters {
   required int32 application_pid = 1;
 }
 
+message PromptSession {
+  optional int32 id = 1;
+
+  optional string error = 127;
+  optional StructuredError structured_error = 128;
+}
+
 message PlatformOperationMessage {
   optional uint32 opcode = 1;
   optional bytes data = 2;

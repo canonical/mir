@@ -1038,7 +1038,7 @@ void mf::SessionMediator::platform_operation(
 
 void mf::SessionMediator::start_prompt_session(
     const ::mir::protobuf::PromptSessionParameters* request,
-    ::mir::protobuf::Void* /*response*/,
+    ::mir::protobuf::PromptSession* /*response*/,
     ::google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
@@ -1060,7 +1060,7 @@ void mf::SessionMediator::start_prompt_session(
 }
 
 void mf::SessionMediator::stop_prompt_session(
-    const ::mir::protobuf::Void*,
+    protobuf::PromptSession const*,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
