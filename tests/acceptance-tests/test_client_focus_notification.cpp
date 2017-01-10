@@ -59,13 +59,13 @@ struct FocusSurface
     {
         if (mir_event_type_window == mir_event_get_type(ev))
         {
-            auto surface_ev = mir_event_get_surface_event(ev);
-            auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(surface_ev));
+            auto surface_ev = mir_event_get_window_event(ev);
+            auto attrib = mir_window_event_get_attribute(surface_ev);
             if (mir_window_attrib_focus == attrib)
             {
                 auto self = static_cast<FocusSurface*>(context);
                 self->log_focus_event(window,
-                    static_cast<MirSurfaceFocusState>(mir_surface_event_get_attribute_value(surface_ev)));
+                    static_cast<MirSurfaceFocusState>(mir_window_event_get_attribute_value(surface_ev)));
             }
         }
     }

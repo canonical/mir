@@ -118,6 +118,13 @@ MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDL
     return ev->to_surface();
 })
 
+MirWindowEvent const* mir_event_get_window_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window);
+
+    return ev->to_surface();
+})
+
 MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_resize);
@@ -187,6 +194,22 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_
 })
 
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window);
+
+    return ev->value();
+})
+
+/* Window event accessors */
+
+MirWindowAttrib mir_window_event_get_attribute(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window);
+
+    return ev->attrib();
+})
+
+int mir_window_event_get_attribute_value(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_window);
 

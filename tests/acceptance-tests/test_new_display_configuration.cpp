@@ -283,9 +283,9 @@ struct SimpleClient
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            auto const attrib  = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(surface_event));
-            auto const value   = mir_surface_event_get_attribute_value(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            auto const attrib  = mir_window_event_get_attribute(window_event);
+            auto const value   = mir_window_event_get_attribute_value(window_event);
 
             std::lock_guard<std::mutex> lk(client->mutex);
             if (mir_window_attrib_focus == attrib &&

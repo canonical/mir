@@ -40,8 +40,8 @@ struct MirEvent
     MirInputConfigurationEvent* to_input_configuration();
     MirInputConfigurationEvent const* to_input_configuration() const;
 
-    MirSurfaceEvent* to_surface();
-    MirSurfaceEvent const* to_surface() const;
+    MirWindowEvent* to_surface();
+    MirWindowEvent const* to_surface() const;
 
     MirResizeEvent* to_resize();
     MirResizeEvent const* to_resize() const;

@@ -488,16 +488,16 @@ MATCHER(PointerMovementEvent, "")
     return true;
 }
 
-MATCHER_P2(SurfaceEvent, attrib, value, "")
+MATCHER_P2(WindowEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
     if (mir_event_get_type(as_address) != mir_event_type_window)
         return false;
-    auto surface_ev = mir_event_get_surface_event(as_address);
-    auto window_attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(surface_ev));
+    auto surface_ev = mir_event_get_window_event(as_address);
+    auto window_attrib = mir_window_event_get_attribute(surface_ev);
     if (window_attrib != attrib)
         return false;
-    if (mir_surface_event_get_attribute_value(surface_ev) != value)
+    if (mir_window_event_get_attribute_value(surface_ev) != value)
         return false;
     return true;
 }

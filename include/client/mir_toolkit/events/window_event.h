@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,11 +13,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_EVENTS_SURFACE_EVENT_H_
-#define MIR_TOOLKIT_EVENTS_SURFACE_EVENT_H_
+#ifndef MIR_TOOLKIT_EVENTS_WINDOW_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_WINDOW_EVENT_H_
 
 #include <mir_toolkit/events/event.h>
 
@@ -30,26 +30,24 @@ extern "C" {
 #endif
 
 /**
- * Retrieve the attribute index configured with a given MirSurfaceEvent
+ * Retrieve the attribute index configured with a given MirWindowEvent
  *
  * \param [in] event The event
  * \return           The associated attribute
  */
-MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event);
-/* __attribute__ ((deprecated("use make_event with mir_window_event_get_attribute instead"))); */
+MirWindowAttrib mir_window_event_get_attribute(MirWindowEvent const* event);
 
 /**
- * Retrieve the new value of the associated attribute for a given MirSurfaceEvent
+ * Retrieve the new value of the associated attribute for a given MirWindowEvent
  *
  * \param [in] event The event
  * \return           The associated attribute value
  */
-int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event);
-/* __attribute__ ((deprecated("use make_event with mir_window_event_get_attribute_value instead"))); */
+int mir_window_event_get_attribute_value(MirWindowEvent const* event);
 
 #ifdef __cplusplus
 }
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_SURFACE_EVENT_H_ */
+#endif /* MIR_TOOLKIT_WINDOW_EVENT_H_ */

@@ -432,10 +432,10 @@ void MirSurface::handle_event(MirEvent const& e)
     {
     case mir_event_type_window:
     {
-        auto sev = mir_event_get_surface_event(&e);
-        auto a = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(sev));
+        auto sev = mir_event_get_window_event(&e);
+        auto a = mir_window_event_get_attribute(sev);
         if (a < mir_window_attribs)
-            attrib_cache[a] = mir_surface_event_get_attribute_value(sev);
+            attrib_cache[a] = mir_window_event_get_attribute_value(sev);
         break;
     }
     case mir_event_type_orientation:
