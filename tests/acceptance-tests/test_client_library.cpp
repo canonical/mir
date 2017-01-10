@@ -95,6 +95,8 @@ static_assert(
     static_cast<int32_t>(mir_surface_types) ==
     static_cast<int32_t>(mir_window_types),
     "mir_surface_types != mir_window_types");
+static_assert(sizeof(MirSurfaceType) == sizeof(MirWindowType),
++    "sizeof(MirSurfaceType) != sizeof(MirWindowType)");
 
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
