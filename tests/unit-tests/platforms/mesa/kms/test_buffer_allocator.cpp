@@ -206,7 +206,7 @@ TEST_F(MesaBufferAllocatorTest, creates_software_buffer_without_utilizing_gbm)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
-    allocator->alloc_buffer( { 1000, 1000}, mir_pixel_format_abgr_8888);
+    allocator->alloc_software_buffer( { 1000, 1000}, mir_pixel_format_abgr_8888);
 }
 
 TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer)

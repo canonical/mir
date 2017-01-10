@@ -220,7 +220,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
     std::shared_ptr<mg::Buffer> buffer;
 
     if (buffer_properties.usage == BufferUsage::software)
-        buffer = alloc_buffer(buffer_properties.size, buffer_properties.format);
+        buffer = alloc_software_buffer(buffer_properties.size, buffer_properties.format);
     else
         buffer = alloc_hardware_buffer(buffer_properties);
 
@@ -276,7 +276,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
         bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
 } 
 
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
     if (!mgc::ShmBuffer::supports(format))
