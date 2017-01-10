@@ -654,6 +654,13 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
         surface_specification->set_hotspot_y(rs_cursor.hotspot.y.as_int());
     }
 
+    if (spec.event_handler.is_set())
+    {
+        set_event_handler(
+            spec.event_handler.value().callback,
+            spec.event_handler.value().context);
+    }
+
     modify_wait_handle.expect_result();
     server->modify_surface(&mods, modify_result.get(),
               google::protobuf::NewCallback(this, &MirSurface::on_modified));

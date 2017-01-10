@@ -156,6 +156,9 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         complete->Run();
     }
 
+    MOCK_METHOD0(discard_future_calls, void());
+    MOCK_METHOD0(wait_for_outstanding_calls, void());
+
     MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
@@ -715,6 +718,12 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
             google::protobuf::Closure* closure) override
         {
             delete closure;
+        }
+        void discard_future_calls() override
+        {
+        }
+        void wait_for_outstanding_calls() override
+        {
         }
     };
     TestConnectionConfiguration conf{
