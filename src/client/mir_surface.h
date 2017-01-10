@@ -103,7 +103,7 @@ struct MirSurfaceSpec
     mir::optional_value<uint32_t> output_id;
 
     mir::optional_value<MirWindowType> type;
-    mir::optional_value<MirSurfaceState> state;
+    mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
     mir::optional_value<MirSurface*> parent;

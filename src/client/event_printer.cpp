@@ -333,7 +333,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
         out << static_cast<MirWindowType>(value);
         break;
     case mir_window_attrib_state:
-        out << static_cast<MirSurfaceState>(value);
+        out << static_cast<MirWindowState>(value);
         break;
     case mir_window_attrib_swapinterval:
         out << value;

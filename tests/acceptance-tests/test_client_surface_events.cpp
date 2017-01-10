@@ -197,36 +197,36 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
     {
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
+        mir_wait_for(mir_surface_set_state(window, mir_window_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_window_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
     }
 
     {
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirWindowState>(999)));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_fullscreen));
-    }
-
-    reset_last_event();
-
-    {
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_surface_state_vertmaximized));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
     }
 
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
+        mir_wait_for(mir_surface_set_state(window, mir_window_state_vertmaximized));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_vertmaximized));
+    }
+
+    reset_last_event();
+
+    {
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirWindowState>(777)));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_window_state_maximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 

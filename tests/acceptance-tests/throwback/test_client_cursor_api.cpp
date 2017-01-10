@@ -480,7 +480,7 @@ struct FullscreenDisabledCursorClient : CursorClient
         // for the test logic. - alan_g
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
-        mir_surface_set_state(window, mir_surface_state_fullscreen);
+        mir_surface_set_state(window, mir_window_state_fullscreen);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);

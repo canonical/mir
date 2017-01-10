@@ -60,7 +60,7 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& of_type(MirWindowType type);
 
-    SurfaceCreationParameters& with_state(MirSurfaceState state);
+    SurfaceCreationParameters& with_state(MirWindowState state);
 
     SurfaceCreationParameters& with_preferred_orientation(MirOrientationMode mode);
 
@@ -80,7 +80,7 @@ struct SurfaceCreationParameters
     input::InputReceptionMode input_mode;
     graphics::DisplayConfigurationOutputId output_id;
 
-    mir::optional_value<MirSurfaceState> state;
+    mir::optional_value<MirWindowState> state;
     mir::optional_value<MirWindowType> type;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     mir::optional_value<frontend::SurfaceId> parent_id;

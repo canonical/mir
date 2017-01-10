@@ -274,7 +274,7 @@ try
 {
     mir::require(spec);
     spec->output_id = output_id;
-    spec->state = mir_surface_state_fullscreen;
+    spec->state = mir_window_state_fullscreen;
 }
 catch (std::exception const& ex)
 {
@@ -312,7 +312,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     return true;
 }
 
-void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state)
+void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state)
 try
 {
     mir::require(spec);

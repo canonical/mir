@@ -72,8 +72,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
             {
-                return mir_surface_get_state(surface1) == mir_surface_state_fullscreen &&
-                       mir_surface_get_state(surface2) == mir_surface_state_fullscreen;
+                return mir_surface_get_state(surface1) == mir_window_state_fullscreen &&
+                       mir_surface_get_state(surface2) == mir_window_state_fullscreen;
             },
             std::chrono::seconds{max_wait});
 

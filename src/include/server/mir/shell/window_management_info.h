@@ -58,7 +58,7 @@ struct SurfaceInfo
         geometry::Rectangle const& bounds) const;
 
     MirWindowType type;
-    MirSurfaceState state;
+    MirWindowState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr <scene::Session> session;
     std::weak_ptr <scene::Surface> parent;

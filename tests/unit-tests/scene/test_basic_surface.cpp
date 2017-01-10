@@ -535,8 +535,8 @@ AttributeTestParameters const surface_type_test_parameters{
 
 AttributeTestParameters const surface_state_test_parameters{
     mir_window_attrib_state,
-    mir_surface_state_restored,
-    mir_surface_state_fullscreen,
+    mir_window_state_restored,
+    mir_window_state_fullscreen,
     1178312
 };
 

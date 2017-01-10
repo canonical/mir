@@ -144,7 +144,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
         spec.surface_name = "test_surface";
         spec.output_id = mir_display_output_id_invalid;
         spec.type = mir_window_type_dialog;
-        spec.state = mir_surface_state_minimized;
+        spec.state = mir_window_state_minimized;
         spec.pref_orientation = mir_orientation_mode_landscape;
     }
 

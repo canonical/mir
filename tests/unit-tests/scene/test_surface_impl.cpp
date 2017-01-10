@@ -140,12 +140,12 @@ TEST_F(Surface, states)
 {
     using namespace testing;
 
-    EXPECT_EQ(mir_surface_state_restored, surface->state());
+    EXPECT_EQ(mir_window_state_restored, surface->state());
 
-    EXPECT_EQ(mir_surface_state_vertmaximized,
+    EXPECT_EQ(mir_window_state_vertmaximized,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_vertmaximized));
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+                             mir_window_state_vertmaximized));
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
     EXPECT_THROW({
         surface->configure(mir_window_attrib_state, 999);
@@ -153,17 +153,17 @@ TEST_F(Surface, states)
     EXPECT_THROW({
         surface->configure(mir_window_attrib_state, -1);
     }, std::logic_error);
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_minimized,
+    EXPECT_EQ(mir_window_state_minimized,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_minimized));
-    EXPECT_EQ(mir_surface_state_minimized, surface->state());
+                             mir_window_state_minimized));
+    EXPECT_EQ(mir_window_state_minimized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_fullscreen,
+    EXPECT_EQ(mir_window_state_fullscreen,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_fullscreen));
-    EXPECT_EQ(mir_surface_state_fullscreen, surface->state());
+                             mir_window_state_fullscreen));
+    EXPECT_EQ(mir_window_state_fullscreen, surface->state());
 }
 
 TEST_F(Surface, clamps_undersized_resize)

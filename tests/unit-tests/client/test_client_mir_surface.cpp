@@ -211,7 +211,7 @@ struct MockServerPackageGenerator : public mt::StubServerTool
 
 std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_window_attrib_type, mir_window_type_normal },
-    { mir_window_attrib_state, mir_surface_state_restored },
+    { mir_window_attrib_state, mir_window_state_restored },
     { mir_window_attrib_swapinterval, 1 },
     { mir_window_attrib_focus, mir_surface_focused },
     { mir_window_attrib_dpi, 19 },

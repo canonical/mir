@@ -68,7 +68,7 @@ public:
 
     float alpha() const override { return 0.0f;}
     MirWindowType type() const override { return mir_window_type_normal; }
-    MirSurfaceState state() const override { return mir_surface_state_unknown; }
+    MirWindowState state() const override { return mir_window_state_unknown; }
 
     void hide() override {}
     void show() override {}

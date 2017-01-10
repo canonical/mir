@@ -393,7 +393,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  * \note    If the server is unable to create a window with the requested state at
  *          the point mir_window_create() is called it will instead return an invalid window.
  */
-void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
+void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state);
 
 /**
  * Set a collection of input rectangles associated with the spec.

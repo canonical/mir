@@ -87,7 +87,7 @@ public:
     void handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface) override
         { session->destroy_surface(surface); }
 
-    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value) override
+    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirWindowState value) override
         { return value; }
 
     bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) override { return false; }

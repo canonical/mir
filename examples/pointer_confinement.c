@@ -112,11 +112,11 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
         {
             static bool fullscreen = false;
             MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
-            MirSurfaceState state = mir_surface_state_restored;
+            MirWindowState state = mir_window_state_restored;
 
             if (!fullscreen)
             {
-                state = mir_surface_state_fullscreen;
+                state = mir_window_state_fullscreen;
             }
 
             fullscreen = !fullscreen;

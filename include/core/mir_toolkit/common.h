@@ -111,6 +111,22 @@ typedef enum MirSurfaceState
     mir_surface_states
 } MirSurfaceState;
 
+typedef enum MirWindowState
+{
+    mir_window_state_unknown,
+    mir_window_state_restored,
+    mir_window_state_minimized,
+    mir_window_state_maximized,
+    mir_window_state_vertmaximized,
+    /* mir_window_state_semimaximized,
+       Omitted for now, since it's functionally a subset of vertmaximized and
+       differs only in the X coordinate. */
+    mir_window_state_fullscreen,
+    mir_window_state_horizmaximized,
+    mir_window_state_hidden,
+    mir_window_states
+} MirWindowState;
+
 /* TODO: MirSurfaceFocusState MirSurfaceVisibility and MirLifecycleState use an inconsistent
    naming convention. */
 typedef enum MirSurfaceFocusState
