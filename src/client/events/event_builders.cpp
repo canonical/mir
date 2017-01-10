@@ -109,7 +109,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib 
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
-    auto e = new_event<MirCloseSurfaceEvent>();
+    auto e = new_event<MirCloseWindowEvent>();
 
     e->set_surface_id(surface_id.as_value());
 
