@@ -42,7 +42,7 @@ mtf::VisibleSurface::~VisibleSurface()
 
 void mtf::VisibleSurface::event_callback(MirSurface* surf, MirEvent const* ev, void* context)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface)
+    if (mir_event_get_type(ev) == mir_event_type_window)
     {
         if (mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
         {
