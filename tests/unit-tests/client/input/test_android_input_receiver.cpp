@@ -230,16 +230,20 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     auto t = 0ns;
 
-    std::atomic_int handler_called{0};
+    std::unique_ptr<MirEvent> ev;
+    bool handler_called{false};
 
     mircva::InputReceiver receiver{channel.client_fd(),
                                    std::make_shared<mircv::XKBMapper>(),
-                                   [&handler_called](MirEvent*)
+                                   [&ev, &handler_called](MirEvent* event)
                                    {
-                                       ++handler_called;
+                                       ev.reset(new MirEvent(*event));
+                                       handler_called = true;
                                    },
                                    std::make_shared<mircv::NullInputReceiverReport>()};
     TestingInputProducer producer(channel.server_fd());
+
+    nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 59;
 
     producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
@@ -247,9 +251,15 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
+    EXPECT_TRUE(handler_called);
+    EXPECT_EQ(mir_input_event_type_touch, ev->to_input()->input_type());
 
-    // We consume raw input events immediately now so expect both came through
-    EXPECT_EQ(2, handler_called);
+    t += 2 * one_frame;
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 2 * one_frame));
+    receiver.dispatch(md::FdEvent::readable);
+
+    EXPECT_TRUE(handler_called);
+    ASSERT_EQ(mir_input_event_type_key, ev->to_input()->input_type());
 }
 
 TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
