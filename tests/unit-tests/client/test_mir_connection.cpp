@@ -776,7 +776,7 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
     EXPECT_TRUE(callback.invoked);
     ASSERT_TRUE(callback.resulting_surface);
     EXPECT_THAT(actual_rs->get_error_message(),
-        StrEq("Error creating MirRenderSurface: no ID in response"));
+        StrEq("Error creating MirRenderSurface: no ID in response (disconnected?)"));
 }
 
 namespace
