@@ -50,6 +50,8 @@ public:
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
+    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size, uint32_t format, uint32_t flags); 
+    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size, MirPixelFormat);
 
     std::shared_ptr<graphics::Buffer> alloc_framebuffer(
         geometry::Size sz, MirPixelFormat pf);
@@ -61,6 +63,7 @@ private:
     std::shared_ptr<Gralloc> alloc_device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<CommandStreamSyncFactory> const cmdstream_sync_factory;
+    std::shared_ptr<DeviceQuirks> const quirks;
 };
 
 }
