@@ -740,6 +740,29 @@ MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrient
  */
 MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
 
+/**
+ * \brief Request an ID for the window that can be shared cross-process and
+ *        across restarts.
+ *
+ * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same window.
+ *
+ * \param [in]     window    The window to acquire a persistent reference to.
+ * \param [in]     callback  Callback to invoke when the request completes.
+ * \param [in,out] context   User data passed to completion callback.
+ * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
+ */
+MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context);
+
+/**
+ * \brief Request a persistent ID for a window and wait for the result
+ * \param [in] window  The window to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
+ */
+MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -991,28 +1014,11 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOri
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_preferred_orientation() instead")));
 
-/**
- * \brief Request an ID for the surface that can be shared cross-process and
- *        across restarts.
- *
- * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
- * can be serialized to a string, stored or sent to another process, and then
- * later deserialized to refer to the same surface.
- *
- * \param [in]     surface   The surface to acquire a persistent reference to.
- * \param [in]     callback  Callback to invoke when the request completes.
- * \param [in,out] context   User data passed to completion callback.
- * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
- */
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context);
+//__attribute__((deprecated("use mir_window_request_persistent_id() instead")));
 
-/**
- * \brief Request a persistent ID for a surface and wait for the result
- * \param [in] surface  The surface to acquire a persistent ID for.
- * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
- *         be freed with a call to mir_persistent_id_release()
- */
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_request_persistent_id_sync() instead")));
 
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 //__attribute__((deprecated("use mir_window_raise() instead")));

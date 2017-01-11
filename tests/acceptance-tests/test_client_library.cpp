@@ -1099,7 +1099,7 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
 
     ASSERT_THAT(window, IsValid());
 
-    auto surface_id = mir_surface_request_persistent_id_sync(window);
+    auto surface_id = mir_window_request_persistent_id_sync(window);
     EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
 
     mir_window_release_sync(window);
@@ -1118,7 +1118,7 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
 
     ASSERT_THAT(main_surface, IsValid());
 
-    auto main_surface_id = mir_surface_request_persistent_id_sync(main_surface);
+    auto main_surface_id = mir_window_request_persistent_id_sync(main_surface);
     ASSERT_TRUE(mir_persistent_id_is_valid(main_surface_id));
 
     // Serialise & deserialise the ID

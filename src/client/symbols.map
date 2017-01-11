@@ -570,4 +570,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_configure_cursor;
     mir_window_set_preferred_orientation;
     mir_window_get_preferred_orientation;
+    mir_window_request_persistent_id;
+    mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;

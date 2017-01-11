@@ -311,7 +311,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     auto window = mtf::make_any_surface(connection);
 
-    auto parent_id = mir_surface_request_persistent_id_sync(window);
+    auto parent_id = mir_window_request_persistent_id_sync(window);
 
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());

@@ -790,6 +790,33 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
     return mode;
 }
 
+MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
+{
+    mir::require(mir_window_is_valid(window));
+
+    return window->request_persistent_id(callback, context);
+}
+
+namespace
+{
+void assign_surface_id_result(MirWindow*, MirPersistentId* id, void* context)
+{
+    void** result_ptr = reinterpret_cast<void**>(context);
+    *result_ptr = id;
+}
+}
+
+MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirPersistentId* result = nullptr;
+    mir_wait_for(mir_window_request_persistent_id(window,
+                                                  &assign_surface_id_result,
+                                                  &result));
+    return result;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1243,29 +1270,12 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
-    mir::require(mir_window_is_valid(surface));
-
-    return surface->request_persistent_id(callback, context);
-}
-
-namespace
-{
-void assign_surface_id_result(MirSurface*, MirPersistentId* id, void* context)
-{
-    void** result_ptr = reinterpret_cast<void**>(context);
-    *result_ptr = id;
-}
+    return mir_window_request_persistent_id(surface, callback, context);
 }
 
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
-    mir::require(mir_window_is_valid(surface));
-
-    MirPersistentId* result = nullptr;
-    mir_wait_for(mir_surface_request_persistent_id(surface,
-                                                   &assign_surface_id_result,
-                                                   &result));
-    return result;
+    return mir_window_request_persistent_id_sync(surface);
 }
 
 //#pragma GCC diagnostic pop
