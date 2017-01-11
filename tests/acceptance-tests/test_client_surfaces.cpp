@@ -99,8 +99,8 @@ TEST_F(ClientSurfaces, have_distinct_ids)
     auto surface_1 = mtf::make_any_surface(connection);
     auto surface_2 = mtf::make_any_surface(connection);
     
-    EXPECT_NE(mir_debug_surface_id(surface_1),
-        mir_debug_surface_id(surface_2));
+    EXPECT_NE(mir_debug_window_id(surface_1),
+        mir_debug_window_id(surface_2));
 
     mir_window_release_sync(surface_1);
     mir_window_release_sync(surface_2);
@@ -122,12 +122,12 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
         {
             if (i == j)
                 EXPECT_EQ(
-                    mir_debug_surface_id(window[i]),
-                    mir_debug_surface_id(window[j]));
+                    mir_debug_window_id(window[i]),
+                    mir_debug_window_id(window[j]));
             else
                 EXPECT_NE(
-                    mir_debug_surface_id(window[i]),
-                    mir_debug_surface_id(window[j]));
+                    mir_debug_window_id(window[i]),
+                    mir_debug_window_id(window[j]));
         }
     }
 
