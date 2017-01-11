@@ -347,7 +347,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirKeymapEvent const& event)
 
 std::ostream& mir::operator<<(std::ostream& out, MirCloseWindowEvent const&)
 {
-    return out << "close_surface_event()";
+    return out << "close_window_event()";
 }
 
 std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
@@ -388,7 +388,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
 std::ostream& mir::operator<<(std::ostream& out, MirWindowPlacementEvent const& event)
 {
     auto const& placement = event.placement();
-    return out << "surface_placement_event({"
+    return out << "window_placement_event({"
                << placement.left << ", "
                << placement.top << ", "
                << placement.width << ", "
