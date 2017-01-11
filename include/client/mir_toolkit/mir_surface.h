@@ -726,12 +726,19 @@ MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfigura
 /**
  * Request to set the preferred orientations of a window.
  * The request may be rejected by the server; to check wait on the
- * result and check the applied value using mir_surface_get_preferred_orientation
+ * result and check the applied value using mir_window_get_preferred_orientation
  *   \param [in] window      The window to operate on
  *   \param [in] orientation The preferred orientation modes
  *   \return                 A wait handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
+
+/**
+ * Get the preferred orientation modes of a window.
+ *   \param [in] window   The window to query
+ *   \return              The preferred orientation modes
+ */
+MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -981,12 +988,8 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface);
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
 //__attribute__((deprecated("use mir_window_set_preferred_orientation() instead")));
 
-/**
- * Get the preferred orientation modes of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The preferred orientation modes
- */
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_preferred_orientation() instead")));
 
 /**
  * \brief Request an ID for the surface that can be shared cross-process and

@@ -150,7 +150,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(window, IsValid());
-    EXPECT_EQ(mir_surface_get_preferred_orientation(window), mode);
+    EXPECT_EQ(mir_window_get_preferred_orientation(window), mode);
 
     mir_window_release_sync(window);
 }

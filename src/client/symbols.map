@@ -569,4 +569,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_get_dpi;
     mir_window_configure_cursor;
     mir_window_set_preferred_orientation;
+    mir_window_get_preferred_orientation;
 } MIR_CLIENT_0.25;

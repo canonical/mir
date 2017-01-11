@@ -300,7 +300,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
         reset_last_event();
 
         mir_wait_for(mir_window_set_preferred_orientation(window, mode));
-        EXPECT_THAT(mir_surface_get_preferred_orientation(window), Eq(mode));
+        EXPECT_THAT(mir_window_get_preferred_orientation(window), Eq(mode));
     }
 }
 

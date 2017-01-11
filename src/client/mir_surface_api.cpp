@@ -772,6 +772,24 @@ MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrient
     return result;
 }
 
+MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirOrientationMode mode = mir_orientation_mode_any;
+
+    try
+    {
+        mode = static_cast<MirOrientationMode>(window->attrib(mir_window_attrib_preferred_orientation));
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return mode;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1205,20 +1223,7 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 {
-    mir::require(mir_window_is_valid(surf));
-
-    MirOrientationMode mode = mir_orientation_mode_any;
-
-    try
-    {
-        mode = static_cast<MirOrientationMode>(surf->attrib(mir_window_attrib_preferred_orientation));
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return mode;
+    return mir_window_get_preferred_orientation(surf);
 }
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
