@@ -20,9 +20,12 @@
 #include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
+#include "mir/compositor/scene.h"
+#include "mir/shell/surface_stack.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_factory.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/renderer/renderer_factory.h"
-#include "mir/frontend/session_mediator_observer.h"
-#include "mir/observer_registrar.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -37,6 +40,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <unordered_set>
 
 using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
@@ -117,8 +121,59 @@ public:
     StubRenderer* renderer_ = nullptr;
 };
 
+class PostObserver : public mir::scene::NullSurfaceObserver
+{
+public:
+    PostObserver(std::function<void(int)> cb) : cb{cb}
+    {
+    }
+    void frame_posted(int count, geom::Size const&) override
+    {
+        cb(count);
+    }
+private:
+    std::function<void(int)> const cb;
+};
+
+class PublicSurfaceFactory : public mir::scene::SurfaceFactory
+{
+public:
+    using Surface = mir::scene::Surface;
+
+    PublicSurfaceFactory(std::shared_ptr<mir::scene::SurfaceFactory> const& real) : real_surface_factory{real} {}
+
+    std::shared_ptr<Surface> create_surface(
+        std::list<mir::scene::StreamInfo> const& streams,
+        mir::scene::SurfaceCreationParameters const& params) override
+    {
+        latest_surface = real_surface_factory->create_surface(streams, params);
+        return latest_surface;
+    }
+
+    std::shared_ptr<Surface> const latest() const
+    {
+        return latest_surface;
+    }
+
+private:
+    std::shared_ptr<mir::scene::SurfaceFactory> const real_surface_factory;
+    std::shared_ptr<Surface> latest_surface;
+};
+
 struct StubServerConfig : mtf::StubbedServerConfiguration
 {
+    std::shared_ptr<PublicSurfaceFactory> the_public_surface_factory()
+    {
+        return public_surface_factory(
+                   [this]{ return std::make_shared<PublicSurfaceFactory>(
+                           mtf::StubbedServerConfiguration::the_surface_factory()); });
+    }
+
+    std::shared_ptr<mir::scene::SurfaceFactory> the_surface_factory() override
+    {
+        return the_public_surface_factory();
+    }
+
     std::shared_ptr<StubRendererFactory> the_stub_renderer_factory()
     {
         return stub_renderer_factory(
@@ -131,57 +186,7 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
     }
 
     mir::CachedPtr<StubRendererFactory> stub_renderer_factory;
-};
-
-using mir::frontend::SessionMediatorObserver;
-class StubSessionMediatorObserver : public SessionMediatorObserver
-{
-public:
-    void session_connect_called(std::string const&) override {}
-    void session_create_surface_called(std::string const&) override {}
-    void session_submit_buffer_called(std::string const&) override {}
-    void session_allocate_buffers_called(std::string const&) override {}
-    void session_release_buffers_called(std::string const&) override {}
-    void session_release_surface_called(std::string const&) override {}
-    void session_disconnect_called(std::string const&) override {}
-    void session_configure_surface_called(std::string const&) override {}
-    void session_configure_surface_cursor_called(std::string const&) override {}
-    void session_configure_display_called(std::string const&) override {}
-    void session_set_base_display_configuration_called(std::string const&) override {}
-    void session_preview_base_display_configuration_called(std::string const&) override {}
-    void session_confirm_base_display_configuration_called(std::string const&) override {}
-    void session_start_prompt_session_called(std::string const&, pid_t) override {}
-    void session_stop_prompt_session_called(std::string const&) override {}
-    void session_create_buffer_stream_called(std::string const&) override {}
-    void session_release_buffer_stream_called(std::string const&) override {}
-    void session_error(std::string const&, char const*, std::string const&) override {}
-};
-
-class CountingSessionMediatorObserver : public StubSessionMediatorObserver
-{
-public:
-    void session_submit_buffer_called(std::string const&) override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        ++submissions_pending; 
-        submitted.notify_one();
-    }
-    bool wait_for_submissions(int count, std::chrono::seconds timeout)
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        auto const deadline = std::chrono::steady_clock::now() + timeout;
-        while (submissions_pending < count)
-        {
-            if (submitted.wait_until(lock, deadline) == std::cv_status::timeout)
-                return false;
-        }
-        submissions_pending -= count;
-        return true;
-    }
-private:
-    std::mutex mutex;
-    std::condition_variable submitted;
-    int submissions_pending = 0;
+    mir::CachedPtr<PublicSurfaceFactory> public_surface_factory;
 };
 
 using BasicFixture = mtf::BasicClientServerFixture<StubServerConfig>;
@@ -190,10 +195,9 @@ struct StaleFrames : BasicFixture,
                      ::testing::WithParamInterface<int>
 {
     StaleFrames()
-        : sm_observer(std::make_shared<CountingSessionMediatorObserver>())
+        : post_observer(std::make_shared<PostObserver>(
+            [this](int n){frame_posted(n);}))
     {
-        auto reg = server_configuration.the_session_mediator_observer_registrar();
-        reg->register_interest(sm_observer);
     }
 
     void SetUp()
@@ -201,6 +205,10 @@ struct StaleFrames : BasicFixture,
         BasicFixture::SetUp();
 
         client_create_surface();
+        auto surface =
+            server_configuration.the_public_surface_factory()->latest();
+        ASSERT_TRUE(surface);
+        surface->add_observer(post_observer);
     }
 
     void TearDown()
@@ -232,16 +240,33 @@ struct StaleFrames : BasicFixture,
         server_configuration.the_compositor()->start();
     }
 
-    bool wait_for_the_server_to_receive_frames(int nframes,
-                                               std::chrono::seconds timeout)
+    void frame_posted(int count)
     {
-        return sm_observer->wait_for_submissions(nframes, timeout);
+        std::unique_lock<std::mutex> lock(mutex);
+        posts += count;
+        posted.notify_all();
     }
 
-    MirSurface* surface;
+    bool wait_for_posts(int count, std::chrono::seconds timeout)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+        while (posts < count)
+        {
+            if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
+                return false;
+        }
+        posts -= count;
+        return true;
+    }
+
     MirWindow* window;
+
 private:
-    std::shared_ptr<CountingSessionMediatorObserver> sm_observer;
+    std::shared_ptr<PostObserver> post_observer;
+    std::mutex mutex;
+    std::condition_variable posted;
+    int posts = 0;
 };
 
 }
@@ -268,7 +293,7 @@ TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
+    ASSERT_TRUE(wait_for_posts(3, 60s));
     start_compositor();
 
     // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
@@ -293,7 +318,7 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    ASSERT_TRUE(wait_for_the_server_to_receive_frames(3, 60s));
+    ASSERT_TRUE(wait_for_posts(3, 60s));
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
