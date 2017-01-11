@@ -98,6 +98,46 @@ static_assert(
 static_assert(sizeof(MirSurfaceType) == sizeof(MirWindowType),
     "sizeof(MirSurfaceType) != sizeof(MirWindowType)");
 
+// Assert our MirSurfaceState is 1to1 to MirWindowState
+static_assert(
+    static_cast<int32_t>(mir_surface_state_unknown) ==
+    static_cast<int32_t>(mir_window_state_unknown),
+    "mir_surface_state_unknown != mir_window_state_unknown");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_restored) ==
+    static_cast<int32_t>(mir_window_state_restored),
+    "mir_surface_state_restored != mir_window_state_restored");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_minimized) ==
+    static_cast<int32_t>(mir_window_state_minimized),
+    "mir_surface_state_minimized != mir_window_state_minimized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_maximized) ==
+    static_cast<int32_t>(mir_window_state_maximized),
+    "mir_surface_state_maximized != mir_window_state_maximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_vertmaximized) ==
+    static_cast<int32_t>(mir_window_state_vertmaximized),
+    "mir_surface_state_vertmaximized != mir_window_state_vertmaximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_fullscreen) ==
+    static_cast<int32_t>(mir_window_state_fullscreen),
+    "mir_surface_state_fullscreen != mir_window_state_fullscreen");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_horizmaximized) ==
+    static_cast<int32_t>(mir_window_state_horizmaximized),
+    "mir_surface_state_horizmaximized != mir_window_state_horizmaximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_hidden) ==
+    static_cast<int32_t>(mir_window_state_hidden),
+    "mir_surface_state_hidden != mir_window_state_hidden");
+static_assert(
+    static_cast<int32_t>(mir_surface_states) ==
+    static_cast<int32_t>(mir_window_states),
+    "mir_surface_states != mir_window_states");
+static_assert(sizeof(MirSurfaceState) == sizeof(MirWindowState),
+    "sizeof(MirSurfaceState) != sizeof(MirWindowState)");
+
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     std::set<MirWindow*> surfaces;
