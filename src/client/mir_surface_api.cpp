@@ -719,6 +719,25 @@ MirWindowVisibility mir_window_get_visibility(MirWindow* window)
     return state;
 }
 
+int mir_window_get_dpi(MirWindow* window)
+{
+    int dpi = -1;
+
+    try
+    {
+        if (window)
+        {
+            dpi = window->attrib(mir_window_attrib_dpi);
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return dpi;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1132,21 +1151,7 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 
 int mir_surface_get_dpi(MirSurface* surf)
 {
-    int dpi = -1;
-
-    try
-    {
-        if (surf)
-        {
-            dpi = surf->attrib(mir_window_attrib_dpi);
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return dpi;
+    return mir_window_get_dpi(surf);
 }
 
 MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)

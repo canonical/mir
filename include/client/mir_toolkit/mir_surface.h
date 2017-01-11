@@ -704,6 +704,13 @@ MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
  */
 MirWindowVisibility mir_window_get_visibility(MirWindow* window);
 
+/**
+ * Query the DPI value of the window (dots per inch). This will vary depending
+ * on the physical display configuration and where the window is within it.
+ *   \return  The DPI of the window, or zero if unknown.
+ */
+int mir_window_get_dpi(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -934,12 +941,8 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval)
 __attribute__((deprecated("Swap interval should be set on the backing content")));
 
-/**
- * Query the DPI value of the surface (dots per inch). This will vary depending
- * on the physical display configuration and where the surface is within it.
- *   \return  The DPI of the surface, or zero if unknown.
- */
 int mir_surface_get_dpi(MirSurface* surface);
+//__attribute__((deprecated("use mir_window_get_dpi() instead")));
 
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_focus_state() instead")));

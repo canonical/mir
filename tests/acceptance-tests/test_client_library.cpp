@@ -576,7 +576,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_window_spec_release(spec);
 
     // Expect zero (not wired up to detect the physical display yet)
-    EXPECT_THAT(mir_surface_get_dpi(window), Eq(0));
+    EXPECT_THAT(mir_window_get_dpi(window), Eq(0));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
