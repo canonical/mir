@@ -265,6 +265,20 @@ TEST_F(ClientLibrary, creates_surface)
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
+{   // An attempt at a regression test for race LP: #1653658
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const spec = mir_connection_create_spec_for_normal_surface(
+        connection, 123, 456, mir_pixel_format_abgr_8888);
+    window = mir_window_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    EXPECT_THAT(window, IsValid());
+
+    mir_window_release(window, [](MirWindow*, void*){ sleep(1); }, NULL);
+    mir_connection_release(connection);
+}
+
 TEST_F(ClientLibrary, can_set_surface_state)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
