@@ -114,7 +114,7 @@ MATCHER_P(HasParent, parent, "")
 
 MATCHER(IsSurfaceOutputEvent, "")
 {
-    return mir_event_get_type(&arg) == mir_event_type_surface_output;
+    return mir_event_get_type(&arg) == mir_event_type_window_output;
 }
 
 struct StubSurfaceStack : public msh::SurfaceStack
@@ -895,7 +895,7 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
 {
     using namespace testing;
 
-    if (mir_event_get_type(arg) != mir_event_type_surface_output)
+    if (mir_event_get_type(arg) != mir_event_type_window_output)
     {
         *result_listener << "Event is not a MirSurfaceOutputEvent";
         return 0;
@@ -942,7 +942,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     EXPECT_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillOnce(Invoke([&event, &event_received](MirEvent const& ev)
                          {
-                             if (event.type() == mir_event_type_surface_output)
+                             if (event.type() == mir_event_type_window_output)
                              {
                                  event = *ev.to_surface_output();
                              }
@@ -978,7 +978,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                          {
-                             if (ev.type() == mir_event_type_surface_output)
+                             if (ev.type() == mir_event_type_window_output)
                              {
                                  event[events_received] = *ev.to_surface_output();
                              }
@@ -1035,7 +1035,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }
@@ -1083,7 +1083,7 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }
@@ -1144,7 +1144,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }

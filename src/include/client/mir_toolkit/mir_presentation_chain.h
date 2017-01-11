@@ -120,7 +120,7 @@ void mir_presentation_chain_submit_buffer(
  * \param chain            The chain containing the content to be displayed.
  */
 void mir_surface_spec_add_presentation_chain(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
     MirPresentationChain* chain);
@@ -142,7 +142,7 @@ void mir_surface_spec_add_presentation_chain(
  * \param stream           The stream containing the content to be displayed.
  */
 void mir_surface_spec_add_buffer_stream(
-    MirSurfaceSpec* spec,
+    MirWindowSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
     MirBufferStream* stream);

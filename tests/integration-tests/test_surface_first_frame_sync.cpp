@@ -195,11 +195,11 @@ struct SurfaceFirstFrameSync : mtf::BasicClientServerFixture<ServerConfig>
 
 TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
 {
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
-    ASSERT_TRUE(surface != NULL);
-    EXPECT_TRUE(mir_surface_is_valid(surface));
-    EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+    ASSERT_TRUE(window != NULL);
+    EXPECT_TRUE(mir_window_is_valid(window));
+    EXPECT_STREQ(mir_window_get_error_message(window), "");
 
     /*
      * This test uses a synchronous compositor (instead of the default
@@ -211,12 +211,12 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
     EXPECT_EQ(0, number_of_executed_render_operations());
 
     mir_buffer_stream_swap_buffers_sync(
-        mir_surface_get_buffer_stream(surface));
+        mir_window_get_buffer_stream(window));
 
     /* After submitting the buffer we should get some render operations */
     mir::test::spin_wait_for_condition_or_timeout(
         [this] { return number_of_executed_render_operations() > 0; },
         std::chrono::seconds{5});
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }

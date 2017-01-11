@@ -491,7 +491,7 @@ MATCHER(PointerMovementEvent, "")
 MATCHER_P2(SurfaceEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_surface)
+    if (mir_event_get_type(as_address) != mir_event_type_window)
         return false;
     auto surface_ev = mir_event_get_surface_event(as_address);
     if (mir_surface_event_get_attribute(surface_ev) != attrib)

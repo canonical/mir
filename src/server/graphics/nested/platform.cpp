@@ -90,7 +90,6 @@ public:
             return guest_allocator->alloc_buffer(size, native_format, native_flags);
     }
 
-
     std::shared_ptr<mg::Buffer> alloc_buffer(mir::geometry::Size size, MirPixelFormat format)
     {
         return alloc_buffer(mg::BufferProperties{size, format, mg::BufferUsage::software});

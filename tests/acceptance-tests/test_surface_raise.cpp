@@ -39,6 +39,7 @@ namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
+using namespace testing;
 
 namespace
 {
@@ -52,36 +53,40 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     {
         ConnectedClientHeadlessServer::SetUp();
 
-       surface1 = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(surface1, &cookie_capturing_callback, this);
-        mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface1));
+        surface1 = mtf::make_any_surface(connection);
+        mir_window_set_event_handler(surface1, &cookie_capturing_callback, this);
 
         surface2 = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(surface2, &cookie_capturing_callback, this);
-        mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface2));
 
         // Need fullscreen for the cursor events
-        auto const spec = mir_connection_create_spec_for_changes(connection);
-        mir_surface_spec_set_fullscreen_on_output(spec, 1);
-        mir_surface_apply_spec(surface1, spec);
-        mir_surface_apply_spec(surface2, spec);
-        mir_surface_spec_release(spec);
-        
+        auto const spec = mir_create_window_spec(connection);
+        mir_window_spec_set_fullscreen_on_output(spec, 1);
+        mir_window_apply_spec(surface1, spec);
+
+        mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
+        mir_window_apply_spec(surface2, spec);
+        mir_window_spec_release(spec);
+
+        mir_buffer_stream_swap_buffers_sync(
+            mir_window_get_buffer_stream(surface1));
+        mir_buffer_stream_swap_buffers_sync(
+            mir_window_get_buffer_stream(surface2));
+
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
             {
                 return mir_surface_get_state(surface1) == mir_surface_state_fullscreen &&
                        mir_surface_get_state(surface2) == mir_surface_state_fullscreen;
             },
-            std::chrono::seconds{max_wait});
+            max_wait);
 
         ready_to_accept_events.wait_for(max_wait);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
 
-        EXPECT_TRUE(surface_fullscreen);
+        ASSERT_TRUE(surface_fullscreen);
+        ASSERT_TRUE(mt::spin_wait_for_condition_or_timeout([this]
+            { return mir_surface_get_focus(surface2) == mir_surface_focused; }, max_wait));
     }
 
     MirSurface* surface1;
@@ -110,7 +115,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
     auto const event_type = mir_event_get_type(ev);
     auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
 
-    if (event_type == mir_event_type_surface)
+    if (event_type == mir_event_type_window)
     {
         auto event = mir_event_get_surface_event(ev);
         auto const attrib = mir_surface_event_get_attribute(event);
@@ -163,7 +168,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
             std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
             return raise_surfaces->event_count >= n;
         },
-        std::chrono::seconds{max_wait});
+        max_wait);
 
    EXPECT_TRUE(all_events);
    return all_events;
@@ -171,13 +176,13 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 
 bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
 {
-    mir_surface_raise(surface, cookie);
+    mir_window_raise(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [&surface]
         {
             return mir_surface_get_focus(surface) == mir_surface_focused;
         },
-        std::chrono::seconds{max_wait});
+        max_wait);
  
     return surface_becomes_focused;
 }
@@ -193,10 +198,9 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
-        attempt_focus(surface2, cookie);
+        EXPECT_TRUE(attempt_focus(surface2, cookie));
 
         mir_cookie_release(cookie);
     }
@@ -215,7 +219,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
-        mir_surface_raise(surface1, cookie);
+        mir_window_raise(surface1, cookie);
 
         mir_cookie_release(cookie);
 

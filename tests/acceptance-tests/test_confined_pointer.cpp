@@ -77,37 +77,37 @@ struct Client
                 std::runtime_error{std::string{"Failed to connect to test server: "} +
                 mir_connection_get_error_message(connection)});
         }
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
-                                                                  surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
-        mir_surface_spec_set_name(spec, name.c_str());
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        if (!mir_surface_is_valid(surface))
+        auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+        mir_window_spec_set_name(spec, name.c_str());
+        window = mir_window_create_sync(spec);
+        mir_window_spec_release(spec);
+        if (!mir_window_is_valid(window))
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
-                mir_surface_get_error_message(surface)});
+            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
+                mir_window_get_error_message(window)});
         }
 
-        mir_surface_set_event_handler(surface, handle_event, this);
+        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface));
+            mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
         }
     }
 
     void resize(int width, int height)
     {
-        auto spec = mir_connection_create_spec_for_changes(connection);
-        mir_surface_spec_set_width (spec, width);
-        mir_surface_spec_set_height(spec, height);
+        auto spec = mir_create_window_spec(connection);
+        mir_window_spec_set_width (spec, width);
+        mir_window_spec_set_height(spec, height);
 
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
     }
 
     void handle_surface_event(MirSurfaceEvent const* event)
@@ -133,7 +133,7 @@ struct Client
         auto type = mir_event_get_type(ev);
         switch (type)
         {
-        case mir_event_type_surface:
+        case mir_event_type_window:
             client->handle_surface_event(mir_event_get_surface_event(ev));
             break;
         case mir_event_type_input:
@@ -146,14 +146,14 @@ struct Client
     ~Client()
     {
         // Remove the event handler to avoid handling spurious events unrelated
-        // to the tests (e.g. pointer leave events when the surface is destroyed),
+        // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
-        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
 
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
     MirConnection* connection;
     mir::test::Signal ready_to_accept_events;
     mir::test::Signal all_events_received;
@@ -288,11 +288,11 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
     Client client_2(new_connection(), second);
 
     // Attempt to confine client_1 while client_2 is focused
-    auto spec = mir_connection_create_spec_for_changes(client_1.connection);
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    auto spec = mir_create_window_spec(client_1.connection);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(client_1.surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(client_1.window, spec);
+    mir_window_spec_release(spec);
 
     // We have to wait since we *wont* set the seat here
     std::this_thread::sleep_for(1s);
