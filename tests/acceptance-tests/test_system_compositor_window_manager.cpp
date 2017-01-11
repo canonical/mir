@@ -43,20 +43,20 @@ std::chrono::seconds const max_wait{4};
 class SurfaceHandle
 {
 public:
-    explicit SurfaceHandle(MirSurface* surface) : surface{surface} {}
-    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
+    explicit SurfaceHandle(MirWindow* window) : window{window} {}
+    ~SurfaceHandle() { if (window) mir_window_release_sync(window); }
 
-    operator MirSurface*() const { return surface; }
+    operator MirWindow*() const { return window; }
 
     void post_buffer()
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
     }
 
-    SurfaceHandle(SurfaceHandle const&& that) : surface{that.surface} { surface = nullptr; }
+    SurfaceHandle(SurfaceHandle const&& that) : window{that.window} { window = nullptr; }
 private:
     SurfaceHandle(SurfaceHandle const&) = delete;
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 struct MockClient
@@ -74,16 +74,16 @@ struct MockClient
 
     auto create_surface(int output_id) -> SurfaceHandle
     {
-        auto const spec = mir_connection_create_spec_for_normal_surface(
-                connection_, 800, 600, mir_pixel_format_bgr_888);
+        auto const spec = mir_create_normal_window_spec(connection_, 800, 600);
 
-        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
-        auto const surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
+        mir_window_spec_set_fullscreen_on_output(spec, output_id);
+        auto const window = mir_window_create_sync(spec);
+        mir_window_spec_release(spec);
 
-        mir_surface_set_event_handler(surface, on_surface_event, this);
+        mir_window_set_event_handler(window, on_surface_event, this);
 
-        return SurfaceHandle{surface};
+        return SurfaceHandle{window};
     };
 
     void disconnect()
@@ -104,14 +104,14 @@ struct MockClient
         disconnect();
     }
 
-    MOCK_METHOD2(surface_event, void(MirSurface* surface, const MirEvent* event));
+    MOCK_METHOD2(surface_event, void(MirWindow* window, const MirEvent* event));
 
 private:
     MirConnection* connection_{nullptr};
 
-    static void on_surface_event(MirSurface* surface, const MirEvent* event, void* client_ptr)
+    static void on_surface_event(MirWindow* window, const MirEvent* event, void* client_ptr)
     {
-        static_cast<MockClient*>(client_ptr)->surface_event(surface, event);
+        static_cast<MockClient*>(client_ptr)->surface_event(window, event);
     }
 };
 
@@ -126,7 +126,7 @@ struct OverridenSystemCompositorWindowManager : msh::SystemCompositorWindowManag
 
     void modify_surface(
         std::shared_ptr<mir::scene::Session> const& /*session*/,
-        std::shared_ptr<mir::scene::Surface> const& /*surface*/,
+        std::shared_ptr<mir::scene::Surface> const& /*window*/,
         mir::shell::SurfaceSpecification const& modifications) override
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
@@ -174,7 +174,7 @@ struct SystemCompositorWindowManager : mtf::HeadlessTest
 
 MATCHER_P(MirFocusEvent, expected, "")
 {
-    if (mir_event_get_type(arg) != mir_event_type_surface)
+    if (mir_event_get_type(arg) != mir_event_type_window)
         return false;
 
     auto surface_event = mir_event_get_surface_event(arg);
@@ -193,25 +193,25 @@ TEST_F(SystemCompositorWindowManager, when_output_is_valid_surfaces_creation_suc
     auto surface1 = client.create_surface(1);
     auto surface2 = client.create_surface(2);
 
-    EXPECT_TRUE(mir_surface_is_valid(surface1));
-    EXPECT_TRUE(mir_surface_is_valid(surface2));
+    EXPECT_TRUE(mir_window_is_valid(surface1));
+    EXPECT_TRUE(mir_window_is_valid(surface2));
 }
 
 TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_creation_fails)
 {
     auto client = connect_client();
 
-    auto surface = client.create_surface(0);
+    auto window = client.create_surface(0);
 
-    EXPECT_FALSE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("An output ID must be specified"));
+    EXPECT_FALSE(mir_window_is_valid(window));
+    EXPECT_THAT(mir_window_get_error_message(window), HasSubstr("An output ID must be specified"));
 }
 
 TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
 {
     auto client = connect_client();
 
-    // Throw away all uninteresting surface events
+    // Throw away all uninteresting window events
     EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
@@ -219,8 +219,8 @@ TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
     EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 
-    auto surface = client.create_surface(1);
-    surface.post_buffer();
+    auto window = client.create_surface(1);
+    window.post_buffer();
 
     signal.wait_for(1s);
 }
@@ -229,7 +229,7 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
 {
     auto client = connect_client();
 
-    // Throw away all uninteresting surface events
+    // Throw away all uninteresting window events
     EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
@@ -237,7 +237,7 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
     ON_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused)))
             .WillByDefault(InvokeWithoutArgs([&] { signal.raise(); }));
 
-    auto surface = client.create_surface(1);
+    auto window = client.create_surface(1);
 
     EXPECT_FALSE(signal.wait_for(100ms)) << "Unexpected surface_focused event received";
 }
@@ -246,13 +246,13 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
 {
     auto client = connect_client();
 
-    auto surface = client.create_surface(1);
+    auto window = client.create_surface(1);
 
-    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(client.connection());
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    MirWindowSpec* spec = mir_create_window_spec(client.connection());
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
 
     mt::spin_wait_for_condition_or_timeout([this]
     {

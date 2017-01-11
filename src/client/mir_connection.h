@@ -107,7 +107,7 @@ public:
     MirConnection& operator=(MirConnection const &) = delete;
 
     MirWaitHandle* create_surface(
-        MirSurfaceSpec const& spec,
+        MirWindowSpec const& spec,
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
@@ -187,6 +187,9 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
+    void configure_session_display(mir::protobuf::DisplayConfiguration const& configuration);
+    void remove_session_display();
+
     MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
     void apply_input_configuration(MirInputConfig  const* config);
     void set_base_input_configuration(MirInputConfig const* config);
@@ -233,7 +236,7 @@ private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirSurfaceSpec const& spec) :
+        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirWindowSpec const& spec) :
             cb(cb), context(context), spec(spec),
               response(std::make_shared<mir::protobuf::Surface>()),
               wh(std::make_shared<MirWaitHandle>())
@@ -241,7 +244,7 @@ private:
         }
         mir_surface_callback cb;
         void* context;
-        MirSurfaceSpec const spec;
+        MirWindowSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
         std::shared_ptr<MirWaitHandle> wh;
     };

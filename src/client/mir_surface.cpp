@@ -62,7 +62,7 @@ MirSurfaceSpec::MirSurfaceSpec(
 {
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params)
+MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params)
     : connection{connection},
       width{params.width},
       height{params.height},
@@ -111,7 +111,7 @@ MirSurface::MirSurface(
     mclr::DisplayServerDebug* debug,
     std::shared_ptr<MirBufferStream> const& buffer_stream,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
-    MirSurfaceSpec const& spec,
+    MirWindowSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
     std::shared_ptr<MirWaitHandle> const& handle)
     : server{&the_server},
@@ -172,7 +172,7 @@ MirSurface::~MirSurface()
         close(surface->fd(i));
 }
 
-MirSurfaceParameters MirSurface::get_parameters() const
+MirWindowParameters MirSurface::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -430,7 +430,7 @@ void MirSurface::handle_event(MirEvent const& e)
 
     switch (mir_event_get_type(&e))
     {
-    case mir_event_type_surface:
+    case mir_event_type_window:
     {
         auto sev = mir_event_get_surface_event(&e);
         auto a = mir_surface_event_get_attribute(sev);
@@ -523,7 +523,7 @@ void MirSurface::on_modified()
     modify_wait_handle.result_received();
 }
 
-MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
+MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
 {
     mp::SurfaceModifications mods;
 
@@ -609,7 +609,17 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        default_stream = nullptr;
+        /*
+         * Note that we don't check for errors from modify_surface. So in
+         * updating default_stream here, we're just assuming it will succeed.
+         * Seems to be a harmless assumption to have made so far and much
+         * simpler than communicating back suceessful mappings from the server,
+         * but there is a prototype started for that: lp:~vanvugt/mir/adoption
+         */
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            default_stream = nullptr;
+        }
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
@@ -642,6 +652,13 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         surface_specification->mutable_cursor_id()->set_value(rs_cursor.id.as_value());
         surface_specification->set_hotspot_x(rs_cursor.hotspot.x.as_int());
         surface_specification->set_hotspot_y(rs_cursor.hotspot.y.as_int());
+    }
+
+    if (spec.event_handler.is_set())
+    {
+        set_event_handler(
+            spec.event_handler.value().callback,
+            spec.event_handler.value().context);
     }
 
     modify_wait_handle.expect_result();

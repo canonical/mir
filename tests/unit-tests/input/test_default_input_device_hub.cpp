@@ -238,7 +238,7 @@ TEST_F(InputDeviceHubTest, emit_stop_receiving_input_after_last_device_added)
 TEST_F(InputDeviceHubTest, when_pointer_configuration_is_applied_successfully_observer_is_triggerd)
 {
     std::shared_ptr<mi::Device> dev_ptr;
-    mi::PointerConfiguration pointer_conf;
+    MirPointerConfiguration pointer_conf;
 
     ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
 
@@ -256,7 +256,7 @@ TEST_F(InputDeviceHubTest, when_pointer_configuration_is_applied_successfully_ob
 TEST_F(InputDeviceHubTest, when_tpd_configuration_is_applied_successfully_observer_is_triggerd)
 {
     std::shared_ptr<mi::Device> dev_ptr;
-    mi::TouchpadConfiguration tpd_conf;
+    MirTouchpadConfiguration tpd_conf;
 
     ON_CALL(mock_observer, device_added(WithName("tpd"))).WillByDefault(SaveArg<0>(&dev_ptr));
 
@@ -274,7 +274,7 @@ TEST_F(InputDeviceHubTest, when_tpd_configuration_is_applied_successfully_observ
 TEST_F(InputDeviceHubTest, when_configuration_attempt_fails_observer_is_not_triggerd)
 {
     std::shared_ptr<mi::Device> dev_ptr;
-    mi::TouchpadConfiguration tpd_conf;
+    MirTouchpadConfiguration tpd_conf;
 
     ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
 

@@ -361,14 +361,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirConnection *connection = mir_eglapp_native_connection();
-    MirSurface *surface = mir_eglapp_native_surface();
+    MirConnection* connection = mir_eglapp_native_connection();
+    MirWindow* window = mir_eglapp_native_window();
 
     struct ClientContext ctx = {connection, configuration_mode_unknown, 0, 1, 0};
     mir_connection_set_display_config_change_callback(
         connection, display_change_callback, &ctx);
 
-    mir_surface_set_event_handler(surface, event_callback, &ctx);
+    mir_window_set_event_handler(window, event_callback, &ctx);
 
     time_t start = time(NULL);
 

@@ -491,7 +491,7 @@ MATCHER(PointerMovementEvent, "")
 MATCHER_P2(SurfaceEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_surface)
+    if (mir_event_get_type(as_address) != mir_event_type_window)
         return false;
     auto surface_ev = mir_event_get_surface_event(as_address);
     if (mir_surface_event_get_attribute(surface_ev) != attrib)
@@ -584,6 +584,11 @@ MATCHER_P2(DeviceStateWithPosition, x, y, "")
     auto device_state = mir_event_get_input_device_state_event(as_address);
     return x == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x) &&
         y == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
+}
+
+MATCHER_P(RectanglesMatches, rectangles, "")
+{
+    return arg == rectangles;
 }
 
 }

@@ -88,9 +88,9 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_is_notified_of_attribute_ch
     EXPECT_CALL(*mock_window_manager,
         set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)));
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_maximized));
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_maximized));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_maximized));
 }
 
 TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribute_changes)
@@ -109,7 +109,7 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribut
         set_surface_attribute(_, _, mir_surface_attrib_state, Eq(mir_surface_state_maximized)))
         .WillOnce(Invoke(set_to_vertmax));
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_maximized));
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_maximized));
 
-    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_vertmaximized));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_vertmaximized));
 }

@@ -199,7 +199,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         state->running = false;
         break;
     default:
@@ -351,8 +351,8 @@ int main(int argc, char *argv[])
         return 3;
     }
 
-    MirSurface *surface = mir_eglapp_native_surface();
-    mir_surface_set_event_handler(surface, on_event, &state);
+    MirWindow* window = mir_eglapp_native_window();
+    mir_window_set_event_handler(window, on_event, &state);
 
     while (true)
     {
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_surface_set_event_handler(surface, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
 
     pthread_join(shutdown_handler_thread, NULL);

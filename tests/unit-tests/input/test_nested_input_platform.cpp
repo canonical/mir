@@ -47,6 +47,9 @@ namespace mgn = mir::graphics::nested;
 using namespace std::chrono_literals;
 using namespace testing;
 
+namespace
+{
+
 struct TestNestedInputPlatform : Test
 {
     NiceMock<mtd::MockInputDeviceRegistry> mock_input_device_registry;
@@ -76,6 +79,8 @@ struct TestNestedInputPlatform : Test
         return input_dev;
     }
 };
+
+}
 
 TEST_F(TestNestedInputPlatform, registers_to_host_connection)
 {

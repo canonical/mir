@@ -35,7 +35,7 @@ typedef struct
     int current_physical_width;     //The driver is in charge of the physical width
     int current_physical_height;    //The driver is in charge of the physical height
 
-    struct MirExtensionAndroidEGL* ext;
+    MirExtensionAndroidEGLV1 const* ext;
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
     PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES; 
@@ -106,8 +106,7 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     memset(info, 0, sizeof(*info));
     info->connection = connection;
 
-    info->ext = (struct MirExtensionAndroidEGL*) mir_connection_request_interface(
-        info->connection, MIR_EXTENSION_ANDROID_EGL, MIR_EXTENSION_ANDROID_EGL_VERSION_1);
+    info->ext = mir_extension_android_egl_v1(info->connection);
     info->eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
     info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
     info->glEGLImageTargetTexture2DOES =

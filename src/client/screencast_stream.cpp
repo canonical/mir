@@ -169,10 +169,10 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
     screencast_wait_handle.result_received();
 }
 
-MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
+MirWindowParameters mcl::ScreencastStream::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "Screencast",
         buffer_size.width.as_int(),
         buffer_size.height.as_int(),

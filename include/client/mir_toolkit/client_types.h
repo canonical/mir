@@ -38,8 +38,10 @@ extern "C" {
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface;
-typedef struct MirSurfaceSpec MirSurfaceSpec;
+typedef struct MirSurface MirSurface /* __attribute__((deprecated("Use MirWindow instead"))) */;
+typedef struct MirSurface MirWindow;
+typedef struct MirSurfaceSpec MirSurfaceSpec /* __attribute__((deprecated("Use MirWindowSpec instead"))) */;
+typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
@@ -84,7 +86,9 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
+typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
+/* __attribute__((deprecated("Use mir_window_callback instead"))) */;
+typedef void (*mir_window_callback)(MirWindow *window, void *client_context);
 
 /**
  * Callback to be passed when calling:
@@ -103,6 +107,9 @@ typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client
  */
 typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
+/* __attribute__((deprecated("Use mir_window_event_callback instead"))) */
+typedef void (*mir_window_event_callback)(
+    MirWindow* window, MirEvent const* event, void* context);
 
 /**
  * Callback called when a lifecycle event/callback is requested
@@ -150,6 +157,9 @@ typedef void (*mir_client_fd_callback)(
 
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context);
+/* __attribute__((deprecated("Use mir_window_id_callback instead"))) */
+typedef void (*mir_window_id_callback)(
+    MirWindow* window, MirPersistentId* id, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -182,7 +192,8 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters;
+} MirSurfaceParameters; /* __attribute__((deprecated("Use MirWindowParameters instead"))) */
+typedef MirSurfaceParameters MirWindowParameters;
 
 enum { mir_platform_package_max = 32 };
 

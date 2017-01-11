@@ -185,7 +185,7 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    response->set_input_configuration(serialize_input_configuration(input_changer->base_configuration()));
+    response->set_input_configuration(mi::serialize_input_configuration(input_changer->base_configuration()));
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
@@ -645,7 +645,7 @@ void mf::SessionMediator::modify_surface(
 }
 
 void mf::SessionMediator::configure_display(
-    const ::mir::protobuf::DisplayConfiguration* request,
+    ::mir::protobuf::DisplayConfiguration const* request,
     ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
 {
@@ -661,6 +661,21 @@ void mf::SessionMediator::configure_display(
 
     auto display_config = display_changer->base_configuration();
     mfd::pack_protobuf_display_configuration(*response, *display_config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::remove_session_configuration(
+    ::mir::protobuf::Void const* /*request*/,
+    ::mir::protobuf::Void* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    display_changer->remove_session_configuration(session);
 
     done->Run();
 }
@@ -761,17 +776,21 @@ void mf::SessionMediator::create_screencast(
         mirror_mode = static_cast<MirMirrorMode>(parameters->mirror_mode());
 
     auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
-    auto buffer = screencast->capture(screencast_session_id);
-    screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+
+    if (nbuffers > 0)
+    {
+        auto buffer = screencast->capture(screencast_session_id);
+        screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+        pack_protobuf_buffer(
+            *protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
+            buffer.get(),
+            msg_type);
+    }
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
-
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
-    pack_protobuf_buffer(*protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
-                         buffer.get(),
-                         msg_type);
 
     done->Run();
 }
@@ -804,6 +823,19 @@ void mf::SessionMediator::screencast_buffer(
                          buffer.get(),
                          msg_type);
 
+    done->Run();
+}
+
+void mf::SessionMediator::screencast_to_buffer(
+    mir::protobuf::ScreencastRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+    ScreencastSessionId const screencast_session_id{request->id().value()};
+    auto buffer = session->get_buffer(mg::BufferID{request->buffer_id()});
+    mf::ScreencastSessionId const screencast_id{request->id().value()};
+    screencast->capture(screencast_session_id, buffer);
     done->Run();
 }
 

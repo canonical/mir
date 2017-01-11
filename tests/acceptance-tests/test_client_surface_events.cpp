@@ -56,7 +56,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     MirSurface* other_surface;
 
     std::mutex last_event_mutex;
-    MirEventType event_filter{mir_event_type_surface};
+    MirEventType event_filter{mir_event_type_window};
     std::condition_variable last_event_cv;
     MirEvent const* last_event = nullptr;
     MirSurface* last_event_surface = nullptr;
@@ -69,7 +69,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
             mir_event_unref(last_event);
     }
 
-    static void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
+    static void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
         std::lock_guard<decltype(self->last_event_mutex)> last_event_lock{self->last_event_mutex};
@@ -80,7 +80,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
             mir_event_unref(self->last_event);
         
         self->last_event = mir_event_ref(event);
-        self->last_event_surface = surface;
+        self->last_event_surface = window;
         self->last_event_cv.notify_one();
     }
 
@@ -88,7 +88,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
     {
         std::unique_lock<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         return last_event_cv.wait_for(last_event_lock, delay,
-            [&] { return last_event_surface == surface && mir_event_get_type(last_event) == event_filter; });
+            [&] { return last_event_surface == window && mir_event_get_type(last_event) == event_filter; });
     }
 
     void set_event_filter(MirEventType type)
@@ -128,19 +128,19 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         mtf::ConnectedClientWithASurface::SetUp();
 
-        mir_surface_set_event_handler(surface, &event_callback, this);
+        mir_window_set_event_handler(window, &event_callback, this);
 
         scene_surface = the_latest_surface();
 
         other_surface = mtf::make_any_surface(connection);
-        mir_surface_set_event_handler(other_surface, nullptr, nullptr);
+        mir_window_set_event_handler(other_surface, nullptr, nullptr);
 
         reset_last_event();
     }
 
     void TearDown() override
     {
-        mir_surface_release_sync(other_surface);
+        mir_window_release_sync(other_surface);
         scene_surface.reset();
 
         mtf::ConnectedClientWithASurface::TearDown();
@@ -153,7 +153,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
         mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
@@ -162,7 +162,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     }
 
     {
-        mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_fullscreen));
@@ -171,7 +171,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_vertmaximized));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -181,7 +181,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(777)));
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
         mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
@@ -226,13 +226,13 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 
         EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
-        EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
+        EXPECT_THAT(mir_window_get_orientation(window), Eq(direction));
     }
 }
 
 TEST_F(ClientSurfaceEvents, surface_receives_close_event)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
     scene_surface->request_client_surface_close();
 
@@ -240,8 +240,8 @@ TEST_F(ClientSurfaceEvents, surface_receives_close_event)
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-    EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_surface));
+    EXPECT_THAT(last_event_surface, Eq(window));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_window));
 }
 
 TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
@@ -255,8 +255,8 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
     {
         reset_last_event();
 
-        mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
-        EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
+        mir_wait_for(mir_surface_set_preferred_orientation(window, mode));
+        EXPECT_THAT(mir_surface_get_preferred_orientation(window), Eq(mode));
     }
 }
 
@@ -281,7 +281,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     ASSERT_FALSE(current_mode.empty());
 
-    set_event_filter(mir_event_type_surface_output);
+    set_event_filter(mir_event_type_window_output);
     reset_last_event();
 
     auto display_controller = server.the_display_configuration_controller();
@@ -291,7 +291,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_surface_output));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_window_output));
     auto output_event = mir_event_get_surface_output_event(last_event);
 
     EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
@@ -304,9 +304,9 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
 TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
-    mir_surface_set_event_handler(surface, nullptr, nullptr);
+    mir_window_set_event_handler(window, nullptr, nullptr);
     scene_surface->request_client_surface_close();
 
     EXPECT_FALSE(wait_for_event(std::chrono::seconds(1)));
@@ -316,7 +316,7 @@ namespace
 {
 bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state)
 {
-    if (mir_event_get_type(event) != mir_event_type_surface)
+    if (mir_event_get_type(event) != mir_event_type_window)
     {
         return false;
     }
@@ -345,11 +345,11 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     using namespace testing;
     using namespace std::chrono_literals;
 
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     mt::Signal focus_received;
-    mir_surface_set_event_handler(
-        surface,
+    mir_window_set_event_handler(
+        window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
@@ -360,15 +360,15 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
         },
         &focus_received);
 
-    // Swap buffers to get the surface into the scene so it can be focused.
-    auto buffer_stream = mir_surface_get_buffer_stream(surface);
+    // Swap buffers to get the window into the scene so it can be focused.
+    auto buffer_stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
 
     mt::Signal unfocus_received;
-    mir_surface_set_event_handler(
-        surface,
+    mir_window_set_event_handler(
+        window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
@@ -379,7 +379,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
         },
         &unfocus_received);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 
     EXPECT_TRUE(unfocus_received.wait_for(10s));
 }
@@ -389,11 +389,11 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     using namespace testing;
     using namespace std::chrono_literals;
 
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
     mt::Signal focus_received;
-    mir_surface_set_event_handler(
-        surface,
+    mir_window_set_event_handler(
+        window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
@@ -404,15 +404,15 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
         },
         &focus_received);
 
-    // Swap buffers to get the surface into the scene so it can be focused.
-    auto buffer_stream = mir_surface_get_buffer_stream(surface);
+    // Swap buffers to get the window into the scene so it can be focused.
+    auto buffer_stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
 
     mt::Signal unfocus_received;
-    mir_surface_set_event_handler(
-        surface,
+    mir_window_set_event_handler(
+        window,
         [](MirSurface*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
@@ -423,15 +423,15 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
         },
         &unfocus_received);
 
-    // Add a new surface that will take focus.
+    // Add a new window that will take focus.
     auto focus_grabbing_surface = mtf::make_any_surface(connection);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(focus_grabbing_surface));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(focus_grabbing_surface));
 
     ASSERT_TRUE(unfocus_received.wait_for(10s));
 
     unfocus_received.reset();
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 
     EXPECT_FALSE(unfocus_received.wait_for(1s));
 }
@@ -445,9 +445,9 @@ class WrapShellGeneratingCloseEvent : public mir::shell::ShellWrapper
         mir::scene::SurfaceCreationParameters const& params,
         std::shared_ptr<mir::frontend::EventSink> const& sink) override
     {
-        auto const surface = mir::shell::ShellWrapper::create_surface(session, params, sink);
-        session->surface(surface)->request_client_surface_close();
-        return surface;
+        auto const window = mir::shell::ShellWrapper::create_surface(session, params, sink);
+        session->surface(window)->request_client_surface_close();
+        return window;
     }
 };
 
@@ -467,7 +467,7 @@ class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
 
 void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_close_surface)
+    if (mir_event_get_type(ev) == mir_event_type_close_window)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -482,23 +482,24 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
 {
     mt::Signal done;
 
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
+    auto spec = mir_create_normal_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
 
-    auto surface = mir_surface_create_sync(spec);
+    auto window = mir_window_create_sync(spec);
 
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
-    /* This expectation will fail if the event generated during surface creation is
+    /* This expectation will fail if the event generated during window creation is
      * sent before the create_surface reply.
      *
-     * In that case, libmirclient first receives a close_surface event for a surface
+     * In that case, libmirclient first receives a close_surface event for a window
      * it doesn't know about, throws it away, and then receives the SurfaceID of the
-     * surface it just created.
+     * window it just created.
      */
     EXPECT_TRUE(done.wait_for(std::chrono::seconds{10}));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }
 
 struct EventContext
@@ -520,7 +521,7 @@ struct EventContext
 
 void surface_output_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface_output)
+    if (mir_event_get_type(ev) == mir_event_type_window_output)
     {
         auto out_event = reinterpret_cast<EventContext*>(ctx);
         out_event->event = mir_event_ref(ev);
@@ -557,7 +558,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
         ASSERT_FALSE(current_mode.empty());
 
-        set_event_filter(mir_event_type_surface_output);
+        set_event_filter(mir_event_type_window_output);
         reset_last_event();
 
         auto const display_controller = server.the_display_configuration_controller();
@@ -565,21 +566,22 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
         ASSERT_TRUE(display_config_changed.wait_for(1s));
 
-        //Wait until the existing surface has received the surface output event
+        //Wait until the existing window has received the window output event
         //to avoid racing against this source output event notification and the
-        //one given during surface creation.
+        //one given during window creation.
         ASSERT_TRUE(wait_for_event(1s));
     }
 
     EventContext context;
 
-    auto spec = mir_connection_create_spec_for_normal_surface(connection, 640, 480, mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto spec = mir_create_normal_window_spec(connection, 640, 480);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
+    auto window = mir_window_create_sync(spec);
+    mir_window_spec_release(spec);
 
     ASSERT_TRUE(context.captured.wait_for(10s));
-    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_surface_output));
+    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_window_output));
     auto surface_event = mir_event_get_surface_output_event(context.event);
     EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));
@@ -589,5 +591,5 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     EXPECT_THAT(mir_surface_output_event_get_refresh_rate(surface_event),
                 Eq(current_mode[id].vrefresh_hz));
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }
