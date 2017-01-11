@@ -155,6 +155,11 @@ public:
         return latest_surface;
     }
 
+    void forget_latest()
+    {
+        latest_surface.reset();
+    }
+
 private:
     std::shared_ptr<mir::scene::SurfaceFactory> const real_surface_factory;
     std::shared_ptr<Surface> latest_surface;
@@ -205,10 +210,11 @@ struct StaleFrames : BasicFixture,
         BasicFixture::SetUp();
 
         client_create_surface();
-        auto surface =
-            server_configuration.the_public_surface_factory()->latest();
+        auto pub = server_configuration.the_public_surface_factory();
+        auto surface = pub->latest();
         ASSERT_TRUE(surface);
         surface->add_observer(post_observer);
+        pub->forget_latest();
     }
 
     void TearDown()
