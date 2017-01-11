@@ -129,19 +129,19 @@ static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
     }
 }
 
-static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
+static void handle_window_output_event(MirWindowOutputEvent const* out)
 {
     static char const* const form_factor_name[6] =
         {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
-    unsigned ff = mir_surface_output_event_get_form_factor(out);
+    unsigned ff = mir_window_output_event_get_form_factor(out);
     char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
 
-    refresh_rate = mir_surface_output_event_get_refresh_rate(out);
+    refresh_rate = mir_window_output_event_get_refresh_rate(out);
 
     printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
-           mir_surface_output_event_get_output_id(out),
-           mir_surface_output_event_get_dpi(out),
-           mir_surface_output_event_get_scale(out),
+           mir_window_output_event_get_output_id(out),
+           mir_window_output_event_get_dpi(out),
+           mir_window_output_event_get_scale(out),
            form_factor,
            refresh_rate);
 }
@@ -165,7 +165,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
         mir_eglapp_handle_window_event(mir_event_get_window_event(ev));
         break;
     case mir_event_type_window_output:
-        handle_surface_output_event(mir_event_get_surface_output_event(ev));
+        handle_window_output_event(mir_event_get_window_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
