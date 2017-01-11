@@ -469,7 +469,7 @@ void MirSurface::handle_event(MirEvent const& e)
 
     switch (mir_event_get_type(&e))
     {
-    case mir_event_type_surface:
+    case mir_event_type_window:
     {
         auto sev = mir_event_get_surface_event(&e);
         auto a = mir_surface_event_get_attribute(sev);
@@ -736,6 +736,13 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
         surface_specification->mutable_cursor_id()->set_value(rs_cursor.id.as_value());
         surface_specification->set_hotspot_x(rs_cursor.hotspot.x.as_int());
         surface_specification->set_hotspot_y(rs_cursor.hotspot.y.as_int());
+    }
+
+    if (spec.event_handler.is_set())
+    {
+        set_event_handler(
+            spec.event_handler.value().callback,
+            spec.event_handler.value().context);
     }
 
     modify_wait_handle.expect_result();
