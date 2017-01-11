@@ -178,9 +178,10 @@ int main(int argc, char *argv[])
     w.cond = &cond;
     w.buffer = &buffer;
 
+    //CHECK CHECK
     //FIXME: would be good to have some convenience functions 
     mir_connection_allocate_buffer(
-        connection, 256, 256, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
+        connection, 256, 256, mir_pixel_format_abgr_8888, wait_buffer, &w);
 
     pthread_mutex_lock(&mutex);
     while (buffer == NULL)

@@ -31,6 +31,9 @@ extern "C" {
 #endif
 
 /** Allocate a MirBuffer and do not wait for the server to return it.
+ *  The buffer will be suitable for writing to via the CPU. Buffers that
+ *  will be used on a GPU should be allocated via the platform appropriate
+ *  extensions. (eg, mir_extension_gbm_buffer or mir_extension_android_buffer)
  *
  *  The callback will be called when the buffer is available for use.
  *  It will be called once when created, and once per every
@@ -48,7 +51,6 @@ void mir_connection_allocate_buffer(
     MirConnection* connection,
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
 /** Test for a valid buffer

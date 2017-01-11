@@ -147,7 +147,6 @@ struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
-    MirBufferUsage const usage = mir_buffer_usage_software;
 };
 
 struct MirBufferSync
@@ -204,7 +203,7 @@ TEST_F(PresentationChain, allocation_calls_callback)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -218,7 +217,7 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -244,7 +243,7 @@ TEST_F(PresentationChain, has_native_fence)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -264,7 +263,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -292,7 +291,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
     {
         mir_connection_allocate_buffer(
             connection,
-            size.width.as_int(), size.height.as_int(), pf, usage,
+            size.width.as_int(), size.height.as_int(), pf,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
         ASSERT_THAT(context.buffer(), Ne(nullptr));    
@@ -321,7 +320,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
     {
         mir_connection_allocate_buffer(
             connection,
-            size.width.as_int(), size.height.as_int(), pf, usage,
+            size.width.as_int(), size.height.as_int(), pf,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
         ASSERT_THAT(context.buffer(), Ne(nullptr));    
@@ -345,7 +344,7 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -361,7 +360,7 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -390,7 +389,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     MirBufferSync context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     context.unavailable();
@@ -415,17 +414,15 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     geom::Width width { 32 };
     geom::Height height { 33 };
     auto format = mir_pixel_format_abgr_8888;
-    auto usage = mir_buffer_usage_software;
 
     SurfaceWithChainFromStart surface(connection, size, pf);
     mir_connection_allocate_buffer(
-        connection, width.as_int(), height.as_int(), format, usage,
+        connection, width.as_int(), height.as_int(), format,
         buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();
     EXPECT_THAT(mir_buffer_get_width(buffer), Eq(width.as_uint32_t()));
     EXPECT_THAT(mir_buffer_get_height(buffer), Eq(height.as_uint32_t()));
-    EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
     EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
 }
 
@@ -433,7 +430,7 @@ TEST_F(PresentationChain, can_check_valid_buffers)
 {
     MirBufferSync context;
     mir_connection_allocate_buffer(
-        connection, size.width.as_int(), size.height.as_int(), pf, usage,
+        connection, size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();
@@ -445,7 +442,7 @@ TEST_F(PresentationChain, can_check_valid_buffers)
 TEST_F(PresentationChain, can_check_invalid_buffers)
 {
     MirBufferSync context;
-    mir_connection_allocate_buffer(connection, 0, 0, pf, usage, buffer_callback, &context);
+    mir_connection_allocate_buffer(connection, 0, 0, pf, buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();
     ASSERT_THAT(buffer, Ne(nullptr));
@@ -470,11 +467,11 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
     MirBufferSync another_context;
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &context);
     mir_connection_allocate_buffer(
         connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
+        size.width.as_int(), size.height.as_int(), pf,
         buffer_callback, &second_buffer_context);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));

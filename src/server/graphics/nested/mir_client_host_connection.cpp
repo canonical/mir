@@ -562,7 +562,6 @@ public:
             size.width.as_int(),
             size.height.as_int(),
             format,
-            mir_buffer_usage_software,
             buffer_available, this);
         std::unique_lock<std::mutex> lk(mut);
         cv.wait(lk, [&]{ return handle; });
