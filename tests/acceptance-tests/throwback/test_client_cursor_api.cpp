@@ -195,7 +195,7 @@ struct DisabledCursorClient : CursorClient
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
-        mir_wait_for(mir_surface_configure_cursor(window, conf));
+        mir_wait_for(mir_window_configure_cursor(window, conf));
         mir_cursor_configuration_destroy(conf);
     }
 };
@@ -217,7 +217,7 @@ struct NamedCursorClient : CursorClient
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(cursor_name.c_str());
 #pragma GCC diagnostic pop
-        mir_wait_for(mir_surface_configure_cursor(window, conf));
+        mir_wait_for(mir_window_configure_cursor(window, conf));
         mir_cursor_configuration_destroy(conf);
     }
 
@@ -390,8 +390,8 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
             auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
 
-            mir_wait_for(mir_surface_configure_cursor(window, conf1));
-            mir_wait_for(mir_surface_configure_cursor(window, conf2));
+            mir_wait_for(mir_window_configure_cursor(window, conf1));
+            mir_wait_for(mir_window_configure_cursor(window, conf2));
 
             mir_cursor_configuration_destroy(conf1);
             mir_cursor_configuration_destroy(conf2);
@@ -434,7 +434,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
             mir_buffer_stream_swap_buffers_sync(stream);
 
-            mir_wait_for(mir_surface_configure_cursor(window, conf));
+            mir_wait_for(mir_window_configure_cursor(window, conf));
             
             mir_cursor_configuration_destroy(conf);            
             
@@ -485,7 +485,7 @@ struct FullscreenDisabledCursorClient : CursorClient
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
 #pragma GCC diagnostic pop
-        mir_surface_configure_cursor(window, conf);
+        mir_window_configure_cursor(window, conf);
         mir_cursor_configuration_destroy(conf);
     }
 };

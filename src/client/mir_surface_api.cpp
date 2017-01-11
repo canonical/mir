@@ -738,6 +738,23 @@ int mir_window_get_dpi(MirWindow* window)
     return dpi;
 }
 
+MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+
+    try
+    {
+        if (window)
+            result = window->configure_cursor(cursor);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1166,19 +1183,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = nullptr;
-    
-    try
-    {
-        if (surface)
-            result = surface->configure_cursor(cursor);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    return mir_window_configure_cursor(surface, cursor);
 }
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)

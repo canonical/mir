@@ -74,7 +74,7 @@ MirBufferStream* make_cursor_stream(MirConnection *connection, MirSurface *surfa
     animate_cursor(stream);
 
     MirCursorConfiguration* conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(surface, conf));
+    mir_wait_for(mir_window_configure_cursor(surface, conf));
     mir_cursor_configuration_destroy(conf);
     
     return stream;

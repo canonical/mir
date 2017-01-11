@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
     mir_window_spec_release(spec);
 
     // Hide cursor
-    mir_surface_configure_cursor(window, NULL);
+    mir_window_configure_cursor(window, NULL);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 

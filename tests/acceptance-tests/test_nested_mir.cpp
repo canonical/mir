@@ -980,7 +980,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
+    mir_wait_for(mir_window_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1062,7 +1062,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
+    mir_wait_for(mir_window_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);

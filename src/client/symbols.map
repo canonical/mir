@@ -567,4 +567,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_get_focus_state;
     mir_window_get_visibility;
     mir_window_get_dpi;
+    mir_window_configure_cursor;
 } MIR_CLIENT_0.25;

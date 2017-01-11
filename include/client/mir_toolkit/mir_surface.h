@@ -711,6 +711,18 @@ MirWindowVisibility mir_window_get_visibility(MirWindow* window);
  */
 int mir_window_get_dpi(MirWindow* window);
 
+/**
+ * Choose the cursor state for a window: whether a cursor is shown,
+ * and which cursor if so.
+ *    \param [in] window    The window to operate on
+ *    \param [in] parameters The configuration parameters obtained
+ *                           from mir_cursor* family of functions.
+ *    \return                A wait handle that can be passed to mir_wait_for,
+ *                           or NULL if parameters is invalid.
+ *
+ */
+MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -950,17 +962,8 @@ MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_visibility() instead")));
 
-/**
- * Choose the cursor state for a surface: whether a cursor is shown, 
- * and which cursor if so.
- *    \param [in] surface    The surface to operate on
- *    \param [in] parameters The configuration parameters obtained
- *                           from mir_cursor* family of functions.
- *    \return                A wait handle that can be passed to mir_wait_for,
- *                           or NULL if parameters is invalid.
- *
- */
 MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
+//__attribute__((deprecated("use mir_window_configure_cursor() instead")));
 
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_orientation() instead")));
