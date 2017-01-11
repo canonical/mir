@@ -112,10 +112,10 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
-        auto const attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(event));
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
         if (mir_window_attrib_visibility == attrib &&
             mir_surface_visibility_exposed == value)
@@ -135,8 +135,8 @@ struct Client
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            client->handle_window_event(window_event);
 
         }
         if (type == mir_event_type_input)

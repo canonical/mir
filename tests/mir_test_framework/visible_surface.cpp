@@ -44,11 +44,11 @@ void mtf::VisibleSurface::event_callback(MirSurface* surf, MirEvent const* ev, v
 {
     if (mir_event_get_type(ev) == mir_event_type_window)
     {
-        auto attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(mir_event_get_surface_event(ev)));
+        auto attrib = mir_window_event_get_attribute(mir_event_get_window_event(ev));
         if (attrib == mir_window_attrib_visibility)
         {
             auto ctx = reinterpret_cast<VisibleSurface*>(context);
-            ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
+            ctx->set_visibility(surf, mir_window_event_get_attribute_value(mir_event_get_window_event(ev)));
         }
     }
 }

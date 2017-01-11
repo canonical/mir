@@ -113,6 +113,11 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
 
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
+    return mir_event_get_window_event(ev);
+})
+
+MirWindowEvent const* mir_event_get_window_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
     expect_event_type(ev, mir_event_type_window);
 
     return ev->to_surface();
@@ -181,12 +186,24 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_window);
-
-    return static_cast<MirSurfaceAttrib>(ev->attrib());
+    return static_cast<MirSurfaceAttrib>(mir_window_event_get_attribute(ev));
 })
 
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return mir_window_event_get_attribute_value(ev);
+})
+
+/* Window event accessors */
+
+MirWindowAttrib mir_window_event_get_attribute(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_window);
+
+    return ev->attrib();
+})
+
+int mir_window_event_get_attribute_value(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_window);
 

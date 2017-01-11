@@ -304,32 +304,32 @@ std::ostream& mir::operator<<(std::ostream& out, MirCloseSurfaceEvent const&)
     return out << "close_surface_event()";
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceEvent const& event)
+std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
 {
-    out << "surface_event("
-        << mir_surface_event_get_attribute(&event)<< '=';
-    auto value = mir_surface_event_get_attribute_value(&event);
-    switch (mir_surface_event_get_attribute(&event))
+    out << "window_event("
+        << mir_window_event_get_attribute(&event)<< '=';
+    auto value = mir_window_event_get_attribute_value(&event);
+    switch (mir_window_event_get_attribute(&event))
     {
-    case mir_surface_attrib_type:
+    case mir_window_attrib_type:
         out << static_cast<MirSurfaceType>(value);
         break;
-    case mir_surface_attrib_state:
+    case mir_window_attrib_state:
         out << static_cast<MirSurfaceState>(value);
         break;
-    case mir_surface_attrib_swapinterval:
+    case mir_window_attrib_swapinterval:
         out << value;
         break;
-    case mir_surface_attrib_focus:
+    case mir_window_attrib_focus:
         out << static_cast<MirSurfaceFocusState>(value);
         break;
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         out << value;
         break;
-    case mir_surface_attrib_visibility:
+    case mir_window_attrib_visibility:
         out << static_cast<MirSurfaceVisibility>(value);
         break;
-    case mir_surface_attrib_preferred_orientation:
+    case mir_window_attrib_preferred_orientation:
         out << value;
         break;
     default:

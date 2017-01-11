@@ -135,10 +135,10 @@ static bool on_input_event(MirInputEvent const* ievent, State* state)
     return false;
 }
 
-static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
+static bool on_surface_event(MirWindowEvent const* sevent, State* state)
 {
-    MirWindowAttrib attrib = (MirWindowAttrib)mir_surface_event_get_attribute(sevent);
-    int value = mir_surface_event_get_attribute_value(sevent);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(sevent);
+    int value = mir_window_event_get_attribute_value(sevent);
 
     if (attrib == mir_window_attrib_visibility)
     {
@@ -173,7 +173,7 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
         handled = on_input_event(mir_event_get_input_event(event), state);
         break;
     case mir_event_type_window:
-        handled = on_surface_event(mir_event_get_surface_event(event), state);
+        handled = on_surface_event(mir_event_get_window_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;

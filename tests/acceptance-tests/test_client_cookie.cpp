@@ -103,9 +103,9 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 
     if (event_type == mir_event_type_window)
     {
-        auto event = mir_event_get_surface_event(ev);
-        auto const attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(event));
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto event = mir_event_get_window_event(ev);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
         std::lock_guard<std::mutex> lk(client_cookie->mutex);
         if (attrib == mir_window_attrib_visibility &&

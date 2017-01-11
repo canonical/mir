@@ -235,9 +235,9 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     {
         InSequence seq;
-        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_window_attrib_focus, mir_surface_focused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_surface_focused)))
             .Times(1);
-        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_window_attrib_focus, mir_surface_unfocused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_surface_unfocused)))
             .Times(1);
     }
 

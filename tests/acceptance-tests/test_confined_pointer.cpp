@@ -110,10 +110,10 @@ struct Client
         mir_window_spec_release(spec);
     }
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirSurfaceEvent const* event)
     {
-        auto const attrib = static_cast<MirWindowAttrib>(mir_surface_event_get_attribute(event));
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
         if (mir_window_attrib_visibility == attrib &&
             mir_surface_visibility_exposed == value)
@@ -134,7 +134,7 @@ struct Client
         switch (type)
         {
         case mir_event_type_window:
-            client->handle_surface_event(mir_event_get_surface_event(ev));
+            client->handle_window_event(mir_event_get_window_event(ev));
             break;
         case mir_event_type_input:
             client->handle_input(ev);
