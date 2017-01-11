@@ -187,7 +187,6 @@ int main(int argc, char *argv[])
     pthread_mutex_unlock(&mutex);
 
     bool const filled = fill_buffer(buffer);
-    printf("FILL? %i\n", filled);
 
     if (use_shim)
         egldisplay = future_driver_eglGetDisplay(connection);
@@ -261,7 +260,6 @@ int main(int argc, char *argv[])
 
         if (use_shim)
         {
-            printf("yep in here\n");
             eglCreateImageKHR = future_driver_eglCreateImageKHR; 
             eglDestroyImageKHR = future_driver_eglDestroyImageKHR; 
         }
