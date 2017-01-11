@@ -82,7 +82,7 @@ MirEventType MirEvent::type() const
     case mir::capnp::Event::Which::INPUT:
         return mir_event_type_input;
     case mir::capnp::Event::Which::SURFACE:
-        return mir_event_type_surface;
+        return mir_event_type_window;
     case mir::capnp::Event::Which::RESIZE:
         return mir_event_type_resize;
     case mir::capnp::Event::Which::PROMPT_SESSION:
@@ -90,7 +90,7 @@ MirEventType MirEvent::type() const
     case mir::capnp::Event::Which::ORIENTATION:
         return mir_event_type_orientation;
     case mir::capnp::Event::Which::CLOSE_SURFACE:
-        return mir_event_type_close_surface;
+        return mir_event_type_close_window;
     case mir::capnp::Event::Which::KEYMAP:
         return mir_event_type_keymap;
 #pragma GCC diagnostic push
@@ -99,11 +99,11 @@ MirEventType MirEvent::type() const
         return mir_event_type_input_configuration;
 #pragma GCC diagnostic pop
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
-        return mir_event_type_surface_output;
+        return mir_event_type_window_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:
         return mir_event_type_input_device_state;
     case mir::capnp::Event::Which::SURFACE_PLACEMENT:
-        return mir_event_type_surface_placement;
+        return mir_event_type_window_placement;
     default:
         mir::log_critical("unknown event type.");
         abort();
