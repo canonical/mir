@@ -40,7 +40,6 @@
 #include <memory>
 
 namespace mi = mir::input;
-namespace mf = mir::frontend;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,

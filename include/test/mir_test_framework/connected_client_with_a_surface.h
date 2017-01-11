@@ -26,7 +26,7 @@ namespace mir_test_framework
 {
 struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
 {
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
 
     void SetUp() override;
 

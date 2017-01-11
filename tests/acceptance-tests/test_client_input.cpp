@@ -78,7 +78,7 @@ void null_event_handler(MirSurface*, MirEvent const*, void*)
 
 struct Client
 {
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
@@ -93,22 +93,22 @@ struct Client
                 std::runtime_error{std::string{"Failed to connect to test server: "} +
                 mir_connection_get_error_message(connection)});
         }
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
-                                                                  surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_name(spec, name.c_str());
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        if (!mir_surface_is_valid(surface))
-            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
-                mir_surface_get_error_message(surface)});
+        auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_name(spec, name.c_str());
+        window = mir_window_create_sync(spec);
+        mir_window_spec_release(spec);
+        if (!mir_window_is_valid(window))
+            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
+                mir_window_get_error_message(window)});
 
-        mir_surface_set_event_handler(surface, handle_event, this);
+        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface));
+            mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
     void handle_surface_event(MirSurfaceEvent const* event)
@@ -132,7 +132,7 @@ struct Client
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        if (type == mir_event_type_window)
         {
             auto surface_event = mir_event_get_surface_event(ev);
             client->handle_surface_event(surface_event);
@@ -146,10 +146,10 @@ struct Client
     ~Client()
     {
         // Remove the event handler to avoid handling spurious events unrelated
-        // to the tests (e.g. pointer leave events when the surface is destroyed),
+        // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
-        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
     MirConnection * connection;
@@ -319,7 +319,7 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
     EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(surface_width - 1, surface_height - 1)));
     EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
-    // But we should not receive an event for the second movement outside of our surface!
+    // But we should not receive an event for the second movement outside of our window!
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 2));
@@ -443,9 +443,9 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
             .WillOnce(mt::WakeUp(&second_client.all_events_received));
     }
 
-    // In the bounds of the first surface
+    // In the bounds of the first window
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width - 1, client_height - 1));
-    // In the bounds of the second surface
+    // In the bounds of the second window
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width, client_height));
 
     first_client.all_events_received.wait_for(2s);
@@ -560,7 +560,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(2, 2)))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
-    // We send one event and then hide the surface on top before sending the next.
+    // We send one event and then hide the window on top before sending the next.
     // So we expect each of the two surfaces to receive one event
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1,1));
 
@@ -856,10 +856,10 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
 
     MirRectangle input_rects[] = {{1, 1, 10, 10}};
 
-    auto spec = mir_connection_create_spec_for_changes(client.connection);
-    mir_surface_spec_set_input_shape(spec, input_rects, 1);
-    mir_surface_apply_spec(client.surface, spec);
-    mir_surface_spec_release(spec);
+    auto spec = mir_create_window_spec(client.connection);
+    mir_window_spec_set_input_shape(spec, input_rects, 1);
+    mir_window_apply_spec(client.window, spec);
+    mir_window_spec_release(spec);
 
     ASSERT_TRUE(shell->wait_for_modify_surface(5s));
 

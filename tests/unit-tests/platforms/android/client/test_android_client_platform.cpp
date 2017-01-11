@@ -133,9 +133,8 @@ struct ClientExtensions : Test
         native_handle{std::make_shared<native_handle_t>()},
         mock_native_buffer{std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(geom::Size{1, 1})},
         mock_registrar{create_registrar()},
-        extension(static_cast<MirExtensionFencedBuffers*>(
-            platform->request_interface(
-                MIR_EXTENSION_FENCED_BUFFERS, MIR_EXTENSION_FENCED_BUFFERS_VERSION_1)))
+        extension(static_cast<MirExtensionFencedBuffersV1*>(
+            platform->request_interface("mir_extension_fenced_buffers", 1)))
     {
     }
 
@@ -145,7 +144,7 @@ struct ClientExtensions : Test
     std::shared_ptr<mtd::MockAndroidNativeBuffer> const mock_native_buffer;
     std::shared_ptr<mtd::MockBufferRegistrar> const mock_registrar;
     MirBufferPackage package;
-    MirExtensionFencedBuffers* extension;
+    MirExtensionFencedBuffersV1* extension;
     int fake_fence = 8482;
     mcl::Buffer buffer{
         nullptr, nullptr, 0,
@@ -204,6 +203,12 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
         {
             channel_call_count++;
             c->Run();
+        }
+        void discard_future_calls() override
+        {
+        }
+        void wait_for_outstanding_calls() override
+        {
         }
         mir::Fd watch_fd() const
         {
@@ -264,9 +269,8 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
 
     int width = 32;
     int height = 90;
-    auto ext = static_cast<MirExtensionAndroidBuffer*>(
-        platform->request_interface(
-            MIR_EXTENSION_ANDROID_BUFFER,MIR_EXTENSION_ANDROID_BUFFER_VERSION_1));
+    auto ext = static_cast<MirExtensionAndroidBufferV1*>(
+        platform->request_interface("mir_extension_android_buffer", 1));
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->allocate_buffer_android, Ne(nullptr));
 

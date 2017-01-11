@@ -91,27 +91,27 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             // We start out grabbed
             static bool grabbed = true;
 
-            MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+            MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             if (!grabbed)
             {
-                mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
-                mir_surface_spec_set_name(spec, "");
+                mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+                mir_window_spec_set_name(spec, "");
             }
             else
             {
-                mir_surface_spec_set_pointer_confinement(spec, mir_pointer_unconfined);
-                mir_surface_spec_set_name(spec, mir_default_cursor_name);
+                mir_window_spec_set_pointer_confinement(spec, mir_pointer_unconfined);
+                mir_window_spec_set_name(spec, mir_default_cursor_name);
             }
 
             grabbed = !grabbed;
 
-            mir_surface_apply_spec(surface, spec);
-            mir_surface_spec_release(spec);
+            mir_window_apply_spec(surface, spec);
+            mir_window_spec_release(spec);
         }
         else if (key_code == XKB_KEY_f)
         {
             static bool fullscreen = false;
-            MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
+            MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             MirSurfaceState state = mir_surface_state_restored;
 
             if (!fullscreen)
@@ -121,9 +121,9 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
 
             fullscreen = !fullscreen;
 
-            mir_surface_spec_set_state(spec, state);
-            mir_surface_apply_spec(surface, spec);
-            mir_surface_spec_release(spec);
+            mir_window_spec_set_state(spec, state);
+            mir_window_apply_spec(surface, spec);
+            mir_window_spec_release(spec);
         }
     }
 }
@@ -180,12 +180,12 @@ int main(int argc, char* argv[])
     width  /= 2;
     height /= 2;
 
-    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
-    mir_surface_spec_set_width (spec, width);
-    mir_surface_spec_set_height(spec, height);
+    MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
+    mir_window_spec_set_width (spec, width);
+    mir_window_spec_set_height(spec, height);
 
-    mir_surface_apply_spec(mir_eglapp_native_surface(), spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(mir_eglapp_native_window(), spec);
+    mir_window_spec_release(spec);
 
     mouse_x = width  / 2.0;
     mouse_y = height / 2.0;
@@ -213,17 +213,17 @@ int main(int argc, char* argv[])
 
     glUseProgram(prog);
 
-    MirSurface* surface = mir_eglapp_native_surface();
-    mir_surface_set_event_handler(surface, handle_event, NULL);
+    MirWindow* window = mir_eglapp_native_window();
+    mir_window_set_event_handler(window, handle_event, NULL);
 
-    spec = mir_connection_create_spec_for_changes(mir_eglapp_native_connection());
-    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    spec = mir_create_window_spec(mir_eglapp_native_connection());
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
 
-    mir_surface_apply_spec(surface, spec);
-    mir_surface_spec_release(spec);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
 
     // Hide cursor
-    mir_surface_configure_cursor(surface, NULL);
+    mir_surface_configure_cursor(window, NULL);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 

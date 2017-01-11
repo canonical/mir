@@ -44,8 +44,8 @@
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
 
-#include "mir/input/input_configuration.h"
-#include "mir/input/input_configuration_serialization.h"
+#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_configuration_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 #include "mir_error.h"
@@ -110,7 +110,7 @@ struct OnScopeExit
     std::function<void()> const f;
 };
 
-mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
+mir::protobuf::SurfaceParameters serialize_spec(MirWindowSpec const& spec)
 {
     mp::SurfaceParameters message;
 
@@ -312,9 +312,11 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
-    // We don't die while if are pending callbacks (as they touch this).
-    // But, if after 500ms we don't get a call, assume it won't happen.
-    connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+    if (channel)  // some tests don't have one
+    {
+        channel->discard_future_calls();
+        channel->wait_for_outstanding_calls();
+    }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     surface_map.reset();
@@ -328,7 +330,7 @@ MirConnection::~MirConnection() noexcept
 }
 
 MirWaitHandle* MirConnection::create_surface(
-    MirSurfaceSpec const& spec,
+    MirWindowSpec const& spec,
     mir_surface_callback callback,
     void * context)
 {
@@ -510,7 +512,7 @@ MirWaitHandle* MirConnection::release_surface(
         release_wait_handles.push_back(new_wait_handle);
     }
 
-    if (!mir_surface_is_valid(surface))
+    if (!mir_window_is_valid(surface))
     {
         new_wait_handle->expect_result();
         new_wait_handle->result_received();
@@ -645,6 +647,9 @@ MirWaitHandle* MirConnection::disconnect()
     disconnect_wait_handle.expect_result();
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+
+    if (channel)
+        channel->discard_future_calls();
 
     return &disconnect_wait_handle;
 }
@@ -1057,19 +1062,37 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
 
 namespace
 {
-struct HandleErrorVoid
+template <class T>
+struct HandleError
 {
-    std::unique_ptr<mp::Void> result;
-    std::function<void(mp::Void const&)> on_error;
+    std::unique_ptr<T> result;
+    std::function<void(T const&)> on_error;
 };
 
-void handle_structured_error(HandleErrorVoid* handler)
+template <class T>
+void handle_structured_error(HandleError<T>* handler)
 {
     if (handler->result->has_structured_error())
     {
         handler->on_error(*handler->result);
     }
     delete handler;
+}
+
+template <class T>
+HandleError<T>* create_stored_error_result(std::shared_ptr<mcl::ErrorHandler> const& error_handler)
+{
+    auto store_error_result = new HandleError<T>;
+    store_error_result->result = std::make_unique<T>();
+    store_error_result->on_error = [error_handler](T const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        (*error_handler)(&error);
+    };
+
+    return store_error_result;
 }
 }
 
@@ -1082,15 +1105,7 @@ void MirConnection::preview_base_display_configuration(
     request.mutable_configuration()->CopyFrom(configuration);
     request.set_timeout(timeout.count());
 
-    auto store_error_result = new HandleErrorVoid;
-    store_error_result->result = std::make_unique<mp::Void>();
-    store_error_result->on_error = [this](mp::Void const& message)
-    {
-        MirError const error{
-            static_cast<MirErrorDomain>(message.structured_error().domain()),
-            message.structured_error().code()};
-        (*error_handler)(&error);
-    };
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
     server.preview_base_display_configuration(
         &request,
@@ -1102,17 +1117,30 @@ void MirConnection::cancel_base_display_configuration_preview()
 {
     mp::Void request;
 
-    auto store_error_result = new HandleErrorVoid;
-    store_error_result->result = std::make_unique<mp::Void>();
-    store_error_result->on_error = [this](mp::Void const& message)
-    {
-        MirError const error{
-            static_cast<MirErrorDomain>(message.structured_error().domain()),
-            message.structured_error().code()};
-        (*error_handler)(&error);
-    };
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
     server.cancel_base_display_configuration_preview(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::configure_session_display(mp::DisplayConfiguration const& configuration)
+{
+    auto store_error_result = create_stored_error_result<mp::DisplayConfiguration>(error_handler);
+
+    server.configure_display(
+        &configuration,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::remove_session_display()
+{
+    mp::Void request;
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    server.remove_session_configuration(
         &request,
         store_error_result->result.get(),
         google::protobuf::NewCallback(&handle_structured_error, store_error_result));
@@ -1455,7 +1483,7 @@ void* MirConnection::request_interface(char const* name, int version)
 
 void MirConnection::apply_input_configuration(MirInputConfig const* config)
 {
-    auto configuration = reinterpret_cast<mi::InputConfiguration const*>(config);
+    auto configuration = reinterpret_cast<MirInputConfiguration const*>(config);
     mp::InputConfigurationRequest req;
     req.set_input_configuration(mi::serialize_input_configuration(*configuration));
 
@@ -1464,7 +1492,7 @@ void MirConnection::apply_input_configuration(MirInputConfig const* config)
 
 void MirConnection::set_base_input_configuration(MirInputConfig const* config)
 {
-    auto configuration = reinterpret_cast<mi::InputConfiguration const*>(config);
+    auto configuration = reinterpret_cast<MirInputConfiguration const*>(config);
     mp::InputConfigurationRequest req;
     req.set_input_configuration(mi::serialize_input_configuration(*configuration));
 

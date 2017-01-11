@@ -292,14 +292,14 @@ MirWaitHandle* mir_connection_set_base_display_config(
     }
 }
 
-MirInputConfig* mir_connection_create_input_config(
+MirInputConfiguration* mir_connection_create_input_config(
     MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
 
     auto devices = connection->the_input_devices();
-    return reinterpret_cast<MirInputConfig*>(new MirInputConfiguration{devices->clone_devices()});
+    return new MirInputConfiguration{devices->devices()};
 }
 catch (std::exception const& ex)
 {
@@ -345,10 +345,9 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_input_config_destroy(MirInputConfig const* config)
+void mir_input_config_destroy(MirInputConfiguration const* config)
 {
-    auto device_config = reinterpret_cast<MirInputConfiguration const*>(config);
-    delete device_config;
+    delete config;
 }
 
 void mir_connection_preview_base_display_configuration(
@@ -452,4 +451,24 @@ void mir_connection_set_error_callback(
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
+}
+
+void mir_connection_apply_session_display_configuration(MirConnection* connection, MirDisplayConfig const* display_config)
+try
+{
+    connection->configure_session_display(*display_config);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_connection_remove_session_display_configuration(MirConnection* connection)
+try
+{
+    connection->remove_session_display();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }

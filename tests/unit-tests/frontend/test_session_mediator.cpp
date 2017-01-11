@@ -323,7 +323,7 @@ struct SessionMediator : public ::testing::Test
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
-    mi::InputConfiguration config;
+    MirInputConfiguration config;
 };
 
 }
@@ -913,8 +913,8 @@ TEST_F(SessionMediator, connect_sends_base_input_configuration)
     mtd::StubDevice dev1{MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "kbd", "kbd-aaf474"};
     mtd::StubDevice dev2{MirInputDeviceId{7}, mi::DeviceCapability::touchscreen, "ts", "ts-ewrkw2"};
     std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
-    config.add_device_configuration(mi::DeviceConfiguration(dev1.id(), dev1.capabilities(), dev1.name(), dev1.unique_id()));
-    config.add_device_configuration(mi::DeviceConfiguration(dev2.id(), dev2.capabilities(), dev2.name(), dev2.unique_id()));
+    config.add_device_configuration(MirInputDevice(dev1.id(), dev1.capabilities(), dev1.name(), dev1.unique_id()));
+    config.add_device_configuration(MirInputDevice(dev2.id(), dev2.capabilities(), dev2.name(), dev2.unique_id()));
     ON_CALL(mock_input_config_changer, base_configuration())
         .WillByDefault(Return(config));
 
@@ -1087,4 +1087,37 @@ TEST_F(SessionMediator, arranges_named_cursors_via_shell)
     ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
     spec->set_cursor_name(cursor_data.begin()->name);
     mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buffer)
+{
+    mp::Void null;
+    mp::ScreencastParameters screencast_parameters;
+    screencast_parameters.set_num_buffers(0);
+    mp::Screencast screencast;
+    mp::BufferAllocation request;
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(100);
+    buffer_request->set_height(129);
+    buffer_request->set_pixel_format(mir_pixel_format_abgr_8888);
+    buffer_request->set_buffer_usage(mir_buffer_usage_hardware);
+    int buffer_id = 3;
+    mf::ScreencastSessionId screencast_id{7};
+    auto mock_screencast = std::make_shared<NiceMock<mtd::MockScreencast>>();
+
+    EXPECT_CALL(*mock_screencast, create_session(_,_,_,_,_))
+        .WillOnce(Return(screencast_id));
+    EXPECT_CALL(*mock_screencast, capture(screencast_id, _));
+
+    auto mediator = create_session_mediator_with_screencast(mock_screencast);
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->allocate_buffers(&request, &null, null_callback.get());
+    mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
+
+    mp::ScreencastRequest screencast_request;
+
+    screencast_request.mutable_id()->set_value(screencast_id.as_value());
+    screencast_request.set_buffer_id(buffer_id);
+
+    mediator->screencast_to_buffer(&screencast_request, &null, null_callback.get());
 }

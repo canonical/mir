@@ -37,7 +37,7 @@ public:
     virtual ~HostSurfaceSpec() = default;
     virtual void add_chain(HostChain&, geometry::Displacement disp, geometry::Size size) = 0;
     virtual void add_stream(HostStream&, geometry::Displacement disp, geometry::Size size) = 0;
-    virtual MirSurfaceSpec* handle() = 0;
+    virtual MirWindowSpec* handle() = 0;
 protected:
     HostSurfaceSpec() = default;
     HostSurfaceSpec(HostSurfaceSpec const&) = delete;

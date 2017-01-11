@@ -26,6 +26,7 @@
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
+#include "gbm_format_conversions.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -121,6 +122,31 @@ void set_device(gbm_device* device, void* context)
     platform->set_gbm_device(device);
 }
 
+void allocate_buffer_gbm(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int gbm_pixel_format,
+    unsigned int gbm_bo_flags,
+    mir_buffer_callback available_callback, void* available_context)
+{
+    //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
+    //this will return an error buffer for now. In the future, we should share MirConnection
+    //and mcl::ErrorBuffer so the platforms can use them. 
+    if (gbm_bo_flags)
+    {
+        mir_connection_allocate_buffer(
+            connection, width, height, mir_pixel_format_invalid, mir_buffer_usage_hardware,
+            available_callback, available_context);
+    }
+
+    mir_connection_allocate_buffer(
+        connection,
+        width, height,
+        mir::graphics::mesa::gbm_format_to_mir_format(gbm_pixel_format),
+        mir_buffer_usage_hardware,
+        available_callback, available_context);
+}
+
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
@@ -137,7 +163,8 @@ mclm::ClientPlatform::ClientPlatform(
       display_container(display_container),
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
-      mesa_auth{set_device, this}
+      mesa_auth{set_device, this},
+      gbm_buffer{allocate_buffer_gbm}
 {
 }
 
@@ -257,15 +284,12 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 
 void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
 {
-    if (!strcmp(MIR_EXTENSION_MESA_DRM_AUTH, extension_name) &&
-        (MIR_EXTENSION_MESA_DRM_AUTH_VERSION_1 == version))
-    {
+    if (!strcmp("mir_extension_mesa_drm_auth", extension_name) && (version == 1))
         return &drm_extensions;
-    }
-    if (!strcmp(extension_name, MIR_EXTENSION_SET_GBM_DEVICE) &&
-       (version == MIR_EXTENSION_SET_GBM_DEVICE_VERSION_1))
-    {
+    if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
-    }
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
+        return &gbm_buffer;
+
     return nullptr;
 }
