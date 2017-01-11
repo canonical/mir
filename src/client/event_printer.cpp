@@ -319,7 +319,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirKeymapEvent const& event)
 
 std::ostream& mir::operator<<(std::ostream& out, MirCloseWindowEvent const&)
 {
-    return out << "close_surface_event()";
+    return out << "close_window_event()";
 }
 
 std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
