@@ -366,16 +366,15 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
 
 std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto type = mir_event_get_type(&event);
     switch (type)
     {
         PRINT_EVENT(surface);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         PRINT_EVENT(close_surface);
-#pragma GCC diagnostic pop
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
@@ -385,5 +384,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }
+#pragma GCC diagnostic pop
 }
 
