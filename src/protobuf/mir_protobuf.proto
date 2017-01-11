@@ -382,6 +382,7 @@ message CursorSetting {
 
 message SocketFDRequest {
   required int32 number = 1;
+  required int32 prompt_session_id = 2;
 }
 
 message SocketFD {

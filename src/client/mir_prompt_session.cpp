@@ -149,6 +149,7 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
 {
     mp::SocketFDRequest request;
     request.set_number(no_of_fds);
+    request.set_prompt_session_id(session->id());
 
     fds_for_prompt_providers_wait_handle.expect_result();
 
