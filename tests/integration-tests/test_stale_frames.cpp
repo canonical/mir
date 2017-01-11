@@ -248,8 +248,8 @@ struct StaleFrames : BasicFixture,
     /*
      * NOTE that we wait for surface buffer posts as opposed to display posts.
      * The difference is that surface buffer posts will precisely match the
-     * number of of client swaps for any swap interval, but display posts
-     * may be fewer than the number of swaps if the client was quick and using
+     * number of client swaps for any swap interval, but display posts may be
+     * fewer than the number of swaps if the client was quick and using
      * interval zero.
      */
     void frame_posted(int count)
