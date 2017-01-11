@@ -157,7 +157,7 @@ private:
     int set_dpi(int);
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
     int set_swap_interval(int);
-    MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
@@ -181,7 +181,7 @@ private:
     MirWindowType type_ = mir_window_type_normal;
     MirWindowState state_ = mir_window_state_restored;
     int swapinterval_ = 1;
-    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;

@@ -690,6 +690,13 @@ MirWaitHandle* mir_window_set_state(MirWindow* window,
  */
 MirWindowState mir_window_get_state(MirWindow* window);
 
+/**
+ * Query the focus state for a window.
+ *   \param [in] window The window to operate on
+ *   \return             The focus state of said window
+ */
+MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -926,13 +933,9 @@ __attribute__((deprecated("Swap interval should be set on the backing content"))
  *   \return  The DPI of the surface, or zero if unknown.
  */
 int mir_surface_get_dpi(MirSurface* surface);
-    
-/**
- * Query the focus state for a surface.
- *   \param [in] surface The surface to operate on
- *   \return             The focus state of said surface
- */
+
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_focus_state() instead")));
 
 /**
  * Query the visibility state for a surface.

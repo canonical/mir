@@ -289,7 +289,7 @@ struct SimpleClient
 
             std::lock_guard<std::mutex> lk(client->mutex);
             if (mir_window_attrib_focus == attrib &&
-                mir_surface_focused == value)
+                mir_window_focus_state_focused == value)
                 client->ready_to_accept_events.raise();
         }
     }

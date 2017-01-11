@@ -115,7 +115,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
         }
 
         if (attrib == mir_window_attrib_focus &&
-            value == mir_surface_focused)
+            value == mir_window_focus_state_focused)
         {
             client_cookie->focused = true;
         }

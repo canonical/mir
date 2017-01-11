@@ -528,10 +528,10 @@ int ms::BasicSurface::set_swap_interval(int interval)
     return interval;
 }
 
-MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_state)
+MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_state)
 {
-    if (new_state != mir_surface_focused &&
-        new_state != mir_surface_unfocused)
+    if (new_state != mir_window_focus_state_focused &&
+        new_state != mir_window_focus_state_unfocused)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
@@ -579,7 +579,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         result = set_state(static_cast<MirWindowState>(result));
         break;
     case mir_window_attrib_focus:
-        result = set_focus_state(static_cast<MirSurfaceFocusState>(result));
+        result = set_focus_state(static_cast<MirWindowFocusState>(result));
         break;
     case mir_window_attrib_swapinterval:
         result = set_swap_interval(result);

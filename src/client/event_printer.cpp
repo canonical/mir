@@ -173,6 +173,17 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowFocusState state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_focus_state,focused);
+    PRINT(mir_window_focus_state,unfocused);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
 {
     switch (state)
@@ -356,7 +367,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
         out << value;
         break;
     case mir_window_attrib_focus:
-        out << static_cast<MirSurfaceFocusState>(value);
+        out << static_cast<MirWindowFocusState>(value);
         break;
     case mir_window_attrib_dpi:
         out << value;

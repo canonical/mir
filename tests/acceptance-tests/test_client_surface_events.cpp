@@ -358,7 +358,7 @@ TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 
 namespace
 {
-bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state)
+bool is_focus_event_with_value(MirEvent const* event, MirWindowFocusState state)
 {
     if (mir_event_get_type(event) != mir_event_type_window)
     {
@@ -376,12 +376,12 @@ bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state
 
 bool is_focus_event(MirEvent const* event)
 {
-    return is_focus_event_with_value(event, mir_surface_focused);
+    return is_focus_event_with_value(event, mir_window_focus_state_focused);
 }
 
 bool is_unfocus_event(MirEvent const* event)
 {
-    return is_focus_event_with_value(event, mir_surface_unfocused);
+    return is_focus_event_with_value(event, mir_window_focus_state_unfocused);
 }
 }
 

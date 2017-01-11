@@ -681,6 +681,25 @@ MirWindowState mir_window_get_state(MirWindow* window)
     return state;
 }
 
+MirWindowFocusState mir_window_get_focus_state(MirWindow* window)
+{
+    MirWindowFocusState state = mir_window_focus_state_unfocused;
+
+    try
+    {
+        if (window)
+        {
+            state = static_cast<MirWindowFocusState>(window->attrib(mir_window_attrib_focus));
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1113,21 +1132,7 @@ int mir_surface_get_dpi(MirSurface* surf)
 
 MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 {
-    MirSurfaceFocusState state = mir_surface_unfocused;
-
-    try
-    {
-        if (surf)
-        {
-            state = static_cast<MirSurfaceFocusState>(surf->attrib(mir_window_attrib_focus));
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceFocusState>(mir_window_get_focus_state(surf));
 }
 
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)

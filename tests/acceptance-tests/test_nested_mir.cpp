@@ -844,7 +844,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
         [window = client.window]
         {
             return mir_surface_get_visibility(window) == mir_surface_visibility_exposed
-                && mir_surface_get_focus(window) == mir_surface_focused;
+                && mir_window_get_focus_state(window) == mir_window_focus_state_focused;
         },
         timeout);
 

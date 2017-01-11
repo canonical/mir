@@ -212,11 +212,11 @@ TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
     auto client = connect_client();
 
     // Throw away all uninteresting window events
-    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
+    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_window_focus_state_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
 
-    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(1)
+    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_window_focus_state_focused))).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 
     auto window = client.create_surface(1);
@@ -230,11 +230,11 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
     auto client = connect_client();
 
     // Throw away all uninteresting window events
-    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
+    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_window_focus_state_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
 
-    ON_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused)))
+    ON_CALL(client, surface_event(_, MirFocusEvent(mir_window_focus_state_focused)))
             .WillByDefault(InvokeWithoutArgs([&] { signal.raise(); }));
 
     auto window = client.create_surface(1);

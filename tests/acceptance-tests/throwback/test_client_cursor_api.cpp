@@ -168,7 +168,7 @@ struct CursorClient
             [window]
             {
                 return mir_surface_get_visibility(window) == mir_surface_visibility_exposed &&
-                    mir_surface_get_focus(window) == mir_surface_focused;
+                    mir_window_get_focus_state(window) == mir_window_focus_state_focused;
             },
             std::chrono::seconds{5});
 

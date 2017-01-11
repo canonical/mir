@@ -556,8 +556,8 @@ AttributeTestParameters const surface_dpi_test_parameters{
 
 AttributeTestParameters const surface_focus_test_parameters{
     mir_window_attrib_focus,
-    mir_surface_unfocused,
-    mir_surface_focused,
+    mir_window_focus_state_unfocused,
+    mir_window_focus_state_focused,
     -1
 };
 

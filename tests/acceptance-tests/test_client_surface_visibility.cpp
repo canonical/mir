@@ -168,7 +168,7 @@ private:
         // GMock is behaving strangely, checking expectations after they
         // have been cleared, so we use spin_wait() instead.
         mt::spin_wait_for_condition_or_timeout(
-            [this] { return mir_surface_get_focus(window) == mir_surface_focused; },
+            [this] { return mir_window_get_focus_state(window) == mir_window_focus_state_focused; },
             std::chrono::seconds{2});
     }
 
