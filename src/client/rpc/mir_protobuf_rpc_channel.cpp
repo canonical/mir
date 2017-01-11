@@ -197,6 +197,20 @@ void mclr::MirProtobufRpcChannel::call_method(
     google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
+    if (discard)
+    {
+       /*
+        * Until recently we had no explicit plan for what to do in this case.
+        * Callbacks would race with destruction of the MirConnection and either
+        * succeed, deadlock, crash or corrupt memory. However the one apparent
+        * intent in the old plan was that we close all closures so that the
+        * user doesn't leak any memory. So do that...
+        */
+       if (complete)
+           complete->Run();
+       return;
+    }
+
     // Only send message when details saved for handling response
     std::vector<mir::Fd> fds;
     if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
@@ -226,6 +240,16 @@ void mclr::MirProtobufRpcChannel::call_method(
     }
 
     send_message(invocation, invocation, fds);
+}
+
+void mclr::MirProtobufRpcChannel::discard_future_calls()
+{
+    discard = true;
+}
+
+void mclr::MirProtobufRpcChannel::wait_for_outstanding_calls()
+{
+    pending_calls.wait_till_complete();
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
@@ -376,7 +400,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
                     switch (e->type())
                     {
-                    case mir_event_type_surface:
+                    case mir_event_type_window:
                         surface_id = e->to_surface()->id();
                         break;
                     case mir_event_type_resize:
@@ -385,16 +409,16 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     case mir_event_type_orientation:
                         surface_id = e->to_orientation()->surface_id();
                         break;
-                    case mir_event_type_close_surface:
+                    case mir_event_type_close_window:
                         surface_id = e->to_close_surface()->surface_id();
                         break;
                     case mir_event_type_keymap:
                         surface_id = e->to_keymap()->surface_id();
                         break;
-                    case mir_event_type_surface_output:
+                    case mir_event_type_window_output:
                         surface_id = e->to_surface_output()->surface_id();
                         break;
-                    case mir_event_type_surface_placement:
+                    case mir_event_type_window_placement:
                         surface_id = e->to_surface_placement()->id();
                         break;
                     default:

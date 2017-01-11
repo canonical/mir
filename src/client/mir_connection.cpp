@@ -309,9 +309,11 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
-    // We don't die while if are pending callbacks (as they touch this).
-    // But, if after 500ms we don't get a call, assume it won't happen.
-    connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+    if (channel)  // some tests don't have one
+    {
+        channel->discard_future_calls();
+        channel->wait_for_outstanding_calls();
+    }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     surface_map.reset();
@@ -642,6 +644,9 @@ MirWaitHandle* MirConnection::disconnect()
     disconnect_wait_handle.expect_result();
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+
+    if (channel)
+        channel->discard_future_calls();
 
     return &disconnect_wait_handle;
 }
