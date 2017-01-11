@@ -76,7 +76,7 @@ uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
 bool mir_debug_surface_coords_to_screen(MirSurface* surface,
                                         int x, int y,
                                         int* screen_x, int* screen_y);
-//__attribute__((deprecated("Use mir_debug_window_current_buffer_id() instead")));
+//__attribute__((deprecated("Use mir_debug_window_coords_to_screen() instead")));
 
 //#pragma GCC diagnostic pop
 
