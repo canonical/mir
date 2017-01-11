@@ -172,7 +172,7 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     case mir_event_type_input:
         handled = on_input_event(mir_event_get_input_event(event), state);
         break;
-    case mir_event_type_surface:
+    case mir_event_type_window:
         handled = on_surface_event(mir_event_get_surface_event(event), state);
         break;
     case mir_event_type_resize:

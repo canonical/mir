@@ -71,20 +71,22 @@ std::string mir::event_type_to_string(MirEventType t)
         return "mir_event_type_key";
     case mir_event_type_motion:
         return "mir_event_type_motion";
-    case mir_event_type_surface:
-        return "mir_event_type_surface";
+    case mir_event_type_window:
+        return "mir_event_type_window";
     case mir_event_type_resize:
         return "mir_event_type_resize";
     case mir_event_type_prompt_session_state_change:
         return "mir_event_type_prompt_session_state_change";
     case mir_event_type_orientation:
         return "mir_event_type_orientation";
-    case mir_event_type_close_surface:
-        return "mir_event_type_close_surface";
+    case mir_event_type_close_window:
+        return "mir_event_type_close_window";
     case mir_event_type_input:
         return "mir_event_type_input";
     case mir_event_type_input_device_state:
         return "mir_event_type_input_device_state";
+    case mir_event_type_window_output:
+        return "mir_event_type_window_output";
     default:
         abort();
     }
@@ -111,7 +113,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
 
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface);
+    expect_event_type(ev, mir_event_type_window);
 
     return ev->to_surface();
 })
@@ -139,7 +141,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) M
 
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_close_surface);
+    expect_event_type(ev, mir_event_type_close_window);
 
     return ev->to_close_surface();
 })
@@ -163,7 +165,7 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
 
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
 
     return ev->to_surface_output();
 })
@@ -179,14 +181,14 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface);
+    expect_event_type(ev, mir_event_type_window);
 
     return ev->attrib();
 })
 
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface);
+    expect_event_type(ev, mir_event_type_window);
 
     return ev->value();
 })
@@ -264,31 +266,31 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 
 int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
     return ev->dpi();
 })
 
 MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
     return ev->form_factor();
 })
 
 float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
     return ev->scale();
 })
 
 double mir_surface_output_event_get_refresh_rate(MirSurfaceOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
     return ev->refresh_rate();
 })
 
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    expect_event_type(ev, mir_event_type_surface_output);
+    expect_event_type(ev, mir_event_type_window_output);
     return ev->output_id();
 })
 

@@ -133,7 +133,7 @@ struct Client
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        if (type == mir_event_type_window)
         {
             auto surface_event = mir_event_get_surface_event(ev);
             client->handle_surface_event(surface_event);

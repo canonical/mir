@@ -301,7 +301,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             changed = true;
         }
     }
-    else if (event_type == mir_event_type_close_surface)
+    else if (event_type == mir_event_type_close_window)
     {
         static int closing = 0;
 
