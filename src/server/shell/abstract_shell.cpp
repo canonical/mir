@@ -93,7 +93,7 @@ void msh::AbstractShell::update_focused_surface_confined_region()
 {
     auto const current_focus = focus_surface.lock();
 
-    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_surface)
+    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_window)
     {
         seat->set_confinement_regions({current_focus->input_bounds()});
     }
@@ -163,7 +163,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     if (modifications.confine_pointer.is_set() && focused_surface() == surface)
     {
-        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+        if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
         {
             seat->set_confinement_regions({surface->input_bounds()});
         }
@@ -295,7 +295,7 @@ void msh::AbstractShell::set_focus_to_locked(
 
         if (surface)
         {
-            if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+            if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
             {
                 seat->set_confinement_regions({surface->input_bounds()});
             }

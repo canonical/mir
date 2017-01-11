@@ -94,7 +94,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             if (!grabbed)
             {
-                mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+                mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
                 mir_window_spec_set_name(spec, "");
             }
             else
@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
     mir_window_set_event_handler(window, handle_event, NULL);
 
     spec = mir_create_window_spec(mir_eglapp_native_connection());
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
 
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
