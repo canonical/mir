@@ -636,7 +636,7 @@ MirBufferStream* mir_window_get_buffer_stream(MirWindow* window);
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
  * connection has been released.
- *   \param [in] window  The window
+ *   \param [in] window   The window
  *   \return              A text description of any error resulting in an
  *                        invalid window, or the empty string "" if the
  *                        connection is valid.
@@ -661,7 +661,7 @@ MirOrientation mir_window_get_orientation(MirWindow* window);
 /**
  * Attempts to raise the window to the front.
  *
- * \param [in] window The window to raise
+ * \param [in] window  The window to raise
  * \param [in] cookie  A cookie instance obtained from an input event.
  *                     An invalid cookie will terminate the client connection.
  */
@@ -669,7 +669,7 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie);
 
 /**
  * Get the type (purpose) of a window.
- *   \param [in] window  The window to query
+ *   \param [in] window   The window to query
  *   \return              The type of the window
  */
 MirWindowType mir_window_get_type(MirWindow* window);
@@ -692,14 +692,14 @@ MirWindowState mir_window_get_state(MirWindow* window);
 
 /**
  * Query the focus state for a window.
- *   \param [in] window The window to operate on
+ *   \param [in] window  The window to operate on
  *   \return             The focus state of said window
  */
 MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
 
 /**
  * Query the visibility state for a window.
- *   \param [in] window The window to operate on
+ *   \param [in] window  The window to operate on
  *   \return             The visibility state of said window
  */
 MirWindowVisibility mir_window_get_visibility(MirWindow* window);
@@ -714,7 +714,7 @@ int mir_window_get_dpi(MirWindow* window);
 /**
  * Choose the cursor state for a window: whether a cursor is shown,
  * and which cursor if so.
- *    \param [in] window    The window to operate on
+ *    \param [in] window     The window to operate on
  *    \param [in] parameters The configuration parameters obtained
  *                           from mir_cursor* family of functions.
  *    \return                A wait handle that can be passed to mir_wait_for,
@@ -722,6 +722,16 @@ int mir_window_get_dpi(MirWindow* window);
  *
  */
 MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
+
+/**
+ * Request to set the preferred orientations of a window.
+ * The request may be rejected by the server; to check wait on the
+ * result and check the applied value using mir_surface_get_preferred_orientation
+ *   \param [in] window      The window to operate on
+ *   \param [in] orientation The preferred orientation modes
+ *   \return                 A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -968,15 +978,8 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfig
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_orientation() instead")));
 
-/**
- * Request to set the preferred orientations of a surface.
- * The request may be rejected by the server; to check wait on the
- * result and check the applied value using mir_surface_get_preferred_orientation
- *   \param [in] surface     The surface to operate on
- *   \param [in] orientation The preferred orientation modes
- *   \return                 A wait handle that can be passed to mir_wait_for
- */
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
+//__attribute__((deprecated("use mir_window_set_preferred_orientation() instead")));
 
 /**
  * Get the preferred orientation modes of a surface.
