@@ -20,8 +20,6 @@
 #include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/scene.h"
-#include "mir/shell/surface_stack.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_surface_observer.h"
@@ -40,7 +38,6 @@
 
 #include <mutex>
 #include <condition_variable>
-#include <unordered_set>
 
 using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
