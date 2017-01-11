@@ -138,6 +138,18 @@ static_assert(
 static_assert(sizeof(MirSurfaceState) == sizeof(MirWindowState),
     "sizeof(MirSurfaceState) != sizeof(MirWindowState)");
 
+// Assert our MirSurfaceFocusState is 1to1 to MirWindowFocusState
+static_assert(
+    static_cast<int32_t>(mir_surface_unfocused) ==
+    static_cast<int32_t>(mir_window_focus_state_unfocused),
+    "mir_surface_unfocused != mir_window_focus_state_unfocused");
+static_assert(
+    static_cast<int32_t>(mir_surface_focused) ==
+    static_cast<int32_t>(mir_window_focus_state_focused),
+    "mir_surface_focused != mir_window_focus_state_focused");
+static_assert(sizeof(MirSurfaceFocusState) == sizeof(MirWindowFocusState),
+    "sizeof(MirSurfaceFocusState) != sizeof(MirWindowFocusState)");
+
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     std::set<MirWindow*> surfaces;
