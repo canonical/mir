@@ -317,9 +317,9 @@ std::ostream& mir::operator<<(std::ostream& out, MirKeymapEvent const& event)
     return out << "keymap_event(blob, device_id=" << mir_keymap_event_get_device_id(&event) << ")";
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirCloseSurfaceEvent const&)
+std::ostream& mir::operator<<(std::ostream& out, MirCloseWindowEvent const&)
 {
-    return out << "close_surface_event()";
+    return out << "close_window_event()";
 }
 
 std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)

@@ -48,7 +48,7 @@ std::ostream& operator<<(std::ostream& out, MirPromptSessionEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirResizeEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirOrientationEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputEvent const& event);
-std::ostream& operator<<(std::ostream& out, MirCloseSurfaceEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirCloseWindowEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirKeymapEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirWindowEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputDeviceStateEvent const& event);
