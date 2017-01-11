@@ -117,7 +117,7 @@ public:
     graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
-    MirSurfaceType type() const override;
+    MirWindowType type() const override;
     MirSurfaceState state() const override;
     int configure(MirWindowAttrib attrib, int value) override;
     int query(MirWindowAttrib attrib) const override;
@@ -152,7 +152,7 @@ public:
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
-    MirSurfaceType set_type(MirSurfaceType t);  // Use configure() to make public changes
+    MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
     MirSurfaceState set_state(MirSurfaceState s);
     int set_dpi(int);
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
@@ -178,7 +178,7 @@ private:
 
     std::list<StreamInfo> layers;
     // Surface attributes:
-    MirSurfaceType type_ = mir_surface_type_normal;
+    MirWindowType type_ = mir_window_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;
     int swapinterval_ = 1;
     MirSurfaceFocusState focus_ = mir_surface_unfocused;

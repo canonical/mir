@@ -110,12 +110,12 @@ TEST_F(Surface, types)
 {
     using namespace testing;
 
-    EXPECT_EQ(mir_surface_type_normal, surface->type());
+    EXPECT_EQ(mir_window_type_normal, surface->type());
 
-    EXPECT_EQ(mir_surface_type_utility,
+    EXPECT_EQ(mir_window_type_utility,
               surface->configure(mir_window_attrib_type,
-                             mir_surface_type_utility));
-    EXPECT_EQ(mir_surface_type_utility, surface->type());
+                             mir_window_type_utility));
+    EXPECT_EQ(mir_window_type_utility, surface->type());
 
     EXPECT_THROW({
         surface->configure(mir_window_attrib_type, 999);
@@ -123,17 +123,17 @@ TEST_F(Surface, types)
     EXPECT_THROW({
         surface->configure(mir_window_attrib_type, -1);
     }, std::logic_error);
-    EXPECT_EQ(mir_surface_type_utility, surface->type());
+    EXPECT_EQ(mir_window_type_utility, surface->type());
 
-    EXPECT_EQ(mir_surface_type_dialog,
+    EXPECT_EQ(mir_window_type_dialog,
               surface->configure(mir_window_attrib_type,
-                             mir_surface_type_dialog));
-    EXPECT_EQ(mir_surface_type_dialog, surface->type());
+                             mir_window_type_dialog));
+    EXPECT_EQ(mir_window_type_dialog, surface->type());
 
-    EXPECT_EQ(mir_surface_type_freestyle,
+    EXPECT_EQ(mir_window_type_freestyle,
               surface->configure(mir_window_attrib_type,
-                             mir_surface_type_freestyle));
-    EXPECT_EQ(mir_surface_type_freestyle, surface->type());
+                             mir_window_type_freestyle));
+    EXPECT_EQ(mir_window_type_freestyle, surface->type());
 }
 
 TEST_F(Surface, states)

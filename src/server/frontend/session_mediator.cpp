@@ -241,7 +241,7 @@ void mf::SessionMediator::create_surface(
         params.with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()));
 
     if (request->has_type())
-        params.of_type(static_cast<MirSurfaceType>(request->type()));
+        params.of_type(static_cast<MirWindowType>(request->type()));
 
     if (request->has_state())
         params.with_state(static_cast<MirSurfaceState>(request->state()));

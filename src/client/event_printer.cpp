@@ -202,6 +202,24 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
+{
+    switch (type)
+    {
+    PRINT(mir_window_type,normal);
+    PRINT(mir_window_type,utility);
+    PRINT(mir_window_type,dialog);
+    PRINT(mir_window_type,gloss);
+    PRINT(mir_window_type,freestyle);
+    PRINT(mir_window_type,menu);
+    PRINT(mir_window_type,inputmethod);
+    PRINT(mir_window_type,satellite);
+    PRINT(mir_window_type,tip);
+    default:
+        return out << static_cast<int>(type) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
 {
     switch (state)
@@ -312,7 +330,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
     switch (mir_window_event_get_attribute(&event))
     {
     case mir_window_attrib_type:
-        out << static_cast<MirSurfaceType>(value);
+        out << static_cast<MirWindowType>(value);
         break;
     case mir_window_attrib_state:
         out << static_cast<MirSurfaceState>(value);

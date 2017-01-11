@@ -553,4 +553,5 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_event_get_window_event;
     mir_window_event_get_attribute;
     mir_window_event_get_attribute_value;
+    mir_window_get_type;
 } MIR_CLIENT_0.25;

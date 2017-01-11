@@ -67,7 +67,7 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}
-    MirSurfaceType type() const override { return mir_surface_type_normal; }
+    MirWindowType type() const override { return mir_window_type_normal; }
     MirSurfaceState state() const override { return mir_surface_state_unknown; }
 
     void hide() override {}

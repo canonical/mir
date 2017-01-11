@@ -100,7 +100,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
-    auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_surface_type_normal;
+    auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_window_type_normal;
     bool const needs_titlebar = SurfaceInfo::needs_titlebar(surf_type);
 
     if (needs_titlebar)
@@ -260,7 +260,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         .of_pixel_format(format)
         .of_buffer_usage(mir::graphics::BufferUsage::software)
         .of_position(titlebar_position_for_window(surface->top_left()))
-        .of_type(mir_surface_type_gloss)
+        .of_type(mir_window_type_gloss)
         .with_buffer_stream(stream_id);
     auto id = build(session, params);
     auto titlebar = session->surface(id);

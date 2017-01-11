@@ -696,7 +696,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_name("Aardavks")
-        .of_type(mir_surface_type_normal)
+        .of_type(mir_window_type_normal)
         .with_buffer_stream(id);
 
     session->create_surface(params, event_sink);

@@ -461,7 +461,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
     mir_window_release_sync(window);
 }
 
-struct UnparentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
+struct UnparentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirWindowType> {};
 
 TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
 {
@@ -494,10 +494,10 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
 
 INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
     ::testing::Values(
-        mir_surface_type_normal,
-        mir_surface_type_utility,
-        mir_surface_type_dialog,
-        mir_surface_type_freestyle));
+        mir_window_type_normal,
+        mir_window_type_utility,
+        mir_window_type_dialog,
+        mir_window_type_freestyle));
 
 // Parented dialog or parented freestyle window
 //
@@ -519,7 +519,7 @@ INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
 //    relative to its parent
 // TODO tests for this
 
-struct ParentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirSurfaceType> {};
+struct ParentedSurface : SurfacePlacement, ::testing::WithParamInterface<MirWindowType> {};
 
 TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
 {
@@ -557,9 +557,9 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
 
 INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
     ::testing::Values(
-        mir_surface_type_dialog,
-        mir_surface_type_satellite,
-        mir_surface_type_popover,
-        mir_surface_type_gloss,
-        mir_surface_type_tip,
-        mir_surface_type_freestyle));
+        mir_window_type_dialog,
+        mir_window_type_satellite,
+        mir_window_type_popover,
+        mir_window_type_gloss,
+        mir_window_type_tip,
+        mir_window_type_freestyle));

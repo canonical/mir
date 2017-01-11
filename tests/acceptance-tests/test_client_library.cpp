@@ -46,6 +46,58 @@ namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 namespace
 {
+// Assert our MirSurfaceType is 1to1 to MirWindowType
+static_assert(
+    static_cast<int32_t>(mir_surface_type_normal) ==
+    static_cast<int32_t>(mir_window_type_normal),
+    "mir_surface_type_normal != mir_window_type_normal");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_utility) ==
+    static_cast<int32_t>(mir_window_type_utility),
+    "mir_surface_type_utility != mir_window_type_utility");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_dialog) ==
+    static_cast<int32_t>(mir_window_type_dialog),
+    "mir_surface_type_dialog != mir_window_type_dialog");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_overlay) ==
+    static_cast<int32_t>(mir_window_type_overlay),
+    "mir_surface_type_overlay != mir_window_type_overlay");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_gloss) ==
+    static_cast<int32_t>(mir_window_type_gloss),
+    "mir_surface_type_gloss != mir_window_type_gloss");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_freestyle) ==
+    static_cast<int32_t>(mir_window_type_freestyle),
+    "mir_surface_type_freestyle != mir_window_type_freestyle");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_popover) ==
+    static_cast<int32_t>(mir_window_type_popover),
+    "mir_surface_type_popover != mir_window_type_popover");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_menu) ==
+    static_cast<int32_t>(mir_window_type_menu),
+    "mir_surface_type_menu != mir_window_type_menu");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_inputmethod) ==
+    static_cast<int32_t>(mir_window_type_inputmethod),
+    "mir_surface_type_inputmethod != mir_window_type_inputmethod");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_satellite) ==
+    static_cast<int32_t>(mir_window_type_satellite),
+    "mir_surface_type_satellite != mir_window_type_satellite");
+static_assert(
+    static_cast<int32_t>(mir_surface_type_tip) ==
+    static_cast<int32_t>(mir_window_type_tip),
+    "mir_surface_type_tip != mir_window_type_tip");
+static_assert(
+    static_cast<int32_t>(mir_surface_types) ==
+    static_cast<int32_t>(mir_window_types),
+    "mir_surface_types != mir_window_types");
+static_assert(sizeof(MirSurfaceType) == sizeof(MirWindowType),
+    "sizeof(MirSurfaceType) != sizeof(MirWindowType)");
+
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     std::set<MirWindow*> surfaces;
@@ -767,7 +819,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    EXPECT_THAT(mir_surface_get_type(window), Eq(mir_surface_type_normal));
+    EXPECT_THAT(mir_window_get_type(window), Eq(mir_window_type_normal));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -793,7 +845,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    EXPECT_THAT(mir_surface_get_type(window), Eq(mir_surface_type_normal));
+    EXPECT_THAT(mir_window_get_type(window), Eq(mir_window_type_normal));
 
     mir_window_release_sync(window);
     mir_connection_release(connection);

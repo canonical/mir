@@ -176,7 +176,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(menu, IsValid());
-    EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
+    EXPECT_EQ(mir_window_get_type(menu), mir_window_type_menu);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(menu);
@@ -196,7 +196,7 @@ TEST_F(ClientSurfaces, can_be_tips)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(tooltip, IsValid());
-    EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
+    EXPECT_EQ(mir_window_get_type(tooltip), mir_window_type_tip);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(tooltip);
@@ -212,7 +212,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
-    EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
+    EXPECT_EQ(mir_window_get_type(dialog), mir_window_type_dialog);
 
     mir_window_release_sync(dialog);
 }
@@ -228,7 +228,7 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
-    EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
+    EXPECT_EQ(mir_window_get_type(dialog), mir_window_type_dialog);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(dialog);
@@ -243,7 +243,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     auto im = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
+    EXPECT_EQ(mir_window_get_type(im), mir_window_type_inputmethod);
 
     mir_window_release_sync(im);
 }

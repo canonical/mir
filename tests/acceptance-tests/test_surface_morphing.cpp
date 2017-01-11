@@ -158,8 +158,8 @@ private:
 
 struct TypePair
 {
-    MirSurfaceType from;
-    MirSurfaceType to;
+    MirWindowType from;
+    MirWindowType to;
 
     friend std::ostream& operator<<(std::ostream& out, TypePair const& types)
         { return out << "from:" << types.from << ", to:" << types.to; }
@@ -203,7 +203,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -244,7 +244,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -310,7 +310,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -345,7 +345,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
        {
-           mir_window_spec_set_type(spec, mir_surface_type_normal);
+           mir_window_spec_set_type(spec, mir_window_type_normal);
            mir_window_spec_set_width(spec, width);
            mir_window_spec_set_height(spec, height);
            mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -375,21 +375,21 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_utility},
-        TypePair{mir_surface_type_utility, mir_surface_type_normal},
-        TypePair{mir_surface_type_dialog, mir_surface_type_utility},
-        TypePair{mir_surface_type_dialog, mir_surface_type_normal}
+        TypePair{mir_window_type_normal, mir_window_type_utility},
+        TypePair{mir_window_type_utility, mir_window_type_normal},
+        TypePair{mir_window_type_dialog, mir_window_type_utility},
+        TypePair{mir_window_type_dialog, mir_window_type_normal}
     ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetNeedingParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_satellite},
-        TypePair{mir_surface_type_utility, mir_surface_type_satellite},
-        TypePair{mir_surface_type_dialog, mir_surface_type_satellite}
+        TypePair{mir_window_type_normal, mir_window_type_satellite},
+        TypePair{mir_window_type_utility, mir_window_type_satellite},
+        TypePair{mir_window_type_dialog, mir_window_type_satellite}
     ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetMayHaveParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
-        TypePair{mir_surface_type_utility, mir_surface_type_dialog}
+        TypePair{mir_window_type_normal, mir_window_type_dialog},
+        TypePair{mir_window_type_utility, mir_window_type_dialog}
     ));
