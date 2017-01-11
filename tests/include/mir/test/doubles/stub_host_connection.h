@@ -174,6 +174,14 @@ public:
         return {};
     }
     void* request_interface(char const*, int) { return nullptr; }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat) override
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t) override
+    {
+        return nullptr;
+    }
 };
 
 struct MockHostConnection : StubHostConnection
