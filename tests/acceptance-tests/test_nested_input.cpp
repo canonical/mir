@@ -330,10 +330,10 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
     client_to_nested_mir.ready_to_accept_events.wait_for(1s);
 
-    ASSERT_THAT(devices_ready.wait_for(2s), true);
+    ASSERT_THAT(devices_ready.wait_for(5s), true);
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(initial_movement_x, initial_movement_y));
-    ASSERT_THAT(event_received.wait_for(2s), true);
+    ASSERT_THAT(event_received.wait_for(5s), true);
 
     event_received.reset();
 
