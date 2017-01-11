@@ -331,13 +331,13 @@ EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 }
 
 auto mgn::MirClientHostConnection::create_display_config()
-    -> std::shared_ptr<MirDisplayConfiguration>
+    -> std::shared_ptr<MirDisplayConfig>
 {
-    return std::shared_ptr<MirDisplayConfiguration>(
-        mir_connection_create_display_config(mir_connection),
-        [] (MirDisplayConfiguration* c)
+    return std::shared_ptr<MirDisplayConfig>(
+        mir_connection_create_display_configuration(mir_connection),
+        [] (MirDisplayConfig* c)
         {
-            if (c) mir_display_config_destroy(c);
+            if (c) mir_display_config_release(c);
         });
 }
 
@@ -351,9 +351,9 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
 }
 
 void mgn::MirClientHostConnection::apply_display_config(
-    MirDisplayConfiguration& display_config)
+    MirDisplayConfig& display_config)
 {
-    mir_wait_for(mir_connection_apply_display_config(mir_connection, &display_config));
+    mir_connection_apply_session_display_configuration(mir_connection, &display_config);
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(

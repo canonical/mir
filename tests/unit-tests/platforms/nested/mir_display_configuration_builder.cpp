@@ -17,8 +17,7 @@
  */
 
 #include "mir_display_configuration_builder.h"
-
-#include <algorithm>
+#include "src/client/display_configuration.h"
 
 namespace mt = mir::test;
 
@@ -40,187 +39,77 @@ uint32_t const third_output_id = 2;
 auto const default_type = MirDisplayOutputType(0);
 int32_t const default_position_x = 0;
 int32_t const default_position_y = 0;
-uint32_t const default_connected = 1;
+MirOutputConnectionState const default_connected = mir_output_connection_state_connected;
 uint32_t const default_used = 1;
 uint32_t const default_physical_width_mm = 0;
 uint32_t const default_physical_height_mm = 0;
 
-template<int NoOfOutputs, int NoOfCards>
-std::shared_ptr<MirDisplayConfiguration> build_test_config(
-    MirDisplayOutput const (&outputs)[NoOfOutputs],
-    MirDisplayCard const (&cards)[NoOfCards])
+}
+
+std::shared_ptr<MirDisplayConfig> mt::build_trivial_configuration()
 {
-    auto out_tmp = new MirDisplayOutput[NoOfOutputs];
-    std::copy(outputs, outputs+NoOfOutputs, out_tmp);
+    mir::protobuf::DisplayConfiguration conf;
 
-    auto card_tmp = new MirDisplayCard[NoOfCards];
-    std::copy(cards, cards+NoOfCards, card_tmp);
+    auto output = conf.add_display_output();
+    auto mode   = output->add_mode();
+    mode->set_horizontal_resolution(1080);
+    mode->set_vertical_resolution(1920);
+    mode->set_refresh_rate(4.33f);
 
-    return std::shared_ptr<MirDisplayConfiguration>(
-        new MirDisplayConfiguration{NoOfOutputs, out_tmp, NoOfCards, card_tmp},
-        [] (MirDisplayConfiguration* conf)
-        {
-            std::for_each(
-                conf->outputs, conf->outputs + conf->num_outputs,
-                [] (MirDisplayOutput const& output)
-                {
-                    delete[] output.modes;
-                    delete[] output.output_formats;
-                });
+    output->add_pixel_format(mir_pixel_format_abgr_8888);
+    output->set_current_format(default_current_output_format);
+    output->set_current_mode(default_current_mode);
+    output->set_position_x(default_position_x);
+    output->set_position_y(default_position_y);
+    output->set_output_id(default_output_id);
+    output->set_connected(default_connected);
+    output->set_used(default_used);
+    output->set_physical_width_mm(default_physical_width_mm);
+    output->set_physical_height_mm(default_physical_height_mm);
+    output->set_type(default_type);
+    output->set_preferred_mode(default_preferred_mode);
+    output->set_power_mode(mir_power_mode_on);
+    output->set_orientation(mir_orientation_normal);
 
-            delete[] conf->outputs;
-            delete[] conf->cards;
-            delete conf;
-        });
+    return std::make_shared<MirDisplayConfig>(conf);
 }
 
-template<int NoOfModes, int NoOfFormats>
-void init_output(
-    MirDisplayOutput* output,
-    MirDisplayMode const (&modes)[NoOfModes],
-    MirPixelFormat const (&formats)[NoOfFormats])
+std::shared_ptr<MirDisplayConfig> mt::build_non_trivial_configuration()
 {
-    auto mode_tmp = new MirDisplayMode[NoOfModes];
-    std::copy(modes, modes+NoOfModes, mode_tmp);
+    mir::protobuf::DisplayConfiguration conf;
 
-    auto format_tmp = new MirPixelFormat[NoOfFormats];
-    std::copy(formats, formats+NoOfFormats, format_tmp);
+    for (int i = 0; i < 3; i++)
+    {
+        auto output = conf.add_display_output();
+        auto mode   = output->add_mode();
+        mode->set_horizontal_resolution(1080);
+        mode->set_vertical_resolution(1920);
+        mode->set_refresh_rate(4.33f);
 
-    output->num_modes = NoOfModes;
-    output->modes = mode_tmp;
-    output->preferred_mode = 0;
-    output->current_mode = 0;
-    output->num_output_formats = NoOfFormats;
-    output->output_formats = format_tmp;
-    output->current_format = NoOfFormats > 0 ? formats[0] : mir_pixel_format_invalid;
+        mode = output->add_mode();
+        mode->set_horizontal_resolution(1080);
+        mode->set_vertical_resolution(1920);
+        mode->set_refresh_rate(1.11f);
+
+        output->add_pixel_format(mir_pixel_format_abgr_8888);
+        output->add_pixel_format(mir_pixel_format_xbgr_8888);
+        output->add_pixel_format(mir_pixel_format_argb_8888);
+        output->add_pixel_format(mir_pixel_format_xrgb_8888);
+        output->add_pixel_format(mir_pixel_format_bgr_888);
+        output->set_current_format(default_current_output_format);
+        output->set_current_mode(default_current_mode);
+        output->set_position_x(default_position_x);
+        output->set_position_y(default_position_y);
+        output->set_output_id(default_output_id);
+        output->set_connected(default_connected);
+        output->set_used(default_used);
+        output->set_physical_width_mm(default_physical_width_mm);
+        output->set_physical_height_mm(default_physical_height_mm);
+        output->set_type(default_type);
+        output->set_preferred_mode(default_preferred_mode);
+        output->set_power_mode(mir_power_mode_on);
+        output->set_orientation(mir_orientation_normal);
+    }
+
+    return std::make_shared<MirDisplayConfig>(conf);
 }
-
-template<int NoOfOutputs, int NoOfModes, int NoOfFormats>
-void init_outputs(
-    MirDisplayOutput (&outputs)[NoOfOutputs],
-    MirDisplayMode const (&modes)[NoOfModes],
-    MirPixelFormat const (&formats)[NoOfFormats])
-{
-    for(auto output = outputs; output != outputs+NoOfOutputs; ++output)
-        init_output(output, modes, formats);
-}
-
-}
-
-std::shared_ptr<MirDisplayConfiguration> mt::build_trivial_configuration()
-{
-    static MirDisplayCard const cards[] {{default_card_id,1}};
-    static MirDisplayMode const modes[] = {{ 1080, 1920, 4.33f }};
-    static MirPixelFormat const formats[] = { mir_pixel_format_abgr_8888 };
-
-    MirDisplayOutput outputs[] {{
-        default_num_modes,
-        default_modes,
-        default_preferred_mode,
-        default_current_mode,
-        default_num_output_formats,
-        default_output_formats,
-        default_current_output_format,
-        default_card_id,
-        default_output_id,
-        default_type,
-        default_position_x,
-        default_position_y,
-        default_connected,
-        default_used,
-        default_physical_width_mm,
-        default_physical_height_mm,
-        mir_power_mode_on,
-        mir_orientation_normal
-    }};
-
-    init_output(outputs, modes, formats);
-
-    return build_test_config(outputs, cards);
-}
-
-std::shared_ptr<MirDisplayConfiguration> mt::build_non_trivial_configuration()
-{
-    static MirDisplayCard const cards[] {
-        {default_card_id,1},
-        {second_card_id,2}};
-
-    static MirDisplayMode const modes[] = {
-        { 1080, 1920, 4.33f },
-        { 1080, 1920, 1.11f }};
-    static MirPixelFormat const formats[] = {
-        mir_pixel_format_abgr_8888,
-        mir_pixel_format_xbgr_8888,
-        mir_pixel_format_argb_8888,
-        mir_pixel_format_xrgb_8888,
-        mir_pixel_format_bgr_888};
-
-    MirDisplayOutput outputs[] {
-        {
-            default_num_modes,
-            default_modes,
-            default_preferred_mode,
-            default_current_mode,
-            default_num_output_formats,
-            default_output_formats,
-            default_current_output_format,
-            default_card_id,
-            default_output_id,
-            default_type,
-            default_position_x,
-            default_position_y,
-            default_connected,
-            default_used,
-            default_physical_width_mm,
-            default_physical_height_mm,
-            mir_power_mode_on,
-            mir_orientation_normal
-        },
-        {
-            default_num_modes,
-            default_modes,
-            default_preferred_mode,
-            default_current_mode,
-            default_num_output_formats,
-            default_output_formats,
-            default_current_output_format,
-            second_card_id,
-            second_output_id,
-            default_type,
-            default_position_x,
-            default_position_y,
-            default_connected,
-            default_used,
-            default_physical_width_mm,
-            default_physical_height_mm,
-            mir_power_mode_on,
-            mir_orientation_normal
-        },
-        {
-            default_num_modes,
-            default_modes,
-            default_preferred_mode,
-            default_current_mode,
-            default_num_output_formats,
-            default_output_formats,
-            default_current_output_format,
-            second_card_id,
-            third_output_id,
-            default_type,
-            default_position_x,
-            default_position_y,
-            default_connected,
-            default_used,
-            default_physical_width_mm,
-            default_physical_height_mm,
-            mir_power_mode_on,
-            mir_orientation_normal
-        },
-    };
-
-    init_outputs(outputs, modes, formats);
-
-    return build_test_config(outputs, cards);
-}
-
-
