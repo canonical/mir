@@ -65,7 +65,7 @@ struct SurfaceSpecification
     optional_value<std::string> name;
     optional_value<graphics::DisplayConfigurationOutputId> output_id;
     optional_value<MirWindowType> type;
-    optional_value<MirSurfaceState> state;
+    optional_value<MirWindowState> state;
     optional_value<MirOrientationMode> preferred_orientation;
     optional_value<frontend::SurfaceId> parent_id;
     optional_value<geometry::Rectangle> aux_rect;

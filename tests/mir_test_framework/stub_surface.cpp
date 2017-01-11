@@ -136,9 +136,9 @@ MirWindowType mtd::StubSurface::type() const
     return MirWindowType::mir_window_type_normal;
 }
 
-MirSurfaceState mtd::StubSurface::state() const
+MirWindowState mtd::StubSurface::state() const
 {
-    return MirSurfaceState::mir_surface_state_fullscreen;
+    return MirWindowState::mir_window_state_fullscreen;
 }
 
 int mtd::StubSurface::configure(MirWindowAttrib /*attrib*/, int value)

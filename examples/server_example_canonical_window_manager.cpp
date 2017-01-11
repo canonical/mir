@@ -107,7 +107,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
 
     if (!parameters.state.is_set())
-        parameters.state = mir_surface_state_restored;
+        parameters.state = mir_window_state_restored;
 
     auto const active_display = tools->active_display();
 
@@ -124,7 +124,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         display_layout->place_in_output(parameters.output_id, rect);
         parameters.top_left = rect.top_left;
         parameters.size = rect.size;
-        parameters.state = mir_surface_state_fullscreen;
+        parameters.state = mir_window_state_fullscreen;
         positioned = true;
     }
     else if (!parent) // No parent => client can't suggest positioning
@@ -206,19 +206,19 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 
         switch (parameters.state.value())
         {
-        case mir_surface_state_fullscreen:
-        case mir_surface_state_maximized:
+        case mir_window_state_fullscreen:
+        case mir_window_state_maximized:
             parameters.top_left = active_display.top_left;
             parameters.size = active_display.size;
             break;
 
-        case mir_surface_state_vertmaximized:
+        case mir_window_state_vertmaximized:
             parameters.top_left = centred;
             parameters.top_left.y = active_display.top_left.y;
             parameters.size.height = active_display.size.height;
             break;
 
-        case mir_surface_state_horizmaximized:
+        case mir_window_state_horizmaximized:
             parameters.top_left = centred;
             parameters.top_left.x = active_display.top_left.x;
             parameters.size.width = active_display.size.width;
@@ -232,7 +232,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
             parameters.top_left.y = display_area.top_left.y;
     }
 
-    if (parameters.state != mir_surface_state_fullscreen && needs_titlebar)
+    if (parameters.state != mir_window_state_fullscreen && needs_titlebar)
     {
         parameters.top_left.y = parameters.top_left.y + DeltaY{title_bar_height};
         parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
@@ -301,7 +301,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
             surface));
     }
 
-    if (surface_info.state == mir_surface_state_fullscreen)
+    if (surface_info.state == mir_window_state_fullscreen)
         fullscreen_surfaces.insert(surface);
 }
 
@@ -499,31 +499,31 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     }
 }
 
-int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
+int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirWindowState value)
 {
     auto& info = tools->info_for(surface);
 
     switch (value)
     {
-    case mir_surface_state_restored:
-    case mir_surface_state_maximized:
-    case mir_surface_state_vertmaximized:
-    case mir_surface_state_horizmaximized:
-    case mir_surface_state_fullscreen:
-    case mir_surface_state_hidden:
-    case mir_surface_state_minimized:
+    case mir_window_state_restored:
+    case mir_window_state_maximized:
+    case mir_window_state_vertmaximized:
+    case mir_window_state_horizmaximized:
+    case mir_window_state_fullscreen:
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
         break;
 
     default:
         return info.state;
     }
 
-    if (info.state == mir_surface_state_restored)
+    if (info.state == mir_window_state_restored)
     {
         info.restore_rect = {surface->top_left(), surface->size()};
     }
 
-    if (info.state != mir_surface_state_fullscreen)
+    if (info.state != mir_window_state_fullscreen)
     {
         info.output_id = decltype(info.output_id){};
         fullscreen_surfaces.erase(surface);
@@ -543,7 +543,7 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
 
     switch (value)
     {
-    case mir_surface_state_restored:
+    case mir_window_state_restored:
         movement = info.restore_rect.top_left - old_pos;
         surface->resize(info.restore_rect.size);
         if (info.titlebar)
@@ -553,14 +553,14 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         }
         break;
 
-    case mir_surface_state_maximized:
+    case mir_window_state_maximized:
         movement = display_area.top_left - old_pos;
         surface->resize(display_area.size);
         if (info.titlebar)
             info.titlebar->hide();
         break;
 
-    case mir_surface_state_horizmaximized:
+    case mir_window_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
         surface->resize({display_area.size.width, info.restore_rect.size.height});
         if (info.titlebar)
@@ -570,14 +570,14 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         }
         break;
 
-    case mir_surface_state_vertmaximized:
+    case mir_window_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
         surface->resize({info.restore_rect.size.width, display_area.size.height});
         if (info.titlebar)
             info.titlebar->hide();
         break;
 
-    case mir_surface_state_fullscreen:
+    case mir_window_state_fullscreen:
     {
         Rectangle rect{old_pos, surface->size()};
 
@@ -595,8 +595,8 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         break;
     }
 
-    case mir_surface_state_hidden:
-    case mir_surface_state_minimized:
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
         if (info.titlebar)
             info.titlebar->hide();
         surface->hide();
@@ -643,15 +643,15 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEven
         switch (modifiers)
         {
         case mir_input_event_modifier_alt:
-            toggle(mir_surface_state_maximized);
+            toggle(mir_window_state_maximized);
             return true;
 
         case mir_input_event_modifier_shift:
-            toggle(mir_surface_state_vertmaximized);
+            toggle(mir_window_state_vertmaximized);
             return true;
 
         case mir_input_event_modifier_ctrl:
-            toggle(mir_surface_state_horizmaximized);
+            toggle(mir_window_state_horizmaximized);
             return true;
 
         default:
@@ -813,16 +813,16 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
     return consumes_event;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
+void me::CanonicalWindowManagerPolicyCopy::toggle(MirWindowState state)
 {
     if (auto const surface = active_surface())
     {
         auto& info = tools->info_for(surface);
 
         if (info.state == state)
-            state = mir_surface_state_restored;
+            state = mir_window_state_restored;
 
-        auto const value = handle_set_state(surface, MirSurfaceState(state));
+        auto const value = handle_set_state(surface, MirWindowState(state));
         surface->configure(mir_window_attrib_state, value);
     }
 }
@@ -985,26 +985,26 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<scene::Surface> 
 
     switch (tools->info_for(surface).state)
     {
-    case mir_surface_state_restored:
+    case mir_window_state_restored:
         break;
 
     // "A vertically maximised surface is anchored to the top and bottom of
     // the available workspace and can have any width."
-    case mir_surface_state_vertmaximized:
+    case mir_window_state_vertmaximized:
         movement.dy = DeltaY(0);
         break;
 
     // "A horizontally maximised surface is anchored to the left and right of
     // the available workspace and can have any height"
-    case mir_surface_state_horizmaximized:
+    case mir_window_state_horizmaximized:
         movement.dx = DeltaX(0);
         break;
 
     // "A maximised surface is anchored to the top, bottom, left and right of the
     // available workspace. For example, if the launcher is always-visible then
     // the left-edge of the surface is anchored to the right-edge of the launcher."
-    case mir_surface_state_maximized:
-    case mir_surface_state_fullscreen:
+    case mir_window_state_maximized:
+    case mir_window_state_fullscreen:
     default:
         return true;
     }

@@ -244,7 +244,7 @@ void mf::SessionMediator::create_surface(
         params.of_type(static_cast<MirWindowType>(request->type()));
 
     if (request->has_state())
-        params.with_state(static_cast<MirSurfaceState>(request->state()));
+        params.with_state(static_cast<MirWindowState>(request->state()));
 
     if (request->has_pref_orientation())
         params.with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));

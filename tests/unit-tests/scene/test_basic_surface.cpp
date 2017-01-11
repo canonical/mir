@@ -535,8 +535,8 @@ AttributeTestParameters const surface_type_test_parameters{
 
 AttributeTestParameters const surface_state_test_parameters{
     mir_window_attrib_state,
-    mir_surface_state_restored,
-    mir_surface_state_fullscreen,
+    mir_window_state_restored,
+    mir_window_state_fullscreen,
     1178312
 };
 
@@ -556,8 +556,8 @@ AttributeTestParameters const surface_dpi_test_parameters{
 
 AttributeTestParameters const surface_focus_test_parameters{
     mir_window_attrib_focus,
-    mir_surface_unfocused,
-    mir_surface_focused,
+    mir_window_focus_state_unfocused,
+    mir_window_focus_state_focused,
     -1
 };
 

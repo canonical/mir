@@ -168,7 +168,7 @@ struct CursorClient
             [window]
             {
                 return mir_surface_get_visibility(window) == mir_surface_visibility_exposed &&
-                    mir_surface_get_focus(window) == mir_surface_focused;
+                    mir_window_get_focus_state(window) == mir_window_focus_state_focused;
             },
             std::chrono::seconds{5});
 
@@ -480,7 +480,7 @@ struct FullscreenDisabledCursorClient : CursorClient
         // for the test logic. - alan_g
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
-        mir_surface_set_state(window, mir_surface_state_fullscreen);
+        mir_window_set_state(window, mir_window_state_fullscreen);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);

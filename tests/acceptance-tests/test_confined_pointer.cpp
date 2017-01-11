@@ -120,7 +120,7 @@ struct Client
             exposed = true;
 
         if (mir_window_attrib_focus == attrib &&
-            mir_surface_focused == value)
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)

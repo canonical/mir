@@ -393,7 +393,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  * \note    If the server is unable to create a window with the requested state at
  *          the point mir_window_create() is called it will instead return an invalid window.
  */
-void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
+void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state);
 
 /**
  * Set a collection of input rectangles associated with the spec.
@@ -674,6 +674,29 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie);
  */
 MirWindowType mir_window_get_type(MirWindow* window);
 
+/**
+ * Change the state of a window.
+ *   \param [in] window  The window to operate on
+ *   \param [in] state   The new state of the window
+ *   \return             A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_window_set_state(MirWindow* window,
+                                     MirWindowState state);
+
+/**
+ * Get the current state of a window.
+ *   \param [in] window  The window to query
+ *   \return             The state of the window
+ */
+MirWindowState mir_window_get_state(MirWindow* window);
+
+/**
+ * Query the focus state for a window.
+ *   \param [in] window The window to operate on
+ *   \return             The focus state of said window
+ */
+MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -880,21 +903,12 @@ void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *param
 MirSurfaceType mir_surface_get_type(MirSurface* surface);
 //__attribute__((deprecated("use mir_window_get_type() instead")));
 
-/**
- * Change the state of a surface.
- *   \param [in] surface  The surface to operate on
- *   \param [in] state    The new state of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
- */
 MirWaitHandle* mir_surface_set_state(MirSurface *surface,
                                      MirSurfaceState state);
+//__attribute__((deprecated("use mir_window_set_state() instead")));
 
-/**
- * Get the current state of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The state of the surface
- */
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_state() instead")));
 
 /**
  * Set the swapinterval for the default stream.
@@ -919,13 +933,9 @@ __attribute__((deprecated("Swap interval should be set on the backing content"))
  *   \return  The DPI of the surface, or zero if unknown.
  */
 int mir_surface_get_dpi(MirSurface* surface);
-    
-/**
- * Query the focus state for a surface.
- *   \param [in] surface The surface to operate on
- *   \return             The focus state of said surface
- */
+
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_focus_state() instead")));
 
 /**
  * Query the visibility state for a surface.

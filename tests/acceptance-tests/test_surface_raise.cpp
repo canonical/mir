@@ -72,8 +72,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
             {
-                return mir_surface_get_state(surface1) == mir_surface_state_fullscreen &&
-                       mir_surface_get_state(surface2) == mir_surface_state_fullscreen;
+                return mir_window_get_state(surface1) == mir_window_state_fullscreen &&
+                       mir_window_get_state(surface2) == mir_window_state_fullscreen;
             },
             std::chrono::seconds{max_wait});
 
@@ -125,7 +125,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         }
 
         if (attrib == mir_window_attrib_focus &&
-            value == mir_surface_focused)
+            value == mir_window_focus_state_focused)
         {
             raise_surfaces->focused = true;
         }
@@ -175,7 +175,7 @@ bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [&surface]
         {
-            return mir_surface_get_focus(surface) == mir_surface_focused;
+            return mir_window_get_focus_state(surface) == mir_window_focus_state_focused;
         },
         std::chrono::seconds{max_wait});
  
@@ -193,7 +193,7 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
+        EXPECT_EQ(mir_window_get_focus_state(surface2), mir_window_focus_state_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
         attempt_focus(surface2, cookie);
@@ -212,7 +212,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
+        EXPECT_EQ(mir_window_get_focus_state(surface2), mir_window_focus_state_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
         mir_window_raise(surface1, cookie);
@@ -221,7 +221,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-        EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
+        EXPECT_EQ(mir_window_get_focus_state(surface2), mir_window_focus_state_focused);
     }
 }
 
@@ -239,7 +239,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
         {
             std::lock_guard<std::mutex> lk(mutex);
             ASSERT_FALSE(out_cookies.empty());
-            EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
+            EXPECT_EQ(mir_window_get_focus_state(surface2), mir_window_focus_state_focused);
 
             // We still have 2 cookie, but have gotten more then 2 events
             EXPECT_EQ(out_cookies.size(), events);

@@ -283,7 +283,7 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
         EXPECT_CALL(window_manager, set_surface_attribute(_, WeakPtrEq(server_surface[i]), mir_window_attrib_state,_))
             .WillOnce(WithArg<3>(Invoke([&](int value) { received.raise(); return value; })));
 
-        mir_surface_set_state(client_surface[i], mir_surface_state_maximized);
+        mir_window_set_state(client_surface[i], mir_window_state_maximized);
 
         received.wait_for(400ms);
     }

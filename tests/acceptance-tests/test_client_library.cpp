@@ -98,6 +98,46 @@ static_assert(
 static_assert(sizeof(MirSurfaceType) == sizeof(MirWindowType),
     "sizeof(MirSurfaceType) != sizeof(MirWindowType)");
 
+// Assert our MirSurfaceState is 1to1 to MirWindowState
+static_assert(
+    static_cast<int32_t>(mir_surface_state_unknown) ==
+    static_cast<int32_t>(mir_window_state_unknown),
+    "mir_surface_state_unknown != mir_window_state_unknown");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_restored) ==
+    static_cast<int32_t>(mir_window_state_restored),
+    "mir_surface_state_restored != mir_window_state_restored");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_minimized) ==
+    static_cast<int32_t>(mir_window_state_minimized),
+    "mir_surface_state_minimized != mir_window_state_minimized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_maximized) ==
+    static_cast<int32_t>(mir_window_state_maximized),
+    "mir_surface_state_maximized != mir_window_state_maximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_vertmaximized) ==
+    static_cast<int32_t>(mir_window_state_vertmaximized),
+    "mir_surface_state_vertmaximized != mir_window_state_vertmaximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_fullscreen) ==
+    static_cast<int32_t>(mir_window_state_fullscreen),
+    "mir_surface_state_fullscreen != mir_window_state_fullscreen");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_horizmaximized) ==
+    static_cast<int32_t>(mir_window_state_horizmaximized),
+    "mir_surface_state_horizmaximized != mir_window_state_horizmaximized");
+static_assert(
+    static_cast<int32_t>(mir_surface_state_hidden) ==
+    static_cast<int32_t>(mir_window_state_hidden),
+    "mir_surface_state_hidden != mir_window_state_hidden");
+static_assert(
+    static_cast<int32_t>(mir_surface_states) ==
+    static_cast<int32_t>(mir_window_states),
+    "mir_surface_states != mir_window_states");
+static_assert(sizeof(MirSurfaceState) == sizeof(MirWindowState),
+    "sizeof(MirSurfaceState) != sizeof(MirWindowState)");
+
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     std::set<MirWindow*> surfaces;
@@ -184,14 +224,14 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     {
         for (int i = 0; i < 10; i++)
         {
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_maximized));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_restored));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_fullscreen));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_minimized));
+            mir_wait_for_one(mir_window_set_state(surf,
+                                            mir_window_state_maximized));
+            mir_wait_for_one(mir_window_set_state(surf,
+                                            mir_window_state_restored));
+            mir_wait_for_one(mir_window_set_state(surf,
+                                            mir_window_state_fullscreen));
+            mir_wait_for_one(mir_window_set_state(surf,
+                                            mir_window_state_minimized));
         }
     }
     
@@ -343,27 +383,27 @@ TEST_F(ClientLibrary, can_set_surface_state)
 
     mir_window_spec_release(spec);
 
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_restored));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_restored));
 
-    mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
+    mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
 
-    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
+    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
 
-    mir_wait_for(mir_surface_set_state(window, mir_surface_state_horizmaximized));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
+    mir_wait_for(mir_window_set_state(window, mir_window_state_horizmaximized));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
 
-    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(888)));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
+    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(888)));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
 
     // Stress-test synchronization logic with some flooding
     for (int i = 0; i < 100; i++)
     {
-        mir_surface_set_state(window, mir_surface_state_maximized);
-        mir_surface_set_state(window, mir_surface_state_restored);
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-        ASSERT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
+        mir_window_set_state(window, mir_window_state_maximized);
+        mir_window_set_state(window, mir_window_state_restored);
+        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
+        ASSERT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
     }
 
     mir_window_release_sync(window);
@@ -704,7 +744,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
     b.join();
     c.join();
 
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_minimized));
+    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_minimized));
 
     mir_window_release_sync(window);
 
@@ -915,7 +955,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     EXPECT_THAT(native_buffer->height, Eq(mode_height));
 
 // TODO: This is racy. Fix in subsequent "send all the things on construction" branch
-//    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
+//    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
 
     mir_window_release_sync(window);
     mir_display_config_destroy(configuration);

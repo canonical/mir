@@ -95,7 +95,7 @@ public:
 
     virtual void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface) = 0;
 
-    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
+    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirWindowState value) = 0;
 
     virtual bool handle_keyboard_event(MirKeyboardEvent const* event) = 0;
 

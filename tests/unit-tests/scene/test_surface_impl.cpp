@@ -140,12 +140,12 @@ TEST_F(Surface, states)
 {
     using namespace testing;
 
-    EXPECT_EQ(mir_surface_state_restored, surface->state());
+    EXPECT_EQ(mir_window_state_restored, surface->state());
 
-    EXPECT_EQ(mir_surface_state_vertmaximized,
+    EXPECT_EQ(mir_window_state_vertmaximized,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_vertmaximized));
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+                             mir_window_state_vertmaximized));
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
     EXPECT_THROW({
         surface->configure(mir_window_attrib_state, 999);
@@ -153,17 +153,17 @@ TEST_F(Surface, states)
     EXPECT_THROW({
         surface->configure(mir_window_attrib_state, -1);
     }, std::logic_error);
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_minimized,
+    EXPECT_EQ(mir_window_state_minimized,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_minimized));
-    EXPECT_EQ(mir_surface_state_minimized, surface->state());
+                             mir_window_state_minimized));
+    EXPECT_EQ(mir_window_state_minimized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_fullscreen,
+    EXPECT_EQ(mir_window_state_fullscreen,
               surface->configure(mir_window_attrib_state,
-                             mir_surface_state_fullscreen));
-    EXPECT_EQ(mir_surface_state_fullscreen, surface->state());
+                             mir_window_state_fullscreen));
+    EXPECT_EQ(mir_window_state_fullscreen, surface->state());
 }
 
 TEST_F(Surface, clamps_undersized_resize)
@@ -235,9 +235,9 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     {
         InSequence seq;
-        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_surface_focused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_window_focus_state_focused)))
             .Times(1);
-        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_surface_unfocused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_window_focus_state_unfocused)))
             .Times(1);
     }
 
@@ -246,8 +246,8 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     surface->add_observer(observer);
 
-    surface->configure(mir_window_attrib_focus, mir_surface_focused);
-    surface->configure(mir_window_attrib_focus, mir_surface_unfocused);
+    surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
+    surface->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
 }
 MATCHER_P(MirCloseSurfaceEventMatches, event, "")
 {

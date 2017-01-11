@@ -73,7 +73,7 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters co
     if (params.output_id != mir_display_output_id_invalid)
     {
         output_id = params.output_id;
-        state = mir_surface_state_fullscreen;
+        state = mir_window_state_fullscreen;
     }
 }
 

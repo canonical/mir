@@ -156,7 +156,7 @@ TEST_F(EventSender, sends_noninput_events)
 {
     using namespace testing;
 
-    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_window_attrib_focus, mir_surface_focused);
+    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_window_attrib_focus, mir_window_focus_state_focused);
     auto resize_ev = mev::make_event(mf::SurfaceId{1}, {10, 10});
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))

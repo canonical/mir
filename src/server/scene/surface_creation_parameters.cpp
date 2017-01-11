@@ -98,7 +98,7 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_type(MirWindowT
     return *this;
 }
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_state(MirSurfaceState the_state)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_state(MirWindowState the_state)
 {
     state = the_state;
     return *this;

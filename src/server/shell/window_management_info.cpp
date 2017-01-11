@@ -147,8 +147,8 @@ bool msh::SurfaceInfo::is_visible() const
 {
     switch (state)
     {
-    case mir_surface_state_hidden:
-    case mir_surface_state_minimized:
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
         return false;
     default:
         break;
@@ -251,19 +251,19 @@ void msh::SurfaceInfo::constrain_resize(
 
     switch (state)
     {
-    case mir_surface_state_restored:
+    case mir_window_state_restored:
         break;
 
         // "A vertically maximised surface is anchored to the top and bottom of
         // the available workspace and can have any width."
-    case mir_surface_state_vertmaximized:
+    case mir_window_state_vertmaximized:
         new_pos.y = surface->top_left().y;
         new_size.height = surface->size().height;
         break;
 
         // "A horizontally maximised surface is anchored to the left and right of
         // the available workspace and can have any height"
-    case mir_surface_state_horizmaximized:
+    case mir_window_state_horizmaximized:
         new_pos.x = surface->top_left().x;
         new_size.width = surface->size().width;
         break;
@@ -271,7 +271,7 @@ void msh::SurfaceInfo::constrain_resize(
         // "A maximised surface is anchored to the top, bottom, left and right of the
         // available workspace. For example, if the launcher is always-visible then
         // the left-edge of the surface is anchored to the right-edge of the launcher."
-    case mir_surface_state_maximized:
+    case mir_window_state_maximized:
     default:
         new_pos.x = surface->top_left().x;
         new_pos.y = surface->top_left().y;

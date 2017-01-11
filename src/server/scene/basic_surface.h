@@ -118,7 +118,7 @@ public:
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     MirWindowType type() const override;
-    MirSurfaceState state() const override;
+    MirWindowState state() const override;
     int configure(MirWindowAttrib attrib, int value) override;
     int query(MirWindowAttrib attrib) const override;
     void hide() override;
@@ -153,11 +153,11 @@ public:
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
-    MirSurfaceState set_state(MirSurfaceState s);
+    MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
     int set_swap_interval(int);
-    MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
@@ -179,9 +179,9 @@ private:
     std::list<StreamInfo> layers;
     // Surface attributes:
     MirWindowType type_ = mir_window_type_normal;
-    MirSurfaceState state_ = mir_surface_state_restored;
+    MirWindowState state_ = mir_window_state_restored;
     int swapinterval_ = 1;
-    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;

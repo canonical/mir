@@ -484,15 +484,15 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
     return t;
 }
 
-MirSurfaceState ms::BasicSurface::state() const
+MirWindowState ms::BasicSurface::state() const
 {
     std::unique_lock<std::mutex> lg(guard);
     return state_;
 }
 
-MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
+MirWindowState ms::BasicSurface::set_state(MirWindowState s)
 {
-    if (s < mir_surface_state_unknown || s > mir_surface_states)
+    if (s < mir_window_state_unknown || s > mir_window_states)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
     std::unique_lock<std::mutex> lg(guard);
@@ -528,10 +528,10 @@ int ms::BasicSurface::set_swap_interval(int interval)
     return interval;
 }
 
-MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_state)
+MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_state)
 {
-    if (new_state != mir_surface_focused &&
-        new_state != mir_surface_unfocused)
+    if (new_state != mir_window_focus_state_focused &&
+        new_state != mir_window_focus_state_unfocused)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
@@ -576,10 +576,10 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         result = set_type(static_cast<MirWindowType>(result));
         break;
     case mir_window_attrib_state:
-        result = set_state(static_cast<MirSurfaceState>(result));
+        result = set_state(static_cast<MirWindowState>(result));
         break;
     case mir_window_attrib_focus:
-        result = set_focus_state(static_cast<MirSurfaceFocusState>(result));
+        result = set_focus_state(static_cast<MirWindowFocusState>(result));
         break;
     case mir_window_attrib_swapinterval:
         result = set_swap_interval(result);

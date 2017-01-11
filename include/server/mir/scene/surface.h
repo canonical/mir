@@ -69,7 +69,7 @@ public:
 
     virtual float alpha() const = 0; //only used in examples/
     virtual MirWindowType type() const = 0;
-    virtual MirSurfaceState state() const = 0;
+    virtual MirWindowState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual bool visible() const = 0;
