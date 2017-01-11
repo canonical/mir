@@ -13,7 +13,7 @@ configure_file(
 )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_library(mirplatformgraphicseglstreamkms MODULE
+add_library(mirplatformgraphicseglstreamkmsobjects OBJECT 
   platform_symbols.cpp
   platform.cpp
   buffer_allocator.cpp
@@ -25,6 +25,10 @@ add_library(mirplatformgraphicseglstreamkms MODULE
   egl_output.h
   egl_output.cpp
   software_buffer.cpp
+)
+
+add_library(mirplatformgraphicseglstreamkms MODULE
+  $<TARGET_OBJECTS:mirplatformgraphicseglstreamkmsobjects>
 )
 
 target_link_libraries(
