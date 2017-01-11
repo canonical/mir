@@ -62,7 +62,7 @@ static GLuint load_shader(const char* src, GLenum type)
     return shader;
 }
 
-static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
+static void handle_input_event(MirInputEvent const* event, MirWindow* surface)
 {
     if (mir_input_event_get_type(event) == mir_input_event_type_pointer)
     {
@@ -128,7 +128,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
     }
 }
 
-static void handle_event(MirSurface* surface, MirEvent const* event, void* context)
+static void handle_event(MirWindow* surface, MirEvent const* event, void* context)
 {
     (void) context;
     switch (mir_event_get_type(event))

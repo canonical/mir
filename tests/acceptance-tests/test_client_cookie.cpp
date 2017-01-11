@@ -41,7 +41,7 @@ namespace mis = mir::input::synthesis;
 namespace
 {
 std::chrono::seconds const max_wait{4};
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx);
 }
 
 class ClientCookies : public mtf::ConnectedClientHeadlessServer
@@ -96,7 +96,7 @@ public:
 namespace
 {
 
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
     auto client_cookie = static_cast<ClientCookies*>(ctx);

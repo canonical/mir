@@ -158,7 +158,7 @@ struct CursorClient
         setup_done.wait_for(std::chrono::seconds{5});
     }
 
-    virtual void setup_cursor(MirSurface*)
+    virtual void setup_cursor(MirWindow*)
     {
     }
 

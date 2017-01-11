@@ -97,13 +97,13 @@ static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
-    MirSurface* other_surface;
+    MirWindow* other_surface;
 
     std::mutex last_event_mutex;
     MirEventType event_filter{mir_event_type_window};
     std::condition_variable last_event_cv;
     MirEvent const* last_event = nullptr;
-    MirSurface* last_event_surface = nullptr;
+    MirWindow* last_event_surface = nullptr;
 
     std::shared_ptr<ms::Surface> scene_surface;
 
@@ -395,7 +395,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     mt::Signal focus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_focus_event(event))
@@ -414,7 +414,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     mt::Signal unfocus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_unfocus_event(event))
@@ -439,7 +439,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     mt::Signal focus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_focus_event(event))
@@ -458,7 +458,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     mt::Signal unfocus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_unfocus_event(event))
@@ -510,7 +510,7 @@ class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
     }
 };
 
-void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
+void raise_signal_on_close_event(MirWindow*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_close_window)
     {
@@ -564,7 +564,7 @@ struct EventContext
     MirEvent const* event;
 };
 
-void surface_output_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+void surface_output_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_window_output)
     {

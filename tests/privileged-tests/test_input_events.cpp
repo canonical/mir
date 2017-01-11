@@ -47,7 +47,7 @@ namespace
 
 template <typename T> using UPtrWithDeleter = std::unique_ptr<T,void(*)(T*)>;
 using MirConnectionUPtr = UPtrWithDeleter<MirConnection>;
-using MirSurfaceUPtr = UPtrWithDeleter<MirSurface>;
+using MirSurfaceUPtr = UPtrWithDeleter<MirWindow>;
 using EvDevUPtr = UPtrWithDeleter<libevdev>;
 using EvDevUInputUPtr = UPtrWithDeleter<libevdev_uinput>;
 
@@ -161,7 +161,7 @@ struct InputEvents : testing::Test
         wait_for_socket(nested_socket);
     }
 
-    static void handle_input(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_input(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const handler = static_cast<MockInputHandler*>(context);
         auto const type = mir_event_get_type(ev);
@@ -212,7 +212,7 @@ struct InputEvents : testing::Test
         auto const window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
-            throw std::runtime_error("Failed to create MirSurface");
+            throw std::runtime_error("Failed to create MirWindow");
 
         mir_window_set_event_handler(window, handle_input, handler);
         mir_buffer_stream_swap_buffers_sync(

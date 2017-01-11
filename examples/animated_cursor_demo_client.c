@@ -66,7 +66,7 @@ void animate_cursor(MirBufferStream *stream)
     mir_buffer_stream_swap_buffers_sync(stream);
 }
 
-MirBufferStream* make_cursor_stream(MirConnection *connection, MirSurface *surface)
+MirBufferStream* make_cursor_stream(MirConnection *connection, MirWindow *surface)
 {
     MirBufferStream* stream = mir_connection_create_buffer_stream_sync(connection,
       24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);

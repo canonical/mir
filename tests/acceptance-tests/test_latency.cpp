@@ -284,7 +284,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
     std::unique_ptr<mtf::VisibleSurface> visible_surface;
-    MirSurface* surface;
+    MirWindow* surface;
 };
 }
 

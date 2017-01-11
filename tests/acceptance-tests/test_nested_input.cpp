@@ -156,7 +156,7 @@ public:
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<ExposedSurface*>(context);
         auto type = mir_event_get_type(ev);
@@ -170,7 +170,7 @@ public:
             client->handle_input(ev);
     }
 
-    static void null_event_handler(MirSurface*, MirEvent const*, void*) {};
+    static void null_event_handler(MirWindow*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
         mir_window_set_event_handler(window, null_event_handler, nullptr);

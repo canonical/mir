@@ -73,7 +73,7 @@ struct MockEventFilter : public mi::EventFilter
 const int surface_width = 100;
 const int surface_height = 100;
 
-void null_event_handler(MirSurface*, MirEvent const*, void*)
+void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -129,7 +129,7 @@ struct Client
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);

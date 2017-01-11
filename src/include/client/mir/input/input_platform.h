@@ -38,7 +38,7 @@ class InputReceiverThread;
 class InputReceiverReport;
 class XKBMapper;
 
-// Interface for MirSurface to construct input dispatcher threads.
+// Interface for MirWindow to construct input dispatcher threads.
 class InputPlatform
 {
 public:

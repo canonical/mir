@@ -149,7 +149,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         server.the_shell()->handle(*drag_event);
     }
 
-    void wait_for_arbitrary_change(MirSurface* surface)
+    void wait_for_arbitrary_change(MirWindow* surface)
     {
         auto const new_title = __PRETTY_FUNCTION__;
 

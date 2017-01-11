@@ -70,14 +70,14 @@ struct FocusSurface
         }
     }
 
-    void log_focus_event(MirSurface*, MirWindowFocusState state)
+    void log_focus_event(MirWindow*, MirWindowFocusState state)
     {
         std::lock_guard<std::mutex> lk(mutex);
         focus_events.push_back(state);
         cv.notify_all();
     }
 
-    MirSurface* native_handle() const
+    MirWindow* native_handle() const
     {
         return window;
     }

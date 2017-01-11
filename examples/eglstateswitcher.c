@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-static void toggle_surface_state(MirSurface* const surface, MirWindowState* state);
+static void toggle_surface_state(MirWindow* const surface, MirWindowState* state);
 
 typedef struct Color
 {
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         puts("Current state: " #state);\
         break
 
-void toggle_surface_state(MirSurface* const surface, MirWindowState* state)
+void toggle_surface_state(MirWindow* const surface, MirWindowState* state)
 {
     switch (mir_window_get_state(surface))
     {

@@ -200,7 +200,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         connection = new_connection;
     }
 
-    virtual void surface_created(MirSurface* new_surface)
+    virtual void surface_created(MirWindow* new_surface)
     {
         std::unique_lock<std::mutex> lock(guard);
         surfaces.insert(new_surface);
@@ -220,7 +220,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         ++buffers;
     }
 
-    void surface_released(MirSurface* old_surface)
+    void surface_released(MirWindow* old_surface)
     {
         std::unique_lock<std::mutex> lock(guard);
         surfaces.erase(old_surface);
@@ -234,7 +234,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         signal.wait(lock, [&]{ return !window; });
     }
 
-    MirSurface* any_surface()
+    MirWindow* any_surface()
     {
         return *surfaces.begin();
     }
@@ -244,7 +244,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         return surfaces.size();
     }
 
-    static void nosey_thread(MirSurface *surf)
+    static void nosey_thread(MirWindow *surf)
     {
         for (int i = 0; i < 10; i++)
         {
@@ -1051,11 +1051,11 @@ TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_software_surface)
 
 namespace
 {
-void dummy_event_handler_one(MirSurface*, MirEvent const*, void*)
+void dummy_event_handler_one(MirWindow*, MirEvent const*, void*)
 {
 }
 
-void dummy_event_handler_two(MirSurface*, MirEvent const*, void*)
+void dummy_event_handler_two(MirWindow*, MirEvent const*, void*)
 {
 }
 }

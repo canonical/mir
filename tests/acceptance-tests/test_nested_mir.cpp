@@ -457,7 +457,7 @@ protected:
     }
 
 private:
-    static void wait_for_key_a_event(MirSurface*, MirEvent const* ev, void* context)
+    static void wait_for_key_a_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const nmr = static_cast<NestedMirRunner*>(context);
         if (mir_event_get_type(ev) == mir_event_type_input)
@@ -776,7 +776,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_window_spec_set_event_handler(spec, [](MirWindow*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_window_output)
             {

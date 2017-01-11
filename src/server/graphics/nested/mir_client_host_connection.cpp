@@ -208,7 +208,7 @@ public:
 
 private:
     MirConnection* const mir_connection;
-    MirSurface* const mir_surface;
+    MirWindow* const mir_surface;
     MirBufferStream* cursor{nullptr};
     mir::geometry::Displacement cursor_hotspot;
 };

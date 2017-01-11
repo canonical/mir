@@ -84,7 +84,7 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         connection = conn;
     }
 
-    virtual void surface_created(MirSurface* new_surface)
+    virtual void surface_created(MirWindow* new_surface)
     {
         std::this_thread::sleep_for(10ms);
         window = new_surface;
@@ -96,7 +96,7 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         ++buffers;
     }
 
-    void surface_released(MirSurface*)
+    void surface_released(MirWindow*)
     {
         std::this_thread::sleep_for(10ms);
         window = nullptr;

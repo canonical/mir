@@ -74,7 +74,7 @@ struct Client
         std::swap(connection, source.connection);
     }
 
-    auto surface_create() const -> MirSurface*
+    auto surface_create() const -> MirWindow*
     {
         auto spec = mir_create_normal_window_spec(connection, 800, 600);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
@@ -253,7 +253,7 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
 
     const int no_of_surfaces = 17;
     std::weak_ptr<ms::Surface> server_surface[no_of_surfaces];
-    MirSurface* client_surface[no_of_surfaces] = {};
+    MirWindow* client_surface[no_of_surfaces] = {};
 
     for (int i = 0; i != no_of_surfaces; ++i)
     {
@@ -550,7 +550,7 @@ private:
     mt::Signal received;
 };
 
-void surface_placement_event_callback(MirSurface* /*window*/, MirEvent const* event, void* context)
+void surface_placement_event_callback(MirWindow* /*window*/, MirEvent const* event, void* context)
 {
     if (mir_event_get_type(event) == mir_event_type_window_placement)
     {

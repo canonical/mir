@@ -18,7 +18,7 @@
 
 // TODO: There's a lot to suggest (usage of real connection most prevalent)
 // that this is perhaps a set of integration tests. But moving it there conflicts
-// with test_mirsurface.cpp. Client MirSurface testing probably needs to be reviewed
+// with test_mirsurface.cpp. Client MirWindow testing probably needs to be reviewed
 
 #include "mir_protobuf.pb.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -273,7 +273,7 @@ void null_connected_callback(MirConnection* /*connection*/, void * /*client_cont
 {
 }
 
-void null_event_callback(MirSurface*, MirEvent const*, void*)
+void null_event_callback(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -320,9 +320,9 @@ struct MirClientSurfaceTest : public testing::Test
         client_comm_channel = std::make_shared<mclr::DisplayServer>(conf.the_rpc_channel());
     }
 
-    std::shared_ptr<MirSurface> create_surface_with(mclr::DisplayServer& server_stub)
+    std::shared_ptr<MirWindow> create_surface_with(mclr::DisplayServer& server_stub)
     {
-        return std::make_shared<MirSurface>(
+        return std::make_shared<MirWindow>(
             connection.get(),
             server_stub,
             nullptr,
@@ -333,11 +333,11 @@ struct MirClientSurfaceTest : public testing::Test
             wh);
     }
 
-    std::shared_ptr<MirSurface> create_surface_with(
+    std::shared_ptr<MirWindow> create_surface_with(
         mclr::DisplayServer& server_stub,
         std::shared_ptr<MirBufferStream> const& buffer_stream)
     {
-        return std::make_shared<MirSurface>(
+        return std::make_shared<MirWindow>(
             connection.get(),
             server_stub,
             nullptr,
@@ -348,14 +348,14 @@ struct MirClientSurfaceTest : public testing::Test
             wh);
     }
 
-    std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
+    std::shared_ptr<MirWindow> create_and_wait_for_surface_with(
         mclr::DisplayServer& server_stub)
     {
         auto surface = create_surface_with(server_stub);
         return surface;
     }
 
-    std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
+    std::shared_ptr<MirWindow> create_and_wait_for_surface_with(
         mclr::DisplayServer& server_stub,
         std::shared_ptr<MirBufferStream> const& buffer_stream)
     {
@@ -407,7 +407,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
 
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
     surface.set_event_handler(null_event_callback, nullptr);
 
@@ -428,7 +428,7 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
         .WillOnce(Return(mock_input_dispatcher));
 
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
     surface.set_event_handler(null_event_callback, nullptr);
 
@@ -449,7 +449,7 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_s
 
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(0);
 
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
 }
 
@@ -457,7 +457,7 @@ TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
 {
     auto const surface = create_and_wait_for_surface_with(*client_comm_channel);
 
-    EXPECT_TRUE(MirSurface::is_valid(surface.get()));
+    EXPECT_TRUE(MirWindow::is_valid(surface.get()));
 }
 
 TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
@@ -514,7 +514,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     EXPECT_CALL(*mock_stream, set_size(size));
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
 
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
     surface_map->insert(mock_stream_id, mock_stream);
     surface.handle_event(*ev);
@@ -534,7 +534,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     geom::Size size(120, 124);
     EXPECT_CALL(*mock_stream, set_size(size)).Times(0);
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
 
     MirWindowSpec spec;
@@ -562,7 +562,7 @@ TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
     surface_proto.set_width(size.width.as_int());
     surface_proto.set_height(size.height.as_int());
 
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
 
     auto params = surface.get_parameters();
@@ -587,7 +587,7 @@ TEST_F(MirClientSurfaceTest, initial_sizes_are_from_response_from_server)
 
     surface_proto.set_width(size.width.as_int());
     surface_proto.set_height(size.height.as_int());
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
         mock_stream, mock_input_platform, spec, surface_proto, wh};
 
     auto params = surface.get_parameters();

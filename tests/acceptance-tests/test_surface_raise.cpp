@@ -44,7 +44,7 @@ using namespace testing;
 namespace
 {
 std::chrono::seconds const max_wait{4};
-void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ctx);
+void cookie_capturing_callback(MirWindow* surface, MirEvent const* ev, void* ctx);
 }
 
 struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
@@ -89,8 +89,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
             { return mir_window_get_focus_state(surface2) == mir_window_focus_state_focused; }, max_wait));
     }
 
-    MirSurface* surface1;
-    MirSurface* surface2;
+    MirWindow* surface1;
+    MirWindow* surface2;
 
     mir::test::Signal ready_to_accept_events;
     std::vector<std::vector<uint8_t>> out_cookies;
@@ -110,7 +110,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 namespace
 {
 
-void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void* ctx)
+void cookie_capturing_callback(MirWindow* /*surface*/, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
     auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
@@ -174,7 +174,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
    return all_events;
 }
 
-bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
+bool attempt_focus(MirWindow* surface, MirCookie const* cookie)
 {
     mir_window_raise(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(

@@ -81,10 +81,10 @@ private:
 
 struct MockVisibilityCallback
 {
-    MOCK_METHOD2(handle, void(MirSurface*,MirWindowVisibility));
+    MOCK_METHOD2(handle, void(MirWindow*,MirWindowVisibility));
 };
 
-void null_event_callback(MirSurface*, MirEvent const*, void*)
+void null_event_callback(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -104,7 +104,7 @@ void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
         static_cast<MirWindowVisibility>(mir_window_event_get_attribute_value(sev)));
 }
 
-MirSurface* create_surface(MirConnection* connection, const char* name, geom::Size size,
+MirWindow* create_surface(MirConnection* connection, const char* name, geom::Size size,
     testing::NiceMock<MockVisibilityCallback>& mock_callback)
 {
     auto const spec = mir_create_normal_window_spec(
@@ -143,7 +143,7 @@ struct Surface
         Mock::VerifyAndClearExpectations(&callback);
 
         EXPECT_CALL(callback, handle(window, visibility))
-            .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirWindowVisibility)
+            .WillOnce(DoAll(Invoke([&visibility](MirWindow *s, MirWindowVisibility)
                 {
                     EXPECT_EQ(visibility, mir_window_get_visibility(s));
                 }), mt::WakeUp(&event_received)));

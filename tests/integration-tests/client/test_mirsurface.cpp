@@ -52,7 +52,7 @@ struct MockShell : msh::ShellWrapper
 };
 
 bool parent_field_matches(ms::SurfaceCreationParameters const& params,
-    mir::optional_value<MirSurface*> const& surf)
+    mir::optional_value<MirWindow*> const& surf)
 {
     if (!surf.is_set())
         return !params.parent_id.is_set();
@@ -148,7 +148,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
         spec.pref_orientation = mir_orientation_mode_landscape;
     }
 
-    std::unique_ptr<MirSurface, std::function<void(MirSurface*)>> create_surface(MirWindowSpec* spec)
+    std::unique_ptr<MirWindow, std::function<void(MirWindow*)>> create_surface(MirWindowSpec* spec)
     {
         return {mir_window_create_sync(spec), [](MirWindow *window){mir_window_release_sync(window);}};
     }

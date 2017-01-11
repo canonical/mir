@@ -156,7 +156,7 @@ static bool on_surface_event(MirWindowEvent const* wevent, State* state)
     return false;  // Let eglapp handle the same event. We are passive.
 }
 
-static void on_event(MirSurface* surface, MirEvent const* event, void* context)
+static void on_event(MirWindow* surface, MirEvent const* event, void* context)
 {
     bool handled = true;
 

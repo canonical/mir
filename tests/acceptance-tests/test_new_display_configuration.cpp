@@ -277,7 +277,7 @@ struct SimpleClient
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<SimpleClient*>(context);
         auto type = mir_event_get_type(ev);

@@ -744,7 +744,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \brief Request an ID for the window that can be shared cross-process and
  *        across restarts.
  *
- * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
+ * This call acquires a MirPersistentId for this MirWindow. This MirPersistentId
  * can be serialized to a string, stored or sent to another process, and then
  * later deserialized to refer to the same window.
  *
