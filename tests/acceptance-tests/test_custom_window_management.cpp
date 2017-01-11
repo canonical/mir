@@ -19,6 +19,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/session.h"
 #include "mir_toolkit/events/surface_placement.h"
+#include "mir_toolkit/events/window_placement.h"
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface.h"
 
@@ -529,12 +530,12 @@ struct PlacementCheck
 {
     PlacementCheck(MirRectangle const& placement) : expected_rect{placement} {}
 
-    void check(MirSurfacePlacementEvent const* placement_event)
+    void check(MirWindowPlacementEvent const* placement_event)
     {
-        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).top, Eq(expected_rect.top));
-        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).left, Eq(expected_rect.left));
-        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).height, Eq(expected_rect.height));
-        EXPECT_THAT(mir_surface_placement_get_relative_position(placement_event).width, Eq(expected_rect.width));
+        EXPECT_THAT(mir_window_placement_get_relative_position(placement_event).top, Eq(expected_rect.top));
+        EXPECT_THAT(mir_window_placement_get_relative_position(placement_event).left, Eq(expected_rect.left));
+        EXPECT_THAT(mir_window_placement_get_relative_position(placement_event).height, Eq(expected_rect.height));
+        EXPECT_THAT(mir_window_placement_get_relative_position(placement_event).width, Eq(expected_rect.width));
 
         received.raise();
     }
