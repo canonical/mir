@@ -133,7 +133,7 @@ struct Client
         auto type = mir_event_get_type(ev);
         switch (type)
         {
-        case mir_event_type_surface:
+        case mir_event_type_window:
             client->handle_surface_event(mir_event_get_surface_event(ev));
             break;
         case mir_event_type_input:
