@@ -891,11 +891,12 @@ void mf::SessionMediator::release_buffer_stream(
 }
 
 
-std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
+auto mf::SessionMediator::prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const
+-> std::function<void(std::shared_ptr<mf::Session> const&)>
 {
-    return [this](std::shared_ptr<mf::Session> const& session)
+    return [this, prompt_session_id](std::shared_ptr<mf::Session> const& session)
     {
-        auto prompt_session = weak_prompt_session.lock();
+        auto prompt_session = prompt_sessions.fetch(prompt_session_id);
         if (prompt_session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
@@ -951,7 +952,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const connect_handler = prompt_session_connect_handler();
+    auto const connect_handler = prompt_session_connect_handler(detail::PromptSessionId(parameters->prompt_session_id()));
 
     auto const fds_requested = parameters->number();
 
@@ -1038,7 +1039,7 @@ void mf::SessionMediator::platform_operation(
 
 void mf::SessionMediator::start_prompt_session(
     const ::mir::protobuf::PromptSessionParameters* request,
-    ::mir::protobuf::Void* /*response*/,
+    ::mir::protobuf::PromptSession* response,
     ::google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
@@ -1046,21 +1047,18 @@ void mf::SessionMediator::start_prompt_session(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    if (weak_prompt_session.lock())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
-
     ms::PromptSessionCreationParameters parameters;
     parameters.application_pid = request->application_pid();
 
     observer->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
-    weak_prompt_session = shell->start_prompt_session_for(session, parameters);
+    response->set_id(prompt_sessions.insert(shell->start_prompt_session_for(session, parameters)).as_value());
 
     done->Run();
 }
 
 void mf::SessionMediator::stop_prompt_session(
-    const ::mir::protobuf::Void*,
+    protobuf::PromptSession const* request,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
@@ -1069,12 +1067,13 @@ void mf::SessionMediator::stop_prompt_session(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const prompt_session = weak_prompt_session.lock();
+    detail::PromptSessionId const id{request->id()};
+    auto const prompt_session = prompt_sessions.fetch(id);
 
     if (!prompt_session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-    weak_prompt_session.reset();
+    prompt_sessions.remove(id);
 
     observer->session_stop_prompt_session_called(session->name());
 
@@ -1200,4 +1199,26 @@ void mf::SessionMediator::destroy_screencast_sessions()
 
     for (auto const& id : ids_to_untrack)
         screencast_buffer_tracker.remove_session(id);
+}
+
+
+auto mf::detail::PromptSessionStore::insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    auto const id = PromptSessionId{++next_id};
+    sessions[id] = session;
+    return id;
+}
+
+auto mf::detail::PromptSessionStore::fetch(PromptSessionId session) const
+-> std::shared_ptr<PromptSession>
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    return sessions[session].lock();
+}
+
+void mf::detail::PromptSessionStore::remove(PromptSessionId session)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    sessions.erase(session);
 }

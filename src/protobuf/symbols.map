@@ -1088,5 +1088,25 @@ MIR_PROTOBUF_0.26 {
     typeinfo?for?mir::protobuf::ScreencastRequest;
     vtable?for?mir::protobuf::ScreencastRequest;
     non-virtual?thunk?to?mir::protobuf::ScreencastRequest::?ScreencastRequest*;
+
+    mir::protobuf::PromptSession::ByteSize*;
+    mir::protobuf::PromptSession::CheckTypeAndMergeFrom*;
+    mir::protobuf::PromptSession::Clear*;
+    mir::protobuf::PromptSession::CopyFrom*;
+    mir::protobuf::PromptSession::default_instance*;
+    mir::protobuf::PromptSession::DiscardUnknownFields*;
+    mir::protobuf::PromptSession::GetTypeName*;
+    mir::protobuf::PromptSession::IsInitialized*;
+    mir::protobuf::PromptSession::kApplicationPidFieldNumber*;
+    mir::protobuf::PromptSession::MergeFrom*;
+    mir::protobuf::PromptSession::MergePartialFromCodedStream*;
+    mir::protobuf::PromptSession::New*;
+    mir::protobuf::PromptSession::?PromptSession*;
+    mir::protobuf::PromptSession::PromptSession*;
+    mir::protobuf::PromptSession::SerializeWithCachedSizes*;
+    mir::protobuf::PromptSession::Swap*;
+    non-virtual?thunk?to?mir::protobuf::PromptSession::?PromptSession*;
+    typeinfo?for?mir::protobuf::PromptSession;
+    vtable?for?mir::protobuf::PromptSession;
   };
 } MIR_PROTOBUF_0.22;
