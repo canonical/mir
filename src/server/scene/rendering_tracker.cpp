@@ -41,7 +41,7 @@ void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 
     occlusions.erase(cid);
 
-    configure_visibility(mir_surface_visibility_exposed);
+    configure_visibility(mir_window_visibility_exposed);
 }
 
 void ms::RenderingTracker::occluded_in(mc::CompositorID cid)
@@ -53,7 +53,7 @@ void ms::RenderingTracker::occluded_in(mc::CompositorID cid)
     occlusions.insert(cid);
 
     if (occluded_in_all_active_compositors())
-        configure_visibility(mir_surface_visibility_occluded);
+        configure_visibility(mir_window_visibility_occluded);
 }
 
 void ms::RenderingTracker::active_compositors(std::set<mc::CompositorID> const& cids)
@@ -65,7 +65,7 @@ void ms::RenderingTracker::active_compositors(std::set<mc::CompositorID> const& 
     remove_occlusions_for_inactive_compositors();
 
     if (occluded_in_all_active_compositors())
-        configure_visibility(mir_surface_visibility_occluded);
+        configure_visibility(mir_window_visibility_occluded);
 }
 
 bool ms::RenderingTracker::is_exposed_in(mc::CompositorID cid) const
@@ -85,7 +85,7 @@ bool ms::RenderingTracker::occluded_in_all_active_compositors()
     return occlusions == active_compositors_;
 }
 
-void ms::RenderingTracker::configure_visibility(MirSurfaceVisibility visibility)
+void ms::RenderingTracker::configure_visibility(MirWindowVisibility visibility)
 {
     if (auto const surface = weak_surface.lock())
         surface->configure(mir_window_attrib_visibility, visibility);

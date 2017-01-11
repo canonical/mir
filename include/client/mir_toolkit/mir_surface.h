@@ -697,6 +697,13 @@ MirWindowState mir_window_get_state(MirWindow* window);
  */
 MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
 
+/**
+ * Query the visibility state for a window.
+ *   \param [in] window The window to operate on
+ *   \return             The visibility state of said window
+ */
+MirWindowVisibility mir_window_get_visibility(MirWindow* window);
+
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -937,12 +944,8 @@ int mir_surface_get_dpi(MirSurface* surface);
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_focus_state() instead")));
 
-/**
- * Query the visibility state for a surface.
- *   \param [in] surface The surface to operate on
- *   \return             The visibility state of said surface
- */
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_visibility() instead")));
 
 /**
  * Choose the cursor state for a surface: whether a cursor is shown, 

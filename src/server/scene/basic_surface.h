@@ -155,7 +155,7 @@ private:
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
     MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
-    MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
+    MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
     MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
@@ -183,7 +183,7 @@ private:
     int swapinterval_ = 1;
     MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
     int dpi_ = 0;
-    MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
+    MirWindowVisibility visibility_ = mir_window_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
     MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
 

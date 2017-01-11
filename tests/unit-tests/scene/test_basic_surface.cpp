@@ -521,8 +521,8 @@ struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
 
 AttributeTestParameters const surface_visibility_test_parameters{
     mir_window_attrib_visibility,
-    mir_surface_visibility_occluded,
-    mir_surface_visibility_exposed,
+    mir_window_visibility_occluded,
+    mir_window_visibility_exposed,
     -1
 };
 
@@ -920,9 +920,9 @@ TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
     EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
     EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
 
-    surface.configure(mir_window_attrib_visibility, mir_surface_visibility_occluded);
-    surface.configure(mir_window_attrib_visibility, mir_surface_visibility_exposed);
-    surface.configure(mir_window_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_occluded);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
 }
 
 //TODO: per-stream alpha and swapinterval seems useful
@@ -1106,9 +1106,9 @@ struct VisibilityObserver : ms::NullSurfaceObserver
     {
         if (attrib == mir_window_attrib_visibility)
         {
-            if (value == mir_surface_visibility_occluded)
+            if (value == mir_window_visibility_occluded)
                 hides_++;
-            else if (value == mir_surface_visibility_exposed)
+            else if (value == mir_window_visibility_exposed)
                 exposes_++;
         }
     }
@@ -1134,7 +1134,7 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));
-    surface.configure(mir_window_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
 
     EXPECT_THAT(observer->exposes(), Eq(1));
     EXPECT_THAT(observer->hides(), Eq(0));

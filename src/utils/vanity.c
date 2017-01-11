@@ -142,7 +142,7 @@ static bool on_surface_event(MirWindowEvent const* wevent, State* state)
 
     if (attrib == mir_window_attrib_visibility)
     {
-        if (value == mir_surface_visibility_exposed)
+        if (value == mir_window_visibility_exposed)
         {
             state->reset = true;
             state->occluded = false;

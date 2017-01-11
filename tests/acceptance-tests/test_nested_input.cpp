@@ -145,7 +145,7 @@ public:
         auto const value = mir_window_event_get_attribute_value(event);
 
         if (mir_window_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+            mir_window_visibility_exposed == value)
             exposed = true;
 
         if (mir_window_attrib_focus == attrib &&

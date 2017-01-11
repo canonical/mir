@@ -588,7 +588,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         result = set_dpi(result);
         break;
     case mir_window_attrib_visibility:
-        result = set_visibility(static_cast<MirSurfaceVisibility>(result));
+        result = set_visibility(static_cast<MirWindowVisibility>(result));
         break;
     case mir_window_attrib_preferred_orientation:
         result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
@@ -748,10 +748,10 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     return new_dpi;
 }
 
-MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_visibility)
+MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_visibility)
 {
-    if (new_visibility != mir_surface_visibility_occluded &&
-        new_visibility != mir_surface_visibility_exposed)
+    if (new_visibility != mir_window_visibility_occluded &&
+        new_visibility != mir_window_visibility_exposed)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
@@ -761,7 +761,7 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
     {
         visibility_ = new_visibility;
         lg.unlock();
-        if (new_visibility == mir_surface_visibility_exposed)
+        if (new_visibility == mir_window_visibility_exposed)
         {
             for (auto& info : layers)
                 info.stream->drop_old_buffers();

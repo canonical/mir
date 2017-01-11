@@ -195,6 +195,17 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowVisibility state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_visibility,exposed);
+    PRINT(mir_window_visibility,occluded);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
 {
     switch (type)
@@ -373,7 +384,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
         out << value;
         break;
     case mir_window_attrib_visibility:
-        out << static_cast<MirSurfaceVisibility>(value);
+        out << static_cast<MirWindowVisibility>(value);
         break;
     case mir_window_attrib_preferred_orientation:
         out << value;

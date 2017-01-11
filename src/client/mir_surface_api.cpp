@@ -700,6 +700,25 @@ MirWindowFocusState mir_window_get_focus_state(MirWindow* window)
     return state;
 }
 
+MirWindowVisibility mir_window_get_visibility(MirWindow* window)
+{
+    MirWindowVisibility state = static_cast<MirWindowVisibility>(mir_window_visibility_occluded);
+
+    try
+    {
+        if (window)
+        {
+            state = static_cast<MirWindowVisibility>(window->attrib(mir_window_attrib_visibility));
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
 // These functions will be deprecated soon
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -1137,21 +1156,7 @@ MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 {
-    MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(mir_surface_visibility_occluded);
-
-    try
-    {
-        if (surf)
-        {
-            state = static_cast<MirSurfaceVisibility>(surf->attrib(mir_window_attrib_visibility));
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceVisibility>(mir_window_get_visibility(surf));
 }
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)

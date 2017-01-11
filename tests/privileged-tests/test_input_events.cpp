@@ -191,7 +191,7 @@ struct InputEvents : testing::Test
         bool const success = mt::spin_wait_for_condition_or_timeout(
             [&]
             {
-                return mir_surface_get_visibility(window) == mir_surface_visibility_exposed &&
+                return mir_window_get_visibility(window) == mir_window_visibility_exposed &&
                        mir_window_get_focus_state(window) == mir_window_focus_state_focused;
             },
             std::chrono::seconds{5});

@@ -124,7 +124,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
 
         if (attrib == mir_window_attrib_visibility &&
-            value == mir_surface_visibility_exposed)
+            value == mir_window_visibility_exposed)
         {
             raise_surfaces->exposed = true;
         }

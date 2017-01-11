@@ -146,7 +146,13 @@ typedef enum MirSurfaceVisibility
 {
     mir_surface_visibility_occluded = 0,
     mir_surface_visibility_exposed
-} MirSurfaceVisibility;
+} MirSurfaceVisibility; /* __attribute__ ((deprecated("use MirWindowFocusState"))); */
+
+typedef enum MirWindowVisibility
+{
+    mir_window_visibility_occluded = 0,
+    mir_window_visibility_exposed
+} MirWindowVisibility;
 
 typedef enum MirLifecycleState
 {

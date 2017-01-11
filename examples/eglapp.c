@@ -118,7 +118,7 @@ static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
     switch (attrib)
     {
     case mir_window_attrib_visibility:
-        printf("Window %s\n", value == mir_surface_visibility_exposed ?
+        printf("Window %s\n", value == mir_window_visibility_exposed ?
                                "exposed" : "occluded");
         break;
     case mir_window_attrib_dpi:

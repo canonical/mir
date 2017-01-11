@@ -843,7 +843,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
         [window = client.window]
         {
-            return mir_surface_get_visibility(window) == mir_surface_visibility_exposed
+            return mir_window_get_visibility(window) == mir_window_visibility_exposed
                 && mir_window_get_focus_state(window) == mir_window_focus_state_focused;
         },
         timeout);
