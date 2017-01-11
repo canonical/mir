@@ -124,10 +124,12 @@ public:
     PostObserver(std::function<void(int)> cb) : cb{cb}
     {
     }
+
     void frame_posted(int count, geom::Size const&) override
     {
         cb(count);
     }
+
 private:
     std::function<void(int)> const cb;
 };
@@ -243,6 +245,13 @@ struct StaleFrames : BasicFixture,
         server_configuration.the_compositor()->start();
     }
 
+    /*
+     * NOTE that we wait for surface buffer posts as opposed to display posts.
+     * The difference is that surface buffer posts will precisely match the
+     * number of of client swaps for any swap interval, but display posts
+     * may be fewer than the number of swaps if the client was quick and using
+     * interval zero.
+     */
     void frame_posted(int count)
     {
         std::unique_lock<std::mutex> lock(mutex);
