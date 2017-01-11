@@ -27,6 +27,7 @@
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_toolkit/mesa/platform_operation.h"
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -68,13 +69,6 @@ mgn::UniqueInputConfig make_input_config(MirConnection* con)
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 {
     (*static_cast<std::function<void()>*>(context))();
-}
-
-void platform_operation_callback(
-    MirConnection*, MirPlatformMessage* reply, void* context)
-{
-    auto reply_ptr = static_cast<MirPlatformMessage**>(context);
-    *reply_ptr = reply;
 }
 
 static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
@@ -400,33 +394,52 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     unsigned int op, mg::PlatformOperationMessage const& request)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto const msg = mir::raii::deleter_for(
-        mir_platform_message_create(op),
-        mir_platform_message_release);
+    mg::PlatformOperationMessage response_msg;
+    if (op == MirMesaPlatformOperation::auth_magic)
+    {
+        auto ext = auth_extension();
+        if (!ext.is_set())
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot perform auth_magic, not supported by platform"));
+        unsigned int magic_request = 0u;
+        if (request.data.size() != sizeof(magic_request))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid request message for auth_magic platform operation"));
 
-    mir_platform_message_set_data(msg.get(), request.data.data(), request.data.size());
-    mir_platform_message_set_fds(msg.get(), request.fds.data(), request.fds.size());
+        std::memcpy(&magic_request, request.data.data(), request.data.size());
+        auto magic_response = ext.value()->auth_magic(magic_request);
+        response_msg.data.resize(sizeof(magic_response));
+        std::memcpy(response_msg.data.data(), &magic_response, sizeof(magic_response));
+    }
+    else if (op == MirMesaPlatformOperation::auth_fd)
+    {
+        if (request.data.size() != 0 || request.fds.size() != 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot perform auth_fd, invalid request"));
 
-    MirPlatformMessage* raw_reply{nullptr};
+        auto ext = auth_extension();
+        if (!ext.is_set())
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot perform auth_fd, not supported by platform"));
+        response_msg.fds.push_back(ext.value()->auth_fd());
+    }
+    else if (op == MirMesaPlatformOperation::set_gbm_device)
+    {
+        auto ext = set_gbm_extension();
+        if (!ext.is_set())
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot perform set_gbm_extension, not supported by platform"));
 
-    auto const wh = mir_connection_platform_operation(
-        mir_connection, msg.get(), platform_operation_callback, &raw_reply);
-    mir_wait_for(wh);
+        gbm_device* device = nullptr;
+        if (request.data.size() != sizeof(device))
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot perform set_gbm_device, invalid request"));
+        std::memcpy(&device, request.data.data(), request.data.size());
 
-    auto const reply = mir::raii::deleter_for(
-        raw_reply,
-        mir_platform_message_release);
+        int const success_response{0};
+        auto const r = reinterpret_cast<char const*>(&success_response);
+        response_msg.data.assign(r, r + sizeof(success_response));
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("unrecognized platform operation opcode"));
+    }
 
-    auto reply_data = mir_platform_message_get_data(reply.get());
-    auto reply_fds = mir_platform_message_get_fds(reply.get());
-
-    return PlatformOperationMessage{
-        {static_cast<uint8_t const*>(reply_data.data),
-         static_cast<uint8_t const*>(reply_data.data) + reply_data.size},
-        {reply_fds.fds, reply_fds.fds + reply_fds.num_fds}};
-#pragma GCC diagnostic pop
+    return response_msg;
 }
 
 void mgn::MirClientHostConnection::set_cursor_image(mg::CursorImage const& image)
