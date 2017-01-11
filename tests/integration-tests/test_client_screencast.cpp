@@ -109,7 +109,7 @@ struct Screencast : mtf::BasicClientServerFixture<StubServerConfig>
         mir_screencast_spec_set_height(spec, default_size.height.as_int());
         mir_screencast_spec_set_pixel_format(spec, default_pixel_format);
 
-        MirRectangle const rect_capture{as_mir_rect(default_capture_region)};
+        MirRectangle const rect_capture = as_mir_rect(default_capture_region);
         mir_screencast_spec_set_capture_region(spec, &rect_capture);
 
         return spec;
