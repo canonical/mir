@@ -174,7 +174,7 @@ struct SystemCompositorWindowManager : mtf::HeadlessTest
 
 MATCHER_P(MirFocusEvent, expected, "")
 {
-    if (mir_event_get_type(arg) != mir_event_type_surface)
+    if (mir_event_get_type(arg) != mir_event_type_window)
         return false;
 
     auto surface_event = mir_event_get_surface_event(arg);

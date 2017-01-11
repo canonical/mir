@@ -136,7 +136,7 @@ public:
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     
-    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(mir::geometry::Size, MirPixelFormat)
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat)
     {
         return nullptr;
     }
