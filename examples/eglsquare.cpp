@@ -179,7 +179,7 @@ private:
         return {width, height};
     }
 
-    static void on_event(MirSurface*, const MirEvent *event, void *context)
+    static void on_event(MirWindow*, const MirEvent *event, void *context)
     {
         auto surface = reinterpret_cast<SquareRenderingSurface*>(context);
         if (surface) surface->on_event(event);

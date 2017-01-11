@@ -65,7 +65,7 @@ void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
     }
 }
 
-void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceEventSource::attrib_changed(MirWindowAttrib attrib, int value)
 {
     event_sink->handle_event(*mev::make_event(id, attrib, value));
 }

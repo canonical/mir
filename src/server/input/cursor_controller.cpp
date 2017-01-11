@@ -44,7 +44,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
     }
 
-    void attrib_changed(MirSurfaceAttrib, int) override
+    void attrib_changed(MirWindowAttrib, int) override
     {
         // Attribute changing alone wont trigger a cursor update
     }
