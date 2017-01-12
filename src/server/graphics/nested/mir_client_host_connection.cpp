@@ -353,7 +353,7 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
 void mgn::MirClientHostConnection::apply_display_config(
     MirDisplayConfig& display_config)
 {
-    mir_connection_apply_session_display_configuration(mir_connection, &display_config);
+    mir_connection_apply_session_display_config(mir_connection, &display_config);
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
