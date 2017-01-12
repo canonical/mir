@@ -61,28 +61,28 @@ inline auto as_device_info(MirInputDevice* device)
     return reinterpret_cast<mp::InputDeviceInfo*>(device);
 }
 
-inline auto as_pointer_config(MirPointerConfiguration const* config)
+inline auto as_pointer_config(MirPointerConfig const* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::PointerConfiguration const*>(config);
+    return reinterpret_cast<mp::PointerConfig const*>(config);
 }
 
-inline auto as_pointer_config(MirPointerConfiguration* config)
+inline auto as_pointer_config(MirPointerConfig* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::PointerConfiguration*>(config);
+    return reinterpret_cast<mp::PointerConfig*>(config);
 }
 
-inline auto as_touchpad_config(MirTouchpadConfiguration const* config)
+inline auto as_touchpad_config(MirTouchpadConfig const* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::TouchpadConfiguration const*>(config);
+    return reinterpret_cast<mp::TouchpadConfig const*>(config);
 }
 
-inline auto as_touchpad_config(MirTouchpadConfiguration* config)
+inline auto as_touchpad_config(MirTouchpadConfig* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::TouchpadConfiguration*>(config);
+    return reinterpret_cast<mp::TouchpadConfig*>(config);
 }
 }
 
@@ -155,36 +155,45 @@ char const* mir_input_device_get_unique_id(MirInputDevice const* device) MIR_HAN
     return device_info->unique_id().c_str();
 })
 
-MirPointerConfiguration const* mir_input_device_get_pointer_configuration(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+MirPointerConfig const* mir_input_device_get_pointer_configuration(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto device_info = as_device_info(device);
     if (device_info->has_pointer_configuration())
-        return reinterpret_cast<MirPointerConfiguration const*>(&device_info->pointer_configuration());
+        return reinterpret_cast<MirPointerConfig const*>(&device_info->pointer_configuration());
 
     return nullptr;
 })
 
-MirPointerAcceleration mir_pointer_configuration_get_acceleration(MirPointerConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+MirPointerConfig const* mir_input_device_get_pointer_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    auto device_info = as_device_info(device);
+    if (device_info->has_pointer_configuration())
+        return reinterpret_cast<MirPointerConfig const*>(&device_info->pointer_configuration());
+
+    return nullptr;
+})
+
+MirPointerAcceleration mir_pointer_config_get_acceleration(MirPointerConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return static_cast<MirPointerAcceleration>(as_pointer_config(conf)->acceleration());
 })
 
-double mir_pointer_configuration_get_acceleration_bias(MirPointerConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+double mir_pointer_config_get_acceleration_bias(MirPointerConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_pointer_config(conf)->acceleration_bias();
 })
 
-double mir_pointer_configuration_get_horizontal_scroll_scale(MirPointerConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+double mir_pointer_config_get_horizontal_scroll_scale(MirPointerConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_pointer_config(conf)->horizontal_scroll_scale();
 })
 
-double mir_pointer_configuration_get_vertical_scroll_scale(MirPointerConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+double mir_pointer_config_get_vertical_scroll_scale(MirPointerConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_pointer_config(conf)->vertical_scroll_scale();
 })
 
-MirPointerHandedness mir_pointer_configuration_get_handedness(MirPointerConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+MirPointerHandedness mir_pointer_config_get_handedness(MirPointerConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (as_pointer_config(conf)->handedness() == mir_pointer_handedness_left)
         return mir_pointer_handedness_left;
@@ -192,127 +201,127 @@ MirPointerHandedness mir_pointer_configuration_get_handedness(MirPointerConfigur
         return mir_pointer_handedness_right;
 })
 
-MirPointerConfiguration* mir_input_device_get_mutable_pointer_configuration(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
+MirPointerConfig* mir_input_device_get_mutable_pointer_config(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto device_info = as_device_info(device);
 
     if (device_info->has_pointer_configuration())
-        return reinterpret_cast<MirPointerConfiguration*>(device_info->mutable_pointer_configuration());
+        return reinterpret_cast<MirPointerConfig*>(device_info->mutable_pointer_configuration());
     return nullptr;
 })
 
-void mir_pointer_configuration_set_acceleration(MirPointerConfiguration* conf, MirPointerAcceleration acceleration) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_pointer_config_set_acceleration(MirPointerConfig* conf, MirPointerAcceleration acceleration) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_pointer_config(conf)->set_acceleration(acceleration);
 })
 
-void mir_pointer_configuration_set_acceleration_bias(MirPointerConfiguration* conf, double acceleration_bias) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_pointer_config_set_acceleration_bias(MirPointerConfig* conf, double acceleration_bias) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_pointer_config(conf)->set_acceleration_bias(acceleration_bias);
 })
 
-void mir_pointer_configuration_set_horizontal_scroll_scale(MirPointerConfiguration* conf,
+void mir_pointer_config_set_horizontal_scroll_scale(MirPointerConfig* conf,
                                                            double horizontal_scroll_scale) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_pointer_config(conf)->set_horizontal_scroll_scale(horizontal_scroll_scale);
 })
 
-void mir_pointer_configuration_set_vertical_scroll_scale(MirPointerConfiguration* conf, double vertical_scroll_scale) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_pointer_config_set_vertical_scroll_scale(MirPointerConfig* conf, double vertical_scroll_scale) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_pointer_config(conf)->set_vertical_scroll_scale(vertical_scroll_scale);
 })
 
-void mir_pointer_configuration_set_handedness(MirPointerConfiguration* conf, MirPointerHandedness handedness) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_pointer_config_set_handedness(MirPointerConfig* conf, MirPointerHandedness handedness) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_pointer_config(conf)->set_handedness(handedness);
 })
 
-MirTouchpadConfiguration const* mir_input_device_get_touchpad_configuration(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+MirTouchpadConfig const* mir_input_device_get_touchpad_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto device_info = as_device_info(device);
 
     if (device_info->has_touchpad_configuration())
-        return reinterpret_cast<MirTouchpadConfiguration const*>(&device_info->touchpad_configuration());
+        return reinterpret_cast<MirTouchpadConfig const*>(&device_info->touchpad_configuration());
     return nullptr;
 })
 
-MirTouchpadClickModes mir_touchpad_configuration_get_click_modes(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+MirTouchpadClickModes mir_touchpad_config_get_click_modes(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->click_modes();
 })
 
-MirTouchpadScrollModes mir_touchpad_configuration_get_scroll_modes(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+MirTouchpadScrollModes mir_touchpad_config_get_scroll_modes(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->scroll_modes();
 })
 
-int mir_touchpad_configuration_get_button_down_scroll_button(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+int mir_touchpad_config_get_button_down_scroll_button(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->button_down_scroll_button();
 })
 
-bool mir_touchpad_configuration_get_tap_to_click(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+bool mir_touchpad_config_get_tap_to_click(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->tap_to_click();
 })
 
-bool mir_touchpad_configuration_get_middle_mouse_button_emulation(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+bool mir_touchpad_config_get_middle_mouse_button_emulation(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->middle_mouse_button_emulation();
 })
 
-bool mir_touchpad_configuration_get_disable_with_mouse(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+bool mir_touchpad_config_get_disable_with_mouse(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->disable_with_mouse();
 })
 
-bool mir_touchpad_configuration_get_disable_while_typing(MirTouchpadConfiguration const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+bool mir_touchpad_config_get_disable_while_typing(MirTouchpadConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return as_touchpad_config(conf)->disable_while_typing();
 })
 
-MirTouchpadConfiguration* mir_input_device_get_mutable_touchpad_configuration(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
+MirTouchpadConfig* mir_input_device_get_mutable_touchpad_config(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto device_info = as_device_info(device);
 
     if (device_info->has_touchpad_configuration())
-        return reinterpret_cast<MirTouchpadConfiguration*>(device_info->mutable_touchpad_configuration());
+        return reinterpret_cast<MirTouchpadConfig*>(device_info->mutable_touchpad_configuration());
     return nullptr;
 })
 
-void mir_touchpad_configuration_set_click_modes(MirTouchpadConfiguration* conf, MirTouchpadClickModes modes) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_click_modes(MirTouchpadConfig* conf, MirTouchpadClickModes modes) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_touchpad_config(conf)->set_click_modes(modes);
 })
 
-void mir_touchpad_configuration_set_scroll_modes(MirTouchpadConfiguration* conf, MirTouchpadScrollModes modes) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_scroll_modes(MirTouchpadConfig* conf, MirTouchpadScrollModes modes) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_touchpad_config(conf)->set_scroll_modes(modes);
 })
 
-void mir_touchpad_configuration_set_button_down_scroll_button(MirTouchpadConfiguration* conf, int button) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_button_down_scroll_button(MirTouchpadConfig* conf, int button) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_touchpad_config(conf)->set_button_down_scroll_button(button);
 })
 
-void mir_touchpad_configuration_set_tap_to_click(MirTouchpadConfiguration* conf, bool tap_to_click) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_tap_to_click(MirTouchpadConfig* conf, bool tap_to_click) MIR_HANDLE_EVENT_EXCEPTION(
 {
     as_touchpad_config(conf)->set_tap_to_click(tap_to_click);
 })
 
-void mir_touchpad_configuration_set_middle_mouse_button_emulation(MirTouchpadConfiguration* conf, bool middle_emulation) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_middle_mouse_button_emulation(MirTouchpadConfig* conf, bool middle_emulation) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto touchpad_info = as_touchpad_config(conf);
     touchpad_info->set_middle_mouse_button_emulation(middle_emulation);
 })
 
-void mir_touchpad_configuration_set_disable_with_mouse(MirTouchpadConfiguration* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_disable_with_mouse(MirTouchpadConfig* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto touchpad_info = as_touchpad_config(conf);
     touchpad_info->set_disable_with_mouse(active);
 })
 
-void mir_touchpad_configuration_set_disable_while_typing(MirTouchpadConfiguration* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
+void mir_touchpad_config_set_disable_while_typing(MirTouchpadConfig* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
 {
     auto touchpad_info = as_touchpad_config(conf);
     touchpad_info->set_disable_while_typing(active);

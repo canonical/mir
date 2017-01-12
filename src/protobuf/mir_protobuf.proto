@@ -446,11 +446,11 @@ message InputDeviceInfo {
   optional uint32 capabilities = 2;
   optional string name = 3;
   optional string unique_id = 4;
-  optional PointerConfiguration pointer_configuration = 5;
-  optional TouchpadConfiguration touchpad_configuration = 6;
+  optional PointerConfig pointer_configuration = 5;
+  optional TouchpadConfig touchpad_configuration = 6;
 }
 
-message PointerConfiguration {
+message PointerConfig {
   optional uint32 handedness = 1;
   optional uint32 acceleration = 2;
   optional double acceleration_bias = 3;
@@ -458,7 +458,7 @@ message PointerConfiguration {
   optional double vertical_scroll_scale = 5;
 }
 
-message TouchpadConfiguration {
+message TouchpadConfig {
   optional uint32 click_modes = 1;
   optional uint32 scroll_modes = 2;
   optional int32 button_down_scroll_button = 3;
