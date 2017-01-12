@@ -224,42 +224,33 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_all_motion_events)
 
 TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 {  // Regression test for LP: #1372300
-    using namespace testing;
     using namespace std::chrono;
     using namespace std::literals::chrono_literals;
 
-    auto t = 0ns;
-
-    std::unique_ptr<MirEvent> ev;
-    bool handler_called{false};
+    std::atomic_int handler_called{0};
 
     mircva::InputReceiver receiver{channel.client_fd(),
                                    std::make_shared<mircv::XKBMapper>(),
-                                   [&ev, &handler_called](MirEvent* event)
+                                   [&handler_called](MirEvent*)
                                    {
-                                       ev.reset(new MirEvent(*event));
-                                       handler_called = true;
+                                       ++handler_called;
                                    },
                                    std::make_shared<mircv::NullInputReceiverReport>()};
     TestingInputProducer producer(channel.server_fd());
 
     nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 59;
 
-    producer.produce_a_pointer_event(123, 456, t);
-    producer.produce_a_key_event();
+    producer.produce_a_pointer_event(123, 456, 0ns);
+    producer.produce_a_pointer_event(234, 567, one_frame);
     flush_channels();
 
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
-    EXPECT_TRUE(handler_called);
-    EXPECT_EQ(mir_input_event_type_touch, ev->to_input()->input_type());
+    EXPECT_EQ(1, handler_called);
 
-    t += 2 * one_frame;
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 2 * one_frame));
     receiver.dispatch(md::FdEvent::readable);
-
-    EXPECT_TRUE(handler_called);
-    ASSERT_EQ(mir_input_event_type_key, ev->to_input()->input_type());
+    EXPECT_EQ(2, handler_called);
 }
 
 TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
