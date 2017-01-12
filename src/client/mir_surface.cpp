@@ -499,6 +499,17 @@ void MirSurface::handle_event(MirEvent const& e)
     }
     case mir_event_type_surface_output:
     {
+        /*
+         * We set the frame clock according to the (maximum) refresh rate of
+         * the display. Note that we don't do the obvious thing and measure
+         * previous vsyncs mainly because that's a very unreliable predictor
+         * of the desired maximum refresh rate in the case of GSync/FreeSync
+         * and panel self-refresh. You can't assume the previous frame
+         * represents the display running at full native speed and so should
+         * not measure it. Instead we conveniently have
+         * mir_surface_output_event_get_refresh_rate that tells us the full
+         * native speed of the most relevant output...
+         */
         auto soevent = mir_event_get_surface_output_event(&e);
         auto rate = mir_surface_output_event_get_refresh_rate(soevent);
         if (rate > 10.0)  // should be >0, but 10 to workaround LP: #1639725
@@ -507,11 +518,13 @@ void MirSurface::handle_event(MirEvent const& e)
                 static_cast<long>(1000000000L / rate));
             frame_clock->set_period(ns);
         }
-        // else: The graphics driver hass not provided valid timing.
-        //       Presently as a fallback we just see interval 0 behaviour then.
-        //       Or would people prefer some different fallback?
-        //         * Re-enable server-side vsync?
-        //         * Rate limit to 60Hz?
+        /* else: The graphics driver has not provided valid timing so we will
+         *       default to swap interval 0 behaviour.
+         *       Or would people prefer some different fallback?
+         *         - Re-enable server-side vsync?
+         *         - Rate limit to 60Hz?
+         *         - Just fix LP: #1639725?
+         */
         break;
     }
     default:
@@ -669,11 +682,17 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
         StreamSet old_streams, new_streams;
 
         /*
-         * Note that we don't check for errors from modify_surface. So in
-         * updating default_stream here, we're just assuming it will succeed.
-         * Seems to be a harmless assumption to have made so far and much
-         * simpler than communicating back suceessful mappings from the server,
-         * but there is a prototype started for that: lp:~vanvugt/mir/adoption
+         * Note that we are updating our local copy of 'streams' before the
+         * server has updated its copy. That's mainly because we have never yet
+         * implemented any kind of client-side error handling for when
+         * modify_surface fails and is rejected. There's a prototype started
+         * along those lines in lp:~vanvugt/mir/adoption, but it does not seem
+         * to be important to block on...
+         *   The worst case is still perfectly acceptable: That is if the server
+         * rejects the surface spec our local copy of streams is wrong. That's
+         * a harmless consequence which just means the stream is now
+         * synchronized to the output the client intended even though the server
+         * is refusing to display it.
          */
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
