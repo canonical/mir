@@ -64,25 +64,25 @@ inline auto as_device_info(MirInputDevice* device)
 inline auto as_pointer_config(MirPointerConfig const* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::PointerConfig const*>(config);
+    return reinterpret_cast<mp::PointerConfiguration const*>(config);
 }
 
 inline auto as_pointer_config(MirPointerConfig* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::PointerConfig*>(config);
+    return reinterpret_cast<mp::PointerConfiguration*>(config);
 }
 
 inline auto as_touchpad_config(MirTouchpadConfig const* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::TouchpadConfig const*>(config);
+    return reinterpret_cast<mp::TouchpadConfiguration const*>(config);
 }
 
 inline auto as_touchpad_config(MirTouchpadConfig* config)
 {
     mir::require(config);
-    return reinterpret_cast<mp::TouchpadConfig*>(config);
+    return reinterpret_cast<mp::TouchpadConfiguration*>(config);
 }
 }
 
