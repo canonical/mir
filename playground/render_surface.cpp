@@ -207,8 +207,7 @@ int main(int /*argc*/, char* /*argv*/[])
     printf("Software Driver selected pixel format %d\n", pixel_format);
     auto buffer_stream = mir_render_surface_get_buffer_stream(render_surface,
                                                               width, height,
-                                                              pixel_format,
-                                                              mir_buffer_usage_software);
+                                                              pixel_format);
 
     auto window = mir_window_create_sync(spec);
     mir_window_spec_release(spec);

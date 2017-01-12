@@ -30,8 +30,9 @@ typedef struct
 {
     MirConnection* connection;      //EGLNativeDisplayType
     MirRenderSurface* surface;      //EGLNativeWindowType
-    MirBufferStream* stream;        //the internal semantics a driver might want to use...
-                                    //could be MirPresentationChain as well
+    MirBuffer* front;
+    MirBuffer* back;
+    MirPresentationChain* chain;
     int current_physical_width;     //The driver is in charge of the physical width
     int current_physical_height;    //The driver is in charge of the physical height
 
@@ -66,15 +67,27 @@ EGLSurface future_driver_eglCreateWindowSurface(
     //      the EGLConfig. mir_connection_get_egl_pixel_format
     //      needs to be deprecated once the drivers support the Mir EGL platform.
     MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
+
+
+    BufferWait w; 
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+    MirBuffer* buffer = NULL;
+    w.mut = &mutex;
+    w.cond = &cond;
+    w.buffer = &info->front;
+    mir_connection_allocate_buffer(
+        connection, 256, 256, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
+    
     //this particular [silly] driver has chosen the buffer stream as the way it wants to post
     //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
-    info->stream =
+/*    info->stream =
         mir_render_surface_get_buffer_stream(surface,
                                              info->current_physical_width,
                                              info->current_physical_height,
                                              pixel_format,
                                              mir_buffer_usage_hardware);
-
+*/
     printf("The driver chose pixel format %d.\n", pixel_format);
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, attr);
 }
