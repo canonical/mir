@@ -63,7 +63,7 @@ public:
 
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface) override;
 
-    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) override;
+    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirWindowState value) override;
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
@@ -83,7 +83,7 @@ private:
         mir_input_event_modifier_ctrl |
         mir_input_event_modifier_meta;
 
-    void toggle(MirSurfaceState state);
+    void toggle(MirWindowState state);
     void click(geometry::Point cursor);
     void resize(geometry::Point cursor);
     void drag(geometry::Point cursor);

@@ -37,7 +37,7 @@ void buffer_cb(MirBuffer*, void*)
 struct ConnectionResourceMap : testing::Test
 {
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
-    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
+    std::shared_ptr<MirWindow> surface{std::make_shared<MirWindow>("a string", nullptr, mf::SurfaceId{2}, wh)};
     std::shared_ptr<MirBufferStream> stream{ std::make_shared<mtd::MockMirBufferStream>() }; 
     std::shared_ptr<mcl::Buffer> buffer {
         std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr, nullptr, mir_buffer_usage_software) };

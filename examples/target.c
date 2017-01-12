@@ -181,7 +181,7 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
     }
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     State *state = (State*)context;

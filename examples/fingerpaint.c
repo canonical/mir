@@ -184,7 +184,7 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;

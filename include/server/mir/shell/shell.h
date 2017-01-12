@@ -88,12 +88,12 @@ public:
     virtual int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) = 0;
 
     virtual int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib) = 0;
+        MirWindowAttrib attrib) = 0;
 
     virtual void raise_surface(
         std::shared_ptr<scene::Session> const& session,

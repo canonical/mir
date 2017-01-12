@@ -134,7 +134,7 @@ void on_input_event(TouchState *state, MirInputEvent const *event)
     state->record_event(tev);
 }
     
-void on_event(MirSurface * /*surface*/, const MirEvent *event, void *context)
+void on_event(MirWindow * /*surface*/, const MirEvent *event, void *context)
 {
     TouchState *state = (TouchState*)context;
 

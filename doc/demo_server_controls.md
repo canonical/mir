@@ -39,10 +39,10 @@ The following operations are supported:
 
 For those writing client code request to set the surface attribute
 `mir_surface_attrib_state` are honoured:
- - `mir_surface_state_restored`: restores the window 
- - `mir_surface_state_maximized`: maximizes size
- - `mir_surface_state_vertmaximized`: maximizes height
- - `mir_surface_state_horizmaximized`: maximizes width
+ - `mir_window_state_restored`: restores the window 
+ - `mir_window_state_maximized`: maximizes size
+ - `mir_window_state_vertmaximized`: maximizes height
+ - `mir_window_state_horizmaximized`: maximizes width
 
 For a quick demo try:
 
