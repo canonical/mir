@@ -86,7 +86,7 @@ static void print_current_configuration(MirConnection *connection)
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfig *conf)
 {
-    mir_connection_apply_session_display_configuration(connection, conf);
+    mir_connection_apply_session_display_config(connection, conf);
     const char* error = mir_connection_get_error_message(connection);
 
     if (!strcmp(error, ""))
