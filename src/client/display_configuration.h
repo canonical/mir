@@ -20,7 +20,6 @@
 #define MIR_CLIENT_DISPLAY_CONFIGURATION_H_
 
 #include "mir_toolkit/client_types.h"
-#include "mir/display_config.h"
 #include "mir_protobuf.pb.h"
 
 #include <mutex>
