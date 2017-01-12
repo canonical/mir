@@ -463,8 +463,8 @@ MIR_COMMON_0.26 {
       MirTouchscreenConfiguration::output_id*;
       MirTouchscreenConfiguration::mapping_mode*;
       MirTouchscreenConfiguration::operator*;
-      mir::input::deserialize_input_configuration*;
-      mir::input::serialize_input_configuration*;
+      mir::input::deserialize_input_config*;
+      mir::input::serialize_input_config*;
       operator*;
       typeinfo?for?MirPointerConfiguration;
       typeinfo?for?MirTouchpadConfiguration;
