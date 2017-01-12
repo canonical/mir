@@ -48,6 +48,9 @@ EventUPtr make_event(MirPromptSessionState state);
 EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
+/* __attribute__ ((deprecated("use make_event with MirWindowAttribute instead")); */
+// Window configure event
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirWindowAttrib attribute, int value);
 // Close surface event
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
 // Keymap event

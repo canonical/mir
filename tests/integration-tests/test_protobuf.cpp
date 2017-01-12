@@ -27,7 +27,6 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/doubles/null_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
@@ -177,7 +176,6 @@ struct DemoPrivateProtobuf : mtf::InProcessServer
     mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
 
     DemoServerConfiguration my_server_config;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<DemoConnectionCreator> demo_connection_creator;
 

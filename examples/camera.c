@@ -83,7 +83,7 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     State *state = (State*)context;
     bool handled = true;

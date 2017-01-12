@@ -117,7 +117,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     auto compositor = conf.the_compositor();
 
     compositor->start();
-    session.default_surface()->configure(mir_surface_attrib_swapinterval, 0);
+    session.default_surface()->configure(mir_window_attrib_swapinterval, 0);
 
     std::thread client_thread{
         [&session, stream_id]

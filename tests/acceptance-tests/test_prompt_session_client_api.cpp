@@ -30,7 +30,6 @@
 #include "mir/test/doubles/mock_prompt_session_listener.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/popen.h"
 
 #include <gtest/gtest.h>
@@ -107,7 +106,6 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
     MirConnection* application_connection{nullptr};
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     mir::CachedPtr<mtd::MockPromptSessionListener> mock_prompt_session_listener;
     mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
@@ -616,6 +614,41 @@ TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt
         HasSubstr("Could not identify application"));
 
     mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, can_start_and_stop_multiple_prompt_sessions)
+{
+    const int sessions = 10;
+
+    connection = mir_connect_sync(new_connection().c_str(), "Prompt session helper");
+
+    MirPromptSession* prompt_sessions[sessions] = {nullptr };
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        prompt_session = mir_connection_create_prompt_session_sync(
+            connection, application_session_pid, null_state_change_callback, this);
+
+        ASSERT_THAT(prompt_session, Ne(nullptr));
+    }
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
+        EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
+
+        mir_prompt_session_new_fds_for_prompt_providers(
+            prompt_session, 1, &client_fd_callback, this);
+
+        ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+
+        DummyPromptProvider{std::move(actual_fds[0]), "Prompt session provider"};
+    }
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        mir_prompt_session_release_sync(prompt_session);
+    }
 }
 
 // Test canary for kernel regression (also compiles as a standalone C test)

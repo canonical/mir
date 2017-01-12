@@ -22,7 +22,6 @@
 
 #include "mir/geometry/size.h"
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/validity_matchers.h"
 
 #include <gtest/gtest.h>
@@ -35,7 +34,6 @@ namespace
 {
 struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 {
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     geom::Size const logical_size{640, 480};
 };
 }

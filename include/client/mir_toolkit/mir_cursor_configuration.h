@@ -23,7 +23,7 @@
 
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
- * Used with mir_surface_configure_cursor.
+ * Used with mir_window_configure_cursor.
  */
 typedef struct MirCursorConfiguration MirCursorConfiguration;
 

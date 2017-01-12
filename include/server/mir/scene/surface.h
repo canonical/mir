@@ -68,8 +68,8 @@ public:
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
-    virtual MirSurfaceType type() const = 0;
-    virtual MirSurfaceState state() const = 0;
+    virtual MirWindowType type() const = 0;
+    virtual MirWindowState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual bool visible() const = 0;
@@ -107,9 +107,9 @@ public:
     virtual std::shared_ptr<Surface> parent() const = 0;
 
     // TODO a legacy of old interactions and needs removing
-    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+    virtual int configure(MirWindowAttrib attrib, int value) = 0;
     // TODO a legacy of old interactions and needs removing
-    virtual int query(MirSurfaceAttrib attrib) const = 0;
+    virtual int query(MirWindowAttrib attrib) const = 0;
 
     virtual void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
                             std::string const& variant, std::string const& options) = 0;
