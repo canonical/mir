@@ -21,6 +21,7 @@
 #include "android_format_conversion-inl.h"
 #include "mir/client_context.h"
 #include "mir/mir_buffer.h"
+#include "mir/mir_render_surface.h"
 #include "mir/client_buffer.h"
 #include "mir/mir_buffer_stream.h"
 #include "android_client_platform.h"
@@ -87,7 +88,7 @@ ANativeWindow* create_anw(
     else
         return nullptr;
 
-    auto buffer_stream = mir_render_surface_get_buffer_stream(rs, width, height, format, usage);
+    auto buffer_stream =  rs->get_buffer_stream(width, height, format, usage);
     return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
 
