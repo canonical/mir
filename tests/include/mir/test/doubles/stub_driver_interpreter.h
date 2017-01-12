@@ -72,7 +72,12 @@ public:
 
     void dispatch_driver_request_buffer_count(unsigned int) override
     {
-    } 
+    }
+
+    void dispatch_driver_request_buffer_size(geometry::Size) override
+    {
+    }
+ 
 private:
     mir::geometry::Size sz;
     int visual_id;

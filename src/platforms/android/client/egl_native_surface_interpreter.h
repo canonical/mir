@@ -48,6 +48,7 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, int) override THROW_EXCEPTION
     void dispatch_driver_request_format(int) override THROW_EXCEPTION
     void dispatch_driver_request_buffer_count(unsigned int) override THROW_EXCEPTION
+    void dispatch_driver_request_buffer_size(geometry::Size) override THROW_EXCEPTION
     int  driver_requests_info(int) const override THROW_EXCEPTION
     void sync_to_display(bool) override THROW_EXCEPTION
 #undef THROW_EXCEPTION
@@ -62,6 +63,7 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) override;
     void dispatch_driver_request_format(int format) override;
     void dispatch_driver_request_buffer_count(unsigned int count) override;
+    void dispatch_driver_request_buffer_size(geometry::Size size) override;
     int  driver_requests_info(int key) const override;
     void sync_to_display(bool) override;
 
