@@ -137,9 +137,9 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
             return allocator->alloc_buffer(size, format, flags);
         }
 
-        std::shared_ptr<mg::Buffer> alloc_buffer(mir::geometry::Size size, MirPixelFormat format) override
+        std::shared_ptr<mg::Buffer> alloc_software_buffer(mir::geometry::Size size, MirPixelFormat format) override
         {
-            return allocator->alloc_buffer(size, format);
+            return allocator->alloc_software_buffer(size, format);
         }
     
         std::shared_ptr<mg::GraphicBufferAllocator> const allocator;

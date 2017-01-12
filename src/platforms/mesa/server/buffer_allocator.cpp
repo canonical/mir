@@ -220,7 +220,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
     std::shared_ptr<mg::Buffer> buffer;
 
     if (buffer_properties.usage == BufferUsage::software)
-        buffer = alloc_buffer(buffer_properties.size, buffer_properties.format);
+        buffer = alloc_software_buffer(buffer_properties.size, buffer_properties.format);
     else
         buffer = alloc_hardware_buffer(buffer_properties);
 
@@ -241,10 +241,11 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
      * Also try to avoid allocating scanout buffers for small surfaces that
      * are unlikely to ever be fullscreen.
      *
-     * TODO: Be more intelligent about when to apply GBM_BO_USE_SCANOUT. That
-     *       may have to come after buffer reallocation support (surface
-     *       resizing). We may also want to check for
-     *       mir_window_state_fullscreen later when it's fully wired up.
+     * TODO: The client will have to be more intelligent about when to use
+     *       GBM_BO_USE_SCANOUT in conjunction with mir_extension_gbm_buffer.
+     *       That may have to come after buffer reallocation support (surface
+     *       resizing). The client may also want to check for
+     *       mir_surface_state_fullscreen later when it's fully wired up.
      */
     if ((bypass_option == mgm::BypassOption::allowed) &&
          buffer_properties.size.width.as_uint32_t() >= 800 &&
@@ -275,7 +276,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
         bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
 } 
 
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
     if (!mgc::ShmBuffer::supports(format))

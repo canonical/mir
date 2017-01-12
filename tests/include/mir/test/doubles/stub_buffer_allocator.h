@@ -40,7 +40,7 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
         return std::make_shared<StubBuffer>(properties);
     }
 
-    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, MirPixelFormat pf)
+    std::shared_ptr<graphics::Buffer> alloc_software_buffer(geometry::Size sz, MirPixelFormat pf)
     {
         return std::make_shared<StubBuffer>(
             graphics::BufferProperties{sz, pf, graphics::BufferUsage::software});

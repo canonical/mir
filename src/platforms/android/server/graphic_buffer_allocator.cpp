@@ -134,7 +134,7 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
     return pixel_formats;
 }
 
-std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_software_buffer(
     geometry::Size size, MirPixelFormat format)
 {
     return std::make_shared<Buffer>(
