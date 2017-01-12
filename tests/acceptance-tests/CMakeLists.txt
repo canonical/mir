@@ -1,9 +1,5 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-)
-
 set(
   SOURCES
 
@@ -17,7 +13,6 @@ set(
   test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
-  test_client_library.cpp
   test_client_library_callbacks.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
@@ -79,6 +74,10 @@ mir_add_wrapped_executable(
   $<TARGET_OBJECTS:acceptance-test-throwback>
   $<TARGET_OBJECTS:acceptance-test-staging>
 )
+
+# uses UsingClientPlatform
+set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
+        "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 

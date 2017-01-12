@@ -1,12 +1,17 @@
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/client
-  ${PROJECT_SOURCE_DIR}/tests/include
-)
-
 add_library(acceptance-test-throwback OBJECT
 
-  test_client_cursor_api.cpp     # uses BasicWindowManager<>
-  test_shell_control_of_surface_configuration.cpp # uses CanonicalWindowManager
+  test_client_cursor_api.cpp
+  test_shell_control_of_surface_configuration.cpp
+  test_client_library.cpp
 )
+
+# uses BasicWindowManager<>
+set_source_files_properties(test_client_cursor_api.cpp PROPERTIES COMPILE_FLAGS
+        "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+# uses CanonicalWindowManager
+set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
+        "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+# uses src/include/common/mir/protobuf/protocol_version.h
+set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
