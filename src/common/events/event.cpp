@@ -133,14 +133,14 @@ MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
 }
 #pragma GCC diagnostic pop
 
-MirSurfaceEvent* MirEvent::to_surface()
+MirWindowEvent* MirEvent::to_surface()
 {
-    return static_cast<MirSurfaceEvent*>(this);
+    return static_cast<MirWindowEvent*>(this);
 }
 
-MirSurfaceEvent const* MirEvent::to_surface() const
+MirWindowEvent const* MirEvent::to_surface() const
 {
-    return static_cast<MirSurfaceEvent const*>(this);
+    return static_cast<MirWindowEvent const*>(this);
 }
 
 MirResizeEvent* MirEvent::to_resize()

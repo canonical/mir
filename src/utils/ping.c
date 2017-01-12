@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
         long long start, duration;
 
         start = now();
-        mir_wait_for(mir_surface_set_preferred_orientation(window, types[t]));
+        mir_wait_for(mir_window_set_preferred_orientation(window, types[t]));
         duration = now() - start;
         t ^= 1;
 

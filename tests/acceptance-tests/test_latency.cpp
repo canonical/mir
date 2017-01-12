@@ -315,7 +315,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
     std::unique_ptr<mtf::VisibleSurface> visible_surface;
-    MirSurface* surface;
+    MirWindow* surface;
 };
 }
 
@@ -327,7 +327,7 @@ TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
@@ -350,7 +350,7 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
@@ -371,7 +371,7 @@ TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
@@ -393,7 +393,7 @@ TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
     }
@@ -416,7 +416,7 @@ TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
     }
@@ -437,7 +437,7 @@ TEST_F(ClientLatency, async_swap_dropping_latency_is_closer_to_zero_than_one)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
     }
@@ -465,7 +465,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
         std::this_thread::sleep_until(next_input_event);
         next_input_event += input_interval;
 
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }

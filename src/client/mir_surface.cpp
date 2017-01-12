@@ -73,11 +73,11 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters co
       pixel_format{params.pixel_format},
       buffer_usage{params.buffer_usage}
 {
-    type = mir_surface_type_normal;
+    type = mir_window_type_normal;
     if (params.output_id != mir_display_output_id_invalid)
     {
         output_id = params.output_id;
-        state = mir_surface_state_fullscreen;
+        state = mir_window_state_fullscreen;
     }
 }
 
@@ -318,13 +318,13 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     return &configure_cursor_wait_handle;
 }
 
-MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
+MirWaitHandle* MirSurface::configure(MirWindowAttrib at, int value)
 {
     // TODO: This is obviously strange. It should be
     // possible to eliminate it in the second phase of buffer
     // stream where the existing MirSurface swap interval functions
     // may be deprecated in terms of mir_buffer_stream_ alternatives
-    if ((at == mir_surface_attrib_swapinterval) && default_stream)
+    if ((at == mir_window_attrib_swapinterval) && default_stream)
     {
         default_stream->set_swap_interval(value);
         return &configure_wait_handle;
@@ -399,11 +399,11 @@ void MirSurface::on_configured()
 
         switch (a)
         {
-        case mir_surface_attrib_type:
-        case mir_surface_attrib_state:
-        case mir_surface_attrib_focus:
-        case mir_surface_attrib_dpi:
-        case mir_surface_attrib_preferred_orientation:
+        case mir_window_attrib_type:
+        case mir_window_attrib_state:
+        case mir_window_attrib_focus:
+        case mir_window_attrib_dpi:
+        case mir_window_attrib_preferred_orientation:
             if (configure_result->has_ivalue())
                 attrib_cache[a] = configure_result->ivalue();
             else
@@ -424,11 +424,11 @@ void MirSurface::on_cursor_configured()
 }
 
 
-int MirSurface::attrib(MirSurfaceAttrib at) const
+int MirSurface::attrib(MirWindowAttrib at) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (at == mir_surface_attrib_swapinterval)
+    if (at == mir_window_attrib_swapinterval)
     {
         if (default_stream)
             return default_stream->swap_interval();
@@ -471,10 +471,10 @@ void MirSurface::handle_event(MirEvent const& e)
     {
     case mir_event_type_window:
     {
-        auto sev = mir_event_get_surface_event(&e);
-        auto a = mir_surface_event_get_attribute(sev);
-        if (a < mir_surface_attribs)
-            attrib_cache[a] = mir_surface_event_get_attribute_value(sev);
+        auto sev = mir_event_get_window_event(&e);
+        auto a = mir_window_event_get_attribute(sev);
+        if (a < mir_window_attribs)
+            attrib_cache[a] = mir_window_event_get_attribute_value(sev);
         break;
     }
     case mir_event_type_orientation:
@@ -526,7 +526,7 @@ void MirSurface::handle_event(MirEvent const& e)
     }
 }
 
-void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
+void MirSurface::request_and_wait_for_configure(MirWindowAttrib a, int value)
 {
     configure(a, value)->wait_for_all();
 }
@@ -540,7 +540,7 @@ MirOrientation MirSurface::get_orientation() const
 
 MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 {
-    return configure(mir_surface_attrib_preferred_orientation, mode);
+    return configure(mir_window_attrib_preferred_orientation, mode);
 }
 
 void MirSurface::raise_surface(MirCookie const* cookie)

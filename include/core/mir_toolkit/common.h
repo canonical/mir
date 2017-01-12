@@ -46,7 +46,28 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
-} MirSurfaceAttrib;
+} MirSurfaceAttrib; /* __attribute__ ((deprecated("use MirWindowAttrib"))); */
+
+/**
+ * Attributes of a window that the client and server/shell may wish to
+ * get or set over the wire.
+ */
+typedef enum MirWindowAttrib
+{
+    /* Do not specify values...code relies on 0...N ordering. */
+    mir_window_attrib_type,
+    mir_window_attrib_state,
+    mir_window_attrib_swapinterval, /**< \deprecated  Do not listen for events
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
+    mir_window_attrib_focus,
+    mir_window_attrib_dpi,
+    mir_window_attrib_visibility,
+    mir_window_attrib_preferred_orientation,
+    /* Must be last */
+    mir_window_attribs
+} MirWindowAttrib;
 
 typedef enum MirSurfaceType
 {
@@ -62,7 +83,23 @@ typedef enum MirSurfaceType
     mir_surface_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_surface_type_tip,          /**< AKA "tooltip"                       */
     mir_surface_types
-} MirSurfaceType;
+} MirSurfaceType; /* __attribute__ ((deprecated("use MirWindowType"))); */
+
+typedef enum MirWindowType
+{
+    mir_window_type_normal,       /**< AKA "regular"                       */
+    mir_window_type_utility,      /**< AKA "floating"                      */
+    mir_window_type_dialog,
+    mir_window_type_overlay,      /**< \deprecated  Use "gloss" instead.   */
+    mir_window_type_gloss = mir_window_type_overlay,
+    mir_window_type_freestyle,
+    mir_window_type_popover,      /**< \deprecated  Choose "menu" or "tip" */
+    mir_window_type_menu = mir_window_type_popover,
+    mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
+    mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
+    mir_window_type_tip,          /**< AKA "tooltip"                       */
+    mir_window_types
+} MirWindowType;
 
 typedef enum MirSurfaceState
 {
@@ -78,21 +115,47 @@ typedef enum MirSurfaceState
     mir_surface_state_horizmaximized,
     mir_surface_state_hidden,
     mir_surface_states
-} MirSurfaceState;
+} MirSurfaceState; /* __attribute__ ((deprecated("use MirWindowState"))); */
 
-/* TODO: MirSurfaceFocusState MirSurfaceVisibility and MirLifecycleState use an inconsistent
-   naming convention. */
+typedef enum MirWindowState
+{
+    mir_window_state_unknown,
+    mir_window_state_restored,
+    mir_window_state_minimized,
+    mir_window_state_maximized,
+    mir_window_state_vertmaximized,
+    /* mir_window_state_semimaximized,
+       Omitted for now, since it's functionally a subset of vertmaximized and
+       differs only in the X coordinate. */
+    mir_window_state_fullscreen,
+    mir_window_state_horizmaximized,
+    mir_window_state_hidden,
+    mir_window_states
+} MirWindowState;
+
 typedef enum MirSurfaceFocusState
 {
     mir_surface_unfocused = 0,
     mir_surface_focused
-} MirSurfaceFocusState;
+} MirSurfaceFocusState; /* __attribute__ ((deprecated("use MirWindowFocusState"))); */
+
+typedef enum MirWindowFocusState
+{
+    mir_window_focus_state_unfocused = 0,
+    mir_window_focus_state_focused
+} MirWindowFocusState;
 
 typedef enum MirSurfaceVisibility
 {
     mir_surface_visibility_occluded = 0,
     mir_surface_visibility_exposed
-} MirSurfaceVisibility;
+} MirSurfaceVisibility; /* __attribute__ ((deprecated("use MirWindowFocusState"))); */
+
+typedef enum MirWindowVisibility
+{
+    mir_window_visibility_occluded = 0,
+    mir_window_visibility_exposed
+} MirWindowVisibility;
 
 typedef enum MirLifecycleState
 {
@@ -362,7 +425,8 @@ typedef enum MirShellChrome
 typedef enum MirPointerConfinementState
 {
     mir_pointer_unconfined,
-    mir_pointer_confined_to_surface,
+    mir_pointer_confined_to_surface, /* __attribute__ ((deprecated("use mir_pointer_confined_to_window"))); */
+    mir_pointer_confined_to_window = mir_pointer_confined_to_surface,
 } MirPointerConfinementState;
 
 /**

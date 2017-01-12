@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-void configure_cursor(MirConnection* connection, MirSurface *surface, unsigned int cursor_index)
+void configure_cursor(MirConnection* connection, MirWindow *surface, unsigned int cursor_index)
 {
     char const *const cursors[] = {
         mir_busy_cursor_name,

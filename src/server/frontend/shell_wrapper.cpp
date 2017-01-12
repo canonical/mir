@@ -85,7 +85,7 @@ std::shared_ptr<ms::Surface> mf::ShellWrapper::surface_for_id(std::string const&
 int mf::ShellWrapper::set_surface_attribute(
     std::shared_ptr<Session> const& session,
     SurfaceId surface_id,
-    MirSurfaceAttrib attrib,
+    MirWindowAttrib attrib,
     int value)
 {
     return wrapped->set_surface_attribute(session, surface_id, attrib, value);
@@ -94,7 +94,7 @@ int mf::ShellWrapper::set_surface_attribute(
 int mf::ShellWrapper::get_surface_attribute(
     std::shared_ptr<Session> const& session,
     SurfaceId surface_id,
-    MirSurfaceAttrib attrib)
+    MirWindowAttrib attrib)
 {
     return wrapped->get_surface_attribute(session, surface_id, attrib);
 }

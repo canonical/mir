@@ -254,7 +254,7 @@ void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set cache size on screencast is invalid"));
 }
 
-void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+void mcl::ScreencastStream::request_and_wait_for_configure(MirWindowAttrib, int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set attrib on screencast is invalid"));
 }
