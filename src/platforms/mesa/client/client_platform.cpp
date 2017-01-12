@@ -23,6 +23,7 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "mir/mir_render_surface.h"
 #include "mir/weak_egl.h"
 #include "mir/platform_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
@@ -144,6 +145,13 @@ void allocate_buffer_gbm(
         available_callback, available_context);
 }
 
+MirBufferStream* get_hw_stream(
+    MirRenderSurface* rs,
+    int width, int height,
+    MirPixelFormat format)
+{
+    return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
+}
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
@@ -161,7 +169,8 @@ mclm::ClientPlatform::ClientPlatform(
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
-      gbm_buffer{allocate_buffer_gbm}
+      gbm_buffer{allocate_buffer_gbm},
+      hw_stream{get_hw_stream}
 {
 }
 
@@ -286,6 +295,8 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &mesa_auth;
     if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
         return &gbm_buffer;
+    if (!strcmp(extension_name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &hw_stream;
 
     return nullptr;
 }

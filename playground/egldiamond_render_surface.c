@@ -67,6 +67,13 @@ void resize_callback(MirWindow* window, MirEvent const* event, void* context)
     }
 }
 
+typedef struct
+{
+    pthread_mutex_t* mut;
+    pthread_cond_t* cond;
+    MirBuffer** buffer;
+} BufferWait;
+
 void wait_buffer(MirBuffer* b, void* context)
 {
     BufferWait* w = (BufferWait*) context;

@@ -25,15 +25,6 @@
 #include <EGL/eglext.h>
 #include "mir_toolkit/mir_render_surface.h"
 
-typedef struct
-{
-    pthread_mutex_t* mut;
-    pthread_cond_t* cond;
-    MirBuffer** buffer;
-} BufferWait;
-
-void wait_buffer(MirBuffer* b, void* context);
-
 //Note that these have the same signatures as the proper EGL functions,
 //and use our intended EGLNativeDisplayType and EGLNativeWindowType.
 
