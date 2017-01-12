@@ -39,6 +39,9 @@ class Buffer : public BufferBasic
 public:
     Buffer(
         std::shared_ptr<HostConnection> const& connection,
+        BufferProperties const& properties);
+    Buffer(
+        std::shared_ptr<HostConnection> const& connection,
         geometry::Size size, MirPixelFormat pf);
     Buffer(
         std::shared_ptr<HostConnection> const& connection,

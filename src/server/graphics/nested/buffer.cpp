@@ -161,6 +161,25 @@ private:
 };
 }
 
+std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
+{
+    if (usage == mg::BufferUsage::software)
+        return std::make_shared<PixelAndTextureAccess>(*this, buffer, connection);
+    else if (usage == mg::BufferUsage::hardware)
+        return std::make_shared<TextureAccess>(*this, buffer, connection);
+    else
+        BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
+}
+
+mgn::Buffer::Buffer(
+    std::shared_ptr<HostConnection> const& connection,
+    mg::BufferProperties const& properties) :
+    connection(connection),
+    buffer(connection->create_buffer(properties)),
+    native_base(create_native_base(properties.usage))
+{
+}
+
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
     geom::Size size, uint32_t native_format, uint32_t native_flags) :
