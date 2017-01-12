@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -14,34 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_PROTOBUF_PROTOCOL_VERSION_H
-#define MIR_PROTOBUF_PROTOCOL_VERSION_H
+#ifndef MIR_TOOLKIT_WINDOW_PLACEMENT_H_
+#define MIR_TOOLKIT_WINDOW_PLACEMENT_H_
 
-#include "mir_toolkit/mir_version_number.h"
+#include <mir_toolkit/client_types.h>
 
-namespace mir
-{
-namespace protobuf
-{
-inline constexpr int current_protocol_version()
-{ 
-    return MIR_VERSION_NUMBER(0,4,0);
-}
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
 
-inline constexpr int oldest_compatible_protocol_version()
-{
-    return MIR_VERSION_NUMBER(0,4,0);
-}
+/**
+ * Retrieve the relative position from a placement notification
+ *
+ * \param [in] event  The placement event
+ * \return            The position relative to the parent window
+ */
+MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent const* event);
 
-inline constexpr int next_incompatible_protocol_version()
-{
-    // For now we're very cautious/pessimistic. Maybe we can be more flexible
-    // in the more distant future...
-    return current_protocol_version() + MIR_VERSION_NUMBER(0,0,1);
+#ifdef __cplusplus
 }
-}
-}
+/**@}*/
+#endif
 
-#endif //MIR_PROTOBUF_PROTOCOL_VERSION_H
+#endif //MIR_TOOLKIT_WINDOW_PLACEMENT_H_

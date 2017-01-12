@@ -142,11 +142,11 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     surface_stack->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())
-        surface->configure(mir_surface_attrib_state, params.state.value());
+        surface->configure(mir_window_attrib_state, params.state.value());
     if (params.type.is_set())
-        surface->configure(mir_surface_attrib_type, params.type.value());
+        surface->configure(mir_window_attrib_type, params.type.value());
     if (params.preferred_orientation.is_set())
-        surface->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
     if (params.input_shape.is_set())
         surface->set_input_region(params.input_shape.value());
 
@@ -213,17 +213,17 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
         {
             switch (s.second->type())
             {
-            case mir_surface_type_normal:       /**< AKA "regular"                       */
-            case mir_surface_type_utility:      /**< AKA "floating"                      */
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-            case mir_surface_type_freestyle:
-            case mir_surface_type_menu:
-            case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+            case mir_window_type_normal:       /**< AKA "regular"                       */
+            case mir_window_type_utility:      /**< AKA "floating"                      */
+            case mir_window_type_dialog:
+            case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+            case mir_window_type_freestyle:
+            case mir_window_type_menu:
+            case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
                 return true;
 
-            case mir_surface_type_gloss:
-            case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+            case mir_window_type_gloss:
+            case mir_window_type_tip:          /**< AKA "tooltip"                       */
             default:
                 // Cannot have input focus - skip it
                 return false;

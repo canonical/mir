@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-static void toggle_surface_state(MirSurface* const surface, MirSurfaceState* state);
+static void toggle_surface_state(MirWindow* const surface, MirWindowState* state);
 
 typedef struct Color
 {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         return 1;
 
     MirWindow* const window = mir_eglapp_native_window();
-    MirSurfaceState state = mir_surface_get_state(window);
+    MirWindowState state = mir_window_get_state(window);
 
     /* This is probably the simplest GL you can do */
     while (mir_eglapp_running())
@@ -70,50 +70,50 @@ int main(int argc, char *argv[])
         puts("Current state: " #state);\
         break
 
-void toggle_surface_state(MirSurface* const surface, MirSurfaceState* state)
+void toggle_surface_state(MirWindow* const surface, MirWindowState* state)
 {
-    switch (mir_surface_get_state(surface))
+    switch (mir_window_get_state(surface))
     {
-    PRINT_STATE(mir_surface_state_unknown);
-    PRINT_STATE(mir_surface_state_restored);
-    PRINT_STATE(mir_surface_state_minimized);
-    PRINT_STATE(mir_surface_state_fullscreen);
-    PRINT_STATE(mir_surface_state_maximized);
-    PRINT_STATE(mir_surface_state_vertmaximized);
-    PRINT_STATE(mir_surface_state_horizmaximized);
+    PRINT_STATE(mir_window_state_unknown);
+    PRINT_STATE(mir_window_state_restored);
+    PRINT_STATE(mir_window_state_minimized);
+    PRINT_STATE(mir_window_state_fullscreen);
+    PRINT_STATE(mir_window_state_maximized);
+    PRINT_STATE(mir_window_state_vertmaximized);
+    PRINT_STATE(mir_window_state_horizmaximized);
     default:
         puts("Current state: unknown");
     }
 
     switch (*state)
     {
-    case mir_surface_state_restored:
-        NEW_STATE(mir_surface_state_unknown);
+    case mir_window_state_restored:
+        NEW_STATE(mir_window_state_unknown);
         break;
 
-    case mir_surface_state_minimized:
-        NEW_STATE(mir_surface_state_restored);
+    case mir_window_state_minimized:
+        NEW_STATE(mir_window_state_restored);
         break;
 
-    case mir_surface_state_fullscreen:
-        NEW_STATE(mir_surface_state_vertmaximized);
+    case mir_window_state_fullscreen:
+        NEW_STATE(mir_window_state_vertmaximized);
         break;
 
-    case mir_surface_state_maximized:
-        NEW_STATE(mir_surface_state_fullscreen);
+    case mir_window_state_maximized:
+        NEW_STATE(mir_window_state_fullscreen);
         break;
 
-    case mir_surface_state_vertmaximized:
-        NEW_STATE(mir_surface_state_horizmaximized);
+    case mir_window_state_vertmaximized:
+        NEW_STATE(mir_window_state_horizmaximized);
         break;
 
-    case mir_surface_state_horizmaximized:
-        NEW_STATE(mir_surface_state_minimized);
+    case mir_window_state_horizmaximized:
+        NEW_STATE(mir_window_state_minimized);
         break;
 
     default:
-        NEW_STATE(mir_surface_state_maximized);
+        NEW_STATE(mir_window_state_maximized);
         break;
     }
-    mir_surface_set_state(surface, *state);
+    mir_window_set_state(surface, *state);
 }

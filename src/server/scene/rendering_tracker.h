@@ -46,7 +46,7 @@ public:
 
 private:
     bool occluded_in_all_active_compositors();
-    void configure_visibility(MirSurfaceVisibility visibility);
+    void configure_visibility(MirWindowVisibility visibility);
     void remove_occlusions_for_inactive_compositors();
     void ensure_is_active_compositor(compositor::CompositorID cid) const;
 

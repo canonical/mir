@@ -82,7 +82,7 @@ private:
     EGLSurfaceHandle const egl_surface;
     PassthroughOption const passthrough_option;
 
-    static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
+    static void event_thunk(MirWindow* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
 
     enum class BackingContent

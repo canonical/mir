@@ -194,7 +194,7 @@ public:
             auto conf = mir_cursor_configuration_from_buffer_stream(
                 cursor, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
 
-            mir_surface_configure_cursor(mir_surface, conf);
+            mir_window_configure_cursor(mir_surface, conf);
             mir_cursor_configuration_destroy(conf);
         }
     }
@@ -211,7 +211,7 @@ public:
 
 private:
     MirConnection* const mir_connection;
-    MirSurface* const mir_surface;
+    MirWindow* const mir_surface;
     MirBufferStream* cursor{nullptr};
     mir::geometry::Displacement cursor_hotspot;
 };

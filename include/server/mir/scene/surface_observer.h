@@ -45,7 +45,7 @@ namespace scene
 class SurfaceObserver
 {
 public:
-    virtual void attrib_changed(MirSurfaceAttrib attrib, int value) = 0;
+    virtual void attrib_changed(MirWindowAttrib attrib, int value) = 0;
     virtual void resized_to(geometry::Size const& size) = 0;
     virtual void moved_to(geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(bool hide) = 0;
