@@ -26,7 +26,6 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
@@ -104,8 +103,7 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     }
     
     mtd::NestedMockEGL mock_egl;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-    
+
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };
