@@ -62,7 +62,7 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD4(set_surface_attribute,
         int(std::shared_ptr<scene::Session> const& session,
             std::shared_ptr<scene::Surface> const& surface,
-            MirSurfaceAttrib attrib,
+            MirWindowAttrib attrib,
             int value));
 
     static frontend::SurfaceId add_surface_default(

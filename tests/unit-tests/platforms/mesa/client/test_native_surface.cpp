@@ -105,9 +105,9 @@ TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
     using namespace testing;
 
     Sequence seq;
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,0))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval,0))
         .InSequence(seq);
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,1))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval,1))
         .InSequence(seq);
 
     EXPECT_EQ(MIR_MESA_TRUE, native_surface.set_swapinterval(0));

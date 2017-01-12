@@ -48,7 +48,7 @@ public:
     void update_surface(
         scene::Session const& session,
         scene::Surface const& surface,
-        MirSurfaceAttrib attrib, int value) override;
+        MirWindowAttrib attrib, int value) override;
 
     void destroying_surface(
         scene::Session const& session,

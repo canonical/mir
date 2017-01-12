@@ -268,7 +268,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
 namespace
 {
-void recording_surface_callback(MirSurface*, void* ctx)
+void recording_surface_callback(MirWindow*, void* ctx)
 {
     auto called = static_cast<bool*>(ctx);
     *called = true;

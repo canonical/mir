@@ -313,8 +313,8 @@ bool spin_wait_for_id(mg::BufferID id, MirWindow* window, std::chrono::time_poin
 {
     while(Clock::now() < pt)
     {
-        //auto z = mir_debug_surface_current_buffer_id(window);
-        if (mir_debug_surface_current_buffer_id(window) == id.as_value())
+        //auto z = mir_debug_window_current_buffer_id(window);
+        if (mir_debug_window_current_buffer_id(window) == id.as_value())
             return true;
         std::this_thread::yield();
     }

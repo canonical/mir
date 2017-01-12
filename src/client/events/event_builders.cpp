@@ -90,6 +90,17 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
     auto e = new_event<MirSurfaceEvent>();
 
     e->set_id(surface_id.as_value());
+    e->set_attrib(static_cast<MirWindowAttrib>(attribute));
+    e->set_value(value);
+
+    return make_uptr_event(e);
+}
+
+mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib attribute, int value)
+{
+    auto e = new_event<MirSurfaceEvent>();
+
+    e->set_id(surface_id.as_value());
     e->set_attrib(attribute);
     e->set_value(value);
 
@@ -98,7 +109,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
-    auto e = new_event<MirCloseSurfaceEvent>();
+    auto e = new_event<MirCloseWindowEvent>();
 
     e->set_surface_id(surface_id.as_value());
 

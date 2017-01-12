@@ -21,13 +21,35 @@
 #include "mir_surface.h"
 #include "mir/mir_buffer_stream.h"
 
+int mir_debug_window_id(MirWindow* window)
+{
+    return window->id();
+}
+
+uint32_t mir_debug_window_current_buffer_id(MirWindow* window)
+{
+    return window->get_buffer_stream()->get_current_buffer_id();
+}
+
+bool mir_debug_window_coords_to_screen(MirWindow* window,
+                                       int x, int y,
+                                       int* screen_x, int* screen_y)
+{
+    return window->translate_to_screen_coordinates(x, y, screen_x, screen_y);
+}
+
+// These functions will be deprecated soon
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
 {
-    return surface->get_buffer_stream()->get_current_buffer_id();
+    return mir_debug_window_current_buffer_id(surface);
 }
 
 int mir_debug_surface_id(MirSurface* surface)
 {
+    return mir_debug_window_id(surface);
     return surface->id();
 }
 
@@ -35,5 +57,7 @@ bool mir_debug_surface_coords_to_screen(MirSurface* surface,
                                         int x, int y,
                                         int* screen_x, int* screen_y)
 {
-    return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y);
+    return mir_debug_window_coords_to_screen(surface, x, y, screen_x, screen_y);
 }
+
+//#pragma GCC diagnostic pop
