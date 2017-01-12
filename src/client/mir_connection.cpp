@@ -261,6 +261,11 @@ MirConnection::Deregisterer::~Deregisterer()
     }
 }
 
+mcl::ClientContext* mcl::to_client_context(MirConnection* connection)
+{
+    return connection;
+}
+
 MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
@@ -1470,4 +1475,9 @@ void* MirConnection::request_interface(char const* name, int version)
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
     return platform->request_interface(name, version);
+}
+
+MirRenderSurface* MirConnection::render_surface(void* key)
+{
+    return connection_surface_map()->render_surface(key).get();
 }

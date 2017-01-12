@@ -74,6 +74,7 @@ EGLSurface future_driver_eglCreateWindowSurface(
     //TODO: this example (which will go away once the Mir EGL Platform is published) is the only
     //      thing using this extension. The shim and the extension should go away at the same time.
     info->stream = ext->get_hardware_buffer_stream(
+        info->connection,
         surface,
         info->current_physical_width,
         info->current_physical_height,

@@ -186,10 +186,17 @@ void create_buffer(
 }
 
 MirBufferStream* get_hw_stream(
-    MirRenderSurface* rs,
+    MirConnection* connection,
+    MirRenderSurface* key,
     int width, int height,
     MirPixelFormat format)
 {
+    auto context = mcl::to_client_context(connection);
+    if (!context)
+        return nullptr;
+    auto rs = context->render_surface(key);
+    if (!rs)
+        return nullptr;
     return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
 }
 

@@ -20,6 +20,7 @@
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir/mir_render_surface.h"
 
 namespace mir
 {
@@ -37,11 +38,15 @@ public:
         MirPlatformMessage const* request,
         mir_platform_operation_callback callback, void* context) = 0;
 
+    virtual MirRenderSurface* render_surface(void* key) = 0; 
+
 protected:
     ClientContext() = default;
     ClientContext(const ClientContext&) = delete;
     ClientContext& operator=(const ClientContext&) = delete;
 };
+
+ClientContext* to_client_context(MirConnection*);
 
 }
 }
