@@ -16,7 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>

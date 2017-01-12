@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
-
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
