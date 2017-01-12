@@ -364,7 +364,7 @@ struct ObservantShell : msh::Shell
     int set_surface_attribute(
         std::shared_ptr<msc::Session> const& session,
         std::shared_ptr<msc::Surface> const& window,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) override
     {
         return wrapped->set_surface_attribute(session, window, attrib, value);
@@ -372,7 +372,7 @@ struct ObservantShell : msh::Shell
 
     int get_surface_attribute(
         std::shared_ptr<msc::Surface> const& window,
-        MirSurfaceAttrib attrib) override
+        MirWindowAttrib attrib) override
     {
         return wrapped->get_surface_attribute(window, attrib);
     }
@@ -457,7 +457,7 @@ protected:
     }
 
 private:
-    static void wait_for_key_a_event(MirSurface*, MirEvent const* ev, void* context)
+    static void wait_for_key_a_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const nmr = static_cast<NestedMirRunner*>(context);
         if (mir_event_get_type(ev) == mir_event_type_input)
@@ -776,13 +776,13 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_window_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_window_spec_set_event_handler(spec, [](MirWindow*, MirEvent const* event, void* ctx)
         {
-            if (mir_event_get_type(event) == mir_event_type_surface_output)
+            if (mir_event_get_type(event) == mir_event_type_window_output)
             {
-                auto surface_event = mir_event_get_surface_output_event(event);
-                EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(expected_form_factor));
-                EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(expected_scale));
+                auto surface_event = mir_event_get_window_output_event(event);
+                EXPECT_THAT(mir_window_output_event_get_form_factor(surface_event), Eq(expected_form_factor));
+                EXPECT_THAT(mir_window_output_event_get_scale(surface_event), Eq(expected_scale));
                 auto signal = static_cast<mt::Signal*>(ctx);
                 signal->raise();
             }
@@ -843,8 +843,8 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
         [window = client.window]
         {
-            return mir_surface_get_visibility(window) == mir_surface_visibility_exposed
-                && mir_surface_get_focus(window) == mir_surface_focused;
+            return mir_window_get_visibility(window) == mir_window_visibility_exposed
+                && mir_window_get_focus_state(window) == mir_window_focus_state_focused;
         },
         timeout);
 
@@ -980,7 +980,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
+    mir_wait_for(mir_window_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1062,7 +1062,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(client.window, conf));
+    mir_wait_for(mir_window_configure_cursor(client.window, conf));
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);

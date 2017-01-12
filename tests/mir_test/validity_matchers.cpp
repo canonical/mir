@@ -17,7 +17,7 @@ bool IsValidMatcher::MatchAndExplain(MirConnection* connection, MatchResultListe
 }
 
 template<>
-bool IsValidMatcher::MatchAndExplain(MirSurface* surface, MatchResultListener* listener) const
+bool IsValidMatcher::MatchAndExplain(MirWindow* surface, MatchResultListener* listener) const
 {
     if (surface == nullptr)
     {

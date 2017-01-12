@@ -329,7 +329,7 @@ static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent co
 }
 
 static void event_callback(
-    MirSurface* surface, MirEvent const* event, void* context)
+    MirWindow* surface, MirEvent const* event, void* context)
 {
     (void) surface;
     struct ClientContext *ctx = (struct ClientContext*) context;

@@ -65,7 +65,7 @@ MirPixelFormat find_pixel_format(MirConnection* connection)
     return pixel_format;
 }
 
-MirSurface* make_surface(MirConnection* connection)
+MirWindow* make_surface(MirConnection* connection)
 {
     auto format = find_pixel_format(connection);
 

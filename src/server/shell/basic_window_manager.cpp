@@ -138,15 +138,15 @@ void msh::BasicWindowManager::handle_raise_surface(
 int msh::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,
-    MirSurfaceAttrib attrib,
+    MirWindowAttrib attrib,
     int value)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     switch (attrib)
     {
-    case mir_surface_attrib_state:
+    case mir_window_attrib_state:
     {
-        auto const state = policy->handle_set_state(surface, MirSurfaceState(value));
+        auto const state = policy->handle_set_state(surface, MirWindowState(value));
         return surface->configure(attrib, state);
     }
     default:

@@ -110,18 +110,18 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
     running = 0;
 }
 
-static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
-    int value = mir_surface_event_get_attribute_value(sev);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(sev);
+    int value = mir_window_event_get_attribute_value(sev);
 
     switch (attrib)
     {
-    case mir_surface_attrib_visibility:
-        printf("Window %s\n", value == mir_surface_visibility_exposed ?
+    case mir_window_attrib_visibility:
+        printf("Window %s\n", value == mir_window_visibility_exposed ?
                                "exposed" : "occluded");
         break;
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:
@@ -129,19 +129,19 @@ static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
     }
 }
 
-static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
+static void handle_window_output_event(MirWindowOutputEvent const* out)
 {
     static char const* const form_factor_name[6] =
         {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
-    unsigned ff = mir_surface_output_event_get_form_factor(out);
+    unsigned ff = mir_window_output_event_get_form_factor(out);
     char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
 
-    refresh_rate = mir_surface_output_event_get_refresh_rate(out);
+    refresh_rate = mir_window_output_event_get_refresh_rate(out);
 
     printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
-           mir_surface_output_event_get_output_id(out),
-           mir_surface_output_event_get_dpi(out),
-           mir_surface_output_event_get_scale(out),
+           mir_window_output_event_get_output_id(out),
+           mir_window_output_event_get_dpi(out),
+           mir_window_output_event_get_scale(out),
            form_factor,
            refresh_rate);
 }
@@ -161,11 +161,11 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     case mir_event_type_input:
         mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
         break;
-    case mir_event_type_surface:
-        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+    case mir_event_type_window:
+        mir_eglapp_handle_window_event(mir_event_get_window_event(ev));
         break;
-    case mir_event_type_surface_output:
-        handle_surface_output_event(mir_event_get_surface_output_event(ev));
+    case mir_event_type_window_output:
+        handle_window_output_event(mir_event_get_window_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
@@ -182,7 +182,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
                    mir_resize_event_get_height(resize));
         }
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         printf("Received close event from server.\n");
         running = 0;
         break;

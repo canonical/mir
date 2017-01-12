@@ -139,38 +139,38 @@ public:
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+        if (mir_window_attrib_visibility == attrib &&
+            mir_window_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
-            mir_surface_focused == value)
+        if (mir_window_attrib_focus == attrib &&
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<ExposedSurface*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            client->handle_window_event(window_event);
 
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
     }
 
-    static void null_event_handler(MirSurface*, MirEvent const*, void*) {};
+    static void null_event_handler(MirWindow*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
         mir_window_set_event_handler(window, null_event_handler, nullptr);

@@ -408,7 +408,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_
     EXPECT_FALSE(display_buffer->overlay(list));
 }
 
-/* Once we have synchronous MirSurface scene updates, we can probably
+/* Once we have synchronous MirWindow scene updates, we can probably
  * passthrough more than one renderable if needed
  */
 TEST_F(NestedDisplayBuffer, rejects_list_containing_multiple_onscreen_renderables)

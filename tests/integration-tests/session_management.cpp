@@ -131,7 +131,7 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
         mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::software);
     ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters()
         .of_size(100,100)
-        .of_type(mir_surface_type_normal)
+        .of_type(mir_window_type_normal)
         .with_buffer_stream(session->create_buffer_stream(properties));
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_)).Times(1);

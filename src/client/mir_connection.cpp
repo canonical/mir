@@ -353,7 +353,7 @@ MirWaitHandle* MirConnection::create_surface(
         if (request != surface_requests.end())
         {
             auto id = next_error_id(lock);
-            auto surf = std::make_shared<MirSurface>(
+            auto surf = std::make_shared<MirWindow>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
             auto wh = (*request)->wh;
@@ -410,7 +410,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         }
     }
 
-    std::shared_ptr<MirSurface> surf {nullptr};
+    std::shared_ptr<MirWindow> surf {nullptr};
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
         std::string reason;
@@ -421,12 +421,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         if (!surface_proto->has_id()) 
             reason +=  "Server assigned surface no id";
         auto id = next_error_id(lock);
-        surf = std::make_shared<MirSurface>(reason, this, id, request->wh);
+        surf = std::make_shared<MirWindow>(reason, this, id, request->wh);
         surface_map->insert(id, surf);
     }
     else
     {
-        surf = std::make_shared<MirSurface>(
+        surf = std::make_shared<MirWindow>(
             this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
@@ -459,7 +459,7 @@ void MirConnection::set_error_message(std::string const& error)
  "only 0, 1, or 2 arguments in the NewCallback function */
 struct MirConnection::SurfaceRelease
 {
-    MirSurface* surface;
+    MirWindow* surface;
     MirWaitHandle* handle;
     mir_surface_callback callback;
     void* context;
@@ -499,7 +499,7 @@ void MirConnection::released(SurfaceRelease data)
 }
 
 MirWaitHandle* MirConnection::release_surface(
-        MirSurface *surface,
+        MirWindow *surface,
         mir_surface_callback callback,
         void * context)
 {
