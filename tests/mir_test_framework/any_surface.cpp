@@ -30,12 +30,12 @@ namespace
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 }
 
-MirSurface* mtf::make_any_surface(MirConnection *connection)
+MirWindow* mtf::make_any_surface(MirConnection *connection)
 {
     return mtf::make_surface(connection, mir::geometry::Size{width, height}, format);
 }
 
-MirSurface* mtf::make_surface(
+MirWindow* mtf::make_surface(
     MirConnection *connection, mir::geometry::Size size, MirPixelFormat f)
 {
     using namespace std::literals::string_literals;

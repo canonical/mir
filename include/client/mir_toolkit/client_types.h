@@ -247,7 +247,7 @@ typedef enum MirBufferLayout
 } MirBufferLayout;
 
 /**
- * Retrieved information about a MirSurface. This is most useful for learning
+ * Retrieved information about a MirWindow. This is most useful for learning
  * how and where to write to a 'mir_buffer_usage_software' surface.
  */
 typedef struct MirGraphicsRegion

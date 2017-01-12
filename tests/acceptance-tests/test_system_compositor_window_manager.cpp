@@ -177,11 +177,11 @@ MATCHER_P(MirFocusEvent, expected, "")
     if (mir_event_get_type(arg) != mir_event_type_window)
         return false;
 
-    auto surface_event = mir_event_get_surface_event(arg);
-    auto attrib = mir_surface_event_get_attribute(surface_event);
-    auto value = mir_surface_event_get_attribute_value(surface_event);
+    auto window_event = mir_event_get_window_event(arg);
+    auto attrib = mir_window_event_get_attribute(window_event);
+    auto value = mir_window_event_get_attribute_value(window_event);
 
-    return (attrib == mir_surface_attrib_focus)
+    return (attrib == mir_window_attrib_focus)
         && (value == expected);
 }
 }
@@ -212,11 +212,11 @@ TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
     auto client = connect_client();
 
     // Throw away all uninteresting window events
-    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
+    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_window_focus_state_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
 
-    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(1)
+    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_window_focus_state_focused))).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 
     auto window = client.create_surface(1);
@@ -230,11 +230,11 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
     auto client = connect_client();
 
     // Throw away all uninteresting window events
-    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
+    EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_window_focus_state_focused)))).Times(AnyNumber());
 
     mt::Signal signal;
 
-    ON_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused)))
+    ON_CALL(client, surface_event(_, MirFocusEvent(mir_window_focus_state_focused)))
             .WillByDefault(InvokeWithoutArgs([&] { signal.raise(); }));
 
     auto window = client.create_surface(1);
@@ -249,7 +249,7 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
     auto window = client.create_surface(1);
 
     MirWindowSpec* spec = mir_create_window_spec(client.connection());
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
 
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);

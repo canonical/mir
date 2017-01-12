@@ -99,8 +99,8 @@ TEST_F(ClientSurfaces, have_distinct_ids)
     auto surface_1 = mtf::make_any_surface(connection);
     auto surface_2 = mtf::make_any_surface(connection);
     
-    EXPECT_NE(mir_debug_surface_id(surface_1),
-        mir_debug_surface_id(surface_2));
+    EXPECT_NE(mir_debug_window_id(surface_1),
+        mir_debug_window_id(surface_2));
 
     mir_window_release_sync(surface_1);
     mir_window_release_sync(surface_2);
@@ -122,12 +122,12 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
         {
             if (i == j)
                 EXPECT_EQ(
-                    mir_debug_surface_id(window[i]),
-                    mir_debug_surface_id(window[j]));
+                    mir_debug_window_id(window[i]),
+                    mir_debug_window_id(window[j]));
             else
                 EXPECT_NE(
-                    mir_debug_surface_id(window[i]),
-                    mir_debug_surface_id(window[j]));
+                    mir_debug_window_id(window[i]),
+                    mir_debug_window_id(window[j]));
         }
     }
 
@@ -150,7 +150,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(window, IsValid());
-    EXPECT_EQ(mir_surface_get_preferred_orientation(window), mode);
+    EXPECT_EQ(mir_window_get_preferred_orientation(window), mode);
 
     mir_window_release_sync(window);
 }
@@ -176,7 +176,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(menu, IsValid());
-    EXPECT_EQ(mir_surface_get_type(menu), mir_surface_type_menu);
+    EXPECT_EQ(mir_window_get_type(menu), mir_window_type_menu);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(menu);
@@ -196,7 +196,7 @@ TEST_F(ClientSurfaces, can_be_tips)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(tooltip, IsValid());
-    EXPECT_EQ(mir_surface_get_type(tooltip), mir_surface_type_tip);
+    EXPECT_EQ(mir_window_get_type(tooltip), mir_window_type_tip);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(tooltip);
@@ -212,7 +212,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
-    EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
+    EXPECT_EQ(mir_window_get_type(dialog), mir_window_type_dialog);
 
     mir_window_release_sync(dialog);
 }
@@ -228,7 +228,7 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
-    EXPECT_EQ(mir_surface_get_type(dialog), mir_surface_type_dialog);
+    EXPECT_EQ(mir_window_get_type(dialog), mir_window_type_dialog);
 
     mir_window_release_sync(parent);
     mir_window_release_sync(dialog);
@@ -243,7 +243,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     auto im = mir_window_create_sync(spec);
     mir_window_spec_release(spec);
 
-    EXPECT_EQ(mir_surface_get_type(im), mir_surface_type_inputmethod);
+    EXPECT_EQ(mir_window_get_type(im), mir_window_type_inputmethod);
 
     mir_window_release_sync(im);
 }
@@ -311,7 +311,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     auto window = mtf::make_any_surface(connection);
 
-    auto parent_id = mir_surface_request_persistent_id_sync(window);
+    auto parent_id = mir_window_request_persistent_id_sync(window);
 
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());

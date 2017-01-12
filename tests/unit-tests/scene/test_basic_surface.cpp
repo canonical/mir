@@ -64,7 +64,7 @@ public:
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib, int));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib, int));
     MOCK_METHOD1(hidden_set_to, void(bool));
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD0(client_surface_close_requested, void());
@@ -508,7 +508,7 @@ namespace
 
 struct AttributeTestParameters
 {
-    MirSurfaceAttrib attribute;
+    MirWindowAttrib attribute;
     int default_value;
     int a_valid_value;
     int an_invalid_value;
@@ -520,44 +520,44 @@ struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
 };
 
 AttributeTestParameters const surface_visibility_test_parameters{
-    mir_surface_attrib_visibility,
-    mir_surface_visibility_occluded,
-    mir_surface_visibility_exposed,
+    mir_window_attrib_visibility,
+    mir_window_visibility_occluded,
+    mir_window_visibility_exposed,
     -1
 };
 
 AttributeTestParameters const surface_type_test_parameters{
-    mir_surface_attrib_type,
-    mir_surface_type_normal,
-    mir_surface_type_freestyle,
+    mir_window_attrib_type,
+    mir_window_type_normal,
+    mir_window_type_freestyle,
     -1
 };
 
 AttributeTestParameters const surface_state_test_parameters{
-    mir_surface_attrib_state,
-    mir_surface_state_restored,
-    mir_surface_state_fullscreen,
+    mir_window_attrib_state,
+    mir_window_state_restored,
+    mir_window_state_fullscreen,
     1178312
 };
 
 AttributeTestParameters const surface_swapinterval_test_parameters{
-    mir_surface_attrib_swapinterval,
+    mir_window_attrib_swapinterval,
     1,
     0,
     -1
 };
 
 AttributeTestParameters const surface_dpi_test_parameters{
-    mir_surface_attrib_dpi,
+    mir_window_attrib_dpi,
     0,
     90,
     -1
 };
 
 AttributeTestParameters const surface_focus_test_parameters{
-    mir_surface_attrib_focus,
-    mir_surface_unfocused,
-    mir_surface_focused,
+    mir_window_attrib_focus,
+    mir_window_focus_state_unfocused,
+    mir_window_focus_state_focused,
     -1
 };
 
@@ -920,9 +920,9 @@ TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
     EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
     EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
 
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_occluded);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
 }
 
 //TODO: per-stream alpha and swapinterval seems useful
@@ -988,7 +988,7 @@ TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
     EXPECT_CALL(*buffer_stream, allow_framedropping(true));
 
     surface.set_streams(streams);
-    surface.configure(mir_surface_attrib_swapinterval, 0);
+    surface.configure(mir_window_attrib_swapinterval, 0);
 }
 
 TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
@@ -1102,13 +1102,13 @@ namespace
 {
 struct VisibilityObserver : ms::NullSurfaceObserver
 {
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override
+    void attrib_changed(MirWindowAttrib attrib, int value) override
     {
-        if (attrib == mir_surface_attrib_visibility)
+        if (attrib == mir_window_attrib_visibility)
         {
-            if (value == mir_surface_visibility_occluded)
+            if (value == mir_window_visibility_occluded)
                 hides_++;
-            else if (value == mir_surface_visibility_exposed)
+            else if (value == mir_window_visibility_exposed)
                 exposes_++;
         }
     }
@@ -1134,7 +1134,7 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
 
     EXPECT_THAT(observer->exposes(), Eq(1));
     EXPECT_THAT(observer->hides(), Eq(0));

@@ -67,8 +67,8 @@ public:
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}
-    MirSurfaceType type() const override { return mir_surface_type_normal; }
-    MirSurfaceState state() const override { return mir_surface_state_unknown; }
+    MirWindowType type() const override { return mir_window_type_normal; }
+    MirWindowState state() const override { return mir_window_state_unknown; }
 
     void hide() override {}
     void show() override {}
@@ -93,8 +93,8 @@ public:
 
     bool supports_input() const override { return true;}
     int client_input_fd() const override { return fd;}
-    int configure(MirSurfaceAttrib, int) override { return 0; }
-    int query(MirSurfaceAttrib) const override { return 0; }
+    int configure(MirWindowAttrib, int) override { return 0; }
+    int query(MirWindowAttrib) const override { return 0; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }

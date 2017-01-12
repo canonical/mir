@@ -24,8 +24,8 @@
 
 namespace mir_test_framework
 {
-MirSurface* make_any_surface(MirConnection *connection);
-MirSurface* make_surface(MirConnection *connection, mir::geometry::Size size, MirPixelFormat format);
+MirWindow* make_any_surface(MirConnection *connection);
+MirWindow* make_surface(MirConnection *connection, mir::geometry::Size size, MirPixelFormat format);
 }
 
 #endif // MIR_TEST_FRAMEWORK_ANY_SURFACE_H_

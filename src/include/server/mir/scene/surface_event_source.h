@@ -42,7 +42,7 @@ public:
         OutputPropertiesCache const& outputs,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void attrib_changed(MirWindowAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void orientation_set_to(MirOrientation orientation) override;
