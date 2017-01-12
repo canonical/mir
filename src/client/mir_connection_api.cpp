@@ -427,7 +427,7 @@ void mir_connection_set_error_callback(
     }
 }
 
-void mir_connection_apply_session_display_configuration(MirConnection* connection, MirDisplayConfig const* display_config)
+void mir_connection_apply_session_display_config(MirConnection* connection, MirDisplayConfig const* display_config)
 try
 {
     connection->configure_session_display(*display_config);
@@ -437,7 +437,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_remove_session_display_configuration(MirConnection* connection)
+void mir_connection_remove_session_display_config(MirConnection* connection)
 try
 {
     connection->remove_session_display();

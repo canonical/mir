@@ -72,7 +72,7 @@ public:
 
     void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
 
-    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
+    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirWindowState value);
 
     void drag(geometry::Point cursor);
 
@@ -100,7 +100,7 @@ private:
         mir_input_event_modifier_ctrl |
         mir_input_event_modifier_meta;
 
-    void toggle(MirSurfaceState state);
+    void toggle(MirWindowState state);
 
     // "Mir and Unity: Surfaces, input, and displays (v0.3)" talks about active
     //  *window*,but Mir really only understands surfaces

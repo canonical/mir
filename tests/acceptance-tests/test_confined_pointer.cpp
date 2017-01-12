@@ -59,7 +59,7 @@ struct MockSurfaceObserver : public ms::NullSurfaceObserver
 };
 }
 
-void null_event_handler(MirSurface*, MirEvent const*, void*)
+void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -79,7 +79,7 @@ struct Client
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
         mir_window_spec_set_name(spec, name.c_str());
         window = mir_window_create_sync(spec);
         mir_window_spec_release(spec);
@@ -110,31 +110,31 @@ struct Client
         mir_window_spec_release(spec);
     }
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirSurfaceEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+        if (mir_window_attrib_visibility == attrib &&
+            mir_window_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
-            mir_surface_focused == value)
+        if (mir_window_attrib_focus == attrib &&
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
         switch (type)
         {
-        case mir_event_type_surface:
-            client->handle_surface_event(mir_event_get_surface_event(ev));
+        case mir_event_type_window:
+            client->handle_window_event(mir_event_get_window_event(ev));
             break;
         case mir_event_type_input:
             client->handle_input(ev);
@@ -289,7 +289,7 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
 
     // Attempt to confine client_1 while client_2 is focused
     auto spec = mir_create_window_spec(client_1.connection);
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
 
     mir_window_apply_spec(client_1.window, spec);
     mir_window_spec_release(spec);

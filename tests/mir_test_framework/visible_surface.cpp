@@ -40,19 +40,20 @@ mtf::VisibleSurface::~VisibleSurface()
     if (window) mir_window_release_sync(window);
 }
 
-void mtf::VisibleSurface::event_callback(MirSurface* surf, MirEvent const* ev, void* context)
+void mtf::VisibleSurface::event_callback(MirWindow* surf, MirEvent const* ev, void* context)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface)
+    if (mir_event_get_type(ev) == mir_event_type_window)
     {
-        if (mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
+        auto attrib = mir_window_event_get_attribute(mir_event_get_window_event(ev));
+        if (attrib == mir_window_attrib_visibility)
         {
             auto ctx = reinterpret_cast<VisibleSurface*>(context);
-            ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
+            ctx->set_visibility(surf, mir_window_event_get_attribute_value(mir_event_get_window_event(ev)));
         }
     }
 }
 
-void mtf::VisibleSurface::set_visibility(MirSurface* surf, bool vis)
+void mtf::VisibleSurface::set_visibility(MirWindow* surf, bool vis)
 {
     std::lock_guard<std::mutex> lk(mutex);
     if (surf != window) return;
@@ -60,7 +61,7 @@ void mtf::VisibleSurface::set_visibility(MirSurface* surf, bool vis)
     cv.notify_all();
 }
 
-mtf::VisibleSurface::operator MirSurface*() const
+mtf::VisibleSurface::operator MirWindow*() const
 {
     return window;
 }
@@ -79,5 +80,5 @@ mtf::VisibleSurface& mtf::VisibleSurface::operator=(VisibleSurface&& that)
 
 std::ostream& mtf::operator<<(std::ostream& os, VisibleSurface const& s)
 {
-    return os << static_cast<MirSurface*>(s);
+    return os << static_cast<MirWindow*>(s);
 }

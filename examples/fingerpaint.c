@@ -184,7 +184,7 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
@@ -301,7 +301,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             changed = true;
         }
     }
-    else if (event_type == mir_event_type_close_surface)
+    else if (event_type == mir_event_type_close_window)
     {
         static int closing = 0;
 

@@ -114,7 +114,7 @@ MATCHER_P(HasParent, parent, "")
 
 MATCHER(IsSurfaceOutputEvent, "")
 {
-    return mir_event_get_type(&arg) == mir_event_type_surface_output;
+    return mir_event_get_type(&arg) == mir_event_type_window_output;
 }
 
 struct StubSurfaceStack : public msh::SurfaceStack
@@ -696,7 +696,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_name("Aardavks")
-        .of_type(mir_surface_type_normal)
+        .of_type(mir_window_type_normal)
         .with_buffer_stream(id);
 
     session->create_surface(params, event_sink);
@@ -895,13 +895,13 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
 {
     using namespace testing;
 
-    if (mir_event_get_type(arg) != mir_event_type_surface_output)
+    if (mir_event_get_type(arg) != mir_event_type_window_output)
     {
-        *result_listener << "Event is not a MirSurfaceOutputEvent";
+        *result_listener << "Event is not a MirWindowOutputEvent";
         return 0;
     }
 
-    auto const event = mir_event_get_surface_output_event(arg);
+    auto const event = mir_event_get_window_output_event(arg);
 
     if (output.output.current_mode_index >= output.output.modes.size())
         return false;
@@ -911,23 +911,23 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
     return
         ExplainMatchResult(
             Eq(output.dpi),
-            mir_surface_output_event_get_dpi(event),
+            mir_window_output_event_get_dpi(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.form_factor),
-            mir_surface_output_event_get_form_factor(event),
+            mir_window_output_event_get_form_factor(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.scale),
-            mir_surface_output_event_get_scale(event),
+            mir_window_output_event_get_scale(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(mode.vrefresh_hz),
-            mir_surface_output_event_get_refresh_rate(event),
+            mir_window_output_event_get_refresh_rate(event),
             result_listener) &&
         ExplainMatchResult(
             Eq(output.id),
-            mir_surface_output_event_get_output_id(event),
+            mir_window_output_event_get_output_id(event),
             result_listener);
 }
 }
@@ -942,7 +942,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     EXPECT_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillOnce(Invoke([&event, &event_received](MirEvent const& ev)
                          {
-                             if (event.type() == mir_event_type_surface_output)
+                             if (event.type() == mir_event_type_window_output)
                              {
                                  event = *ev.to_surface_output();
                              }
@@ -978,7 +978,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                          {
-                             if (ev.type() == mir_event_type_surface_output)
+                             if (ev.type() == mir_event_type_window_output)
                              {
                                  event[events_received] = *ev.to_surface_output();
                              }
@@ -1035,7 +1035,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }
@@ -1083,7 +1083,7 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }
@@ -1144,7 +1144,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                               {
-                                  if (ev.type() == mir_event_type_surface_output)
+                                  if (ev.type() == mir_event_type_window_output)
                                   {
                                       event = *ev.to_surface_output();
                                   }
