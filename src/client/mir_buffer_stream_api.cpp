@@ -216,7 +216,7 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* buffer_stream)
 MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* buffer_stream, int interval)
 try
 {
-    if ((interval < 0) || (interval > 1))
+    if (interval < 0)
         return nullptr;
 
     if (!buffer_stream)

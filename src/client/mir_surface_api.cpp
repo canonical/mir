@@ -1189,7 +1189,7 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface)
 
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
-    if ((interval < 0) || (interval > 1))
+    if (interval < 0)
         return nullptr;
 
     try
