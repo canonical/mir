@@ -211,7 +211,7 @@ struct StaleFrames : BasicFixture,
         client_create_surface();
         auto pub = server_configuration.the_public_surface_factory();
         auto surface = pub->latest();
-        ASSERT_TRUE(surface);
+        ASSERT_TRUE(!!surface);
         surface->add_observer(post_observer);
         pub->forget_latest();
     }
