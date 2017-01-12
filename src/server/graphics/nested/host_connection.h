@@ -39,6 +39,8 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+class BufferProperties;
+ 
 namespace nested
 {
 using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;

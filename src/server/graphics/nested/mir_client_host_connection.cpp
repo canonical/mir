@@ -553,7 +553,6 @@ namespace
 class HostBuffer : public mgn::NativeBuffer
 {
 public:
-
     HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
         fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
     {
@@ -573,7 +572,6 @@ public:
         }
     }
 
-    //software
     HostBuffer(MirConnection* mir_connection, geom::Size size, MirPixelFormat format) :
         fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
     {
@@ -761,6 +759,12 @@ private:
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
+    mg::BufferProperties const& properties)
+{
+    return std::make_shared<HostBuffer>(mir_connection, properties);
+}
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     geom::Size size, MirPixelFormat format)
 {
     return std::make_shared<HostBuffer>(mir_connection, size, format);
@@ -780,11 +784,6 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));
-}
-
-std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(graphics::BufferProperties const& properties)
-{
-    return std::make_shared<HostBuffer>(mir_connection, properties);
 }
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
