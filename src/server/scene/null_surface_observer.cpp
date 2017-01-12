@@ -21,7 +21,7 @@
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
-void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::NullSurfaceObserver::attrib_changed(MirWindowAttrib /*attrib*/, int /*value*/) {}
 void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
 void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
 void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}

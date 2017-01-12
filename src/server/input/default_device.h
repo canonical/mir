@@ -25,7 +25,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/optional_value.h"
 
 #include <memory>
@@ -52,19 +52,19 @@ public:
     std::string name() const override;
     std::string unique_id() const override;
 
-    optional_value<MirPointerConfiguration> pointer_configuration() const override;
-    void apply_pointer_configuration(MirPointerConfiguration const&) override;
-    optional_value<MirTouchpadConfiguration> touchpad_configuration() const override;
-    void apply_touchpad_configuration(MirTouchpadConfiguration const&) override;
-    optional_value<MirKeyboardConfiguration> keyboard_configuration() const override;
-    void apply_keyboard_configuration(MirKeyboardConfiguration const&) override;
+    optional_value<MirPointerConfig> pointer_configuration() const override;
+    void apply_pointer_configuration(MirPointerConfig const&) override;
+    optional_value<MirTouchpadConfig> touchpad_configuration() const override;
+    void apply_touchpad_configuration(MirTouchpadConfig const&) override;
+    optional_value<MirKeyboardConfig> keyboard_configuration() const override;
+    void apply_keyboard_configuration(MirKeyboardConfig const&) override;
 private:
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;
     optional_value<PointerSettings> pointer;
     optional_value<TouchpadSettings> touchpad;
-    optional_value<MirKeyboardConfiguration> keyboard;
+    optional_value<MirKeyboardConfig> keyboard;
     std::shared_ptr<dispatch::ActionQueue> const actions;
     std::shared_ptr<KeyMapper> const key_mapper;
 };

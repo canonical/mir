@@ -93,7 +93,7 @@ void msh::AbstractShell::update_focused_surface_confined_region()
 {
     auto const current_focus = focus_surface.lock();
 
-    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_surface)
+    if (current_focus && current_focus->confine_pointer_state() == mir_pointer_confined_to_window)
     {
         seat->set_confinement_regions({current_focus->input_bounds()});
     }
@@ -163,7 +163,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     if (modifications.confine_pointer.is_set() && focused_surface() == surface)
     {
-        if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+        if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
         {
             seat->set_confinement_regions({surface->input_bounds()});
         }
@@ -209,7 +209,7 @@ void msh::AbstractShell::stop_prompt_session(
 int msh::AbstractShell::set_surface_attribute(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
-    MirSurfaceAttrib attrib,
+    MirWindowAttrib attrib,
     int value)
 {
     report->update_surface(*session, *surface, attrib, value);
@@ -218,7 +218,7 @@ int msh::AbstractShell::set_surface_attribute(
 
 int msh::AbstractShell::get_surface_attribute(
     std::shared_ptr<ms::Surface> const& surface,
-    MirSurfaceAttrib attrib)
+    MirWindowAttrib attrib)
 {
     return surface->query(attrib);
 }
@@ -289,13 +289,13 @@ void msh::AbstractShell::set_focus_to_locked(
 
         if (current_focus)
         {
-            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+            current_focus->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
             current_focus->remove_observer(focus_surface_observer);
         }
 
         if (surface)
         {
-            if (surface->confine_pointer_state() == mir_pointer_confined_to_surface)
+            if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
             {
                 seat->set_confinement_regions({surface->input_bounds()});
             }
@@ -303,7 +303,7 @@ void msh::AbstractShell::set_focus_to_locked(
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
-            surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+            surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
             surface->add_observer(focus_surface_observer);
         }
         else

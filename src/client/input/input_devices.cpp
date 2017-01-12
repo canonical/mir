@@ -17,7 +17,7 @@
  */
 
 #include "mir/input/input_devices.h"
-#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_input_config_serialization.h"
 
 namespace mi = mir::input;
 
@@ -27,7 +27,7 @@ void mi::InputDevices::update_devices(std::string const& config_buffer)
 
     {
         std::unique_lock<std::mutex> lock(devices_access);
-        configuration = mi::deserialize_input_configuration(config_buffer);
+        configuration = mi::deserialize_input_config(config_buffer);
         stored_callback = callback;
     }
 
@@ -35,7 +35,7 @@ void mi::InputDevices::update_devices(std::string const& config_buffer)
         stored_callback();
 }
 
-MirInputConfiguration mi::InputDevices::devices()
+MirInputConfig mi::InputDevices::devices()
 {
     std::unique_lock<std::mutex> lock(devices_access);
     return configuration;

@@ -20,11 +20,11 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
-#include "mir/input/mir_input_configuration.h"
-#include "mir/input/mir_input_configuration_serialization.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "event_sender.h"
 #include "mir/events/serialization.h"
 #include "message_sender.h"
@@ -101,7 +101,7 @@ void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mi
 {
     mp::EventSequence seq;
 
-    MirInputConfiguration temp;
+    MirInputConfig temp;
     for(auto const& dev : devices)
     {
         MirInputDevice conf(dev->id(), dev->capabilities(), dev->name(), dev->unique_id());
@@ -110,16 +110,16 @@ void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mi
         auto kbd_conf = dev->keyboard_configuration();
 
         if (ptr_conf.is_set())
-            conf.set_pointer_configuration(ptr_conf.value());
+            conf.set_pointer_config(ptr_conf.value());
         if (tpd_conf.is_set())
-            conf.set_touchpad_configuration(tpd_conf.value());
+            conf.set_touchpad_config(tpd_conf.value());
         if (kbd_conf.is_set())
-            conf.set_keyboard_configuration(kbd_conf.value());
+            conf.set_keyboard_config(kbd_conf.value());
 
-        temp.add_device_configuration(conf);
+        temp.add_device_config(conf);
     }
 
-    seq.set_input_configuration(mi::serialize_input_configuration(temp));
+    seq.set_input_configuration(mi::serialize_input_config(temp));
     send_event_sequence(seq, {});
 }
 

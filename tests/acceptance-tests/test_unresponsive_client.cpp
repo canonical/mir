@@ -114,7 +114,7 @@ TEST_F(UnresponsiveClient, DISABLED_does_not_hang_server)
     auto const client_code = [&]
     {
         MirConnection* connection = nullptr;
-        MirSurface* surface = nullptr;
+        MirWindow* surface = nullptr;
 
         client_connect.exec([&]
             {

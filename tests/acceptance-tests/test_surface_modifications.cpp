@@ -159,19 +159,19 @@ MATCHER_P(HeightEq, value, "")
 
 struct StatePair
 {
-    MirSurfaceState from;
-    MirSurfaceState to;
+    MirWindowState from;
+    MirWindowState to;
 
     friend std::ostream& operator<<(std::ostream& out, StatePair const& types)
         { return out << "from:" << types.from << ", to:" << types.to; }
 };
 
-bool is_visible(MirSurfaceState state)
+bool is_visible(MirWindowState state)
 {
     switch (state)
     {
-    case mir_surface_state_hidden:
-    case mir_surface_state_minimized:
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
         return false;
     default:
         break;
@@ -521,7 +521,7 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
 
 TEST_F(SurfaceModifications, surface_spec_state_affects_surface_visibility)
 {
-    auto const new_state = mir_surface_state_hidden;
+    auto const new_state = mir_window_state_hidden;
 
     EXPECT_CALL(surface_observer, hidden_set_to(true));
 
@@ -552,16 +552,16 @@ TEST_P(SurfaceSpecStateCase, set_state_affects_surface_visibility)
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceSpecStateCase,
     Values(
-        StatePair{mir_surface_state_hidden, mir_surface_state_restored},
-        StatePair{mir_surface_state_hidden, mir_surface_state_maximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_vertmaximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_horizmaximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_fullscreen},
-        StatePair{mir_surface_state_minimized, mir_surface_state_restored},
-        StatePair{mir_surface_state_minimized, mir_surface_state_maximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
+        StatePair{mir_window_state_hidden, mir_window_state_restored},
+        StatePair{mir_window_state_hidden, mir_window_state_maximized},
+        StatePair{mir_window_state_hidden, mir_window_state_vertmaximized},
+        StatePair{mir_window_state_hidden, mir_window_state_horizmaximized},
+        StatePair{mir_window_state_hidden, mir_window_state_fullscreen},
+        StatePair{mir_window_state_minimized, mir_window_state_restored},
+        StatePair{mir_window_state_minimized, mir_window_state_maximized},
+        StatePair{mir_window_state_minimized, mir_window_state_vertmaximized},
+        StatePair{mir_window_state_minimized, mir_window_state_horizmaximized},
+        StatePair{mir_window_state_minimized, mir_window_state_fullscreen}
     ));
 
 TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
@@ -572,20 +572,20 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
 
-    mir_wait_for(mir_surface_set_state(window, initial_state));
-    mir_wait_for(mir_surface_set_state(window, new_state));
+    mir_wait_for(mir_window_set_state(window, initial_state));
+    mir_wait_for(mir_window_set_state(window, new_state));
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,
     Values(
-        StatePair{mir_surface_state_hidden, mir_surface_state_restored},
-        StatePair{mir_surface_state_hidden, mir_surface_state_maximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_vertmaximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_horizmaximized},
-        StatePair{mir_surface_state_hidden, mir_surface_state_fullscreen},
-        StatePair{mir_surface_state_minimized, mir_surface_state_restored},
-        StatePair{mir_surface_state_minimized, mir_surface_state_maximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
-        StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
+        StatePair{mir_window_state_hidden, mir_window_state_restored},
+        StatePair{mir_window_state_hidden, mir_window_state_maximized},
+        StatePair{mir_window_state_hidden, mir_window_state_vertmaximized},
+        StatePair{mir_window_state_hidden, mir_window_state_horizmaximized},
+        StatePair{mir_window_state_hidden, mir_window_state_fullscreen},
+        StatePair{mir_window_state_minimized, mir_window_state_restored},
+        StatePair{mir_window_state_minimized, mir_window_state_maximized},
+        StatePair{mir_window_state_minimized, mir_window_state_vertmaximized},
+        StatePair{mir_window_state_minimized, mir_window_state_horizmaximized},
+        StatePair{mir_window_state_minimized, mir_window_state_fullscreen}
     ));

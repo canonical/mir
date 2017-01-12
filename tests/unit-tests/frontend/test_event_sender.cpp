@@ -34,10 +34,10 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/mir_input_configuration.h"
-#include "mir/input/mir_input_configuration_serialization.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/variable_length_array.h"
 
 #include <gtest/gtest.h>
@@ -75,27 +75,27 @@ struct StubDevice : mi::Device
     {
         return device_unique_id;
     }
-    mir::optional_value<MirPointerConfiguration> pointer_configuration() const override
+    mir::optional_value<MirPointerConfig> pointer_configuration() const override
     {
         return {};
     }
-    void apply_pointer_configuration(MirPointerConfiguration const&) override
+    void apply_pointer_configuration(MirPointerConfig const&) override
     {
     }
 
-    mir::optional_value<MirTouchpadConfiguration> touchpad_configuration() const override
+    mir::optional_value<MirTouchpadConfig> touchpad_configuration() const override
     {
         return {};
     }
-    void apply_touchpad_configuration(MirTouchpadConfiguration const&) override
+    void apply_touchpad_configuration(MirTouchpadConfig const&) override
     {
     }
 
-    mir::optional_value<MirKeyboardConfiguration> keyboard_configuration() const override
+    mir::optional_value<MirKeyboardConfig> keyboard_configuration() const override
     {
         return {};
     }
-    void apply_keyboard_configuration(MirKeyboardConfiguration const&) override
+    void apply_keyboard_configuration(MirKeyboardConfig const&) override
     {
     }
 
@@ -158,7 +158,7 @@ TEST_F(EventSender, sends_noninput_events)
 {
     using namespace testing;
 
-    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_surface_attrib_focus, mir_surface_focused);
+    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_window_attrib_focus, mir_window_focus_state_focused);
     auto resize_ev = mev::make_event(mf::SurfaceId{1}, {10, 10});
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
