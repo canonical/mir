@@ -73,12 +73,10 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&) override
     {
-        if (passthrough_candidate(properties.size))
-            return std::make_shared<mgn::Buffer>(connection, properties);
-        else
-            return guest_allocator->alloc_buffer(properties);
+        //fixme
+        return nullptr;
     }
 
     std::shared_ptr<mg::Buffer> alloc_buffer(
@@ -92,7 +90,10 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mir::geometry::Size size, MirPixelFormat format) override
     {
-        return alloc_buffer(mg::BufferProperties{size, format, mg::BufferUsage::software});
+        if (passthrough_candidate(size))
+            return std::make_shared<mgn::Buffer>(connection, size, format);
+        else
+            return guest_allocator->alloc_buffer(size, format);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats() override

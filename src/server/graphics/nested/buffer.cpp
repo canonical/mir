@@ -173,15 +173,6 @@ std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::Buffer
 
 mgn::Buffer::Buffer(
     std::shared_ptr<HostConnection> const& connection,
-    mg::BufferProperties const& properties) :
-    connection(connection),
-    buffer(connection->create_buffer(properties)),
-    native_base(create_native_base(properties.usage))
-{
-}
-
-mgn::Buffer::Buffer(
-    std::shared_ptr<HostConnection> const& connection,
     geom::Size size, uint32_t native_format, uint32_t native_flags) :
     connection(connection),
     buffer(connection->create_buffer(size, native_format, native_flags)),
