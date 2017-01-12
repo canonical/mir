@@ -16,13 +16,13 @@
  * Authored By: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/mir_input_configuration_serialization.h"
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_input_config.h"
 #include "mir/input/mir_pointer_configuration.h"
 #include "mir/input/mir_touchpad_configuration.h"
 #include "mir/input/mir_touchscreen_configuration.h"
 #include "mir/input/mir_keyboard_configuration.h"
-#include "mir_input_configuration.capnp.h"
+#include "mir_input_config.capnp.h"
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
@@ -30,10 +30,10 @@
 namespace mi = mir::input;
 namespace mc = mir::capnp;
 
-std::string mi::serialize_input_configuration(MirInputConfiguration const& config)
+std::string mi::serialize_input_config(MirInputConfig const& config)
 {
     ::capnp::MallocMessageBuilder message;
-    mc::InputConfiguration::Builder builder = message.initRoot<mc::InputConfiguration>();
+    mc::InputConfig::Builder builder = message.initRoot<mc::InputConfig>();
     auto list_builder = builder.initDevices(config.size());
     auto device_iterator = list_builder.begin();
 
@@ -106,15 +106,15 @@ std::string mi::serialize_input_configuration(MirInputConfiguration const& confi
     return {reinterpret_cast<char*>(flat.asBytes().begin()), flat.asBytes().size()};
 }
 
-MirInputConfiguration mi::deserialize_input_configuration(std::string const& buffer)
+MirInputConfig mi::deserialize_input_config(std::string const& buffer)
 {
     ::capnp::MallocMessageBuilder message;
     kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
         buffer.data()), buffer.size() / sizeof(::capnp::word));
     ::capnp::initMessageBuilderFromFlatArrayCopy(words, message);
-    mc::InputConfiguration::Reader conf_reader = message.getRoot<mc::InputConfiguration>();
+    mc::InputConfig::Reader conf_reader = message.getRoot<mc::InputConfig>();
 
-    MirInputConfiguration ret;
+    MirInputConfig ret;
 
     for (auto const& device_config : conf_reader.getDevices())
     {

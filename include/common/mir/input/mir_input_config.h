@@ -74,14 +74,14 @@ private:
     std::unique_ptr<Implementation> impl;
 };
 
-class MirInputConfiguration
+class MirInputConfig
 {
 public:
-    MirInputConfiguration();
-    MirInputConfiguration(MirInputConfiguration && conf);
-    MirInputConfiguration(MirInputConfiguration const& conf);
-    MirInputConfiguration& operator=(MirInputConfiguration const& conf);
-    ~MirInputConfiguration();
+    MirInputConfig();
+    MirInputConfig(MirInputConfig && conf);
+    MirInputConfig(MirInputConfig const& conf);
+    MirInputConfig& operator=(MirInputConfig const& conf);
+    ~MirInputConfig();
 
     void add_device_configuration(MirInputDevice const& conf);
     MirInputDevice* get_device_configuration_by_id(MirInputDeviceId id);
@@ -93,14 +93,14 @@ public:
 
     void for_each(std::function<void(MirInputDevice const&)> const& visitor) const;
     void for_each(std::function<void(MirInputDevice &)> const& visitor);
-    bool operator==(MirInputConfiguration const& rhs) const;
-    bool operator!=(MirInputConfiguration const& rhs) const;
+    bool operator==(MirInputConfig const& rhs) const;
+    bool operator!=(MirInputConfig const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
 std::ostream& operator<<(std::ostream&, MirInputDevice const&);
-std::ostream& operator<<(std::ostream&, MirInputConfiguration const&);
+std::ostream& operator<<(std::ostream&, MirInputConfig const&);
 
 #endif

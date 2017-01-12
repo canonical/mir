@@ -88,7 +88,7 @@ struct DeviceConfiguration
    touchscreenConfiguration @7 :TouchscreenConfiguration;
 }
 
-struct InputConfiguration
+struct InputConfig
 {
     devices @0 :List(DeviceConfiguration);
 }
