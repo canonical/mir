@@ -201,7 +201,7 @@ mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 }
 
 void mgn::detail::DisplayBuffer::event_thunk(
-    MirSurface* /*surface*/,
+    MirWindow* /*surface*/,
     MirEvent const* event,
     void* context)
 try

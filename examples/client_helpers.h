@@ -85,7 +85,7 @@ private:
 class Context
 {
 public:
-    Context(Connection& connection, MirSurface* surface, int swap_interval);
+    Context(Connection& connection, MirWindow* surface, int swap_interval);
     void make_current();
     void release_current();
     void swapbuffers();
