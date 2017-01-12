@@ -24,13 +24,11 @@
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 #include "mir_test_framework/visible_surface.h"
 #include "mir/options/option.h"
 #include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
-#include "mir/events/event_builders.h"
-#include "src/include/server/mir/frontend/event_sink.h"
-#include "mir/shell/shell_wrapper.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,8 +37,6 @@
 #include <mutex>
 #include <condition_variable>
 
-using mir::shell::ShellWrapper;
-using mir::shell::Shell;
 using namespace ::std::chrono;
 using namespace ::std::chrono_literals;
 using namespace ::testing;
@@ -55,26 +51,6 @@ namespace
 unsigned int const expected_client_buffers = 3;
 int const refresh_rate = 60;
 microseconds const vblank_interval(1000000/refresh_rate);
-
-class ShellOnFakeMonitor : public ShellWrapper
-{
-    // This whole class exists just to inject one fake event.
-    // Is there an easier way?
-public:
-    using ShellWrapper::ShellWrapper;
-
-    mir::frontend::SurfaceId create_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& sink) override
-    {
-        auto const id = ShellWrapper::create_surface(session, params, sink);
-        auto ev = mir::events::make_event(id, 96, 1.0f, refresh_rate,
-                                          mir_form_factor_monitor, 456);
-        sink->handle_event(*ev);
-        return id;
-    }
-};
 
 class Stats
 {
@@ -265,12 +241,36 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingDisplay(Stats& stats)
         : group{stats}
     {
+        mg::DisplayConfigurationOutput output{
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{1},
+            mg::DisplayConfigurationOutputType::hdmia,
+            std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+            {{{1920,1080}, refresh_rate}},  // <=== Refresh rate must be valid
+            0, mir::geometry::Size{}, true, true, mir::geometry::Point{}, 0,
+            mir_pixel_format_abgr_8888, mir_power_mode_on,
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown,
+            {},
+            mir_output_gamma_unsupported,
+            {}
+        };
+        outputs.push_back(output);
+    }
+
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        return std::make_unique<mtd::StubDisplayConfig>(outputs);
     }
 
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
         f(group);
     }
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
     TimeTrackingGroup group;
 };
  
@@ -279,12 +279,6 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
-
-        server.wrap_shell([&](std::shared_ptr<Shell> const& wrapped)
-        {
-            return std::make_shared<ShellOnFakeMonitor>(wrapped);
-        });
-
         mtf::ConnectedClientHeadlessServer::SetUp();
 
         auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
