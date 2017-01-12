@@ -553,6 +553,26 @@ namespace
 class HostBuffer : public mgn::NativeBuffer
 {
 public:
+
+    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
+        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
+    {
+        mir_connection_allocate_buffer(
+            mir_connection,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format,
+            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
+            buffer_available, this);
+        std::unique_lock<std::mutex> lk(mut);
+        cv.wait(lk, [&]{ return handle; });
+        if (!mir_buffer_is_valid(handle))
+        {
+            mir_buffer_release(handle);
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
+        }
+    }
+
     //software
     HostBuffer(MirConnection* mir_connection, geom::Size size, MirPixelFormat format) :
         fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
@@ -760,6 +780,11 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));
+}
+
+std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(graphics::BufferProperties const& properties)
+{
+    return std::make_shared<HostBuffer>(mir_connection, properties);
 }
 
 std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surface_spec()
