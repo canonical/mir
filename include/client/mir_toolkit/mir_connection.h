@@ -153,8 +153,8 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
-MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
-__attribute__ ((deprecated("use mir_connection_create_display_configuration instead")));
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
+/* __attribute__ ((deprecated("use mir_connection_create_display_configuration instead"))); */
 
 /**
  * Query the display
@@ -185,8 +185,8 @@ void mir_connection_set_display_config_change_callback(
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed
  */
-void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
-__attribute__ ((deprecated("use mir_display_config_release instead")));
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
+/* __attribute__ ((deprecated("use mir_display_config_release instead"))); */
 
 /**
  * Apply the display configuration
@@ -201,8 +201,8 @@ __attribute__ ((deprecated("use mir_display_config_release instead")));
  *   \param [in] display_configuration  The display_configuration to apply
  *   \return                            A handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
-__attribute__ ((deprecated("use mir_connection_apply_session_display_config instead")));
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+/* __attribute__ ((deprecated("use mir_connection_apply_session_display_config instead"))); */
 
 /**
  * Apply the display config for the connection
@@ -251,8 +251,8 @@ void mir_connection_remove_session_display_config(MirConnection* connection);
  */
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration)
-__attribute__ ((deprecated("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration")));
+    MirDisplayConfiguration const* display_configuration);
+/* __attribute__ ((deprecated("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration"))); */
 
 
 /**

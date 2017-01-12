@@ -128,9 +128,9 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
             });
 
             configure_display.exec([&] {
-                auto config = mir_connection_create_display_config(connection);
-                mir_wait_for(mir_connection_apply_display_config(connection, config));
-                mir_display_config_destroy(config);
+                auto config = mir_connection_create_display_configuration(connection);
+                mir_connection_apply_session_display_config(connection, config);
+                mir_display_config_release(config);
             });
 
             disconnect.exec([&] {
