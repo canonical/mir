@@ -326,12 +326,12 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
-    client_to_nested_mir.ready_to_accept_events.wait_for(1s);
+    ASSERT_TRUE(client_to_nested_mir.ready_to_accept_events.wait_for(60s));
 
-    devices_ready.wait_for(2s);
+    ASSERT_TRUE(devices_ready.wait_for(60s));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(initial_movement_x, initial_movement_y));
-    event_received.wait_for(2s);
+    ASSERT_TRUE(event_received.wait_for(60s));
 
     event_received.reset();
 
@@ -341,7 +341,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
         .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(second_movement_x, second_movement_y));
-    event_received.wait_for(2s);
+    ASSERT_TRUE(event_received.wait_for(60s));
 }
 
 TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
@@ -368,9 +368,9 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
-    client_to_nested_mir.ready_to_accept_events.wait_for(1s);
-    devices_ready.wait_for(2s);
+    ASSERT_TRUE(client_to_nested_mir.ready_to_accept_events.wait_for(60s));
+    ASSERT_TRUE(devices_ready.wait_for(60s));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x[2], y[2]));
-    event_received.wait_for(2s);
+    ASSERT_TRUE(event_received.wait_for(60s));
 }
