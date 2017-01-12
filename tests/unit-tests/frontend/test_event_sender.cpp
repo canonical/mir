@@ -205,7 +205,7 @@ TEST_F(EventSender, sends_input_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            auto received_input_config = mi::deserialize_input_configuration(seq.input_configuration());
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
             EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
         });
 
@@ -225,7 +225,7 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            auto received_input_config = mi::deserialize_input_configuration(seq.input_configuration());
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
             EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
         });
 
