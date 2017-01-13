@@ -148,6 +148,8 @@ struct Client
         // Remove the event handler to avoid handling spurious events unrelated
         // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
+        mir_connection_set_input_config_change_callback(connection, [](MirConnection*, void*){}, nullptr);
+
         mir_window_set_event_handler(window, null_event_handler, nullptr);
         mir_window_release_sync(window);
         mir_connection_release(connection);
@@ -1120,7 +1122,7 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
     mir_connection_apply_input_config(a_client.connection, config);
     mir_input_config_destroy(config);
 
-    EXPECT_THAT(changes_complete.wait_for(2s), Eq(true));
+    EXPECT_TRUE(changes_complete.wait_for(10s));
 
     config = mir_connection_create_input_config(a_client.connection);
     mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1154,7 +1156,7 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
     mir_connection_set_base_input_config(unfocused_client.connection, config);
     mir_input_config_destroy(config);
 
-    EXPECT_THAT(changes_complete.wait_for(2s), Eq(true));
+    EXPECT_TRUE(changes_complete.wait_for(10s));
 
     config = mir_connection_create_input_config(unfocused_client.connection);
     mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1175,18 +1177,50 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
 
     mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
 
-    mt::Signal changes_complete;
+    mt::Signal expect_no_changes;
     mir_connection_set_input_config_change_callback(
         unfocused_client.connection,
         [](MirConnection*, void* context)
         {
             static_cast<mt::Signal*>(context)->raise();
         },
-        &changes_complete
+        &expect_no_changes
         );
     mir_connection_apply_input_config(unfocused_client.connection, config);
     mir_input_config_destroy(config);
 
-    EXPECT_THAT(changes_complete.wait_for(2s), Eq(false));
-    mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*) {}, nullptr);
+    EXPECT_FALSE(expect_no_changes.wait_for(10s));
+    mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
+}
+
+TEST_F(TestClientInput, focused_client_can_change_base_configuration)
+{
+    wait_for_input_devices();
+
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(focused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        focused_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_set_base_input_config(focused_client.connection, config);
+    mir_input_config_destroy(config);
+
+    changes_complete.wait_for(10s);
+
+    config = mir_connection_create_input_config(focused_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
 }

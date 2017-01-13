@@ -384,11 +384,11 @@ MirWaitHandle* mir_connection_platform_operation(
 MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
- * Apply the input configuration TODO FIXME
+ * Apply the input configuration
  *
- * Configure the behavior of input device attached to a server. This does not
- * only affect the input device when events are dispatched to surfaces of this
- * connection, but the behavior of the devices in general.
+ * Configure the behavior of input device attached to a server. This only
+ * affects the input device when events are dispatched to surfaces of this
+ * connection.
  *
  *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] connection             The connection
@@ -398,7 +398,7 @@ void mir_connection_apply_input_config(
     MirConnection* connection, MirInputConfig const* config);
 
 /**
- * Apply as base configuration TOfO --FIXME 
+ * Apply the input configuration as base configuration for this server
  *
  * Configure the behavior of input device attached to a server. This does not
  * only affect the input device when events are dispatched to surfaces of this
