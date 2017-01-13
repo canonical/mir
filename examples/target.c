@@ -181,7 +181,7 @@ static void get_all_touch_points(const MirInputEvent *ievent, TouchState *touch)
     }
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     State *state = (State*)context;
@@ -199,7 +199,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         state->running = false;
         break;
     default:

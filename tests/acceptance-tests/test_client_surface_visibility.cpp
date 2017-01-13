@@ -81,29 +81,30 @@ private:
 
 struct MockVisibilityCallback
 {
-    MOCK_METHOD2(handle, void(MirSurface*,MirSurfaceVisibility));
+    MOCK_METHOD2(handle, void(MirWindow*,MirWindowVisibility));
 };
 
-void null_event_callback(MirSurface*, MirEvent const*, void*)
+void null_event_callback(MirWindow*, MirEvent const*, void*)
 {
 }
 
 void event_callback(MirWindow* window, MirEvent const* event, void* ctx)
 {
-    if (mir_event_get_type(event) != mir_event_type_surface)
+    if (mir_event_get_type(event) != mir_event_type_window)
         return;
-    auto sev = mir_event_get_surface_event(event);
-    if (mir_surface_event_get_attribute(sev) != mir_surface_attrib_visibility)
+    auto sev = mir_event_get_window_event(event);
+    auto attrib = mir_window_event_get_attribute(sev);
+    if (attrib != mir_window_attrib_visibility)
         return;
 
     auto const mock_callback =
         reinterpret_cast<testing::NiceMock<MockVisibilityCallback>*>(ctx);
     mock_callback->handle(
         window,
-        static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
+        static_cast<MirWindowVisibility>(mir_window_event_get_attribute_value(sev)));
 }
 
-MirSurface* create_surface(MirConnection* connection, const char* name, geom::Size size,
+MirWindow* create_surface(MirConnection* connection, const char* name, geom::Size size,
     testing::NiceMock<MockVisibilityCallback>& mock_callback)
 {
     auto const spec = mir_create_normal_window_spec(
@@ -132,7 +133,7 @@ struct Surface
     }
 
     void expect_surface_visibility_event_after(
-        MirSurfaceVisibility visibility,
+        MirWindowVisibility visibility,
         std::function<void()> const& action)
     {
         using namespace testing;
@@ -142,9 +143,9 @@ struct Surface
         Mock::VerifyAndClearExpectations(&callback);
 
         EXPECT_CALL(callback, handle(window, visibility))
-            .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
+            .WillOnce(DoAll(Invoke([&visibility](MirWindow *s, MirWindowVisibility)
                 {
-                    EXPECT_EQ(visibility, mir_surface_get_visibility(s));
+                    EXPECT_EQ(visibility, mir_window_get_visibility(s));
                 }), mt::WakeUp(&event_received)));
 
         action();
@@ -158,7 +159,7 @@ private:
     void wait_for_visible_and_focused()
     {
         expect_surface_visibility_event_after(
-            mir_surface_visibility_exposed,
+            mir_window_visibility_exposed,
             [this]
             {
                 mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
@@ -167,7 +168,7 @@ private:
         // GMock is behaving strangely, checking expectations after they
         // have been cleared, so we use spin_wait() instead.
         mt::spin_wait_for_condition_or_timeout(
-            [this] { return mir_surface_get_focus(window) == mir_surface_focused; },
+            [this] { return mir_window_get_focus_state(window) == mir_window_focus_state_focused; },
             std::chrono::seconds{2});
     }
 
@@ -224,7 +225,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
     }
 
     void expect_surface_visibility_event_after(
-        MirSurfaceVisibility visibility,
+        MirWindowVisibility visibility,
         std::function<void()> const& action)
     {
         window->expect_surface_visibility_event_after(visibility, action);
@@ -242,35 +243,35 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 TEST_F(MirSurfaceVisibilityEvent, occluded_received_when_surface_goes_off_screen)
 {
     expect_surface_visibility_event_after(
-        mir_surface_visibility_occluded,
+        mir_window_visibility_occluded,
         [this] { move_surface_off_screen(); });
 }
 
 TEST_F(MirSurfaceVisibilityEvent, exposed_received_when_surface_reenters_screen)
 {
     expect_surface_visibility_event_after(
-        mir_surface_visibility_occluded,
+        mir_window_visibility_occluded,
         [this] { move_surface_off_screen(); });
 
     expect_surface_visibility_event_after(
-        mir_surface_visibility_exposed,
+        mir_window_visibility_exposed,
         [this] { move_surface_into_screen(); });
 }
 
 TEST_F(MirSurfaceVisibilityEvent, occluded_received_when_surface_occluded_by_other_surface)
 {
     expect_surface_visibility_event_after(
-        mir_surface_visibility_occluded,
+        mir_window_visibility_occluded,
         [this] { create_larger_surface_on_top(); });
 }
 
 TEST_F(MirSurfaceVisibilityEvent, exposed_received_when_surface_raised_over_occluding_surface)
 {
     expect_surface_visibility_event_after(
-        mir_surface_visibility_occluded,
+        mir_window_visibility_occluded,
         [this] { create_larger_surface_on_top(); });
 
     expect_surface_visibility_event_after(
-        mir_surface_visibility_exposed,
+        mir_window_visibility_exposed,
         [this] { raise_surface_on_top(); });
 }

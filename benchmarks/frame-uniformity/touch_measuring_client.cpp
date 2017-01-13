@@ -52,14 +52,14 @@ MirWindow *create_window(MirConnection *connection)
     return window;
 }
 
-void input_callback(MirSurface * /* surface */, MirEvent const* event, void* context)
+void input_callback(MirWindow * /* surface */, MirEvent const* event, void* context)
 {
     auto results = static_cast<TouchSamples*>(context);
     
     results->record_pointer_coordinates(std::chrono::high_resolution_clock::now(), *event);
 }
 
-void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
+void collect_input_and_frame_timing(MirWindow *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
     mir_window_set_event_handler(surface, input_callback, results.get());
     
