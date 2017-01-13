@@ -827,8 +827,8 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
 
     MirPersistentId* result = nullptr;
     mir_wait_for(mir_window_request_persistent_id_helper(window,
-                                                  &assign_surface_id_result,
-                                                  &result));
+                                                         &assign_surface_id_result,
+                                                         &result));
     return result;
 }
 
