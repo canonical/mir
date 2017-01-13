@@ -193,6 +193,8 @@ void mf::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
+    response->set_coordinate_translation_present(translator->translation_supported());
+
     done->Run();
 }
 

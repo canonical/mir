@@ -29,6 +29,7 @@ class DefaultCoordinateTranslator : public CoordinateTranslator
 {
 public:
     geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface, int32_t x, int32_t y);
+    bool translation_supported() const override;
 };
 
 }
