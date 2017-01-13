@@ -56,6 +56,22 @@ using namespace std::chrono_literals;
 
 namespace
 {
+size_t get_index_of(MirInputConfiguration const* config, std::string const& id)
+{
+    for (size_t i = 0, e = mir_input_config_device_count(config);i != e;++i)
+    {
+        auto const* device = mir_input_config_get_device(config, i);
+        if (mir_input_device_get_unique_id(device) == id)
+            return i;
+    }
+    return mir_input_config_device_count(config);
+}
+
+bool contains(MirInputConfiguration const* config, std::string const& id)
+{
+    return mir_input_config_device_count(config) != get_index_of(config, id);
+}
+
 struct MockEventFilter : public mi::EventFilter
 {
     // Work around GMock wanting to know how to construct MirEvent
@@ -128,10 +144,22 @@ struct NestedInputWithMouse : NestedInput
 struct ExposedSurface
 {
 public:
+    using UniqueInputConfig = std::unique_ptr<MirInputConfiguration, void(*)(MirInputConfiguration const*)>;
     ExposedSurface(std::string const& connect_string)
     {
         // Ensure the nested server posts a frame
         connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
+
+        mir_connection_set_input_config_change_callback(
+            connection,
+            [](MirConnection*, void* context)
+            {
+                auto* surf = static_cast<ExposedSurface*>(context);
+                auto config = surf->get_input_config();
+                surf->input_config(config.get());
+            },
+            this);
+
         window = mtf::make_any_surface(connection);
         mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
@@ -154,6 +182,22 @@ public:
 
         if (exposed && focused)
             ready_to_accept_events.raise();
+    }
+
+    UniqueInputConfig get_input_config()
+    {
+        auto config = mir_connection_create_input_config(connection);
+        return {config,&mir_input_config_destroy};
+    }
+
+    void on_input_config(std::function<void(MirInputConfiguration const*)> const& handler)
+    {
+        input_config = handler;
+    }
+
+    void apply_config(MirInputConfiguration* configuration)
+    {
+        mir_connection_apply_input_configuration(connection, configuration);
     }
 
     static void handle_event(MirSurface*, MirEvent const* ev, void* context)
@@ -182,12 +226,13 @@ public:
 protected:
     ExposedSurface(ExposedSurface const&) = delete;
     ExposedSurface& operator=(ExposedSurface const&) = delete;
-    
+
 private:
     MirConnection *connection;
     MirWindow *window;
     bool exposed{false};
     bool focused{false};
+    std::function<void(MirInputConfiguration const* confg)> input_config{[](MirInputConfiguration const*){}};
 };
 
 }
@@ -376,3 +421,42 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x[2], y[2]));
     event_received.wait_for(2s);
 }
+
+TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
+{
+    auto const acceleration_bias = 0.9;
+    std::string const uid{"mouse-uid"};
+
+    mt::Signal fake_device_received;
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    ExposedSurface client_to_nested(nested_mir.new_connection());
+    client_to_nested.on_input_config(
+        [&](MirInputConfiguration const* config)
+        {
+            if (contains(config, uid))
+                fake_device_received.raise();
+        });
+    client_to_nested.ready_to_accept_events.wait_for(4s);
+
+    std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer})
+    };
+
+    ASSERT_TRUE(fake_device_received.wait_for(4s));
+
+    auto device_config = client_to_nested.get_input_config();
+    auto device = mir_input_config_get_mutable_device(device_config.get(), get_index_of(device_config.get(), uid));
+    auto ptr_conf = mir_input_device_get_mutable_pointer_configuration(device);
+    mir_pointer_configuration_set_acceleration_bias(ptr_conf, acceleration_bias);
+    fake_device_received.reset();
+    client_to_nested.apply_config(device_config.get());
+
+    EXPECT_TRUE(fake_device_received.wait_for(2s));
+
+    device_config = client_to_nested.get_input_config();
+    device = mir_input_config_get_mutable_device(device_config.get(), get_index_of(device_config.get(), uid));
+    ptr_conf = mir_input_device_get_mutable_pointer_configuration(device);
+
+    EXPECT_THAT(mir_pointer_configuration_get_acceleration_bias(ptr_conf), acceleration_bias);
+}
+

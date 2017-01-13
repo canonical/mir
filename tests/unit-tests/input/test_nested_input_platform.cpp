@@ -26,6 +26,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_report.h"
+#include "mir/input/pointer_settings.h"
 #include "mir/input/mir_input_configuration.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
@@ -189,4 +190,21 @@ TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
                                  60.0f, 35.0f);
 
     mock_host_connection.event_callback(*event, source_surface);
+}
+
+TEST_F(TestNestedInputPlatform, device_configurations_are_forwarded_to_host_connection)
+{
+    auto nested_input_device = capture_input_device(a_mouse);
+    NiceMock<mtd::MockInputSink> event_sink;
+    mi::DefaultEventBuilder builder(MirInputDeviceId{18}, mir::cookie::Authority::create(), mt::fake_shared(mock_seat));
+
+    ASSERT_THAT(nested_input_device, Ne(nullptr));
+    nested_input_device->start(&event_sink, &builder);
+
+    mi::PointerSettings left_handed = nested_input_device->get_pointer_settings().value();
+    left_handed.handedness = mir_pointer_handedness_left;
+
+    EXPECT_CALL(mock_host_connection, apply_input_configuration(_));
+
+    nested_input_device->apply_settings(left_handed);
 }
