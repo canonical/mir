@@ -76,6 +76,11 @@ public:
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
 };
 
+// TODO There already is a test new display config acceptance tests so these can be
+// removed once we remove these functions.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"{
+
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
     bool configure_display_is_allowed(mf::SessionCredentials const&) override
@@ -118,25 +123,18 @@ struct LegacyDisplayConfigurationTest : mtf::ConnectedClientWithASurface
 
 TEST_F(LegacyDisplayConfigurationTest, display_configuration_reaches_client)
 {
-// TODO There already is a test new display config acceptance tests so these can be
-// removed once we remove these functions.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"{
     auto configuration = mir_connection_create_display_config(connection);
 
     EXPECT_THAT(*configuration,
                 mt::DisplayConfigMatches(std::cref(stub_display_config)));
 
     mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
 }
 
 namespace
 {
 void display_change_handler(MirConnection* connection, void* context)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto configuration = mir_connection_create_display_config(connection);
 
     EXPECT_THAT(*configuration,
@@ -145,15 +143,12 @@ void display_change_handler(MirConnection* connection, void* context)
 
     auto callback_called = static_cast<std::atomic<bool>*>(context);
     *callback_called = true;
-#pragma GCC diagnostic pop
 }
 }
 
 TEST_F(LegacyDisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     std::atomic<bool> callback_called{false};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_connection_set_display_config_change_callback(connection, &display_change_handler, &callback_called);
 
     MirConnection* unsubscribed_connection = mir_connect_sync(new_connection().c_str(), "notifier");
@@ -180,7 +175,6 @@ TEST_F(LegacyDisplayConfigurationTest, hw_display_change_notification_reaches_al
                 mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
 
     mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
 
     mir_connection_release(unsubscribed_connection);
 }
@@ -191,8 +185,6 @@ TEST_F(LegacyDisplayConfigurationTest, display_change_request_for_unauthorized_c
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto configuration = mir_connection_create_display_config(connection);
 
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
@@ -200,7 +192,6 @@ TEST_F(LegacyDisplayConfigurationTest, display_change_request_for_unauthorized_c
                 testing::HasSubstr("not authorized to apply display configurations"));
 
     mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
     mir_connection_release(connection);
 }
 
@@ -244,31 +235,22 @@ struct DisplayClient : SimpleClient
 
     void apply_config()
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto configuration = mir_connection_create_display_config(connection);
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
         EXPECT_STREQ("", mir_connection_get_error_message(connection));
         mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
     }
 
     std::unique_ptr<MirDisplayConfiguration,void(*)(MirDisplayConfiguration*)> get_base_config()
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         return {mir_connection_create_display_config(connection),
                 mir_display_config_destroy};
-#pragma GCC diagnostic pop
     }
 
     void set_base_config(MirDisplayConfiguration* configuration)
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
         EXPECT_STREQ("", mir_connection_get_error_message(connection));
-#pragma GCC diagnostic pop
     }
 };
 }
@@ -303,13 +285,10 @@ TEST_F(LegacyDisplayConfigurationTest, focusing_client_with_display_config_confi
     /* Connect the simple client. After this the simple client should have the focus. */
     simple_client.connect();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     /* Apply the display config while not focused */
     auto const configuration = mir_connection_create_display_config(connection);
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
     mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
 
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
@@ -392,12 +371,9 @@ void new_display_config_matches(MirConnection* connection, void* ctx)
 {
     auto context = reinterpret_cast<DisplayConfigMatchingContext*>(ctx);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto config = mir_connection_create_display_config(connection);
     context->matcher(config);
     mir_display_config_destroy(config);
-#pragma GCC diagnostic pop
     context->done.raise();
 }
 }
@@ -528,15 +504,12 @@ TEST_F(LegacyDisplayConfigurationTest,
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto configuration = mir_connection_create_display_config(connection);
     mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
     EXPECT_THAT(mir_connection_get_error_message(connection),
                 testing::HasSubstr("not authorized to set base display configuration"));
 
     mir_display_config_destroy(configuration);
-#pragma GCC diagnostic pop
     mir_connection_release(connection);
 }
 
@@ -592,3 +565,4 @@ TEST_F(LegacyDisplayConfigurationTest,
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 }
+#pragma GCC diagnostic pop
