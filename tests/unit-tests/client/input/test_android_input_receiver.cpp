@@ -210,8 +210,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_all_motion_events)
 
     flush_channels();
 
-    // Consume 3+1 times, since we'll only notice we're drained on the 4th
-    for (int j = 0; j < nevents+1; ++j)
+    for (int j = 0; j < nevents; ++j)
     {
         EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(),
                                             next_event_timeout));

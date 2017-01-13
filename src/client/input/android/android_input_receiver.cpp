@@ -151,14 +151,18 @@ void mircva::InputReceiver::woke()
         //       get passed on to someone else - passed into here:
         input_consumer->sendFinishedSignal(event_sequence_id, true);
     }
-
-    /*
-     * droidinput::OK means one OR MORE events pending. And they are probably
-     * not batched or deferred so we must wake() until we get something other
-     * than OK (WOULD_BLOCK or an error).
-     */
-    if (result == droidinput::OK || input_consumer->hasDeferredEvent())
+    if (input_consumer->hasDeferredEvent())
+    {
+        // input_consumer->consume() can read an event from the fd and find that the event cannot
+        // be added to the current batch.
+        //
+        // In this case, it emits the current batch and leaves the new event pending.
+        // This means we have an event we need to dispatch, but as it has already been read from
+        // the fd we cannot rely on being woken by the fd being readable.
+        //
+        // So, we ensure we'll appear dispatchable by pushing an event to the wakeup pipe.
         wake();
+    }
 }
 
 void mircva::InputReceiver::wake()
