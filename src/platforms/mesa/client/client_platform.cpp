@@ -63,7 +63,7 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 
 struct AuthFdContext
 {
-    mir_auth_fd_callback cb;
+    MirAuthFdCallback cb;
     void* context;
 };
 
@@ -79,7 +79,7 @@ void auth_fd_cb(
     delete ctx;
 }
 
-void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
+void auth_fd_ext(MirConnection* conn, MirAuthFdCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_fd);
@@ -89,7 +89,7 @@ void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 
 struct AuthMagicContext
 {
-    mir_auth_magic_callback cb;
+    MirAuthMagicCallback cb;
     void* context;
 };
 
@@ -103,7 +103,7 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
     delete ctx;
 }
 
-void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
+void auth_magic_ext(MirConnection* conn, int magic, MirAuthMagicCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_magic);

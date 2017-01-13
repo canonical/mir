@@ -423,7 +423,7 @@ void mir_window_spec_set_input_shape(MirWindowSpec* spec,
  * \param [in] context    Additional argument to be passed to callback
  */
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                       mir_window_event_callback callback,
+                                       MirWindowEventCallback callback,
                                        void* context);
 
 /**
@@ -561,7 +561,7 @@ void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec);
  *                                      case of an error.
  */
 void mir_window_create(MirWindowSpec* requested_specification,
-                       mir_window_callback callback, void* context);
+                       MirWindowCallback callback, void* context);
 
 /**
  * Create a window from a given specification and wait for the result.
@@ -584,7 +584,7 @@ MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification);
  */
 void mir_window_release(
     MirWindow* window,
-    mir_window_callback callback,
+    MirWindowCallback callback,
     void *context);
 
 /**
@@ -614,7 +614,7 @@ bool mir_window_is_valid(MirWindow* window);
  *   \param [in] context        Additional argument to be passed to callback
  */
 void mir_window_set_event_handler(MirWindow* window,
-                                  mir_window_event_callback callback,
+                                  MirWindowEventCallback callback,
                                   void* context);
 
 /**
@@ -753,7 +753,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in,out] context   User data passed to completion callback.
  * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
  */
-MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context);
+MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
  * \brief Request a persistent ID for a window and wait for the result
