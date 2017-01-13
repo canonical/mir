@@ -123,7 +123,8 @@ void mircva::InputReceiver::woke()
      * wake() or real input channel event.
      */
     if (read(wake_fd, &dummy, sizeof(dummy)) != sizeof(dummy) &&
-        errno != EAGAIN)
+        errno != EAGAIN &&
+        errno != EINTR)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
