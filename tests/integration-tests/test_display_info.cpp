@@ -33,51 +33,7 @@ namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 
-namespace
-{
-
-class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
-{
-public:
-    std::vector<MirPixelFormat> supported_pixel_formats() override
-    {
-        return pixel_formats;
-    }
-
-    static std::vector<MirPixelFormat> const pixel_formats;
-};
-
-std::vector<MirPixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    mir_pixel_format_argb_8888,
-    mir_pixel_format_xbgr_8888,
-    mir_pixel_format_bgr_888
-};
-
-class StubPlatform : public mtd::NullPlatform
-{
-public:
-    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
-    {
-        return mir::make_module_ptr<StubGraphicBufferAllocator>();
-    }
-};
-
-struct ServerConfig : mtf::TestingServerConfiguration
-{
-    std::shared_ptr<mg::Platform> the_graphics_platform() override
-    {
-        if (!platform)
-            platform = std::make_shared<StubPlatform>();
-
-        return platform;
-    }
-
-    std::shared_ptr<mg::Platform> platform;
-};
-
-using AvailableSurfaceFormats = mtf::BasicClientServerFixture<ServerConfig>;
-
-}
+using AvailableSurfaceFormats = mtf::BasicClientServerFixture<mtf::TestingServerConfiguration>;
 
 TEST_F(AvailableSurfaceFormats, reach_clients)
 {
@@ -91,5 +47,7 @@ TEST_F(AvailableSurfaceFormats, reach_clients)
 
     formats.resize(returned_format_size);
 
-    EXPECT_THAT(formats, ContainerEq(StubGraphicBufferAllocator::pixel_formats));
+    EXPECT_THAT(
+        formats,
+        ContainerEq(server_config().the_buffer_allocator()->supported_pixel_formats()));
 }
