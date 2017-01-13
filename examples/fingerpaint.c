@@ -431,7 +431,18 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirPixelFormat pixel_format = mir_output_get_current_pixel_format(output);
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
+    size_t num_pfs = mir_output_get_num_pixel_formats(output);
+
+    for (size_t i = 0; i < num_pfs; i++)
+    {
+        MirPixelFormat f = mir_output_get_pixel_format(output, i);
+        if (BYTES_PER_PIXEL(f) == 4)
+        {
+            pixel_format = f;
+            break;
+        }
+    }
 
     if (pixel_format == mir_pixel_format_invalid)
     {
