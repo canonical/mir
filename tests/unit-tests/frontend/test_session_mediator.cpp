@@ -34,6 +34,7 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/scene/coordinate_translator.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/test/doubles/mock_display.h"
 #include "mir/test/doubles/mock_display_changer.h"
@@ -233,6 +234,18 @@ struct StubScreencast : mtd::NullScreencast
     mtd::StubBuffer stub_buffer;
 };
 
+struct NullCoordinateTranslator : ms::CoordinateTranslator
+{
+    geom::Point surface_to_screen(std::shared_ptr<mf::Surface>, int32_t x, int32_t y) override
+    {
+        return {x, y};
+    }
+    bool translation_supported() const override
+    {
+        return true;
+    }
+};
+
 struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
@@ -251,7 +264,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector,
             std::make_shared<mi::BuiltinCursorImages>(),
-            nullptr,
+            std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_hub)}
@@ -277,7 +290,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullEventSinkFactory>(),
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, std::make_shared<mtd::NullScreencast>(),
-            nullptr, nullptr, nullptr,
+            nullptr, nullptr, 
+            std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_hub));
@@ -291,7 +305,8 @@ struct SessionMediator : public ::testing::Test
             surface_pixel_formats, report,
             std::make_shared<mtd::NullEventSinkFactory>(),
             std::make_shared<mtd::NullMessageSender>(),
-            resource_cache, screencast, &connector, nullptr, nullptr,
+            resource_cache, screencast, &connector, nullptr,
+            std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_hub));
@@ -347,7 +362,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
-        resource_cache, stub_screencast, context, nullptr, nullptr,
+        resource_cache, stub_screencast, context, nullptr,
+        std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_hub)};
@@ -804,7 +820,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report, sink_factory,
         mock_sender,
-        resource_cache, stub_screencast, nullptr, nullptr, nullptr,
+        resource_cache, stub_screencast, nullptr, nullptr,
+        std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_hub)};
