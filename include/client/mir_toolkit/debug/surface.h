@@ -62,6 +62,7 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow *window);
 bool mir_debug_window_coords_to_screen(MirWindow *window,
                                        int x, int y,
                                        int* screen_x, int* screen_y);
+//__attribute__((deprecated("Use mir_debug_window_id() instead")));
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push

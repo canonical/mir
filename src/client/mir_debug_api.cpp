@@ -56,7 +56,7 @@ bool mir_debug_surface_coords_to_screen(MirSurface* surface,
                                         int x, int y,
                                         int* screen_x, int* screen_y)
 {
-    return mir_debug_window_coords_to_screen(surface, x, y, screen_x, screen_y);
+    return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y);
 }
 
 //#pragma GCC diagnostic pop
