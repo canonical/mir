@@ -35,6 +35,11 @@ namespace mt = mir::test;
 
 namespace
 {
+unsigned int const default_width{1};
+unsigned int const default_height{1};
+MirPixelFormat const default_pixel_format{mir_pixel_format_abgr_8888};
+MirRectangle const default_capture_region{0, 0, 1, 1};
+
 struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
     MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
@@ -42,9 +47,6 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 
 struct Screencast : mtf::HeadlessInProcessServer
 {
-    MirScreencastParameters default_screencast_params {
-        {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-
     MockSessionAuthorizer mock_authorizer;
 
     void SetUp() override
@@ -53,6 +55,17 @@ struct Screencast : mtf::HeadlessInProcessServer
             { return mt::fake_shared(mock_authorizer); });
 
         mtf::HeadlessInProcessServer::SetUp();
+    }
+
+    MirScreencastSpec* create_default_screencast_spec(MirConnection* connection)
+    {
+        MirScreencastSpec* spec = mir_create_screencast_spec(connection);
+        mir_screencast_spec_set_width(spec, default_width);
+        mir_screencast_spec_set_height(spec, default_height);
+        mir_screencast_spec_set_pixel_format(spec, default_pixel_format);
+        mir_screencast_spec_set_capture_region(spec, &default_capture_region);
+
+        return spec;
     }
 };
 }
@@ -68,26 +81,30 @@ TEST_F(Screencast, with_invalid_params_fails)
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    MirScreencastParameters params = default_screencast_params;
-    params.width = params.height = 0;
-    auto screencast = mir_connection_create_screencast_sync(connection, &params);
+    auto spec = create_default_screencast_spec(connection);
+
+    mir_screencast_spec_set_height(spec, 0);
+    auto screencast = mir_screencast_create_sync(spec);
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
 
-    params = default_screencast_params;
-    params.region.width = params.region.height = 0;
-    screencast = mir_connection_create_screencast_sync(connection, &params);
+    mir_screencast_spec_set_height(spec, default_height);
+
+    MirRectangle invalid_region{0, 0, 1, 0};
+    mir_screencast_spec_set_capture_region(spec, &invalid_region);
+    screencast = mir_screencast_create_sync(spec);
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
 
-    params = default_screencast_params;
-    params.pixel_format = mir_pixel_format_invalid;
+    mir_screencast_spec_set_capture_region(spec, &default_capture_region);
+    mir_screencast_spec_set_pixel_format(spec, mir_pixel_format_invalid);
 
-    screencast = mir_connection_create_screencast_sync(connection, &params);
+    screencast = mir_screencast_create_sync(spec);
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
+    mir_screencast_spec_release(spec);
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
@@ -101,9 +118,11 @@ TEST_F(Screencast, when_unauthorized_fails)
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
+    auto spec = create_default_screencast_spec(connection);
+    auto screencast = mir_screencast_create_sync(spec);
     EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
+    mir_screencast_spec_release(spec);
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
