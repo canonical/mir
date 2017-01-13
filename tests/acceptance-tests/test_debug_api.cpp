@@ -27,6 +27,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
+#include "mir_toolkit/extensions/window_coordinate_translation.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,6 +37,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 namespace mtf = mir_test_framework;
+using namespace testing;
 
 namespace
 {
@@ -77,6 +79,10 @@ public:
         int32_t /*y*/) override
     {
         return testpoint;
+    }
+    bool translation_supported() const override
+    {
+        return true;
     }
 };
 
@@ -143,7 +149,7 @@ private:
 };
 }
 
-TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
+TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates_deprecated)
 {
     start_server_with_debug(true);
 
@@ -177,7 +183,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     mir_window_release_sync(window);
 }
 
-TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
+TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug_deprecated)
 {
     start_server_with_debug(false);
 
@@ -189,6 +195,58 @@ TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
     EXPECT_FALSE(mir_debug_window_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
 
     mir_window_release_sync(window);
+}
+
+TEST_F(DebugAPI, is_overrideable_deprecated)
+{
+    server.override_the_coordinate_translator([&]()
+        ->std::shared_ptr<mir::scene::CoordinateTranslator>
+        {
+            return std::make_shared<SimpleCoordinateTranslator>();
+        });
+
+    start_server_with_debug(false);
+
+    auto window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
+
+    int screen_x, screen_y;
+
+    EXPECT_TRUE(mir_debug_window_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
+    EXPECT_EQ(testpoint.x.as_int(), screen_x);
+    EXPECT_EQ(testpoint.y.as_int(), screen_y);
+
+    mir_window_release_sync(window);
+}
+
+TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
+{
+    start_server_with_debug(true);
+
+    mir::geometry::Rectangle window_location{{200, 100}, {800, 600}};
+
+    set_surface_placement(window_location);
+
+    auto window = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_window_is_valid(window));
+
+    int screen_x, screen_y, x, y;
+    x = 35, y = 21;
+
+    auto ext = mir_extension_window_coordinate_translation_v1(connection);
+    ASSERT_THAT(ext, Not(IsNull()));
+    ext->window_translate_coordinates(window, x, y, &screen_x, &screen_y);
+    EXPECT_EQ(x + window_location.top_left.x.as_int(), screen_x);
+    EXPECT_EQ(y + window_location.top_left.y.as_int(), screen_y);
+
+    mir_window_release_sync(window);
+}
+
+TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
+{
+    start_server_with_debug(false);
+    auto ext = mir_extension_window_coordinate_translation_v1(connection);
+    EXPECT_THAT(ext, IsNull());
 }
 
 TEST_F(DebugAPI, is_overrideable)
@@ -206,7 +264,9 @@ TEST_F(DebugAPI, is_overrideable)
 
     int screen_x, screen_y;
 
-    EXPECT_TRUE(mir_debug_window_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
+    auto ext = mir_extension_window_coordinate_translation_v1(connection);
+    ASSERT_THAT(ext, Not(IsNull()));
+    ext->window_translate_coordinates(window, 0, 0, &screen_x, &screen_y);
     EXPECT_EQ(testpoint.x.as_int(), screen_x);
     EXPECT_EQ(testpoint.y.as_int(), screen_y);
 
