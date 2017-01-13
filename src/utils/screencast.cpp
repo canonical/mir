@@ -119,13 +119,14 @@ MirRectangle get_screen_region_from(MirDisplayConfig const& display_config, uint
     throw std::runtime_error("Couldn't get screen region of specified output");
 }
 
-MirScreencastParameters get_screencast_params(MirConnection* connection,
+ScreencastConfiguration get_screencast_config(MirConnection* connection,
                                               MirDisplayConfig const& display_config,
                                               std::vector<int> const& requested_size,
                                               std::vector<int> const& requested_region,
                                               uint32_t output_id)
 {
     ScreencastConfiguration config;
+
     if (requested_region.size() == 4)
     {
         /* TODO: the region should probably be validated
@@ -161,7 +162,7 @@ MirScreencastParameters get_screencast_params(MirConnection* connection,
     return config;
 }
 
-double get_capture_rate_limit(MirDisplayConfig const& display_config, MirScreencastParameters const& params)
+double get_capture_rate_limit(MirDisplayConfig const& display_config, ScreencastConfiguration const& config)
 {
     mir::geometry::Rectangle screencast_area{
         {config.region.left,  config.region.top},
