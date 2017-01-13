@@ -247,7 +247,7 @@ typedef enum MirBufferLayout
 } MirBufferLayout;
 
 /**
- * Retrieved information about a MirSurface. This is most useful for learning
+ * Retrieved information about a MirWindow. This is most useful for learning
  * how and where to write to a 'mir_buffer_usage_software' surface.
  */
 typedef struct MirGraphicsRegion
@@ -375,11 +375,10 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
-typedef struct MirInputConfiguration MirInputConfiguration;
-typedef MirInputConfiguration MirInputConfig;
+typedef struct MirInputConfig MirInputConfig;
 typedef struct MirInputDevice MirInputDevice;
-typedef struct MirPointerConfiguration MirPointerConfiguration;
-typedef struct MirTouchpadConfiguration MirTouchpadConfiguration;
+typedef struct MirPointerConfig MirPointerConfig;
+typedef struct MirTouchpadConfig MirTouchpadConfig;
 
 /**
  * MirScreencastParameters is the structure of required information that

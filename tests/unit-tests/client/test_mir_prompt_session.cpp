@@ -50,12 +50,12 @@ struct MockProtobufServer : mclr::DisplayServer
     MOCK_METHOD3(start_prompt_session,
                  void(
                       mir::protobuf::PromptSessionParameters const* /*request*/,
-                      mir::protobuf::Void* /*response*/,
+                      mir::protobuf::PromptSession* /*response*/,
                       google::protobuf::Closure* /*done*/));
 
     MOCK_METHOD3(stop_prompt_session,
                  void(
-                      mir::protobuf::Void const* /*request*/,
+                      mir::protobuf::PromptSession const* /*request*/,
                       mir::protobuf::Void* /*response*/,
                       google::protobuf::Closure* /*done*/));
 };
@@ -67,7 +67,7 @@ public:
 
     void start_prompt_session(
         mir::protobuf::PromptSessionParameters const* /*request*/,
-        mir::protobuf::Void* response,
+        mir::protobuf::PromptSession* response,
         google::protobuf::Closure* done) override
     {
         if (server_thread.joinable())
@@ -81,7 +81,7 @@ public:
     }
 
     void stop_prompt_session(
-        mir::protobuf::Void const* /*request*/,
+        mir::protobuf::PromptSession const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* done) override
     {

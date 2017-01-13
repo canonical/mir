@@ -36,9 +36,9 @@ public:
     VisibleSurface& operator=(VisibleSurface const&) = delete;
 
     ~VisibleSurface();
-    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context);
-    void set_visibility(MirSurface* surf, bool vis);
-    operator MirSurface*() const;
+    static void event_callback(MirWindow* surf, MirEvent const* ev, void* context);
+    void set_visibility(MirWindow* surf, bool vis);
+    operator MirWindow*() const;
 private:
     std::mutex mutex;
     std::condition_variable cv;

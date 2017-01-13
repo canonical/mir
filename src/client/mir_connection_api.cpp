@@ -292,14 +292,14 @@ MirWaitHandle* mir_connection_set_base_display_config(
     }
 }
 
-MirInputConfiguration* mir_connection_create_input_config(
+MirInputConfig* mir_connection_create_input_config(
     MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
 
-    auto devices = connection->the_input_devices();
-    return new MirInputConfiguration{devices->devices()};
+    auto wrapper = connection->the_input_devices();
+    return new MirInputConfig{wrapper->devices()};
 }
 catch (std::exception const& ex)
 {
@@ -318,7 +318,7 @@ void mir_connection_set_input_config_change_callback(
     devices->set_change_callback([connection, context, callback]{callback(connection, context);});
 }
 
-void mir_input_config_destroy(MirInputConfiguration const* config)
+void mir_input_config_destroy(MirInputConfig const* config)
 {
     delete config;
 }

@@ -143,7 +143,7 @@ void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*su
 {
 }
 
-void mtd::StubSession::send_input_config(MirInputConfiguration const& /*config*/)
+void mtd::StubSession::send_input_config(MirInputConfig const& /*config*/)
 {
 }
 

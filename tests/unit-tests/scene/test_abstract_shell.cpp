@@ -382,15 +382,15 @@ TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
     auto const surface_id = shell.create_surface(session, params, nullptr);
     auto const surface = session->surface(surface_id);
 
-    MirSurfaceState const state{mir_surface_state_fullscreen};
+    MirWindowState const state{mir_window_state_fullscreen};
 
-    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_surface_attrib_state, state))
+    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_window_attrib_state, state))
         .WillOnce(WithArg<1>(Invoke([](std::shared_ptr<ms::Surface> const& surface)
-             { surface->configure(mir_surface_attrib_state, mir_surface_state_maximized); return mir_surface_state_maximized; })));
+             { surface->configure(mir_window_attrib_state, mir_window_state_maximized); return mir_window_state_maximized; })));
 
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_state, mir_surface_state_maximized));
+    EXPECT_CALL(mock_surface, configure(mir_window_attrib_state, mir_window_state_maximized));
 
-    shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_fullscreen);
+    shell.set_surface_attribute(session, surface, mir_window_attrib_state, mir_window_state_fullscreen);
 }
 
 TEST_F(AbstractShell, as_focus_controller_set_focus_to_notifies_session_event_sink)

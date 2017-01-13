@@ -21,9 +21,9 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -53,11 +53,11 @@ MirInputDevice from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
     auto kbd_conf = device->keyboard_configuration();
 
     if (ptr_conf.is_set())
-        conf.set_pointer_configuration(ptr_conf.value());
+        conf.set_pointer_config(ptr_conf.value());
     if (tpd_conf.is_set())
-        conf.set_touchpad_configuration(tpd_conf.value());
+        conf.set_touchpad_config(tpd_conf.value());
     if (kbd_conf.is_set())
-        conf.set_keyboard_configuration(kbd_conf.value());
+        conf.set_keyboard_config(kbd_conf.value());
 
     return conf;
 }
@@ -291,7 +291,7 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
-    config.add_device_configuration(from_handle(handle));
+    config.add_device_config(from_handle(handle));
     sink->handle_input_config_change(config);
 
     for (auto const& observer : observers)

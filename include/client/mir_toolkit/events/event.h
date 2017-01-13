@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -48,7 +48,7 @@ typedef enum
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
     mir_event_type_keymap,
-    mir_event_type_input_configuration,
+    mir_event_type_input_configuration, /*  __attribute__ ((deprecated("use the input config change callback and mir_event_type_input_device_state instead"))), */
     mir_event_type_surface_output, /* __attribute__ ((deprecated("use mir_event_type_window_output instead"))), */
     mir_event_type_window_output = mir_event_type_surface_output,
     mir_event_type_input_device_state,
@@ -57,17 +57,21 @@ typedef enum
 } MirEventType;
 #pragma GCC diagnostic pop
 
-typedef struct MirSurfaceEvent MirSurfaceEvent;
+typedef struct MirSurfaceEvent MirSurfaceEvent; /* __attribute__ ((deprecated("use MirWindowEvent instead"))); */
+typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
-typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent;
+typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent; /* __attribute__ ((deprecated("use MirCloseWindowEvent instead"))); */
+typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
-typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
+typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
+typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
+typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
-typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent; /* __attribute__ ((deprecated("use MirWindowPlacementEvent instead"))); */
+typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
 
@@ -81,11 +85,13 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/surface_event.h"
+#include "mir_toolkit/events/window_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/input_configuration_event.h"
 #include "mir_toolkit/events/surface_output_event.h"
+#include "mir_toolkit/events/window_output_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 
 #ifdef __cplusplus
@@ -125,6 +131,17 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  * \return           The associated MirSurfaceEvent
  */
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event);
+/* __attribute__ ((deprecated("use mir_event_get_window_event instead"))); */
+
+/**
+ * Retrieve the MirWindowEvent associated with a MirEvent of
+ * type mir_event_type_window. See <mir_toolkit/events/surface_event.h>
+ * for accessors.
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowEvent
+ */
+MirWindowEvent const* mir_event_get_window_event(MirEvent const* event);
 
 /**
  * Retrieve the MirResizeEvent associated with a MirEvent of
@@ -185,7 +202,7 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
 /**
- * Retrieve the MirInputConfiguration associated with a MirEvent of
+ * Retrieve the MirInputConfig associated with a MirEvent of
  * type mir_event_type_input_configuration. The event signifies that the
  * input device configuration has changed.
  *
@@ -213,6 +230,22 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \return           The associated MirSurfaceOutputEvent
  */
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event);
+/* __attribute__((deprecated("use mir_event_get_window_output_event))) */
+
+/**
+ * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
+ * mir_event_type_window_output. The event signifies that the properties
+ * of the output the window is displayed upon have changed.
+ *
+ * A MirWindowOutputEvent is generated either when the properties of the
+ * output the window is primarily on change (for example: by user configuration
+ * of resolution) or when the output the window is primarily on changes
+ * (for example: when a user moves the window from one monitor to another).
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowOutputEvent
+ */
+MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* event);
 
 /**
  * Retrieve the MirInputDeviceStateEvent associated with a MirEvent of
@@ -234,6 +267,17 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \return           The associated MirSurfacePlacementEvent
  */
 MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
+/* __attribute__((deprecated("use mir_event_get_window_placement_event))) */
+
+/**
+ * Retrieve the MirWindowPlacementEvent associated with a MirEvent of
+ * type mir_event_type_window_placement. The event signifies that the
+ * the server has fulfilled a request for relative window placement.
+ *
+ * \param [in] event The event
+ * \return           The associated MirWindowPlacementEvent
+ */
+MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event);
 
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

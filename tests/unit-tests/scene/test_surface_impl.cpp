@@ -102,7 +102,7 @@ TEST_F(Surface, attributes)
     using namespace testing;
 
     EXPECT_THROW({
-        surface->configure(static_cast<MirSurfaceAttrib>(111), 222);
+        surface->configure(static_cast<MirWindowAttrib>(111), 222);
     }, std::logic_error);
 }
 
@@ -110,60 +110,60 @@ TEST_F(Surface, types)
 {
     using namespace testing;
 
-    EXPECT_EQ(mir_surface_type_normal, surface->type());
+    EXPECT_EQ(mir_window_type_normal, surface->type());
 
-    EXPECT_EQ(mir_surface_type_utility,
-              surface->configure(mir_surface_attrib_type,
-                             mir_surface_type_utility));
-    EXPECT_EQ(mir_surface_type_utility, surface->type());
+    EXPECT_EQ(mir_window_type_utility,
+              surface->configure(mir_window_attrib_type,
+                             mir_window_type_utility));
+    EXPECT_EQ(mir_window_type_utility, surface->type());
 
     EXPECT_THROW({
-        surface->configure(mir_surface_attrib_type, 999);
+        surface->configure(mir_window_attrib_type, 999);
     }, std::logic_error);
     EXPECT_THROW({
-        surface->configure(mir_surface_attrib_type, -1);
+        surface->configure(mir_window_attrib_type, -1);
     }, std::logic_error);
-    EXPECT_EQ(mir_surface_type_utility, surface->type());
+    EXPECT_EQ(mir_window_type_utility, surface->type());
 
-    EXPECT_EQ(mir_surface_type_dialog,
-              surface->configure(mir_surface_attrib_type,
-                             mir_surface_type_dialog));
-    EXPECT_EQ(mir_surface_type_dialog, surface->type());
+    EXPECT_EQ(mir_window_type_dialog,
+              surface->configure(mir_window_attrib_type,
+                             mir_window_type_dialog));
+    EXPECT_EQ(mir_window_type_dialog, surface->type());
 
-    EXPECT_EQ(mir_surface_type_freestyle,
-              surface->configure(mir_surface_attrib_type,
-                             mir_surface_type_freestyle));
-    EXPECT_EQ(mir_surface_type_freestyle, surface->type());
+    EXPECT_EQ(mir_window_type_freestyle,
+              surface->configure(mir_window_attrib_type,
+                             mir_window_type_freestyle));
+    EXPECT_EQ(mir_window_type_freestyle, surface->type());
 }
 
 TEST_F(Surface, states)
 {
     using namespace testing;
 
-    EXPECT_EQ(mir_surface_state_restored, surface->state());
+    EXPECT_EQ(mir_window_state_restored, surface->state());
 
-    EXPECT_EQ(mir_surface_state_vertmaximized,
-              surface->configure(mir_surface_attrib_state,
-                             mir_surface_state_vertmaximized));
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+    EXPECT_EQ(mir_window_state_vertmaximized,
+              surface->configure(mir_window_attrib_state,
+                             mir_window_state_vertmaximized));
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
     EXPECT_THROW({
-        surface->configure(mir_surface_attrib_state, 999);
+        surface->configure(mir_window_attrib_state, 999);
     }, std::logic_error);
     EXPECT_THROW({
-        surface->configure(mir_surface_attrib_state, -1);
+        surface->configure(mir_window_attrib_state, -1);
     }, std::logic_error);
-    EXPECT_EQ(mir_surface_state_vertmaximized, surface->state());
+    EXPECT_EQ(mir_window_state_vertmaximized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_minimized,
-              surface->configure(mir_surface_attrib_state,
-                             mir_surface_state_minimized));
-    EXPECT_EQ(mir_surface_state_minimized, surface->state());
+    EXPECT_EQ(mir_window_state_minimized,
+              surface->configure(mir_window_attrib_state,
+                             mir_window_state_minimized));
+    EXPECT_EQ(mir_window_state_minimized, surface->state());
 
-    EXPECT_EQ(mir_surface_state_fullscreen,
-              surface->configure(mir_surface_attrib_state,
-                             mir_surface_state_fullscreen));
-    EXPECT_EQ(mir_surface_state_fullscreen, surface->state());
+    EXPECT_EQ(mir_window_state_fullscreen,
+              surface->configure(mir_window_attrib_state,
+                             mir_window_state_fullscreen));
+    EXPECT_EQ(mir_window_state_fullscreen, surface->state());
 }
 
 TEST_F(Surface, clamps_undersized_resize)
@@ -235,9 +235,9 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     {
         InSequence seq;
-        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_window_focus_state_focused)))
             .Times(1);
-        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))
+        EXPECT_CALL(sink, handle_event(mt::WindowEvent(mir_window_attrib_focus, mir_window_focus_state_unfocused)))
             .Times(1);
     }
 
@@ -246,8 +246,8 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
 
     surface->add_observer(observer);
 
-    surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-    surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+    surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
+    surface->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
 }
 MATCHER_P(MirCloseSurfaceEventMatches, event, "")
 {
@@ -286,5 +286,5 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    EXPECT_EQ(mir_orientation_mode_any, surf.query(mir_surface_attrib_preferred_orientation));
+    EXPECT_EQ(mir_orientation_mode_any, surf.query(mir_window_attrib_preferred_orientation));
 }

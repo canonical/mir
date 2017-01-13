@@ -22,9 +22,9 @@
 #include "mir/input/device.h"
 #include "mir/scene/session_event_handler_register.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_keyboard_config.h"
+#include "mir/input/mir_touchpad_config.h"
 
 #include "mir/test/doubles/mock_input_device_hub.h"
 #include "mir/test/doubles/mock_input_manager.h"
@@ -54,21 +54,21 @@ struct MockDevice : mir::input::Device
         ON_CALL(*this, name()).WillByDefault(Return(name));
         ON_CALL(*this, unique_id()).WillByDefault(Return(unique_id));
         ON_CALL(*this, capabilities()).WillByDefault(Return(caps));
-        ON_CALL(*this, pointer_configuration()).WillByDefault(Return(MirPointerConfiguration{}));
-        ON_CALL(*this, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfiguration{}));
-        ON_CALL(*this, touchpad_configuration()).WillByDefault(Return(MirTouchpadConfiguration{}));
+        ON_CALL(*this, pointer_configuration()).WillByDefault(Return(MirPointerConfig{}));
+        ON_CALL(*this, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{}));
+        ON_CALL(*this, touchpad_configuration()).WillByDefault(Return(MirTouchpadConfig{}));
     }
 
     MOCK_CONST_METHOD0(id, MirInputDeviceId());
     MOCK_CONST_METHOD0(capabilities, mir::input::DeviceCapabilities());
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(unique_id, std::string());
-    MOCK_CONST_METHOD0(pointer_configuration, mir::optional_value<MirPointerConfiguration>());
-    MOCK_CONST_METHOD0(touchpad_configuration, mir::optional_value<MirTouchpadConfiguration>());
-    MOCK_CONST_METHOD0(keyboard_configuration, mir::optional_value<MirKeyboardConfiguration>());
-    MOCK_METHOD1(apply_pointer_configuration, void(MirPointerConfiguration const&));
-    MOCK_METHOD1(apply_touchpad_configuration, void(MirTouchpadConfiguration const&));
-    MOCK_METHOD1(apply_keyboard_configuration, void(MirKeyboardConfiguration const&));
+    MOCK_CONST_METHOD0(pointer_configuration, mir::optional_value<MirPointerConfig>());
+    MOCK_CONST_METHOD0(touchpad_configuration, mir::optional_value<MirTouchpadConfig>());
+    MOCK_CONST_METHOD0(keyboard_configuration, mir::optional_value<MirKeyboardConfig>());
+    MOCK_METHOD1(apply_pointer_configuration, void(MirPointerConfig const&));
+    MOCK_METHOD1(apply_touchpad_configuration, void(MirTouchpadConfig const&));
+    MOCK_METHOD1(apply_keyboard_configuration, void(MirKeyboardConfig const&));
 };
 
 struct FakeInputDeviceHub : mir::input::InputDeviceHub
@@ -142,15 +142,15 @@ struct ConfigChanger : Test
                               std::string const& unique_id)
     {
         MirInputDevice conf(id, caps, name, unique_id);
-        conf.set_keyboard_configuration(MirKeyboardConfiguration{});
-        conf.set_pointer_configuration(MirPointerConfiguration{});
-        conf.set_touchpad_configuration(MirTouchpadConfiguration{});
+        conf.set_keyboard_config(MirKeyboardConfig{});
+        conf.set_pointer_config(MirPointerConfig{});
+        conf.set_touchpad_config(MirTouchpadConfig{});
         return conf;
     }
     auto get_populated_conf(MirInputDevice && conf)
     {
-        MirInputConfiguration ret;
-        ret.add_device_configuration(std::move(conf));
+        MirInputConfig ret;
+        ret.add_device_config(std::move(conf));
         return ret;
     }
 
@@ -167,7 +167,7 @@ struct ConfigChanger : Test
 
 TEST_F(ConfigChanger, doesnt_apply_config_for_unfocused_session)
 {
-    MirInputConfiguration conf{get_populated_conf(conf_for_first())};
+    MirInputConfig conf{get_populated_conf(conf_for_first())};
 
     EXPECT_CALL(hub.first_device, apply_touchpad_configuration(_)).Times(0);
     EXPECT_CALL(hub.first_device, apply_keyboard_configuration(_)).Times(0);
@@ -178,8 +178,8 @@ TEST_F(ConfigChanger, doesnt_apply_config_for_unfocused_session)
 
 TEST_F(ConfigChanger, returns_updated_base_configuration_after_hardware_change)
 {
-    MirInputConfiguration conf{get_populated_conf(conf_for_first())};
-    conf.add_device_configuration(conf_for_second());
+    MirInputConfig conf{get_populated_conf(conf_for_first())};
+    conf.add_device_config(conf_for_second());
 
     hub.observer->device_added(mt::fake_shared(hub.second_device));
     hub.observer->changes_complete();
@@ -222,9 +222,9 @@ TEST_F(ConfigChanger, notifies_all_sessions_on_hardware_config_change)
 
 TEST_F(ConfigChanger, focusing_a_session_with_attached_config_applies_config)
 {
-    auto changed_ptr_config = MirPointerConfiguration{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1, -1};
+    auto changed_ptr_config = MirPointerConfig{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1, -1};
     auto changed_device_config = conf_for_first();
-    changed_device_config.set_pointer_configuration(changed_ptr_config);
+    changed_device_config.set_pointer_config(changed_ptr_config);
 
     auto changed_config = get_populated_conf(std::move(changed_device_config));
     auto session1 = std::make_shared<mtd::StubSession>();
@@ -243,9 +243,9 @@ TEST_F(ConfigChanger, configuring_a_focused_session_sends_changed_config_to_clie
     stub_session_container.insert_session(session);
     session_event_sink.handle_focus_change(session);
 
-    auto changed_ptr_config = MirPointerConfiguration{mir_pointer_handedness_right, mir_pointer_acceleration_none, 0, -1, 1};
+    auto changed_ptr_config = MirPointerConfig{mir_pointer_handedness_right, mir_pointer_acceleration_none, 0, -1, 1};
     auto changed_device_config = conf_for_first();
-    changed_device_config.set_pointer_configuration(changed_ptr_config);
+    changed_device_config.set_pointer_config(changed_ptr_config);
 
     auto changed_config = get_populated_conf(std::move(changed_device_config));
 
@@ -255,9 +255,9 @@ TEST_F(ConfigChanger, configuring_a_focused_session_sends_changed_config_to_clie
 
 TEST_F(ConfigChanger, setting_the_base_configuration_changes_the_base_configuration)
 {
-    auto changed_ptr_config = MirPointerConfiguration{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1, -1};
+    auto changed_ptr_config = MirPointerConfig{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1, -1};
     auto changed_device_config = conf_for_first();
-    changed_device_config.set_pointer_configuration(changed_ptr_config);
+    changed_device_config.set_pointer_config(changed_ptr_config);
     auto changed_config = get_populated_conf(std::move(changed_device_config));
 
     EXPECT_CALL(hub.first_device, apply_pointer_configuration(changed_ptr_config));

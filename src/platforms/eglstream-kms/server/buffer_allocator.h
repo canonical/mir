@@ -38,6 +38,11 @@ public:
     BufferAllocator();
 
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
+
+    std::shared_ptr<Buffer> alloc_buffer(geometry::Size size, MirPixelFormat format);
+    std::shared_ptr<Buffer> alloc_buffer(
+        geometry::Size size, uint32_t native_format, uint32_t native_flags);
+
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 };
 

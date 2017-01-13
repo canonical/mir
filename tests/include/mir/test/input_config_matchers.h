@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_INPUT_CONFIG_MATCHERS_H
 #define MIR_TEST_INPUT_CONFIG_MATCHERS_H
 
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config.h"
 #include <gmock/gmock.h>
 
 namespace testing
@@ -27,7 +27,7 @@ namespace internal
 {
 
 class InputConfigElementsMatcher
-    : public MatcherInterface<MirInputConfiguration const&>,
+    : public MatcherInterface<MirInputConfig const&>,
       public UnorderedElementsAreMatcherImplBase
 {
 public:
@@ -53,7 +53,7 @@ public:
         return UnorderedElementsAreMatcherImplBase::DescribeNegationToImpl(os);
     }
 
-    virtual bool MatchAndExplain(MirInputConfiguration const& container, MatchResultListener* listener) const
+    virtual bool MatchAndExplain(MirInputConfig const& container, MatchResultListener* listener) const
     {
         ::std::vector<string> element_printouts;
         MatchMatrix matrix = AnalyzeElements(container, &element_printouts, listener);
@@ -79,7 +79,7 @@ public:
 private:
     typedef ::std::vector<Matcher<const Element&>> MatcherVec;
 
-    MatchMatrix AnalyzeElements(MirInputConfiguration const& config,
+    MatchMatrix AnalyzeElements(MirInputConfig const& config,
                                 ::std::vector<string>* element_printouts,
                                 MatchResultListener* listener) const
     {
@@ -111,7 +111,7 @@ private:
 // Multiple specializations because gmock does not decay the parameter type to the
 // actual value type.
 template <>
-class UnorderedElementsAreMatcherImpl<MirInputConfiguration const&>
+class UnorderedElementsAreMatcherImpl<MirInputConfig const&>
     : public InputConfigElementsMatcher
 {
 public:
@@ -119,7 +119,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<MirInputConfiguration&>
+class UnorderedElementsAreMatcherImpl<MirInputConfig&>
     : public InputConfigElementsMatcher
 {
 public:
@@ -127,7 +127,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<MirInputConfiguration>
+class UnorderedElementsAreMatcherImpl<MirInputConfig>
     : public InputConfigElementsMatcher
 {
 public:
@@ -135,7 +135,7 @@ public:
 };
 
 template <>
-class UnorderedElementsAreMatcherImpl<MirInputConfiguration const>
+class UnorderedElementsAreMatcherImpl<MirInputConfig const>
     : public InputConfigElementsMatcher
 {
 public:
