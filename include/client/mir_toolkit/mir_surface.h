@@ -751,9 +751,8 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in]     window    The window to acquire a persistent reference to.
  * \param [in]     callback  Callback to invoke when the request completes.
  * \param [in,out] context   User data passed to completion callback.
- * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
  */
-MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context);
+void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context);
 
 /**
  * \brief Request a persistent ID for a window and wait for the result
