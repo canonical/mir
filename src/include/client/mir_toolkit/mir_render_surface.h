@@ -116,7 +116,8 @@ void mir_render_surface_release(
     MirRenderSurface* render_surface);
 
 /**
- * Obtain the buffer stream backing a given render surface
+ * Obtain the buffer stream backing a given render surface.
+ * The MirBufferStream will contain buffers suitable for writing via the CPU. 
  *
  * \param [in] render_surface    The render surface
  * \param [in] width             Requested width

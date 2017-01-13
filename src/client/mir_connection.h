@@ -216,8 +216,6 @@ public:
         return surface_map;
     }
 
-    MirRenderSurface* render_surface(void* key) override;
- 
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);

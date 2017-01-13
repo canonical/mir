@@ -45,4 +45,12 @@ protected:
     MirRenderSurface() = default;
 };
 
+namespace mir
+{
+namespace client
+{
+MirRenderSurface* render_surface_lookup(void* key); 
+}
+}
+
 #endif /* MIR_CLIENT_MIR_RENDER_SURFACE_H */

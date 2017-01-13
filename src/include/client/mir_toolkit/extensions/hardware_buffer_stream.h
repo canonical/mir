@@ -34,7 +34,6 @@ extern "C" {
 //Internally, its useful in playground/ until we switch everything to the mir egl platform. 
 
 typedef MirBufferStream* (*mir_extension_get_hardware_buffer_stream)(
-    MirConnection* connection,
     MirRenderSurface* rs,
     int width, int height,
     MirPixelFormat format);

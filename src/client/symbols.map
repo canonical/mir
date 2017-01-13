@@ -467,7 +467,7 @@ MIR_CLIENT_DETAIL_0.25 {
 MIR_CLIENT_DETAIL_0.26 {
   global:
     extern "C++" {
-        mir::client::to_client_context*;
+        mir::client::render_surface_lookup*;
     };
 } MIR_CLIENT_DETAIL_0.25;
 

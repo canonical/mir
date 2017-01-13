@@ -62,7 +62,7 @@ public:
         connections[render_surface_key] = connection;
     }
 
-    void erase(MirRenderSurface* render_surface_key)
+    void erase(void* render_surface_key)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         auto conn_it = connections.find(render_surface_key);
@@ -70,7 +70,7 @@ public:
             connections.erase(conn_it);
     }
 
-    MirConnection* connection(MirRenderSurface* render_surface_key) const
+    MirConnection* connection(void* render_surface_key) const
     {
         std::shared_lock<decltype(guard)> lk(guard);
         auto const it = connections.find(render_surface_key);
@@ -81,7 +81,7 @@ public:
     }
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<MirRenderSurface*, MirConnection*> connections;
+    std::unordered_map<void*, MirConnection*> connections;
 };
 
 RenderSurfaceToConnectionMap connection_map;
@@ -231,4 +231,17 @@ void mir_surface_spec_set_cursor_render_surface(
     auto connection = connection_map.connection(surface);
     auto rs = connection->connection_surface_map()->render_surface(surface);
     spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
+}
+
+//temporary, until we stop trampolining via the RenderSurfaceToConnectionMap above
+MirRenderSurface* mir::client::render_surface_lookup(void* key)
+try
+{
+    auto connection = connection_map.connection(key);
+    return connection->connection_surface_map()->render_surface(key).get();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }

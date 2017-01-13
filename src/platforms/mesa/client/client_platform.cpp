@@ -146,15 +146,11 @@ void allocate_buffer_gbm(
 }
 
 MirBufferStream* get_hw_stream(
-    MirConnection* connection,
-    MirRenderSurface* key,
+    MirRenderSurface* rs_key,
     int width, int height,
     MirPixelFormat format)
 {
-    auto context = mcl::to_client_context(connection);
-    if (!context)
-        return nullptr;
-    auto rs = context->render_surface(key);
+    auto rs = mcl::render_surface_lookup(rs_key);
     if (!rs)
         return nullptr;
     return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);

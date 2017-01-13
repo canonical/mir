@@ -38,15 +38,11 @@ public:
         MirPlatformMessage const* request,
         mir_platform_operation_callback callback, void* context) = 0;
 
-    virtual MirRenderSurface* render_surface(void* key) = 0; 
-
 protected:
     ClientContext() = default;
     ClientContext(const ClientContext&) = delete;
     ClientContext& operator=(const ClientContext&) = delete;
 };
-
-ClientContext* to_client_context(MirConnection*);
 
 }
 }
