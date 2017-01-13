@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_INPUT_CONFIG_CHANGER_H_
 
 #include "mir/frontend/input_configuration_changer.h"
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config.h"
 
 #include <gmock/gmock.h>
 
@@ -33,15 +33,15 @@ namespace doubles
 class MockInputConfigurationChanger : public frontend::InputConfigurationChanger
 {
 public:
-    MOCK_METHOD0(base_configuration, MirInputConfiguration());
-    MOCK_METHOD2(configure_called, void(std::shared_ptr<frontend::Session> const&, MirInputConfiguration const&));
-    MOCK_METHOD1(set_base_configuration_called, void(MirInputConfiguration const&));
+    MOCK_METHOD0(base_configuration, MirInputConfig());
+    MOCK_METHOD2(configure_called, void(std::shared_ptr<frontend::Session> const&, MirInputConfig const&));
+    MOCK_METHOD1(set_base_configuration_called, void(MirInputConfig const&));
 
-    void configure(std::shared_ptr<frontend::Session> const& session, MirInputConfiguration && conf) override
+    void configure(std::shared_ptr<frontend::Session> const& session, MirInputConfig && conf) override
     {
         configure_called(session, conf);
     }
-    void set_base_configuration(MirInputConfiguration && conf) override
+    void set_base_configuration(MirInputConfig && conf) override
     {
         set_base_configuration_called(conf);
     }

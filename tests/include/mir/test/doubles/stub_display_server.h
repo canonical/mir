@@ -120,10 +120,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         google::protobuf::Closure* /*done*/) {}
     void start_prompt_session(
         mir::protobuf::PromptSessionParameters const* /*request*/,
-        mir::protobuf::Void* /*response*/,
+        mir::protobuf::PromptSession* /*response*/,
         google::protobuf::Closure* /*done*/) {}
     void stop_prompt_session(
-        mir::protobuf::Void const* /*request*/,
+        mir::protobuf::PromptSession const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
     void exchange_buffer(

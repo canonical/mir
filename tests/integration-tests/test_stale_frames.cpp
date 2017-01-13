@@ -183,17 +183,17 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
 
     std::set<mg::BufferID> stale_buffers;
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
+    stale_buffers.emplace(mir_debug_window_current_buffer_id(window));
 
     auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(window));
+    stale_buffers.emplace(mir_debug_window_current_buffer_id(window));
     mir_buffer_stream_swap_buffers_sync(bs);
 
     EXPECT_THAT(stale_buffers.size(), Eq(2u));
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_window_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
     start_compositor();
@@ -216,7 +216,7 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(window)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_window_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
     start_compositor();

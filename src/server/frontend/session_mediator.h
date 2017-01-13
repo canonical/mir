@@ -77,6 +77,23 @@ class PromptSession;
 class BufferStream;
 class InputConfigurationChanger;
 
+namespace detail
+{
+typedef IntWrapper<struct PromptSessionTag> PromptSessionId;
+
+struct PromptSessionStore
+{
+    auto insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId;
+    auto fetch(PromptSessionId session) const -> std::shared_ptr<PromptSession>;
+    void remove(PromptSessionId session);
+
+private:
+    std::mutex mutable mutex;
+    int32_t next_id{0};
+    std::map<PromptSessionId, std::weak_ptr<PromptSession>> mutable sessions;
+};
+}
+
 /**
  * SessionMediator relays requests from the client process into the server.
  *
@@ -198,10 +215,10 @@ public:
         google::protobuf::Closure* done) override;
     void start_prompt_session(
         mir::protobuf::PromptSessionParameters const* request,
-        mir::protobuf::Void* response,
+        mir::protobuf::PromptSession* response,
         google::protobuf::Closure* done) override;
     void stop_prompt_session(
-        mir::protobuf::Void const* request,
+        mir::protobuf::PromptSession const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
     void submit_buffer(
@@ -261,7 +278,8 @@ private:
     std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
         protobuf::DisplayConfiguration const*);
 
-    virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
+    virtual std::function<void(std::shared_ptr<Session> const&)>
+    prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const;
 
     void destroy_screencast_sessions();
 
@@ -288,7 +306,7 @@ private:
     ScreencastBufferTracker screencast_buffer_tracker;
 
     std::weak_ptr<Session> weak_session;
-    std::weak_ptr<PromptSession> weak_prompt_session;
+    detail::PromptSessionStore prompt_sessions;
 
     std::map<frontend::SurfaceId, frontend::BufferStreamId> legacy_default_stream_map;
 };

@@ -394,7 +394,7 @@ MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
  *   \param [in] connection             The connection
  *   \param [in] config                 The input config
  */
-void mir_connection_apply_input_configuration(
+void mir_connection_apply_input_config(
     MirConnection* connection, MirInputConfig const* config);
 
 /**
@@ -408,7 +408,7 @@ void mir_connection_apply_input_configuration(
  *   \param [in] connection             The connection
  *   \param [in] config                 The input config
  */
-void mir_connection_set_base_input_configuration(
+void mir_connection_set_base_input_config(
     MirConnection* connection, MirInputConfig const* config);
 
 /**

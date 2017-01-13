@@ -54,7 +54,7 @@ public:
 
     virtual void update_surface(
         scene::Session const& session, scene::Surface const& surface,
-        MirSurfaceAttrib attrib, int value) = 0;
+        MirWindowAttrib attrib, int value) = 0;
 
     virtual void destroying_surface(
         scene::Session const& session, frontend::SurfaceId surface) = 0;

@@ -26,7 +26,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_report.h"
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_input_device.h"
@@ -67,10 +67,10 @@ struct TestNestedInputPlatform : Test
         ON_CALL(mock_input_device_registry, add_device(_))
             .WillByDefault(SaveArg<0>(&input_dev));
         platform.start();
-        MirInputConfiguration config;
-        config.add_device_configuration(dev);
+        MirInputConfig config;
+        config.add_device_config(dev);
         mgn::UniqueInputConfig input_config(
-            new MirInputConfiguration(config),
+            new MirInputConfig(config),
             mir_input_config_destroy);
         mock_host_connection.device_change_callback(std::move(input_config));
 
@@ -111,11 +111,11 @@ TEST_F(TestNestedInputPlatform, registers_devices)
     EXPECT_CALL(mock_input_device_registry, add_device(MatchesDeviceData(a_mouse)));
 
     platform.start();
-    MirInputConfiguration devices;
-    devices.add_device_configuration(a_keyboard);
-    devices.add_device_configuration(a_mouse);
+    MirInputConfig devices;
+    devices.add_device_config(a_keyboard);
+    devices.add_device_config(a_mouse);
     mgn::UniqueInputConfig input_config(
-        new MirInputConfiguration(devices),
+        new MirInputConfig(devices),
         mir_input_config_destroy);
     mock_host_connection.device_change_callback(std::move(input_config));
 

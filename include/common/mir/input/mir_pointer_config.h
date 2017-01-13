@@ -26,14 +26,14 @@
 #include <memory>
 #include <iosfwd>
 
-struct MirPointerConfiguration
+struct MirPointerConfig
 {
-    MirPointerConfiguration();
-    ~MirPointerConfiguration();
-    MirPointerConfiguration(MirPointerConfiguration const& cp);
-    MirPointerConfiguration(MirPointerConfiguration && cp);
-    MirPointerConfiguration& operator=(MirPointerConfiguration const& cp);
-    MirPointerConfiguration(MirPointerHandedness handedness, MirPointerAcceleration acceleration, double acceleration_bias,
+    MirPointerConfig();
+    ~MirPointerConfig();
+    MirPointerConfig(MirPointerConfig const& cp);
+    MirPointerConfig(MirPointerConfig && cp);
+    MirPointerConfig& operator=(MirPointerConfig const& cp);
+    MirPointerConfig(MirPointerHandedness handedness, MirPointerAcceleration acceleration, double acceleration_bias,
                          double horizontal_scroll_scale, double vertical_scroll_scale);
     /*!
      * Configure which button shall be used as primary button. That way the input device is configured to be either
@@ -69,14 +69,14 @@ struct MirPointerConfiguration
     double vertical_scroll_scale() const;
     void vertical_scroll_scale(double);
 
-    bool operator==(MirPointerConfiguration const& rhs) const;
-    bool operator!=(MirPointerConfiguration const& rhs) const;
+    bool operator==(MirPointerConfig const& rhs) const;
+    bool operator!=(MirPointerConfig const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream& operator<<(std::ostream& out, MirPointerConfiguration const& rhs);
+std::ostream& operator<<(std::ostream& out, MirPointerConfig const& rhs);
 
 
 #endif
