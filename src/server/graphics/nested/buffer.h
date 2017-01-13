@@ -40,6 +40,12 @@ public:
     Buffer(
         std::shared_ptr<HostConnection> const& connection,
         BufferProperties const& properties);
+    Buffer(
+        std::shared_ptr<HostConnection> const& connection,
+        geometry::Size size, MirPixelFormat pf);
+    Buffer(
+        std::shared_ptr<HostConnection> const& connection,
+        geometry::Size size, unsigned int native_format, unsigned int native_flags);
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
     geometry::Size size() const override;
