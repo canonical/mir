@@ -18,10 +18,10 @@
 
 #include "mir/input/mir_input_config_serialization.h"
 #include "mir/input/mir_input_config.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_touchscreen_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir_input_config.capnp.h"
 
 #include <capnp/message.h>
@@ -46,26 +46,26 @@ std::string mi::serialize_input_config(MirInputConfig const& config)
             device.setName(conf.name());
             device.setUniqueId(conf.unique_id());
 
-            if (conf.has_pointer_configuration())
+            if (conf.has_pointer_config())
             {
-                auto ptr_conf = conf.pointer_configuration();
-                auto ptr_builder = device.initPointerConfiguration();
+                auto ptr_conf = conf.pointer_config();
+                auto ptr_builder = device.initPointerConfig();
                 ptr_builder.setHandedness(ptr_conf.handedness() == mir_pointer_handedness_right ?
-                                          mc::PointerConfiguration::Handedness::RIGHT :
-                                          mc::PointerConfiguration::Handedness::LEFT);
+                                          mc::PointerConfig::Handedness::RIGHT :
+                                          mc::PointerConfig::Handedness::LEFT);
                 ptr_builder.setAcceleration(ptr_conf.acceleration() == mir_pointer_acceleration_adaptive ?
-                                            mc::PointerConfiguration::Acceleration::ADAPTIVE :
-                                            mc::PointerConfiguration::Acceleration::NONE
+                                            mc::PointerConfig::Acceleration::ADAPTIVE :
+                                            mc::PointerConfig::Acceleration::NONE
                                            );
                 ptr_builder.setCursorAccelerationBias(ptr_conf.cursor_acceleration_bias());
                 ptr_builder.setHorizontalScrollScale(ptr_conf.horizontal_scroll_scale());
                 ptr_builder.setVerticalScrollScale(ptr_conf.vertical_scroll_scale());
             }
 
-            if (conf.has_touchpad_configuration())
+            if (conf.has_touchpad_config())
             {
-                auto tpd_conf = conf.touchpad_configuration();
-                auto tpd_builder = device.initTouchpadConfiguration();
+                auto tpd_conf = conf.touchpad_config();
+                auto tpd_builder = device.initTouchpadConfig();
 
                 tpd_builder.setClickMode(tpd_conf.click_mode());
                 tpd_builder.setScrollMode(tpd_conf.scroll_mode());
@@ -76,21 +76,21 @@ std::string mi::serialize_input_config(MirInputConfig const& config)
                 tpd_builder.setDisableWhileTyping(tpd_conf.disable_while_typing());
             }
 
-            if (conf.has_touchscreen_configuration())
+            if (conf.has_touchscreen_config())
             {
-                auto ts_conf = conf.touchscreen_configuration();
-                auto ts_builder = device.initTouchscreenConfiguration();
+                auto ts_conf = conf.touchscreen_config();
+                auto ts_builder = device.initTouchscreenConfig();
 
                 ts_builder.setOutputId(ts_conf.output_id());
                 ts_builder.setMappingMode(ts_conf.mapping_mode() == mir_touchscreen_mapping_mode_to_output?
-                                          mc::TouchscreenConfiguration::MappingMode::TO_OUTPUT :
-                                          mc::TouchscreenConfiguration::MappingMode::TO_DISPLAY_WALL);
+                                          mc::TouchscreenConfig::MappingMode::TO_OUTPUT :
+                                          mc::TouchscreenConfig::MappingMode::TO_DISPLAY_WALL);
             }
 
-            if (conf.has_keyboard_configuration())
+            if (conf.has_keyboard_config())
             {
-                auto kbd_conf = conf.keyboard_configuration();
-                auto kbd_builder = device.initKeyboardConfiguration();
+                auto kbd_conf = conf.keyboard_config();
+                auto kbd_builder = device.initKeyboardConfig();
                 auto keymap_builder = kbd_builder.initKeymap();
                 auto keymap = kbd_conf.device_keymap();
 
@@ -122,11 +122,11 @@ MirInputConfig mi::deserialize_input_config(std::string const& buffer)
                             static_cast<mi::DeviceCapabilities>(device_config.getCapabilities()),
                             device_config.getName(),
                             device_config.getUniqueId());
-        if (device_config.hasTouchpadConfiguration())
+        if (device_config.hasTouchpadConfig())
         {
-            auto tpd_conf = device_config.getTouchpadConfiguration();
-            conf.set_touchpad_configuration(
-                MirTouchpadConfiguration{
+            auto tpd_conf = device_config.getTouchpadConfig();
+            conf.set_touchpad_config(
+                MirTouchpadConfig{
                     tpd_conf.getClickMode(),
                     tpd_conf.getScrollMode(),
                     tpd_conf.getButtonDownScrollButton(),
@@ -137,15 +137,15 @@ MirInputConfig mi::deserialize_input_config(std::string const& buffer)
                     });
         }
 
-        if (device_config.hasPointerConfiguration())
+        if (device_config.hasPointerConfig())
         {
-            auto pointer_conf = device_config.getPointerConfiguration();
-            conf.set_pointer_configuration(
-                MirPointerConfiguration{
-                    pointer_conf.getHandedness()==mc::PointerConfiguration::Handedness::RIGHT ?
+            auto pointer_conf = device_config.getPointerConfig();
+            conf.set_pointer_config(
+                MirPointerConfig{
+                    pointer_conf.getHandedness()==mc::PointerConfig::Handedness::RIGHT ?
                     mir_pointer_handedness_right :
                     mir_pointer_handedness_left,
-                    pointer_conf.getAcceleration()==mc::PointerConfiguration::Acceleration::ADAPTIVE ?
+                    pointer_conf.getAcceleration()==mc::PointerConfig::Acceleration::ADAPTIVE ?
                     mir_pointer_acceleration_adaptive :
                     mir_pointer_acceleration_none,
                     pointer_conf.getCursorAccelerationBias(),
@@ -154,12 +154,12 @@ MirInputConfig mi::deserialize_input_config(std::string const& buffer)
                     });
         }
 
-        if (device_config.hasKeyboardConfiguration())
+        if (device_config.hasKeyboardConfig())
         {
-            auto keyboard_conf = device_config.getKeyboardConfiguration();
+            auto keyboard_conf = device_config.getKeyboardConfig();
             auto keymap_reader = keyboard_conf.getKeymap();
-            conf.set_keyboard_configuration(
-                MirKeyboardConfiguration{
+            conf.set_keyboard_config(
+                MirKeyboardConfig{
                     Keymap{
                         keymap_reader.getModel(),
                         keymap_reader.getLayout(),
@@ -169,18 +169,18 @@ MirInputConfig mi::deserialize_input_config(std::string const& buffer)
                 });
         }
 
-        if (device_config.hasTouchscreenConfiguration())
+        if (device_config.hasTouchscreenConfig())
         {
-            auto touchscreen_conf = device_config.getTouchscreenConfiguration();
-            conf.set_touchscreen_configuration(
-                MirTouchscreenConfiguration{
+            auto touchscreen_conf = device_config.getTouchscreenConfig();
+            conf.set_touchscreen_config(
+                MirTouchscreenConfig{
                     touchscreen_conf.getOutputId(),
-                    touchscreen_conf.getMappingMode() == mc::TouchscreenConfiguration::MappingMode::TO_OUTPUT ?
+                    touchscreen_conf.getMappingMode() == mc::TouchscreenConfig::MappingMode::TO_OUTPUT ?
                     mir_touchscreen_mapping_mode_to_output :
                     mir_touchscreen_mapping_mode_to_display_wall
                 });
         }
-        ret.add_device_configuration(std::move(conf));
+        ret.add_device_config(std::move(conf));
     }
 
     return ret;

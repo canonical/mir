@@ -18,10 +18,10 @@
 
 #include "mir/input/mir_input_config.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchscreen_configuration.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 
 #include "mir/optional_value.h"
 #include <algorithm>
@@ -48,10 +48,10 @@ struct MirInputDevice::Implementation
     std::string unique_id;
     std::string name;
 
-    mir::optional_value<MirPointerConfiguration> pointer;
-    mir::optional_value<MirTouchpadConfiguration> touchpad;
-    mir::optional_value<MirKeyboardConfiguration> keyboard;
-    mir::optional_value<MirTouchscreenConfiguration> touchscreen;
+    mir::optional_value<MirPointerConfig> pointer;
+    mir::optional_value<MirTouchpadConfig> touchpad;
+    mir::optional_value<MirKeyboardConfig> keyboard;
+    mir::optional_value<MirTouchscreenConfig> touchscreen;
     // todo add tablet..
 };
 
@@ -104,82 +104,82 @@ MirInputDevice& MirInputDevice::operator=(MirInputDevice const& conf)
 
 MirInputDevice::~MirInputDevice() = default;
 
-bool MirInputDevice::has_touchpad_configuration() const
+bool MirInputDevice::has_touchpad_config() const
 {
     return impl->touchpad.is_set();
 }
 
-MirTouchpadConfiguration& MirInputDevice::touchpad_configuration()
+MirTouchpadConfig& MirInputDevice::touchpad_config()
 {
     return impl->touchpad.value();
 }
 
-MirTouchpadConfiguration const& MirInputDevice::touchpad_configuration() const
+MirTouchpadConfig const& MirInputDevice::touchpad_config() const
 {
     return impl->touchpad.value();
 }
 
-void MirInputDevice::set_touchpad_configuration(MirTouchpadConfiguration const& conf)
+void MirInputDevice::set_touchpad_config(MirTouchpadConfig const& conf)
 {
     impl->touchpad = conf;
 }
 
-bool MirInputDevice::has_touchscreen_configuration() const
+bool MirInputDevice::has_touchscreen_config() const
 {
     return impl->touchscreen.is_set();
 }
 
-MirTouchscreenConfiguration& MirInputDevice::touchscreen_configuration()
+MirTouchscreenConfig& MirInputDevice::touchscreen_config()
 {
     return impl->touchscreen.value();
 }
 
-MirTouchscreenConfiguration const& MirInputDevice::touchscreen_configuration() const
+MirTouchscreenConfig const& MirInputDevice::touchscreen_config() const
 {
     return impl->touchscreen.value();
 }
 
-void MirInputDevice::set_touchscreen_configuration(MirTouchscreenConfiguration const& conf)
+void MirInputDevice::set_touchscreen_config(MirTouchscreenConfig const& conf)
 {
     impl->touchscreen = conf;
 }
 
-bool MirInputDevice::has_keyboard_configuration() const
+bool MirInputDevice::has_keyboard_config() const
 {
     return impl->keyboard.is_set();
 }
 
-MirKeyboardConfiguration& MirInputDevice::keyboard_configuration()
+MirKeyboardConfig& MirInputDevice::keyboard_config()
 {
     return impl->keyboard.value();
 }
 
-MirKeyboardConfiguration const& MirInputDevice::keyboard_configuration() const
+MirKeyboardConfig const& MirInputDevice::keyboard_config() const
 {
     return impl->keyboard.value();
 }
 
-void MirInputDevice::set_keyboard_configuration(MirKeyboardConfiguration const& conf)
+void MirInputDevice::set_keyboard_config(MirKeyboardConfig const& conf)
 {
     impl->keyboard = conf;
 }
 
-bool MirInputDevice::has_pointer_configuration() const
+bool MirInputDevice::has_pointer_config() const
 {
     return impl->pointer.is_set();
 }
 
-MirPointerConfiguration& MirInputDevice::pointer_configuration()
+MirPointerConfig& MirInputDevice::pointer_config()
 {
     return impl->pointer.value();
 }
 
-MirPointerConfiguration const& MirInputDevice::pointer_configuration() const
+MirPointerConfig const& MirInputDevice::pointer_config() const
 {
     return impl->pointer.value();
 }
 
-void MirInputDevice::set_pointer_configuration(MirPointerConfiguration const& conf)
+void MirInputDevice::set_pointer_config(MirPointerConfig const& conf)
 {
     impl->pointer = conf;
 }
@@ -223,7 +223,7 @@ MirInputConfig& MirInputConfig::MirInputConfig::operator=(MirInputConfig const& 
     return *this;
 }
 
-void MirInputConfig::add_device_configuration(MirInputDevice const& conf)
+void MirInputConfig::add_device_config(MirInputDevice const& conf)
 {
     impl->devices.push_back(conf);
 }
@@ -245,7 +245,7 @@ void MirInputConfig::for_each(std::function<void(MirInputDevice &)> const& visit
         visitor(item);
 }
 
-MirInputDevice* MirInputConfig::get_device_configuration_by_id(MirInputDeviceId id)
+MirInputDevice* MirInputConfig::get_device_config_by_id(MirInputDeviceId id)
 {
     for (auto& item : impl->devices)
         if (item.id() == id)
@@ -253,7 +253,7 @@ MirInputDevice* MirInputConfig::get_device_configuration_by_id(MirInputDeviceId 
     return nullptr;
 }
 
-MirInputDevice const* MirInputConfig::get_device_configuration_by_id(MirInputDeviceId id) const
+MirInputDevice const* MirInputConfig::get_device_config_by_id(MirInputDeviceId id) const
 {
     for (auto const& item : impl->devices)
         if (item.id() == id)
@@ -261,12 +261,12 @@ MirInputDevice const* MirInputConfig::get_device_configuration_by_id(MirInputDev
     return nullptr;
 }
 
-MirInputDevice& MirInputConfig::get_device_configuration_by_index(size_t pos)
+MirInputDevice& MirInputConfig::get_device_config_by_index(size_t pos)
 {
     return impl->devices[pos];
 }
 
-MirInputDevice const& MirInputConfig::get_device_configuration_by_index(size_t pos) const
+MirInputDevice const& MirInputConfig::get_device_config_by_index(size_t pos) const
 {
     return impl->devices[pos];
 }
