@@ -16,7 +16,7 @@
  * Authored By: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/mir_touchpad_configuration.h"
 #include "mir/input/mir_keyboard_configuration.h"
@@ -29,7 +29,7 @@
 
 namespace mi = mir::input;
 
-struct MirInputConfiguration::Implementation
+struct MirInputConfig::Implementation
 {
     // FIXME use a map instead?
     std::vector<MirInputDevice> devices;
@@ -200,52 +200,52 @@ bool MirInputDevice::operator!=(MirInputDevice const& rhs) const
     return !(*this == rhs);
 }
 
-MirInputConfiguration::MirInputConfiguration()
+MirInputConfig::MirInputConfig()
     : impl(std::make_unique<Implementation>())
 {
 }
 
-MirInputConfiguration::MirInputConfiguration(MirInputConfiguration && conf)
+MirInputConfig::MirInputConfig(MirInputConfig && conf)
     : impl(std::move(conf.impl))
 {
 }
 
-MirInputConfiguration::MirInputConfiguration(MirInputConfiguration const& conf)
+MirInputConfig::MirInputConfig(MirInputConfig const& conf)
     : impl(std::make_unique<Implementation>(*conf.impl))
 {
 }
 
-MirInputConfiguration::~MirInputConfiguration() = default;
+MirInputConfig::~MirInputConfig() = default;
 
-MirInputConfiguration& MirInputConfiguration::MirInputConfiguration::operator=(MirInputConfiguration const& conf)
+MirInputConfig& MirInputConfig::MirInputConfig::operator=(MirInputConfig const& conf)
 {
     impl = std::make_unique<Implementation>(*conf.impl);
     return *this;
 }
 
-void MirInputConfiguration::add_device_configuration(MirInputDevice const& conf)
+void MirInputConfig::add_device_configuration(MirInputDevice const& conf)
 {
     impl->devices.push_back(conf);
 }
 
-size_t MirInputConfiguration::size() const
+size_t MirInputConfig::size() const
 {
     return impl->devices.size();
 }
 
-void MirInputConfiguration::for_each(std::function<void(MirInputDevice const&)> const& visitor) const
+void MirInputConfig::for_each(std::function<void(MirInputDevice const&)> const& visitor) const
 {
     for (auto const& item : impl->devices)
         visitor(item);
 }
 
-void MirInputConfiguration::for_each(std::function<void(MirInputDevice &)> const& visitor)
+void MirInputConfig::for_each(std::function<void(MirInputDevice &)> const& visitor)
 {
     for (auto& item : impl->devices)
         visitor(item);
 }
 
-MirInputDevice* MirInputConfiguration::get_device_configuration_by_id(MirInputDeviceId id)
+MirInputDevice* MirInputConfig::get_device_configuration_by_id(MirInputDeviceId id)
 {
     for (auto& item : impl->devices)
         if (item.id() == id)
@@ -253,7 +253,7 @@ MirInputDevice* MirInputConfiguration::get_device_configuration_by_id(MirInputDe
     return nullptr;
 }
 
-MirInputDevice const* MirInputConfiguration::get_device_configuration_by_id(MirInputDeviceId id) const
+MirInputDevice const* MirInputConfig::get_device_configuration_by_id(MirInputDeviceId id) const
 {
     for (auto const& item : impl->devices)
         if (item.id() == id)
@@ -261,17 +261,17 @@ MirInputDevice const* MirInputConfiguration::get_device_configuration_by_id(MirI
     return nullptr;
 }
 
-MirInputDevice& MirInputConfiguration::get_device_configuration_by_index(size_t pos)
+MirInputDevice& MirInputConfig::get_device_configuration_by_index(size_t pos)
 {
     return impl->devices[pos];
 }
 
-MirInputDevice const& MirInputConfiguration::get_device_configuration_by_index(size_t pos) const
+MirInputDevice const& MirInputConfig::get_device_configuration_by_index(size_t pos) const
 {
     return impl->devices[pos];
 }
 
-void MirInputConfiguration::remove_device_by_id(MirInputDeviceId id)
+void MirInputConfig::remove_device_by_id(MirInputDeviceId id)
 {
     impl->devices.erase(
         remove_if(begin(impl->devices), end(impl->devices),
@@ -280,13 +280,13 @@ void MirInputConfiguration::remove_device_by_id(MirInputDeviceId id)
         );
 }
 
-bool MirInputConfiguration::operator==(MirInputConfiguration const& rhs) const
+bool MirInputConfig::operator==(MirInputConfig const& rhs) const
 {
     // FIXME assumes fixed ordering
     return impl->devices == rhs.impl->devices;
 }
 
-bool MirInputConfiguration::operator!=(MirInputConfiguration const& rhs) const
+bool MirInputConfig::operator!=(MirInputConfig const& rhs) const
 {
     return !(*this == rhs);
 }
@@ -296,9 +296,9 @@ std::ostream& operator<<(std::ostream& out, MirInputDevice const& rhs)
     return out << rhs.id() << ' '<< rhs.name()  << ' ' << rhs.unique_id();
 }
 
-std::ostream& operator<<(std::ostream& out, MirInputConfiguration const& rhs)
+std::ostream& operator<<(std::ostream& out, MirInputConfig const& rhs)
 {
-    out << "MirInputConfiguration{";
+    out << "MirInputConfig{";
     rhs.for_each(
         [&out](MirInputDevice const& conf)
         {
