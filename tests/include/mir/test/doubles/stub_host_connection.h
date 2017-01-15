@@ -140,6 +140,14 @@ public:
     {
         return nullptr;
     }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat)
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t)
+    {
+        return nullptr;
+    }
 
     MirNativeBuffer* get_native_handle(MirBuffer*)
     {

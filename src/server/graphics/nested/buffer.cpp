@@ -19,6 +19,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "host_connection.h"
 #include "buffer.h"
@@ -176,6 +177,25 @@ mgn::Buffer::Buffer(
     connection(connection),
     buffer(connection->create_buffer(properties)),
     native_base(create_native_base(properties.usage))
+{
+}
+
+mgn::Buffer::Buffer(
+    std::shared_ptr<HostConnection> const& connection,
+    geom::Size size, uint32_t native_format, uint32_t native_flags) :
+    connection(connection),
+    buffer(connection->create_buffer(size, native_format, native_flags)),
+    native_base(std::make_shared<TextureAccess>(*this, buffer, connection))
+{
+}
+
+mgn::Buffer::Buffer(
+    std::shared_ptr<HostConnection> const& connection,
+    geom::Size size,
+    MirPixelFormat format) :
+    connection(connection),
+    buffer(connection->create_buffer(size, format)),
+    native_base(std::make_shared<PixelAndTextureAccess>(*this, buffer, connection))
 {
 }
 

@@ -9,6 +9,9 @@
 #include <cstring>
 #include <unistd.h>
 
+//whole test should be removed once the platform messages are removed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace mtf = mir_test_framework;
 
 namespace
@@ -186,3 +189,4 @@ TEST_F(ClientPlatformOperation, exchanges_fd_items_with_platform)
     close(reply_fd);
     mir_platform_message_release(reply);
 }
+#pragma GCC diagnostic pop
