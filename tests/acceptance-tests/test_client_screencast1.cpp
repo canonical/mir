@@ -72,7 +72,8 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
         }, &capture );
 
     std::unique_lock<decltype(capture.mutex)> lk2(capture.mutex);
-    EXPECT_TRUE(capture.cv.wait_for(lk2, 5s, [&] { return capture.capture; }));
+    ASSERT_TRUE(capture.cv.wait_for(lk2, 5s, [&] { return capture.capture; }));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer_info.buffer), StrEq(""));
 
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
