@@ -42,18 +42,18 @@ set(MIRCOMMON_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
-  input/mir_input_configuration.cpp
-  input/mir_input_configuration_serialization.cpp
-  input/mir_touchpad_configuration.cpp
-  input/mir_pointer_configuration.cpp
-  input/mir_keyboard_configuration.cpp
-  input/mir_touchscreen_configuration.cpp
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_configuration.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_configuration_serialization.h
+  input/mir_input_config.cpp
+  input/mir_input_config_serialization.cpp
+  input/mir_touchpad_config.cpp
+  input/mir_pointer_config.cpp
+  input/mir_keyboard_config.cpp
+  input/mir_touchscreen_config.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 

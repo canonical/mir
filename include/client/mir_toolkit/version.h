@@ -43,7 +43,7 @@
  * 
  * See also: http://semver.org/
  */
-#define MIR_CLIENT_MINOR_VERSION (4)
+#define MIR_CLIENT_MINOR_VERSION (5)
 
 /**
  * MIR_CLIENT_MICRO_VERSION

@@ -24,18 +24,10 @@ namespace mt = mir::test;
 namespace
 {
 
-uint32_t const default_num_modes = 0;
-MirDisplayMode* const default_modes = nullptr;
 uint32_t const default_preferred_mode = 0;
 uint32_t const default_current_mode = 0;
-uint32_t const default_num_output_formats = 0;
-MirPixelFormat* const default_output_formats = nullptr;
 MirPixelFormat const default_current_output_format = mir_pixel_format_abgr_8888;
-uint32_t const default_card_id = 1;
-uint32_t const second_card_id = 2;
 uint32_t const default_output_id = 0;
-uint32_t const second_output_id = 1;
-uint32_t const third_output_id = 2;
 auto const default_type = MirDisplayOutputType(0);
 int32_t const default_position_x = 0;
 int32_t const default_position_y = 0;

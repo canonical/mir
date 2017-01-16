@@ -74,7 +74,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
 {
     size_t num_pixel_formats = mir_output_get_num_pixel_formats(output);
     std::vector<MirPixelFormat> formats;
-    
+
     for (size_t n_pf = 0; n_pf < num_pixel_formats; n_pf++)
     {
         formats.push_back(mir_output_get_pixel_format(output, n_pf));
@@ -162,15 +162,22 @@ void mgn::NestedDisplayConfiguration::for_each_output(
             {user.scale, user.form_factor, user.subpixel_arrangement,
              user.gamma, user.gamma_supported});
 
-        mir_output_set_current_mode(mir_output, mir_output_get_mode(mir_output, output.current_mode_index));
-        mir_output_set_pixel_format(mir_output, output.current_format);
-        mir_output_set_position(mir_output, output.top_left.x.as_int(), output.top_left.y.as_int());
-        mir_output_set_power_mode(mir_output, output.power_mode);
-        mir_output_set_orientation(mir_output, output.orientation);
-
-        if (output.used)
+        if (mir_output_get_num_modes(mir_output) > 0)
         {
-            mir_output_enable(mir_output);
+            mir_output_set_current_mode(mir_output, mir_output_get_mode(mir_output, output.current_mode_index));
+            mir_output_set_pixel_format(mir_output, output.current_format);
+            mir_output_set_position(mir_output, output.top_left.x.as_int(), output.top_left.y.as_int());
+            mir_output_set_power_mode(mir_output, output.power_mode);
+            mir_output_set_orientation(mir_output, output.orientation);
+
+            if (output.used)
+            {
+                mir_output_enable(mir_output);
+            }
+            else
+            {
+                mir_output_disable(mir_output);
+            }
         }
         else
         {
