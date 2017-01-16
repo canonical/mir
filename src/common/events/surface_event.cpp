@@ -33,12 +33,12 @@ void MirSurfaceEvent::set_id(int id)
     event.getSurface().setId(id);
 }
 
-MirSurfaceAttrib MirSurfaceEvent::attrib() const
+MirWindowAttrib MirSurfaceEvent::attrib() const
 {
-    return static_cast<MirSurfaceAttrib>(event.asReader().getSurface().getAttrib());
+    return static_cast<MirWindowAttrib>(event.asReader().getSurface().getAttrib());
 }
 
-void MirSurfaceEvent::set_attrib(MirSurfaceAttrib attrib)
+void MirSurfaceEvent::set_attrib(MirWindowAttrib attrib)
 {
     event.getSurface().setAttrib(static_cast<mir::capnp::SurfaceEvent::Attrib>(attrib));
 }

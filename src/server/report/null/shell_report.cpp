@@ -44,7 +44,7 @@ void mrn::ShellReport::update_surface(
 void mrn::ShellReport::update_surface(
     scene::Session const& /*session*/,
     scene::Surface const& /*surface*/,
-    MirSurfaceAttrib /*attrib*/, int /*value*/)
+    MirWindowAttrib /*attrib*/, int /*value*/)
 {
 }
 

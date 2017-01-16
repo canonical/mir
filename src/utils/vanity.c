@@ -135,14 +135,14 @@ static bool on_input_event(MirInputEvent const* ievent, State* state)
     return false;
 }
 
-static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
+static bool on_surface_event(MirWindowEvent const* wevent, State* state)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sevent);
-    int value = mir_surface_event_get_attribute_value(sevent);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(wevent);
+    int value = mir_window_event_get_attribute_value(wevent);
 
-    if (attrib == mir_surface_attrib_visibility)
+    if (attrib == mir_window_attrib_visibility)
     {
-        if (value == mir_surface_visibility_exposed)
+        if (value == mir_window_visibility_exposed)
         {
             state->reset = true;
             state->occluded = false;
@@ -156,7 +156,7 @@ static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
     return false;  // Let eglapp handle the same event. We are passive.
 }
 
-static void on_event(MirSurface* surface, MirEvent const* event, void* context)
+static void on_event(MirWindow* surface, MirEvent const* event, void* context)
 {
     bool handled = true;
 
@@ -173,7 +173,7 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
         handled = on_input_event(mir_event_get_input_event(event), state);
         break;
     case mir_event_type_window:
-        handled = on_surface_event(mir_event_get_surface_event(event), state);
+        handled = on_surface_event(mir_event_get_window_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;

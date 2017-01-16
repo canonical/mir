@@ -87,7 +87,7 @@ public:
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
     std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
     bool supports_passthrough() override;
-    void apply_input_configuration(MirInputConfiguration const* config) override;
+    void apply_input_configuration(MirInputConfig const* config) override;
 
     optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;
     optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override;

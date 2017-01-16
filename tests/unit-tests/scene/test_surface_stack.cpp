@@ -281,8 +281,8 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_surface_attrib_visibility,
-                       mir_surface_visibility_exposed);
+    surface->configure(mir_window_attrib_visibility,
+                       mir_window_visibility_exposed);
     
     auto elements = stack.scene_elements_for(compositor_id);
     ASSERT_EQ(1, elements.size());
@@ -310,8 +310,8 @@ TEST_F(SurfaceStack, gets_surface_renames)
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_surface_attrib_visibility,
-                       mir_surface_visibility_exposed);
+    surface->configure(mir_window_attrib_visibility,
+                       mir_window_visibility_exposed);
     
     // (change directory in shell app)
     surface->rename("username@hostname: ~/Documents");
@@ -356,8 +356,8 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_surface_attrib_visibility,
-                       mir_surface_visibility_exposed);
+    surface->configure(mir_window_attrib_visibility,
+                       mir_window_visibility_exposed);
 
     EXPECT_EQ(0, stack.frames_pending(this));
 
@@ -811,7 +811,7 @@ struct MockConfigureSurface : public ms::BasicSurface
             mir::report::null_scene_report())
     {
     }
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
+    MOCK_METHOD2(configure, int(MirWindowAttrib, int));
 };
 }
 
@@ -834,7 +834,7 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     auto const elements2 = stack.scene_elements_for(compositor_id2);
     ASSERT_THAT(elements2.size(), Eq(1u));
 
-    EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_occluded));
 
     elements.back()->occluded();
     elements2.back()->occluded();
@@ -857,7 +857,7 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     auto const elements2 = stack.scene_elements_for(compositor_id2);
     ASSERT_THAT(elements2.size(), Eq(1u));
 
-    EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed));
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed));
 
     elements.back()->occluded();
     elements2.back()->rendered();
@@ -884,7 +884,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     auto const elements3 = stack.scene_elements_for(compositor_id3);
     ASSERT_THAT(elements3.size(), Eq(1u));
 
-    EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed))
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed))
         .Times(2);
 
     elements.back()->occluded();
@@ -893,7 +893,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
 
     Mock::VerifyAndClearExpectations(mock_surface.get());
 
-    EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_occluded));
 
     stack.unregister_compositor(compositor_id2);
     stack.unregister_compositor(compositor_id3);
@@ -978,8 +978,8 @@ TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
     stack.add_surface(stub_surface2, default_params.input_mode);
 
     // Configure surface1 and surface2 to appear in input enumeration.
-    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
+    stub_surface1->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
+    stub_surface2->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
 
     stack.add_input_visualization(mt::fake_shared(r));
 
@@ -1056,9 +1056,9 @@ TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
     stack.add_surface(stub_surface2, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.input_mode);
 
-    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
-    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
-    stub_surface3->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
+    stub_surface1->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
+    stub_surface2->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
+    stub_surface3->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
 
     int num_exposed_surfaces = 0;
     auto const count_exposed_surfaces = [&num_exposed_surfaces](std::shared_ptr<mi::Surface> const&){

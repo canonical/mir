@@ -59,7 +59,7 @@ namespace
 
 struct MockSurfaceMap : mcl::SurfaceMap
 {
-    MOCK_CONST_METHOD1(surface, std::shared_ptr<MirSurface>(mir::frontend::SurfaceId));
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<MirWindow>(mir::frontend::SurfaceId));
     MOCK_CONST_METHOD1(stream, std::shared_ptr<MirBufferStream>(mir::frontend::BufferStreamId));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(MirBufferStream*)> const&));
@@ -72,7 +72,7 @@ struct MockSurfaceMap : mcl::SurfaceMap
 class StubSurfaceMap : public mcl::SurfaceMap
 {
 public:
-    std::shared_ptr<MirSurface> surface(mir::frontend::SurfaceId) const override
+    std::shared_ptr<MirWindow> surface(mir::frontend::SurfaceId) const override
     {
         return {};
     }

@@ -44,8 +44,8 @@
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
 
-#include "mir/input/mir_input_configuration.h"
-#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 #include "mir_error.h"
@@ -356,7 +356,7 @@ MirWaitHandle* MirConnection::create_surface(
         if (request != surface_requests.end())
         {
             auto id = next_error_id(lock);
-            auto surf = std::make_shared<MirSurface>(
+            auto surf = std::make_shared<MirWindow>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
             auto wh = (*request)->wh;
@@ -413,7 +413,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         }
     }
 
-    std::shared_ptr<MirSurface> surf {nullptr};
+    std::shared_ptr<MirWindow> surf {nullptr};
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
         std::string reason;
@@ -424,12 +424,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         if (!surface_proto->has_id()) 
             reason +=  "Server assigned surface no id";
         auto id = next_error_id(lock);
-        surf = std::make_shared<MirSurface>(reason, this, id, request->wh);
+        surf = std::make_shared<MirWindow>(reason, this, id, request->wh);
         surface_map->insert(id, surf);
     }
     else
     {
-        surf = std::make_shared<MirSurface>(
+        surf = std::make_shared<MirWindow>(
             this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
@@ -462,7 +462,7 @@ void MirConnection::set_error_message(std::string const& error)
  "only 0, 1, or 2 arguments in the NewCallback function */
 struct MirConnection::SurfaceRelease
 {
-    MirSurface* surface;
+    MirWindow* surface;
     MirWaitHandle* handle;
     mir_surface_callback callback;
     void* context;
@@ -502,7 +502,7 @@ void MirConnection::released(SurfaceRelease data)
 }
 
 MirWaitHandle* MirConnection::release_surface(
-        MirSurface *surface,
+        MirWindow *surface,
         mir_surface_callback callback,
         void * context)
 {
@@ -1483,18 +1483,16 @@ void* MirConnection::request_interface(char const* name, int version)
 
 void MirConnection::apply_input_configuration(MirInputConfig const* config)
 {
-    auto configuration = reinterpret_cast<MirInputConfiguration const*>(config);
     mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_configuration(*configuration));
+    req.set_input_configuration(mi::serialize_input_config(*config));
 
     server.apply_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
 }
 
 void MirConnection::set_base_input_configuration(MirInputConfig const* config)
 {
-    auto configuration = reinterpret_cast<MirInputConfiguration const*>(config);
     mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_configuration(*configuration));
+    req.set_input_configuration(mi::serialize_input_config(*config));
 
     server.set_base_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
 }

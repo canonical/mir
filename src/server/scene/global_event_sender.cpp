@@ -46,7 +46,7 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
-void ms::GlobalEventSender::handle_input_config_change(MirInputConfiguration const& config)
+void ms::GlobalEventSender::handle_input_config_change(MirInputConfig const& config)
 {
     sessions->for_each([&config](std::shared_ptr<ms::Session> const& session)
     {

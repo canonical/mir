@@ -62,7 +62,7 @@ static GLuint load_shader(const char* src, GLenum type)
     return shader;
 }
 
-static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
+static void handle_input_event(MirInputEvent const* event, MirWindow* surface)
 {
     if (mir_input_event_get_type(event) == mir_input_event_type_pointer)
     {
@@ -94,7 +94,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
             MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
             if (!grabbed)
             {
-                mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+                mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
                 mir_window_spec_set_name(spec, "");
             }
             else
@@ -112,11 +112,11 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
         {
             static bool fullscreen = false;
             MirWindowSpec* spec = mir_create_window_spec(mir_eglapp_native_connection());
-            MirSurfaceState state = mir_surface_state_restored;
+            MirWindowState state = mir_window_state_restored;
 
             if (!fullscreen)
             {
-                state = mir_surface_state_fullscreen;
+                state = mir_window_state_fullscreen;
             }
 
             fullscreen = !fullscreen;
@@ -128,7 +128,7 @@ static void handle_input_event(MirInputEvent const* event, MirSurface* surface)
     }
 }
 
-static void handle_event(MirSurface* surface, MirEvent const* event, void* context)
+static void handle_event(MirWindow* surface, MirEvent const* event, void* context)
 {
     (void) context;
     switch (mir_event_get_type(event))
@@ -217,13 +217,13 @@ int main(int argc, char* argv[])
     mir_window_set_event_handler(window, handle_event, NULL);
 
     spec = mir_create_window_spec(mir_eglapp_native_connection());
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
 
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
 
     // Hide cursor
-    mir_surface_configure_cursor(window, NULL);
+    mir_window_configure_cursor(window, NULL);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 

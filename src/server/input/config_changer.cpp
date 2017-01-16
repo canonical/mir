@@ -24,10 +24,10 @@
 #include "mir/input/device.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/mir_input_configuration.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/client_visible_error.h"
 
 #include "mir_toolkit/client_types.h"
@@ -64,16 +64,16 @@ void apply_device_config(MirInputDevice const* config, mi::Device& device)
         return;
 
     auto existing_ptr_conf = device.pointer_configuration();
-    if (config->has_pointer_configuration() && existing_ptr_conf.is_set())
-        device.apply_pointer_configuration(config->pointer_configuration());
+    if (config->has_pointer_config() && existing_ptr_conf.is_set())
+        device.apply_pointer_configuration(config->pointer_config());
 
     auto existing_tpd_conf = device.touchpad_configuration();
-    if (config->has_touchpad_configuration() && existing_tpd_conf.is_set())
-        device.apply_touchpad_configuration(config->touchpad_configuration());
+    if (config->has_touchpad_config() && existing_tpd_conf.is_set())
+        device.apply_touchpad_configuration(config->touchpad_config());
 
     auto existing_kbd_conf = device.keyboard_configuration();
-    if (config->has_keyboard_configuration() && existing_kbd_conf.is_set())
-        device.apply_keyboard_configuration(config->keyboard_configuration());
+    if (config->has_keyboard_config() && existing_kbd_conf.is_set())
+        device.apply_keyboard_configuration(config->keyboard_config());
 }
 
 MirInputDevice get_device_config(mi::Device const& device)
@@ -81,15 +81,15 @@ MirInputDevice get_device_config(mi::Device const& device)
     MirInputDevice cfg(device.id(), device.capabilities(), device.name(), device.unique_id());
     auto ptr_conf = device.pointer_configuration();
     if (ptr_conf.is_set())
-        cfg.set_pointer_configuration(ptr_conf.value());
+        cfg.set_pointer_config(ptr_conf.value());
 
     auto tpd_conf = device.touchpad_configuration();
     if (tpd_conf.is_set())
-        cfg.set_touchpad_configuration(tpd_conf.value());
+        cfg.set_touchpad_config(tpd_conf.value());
 
     auto kbd_conf = device.keyboard_configuration();
     if (kbd_conf.is_set())
-        cfg.set_keyboard_configuration(kbd_conf.value());
+        cfg.set_keyboard_config(kbd_conf.value());
 
     return cfg;
 }
@@ -169,13 +169,13 @@ mi::ConfigChanger::~ConfigChanger()
     devices->remove_observer(device_observer);
 }
 
-MirInputConfiguration mi::ConfigChanger::base_configuration()
+MirInputConfig mi::ConfigChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     return base;
 }
 
-void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& session, MirInputConfiguration && config)
+void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& session, MirInputConfig && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     auto const& session_config = (config_map[session] = std::move(config));
@@ -186,7 +186,7 @@ void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& sess
     apply_config_at_session(session_config, session);
 }
 
-void mi::ConfigChanger::set_base_configuration(MirInputConfiguration && config)
+void mi::ConfigChanger::set_base_configuration(MirInputConfig && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     base = std::move(config);
@@ -207,10 +207,10 @@ void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> con
     for (auto const dev : added)
     {
         auto initial_config = get_device_config(*dev);
-        base.add_device_configuration(initial_config);
+        base.add_device_config(initial_config);
 
         for(auto & session_config : config_map)
-            session_config.second.add_device_configuration(initial_config);
+            session_config.second.add_device_config(initial_config);
     }
 
     send_base_config_to_all_sessions();
@@ -260,18 +260,18 @@ void mi::ConfigChanger::session_stopping_handler(std::shared_ptr<ms::Session> co
     config_map.erase(session);
 }
 
-void mi::ConfigChanger::apply_config(MirInputConfiguration const& config)
+void mi::ConfigChanger::apply_config(MirInputConfig const& config)
 {
     devices->for_each_mutable_input_device(
         [&config](Device& device)
         {
-            auto device_config = config.get_device_configuration_by_id(device.id());
+            auto device_config = config.get_device_config_by_id(device.id());
             apply_device_config(device_config, device);
         });
     base_configuration_applied = false;
 }
 
-void mi::ConfigChanger::apply_config_at_session(MirInputConfiguration const& config, std::shared_ptr<mf::Session> const& session)
+void mi::ConfigChanger::apply_config_at_session(MirInputConfig const& config, std::shared_ptr<mf::Session> const& session)
 {
     try
     {

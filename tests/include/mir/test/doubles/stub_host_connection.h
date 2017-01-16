@@ -27,7 +27,7 @@
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
-#include "mir/input/mir_input_configuration.h"
+#include "mir/input/mir_input_config.h"
 #include "mir_toolkit/mir_connection.h"
 #include <gmock/gmock.h>
 #include "mir/test/gmock_fixes.h"

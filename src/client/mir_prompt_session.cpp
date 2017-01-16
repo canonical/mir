@@ -42,7 +42,7 @@ MirPromptSession::MirPromptSession(
                 set_state(mir_prompt_session_event_get_state(mir_event_get_prompt_session_event(&event)));
         })},
     state(mir_prompt_session_state_stopped),
-    session(mcl::make_protobuf_object<mir::protobuf::Void>()),
+    session(mcl::make_protobuf_object<mir::protobuf::PromptSession>()),
     handle_prompt_session_state_change{[](MirPromptSessionState){}}
 {
 }
@@ -91,7 +91,7 @@ MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void
     stop_wait_handle.expect_result();
 
     server.stop_prompt_session(
-        protobuf_void.get(),
+        session.get(),
         protobuf_void.get(),
         google::protobuf::NewCallback(this, &MirPromptSession::done_stop,
                                       callback, context));
@@ -149,6 +149,7 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
 {
     mp::SocketFDRequest request;
     request.set_number(no_of_fds);
+    request.set_prompt_session_id(session->id());
 
     fds_for_prompt_providers_wait_handle.expect_result();
 

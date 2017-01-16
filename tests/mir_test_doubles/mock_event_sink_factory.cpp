@@ -40,7 +40,7 @@ public:
     void handle_error(mir::ClientVisibleError const& error) override;
     void send_ping(int32_t serial) override;
     void send_buffer(mf::BufferStreamId id, mg::Buffer& buf, mg::BufferIpcMsgType type) override;
-    void handle_input_config_change(MirInputConfiguration const& devices) override;
+    void handle_input_config_change(MirInputConfig const& devices) override;
     void add_buffer(mir::graphics::Buffer&) override;
     void remove_buffer(mir::graphics::Buffer&) override;
     void update_buffer(mir::graphics::Buffer&) override;
@@ -82,7 +82,7 @@ void GloballyUniqueMockEventSink::send_ping(int32_t serial)
 }
 
 void GloballyUniqueMockEventSink::handle_input_config_change(
-    MirInputConfiguration const& config)
+    MirInputConfig const& config)
 {
     underlying_sink->handle_input_config_change(config);
 }

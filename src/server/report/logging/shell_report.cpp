@@ -86,7 +86,7 @@ void mrl::ShellReport::update_surface(
 void mrl::ShellReport::update_surface(
     Session const& session,
     Surface const& surface,
-    MirSurfaceAttrib /*attrib*/, int /*value*/)
+    MirWindowAttrib /*attrib*/, int /*value*/)
 {
     std::ostringstream out;
     log_basics(out, session, surface, "update");

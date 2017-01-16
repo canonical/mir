@@ -292,14 +292,14 @@ MirWaitHandle* mir_connection_set_base_display_config(
     }
 }
 
-MirInputConfiguration* mir_connection_create_input_config(
+MirInputConfig* mir_connection_create_input_config(
     MirConnection* connection)
 try
 {
     mir::require(mir_connection_is_valid(connection));
 
-    auto devices = connection->the_input_devices();
-    return new MirInputConfiguration{devices->devices()};
+    auto wrapper = connection->the_input_devices();
+    return new MirInputConfig{wrapper->devices()};
 }
 catch (std::exception const& ex)
 {
@@ -323,7 +323,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_apply_input_configuration(MirConnection* connection, MirInputConfig const* config) try
+void mir_connection_apply_input_config(MirConnection* connection, MirInputConfig const* config) try
 {
     if (!connection)
         return;
@@ -334,7 +334,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_set_base_input_configuration(MirConnection* connection, MirInputConfig const* config) try
+void mir_connection_set_base_input_config(MirConnection* connection, MirInputConfig const* config) try
 {
     if (!connection)
         return;
@@ -345,7 +345,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_input_config_destroy(MirInputConfiguration const* config)
+void mir_input_config_destroy(MirInputConfig const* config)
 {
     delete config;
 }

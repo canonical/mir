@@ -78,7 +78,7 @@ public:
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
     virtual bool supports_passthrough() = 0;
-    virtual void apply_input_configuration(MirInputConfiguration const* config) = 0;
+    virtual void apply_input_configuration(MirInputConfig const* config) = 0;
 
 protected:
     HostConnection() = default;

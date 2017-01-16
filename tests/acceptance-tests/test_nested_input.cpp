@@ -21,6 +21,7 @@
 #include "mir/input/device.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/input/mir_input_config.h"
 
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -43,6 +44,7 @@
 
 #include <linux/input.h>
 #include <atomic>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -56,7 +58,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
-size_t get_index_of(MirInputConfiguration const* config, std::string const& id)
+size_t get_index_of(MirInputConfig const* config, std::string const& id)
 {
     for (size_t i = 0, e = mir_input_config_device_count(config);i != e;++i)
     {
@@ -67,7 +69,7 @@ size_t get_index_of(MirInputConfiguration const* config, std::string const& id)
     return mir_input_config_device_count(config);
 }
 
-bool contains(MirInputConfiguration const* config, std::string const& id)
+bool contains(MirInputConfig const* config, std::string const& id)
 {
     return mir_input_config_device_count(config) != get_index_of(config, id);
 }
@@ -144,7 +146,7 @@ struct NestedInputWithMouse : NestedInput
 struct ExposedSurface
 {
 public:
-    using UniqueInputConfig = std::unique_ptr<MirInputConfiguration, void(*)(MirInputConfiguration const*)>;
+    using UniqueInputConfig = std::unique_ptr<MirInputConfig , void(*)(MirInputConfig const*)>;
     ExposedSurface(std::string const& connect_string)
     {
         // Ensure the nested server posts a frame
@@ -167,17 +169,17 @@ public:
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+        if (mir_window_attrib_visibility == attrib &&
+            mir_window_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
-            mir_surface_focused == value)
+        if (mir_window_attrib_focus == attrib &&
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)
@@ -190,31 +192,31 @@ public:
         return {config,&mir_input_config_destroy};
     }
 
-    void on_input_config(std::function<void(MirInputConfiguration const*)> const& handler)
+    void on_input_config(std::function<void(MirInputConfig const*)> const& handler)
     {
         input_config = handler;
     }
 
-    void apply_config(MirInputConfiguration* configuration)
+    void apply_config(MirInputConfig* configuration)
     {
-        mir_connection_apply_input_configuration(connection, configuration);
+        mir_connection_apply_input_config(connection, configuration);
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<ExposedSurface*>(context);
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            client->handle_window_event(window_event);
 
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
     }
 
-    static void null_event_handler(MirSurface*, MirEvent const*, void*) {};
+    static void null_event_handler(MirWindow*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
         mir_window_set_event_handler(window, null_event_handler, nullptr);
@@ -232,7 +234,7 @@ private:
     MirWindow *window;
     bool exposed{false};
     bool focused{false};
-    std::function<void(MirInputConfiguration const* confg)> input_config{[](MirInputConfiguration const*){}};
+    std::function<void(MirInputConfig const* confg)> input_config{[](MirInputConfig const*){}};
 };
 
 }
@@ -431,7 +433,7 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     ExposedSurface client_to_nested(nested_mir.new_connection());
     client_to_nested.on_input_config(
-        [&](MirInputConfiguration const* config)
+        [&](MirInputConfig const* config)
         {
             if (contains(config, uid))
                 fake_device_received.raise();
@@ -445,9 +447,12 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     ASSERT_TRUE(fake_device_received.wait_for(4s));
 
     auto device_config = client_to_nested.get_input_config();
+    std::cout << "..++++ " << *device_config << std::endl;
     auto device = mir_input_config_get_mutable_device(device_config.get(), get_index_of(device_config.get(), uid));
-    auto ptr_conf = mir_input_device_get_mutable_pointer_configuration(device);
-    mir_pointer_configuration_set_acceleration_bias(ptr_conf, acceleration_bias);
+    std::cout << "..++++ " << *device << std::endl;
+    std::cout << "..++++ index : " << get_index_of(device_config.get(), uid) << std::endl;
+    auto ptr_conf = mir_input_device_get_mutable_pointer_config(device);
+    mir_pointer_config_set_acceleration_bias(ptr_conf, acceleration_bias);
     fake_device_received.reset();
     client_to_nested.apply_config(device_config.get());
 
@@ -455,8 +460,8 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
 
     device_config = client_to_nested.get_input_config();
     device = mir_input_config_get_mutable_device(device_config.get(), get_index_of(device_config.get(), uid));
-    ptr_conf = mir_input_device_get_mutable_pointer_configuration(device);
+    ptr_conf = mir_input_device_get_mutable_pointer_config(device);
 
-    EXPECT_THAT(mir_pointer_configuration_get_acceleration_bias(ptr_conf), acceleration_bias);
+    EXPECT_THAT(mir_pointer_config_get_acceleration_bias(ptr_conf), acceleration_bias);
 }
 

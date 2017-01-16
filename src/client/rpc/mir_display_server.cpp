@@ -177,13 +177,13 @@ void mclr::DisplayServer::new_fds_for_prompt_providers(
 }
 void mclr::DisplayServer::start_prompt_session(
     mir::protobuf::PromptSessionParameters const* request,
-    mir::protobuf::Void* response,
+    mir::protobuf::PromptSession* response,
     google::protobuf::Closure* done)
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
 void mclr::DisplayServer::stop_prompt_session(
-    mir::protobuf::Void const* request,
+    mir::protobuf::PromptSession const* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {

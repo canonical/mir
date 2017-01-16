@@ -67,8 +67,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/cookie/authority.h"
-#include "mir/input/mir_input_configuration.h"
-#include "mir/input/mir_input_configuration_serialization.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
@@ -323,7 +323,7 @@ struct SessionMediator : public ::testing::Test
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
-    MirInputConfiguration config;
+    MirInputConfig config;
 };
 
 }
@@ -913,13 +913,13 @@ TEST_F(SessionMediator, connect_sends_base_input_configuration)
     mtd::StubDevice dev1{MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "kbd", "kbd-aaf474"};
     mtd::StubDevice dev2{MirInputDeviceId{7}, mi::DeviceCapability::touchscreen, "ts", "ts-ewrkw2"};
     std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
-    config.add_device_configuration(MirInputDevice(dev1.id(), dev1.capabilities(), dev1.name(), dev1.unique_id()));
-    config.add_device_configuration(MirInputDevice(dev2.id(), dev2.capabilities(), dev2.name(), dev2.unique_id()));
+    config.add_device_config(MirInputDevice(dev1.id(), dev1.capabilities(), dev1.name(), dev1.unique_id()));
+    config.add_device_config(MirInputDevice(dev2.id(), dev2.capabilities(), dev2.name(), dev2.unique_id()));
     ON_CALL(mock_input_config_changer, base_configuration())
         .WillByDefault(Return(config));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
-    auto received_conf = mir::input::deserialize_input_configuration(connection.input_configuration());
+    auto received_conf = mir::input::deserialize_input_config(connection.input_configuration());
 
     EXPECT_THAT(received_conf, mt::InputConfigurationMatches(devices));
 }
