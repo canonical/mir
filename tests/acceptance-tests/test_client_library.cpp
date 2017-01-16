@@ -58,10 +58,6 @@ static_assert(
     static_cast<int32_t>(mir_window_type_dialog),
     "mir_surface_type_dialog != mir_window_type_dialog");
 static_assert(
-    static_cast<int32_t>(mir_surface_type_overlay) ==
-    static_cast<int32_t>(mir_window_type_overlay),
-    "mir_surface_type_overlay != mir_window_type_overlay");
-static_assert(
     static_cast<int32_t>(mir_surface_type_gloss) ==
     static_cast<int32_t>(mir_window_type_gloss),
     "mir_surface_type_gloss != mir_window_type_gloss");
@@ -89,12 +85,6 @@ static_assert(
     static_cast<int32_t>(mir_surface_type_tip) ==
     static_cast<int32_t>(mir_window_type_tip),
     "mir_surface_type_tip != mir_window_type_tip");
-static_assert(
-    static_cast<int32_t>(mir_surface_types) ==
-    static_cast<int32_t>(mir_window_types),
-    "mir_surface_types != mir_window_types");
-static_assert(sizeof(MirSurfaceType) == sizeof(MirWindowType),
-    "sizeof(MirSurfaceType) != sizeof(MirWindowType)");
 
 // Assert our MirSurfaceState is 1to1 to MirWindowState
 static_assert(
