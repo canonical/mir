@@ -135,12 +135,12 @@ catch (std::exception const& ex)
 
 void mir_screencast_capture_to_buffer(
     MirScreencast* screencast,
-    MirBuffer* buffer,
+    MirBuffer* b,
     mir_buffer_callback available_callback, void* available_context)
 try
 {
-    (void) screencast; (void)buffer;
-    (void) available_callback;(void)available_context;
+    auto buffer = reinterpret_cast<mir::client::MirBuffer*>(b);
+    screencast->screencast_to_buffer(buffer, available_callback, available_context);
 }
 catch (std::exception const& ex)
 {

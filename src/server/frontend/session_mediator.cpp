@@ -835,7 +835,6 @@ void mf::SessionMediator::screencast_to_buffer(
     auto session = weak_session.lock();
     ScreencastSessionId const screencast_session_id{request->id().value()};
     auto buffer = session->get_buffer(mg::BufferID{request->buffer_id()});
-    mf::ScreencastSessionId const screencast_id{request->id().value()};
     screencast->capture(screencast_session_id, buffer);
     done->Run();
 }

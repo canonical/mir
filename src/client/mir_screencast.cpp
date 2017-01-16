@@ -21,10 +21,12 @@
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir/mir_buffer_stream.h"
+#include "mir/mir_buffer.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -209,4 +211,37 @@ MirBufferStream* MirScreencast::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();
+}
+
+void MirScreencast::screencast_done(ScreencastRequest* request)
+{
+    request->available_callback(reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
+
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto it = std::find_if(requests.begin(), requests.end(),
+        [&request] (auto const& it) { return it.get() == request; } );
+    if (it != requests.end())
+        requests.erase(it);
+}
+
+void MirScreencast::screencast_to_buffer(
+    mcl::MirBuffer* buffer,
+    mir_buffer_callback cb,
+    void* context)
+{
+    if (!server) //construction with nullptr should be invalid
+        BOOST_THROW_EXCEPTION(std::runtime_error("invalid screencast"));
+    
+    std::unique_lock<decltype(mutex)> lk(mutex);
+
+    requests.emplace_back(std::make_unique<ScreencastRequest>(buffer, cb, context));
+
+    mir::protobuf::ScreencastRequest request;
+    request.set_buffer_id(buffer->rpc_id());
+    request.mutable_id()->set_value(protobuf_screencast->screencast_id().value());
+
+    server->screencast_to_buffer(
+        &request,
+        &(requests.back()->response),
+        google::protobuf::NewCallback(this, &MirScreencast::screencast_done, requests.back().get()));
 }
