@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
 #include <stdbool.h>
+#include <mir_toolkit/client_types.h>
 #include <mir_toolkit/client_types_nbs.h>
 #include <mir_toolkit/mir_native_buffer.h>
 
@@ -138,6 +139,26 @@ MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
  *   \param [in] buffer              The buffer to be released
  **/
 void mir_buffer_release(MirBuffer* buffer);
+
+/** Capture the contents of the screen to a particular buffer.
+ *
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ *   \param [in] available_callback Callback triggered when buffer is available again
+ *   \param [in] available_context  The context for the above callback
+ **/
+void mir_screencast_capture_to_buffer(
+    MirScreencast* screencast,
+    MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context);
+
+/** Capture the contents of the screen to a particular buffer and wait for the
+ *  capture to complete.
+ *
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ **/
+void mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer);
 
 #ifdef __cplusplus
 }

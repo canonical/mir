@@ -21,7 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "client_screencast.h"
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
 
@@ -33,45 +33,27 @@ namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
-namespace
+void mt::ScreencastBase::SetUp()
 {
-unsigned int const default_width{1};
-unsigned int const default_height{1};
-MirPixelFormat const default_pixel_format{mir_pixel_format_abgr_8888};
-MirRectangle const default_capture_region{0, 0, 1, 1};
+    server.override_the_session_authorizer([this]
+        { return mt::fake_shared(mock_authorizer); });
 
-struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
-{
-    MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
-};
-
-struct Screencast : mtf::HeadlessInProcessServer
-{
-    MockSessionAuthorizer mock_authorizer;
-
-    void SetUp() override
-    {
-        server.override_the_session_authorizer([this]
-            { return mt::fake_shared(mock_authorizer); });
-
-        mtf::HeadlessInProcessServer::SetUp();
-    }
-
-    MirScreencastSpec* create_default_screencast_spec(MirConnection* connection)
-    {
-        MirScreencastSpec* spec = mir_create_screencast_spec(connection);
-        mir_screencast_spec_set_width(spec, default_width);
-        mir_screencast_spec_set_height(spec, default_height);
-        mir_screencast_spec_set_pixel_format(spec, default_pixel_format);
-        mir_screencast_spec_set_capture_region(spec, &default_capture_region);
-
-        return spec;
-    }
-};
+    mtf::HeadlessInProcessServer::SetUp();
 }
 
-// TODO test case(s) showing screencast works. lp:1396681
+MirScreencastSpec* mt::ScreencastBase::create_default_screencast_spec(MirConnection* connection)
+{
+    MirScreencastSpec* spec = mir_create_screencast_spec(connection);
+    mir_screencast_spec_set_width(spec, default_width);
+    mir_screencast_spec_set_height(spec, default_height);
+    mir_screencast_spec_set_pixel_format(spec, default_pixel_format);
+    mir_screencast_spec_set_capture_region(spec, &default_capture_region);
 
+    return spec;
+}
+
+typedef mt::ScreencastBase Screencast;
+// TODO test case(s) showing screencast works. lp:1396681
 TEST_F(Screencast, with_invalid_params_fails)
 {
     using namespace testing;

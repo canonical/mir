@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
 
 #include "mir/frontend/session_authorizer.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -50,6 +51,11 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
     {
         return true;
     }
+};
+
+struct MockSessionAuthorizer : StubSessionAuthorizer
+{
+    MOCK_METHOD1(screencast_is_allowed, bool(frontend::SessionCredentials const&));
 };
 
 }

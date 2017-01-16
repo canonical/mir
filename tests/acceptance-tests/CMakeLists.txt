@@ -64,6 +64,7 @@ set(
   test_presentation_chain.cpp
   test_render_surface.cpp
   test_buffer_stream_arrangement1.cpp
+  test_client_screencast1.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -101,6 +102,9 @@ endif()
           "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
 
   set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+
+  set_source_files_properties(test_client_screencast1.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
 # END "staging"
 
