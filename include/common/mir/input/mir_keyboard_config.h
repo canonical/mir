@@ -30,25 +30,25 @@
 /*
  * Keyboard device configuration.
  */
-struct MirKeyboardConfiguration
+struct MirKeyboardConfig
 {
-    MirKeyboardConfiguration();
-    ~MirKeyboardConfiguration();
-    MirKeyboardConfiguration(mir::input::Keymap&& keymap);
-    MirKeyboardConfiguration(MirKeyboardConfiguration&& other);
-    MirKeyboardConfiguration(MirKeyboardConfiguration const& other);
-    MirKeyboardConfiguration& operator=(MirKeyboardConfiguration const& other);
+    MirKeyboardConfig();
+    ~MirKeyboardConfig();
+    MirKeyboardConfig(mir::input::Keymap&& keymap);
+    MirKeyboardConfig(MirKeyboardConfig&& other);
+    MirKeyboardConfig(MirKeyboardConfig const& other);
+    MirKeyboardConfig& operator=(MirKeyboardConfig const& other);
 
     mir::input::Keymap const& device_keymap() const;
     void device_keymap(mir::input::Keymap const& );
 
-    bool operator==(MirKeyboardConfiguration const& rhs) const;
-    bool operator!=(MirKeyboardConfiguration const& rhs) const;
+    bool operator==(MirKeyboardConfig const& rhs) const;
+    bool operator!=(MirKeyboardConfig const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream& operator<<(std::ostream& out, MirKeyboardConfiguration const& keyboard);
+std::ostream& operator<<(std::ostream& out, MirKeyboardConfig const& keyboard);
 
 #endif

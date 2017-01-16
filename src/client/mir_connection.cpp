@@ -600,9 +600,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             this->pong(serial);
         });
 
-        if (connect_result->has_input_devices())
+        if (connect_result->has_input_configuration())
         {
-            input_devices->update_devices(connect_result->input_devices());
+            input_devices->update_devices(connect_result->input_configuration());
         }
     }
     catch (std::exception const& e)

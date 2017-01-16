@@ -251,7 +251,8 @@ message Connection {
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
   optional InputDevices input_devices = 6;
-  optional bool coordinate_translation_present = 7; 
+  optional string input_configuration = 7;
+  optional bool coordinate_translation_present = 8; 
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -333,6 +334,7 @@ message EventSequence {
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
   optional InputDevices input_devices = 6;
+  optional string input_configuration = 7;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;

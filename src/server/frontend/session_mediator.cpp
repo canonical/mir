@@ -48,6 +48,11 @@
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/input/input_device_hub.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/input/device.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
@@ -180,13 +185,26 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    auto input_devices = response->mutable_input_devices();
+    MirInputConfig temp;
     hub->for_each_input_device(
-        [input_devices](auto const& dev)
+        [&temp](auto const& dev)
         {
-            auto dev_info = input_devices->add_device_info();
-            detail::pack_protobuf_input_device_info(*dev_info, dev);
+            MirInputDevice conf(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
+            auto ptr_conf = dev.pointer_configuration();
+            auto tpd_conf = dev.touchpad_configuration();
+            auto kbd_conf = dev.keyboard_configuration();
+
+            if (ptr_conf.is_set())
+                conf.set_pointer_config(ptr_conf.value());
+            if (tpd_conf.is_set())
+                conf.set_touchpad_config(tpd_conf.value());
+            if (kbd_conf.is_set())
+                conf.set_keyboard_config(kbd_conf.value());
+
+            temp.add_device_config(conf);
         });
+
+    response->set_input_configuration(mi::serialize_input_config(temp));
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));

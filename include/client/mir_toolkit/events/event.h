@@ -48,7 +48,7 @@ typedef enum
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
     mir_event_type_keymap,
-    mir_event_type_input_configuration,
+    mir_event_type_input_configuration, /*  __attribute__ ((deprecated("use the input config change callback and mir_event_type_input_device_state instead"))), */
     mir_event_type_surface_output, /* __attribute__ ((deprecated("use mir_event_type_window_output instead"))), */
     mir_event_type_window_output = mir_event_type_surface_output,
     mir_event_type_input_device_state,
@@ -66,7 +66,7 @@ typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent; /* __attribute__ ((dep
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
+typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
@@ -202,7 +202,7 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
 /**
- * Retrieve the MirInputConfiguration associated with a MirEvent of
+ * Retrieve the MirInputConfig associated with a MirEvent of
  * type mir_event_type_input_configuration. The event signifies that the
  * input device configuration has changed.
  *

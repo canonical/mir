@@ -27,10 +27,10 @@
 #include <string>
 #include <iosfwd>
 
-struct MirPointerConfiguration;
-struct MirTouchpadConfiguration;
-struct MirKeyboardConfiguration;
-struct MirTouchscreenConfiguration;
+struct MirPointerConfig;
+struct MirTouchpadConfig;
+struct MirKeyboardConfig;
+struct MirTouchscreenConfig;
 
 class MirInputDevice
 {
@@ -47,25 +47,25 @@ public:
     std::string const& name() const;
     std::string const& unique_id() const;
 
-    bool has_touchpad_configuration() const;
-    MirTouchpadConfiguration& touchpad_configuration();
-    MirTouchpadConfiguration const& touchpad_configuration() const;
-    void set_touchpad_configuration(MirTouchpadConfiguration const& conf);
+    bool has_touchpad_config() const;
+    MirTouchpadConfig& touchpad_config();
+    MirTouchpadConfig const& touchpad_config() const;
+    void set_touchpad_config(MirTouchpadConfig const& conf);
 
-    bool has_keyboard_configuration() const;
-    MirKeyboardConfiguration& keyboard_configuration();
-    MirKeyboardConfiguration const& keyboard_configuration() const;
-    void set_keyboard_configuration(MirKeyboardConfiguration const& conf);
+    bool has_keyboard_config() const;
+    MirKeyboardConfig& keyboard_config();
+    MirKeyboardConfig const& keyboard_config() const;
+    void set_keyboard_config(MirKeyboardConfig const& conf);
 
-    bool has_pointer_configuration() const;
-    MirPointerConfiguration& pointer_configuration();
-    MirPointerConfiguration const& pointer_configuration() const;
-    void set_pointer_configuration(MirPointerConfiguration const& conf);
+    bool has_pointer_config() const;
+    MirPointerConfig& pointer_config();
+    MirPointerConfig const& pointer_config() const;
+    void set_pointer_config(MirPointerConfig const& conf);
 
-    bool has_touchscreen_configuration() const;
-    MirTouchscreenConfiguration& touchscreen_configuration();
-    MirTouchscreenConfiguration const& touchscreen_configuration() const;
-    void set_touchscreen_configuration(MirTouchscreenConfiguration const& conf);
+    bool has_touchscreen_config() const;
+    MirTouchscreenConfig& touchscreen_config();
+    MirTouchscreenConfig const& touchscreen_config() const;
+    void set_touchscreen_config(MirTouchscreenConfig const& conf);
 
     bool operator==(MirInputDevice const& rhs) const;
     bool operator!=(MirInputDevice const& rhs) const;
@@ -74,33 +74,33 @@ private:
     std::unique_ptr<Implementation> impl;
 };
 
-class MirInputConfiguration
+class MirInputConfig
 {
 public:
-    MirInputConfiguration();
-    MirInputConfiguration(MirInputConfiguration && conf);
-    MirInputConfiguration(MirInputConfiguration const& conf);
-    MirInputConfiguration& operator=(MirInputConfiguration const& conf);
-    ~MirInputConfiguration();
+    MirInputConfig();
+    MirInputConfig(MirInputConfig && conf);
+    MirInputConfig(MirInputConfig const& conf);
+    MirInputConfig& operator=(MirInputConfig const& conf);
+    ~MirInputConfig();
 
-    void add_device_configuration(MirInputDevice const& conf);
-    MirInputDevice* get_device_configuration_by_id(MirInputDeviceId id);
-    MirInputDevice const* get_device_configuration_by_id(MirInputDeviceId id) const;
-    MirInputDevice& get_device_configuration_by_index(size_t pos);
-    MirInputDevice const& get_device_configuration_by_index(size_t pos) const;
+    void add_device_config(MirInputDevice const& conf);
+    MirInputDevice* get_device_config_by_id(MirInputDeviceId id);
+    MirInputDevice const* get_device_config_by_id(MirInputDeviceId id) const;
+    MirInputDevice& get_device_config_by_index(size_t pos);
+    MirInputDevice const& get_device_config_by_index(size_t pos) const;
     void remove_device_by_id(MirInputDeviceId id);
     size_t size() const;
 
     void for_each(std::function<void(MirInputDevice const&)> const& visitor) const;
     void for_each(std::function<void(MirInputDevice &)> const& visitor);
-    bool operator==(MirInputConfiguration const& rhs) const;
-    bool operator!=(MirInputConfiguration const& rhs) const;
+    bool operator==(MirInputConfig const& rhs) const;
+    bool operator!=(MirInputConfig const& rhs) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
 std::ostream& operator<<(std::ostream&, MirInputDevice const&);
-std::ostream& operator<<(std::ostream&, MirInputConfiguration const&);
+std::ostream& operator<<(std::ostream&, MirInputConfig const&);
 
 #endif
