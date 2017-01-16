@@ -21,8 +21,8 @@
 
 #include <memory>
 
-class MirTouchpadConfiguration;
-class MirPointerConfiguration;
+class MirTouchpadConfig;
+class MirPointerConfig;
 
 namespace mir
 {
