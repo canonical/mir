@@ -51,7 +51,7 @@ namespace input
 class InputManager;
 class InputDispatcher;
 class EventFilter;
-class MirInputConfiguration;
+class MirInputConfig;
 }
 
 namespace scene

@@ -25,14 +25,14 @@
 #include <memory>
 #include <iosfwd>
 
-struct MirTouchscreenConfiguration
+struct MirTouchscreenConfig
 {
-    MirTouchscreenConfiguration();
-    ~MirTouchscreenConfiguration();
-    MirTouchscreenConfiguration(MirTouchscreenConfiguration const&);
-    MirTouchscreenConfiguration(MirTouchscreenConfiguration &&);
-    MirTouchscreenConfiguration& operator=(MirTouchscreenConfiguration const&);
-    MirTouchscreenConfiguration(uint32_t output_id, MirTouchscreenMappingMode mode);
+    MirTouchscreenConfig();
+    ~MirTouchscreenConfig();
+    MirTouchscreenConfig(MirTouchscreenConfig const&);
+    MirTouchscreenConfig(MirTouchscreenConfig &&);
+    MirTouchscreenConfig& operator=(MirTouchscreenConfig const&);
+    MirTouchscreenConfig(uint32_t output_id, MirTouchscreenMappingMode mode);
 
     /**
      * Configures the output the device coordinates should be aligned to.
@@ -50,13 +50,13 @@ struct MirTouchscreenConfiguration
     MirTouchscreenMappingMode mapping_mode() const;
     void mapping_mode(MirTouchscreenMappingMode);
 
-    bool operator==(MirTouchscreenConfiguration const& other) const;
-    bool operator!=(MirTouchscreenConfiguration const& other) const;
+    bool operator==(MirTouchscreenConfig const& other) const;
+    bool operator!=(MirTouchscreenConfig const& other) const;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
 };
 
-std::ostream& operator<<(std::ostream& out, MirTouchscreenConfiguration const& conf);
+std::ostream& operator<<(std::ostream& out, MirTouchscreenConfig const& conf);
 
 #endif

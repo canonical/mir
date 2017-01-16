@@ -24,9 +24,9 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/cookie/authority.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
-#include "mir/input/mir_keyboard_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/input/device.h"
 
 #include "mir/test/fake_shared.h"
@@ -91,12 +91,12 @@ struct StubDevice : public mi::Device
     std::string name() const {return device_name;}
     std::string unique_id() const {return {};}
 
-    mir::optional_value<MirPointerConfiguration> pointer_configuration() const {return {};}
-    void apply_pointer_configuration(MirPointerConfiguration const&) {;}
-    mir::optional_value<MirTouchpadConfiguration> touchpad_configuration() const {return {};}
-    void apply_touchpad_configuration(MirTouchpadConfiguration const&) {}
-    mir::optional_value<MirKeyboardConfiguration> keyboard_configuration() const {return {};}
-    void apply_keyboard_configuration(MirKeyboardConfiguration const&) {}
+    mir::optional_value<MirPointerConfig> pointer_configuration() const {return {};}
+    void apply_pointer_configuration(MirPointerConfig const&) {;}
+    mir::optional_value<MirTouchpadConfig> touchpad_configuration() const {return {};}
+    void apply_touchpad_configuration(MirTouchpadConfig const&) {}
+    mir::optional_value<MirKeyboardConfig> keyboard_configuration() const {return {};}
+    void apply_keyboard_configuration(MirKeyboardConfig const&) {}
 };
 
 struct KeyRepeatDispatcher : public testing::Test
