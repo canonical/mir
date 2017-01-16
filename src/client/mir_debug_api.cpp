@@ -31,7 +31,7 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow* window)
     return window->get_buffer_stream()->get_current_buffer_id();
 }
 
-bool mir_debug_window_coords_to_screen(MirWindow* window,
+bool mir_debug_surface_coords_to_screen(MirWindow* window,
                                        int x, int y,
                                        int* screen_x, int* screen_y)
 {
@@ -50,13 +50,6 @@ uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
 int mir_debug_surface_id(MirSurface* surface)
 {
     return mir_debug_window_id(surface);
-}
-
-bool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                        int x, int y,
-                                        int* screen_x, int* screen_y)
-{
-    return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y);
 }
 
 //#pragma GCC diagnostic pop

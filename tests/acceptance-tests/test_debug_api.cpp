@@ -165,7 +165,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates_deprecated
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    ASSERT_TRUE(mir_debug_window_coords_to_screen(window, x, y, &screen_x, &screen_y));
+    ASSERT_TRUE(mir_debug_surface_coords_to_screen(window, x, y, &screen_x, &screen_y));
 #pragma GCC diagnostic pop
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
@@ -181,7 +181,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates_deprecated
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    ASSERT_TRUE(mir_debug_window_coords_to_screen(window, x, y, &screen_x, &screen_y));
+    ASSERT_TRUE(mir_debug_surface_coords_to_screen(window, x, y, &screen_x, &screen_y));
 #pragma GCC diagnostic pop
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
@@ -200,7 +200,7 @@ TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug_deprecated)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    EXPECT_FALSE(mir_debug_window_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
+    EXPECT_FALSE(mir_debug_surface_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
 #pragma GCC diagnostic pop
 
     mir_window_release_sync(window);
@@ -223,7 +223,7 @@ TEST_F(DebugAPI, is_overrideable_deprecated)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    EXPECT_TRUE(mir_debug_window_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
+    EXPECT_TRUE(mir_debug_surface_coords_to_screen(window, 0, 0, &screen_x, &screen_y));
 #pragma GCC diagnostic pop
     EXPECT_EQ(testpoint.x.as_int(), screen_x);
     EXPECT_EQ(testpoint.y.as_int(), screen_y);

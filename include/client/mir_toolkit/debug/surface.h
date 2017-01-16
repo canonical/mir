@@ -59,10 +59,10 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow *window);
  *          This call will only be interesting for automated testing, where both the client
  *          and shell state is known and constrained.
  */
-bool mir_debug_window_coords_to_screen(MirWindow *window,
+bool mir_debug_surface_coords_to_screen(MirWindow *window,
                                        int x, int y,
                                        int* screen_x, int* screen_y);
-//__attribute__((deprecated("Use mir_debug_window_id() instead")));
+//__attribute__((deprecated("Use mir_extension_window_coordinate_translation instead")));
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -73,11 +73,6 @@ int mir_debug_surface_id(MirSurface *surface);
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
 //__attribute__((deprecated("Use mir_debug_window_current_buffer_id() instead")));
-
-bool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                        int x, int y,
-                                        int* screen_x, int* screen_y);
-//__attribute__((deprecated("Use mir_debug_window_coords_to_screen() instead")));
 
 //#pragma GCC diagnostic pop
 
