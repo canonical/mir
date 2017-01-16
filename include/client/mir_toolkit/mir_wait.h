@@ -36,7 +36,7 @@ struct MirWaitHandle;
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for(MirWaitHandle *wait_handle)
-__attribute__ ((deprecated));
+/* __attribute__ ((deprecated)); */
 
 /**
  * Wait on the supplied handle until one instance of the associated request
@@ -47,7 +47,7 @@ __attribute__ ((deprecated));
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for_one(MirWaitHandle *wait_handle)
-__attribute__((deprecated));
+/* __attribute__((deprecated)); */
 
 
 #ifdef __cplusplus

@@ -43,7 +43,10 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
         auto const platform_op_done = mir_connection_platform_operation(
             connection, request, assign_reply, &reply);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(platform_op_done);
+#pragma GCC diagnostic pop
 
         mir_platform_message_release(request);
 
@@ -61,7 +64,10 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
         auto const platform_op_done = mir_connection_platform_operation(
                 connection, request, assign_reply, &reply);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(platform_op_done);
+#pragma GCC diagnostic pop
 
         mir_platform_message_release(request);
 

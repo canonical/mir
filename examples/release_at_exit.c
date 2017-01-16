@@ -46,7 +46,10 @@ void demo_client(const char* server)
 {
     atexit(&close_connection);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(server, __FILE__, connection_callback, NULL));
+#pragma GCC diagnostic pop
     assert(mir_connection_is_valid(connection));
 
     MirPixelFormat pixel_format;

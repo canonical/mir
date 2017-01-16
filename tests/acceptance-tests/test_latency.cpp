@@ -364,7 +364,10 @@ TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
     {
         auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
     }
 
     ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
@@ -387,7 +390,10 @@ TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
     {
         auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
     }
 
     ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
@@ -408,7 +414,10 @@ TEST_F(ClientLatency, async_swap_dropping_latency_is_closer_to_zero_than_one)
     {
         auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
     }
 
     ASSERT_THAT(stats.frames_composited(), Ge(test_frames));

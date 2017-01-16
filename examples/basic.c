@@ -78,7 +78,10 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [connect_tag]
     // Call mir_connect and wait for callback to complete.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(server, __FILE__, connection_callback, &mcd));
+#pragma GCC diagnostic pop
     puts("Connected");
     ///\internal [connect_tag]
 

@@ -611,7 +611,10 @@ struct Client
     {
         auto const configuration = mir_connection_create_display_config(connection);
         changer(configuration);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
         mir_display_config_destroy(configuration);
     }
 
@@ -628,7 +631,10 @@ struct Client
         EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
 
         initial_condition.wait_for(timeout);
         mir_display_config_destroy(configuration);
@@ -943,7 +949,10 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
         EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(Pointee(mt::DisplayConfigMatches(configuration))))
             .WillRepeatedly(InvokeWithoutArgs([&] { config_reported.raise(); }));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
+#pragma GCC diagnostic pop
 
         config_reported.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
@@ -978,7 +987,10 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_configure_cursor(client.window, conf));
+#pragma GCC diagnostic pop
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1060,7 +1072,10 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_configure_cursor(client.window, conf));
+#pragma GCC diagnostic pop
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);

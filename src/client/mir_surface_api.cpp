@@ -826,9 +826,12 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirPersistentId* result = nullptr;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_request_persistent_id_helper(window,
                                                          &assign_surface_id_result,
                                                          &result));
+#pragma GCC diagnostic pop
     return result;
 }
 
@@ -1291,9 +1294,12 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirPersistentId* result = nullptr;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_request_persistent_id_helper(surface,
                                                   &assign_surface_id_result,
                                                   &result));
+#pragma GCC diagnostic pop
     return result;
 }
 

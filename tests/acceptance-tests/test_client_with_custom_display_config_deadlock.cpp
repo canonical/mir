@@ -39,7 +39,10 @@ TEST_F(ClientWithCustomDisplayConfiguration,
     ASSERT_TRUE(mir_window_is_valid(second_surface));
 
     auto configuration = mir_connection_create_display_config(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
     EXPECT_STREQ("", mir_connection_get_error_message(connection));
     mir_display_config_destroy(configuration);
 

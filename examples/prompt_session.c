@@ -154,7 +154,10 @@ void helper(const char* server)
     assert(mcd.state == mir_prompt_session_state_started);
     puts("helper: Started prompt session");
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd));
+#pragma GCC diagnostic pop
     assert(mcd.client_fd_count == 1);
     puts("helper: Added waiting FD");
 

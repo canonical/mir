@@ -614,13 +614,19 @@ TEST_F(MirConnectionTest, uses_client_platform_for_platform_operation)
 
     auto connect_wh =
         connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(connect_wh);
+#pragma GCC diagnostic pop
 
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
         request.get(), assign_response, &returned_response);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(op_wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(returned_response, Eq(response.get()));
 }
@@ -639,13 +645,19 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
 
     auto connect_wh =
         connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(connect_wh);
+#pragma GCC diagnostic pop
 
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
         request.get(), assign_response, &returned_response);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(op_wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
     mir_platform_message_release(returned_response);

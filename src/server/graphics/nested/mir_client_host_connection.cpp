@@ -350,7 +350,10 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
 void mgn::MirClientHostConnection::apply_display_config(
     MirDisplayConfiguration& display_config)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connection_apply_display_config(mir_connection, &display_config));
+#pragma GCC diagnostic pop
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(

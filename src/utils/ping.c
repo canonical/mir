@@ -117,7 +117,10 @@ int main(int argc, char *argv[])
         long long start, duration;
 
         start = now();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_window_set_preferred_orientation(window, types[t]));
+#pragma GCC diagnostic pop
         duration = now() - start;
         t ^= 1;
 
