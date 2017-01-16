@@ -79,7 +79,7 @@ public:
 // TODO There already is a test new display config acceptance tests so these can be
 // removed once we remove these functions.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"{
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
