@@ -172,7 +172,7 @@ int main(int argc, char** argv)
     mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(
         spec, render_surface, width, height, displacement_x, displacement_y);
-    MirWindow* window = mir_window_create_sync(spec);
+    MirWindow* window = mir_create_window_sync(spec);
     if (!mir_window_is_valid(window))
     {
         printf("could not create a window\n");
