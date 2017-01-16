@@ -191,27 +191,22 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     }
 }
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
+static MirOutput const* find_active_output(
+    MirDisplayConfig const* conf)
 {
-    const MirDisplayOutput *output = NULL;
-    int d;
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (d = 0; d < (int)conf->num_outputs; d++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        MirOutputConnectionState state = mir_output_get_connection_state(output);
+        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
         {
-            output = out;
-            break;
+            return output;
         }
     }
 
-    return output;
+    return NULL;
 }
 
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)
@@ -443,10 +438,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */
-    MirDisplayConfiguration* display_config =
-        mir_connection_create_display_config(connection);
+    MirDisplayConfig* display_config =
+        mir_connection_create_display_configuration(connection);
 
-    const MirDisplayOutput *output = find_active_output(display_config);
+    MirOutput const* output = find_active_output(display_config);
 
     if (output == NULL)
     {
@@ -454,19 +449,25 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         return 0;
     }
 
-    const MirDisplayMode *mode = &output->modes[output->current_mode];
+    MirOutputMode const* mode = mir_output_get_current_mode(output);
+
+    int pos_x = mir_output_get_position_x(output);
+    int pos_y = mir_output_get_position_y(output);
+
+    int mode_width  = mir_output_mode_get_width(mode);
+    int mode_height = mir_output_mode_get_height(mode);
 
     printf("Current active output is %dx%d %+d%+d\n",
-           mode->horizontal_resolution, mode->vertical_resolution,
-           output->position_x, output->position_y);
+        mode_width, mode_height,
+        pos_x, pos_y);
 
     if (fullscreen)  /* TODO: Use surface states for this */
     {
-        *width = mode->horizontal_resolution;
-        *height = mode->vertical_resolution;
+        *width  = mode_width;
+        *height = mode_height;
     }
 
-    mir_display_config_destroy(display_config);
+    mir_display_config_release(display_config);
 
     MirWindowSpec *spec =
         mir_create_normal_window_spec(connection, *width, *height);
