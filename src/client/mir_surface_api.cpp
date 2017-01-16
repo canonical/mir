@@ -511,6 +511,23 @@ static MirWaitHandle* window_release_helper(
     }
 }
 
+static MirWaitHandle* mir_window_request_persistent_id_helper(
+    MirWindow* window,
+    mir_window_id_callback callback, void* context)
+{
+    mir::require(mir_window_is_valid(window));
+
+    try
+    {
+        return window->request_persistent_id(callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
 class WindowSync
 {
 public:
@@ -790,11 +807,9 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
     return mode;
 }
 
-MirWaitHandle* mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
+void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
 {
-    mir::require(mir_window_is_valid(window));
-
-    return window->request_persistent_id(callback, context);
+    mir_window_request_persistent_id_helper(window, callback, context);
 }
 
 namespace
@@ -811,9 +826,9 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_window_request_persistent_id(window,
-                                                  &assign_surface_id_result,
-                                                  &result));
+    mir_wait_for(mir_window_request_persistent_id_helper(window,
+                                                         &assign_surface_id_result,
+                                                         &result));
     return result;
 }
 
@@ -1270,12 +1285,16 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
-    return mir_window_request_persistent_id(surface, callback, context);
+    return mir_window_request_persistent_id_helper(surface, callback, context);
 }
 
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
-    return mir_window_request_persistent_id_sync(surface);
+    MirPersistentId* result = nullptr;
+    mir_wait_for(mir_window_request_persistent_id_helper(surface,
+                                                  &assign_surface_id_result,
+                                                  &result));
+    return result;
 }
 
 //#pragma GCC diagnostic pop
