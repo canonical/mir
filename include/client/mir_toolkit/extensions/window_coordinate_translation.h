@@ -41,14 +41,14 @@ extern "C" {
  *          This call will only be interesting for automated testing, where both the client
  *          and shell state is known and constrained.
  */
-typedef void (*mir_extension_window_translate_coordinates)(
+typedef void (*MirExtensionWindowTranslateCoordinates)(
     MirWindow* window,
     int x, int y,
     int* screen_x, int* screen_y);
 
 typedef struct MirExtensionWindowCoordinateTranslationV1
 {
-    mir_extension_window_translate_coordinates window_translate_coordinates;
+    MirExtensionWindowTranslateCoordinates window_translate_coordinates;
 } MirExtensionWindowCoordinateTranslationV1;
 
 static inline MirExtensionWindowCoordinateTranslationV1 const*
