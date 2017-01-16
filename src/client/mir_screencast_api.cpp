@@ -19,6 +19,7 @@
 #define MIR_LOG_COMPONENT "MirScreencastAPI"
 
 #include "mir_toolkit/mir_screencast.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir_screencast.h"
 #include "mir_connection.h"
 #include "mir/raii.h"
@@ -130,4 +131,28 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
+}
+
+void mir_screencast_capture_to_buffer(
+    MirScreencast* screencast,
+    MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context)
+try
+{
+    (void) screencast; (void)buffer;
+    (void) available_callback;(void)available_context;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
+try
+{
+    (void) screencast; (void)buffer;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }

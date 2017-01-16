@@ -573,3 +573,9 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_request_persistent_id;
     mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;
+
+MIR_CLIENT_0.27 {  # New functions in Mir 0.27
+  global:
+    mir_screencast_capture_to_buffer;
+    mir_screencast_capture_to_buffer_sync;
+} MIR_CLIENT_0.26;

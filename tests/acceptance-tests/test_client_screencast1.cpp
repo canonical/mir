@@ -56,7 +56,24 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
     mir_screencast_spec_set_capture_region(spec, &default_capture_region);
     auto screencast = mir_screencast_create_sync(spec);
 
-    mir_screencast_capture_to_buffer_sync(screencast, buffer_info.buffer);
+    struct Capture
+    {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool capture = false;
+    } capture;
+
+    mir_screencast_capture_to_buffer(screencast, buffer_info.buffer, 
+        [] (MirBuffer*, void* context) {
+            auto c = reinterpret_cast<Capture*>(context);
+            std::unique_lock<decltype(c->mutex)> lk(c->mutex);
+            c->capture = true;
+            c->cv.notify_all();
+        }, &capture );
+
+    std::unique_lock<decltype(capture.mutex)> lk2(capture.mutex);
+    EXPECT_TRUE(capture.cv.wait_for(lk2, 5s, [&] { return capture.capture; }));
+
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
