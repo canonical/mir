@@ -34,6 +34,8 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/variable_length_array.h"
@@ -203,7 +205,8 @@ TEST_F(EventSender, sends_input_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices().device_info(), mt::InputDevicesMatch(devices));
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
+            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -222,7 +225,8 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices().device_info(), mt::InputDevicesMatch(devices));
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
+            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
