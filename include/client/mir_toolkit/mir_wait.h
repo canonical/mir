@@ -35,7 +35,7 @@ struct MirWaitHandle;
  * have completed. Returns immediately if zero are pending.
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
-void mir_wait_for(MirWaitHandle *wait_handle)
+void mir_wait_for(MirWaitHandle *wait_handle);
 /* __attribute__ ((deprecated)); */
 
 /**
@@ -46,7 +46,7 @@ void mir_wait_for(MirWaitHandle *wait_handle)
  * not return if zero are pending and instead waits for one.
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
-void mir_wait_for_one(MirWaitHandle *wait_handle)
+void mir_wait_for_one(MirWaitHandle *wait_handle);
 /* __attribute__((deprecated)); */
 
 
