@@ -97,7 +97,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
                 std::reverse(buffer_id_seq.begin(), buffer_id_seq.end());
             }
 
-            mg::BufferID add_buffer(mg::BufferProperties const& props) override
+            mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const& buffer) override
             {
                 struct BufferIdWrapper : mg::Buffer
                 {
@@ -133,7 +133,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
 
                 auto id = buffer_id_seq.back();
                 buffer_id_seq.pop_back();
-                b = std::make_shared<BufferIdWrapper>(alloc->alloc_buffer(props), id);
+                b = std::make_shared<BufferIdWrapper>(buffer, id);
                 sink->add_buffer(*b);
                 return id; 
             }

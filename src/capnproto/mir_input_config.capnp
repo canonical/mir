@@ -29,7 +29,7 @@ struct Keymap
     options @3 :Text;
 }
 
-struct PointerConfiguration
+struct PointerConfig
 {
     enum Handedness
     {
@@ -48,7 +48,7 @@ struct PointerConfiguration
     verticalScrollScale @4 :Float32;
 }
 
-struct TouchscreenConfiguration 
+struct TouchscreenConfig 
 {
     enum MappingMode
     {
@@ -59,7 +59,7 @@ struct TouchscreenConfiguration
     mappingMode @1 :MappingMode;
 }
 
-struct TouchpadConfiguration
+struct TouchpadConfig
 {
     clickMode @0 :UInt32;
     scrollMode @1 :UInt32;
@@ -70,7 +70,7 @@ struct TouchpadConfiguration
     disableWhileTyping @6 :Bool;
 }
 
-struct KeyboardConfiguration
+struct KeyboardConfig
 {
    keymap @0 :Keymap;
 }
@@ -82,13 +82,13 @@ struct DeviceConfiguration
    name @2 :Text;
    uniqueId @3 :Text;
 
-   pointerConfiguration @4 :PointerConfiguration;
-   touchpadConfiguration @5 :TouchpadConfiguration;
-   keyboardConfiguration @6 :KeyboardConfiguration;
-   touchscreenConfiguration @7 :TouchscreenConfiguration;
+   pointerConfig @4 :PointerConfig;
+   touchpadConfig @5 :TouchpadConfig;
+   keyboardConfig @6 :KeyboardConfig;
+   touchscreenConfig @7 :TouchscreenConfig;
 }
 
-struct InputConfiguration
+struct InputConfig
 {
     devices @0 :List(DeviceConfiguration);
 }
