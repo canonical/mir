@@ -51,7 +51,7 @@ public:
 class LinearGammaLUTs : public GammaCurves
 {
 public:
-    LinearGammaLUTs(int size);
+    explicit LinearGammaLUTs(int size);
 };
 
 }
