@@ -99,8 +99,8 @@ public:
 
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
-    void adopted_by(MirSurface*) override;
-    void unadopted_by(MirSurface*) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
@@ -169,7 +169,7 @@ private:
     std::shared_ptr<AsyncBufferFactory> const factory;
     MirRenderSurface* render_surface_;
 
-    std::unordered_set<MirSurface*> users;
+    std::unordered_set<MirWindow*> users;
     std::shared_ptr<FrameClock> frame_clock;
     mir::time::PosixTimestamp last_vsync;
 };

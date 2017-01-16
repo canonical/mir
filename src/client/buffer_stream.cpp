@@ -520,25 +520,25 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
     return set_server_swap_interval(current_swap_interval);
 }
 
-void mcl::BufferStream::adopted_by(MirSurface* surface)
+void mcl::BufferStream::adopted_by(MirWindow* win)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     /*
-     * Yes, we're storing raw pointers here. That's safe so long as MirSurface
+     * Yes, we're storing raw pointers here. That's safe so long as MirWindow
      * remembers to always call unadopted_by prior to its destruction.
-     *   The alternative of MirSurface passing in a shared_ptr to itself is
+     *   The alternative of MirWindow passing in a shared_ptr to itself is
      * actually uglier than this...
      */
-    users.insert(surface);
+    users.insert(win);
     if (!frame_clock)
-        frame_clock = surface->get_frame_clock();
+        frame_clock = win->get_frame_clock();
 }
 
-void mcl::BufferStream::unadopted_by(MirSurface* surface)
+void mcl::BufferStream::unadopted_by(MirWindow* win)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    users.erase(surface);
-    if (frame_clock == surface->get_frame_clock())
+    users.erase(win);
+    if (frame_clock == win->get_frame_clock())
     {
         frame_clock = users.empty() ? nullptr
                                     : (*users.begin())->get_frame_clock();

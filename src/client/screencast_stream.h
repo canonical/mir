@@ -78,8 +78,8 @@ public:
     uint32_t get_current_buffer_id() override;
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
-    void adopted_by(MirSurface*) override;
-    void unadopted_by(MirSurface*) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;

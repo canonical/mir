@@ -423,21 +423,21 @@ TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
     auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
 
-    MirSurface* adopted_by = nullptr;
-    MirSurface* unadopted_by = nullptr;
+    MirWindow* adopted_by = nullptr;
+    MirWindow* unadopted_by = nullptr;
     EXPECT_CALL(*mock_stream, adopted_by(_))
         .WillOnce(SaveArg<0>(&adopted_by));
     EXPECT_CALL(*mock_stream, unadopted_by(_))
         .WillOnce(SaveArg<0>(&unadopted_by));
 
     {
-        MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        MirWindow win{connection.get(), *client_comm_channel, nullptr,
             mock_stream, mock_input_platform, spec, surface_proto, wh};
-        EXPECT_EQ(&surface, adopted_by);
+        EXPECT_EQ(&win,    adopted_by);
         EXPECT_EQ(nullptr, unadopted_by);
     }
 
-    EXPECT_NE(nullptr, unadopted_by);
+    EXPECT_NE(nullptr,    unadopted_by);
     EXPECT_EQ(adopted_by, unadopted_by);
 }
 
@@ -449,8 +449,8 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_if_set)
 
     mir::frontend::BufferStreamId const mock_old_stream_id(11);
     auto mock_old_stream = std::make_shared<mtd::MockMirBufferStream>(); 
-    MirSurface* old_adopted_by = nullptr;
-    MirSurface* old_unadopted_by = nullptr;
+    MirWindow* old_adopted_by = nullptr;
+    MirWindow* old_unadopted_by = nullptr;
     EXPECT_CALL(*mock_old_stream, adopted_by(_))
         .WillOnce(SaveArg<0>(&old_adopted_by));
     EXPECT_CALL(*mock_old_stream, unadopted_by(_))
@@ -460,8 +460,8 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_if_set)
 
     mir::frontend::BufferStreamId const mock_new_stream_id(22);
     auto mock_new_stream = std::make_shared<mtd::MockMirBufferStream>(); 
-    MirSurface* new_adopted_by = nullptr;
-    MirSurface* new_unadopted_by = nullptr;
+    MirWindow* new_adopted_by = nullptr;
+    MirWindow* new_unadopted_by = nullptr;
     EXPECT_CALL(*mock_new_stream, adopted_by(_))
         .WillOnce(SaveArg<0>(&new_adopted_by));
     EXPECT_CALL(*mock_new_stream, unadopted_by(_))
@@ -472,25 +472,25 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_if_set)
     surface_map->insert(mock_old_stream_id, mock_old_stream);
     surface_map->insert(mock_new_stream_id, mock_new_stream);
     {
-        MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        MirWindow win{connection.get(), *client_comm_channel, nullptr,
             mock_old_stream, mock_input_platform, spec, surface_proto, wh};
     
-        EXPECT_EQ(&surface, old_adopted_by);
-        EXPECT_EQ(nullptr,  old_unadopted_by);
-        EXPECT_EQ(nullptr,  new_adopted_by);
-        EXPECT_EQ(nullptr,  new_unadopted_by);
+        EXPECT_EQ(&win,    old_adopted_by);
+        EXPECT_EQ(nullptr, old_unadopted_by);
+        EXPECT_EQ(nullptr, new_adopted_by);
+        EXPECT_EQ(nullptr, new_unadopted_by);
 
-        MirSurfaceSpec spec;
+        MirWindowSpec spec;
         std::vector<ContentInfo> replacements
         {
             {geom::Displacement{0,0}, mock_new_stream_id.as_value(), geom::Size{1,1}}
         };
         spec.streams = replacements;
-        surface.modify(spec)->wait_for_all();
+        win.modify(spec)->wait_for_all();
 
-        EXPECT_EQ(&surface, old_unadopted_by);
-        EXPECT_EQ(&surface, new_adopted_by);
-        EXPECT_EQ(nullptr,  new_unadopted_by);
+        EXPECT_EQ(&win,    old_unadopted_by);
+        EXPECT_EQ(&win,    new_adopted_by);
+        EXPECT_EQ(nullptr, new_unadopted_by);
     }
     EXPECT_EQ(new_adopted_by, new_unadopted_by);
     surface_map->erase(mock_old_stream_id);
