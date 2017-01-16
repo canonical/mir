@@ -71,21 +71,19 @@ public:
     ScreencastSessionContext(
         std::shared_ptr<Scene> const& scene,
         mg::Display& display,
-        mg::GraphicBufferAllocator& buffer_allocator,
         DisplayBufferCompositorFactory& db_compositor_factory,
+        std::vector<std::shared_ptr<mg::Buffer>> const& buffers,
         geom::Rectangle const& capture_region,
         geom::Size const& capture_size,
-        MirPixelFormat pixel_format,
-        int nbuffers,
         MirMirrorMode mirror_mode)
     : scene{scene},
       display_buffer{std::make_unique<ScreencastDisplayBuffer>(capture_region, capture_size, mirror_mode, free_queue, ready_queue, display)},
       display_buffer_compositor{db_compositor_factory.create_compositor_for(*display_buffer)},
-      virtual_output{make_virtual_output(display, capture_region)}
+      virtual_output{make_virtual_output(display, capture_region)},
+      capture_size{capture_size}
     {
-        mg::BufferProperties const buffer_properties{capture_size, pixel_format, mg::BufferUsage::hardware};
-        for (int i = 0; i < nbuffers; i++)
-            free_queue.schedule(buffer_allocator.alloc_buffer(buffer_properties));
+        for (auto buffer : buffers)
+            free_queue.schedule(buffer);
 
         scene->register_compositor(this);
         if (virtual_output)
@@ -112,6 +110,9 @@ public:
 
     void capture(std::shared_ptr<mg::Buffer> const& buffer)
     {
+        if (buffer->size() != capture_size)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid buffer size"));
+        
         std::lock_guard<decltype(mutex)> lk(mutex);
         auto scheduled = free_queue.num_scheduled();
         free_queue.schedule(buffer);
@@ -133,6 +134,7 @@ private:
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
     std::unique_ptr<graphics::VirtualOutput> virtual_output;
     std::shared_ptr<mg::Buffer> last_captured_buffer;
+    geom::Size capture_size;
 };
 
 
@@ -159,14 +161,20 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
         size.height.as_int() == 0 ||
         region.size.width.as_int() == 0 ||
         region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid ||
-        nbuffers < 0)
+        ((nbuffers > 1) && (pixel_format == mir_pixel_format_invalid)))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};
     auto const id = next_available_session_id();
-    session_contexts[id] = create_session_context(region, size, pixel_format, nbuffers, mirror_mode);
+
+    std::vector<std::shared_ptr<mg::Buffer>> buffers(nbuffers);
+    for (auto& buffer : buffers)
+    {
+        buffer = buffer_allocator->alloc_buffer(
+            mg::BufferProperties{size, pixel_format, mg::BufferUsage::hardware});
+    }
+    session_contexts[id] = create_session_context(region, size, buffers, mirror_mode);
 
     return id;
 }
@@ -204,13 +212,11 @@ std::shared_ptr<mc::detail::ScreencastSessionContext>
 mc::CompositingScreencast::create_session_context(
     geometry::Rectangle const& rect,
     geometry::Size const& size,
-    MirPixelFormat pixel_format,
-    int nbuffers,
+    std::vector<std::shared_ptr<mg::Buffer>> const& buffers,
     MirMirrorMode mirror_mode)
 {
     return std::make_shared<detail::ScreencastSessionContext>(
-        scene, *display, *buffer_allocator, *db_compositor_factory,
-        rect, size, pixel_format, nbuffers, mirror_mode);
+        scene, *display, *db_compositor_factory, buffers, rect, size, mirror_mode);
 }
 
 void mc::CompositingScreencast::capture(
