@@ -94,10 +94,13 @@ MirConnection* mir_connect_sync(
     char const* app_name)
 {
     MirConnection* conn = nullptr;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(server, app_name,
                              reinterpret_cast<mir_connected_callback>
                                              (assign_result),
                              &conn));
+#pragma GCC diagnostic pop
     return conn;
 }
 
