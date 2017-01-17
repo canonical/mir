@@ -41,8 +41,8 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
@@ -108,7 +108,7 @@ public:
         MirWindowSpec* spec)
         : mir_connection(mir_connection),
           mir_surface{
-              mir_window_create_sync(spec)}
+              mir_create_window_sync(spec)}
     {
         if (!mir_window_is_valid(mir_surface))
         {
@@ -321,13 +321,13 @@ EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 }
 
 auto mgn::MirClientHostConnection::create_display_config()
-    -> std::shared_ptr<MirDisplayConfiguration>
+    -> std::shared_ptr<MirDisplayConfig>
 {
-    return std::shared_ptr<MirDisplayConfiguration>(
-        mir_connection_create_display_config(mir_connection),
-        [] (MirDisplayConfiguration* c)
+    return std::shared_ptr<MirDisplayConfig>(
+        mir_connection_create_display_configuration(mir_connection),
+        [] (MirDisplayConfig* c)
         {
-            if (c) mir_display_config_destroy(c);
+            if (c) mir_display_config_release(c);
         });
 }
 
@@ -341,9 +341,9 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
 }
 
 void mgn::MirClientHostConnection::apply_display_config(
-    MirDisplayConfiguration& display_config)
+    MirDisplayConfig& display_config)
 {
-    mir_wait_for(mir_connection_apply_display_config(mir_connection, &display_config));
+    mir_connection_apply_session_display_config(mir_connection, &display_config);
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(

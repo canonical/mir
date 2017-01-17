@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
@@ -44,10 +43,9 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         mtd::StubFrameDroppingPolicyFactory policy_factory;
         stream = std::make_shared<mc::Stream>(policy_factory,
-            std::make_shared<mc::BufferMap>(nullptr, allocator),
+            std::make_shared<mc::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 

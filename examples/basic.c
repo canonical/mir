@@ -117,7 +117,7 @@ int demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format.
-    mcd.window = mir_window_create_sync(spec);
+    mcd.window = mir_create_window_sync(spec);
     puts("Window created");
     ///\internal [surface_create_tag]
 

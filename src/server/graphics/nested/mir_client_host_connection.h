@@ -61,7 +61,7 @@ public:
     ~MirClientHostConnection();
 
     EGLNativeDisplayType egl_native_display() override;
-    std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
+    std::shared_ptr<MirDisplayConfig> create_display_config() override;
     std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
     std::unique_ptr<HostChain> create_chain() const override;
     std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
@@ -71,7 +71,7 @@ public:
         graphics::BufferProperties properties,
         char const* name, uint32_t output_id) override;
     void set_display_config_change_callback(std::function<void()> const& cb) override;
-    void apply_display_config(MirDisplayConfiguration&) override;
+    void apply_display_config(MirDisplayConfig&) override;
 
     void set_cursor_image(CursorImage const& image) override;
     void hide_cursor() override;

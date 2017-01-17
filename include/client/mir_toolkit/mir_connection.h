@@ -155,6 +155,7 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
  *   \return                        structure that describes the display configuration
  */
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
+/* __attribute__ ((deprecated("use mir_connection_create_display_configuration instead"))); */
 
 /**
  * Query the display

@@ -159,21 +159,21 @@ private:
     {
         unsigned int width{0};
         unsigned int height{0};
-        auto display_config = mir_connection_create_display_config(connection);
-        for (auto i = 0u; i < display_config->num_outputs; i++)
+        auto display_config = mir_connection_create_display_configuration(connection);
+        auto num_outputs = mir_display_config_get_num_outputs(display_config);
+        for (auto i = 0; i < num_outputs; i++)
         {
-            MirDisplayOutput const* out = display_config->outputs + i;
-            if (out->used &&
-                out->connected &&
-                out->num_modes &&
-                out->current_mode < out->num_modes)
+            auto output = mir_display_config_get_output(display_config, i);
+            auto state = mir_output_get_connection_state(output);
+            if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
             {
-                width = out->modes[out->current_mode].horizontal_resolution;
-                height = out->modes[out->current_mode].vertical_resolution;
+                auto mode = mir_output_get_current_mode(output);
+                width  = mir_output_mode_get_width(mode);
+                height = mir_output_mode_get_height(mode);
                 break;
             }
         }
-        mir_display_config_destroy(display_config);
+        mir_display_config_release(display_config);
         if (width == 0 || height == 0)
             throw std::logic_error("could not determine display size");
         return {width, height};

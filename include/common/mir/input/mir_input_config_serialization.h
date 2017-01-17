@@ -16,19 +16,19 @@
  * Authored By: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_SERIALIZATION_H
-#define MIR_INPUT_INPUT_CONFIGURATION_SERIALIZATION_H
+#ifndef MIR_INPUT_INPUT_CONFIG_SERIALIZATION_H
+#define MIR_INPUT_INPUT_CONFIG_SERIALIZATION_H
 
 #include <string>
 
-class MirInputConfiguration;
+class MirInputConfig;
 namespace mir
 {
 namespace input
 {
 
-std::string serialize_input_configuration(MirInputConfiguration const& config);
-MirInputConfiguration deserialize_input_configuration(std::string const& buffer);
+std::string serialize_input_config(MirInputConfig const& config);
+MirInputConfig deserialize_input_config(std::string const& buffer);
 
 }
 }

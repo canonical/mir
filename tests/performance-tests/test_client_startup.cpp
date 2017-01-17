@@ -71,7 +71,7 @@ MirWindow* make_surface(MirConnection* connection)
 
     auto spec = mir_create_normal_window_spec(connection, 720, 1280);
     mir_window_spec_set_pixel_format(spec, format);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
 
     mir_window_spec_release(spec);
 
