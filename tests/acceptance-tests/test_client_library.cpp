@@ -67,8 +67,8 @@ static_assert(
     "mir_surface_type_freestyle != mir_window_type_freestyle");
 static_assert(
     static_cast<int32_t>(mir_surface_type_popover) ==
-    static_cast<int32_t>(mir_window_type_popover),
-    "mir_surface_type_popover != mir_window_type_popover");
+    static_cast<int32_t>(mir_window_type_menu),
+    "mir_surface_type_popover != mir_window_type_menu");
 static_assert(
     static_cast<int32_t>(mir_surface_type_menu) ==
     static_cast<int32_t>(mir_window_type_menu),

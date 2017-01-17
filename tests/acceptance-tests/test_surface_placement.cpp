@@ -559,7 +559,7 @@ INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
     ::testing::Values(
         mir_window_type_dialog,
         mir_window_type_satellite,
-        mir_window_type_popover,
+        mir_window_type_menu,
         mir_window_type_gloss,
         mir_window_type_tip,
         mir_window_type_freestyle));
