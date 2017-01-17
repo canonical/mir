@@ -29,21 +29,21 @@ TEST(ClientHeaderVersion, mir_client_version_ge_is_sane)
     // We should be greater than or equal to our current version
     EXPECT_TRUE(MIR_CLIENT_API_VERSION >=
                 MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR,
-				   MIR_CLIENT_API_VERSION_MINOR,
-				   MIR_CLIENT_API_VERSION_PATCH));
+                                   MIR_CLIENT_API_VERSION_MINOR,
+                                   MIR_CLIENT_API_VERSION_PATCH));
     
     EXPECT_FALSE(MIR_CLIENT_API_VERSION >=
                  MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR + 1, 0, 0));
 
     EXPECT_FALSE(MIR_CLIENT_API_VERSION >=
                  MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR,
-				    MIR_CLIENT_API_VERSION_MINOR + 1,
-				    0));
+                                    MIR_CLIENT_API_VERSION_MINOR + 1,
+                                    0));
     
     EXPECT_FALSE(MIR_CLIENT_API_VERSION >=
                  MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR,
-				    MIR_CLIENT_API_VERSION_MINOR,
-				    MIR_CLIENT_API_VERSION_PATCH + 1));
+                                    MIR_CLIENT_API_VERSION_MINOR,
+                                    MIR_CLIENT_API_VERSION_PATCH + 1));
 }
 
 TEST(ClientHeaderVersion, mir_client_version_ge_is_usable_in_preprocessor)
