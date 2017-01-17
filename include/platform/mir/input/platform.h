@@ -81,6 +81,14 @@ public:
      * Request the platform to stop monitoring for devices.
      */
     virtual void stop() = 0;
+    /*!
+     * Request the platform to pause for device reconfiguration.
+     */
+    virtual void pause_for_config() = 0;
+    /*!
+     * Tell the platform to continue after device reconfiguration.
+     */
+    virtual void continue_after_config() = 0;
 
 private:
     Platform(Platform const&) = delete;

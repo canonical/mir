@@ -71,6 +71,14 @@ void mtf::StubInputPlatform::stop()
     }
 }
 
+void mtf::StubInputPlatform::pause_for_config()
+{
+}
+
+void mtf::StubInputPlatform::continue_after_config()
+{
+}
+
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
     auto input_platform = stub_input_platform.load();

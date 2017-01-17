@@ -44,7 +44,6 @@
 
 #include <linux/input.h>
 #include <atomic>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -426,7 +425,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 
 TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
 {
-    auto const acceleration_bias = 0.9;
+    auto const acceleration_bias = 0.9f;
     std::string const uid{"mouse-uid"};
 
     mt::Signal fake_device_received;
@@ -447,11 +446,9 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     ASSERT_TRUE(fake_device_received.wait_for(4s));
 
     auto device_config = client_to_nested.get_input_config();
-    std::cout << "..++++ " << *device_config << std::endl;
     auto device = mir_input_config_get_mutable_device(device_config.get(), get_index_of(device_config.get(), uid));
-    std::cout << "..++++ " << *device << std::endl;
-    std::cout << "..++++ index : " << get_index_of(device_config.get(), uid) << std::endl;
     auto ptr_conf = mir_input_device_get_mutable_pointer_config(device);
+
     mir_pointer_config_set_acceleration_bias(ptr_conf, acceleration_bias);
     fake_device_received.reset();
     client_to_nested.apply_config(device_config.get());

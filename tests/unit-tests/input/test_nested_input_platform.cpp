@@ -28,6 +28,9 @@
 #include "mir/input/input_report.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_keyboard_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_input_device.h"
@@ -61,6 +64,12 @@ struct TestNestedInputPlatform : Test
     MirInputDevice a_keyboard{1, mi::DeviceCapabilities{mir_input_device_capability_keyboard}, "keys" , "keys-evdev2"};
     MirInputDevice a_mouse{0, mi::DeviceCapabilities{mir_input_device_capability_pointer}, "rodent", "rodent-evdev1"};
     const mir::geometry::Rectangle source_surface{{0, 0}, {100, 100}};
+
+    TestNestedInputPlatform()
+    {
+        a_mouse.set_pointer_config(MirPointerConfig{});
+        a_keyboard.set_keyboard_config(MirKeyboardConfig{});
+    }
 
     auto capture_input_device(MirInputDevice& dev)
     {
