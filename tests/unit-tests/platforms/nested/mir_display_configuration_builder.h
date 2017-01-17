@@ -27,8 +27,8 @@ namespace mir
 namespace test
 {
 
-std::shared_ptr<MirDisplayConfiguration> build_trivial_configuration();
-std::shared_ptr<MirDisplayConfiguration> build_non_trivial_configuration();
+std::shared_ptr<MirDisplayConfig> build_trivial_configuration();
+std::shared_ptr<MirDisplayConfig> build_non_trivial_configuration();
 
 }
 }

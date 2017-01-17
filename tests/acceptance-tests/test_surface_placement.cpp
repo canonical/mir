@@ -90,7 +90,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        auto const window = mir_window_create_sync(spec);
+        auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         return window;
@@ -103,7 +103,7 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        auto const window = mir_window_create_sync(spec);
+        auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         return window;
@@ -559,7 +559,7 @@ INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
     ::testing::Values(
         mir_window_type_dialog,
         mir_window_type_satellite,
-        mir_window_type_popover,
+        mir_window_type_menu,
         mir_window_type_gloss,
         mir_window_type_tip,
         mir_window_type_freestyle));
