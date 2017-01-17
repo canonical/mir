@@ -56,18 +56,14 @@ namespace android
 class InputReceiver : public dispatch::Dispatchable
 {
 public:
-    typedef std::function<std::chrono::nanoseconds(int)> AndroidClock;
-
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
                   std::shared_ptr<XKBMapper> const& keymapper,
                   std::function<void(MirEvent*)> const& event_handling_callback,
-                  std::shared_ptr<InputReceiverReport> const& report,
-                  AndroidClock clock = systemTime);
+                  std::shared_ptr<InputReceiverReport> const& report);
     InputReceiver(int fd,
                   std::shared_ptr<XKBMapper> const& keymapper,
                   std::function<void(MirEvent*)> const& event_handling_callback,
-                  std::shared_ptr<InputReceiverReport> const& report,
-                  AndroidClock clock = systemTime);
+                  std::shared_ptr<InputReceiverReport> const& report);
 
     virtual ~InputReceiver();
 
@@ -81,7 +77,6 @@ protected:
 
 private:
     dispatch::MultiplexingDispatchable dispatcher;
-    Fd const timer_fd;
     Fd const wake_fd;
 
     droidinput::sp<droidinput::InputChannel> input_channel;
@@ -92,11 +87,7 @@ private:
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
 
-    AndroidClock const android_clock;
-    int event_rate_hz;
-
-    void process_and_maybe_send_event();
-    static void consume_wake_notification(mir::Fd const& fd);
+    void woke();
     void wake();
 };
 

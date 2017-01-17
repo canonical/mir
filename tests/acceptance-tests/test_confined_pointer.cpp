@@ -206,7 +206,6 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     std::string first{"first"};
     std::string second{"second"};
     mtf::ClientPositions positions;
-    mtf::TemporaryEnvironmentValue disable_batching{"MIR_CLIENT_INPUT_RATE", "0"};
 };
 
 TEST_F(PointerConfinement, test_we_hit_pointer_confined_boundary)
