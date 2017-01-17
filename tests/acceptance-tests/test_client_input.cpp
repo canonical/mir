@@ -1223,4 +1223,5 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
     pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    mir_input_config_destroy(config);
 }
