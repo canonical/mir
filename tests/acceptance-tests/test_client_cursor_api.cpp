@@ -28,7 +28,6 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir/test/doubles/mock_egl.h"
 
@@ -138,7 +137,7 @@ struct CursorClient
                 auto spec = mir_create_normal_window_spec(connection, 1, 1);
                 mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
                 mir_window_spec_set_name(spec, client_name.c_str());
-                auto const window = mir_window_create_sync(spec);
+                auto const window = mir_create_window_sync(spec);
                 mir_window_spec_release(spec);
 
                 mir_buffer_stream_swap_buffers_sync(
@@ -266,7 +265,6 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
     std::string const client_cursor_2{"cursor-2"};
 
     mir::test::Signal expectations_satisfied;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})

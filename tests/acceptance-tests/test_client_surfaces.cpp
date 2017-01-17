@@ -68,12 +68,12 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
     
     auto spec = mir_create_normal_window_spec(connection, width_1, height_1);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    window[0] = mir_window_create_sync(spec);
+    window[0] = mir_create_window_sync(spec);
 
     mir_window_spec_set_width(spec, width_2);
     mir_window_spec_set_height(spec, height_2);
 
-    window[1] = mir_window_create_sync(spec);
+    window[1] = mir_create_window_sync(spec);
     
     mir_window_spec_release(spec);
 
@@ -112,7 +112,7 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
     {
         auto spec = mir_create_normal_window_spec(connection, 1, 1);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-        window[i] = mir_window_create_sync(spec);
+        window[i] = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
     }
 
@@ -146,7 +146,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     MirOrientationMode mode{GetParam()};
     mir_window_spec_set_preferred_orientation(spec, mode);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_THAT(window, IsValid());
@@ -172,7 +172,7 @@ TEST_F(ClientSurfaces, can_be_menus)
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
-    auto menu = mir_window_create_sync(spec);
+    auto menu = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_THAT(menu, IsValid());
@@ -192,7 +192,7 @@ TEST_F(ClientSurfaces, can_be_tips)
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
 
-    auto tooltip = mir_window_create_sync(spec);
+    auto tooltip = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_THAT(tooltip, IsValid());
@@ -208,7 +208,7 @@ TEST_F(ClientSurfaces, can_be_dialogs)
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    auto dialog = mir_window_create_sync(spec);
+    auto dialog = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
@@ -224,7 +224,7 @@ TEST_F(ClientSurfaces, can_be_modal_dialogs)
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    auto dialog = mir_window_create_sync(spec);
+    auto dialog = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_THAT(dialog, IsValid());
@@ -240,7 +240,7 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    auto im = mir_window_create_sync(spec);
+    auto im = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_EQ(mir_window_get_type(im), mir_window_type_inputmethod);
@@ -253,7 +253,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
     auto spec = mir_create_normal_window_spec(connection, 123, 456);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     /*
@@ -324,7 +324,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_persistent_id_release(parent_id);
 
-    auto im = mir_window_create_sync(spec);
+    auto im = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     mir_window_release_sync(im);

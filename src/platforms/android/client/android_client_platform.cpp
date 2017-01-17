@@ -31,6 +31,7 @@
 #include "android_format_conversion-inl.h"
 
 #include <chrono>
+#include <hardware/gralloc.h>
 #include "mir/weak_egl.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
@@ -67,8 +68,26 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 {
 }
 
-ANativeWindow* create_anw(MirBufferStream* buffer_stream)
+ANativeWindow* create_anw(
+    MirRenderSurface* rs,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags)
 {
+    auto format = mga::to_mir_format(hal_pixel_format);
+    if (format == mir_pixel_format_invalid)
+        return nullptr;
+
+    //TODO: will be able to pass through the actual requested flags once buffers have generic flags.
+    MirBufferUsage usage;
+    if (gralloc_usage_flags & (GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK))
+        usage = mir_buffer_usage_software;
+    else if (gralloc_usage_flags == (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER))
+        usage = mir_buffer_usage_hardware;
+    else
+        return nullptr;
+
+    auto buffer_stream = mir_render_surface_get_buffer_stream(rs, width, height, format, usage);
     return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
 

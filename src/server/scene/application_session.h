@@ -119,6 +119,7 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<frontend::ClientBuffers> const buffers;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
 
     frontend::SurfaceId next_id();
 

@@ -82,7 +82,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
     mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
     mir_window_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
 
-    MirWindow *window = mir_window_create_sync(spec.get());
+    MirWindow *window = mir_create_window_sync(spec.get());
     spec.reset();
 
     assert(window != NULL);

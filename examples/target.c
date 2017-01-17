@@ -16,7 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
@@ -264,11 +263,6 @@ int main(int argc, char *argv[])
     sigaddset(&sigs, SIGTERM);
     sigaddset(&sigs, SIGHUP);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-
-    // Disable Mir's input resampling. We do our own here, in a way that
-    // has even lower latency than Mir's default algorithm.
-    // TODO: Make a proper client API function for this:
-    setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
 
     static unsigned int width = 0, height = 0;
     if (!mir_eglapp_init(argc, argv, &width, &height, NULL))

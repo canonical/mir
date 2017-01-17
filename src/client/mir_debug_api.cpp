@@ -50,7 +50,6 @@ uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
 int mir_debug_surface_id(MirSurface* surface)
 {
     return mir_debug_window_id(surface);
-    return surface->id();
 }
 
 bool mir_debug_surface_coords_to_screen(MirSurface* surface,
