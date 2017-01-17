@@ -17,6 +17,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
+)
+
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
