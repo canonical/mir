@@ -811,8 +811,8 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 
     // StubDisplayConfiguration is set to 60Hz and we now actually honour
     // that. So to avoid 1024 frames taking 17 seconds or so...
-    mir_buffer_stream_set_swapinterval(mir_surface_get_buffer_stream(surf_one), 0);
-    mir_buffer_stream_set_swapinterval(mir_surface_get_buffer_stream(surf_two), 0);
+    mir_buffer_stream_set_swapinterval(mir_window_get_buffer_stream(surf_one), 0);
+    mir_buffer_stream_set_swapinterval(mir_window_get_buffer_stream(surf_two), 0);
 
     while (buffers < 1024)
     {
