@@ -39,11 +39,22 @@ namespace mi = mir::input;
 
 namespace
 {
-// assign_result is compatible with all 2-parameter callbacks
-void assign_result(void* result, void** context)
+struct ConnectContext
+{
+    std::mutex mutex;
+    std::condition_variable connect_cv;
+    MirConnection* connection{nullptr};
+};
+
+void assign_result(MirConnection* result, void* context)
 {
     if (context)
-        *context = result;
+    {
+        auto connect_context = static_cast<ConnectContext*>(context);
+        std::lock_guard<std::mutex> lock(connect_context->mutex);
+        connect_context->connection = result;
+        connect_context->connect_cv.notify_one();
+    }
 }
 }
 
@@ -93,15 +104,14 @@ MirConnection* mir_connect_sync(
     char const* server,
     char const* app_name)
 {
-    MirConnection* conn = nullptr;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_connect(server, app_name,
-                             reinterpret_cast<mir_connected_callback>
-                                             (assign_result),
-                             &conn));
-#pragma GCC diagnostic pop
-    return conn;
+    ConnectContext context;
+
+    mir_connect(server, app_name, assign_result, &context);
+
+    std::unique_lock<std::mutex> lock(context.mutex);
+    context.connect_cv.wait(lock, [&] { return context.connection != nullptr; });
+
+    return context.connection;
 }
 
 bool mir_connection_is_valid(MirConnection* connection)
