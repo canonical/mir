@@ -74,11 +74,8 @@ MirBufferStream* make_cursor_stream(MirConnection *connection, MirWindow *surfac
     animate_cursor(stream);
 
     MirCursorConfiguration* conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_window_configure_cursor(surface, conf));
+    mir_window_configure_cursor(surface, conf);
     mir_cursor_configuration_destroy(conf);
-#pragma GCC diagnostic pop
     
     return stream;
 }
