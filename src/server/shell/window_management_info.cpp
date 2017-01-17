@@ -114,7 +114,7 @@ bool msh::SurfaceInfo::can_morph_to(MirWindowType new_type) const
         case mir_window_type_normal:
         case mir_window_type_utility:
         case mir_window_type_dialog:
-        case mir_window_type_popover:
+        case mir_window_type_menu:
         case mir_window_type_satellite:
             return true;
 

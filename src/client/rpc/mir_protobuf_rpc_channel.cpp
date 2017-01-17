@@ -293,9 +293,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         display_configuration->update_configuration(seq.display_configuration());
     }
 
-    if (seq.has_input_devices())
+    if (seq.has_input_configuration())
     {
-        input_devices->update_devices(seq.input_devices());
+        input_devices->update_devices(seq.input_configuration());
     }
 
     if (seq.has_lifecycle_event())

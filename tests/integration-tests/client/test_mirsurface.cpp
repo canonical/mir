@@ -150,7 +150,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
 
     std::unique_ptr<MirWindow, std::function<void(MirWindow*)>> create_surface(MirWindowSpec* spec)
     {
-        return {mir_window_create_sync(spec), [](MirWindow *window){mir_window_release_sync(window);}};
+        return {mir_create_window_sync(spec), [](MirWindow *window){mir_window_release_sync(window);}};
     }
 
     MirWindowSpec spec{nullptr, 640, 480, mir_pixel_format_abgr_8888};

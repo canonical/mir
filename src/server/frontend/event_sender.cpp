@@ -20,11 +20,15 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "event_sender.h"
 #include "mir/events/serialization.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
-#include "protobuf_input_converter.h"
 
 #include "mir/graphics/buffer.h"
 #include "mir/client_visible_error.h"
@@ -36,6 +40,7 @@ namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
 namespace mev = mir::events;
 namespace mp = mir::protobuf;
+namespace mi = mir::input;
 
 mfd::EventSender::EventSender(
     std::shared_ptr<MessageSender> const& socket_sender,
@@ -96,13 +101,25 @@ void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mi
 {
     mp::EventSequence seq;
 
-    auto protobuf_devices = seq.mutable_input_devices();
-
-    for(const auto & dev : devices)
+    MirInputConfig temp;
+    for(auto const& dev : devices)
     {
-        auto dev_info = protobuf_devices->add_device_info();
-        detail::pack_protobuf_input_device_info(*dev_info, *dev);
+        MirInputDevice conf(dev->id(), dev->capabilities(), dev->name(), dev->unique_id());
+        auto ptr_conf = dev->pointer_configuration();
+        auto tpd_conf = dev->touchpad_configuration();
+        auto kbd_conf = dev->keyboard_configuration();
+
+        if (ptr_conf.is_set())
+            conf.set_pointer_config(ptr_conf.value());
+        if (tpd_conf.is_set())
+            conf.set_touchpad_config(tpd_conf.value());
+        if (kbd_conf.is_set())
+            conf.set_keyboard_config(kbd_conf.value());
+
+        temp.add_device_config(conf);
     }
+
+    seq.set_input_configuration(mi::serialize_input_config(temp));
     send_event_sequence(seq, {});
 }
 
@@ -137,14 +154,14 @@ void mfd::EventSender::add_buffer(graphics::Buffer& buffer)
     send_buffer(seq, buffer, mg::BufferIpcMsgType::full_msg);
 }
 
-void mfd::EventSender::error_buffer(graphics::BufferProperties const& properties, std::string const& error)
+void mfd::EventSender::error_buffer(geometry::Size size, MirPixelFormat, std::string const& error)
 {
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
     request->set_operation(mir::protobuf::BufferOperation::add);
     request->mutable_buffer()->set_error(error);
-    request->mutable_buffer()->set_width(properties.size.width.as_int());
-    request->mutable_buffer()->set_height(properties.size.height.as_int());
+    request->mutable_buffer()->set_width(size.width.as_int());
+    request->mutable_buffer()->set_height(size.height.as_int());
     send_event_sequence(seq, {});
 }
 

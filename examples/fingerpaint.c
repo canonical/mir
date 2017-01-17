@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "Mir Fingerpaint");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     if (window != NULL)
@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
         MirBufferStream* bs = mir_window_get_buffer_stream(window);
         mir_buffer_stream_set_swapinterval(bs, swap_interval);
         mir_window_set_event_handler(window, &on_event, &canvas);
-    
+
         canvas.width = width;
         canvas.height = height;
         canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
             signal(SIGHUP, shutdown);
-        
+
             clear_region(&canvas, &background);
 
             while (running)

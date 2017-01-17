@@ -38,8 +38,7 @@ namespace compositor
 class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
-    BufferStreamFactory(std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-                        std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory);
+    BufferStreamFactory(std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory);
 
     virtual ~BufferStreamFactory() {}
 
@@ -53,7 +52,6 @@ public:
         std::shared_ptr<frontend::BufferSink> const& sink) override;
 
 private:
-    std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
     std::shared_ptr<FrameDroppingPolicyFactory> const policy_factory;
 };
 
