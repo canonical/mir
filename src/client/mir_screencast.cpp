@@ -182,15 +182,27 @@ MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* co
 void MirScreencast::screencast_created(
     mir_screencast_callback callback, void* context)
 {
+    printf("CREATED!\n");
     if (!protobuf_screencast->has_error() && connection)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        buffer_stream = connection->make_consumer_stream(
-            protobuf_screencast->buffer_stream());
+        printf("NO ERROR\n");
+//        std::lock_guard<decltype(mutex)> lock(mutex);
+        try{
+//        buffer_stream = connection->make_consumer_stream(
+//            protobuf_screencast->buffer_stream());
+        } catch (std::exception& e) {
+            printf("NEEEEE %s\n", e.what());
+        }
+    }
+    else
+    {
+        printf("YEP, error %s\n", protobuf_screencast->error().c_str());
     }
 
+    printf("CB CB \n");
     callback(this, context);
     create_screencast_wait_handle.result_received();
+    printf("ZZOOZOZ\n");
 }
 
 void MirScreencast::released(
@@ -200,8 +212,8 @@ void MirScreencast::released(
 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        if (connection)
-            connection->release_consumer_stream(buffer_stream.get());
+//        if (connection)
+//            connection->release_consumer_stream(buffer_stream.get());
         buffer_stream.reset();
     }
     release_wait_handle.result_received();
