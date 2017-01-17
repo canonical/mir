@@ -34,7 +34,7 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow* window)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-bool mir_debug_surface_coords_to_screen(MirSurface* window,
+bool mir_debug_surface_coords_to_screen(MirSurface* surface,
                                        int x, int y,
                                        int* screen_x, int* screen_y)
 {
