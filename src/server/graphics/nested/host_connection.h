@@ -56,9 +56,9 @@ public:
     virtual ~HostConnection() = default;
 
     virtual EGLNativeDisplayType egl_native_display() = 0;
-    virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
+    virtual std::shared_ptr<MirDisplayConfig> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
-    virtual void apply_display_config(MirDisplayConfiguration&) = 0;
+    virtual void apply_display_config(MirDisplayConfig&) = 0;
     virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
     virtual std::unique_ptr<HostChain> create_chain() const = 0;
     virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;

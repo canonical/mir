@@ -51,7 +51,7 @@ public:
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties) override;
     std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size, uint32_t format, uint32_t flags) override; 
-    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size, MirPixelFormat) override;
+    std::shared_ptr<graphics::Buffer> alloc_software_buffer(geometry::Size, MirPixelFormat) override;
 
     std::shared_ptr<graphics::Buffer> alloc_framebuffer(
         geometry::Size sz, MirPixelFormat pf);

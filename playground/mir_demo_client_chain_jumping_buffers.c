@@ -211,7 +211,7 @@ int main(int argc, char** argv)
         spec, render_surface[2], chain_width, chain_height, displacement_x, chain_height);
     mir_surface_spec_add_render_surface(
         spec, render_surface[3], chain_width, chain_height, chain_width, chain_height);
-    MirWindow* window = mir_window_create_sync(spec);
+    MirWindow* window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     SubmissionInfo buffer_available[num_buffers];

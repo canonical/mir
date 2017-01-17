@@ -88,12 +88,12 @@ public:
             return guest_allocator->alloc_buffer(size, native_format, native_flags);
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mir::geometry::Size size, MirPixelFormat format) override
+    std::shared_ptr<mg::Buffer> alloc_software_buffer(mir::geometry::Size size, MirPixelFormat format) override
     {
         if (passthrough_candidate(size))
             return std::make_shared<mgn::Buffer>(connection, size, format);
         else
-            return guest_allocator->alloc_buffer(size, format);
+            return guest_allocator->alloc_software_buffer(size, format);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats() override

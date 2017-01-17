@@ -39,7 +39,6 @@
 #include "mir/observer_registrar.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
@@ -138,6 +137,11 @@ std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
     {{640, 0}, {1920, 1080}}
+};
+
+std::vector<geom::Rectangle> const single_display_geometry
+{
+    {{  0, 0}, { 640,  480}}
 };
 
 std::chrono::seconds const timeout{5};
@@ -483,14 +487,21 @@ private:
 struct NestedServer : mtf::HeadlessInProcessServer
 {
     mtd::NestedMockEGL mock_egl;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     mt::Signal condition;
     mt::Signal test_processed_result;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report
         {std::make_shared<NiceMock<MockSessionMediatorReport>>()};
-    NiceMock<MockDisplay> display{display_geometry};
+    std::vector<geom::Rectangle> display_rectangles;
+    NiceMock<MockDisplay> display;
     std::shared_ptr<StubSurfaceObserver> stub_observer = std::make_shared<StubSurfaceObserver>();
+    NestedServer()
+        : display_rectangles{single_display_geometry}, display{display_rectangles}
+    {}
+
+    NestedServer(std::vector<geom::Rectangle> const& rectangles)
+        : display_rectangles{rectangles}, display{display_rectangles}
+    {}
 
     void SetUp() override
     {
@@ -545,7 +556,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     auto hw_display_config_for_unplug() -> std::shared_ptr<mtd::StubDisplayConfig>
     {
-        auto new_displays = display_geometry;
+        auto new_displays = display_rectangles;
         new_displays.resize(1);
 
         return std::make_shared<mtd::StubDisplayConfig>(new_displays);
@@ -554,7 +565,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     auto hw_display_config_for_plugin() -> std::shared_ptr<mtd::StubDisplayConfig>
     {
-        auto new_displays = display_geometry;
+        auto new_displays = display_rectangles;
         new_displays.push_back({{2560, 0}, { 640,  480}});
 
         return  std::make_shared<mtd::StubDisplayConfig>(new_displays);
@@ -598,6 +609,14 @@ struct NestedServer : mtf::HeadlessInProcessServer
                std::this_thread::sleep_for(100ms);
        }
        return done;
+    }
+};
+
+struct NestedServerWithTwoDisplays : NestedServer
+{
+    NestedServerWithTwoDisplays()
+        : NestedServer{display_geometry}
+    {
     }
 };
 
@@ -726,7 +745,7 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     NestedMirRunner{new_connection()};
 }
 
-TEST_F(NestedServer, sees_expected_outputs)
+TEST_F(NestedServerWithTwoDisplays, sees_expected_outputs)
 {
     NestedMirRunner nested_mir{new_connection()};
 
@@ -789,7 +808,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         },
         &surface_event_received);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));
@@ -851,7 +870,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     EXPECT_TRUE(became_exposed_and_focused);
 }
 
-TEST_F(NestedServer, posts_when_scene_has_visible_changes)
+TEST_F(NestedServerWithTwoDisplays, posts_when_scene_has_visible_changes)
 {
     auto const number_of_nested_surfaces = 2;
     auto const number_of_cursor_streams = number_of_nested_surfaces;
@@ -1173,7 +1192,7 @@ TEST_F(NestedServer, base_configuration_change_in_host_is_seen_in_nested)
 }
 
 // lp:1511798
-TEST_F(NestedServer, display_configuration_reset_when_application_exits)
+TEST_F(NestedServerWithTwoDisplays, display_configuration_reset_when_application_exits)
 {
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
@@ -1458,7 +1477,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
-TEST_F(NestedServer,
+TEST_F(NestedServerWithTwoDisplays,
     given_client_set_display_configuration_when_monitor_unplugs_client_is_notified_of_new_display_configuration)
 {
     NestedMirRunner nested_mir{new_connection()};
@@ -1534,7 +1553,7 @@ TEST_F(NestedServer,
     Mock::VerifyAndClearExpectations(&display);
 }
 
-TEST_F(NestedServer, uses_passthrough_when_surface_size_is_appropriate)
+TEST_F(NestedServerWithTwoDisplays, uses_passthrough_when_surface_size_is_appropriate)
 {
     using namespace std::chrono_literals;
     NestedMirRunner nested_mir{new_connection()};

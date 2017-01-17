@@ -67,19 +67,11 @@ MirPixelFormat select_opaque_format(MirPixelFormat format, std::vector<MirPixelF
 void mg::CloneDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
     static MirPowerMode const default_power_state = mir_power_mode_on;
-    std::unordered_map<DisplayConfigurationCardId, size_t> available_outputs_for_card;
-
-    conf.for_each_card(
-        [&](DisplayConfigurationCard const& card)
-        {
-            available_outputs_for_card[card.id] = card.max_simultaneous_outputs;
-        });
 
     conf.for_each_output(
         [&](UserDisplayConfigurationOutput& conf_output)
         {
-            if (!conf_output.connected || conf_output.modes.empty() ||
-                available_outputs_for_card[conf_output.card_id] == 0)
+            if (!conf_output.connected || conf_output.modes.empty())
             {
                 conf_output.used = false;
                 conf_output.power_mode = default_power_state;
@@ -95,27 +87,17 @@ void mg::CloneDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
             conf_output.current_format = format;
             conf_output.power_mode = default_power_state;
             conf_output.orientation = mir_orientation_normal;
-
-            --available_outputs_for_card[conf_output.card_id];
         });
 }
 
 void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
     int max_x = 0;
-    std::unordered_map<mg::DisplayConfigurationCardId, size_t> available_outputs_for_card;
-
-    conf.for_each_card(
-        [&](mg::DisplayConfigurationCard const& card)
-            {
-            available_outputs_for_card[card.id] = card.max_simultaneous_outputs;
-            });
 
     conf.for_each_output(
         [&](mg::UserDisplayConfigurationOutput& conf_output)
             {
-            if (conf_output.connected && conf_output.modes.size() > 0 &&
-                available_outputs_for_card[conf_output.card_id] > 0)
+            if (conf_output.connected && conf_output.modes.size() > 0)
             {
                 conf_output.used = true;
                 conf_output.top_left = geom::Point{max_x, 0};
@@ -124,7 +106,6 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
                 conf_output.power_mode = mir_power_mode_on;
                 conf_output.orientation = mir_orientation_normal;
                 max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
-                --available_outputs_for_card[conf_output.card_id];
             }
             else
             {

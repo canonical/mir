@@ -268,7 +268,7 @@ struct SimpleClient
         auto const spec = mir_create_normal_window_spec(connection, 100, 100);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_event_handler(spec, &handle_event, this);
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
@@ -1785,7 +1785,7 @@ TEST_F(DisplayConfigurationTest, configure_session_display)
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
 
-    mir_connection_apply_session_display_configuration(connection, configuration);
+    mir_connection_apply_session_display_config(connection, configuration);
 
     observed_changed.wait_for(10s);
 
@@ -1800,7 +1800,7 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
 
-    mir_connection_apply_session_display_configuration(connection, configuration);
+    mir_connection_apply_session_display_config(connection, configuration);
 
     observed_changed.wait_for(10s);
     observed_changed.reset();
@@ -1809,7 +1809,7 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
         .Times(1)
         .WillOnce(mt::WakeUp(&observed_changed));
 
-    mir_connection_remove_session_display_configuration(connection);
+    mir_connection_remove_session_display_config(connection);
 
     observed_changed.wait_for(10s);
 
@@ -1821,7 +1821,7 @@ TEST_F(DisplayConfigurationTest, remove_is_noop_when_no_session_configuration_se
     EXPECT_CALL(*observer, session_configuration_removed(_))
         .Times(0);
 
-    mir_connection_remove_session_display_configuration(connection);
+    mir_connection_remove_session_display_config(connection);
 
     std::this_thread::sleep_for(1s);
 }
@@ -1846,7 +1846,7 @@ TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_chan
             .Times(1)
             .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
 
-        mir_connection_apply_session_display_configuration(client.connection, new_config);
+        mir_connection_apply_session_display_config(client.connection, new_config);
 
         observed_changed.wait_for(10s);
         observed_changed.reset();
@@ -1864,7 +1864,7 @@ TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_chan
             .Times(1)
             .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
 
-        mir_connection_remove_session_display_configuration(client.connection);
+        mir_connection_remove_session_display_config(client.connection);
 
         observed_changed.wait_for(10s);
     }
@@ -1892,7 +1892,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware
             .Times(1)
             .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
 
-        mir_connection_apply_session_display_configuration(client.connection, new_config);
+        mir_connection_apply_session_display_config(client.connection, new_config);
 
         observed_changed.wait_for(10s);
         observed_changed.reset();
@@ -1920,7 +1920,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware
         EXPECT_CALL(mock_display, configure(_))
             .Times(0);
 
-        mir_connection_remove_session_display_configuration(client.connection);
+        mir_connection_remove_session_display_config(client.connection);
 
         observed_changed.wait_for(10s);
         std::this_thread::sleep_for(1s);
@@ -1950,7 +1950,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
             .Times(1)
             .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
 
-        mir_connection_apply_session_display_configuration(client.connection, new_config);
+        mir_connection_apply_session_display_config(client.connection, new_config);
 
         observed_changed.wait_for(10s);
         observed_changed.reset();
@@ -1980,7 +1980,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
             .Times(1)
             .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
 
-        mir_connection_apply_session_display_configuration(client2.connection, new_config);
+        mir_connection_apply_session_display_config(client2.connection, new_config);
         observed_changed.wait_for(10s);
         observed_changed.reset();
         mir_display_config_release(new_config);
@@ -1995,7 +1995,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
         EXPECT_CALL(mock_display, configure(_))
             .Times(0);
 
-        mir_connection_remove_session_display_configuration(client.connection);
+        mir_connection_remove_session_display_config(client.connection);
 
         observed_changed.wait_for(10s);
         std::this_thread::sleep_for(1s);

@@ -22,7 +22,6 @@
 
 #include "mir/geometry/size.h"
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir/test/validity_matchers.h"
 
 #include <gtest/gtest.h>
@@ -35,7 +34,6 @@ namespace
 {
 struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 {
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     geom::Size const logical_size{640, 480};
 };
 }
@@ -150,7 +148,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
         physical_size.width.as_int(), physical_size.height.as_int());
     mir_surface_spec_add_render_surface(
         spec, rs, logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_THAT(window, IsValid());
@@ -174,7 +172,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
     auto spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     auto bs = mir_render_surface_get_buffer_stream(rs,
                                                    640, 480,
@@ -238,7 +236,7 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
     auto spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     auto pc = mir_render_surface_get_presentation_chain(rs);
 

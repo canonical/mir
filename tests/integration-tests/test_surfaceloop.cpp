@@ -123,32 +123,6 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
             return std::make_shared<CountingStubBuffer>();
         }
     };
-
-    class StubPlatform : public mtd::NullPlatform
-    {
-    public:
-        mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
-        {
-            return mir::make_module_ptr<StubGraphicBufferAllocator>();
-        }
-
-        mir::UniqueModulePtr<mg::Display> create_display(
-            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-            std::shared_ptr<mg::GLConfig> const&) override
-        {
-            return mir::make_module_ptr<StubDisplay>();
-        }
-    };
-
-    std::shared_ptr<mg::Platform> the_graphics_platform()
-    {
-        if (!platform)
-            platform = std::make_shared<StubPlatform>();
-
-        return platform;
-    }
-
-    std::shared_ptr<mg::Platform> platform;
 };
 
 std::mutex BufferCounterConfig::CountingStubBuffer::buffers_mutex;
@@ -191,7 +165,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        window[i] = mir_window_create_sync(surface_spec);
+        window[i] = mir_create_window_sync(surface_spec);
 
     for (int i = 0; i != max_surface_count; ++i)
         mir_window_release_sync(window[i]);
@@ -200,5 +174,5 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        window[i] = mir_window_create_sync(surface_spec);
+        window[i] = mir_create_window_sync(surface_spec);
 }
