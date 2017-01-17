@@ -787,7 +787,7 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
         },
         &surface_event_received);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_TRUE(surface_event_received.wait_for(30s));

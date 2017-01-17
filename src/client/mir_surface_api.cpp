@@ -557,16 +557,16 @@ void set_result(MirWindow* result, WindowSync* context)
 }
 }
 
-void mir_window_create(MirWindowSpec* requested_specification,
+void mir_create_window(MirWindowSpec* requested_specification,
                        mir_window_callback callback, void* context)
 {
     window_create_helper(requested_specification, callback, context);
 }
 
-MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification)
+MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification)
 {
     WindowSync ws;
-    mir_window_create(requested_specification,
+    mir_create_window(requested_specification,
                       reinterpret_cast<mir_window_callback>(set_result),
                       &ws);
     return ws.wait_for_result();
@@ -909,7 +909,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
-    return mir_window_create_sync(requested_specification);
+    return mir_create_window_sync(requested_specification);
 }
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
