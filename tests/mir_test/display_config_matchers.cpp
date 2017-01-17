@@ -48,19 +48,6 @@ class TestDisplayConfiguration : public mg::DisplayConfiguration
 public:
     TestDisplayConfiguration(mp::DisplayConfiguration const& protobuf_config)
     {
-        /* Cards */
-        for (int i = 0; i < protobuf_config.display_card_size(); i++)
-        {
-            auto const& protobuf_card = protobuf_config.display_card(i);
-            mg::DisplayConfigurationCard display_card
-            {
-                mg::DisplayConfigurationCardId(protobuf_card.card_id()),
-                protobuf_card.max_simultaneous_outputs(),
-            };
-
-            cards.push_back(display_card);
-        }
-
         /* Outputs */
         for (int i = 0; i < protobuf_config.display_output_size(); i++)
         {
@@ -68,7 +55,7 @@ public:
             mg::DisplayConfigurationOutput display_output
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
-                mg::DisplayConfigurationCardId(protobuf_output.card_id()),
+                mg::DisplayConfigurationCardId(0), // Not supported
                 static_cast<mg::DisplayConfigurationOutputType>(protobuf_output.type()),
                 {},
                 {},
@@ -120,19 +107,6 @@ public:
 
     TestDisplayConfiguration(MirDisplayConfiguration const& client_config)
     {
-        /* Cards */
-        for (size_t i = 0; i < client_config.num_cards; i++)
-        {
-            auto const& client_card = client_config.cards[i];
-            mg::DisplayConfigurationCard display_card
-            {
-                mg::DisplayConfigurationCardId(client_card.card_id),
-                client_card.max_simultaneous_outputs,
-            };
-
-            cards.push_back(display_card);
-        }
-
         /* Outputs */
         for (size_t i = 0; i < client_config.num_outputs; i++)
         {
@@ -140,7 +114,7 @@ public:
             mg::DisplayConfigurationOutput display_output
             {
                 mg::DisplayConfigurationOutputId(client_output.output_id),
-                mg::DisplayConfigurationCardId(client_output.card_id),
+                mg::DisplayConfigurationCardId(0), // Not supported
                 static_cast<mg::DisplayConfigurationOutputType>(client_output.type),
                 {},
                 {},
@@ -191,13 +165,6 @@ public:
 
     TestDisplayConfiguration(MirDisplayConfig const* config)
     {
-        /* Cards; fake it, 'cause we only ever support 1 card at the moment */
-        cards.push_back(
-            mg::DisplayConfigurationCard{
-                mg::DisplayConfigurationCardId{1},
-                static_cast<size_t>(mir_display_config_get_max_simultaneous_outputs(config))
-            });
-
         /* Outputs */
         for (int i = 0; i < mir_display_config_get_num_outputs(config); i++)
         {
@@ -205,7 +172,7 @@ public:
             mg::DisplayConfigurationOutput display_output
                 {
                     mg::DisplayConfigurationOutputId(mir_output_get_id(client_output)),
-                    mg::DisplayConfigurationCardId(1),
+                    mg::DisplayConfigurationCardId(0), // Not supported
                     static_cast<mg::DisplayConfigurationOutputType>(mir_output_get_type(client_output)),
                     {},
                     {},
@@ -257,15 +224,12 @@ public:
 
     TestDisplayConfiguration(TestDisplayConfiguration const& other)
         : mg::DisplayConfiguration(),
-          cards{other.cards},
           outputs{other.outputs}
     {
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> /*f*/) const override
     {
-        for (auto const& card : cards)
-            f(card);
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
@@ -289,7 +253,6 @@ public:
     }
 
 private:
-    std::vector<mg::DisplayConfigurationCard> cards;
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
 
@@ -302,23 +265,6 @@ bool mt::compare_display_configurations(
 {
     using namespace testing;
     bool failure = false;
-
-    /* cards */
-    std::vector<mg::DisplayConfigurationCard> cards1;
-    std::vector<mg::DisplayConfigurationCard> cards2;
-
-    config1.for_each_card(
-        [&cards1](mg::DisplayConfigurationCard const& card)
-        {
-            cards1.push_back(card);
-        });
-    config2.for_each_card(
-        [&cards2](mg::DisplayConfigurationCard const& card)
-        {
-            cards2.push_back(card);
-        });
-
-    failure |= !ExplainMatchResult(UnorderedElementsAreArray(cards1), cards2, listener);
 
     /* Outputs */
     std::vector<mg::DisplayConfigurationOutput> outputs1;

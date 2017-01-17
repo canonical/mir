@@ -37,11 +37,8 @@ public:
     using mir::test::doubles::StubDisplayConfig::StubDisplayConfig;
 
     StubDisplayConfiguration(
-        size_t max_simultaneous_outputs,
         std::vector<DisplayConfigurationOutput> const& outputs)
-        : StubDisplayConfig{
-            {{DisplayConfigurationCardId{1}, max_simultaneous_outputs}},
-            outputs}
+        : StubDisplayConfig{outputs}
     {
     }
 };
@@ -123,11 +120,10 @@ DisplayConfigurationOutput connected_with_xrgb_bgr()
     return output;
 }
 
-StubDisplayConfiguration create_default_configuration(size_t max_outputs = 4)
+StubDisplayConfiguration create_default_configuration()
 {
     return StubDisplayConfiguration
     {
-        max_outputs,
         {
             connected_with_modes(),
             connected_without_modes(),
@@ -187,26 +183,6 @@ TEST(CloneDisplayConfigurationPolicyTest, default_orientation_is_normal)
     {
         EXPECT_EQ(mir_orientation_normal, output.orientation);
     });
-}
-
-TEST(CloneDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
-{
-    using namespace ::testing;
-
-    size_t const max_simultaneous_outputs{1};
-    CloneDisplayConfigurationPolicy policy;
-    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
-
-    policy.apply_to(conf);
-
-    size_t used_count{0};
-    conf.for_each_output([&used_count](DisplayConfigurationOutput const& output)
-    {
-        if (output.used)
-            ++used_count;
-    });
-
-    EXPECT_GE(max_simultaneous_outputs, used_count);
 }
 
 TEST(CloneDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
@@ -316,26 +292,6 @@ TEST(SingleDisplayConfigurationPolicyTest, default_orientation_is_normal)
     });
 }
 
-TEST(SingleDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
-{
-    using namespace ::testing;
-
-    size_t const max_simultaneous_outputs{1};
-    SingleDisplayConfigurationPolicy policy;
-    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
-
-    policy.apply_to(conf);
-
-    size_t used_count{0};
-    conf.for_each_output([&used_count](DisplayConfigurationOutput const& output)
-    {
-        if (output.used)
-            ++used_count;
-    });
-
-    EXPECT_GE(max_simultaneous_outputs, used_count);
-}
-
 TEST(SideBySideDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     using namespace ::testing;
@@ -394,25 +350,3 @@ TEST(SideBySideDisplayConfigurationPolicyTest, default_orientation_is_normal)
         EXPECT_EQ(mir_orientation_normal, output.orientation);
     });
 }
-
-TEST(SideBySideDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supported)
-{
-    using namespace ::testing;
-
-    size_t const max_simultaneous_outputs{1};
-    SideBySideDisplayConfigurationPolicy policy;
-    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
-
-    policy.apply_to(conf);
-
-    size_t used_count{0};
-    conf.for_each_output([&used_count](DisplayConfigurationOutput const& output)
-    {
-        if (output.used)
-            ++used_count;
-    });
-
-    EXPECT_GE(max_simultaneous_outputs, used_count);
-}
-
-

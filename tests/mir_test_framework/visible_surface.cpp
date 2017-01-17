@@ -23,7 +23,7 @@ mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
     visible{false}
 {
     mir_window_spec_set_event_handler(spec, VisibleSurface::event_callback, this);
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     // Swap buffers to ensure window is visible for event based tests
     if (mir_window_is_valid(window))
     {

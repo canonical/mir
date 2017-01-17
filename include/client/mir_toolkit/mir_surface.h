@@ -43,7 +43,7 @@ extern "C" {
  * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
  *
- * \return                  A handle that can be passed to mir_window_create() to complete construction.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
  */
 MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
                                              int width, int height);
@@ -69,7 +69,7 @@ MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_window_create()
+ * \return                  A handle that can be passed to mir_create_window()
  *                          to complete construction.
  */
 MirWindowSpec*
@@ -100,7 +100,7 @@ mir_create_menu_window_spec(MirConnection* connection,
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_window_create()
+ * \return                  A handle that can be passed to mir_create_window()
  *                          to complete construction.
  */
 MirWindowSpec*
@@ -163,7 +163,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
  * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
- * \return                  A handle that can be passed to mir_window_create() to complete construction.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
  */
 MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
@@ -171,15 +171,15 @@ mir_create_input_method_window_spec(MirConnection* connection,
 
 /**
  * Create a window specification.
- * This can be used with mir_window_create() to create a window or with
+ * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
- * \remark For use with mir_window_create() at least the type, width, height,
+ * \remark For use with mir_create_window() at least the type, width, height,
  * format and buffer_usage must be set. (And for types requiring a parent that
  * too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_window_create() or mir_window_apply_spec()
+ *                          mir_create_window() or mir_window_apply_spec()
  */
 MirWindowSpec* mir_create_window_spec(MirConnection* connection);
 
@@ -193,7 +193,7 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
 
 /**
  * Update a window specification with a window type.
- * This can be used with mir_window_create() to create a window or with
+ * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
  * \remark For use with mir_window_apply_spec() the shell need not support
  * arbitrary changes of type and some target types may require the setting of
@@ -345,7 +345,7 @@ void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, u
  * \param [in] spec         Specification to mutate
  * \param [in] output_id    ID of output to place window on. From MirDisplayOutput.output_id
  *
- * \note    If this call returns %true then a valid window returned from mir_window_create() is
+ * \note    If this call returns %true then a valid window returned from mir_create_window() is
  *          guaranteed to be fullscreen on the specified output. An invalid window is returned
  *          if the server unable to, or policy prevents it from, honouring this request.
  */
@@ -357,7 +357,7 @@ void mir_window_spec_set_fullscreen_on_output(MirWindowSpec* spec, uint32_t outp
  * \param [in] mode    Requested preferred orientation
  *
  * \note    If the server is unable to create a window with the preferred orientation at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
 
@@ -375,9 +375,9 @@ void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientati
  *                              mir_edge_attachment_any for no preference.
  * \return                      False if the operation is invalid for this window type.
  *
- * \note    If the parent window becomes invalid before mir_window_create() is processed,
+ * \note    If the parent window becomes invalid before mir_create_window() is processed,
  *          it will return an invalid window. If the parent window is valid at the time
- *          mir_window_create() is called but is later closed, this window will also receive
+ *          mir_create_window() is called but is later closed, this window will also receive
  *          a close event.
  */
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
@@ -391,7 +391,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  * \param [in] state   Requested state
  *
  * \note    If the server is unable to create a window with the requested state at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state);
 
@@ -492,7 +492,7 @@ void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
  *
  * \note    If this call returns %true then the server is guaranteed to honour this request.
  *          If the server is unable to create a window with this pixel format at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format);
 
@@ -505,7 +505,7 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
  *
  * \note    If this call returns %true then the server is guaranteed to honour this request.
  *          If the server is unable to create a window with this buffer usage at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage);
 
@@ -560,7 +560,7 @@ void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec);
  *                                      non-null MirWindow*, but the window may be invalid in
  *                                      case of an error.
  */
-void mir_window_create(MirWindowSpec* requested_specification,
+void mir_create_window(MirWindowSpec* requested_specification,
                        mir_window_callback callback, void* context);
 
 /**
@@ -569,7 +569,7 @@ void mir_window_create(MirWindowSpec* requested_specification,
  * \return                              The new window. This is guaranteed non-null, but may be invalid
  *                                      in the case of error.
  */
-MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification);
+MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification);
 
 /**
  * Release the supplied window and any associated buffer.
@@ -937,10 +937,10 @@ bool mir_surface_is_valid(MirSurface *surface);
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context);
-//__attribute__((deprecated("use mir_window_create() instead")));
+//__attribute__((deprecated("use mir_create_window() instead")));
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
-//__attribute__((deprecated("use mir_window_create_sync() instead")));
+//__attribute__((deprecated("use mir_create_window_sync() instead")));
 
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
