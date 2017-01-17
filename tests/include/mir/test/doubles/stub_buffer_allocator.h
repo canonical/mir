@@ -21,6 +21,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include <vector>
 #include <memory>
@@ -37,17 +38,21 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& properties)
     {
-        return std::make_shared<StubBuffer>(properties);
+        printf("ALLOC LEGACY\n");
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), properties.size);
     }
 
     std::shared_ptr<graphics::Buffer> alloc_software_buffer(geometry::Size sz, MirPixelFormat pf)
     {
-        return std::make_shared<StubBuffer>(
-            graphics::BufferProperties{sz, pf, graphics::BufferUsage::software});
+        printf("ALLOC SW\n");
+        graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
+//        return std::make_shared<StubBuffer>(
     }
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t)
     {
+        printf("ALLOC HW\n");
         return std::make_shared<StubBuffer>(
             graphics::BufferProperties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware});
     }

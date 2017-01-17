@@ -443,6 +443,7 @@ void mf::SessionMediator::allocate_buffers(
             }
             else
             {
+                printf("WHATU\n");
                 //legacy route, server-selected pf and usage
                 id = session->create_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
             }

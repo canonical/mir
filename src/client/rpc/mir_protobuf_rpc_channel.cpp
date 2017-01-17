@@ -349,6 +349,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     switch (stream_cmd)
                     {
                     case mp::BufferOperation::add:
+                        printf("ADD\n");
                         buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
                         map->insert(buffer_id, buffer); 
                         buffer->received();
