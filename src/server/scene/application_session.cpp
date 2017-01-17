@@ -453,7 +453,7 @@ mg::BufferID ms::ApplicationSession::create_buffer(mir::geometry::Size size, Mir
 {
     try
     {
-        return buffers->add_buffer(gralloc->alloc_buffer(size, format));
+        return buffers->add_buffer(gralloc->alloc_software_buffer(size, format));
     }
     catch (std::exception& e)
     {

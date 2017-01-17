@@ -73,10 +73,9 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&) override
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        //fixme
-        return nullptr;
+        return guest_allocator->alloc_buffer(properties);
     }
 
     std::shared_ptr<mg::Buffer> alloc_buffer(
