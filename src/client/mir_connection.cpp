@@ -43,6 +43,8 @@
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
+#include "mir/require.h"
+#include "mir/uncaught.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -241,6 +243,22 @@ void populate_protobuf_display_configuration(
         protobuf_output->set_power_mode(output.power_mode);
         protobuf_output->set_orientation(output.orientation);
     }
+}
+
+void translate_coordinates(
+    MirWindow* window,
+    int x, int y,
+    int* screen_x, int* screen_y)
+try
+{
+    mir::require(window && screen_x && screen_y);
+    window->translate_to_screen_coordinates(x, y, screen_x, screen_y);
+}
+catch (std::exception& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    *screen_x = 0;
+    *screen_y = 0;
 }
 
 std::mutex connection_guard;
@@ -549,6 +567,12 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 
         connect_done = true;
 
+        if (connect_result->has_coordinate_translation_present() &&
+            connect_result->coordinate_translation_present())
+        {
+            translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
+        }
+
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all
@@ -576,9 +600,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             this->pong(serial);
         });
 
-        if (connect_result->has_input_devices())
+        if (connect_result->has_input_configuration())
         {
-            input_devices->update_devices(connect_result->input_devices());
+            input_devices->update_devices(connect_result->input_configuration());
         }
     }
     catch (std::exception const& e)
@@ -1469,5 +1493,9 @@ void* MirConnection::request_interface(char const* name, int version)
 {
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+
+    if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
+        return &translation_ext.value();
+
     return platform->request_interface(name, version);
 }

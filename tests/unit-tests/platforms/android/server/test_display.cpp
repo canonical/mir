@@ -913,27 +913,6 @@ TEST_F(Display, reports_vsync)
     vsync_fn(mga::DisplayName::primary, {});
 }
 
-TEST_F(Display, reports_correct_card_information)
-{
-    using namespace testing;
-    mga::Display display(
-        stub_db_factory,
-        stub_gl_program_factory,
-        stub_gl_config,
-        null_display_report,
-        null_anw_report,
-        mga::OverlayOptimization::enabled);
-
-    int num_cards = 0;
-    display.configuration()->for_each_card(
-        [&](mg::DisplayConfigurationCard const& config)
-        {
-            EXPECT_THAT(config.max_simultaneous_outputs, Eq(3u));
-            num_cards++;
-        });
-    EXPECT_THAT(num_cards, Eq(1));
-}
-
 TEST_F(Display, can_configure_positioning_of_dbs)
 {
     using namespace testing;

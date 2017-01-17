@@ -165,7 +165,7 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        window[i] = mir_window_create_sync(surface_spec);
+        window[i] = mir_create_window_sync(surface_spec);
 
     for (int i = 0; i != max_surface_count; ++i)
         mir_window_release_sync(window[i]);
@@ -174,5 +174,5 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        window[i] = mir_window_create_sync(surface_spec);
+        window[i] = mir_create_window_sync(surface_spec);
 }

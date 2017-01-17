@@ -18,6 +18,9 @@
 
 #include "src/server/graphics/nested/nested_display_configuration.h"
 #include "mir_display_configuration_builder.h"
+#include "mir_toolkit/mir_display_configuration.h"
+
+#include "src/client/display_configuration.h"
 
 #include "mir/test/display_config_matchers.h"
 
@@ -49,24 +52,14 @@ struct MockOutputVisitor
 
 TEST(NestedDisplayConfiguration, empty_configuration_is_read_correctly)
 {
+    auto conf = mir::protobuf::DisplayConfiguration{};
     auto empty_configuration =
-        std::shared_ptr<MirDisplayConfiguration>(
-            new MirDisplayConfiguration{0, nullptr, 0, nullptr});
+        std::shared_ptr<MirDisplayConfig>(
+            new MirDisplayConfig{conf});
 
     mgn::NestedDisplayConfiguration config(empty_configuration);
 
-    config.for_each_card([](mg::DisplayConfigurationCard const&) { FAIL(); });
     config.for_each_output([](mg::DisplayConfigurationOutput const&) { FAIL(); });
-}
-
-TEST(NestedDisplayConfiguration, trivial_configuration_has_one_card)
-{
-    mgn::NestedDisplayConfiguration config(mt::build_trivial_configuration());
-
-    MockCardVisitor cv;
-    EXPECT_CALL(cv, f(_)).Times(Exactly(1));
-
-    config.for_each_card([&cv](mg::DisplayConfigurationCard const& card) { cv.f(card); });
 }
 
 TEST(NestedDisplayConfiguration, trivial_configuration_has_one_output)
@@ -82,7 +75,8 @@ TEST(NestedDisplayConfiguration, trivial_configuration_has_one_output)
 TEST(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
 {
     auto const mir_config = mt::build_trivial_configuration();
-    auto const default_current_output_format = mir_config->outputs[0].current_format;
+    auto const output = mir_display_config_get_output(mir_config.get(), 0);
+    auto const default_current_output_format = mir_output_get_current_pixel_format(output);
     geom::Point const new_top_left{10,20};
     mgn::NestedDisplayConfiguration config(mir_config);
 
@@ -109,16 +103,6 @@ TEST(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
 // portable validation logic which can be found in:
 // TEST(DisplayConfiguration, ...
 
-TEST(NestedDisplayConfiguration, non_trivial_configuration_has_two_cards)
-{
-    mgn::NestedDisplayConfiguration config(mt::build_non_trivial_configuration());
-
-    MockCardVisitor cv;
-    EXPECT_CALL(cv, f(_)).Times(Exactly(2));
-
-    config.for_each_card([&cv](mg::DisplayConfigurationCard const& card) { cv.f(card); });
-}
-
 TEST(NestedDisplayConfiguration, non_trivial_configuration_has_three_outputs)
 {
     mgn::NestedDisplayConfiguration config(mt::build_non_trivial_configuration());
@@ -132,7 +116,8 @@ TEST(NestedDisplayConfiguration, non_trivial_configuration_has_three_outputs)
 TEST(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
 {
     auto const mir_config = mt::build_non_trivial_configuration();
-    mg::DisplayConfigurationOutputId const id(mir_config->outputs[1].output_id);
+    auto const output = mir_display_config_get_output(mir_config.get(), 1);
+    mg::DisplayConfigurationOutputId const id(mir_output_get_id(output));
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(mir_config);
 

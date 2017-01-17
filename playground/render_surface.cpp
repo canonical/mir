@@ -208,7 +208,7 @@ int main(int /*argc*/, char* /*argv*/[])
     auto buffer_stream = mir_render_surface_get_buffer_stream(
         render_surface, width, height, pixel_format);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     fill_stream_with(buffer_stream, 255, 0, 0, 128);

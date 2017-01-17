@@ -85,7 +85,7 @@ std::vector<std::shared_ptr<mge::kms::EGLOutput>> create_outputs(int drm_fd, EGL
         EGLOutputPortEXT port;
         int num_ports;
         EGLAttrib const select_connector[] = {
-            EGL_DRM_CONNECTOR_EXT, connector->connector_id,
+            EGL_DRM_CONNECTOR_EXT, static_cast<EGLAttrib>(connector->connector_id),
             EGL_NONE
         };
         if (eglGetOutputPortsEXT(display, select_connector, &port, 1, &num_ports) != EGL_TRUE)
