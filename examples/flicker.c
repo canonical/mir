@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
     mir_window_spec_set_name(spec, __FILE__);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     assert(window != NULL);

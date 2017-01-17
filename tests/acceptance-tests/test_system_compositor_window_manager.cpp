@@ -78,7 +78,7 @@ struct MockClient
 
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
-        auto const window = mir_window_create_sync(spec);
+        auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         mir_window_set_event_handler(window, on_surface_event, this);

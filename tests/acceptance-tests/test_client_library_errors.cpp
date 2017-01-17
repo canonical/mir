@@ -92,7 +92,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -139,7 +139,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     mir_window_release_sync(window);
@@ -168,7 +168,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -195,7 +195,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -227,7 +227,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     };
     mir_window_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     EXPECT_THAT(window, Not(IsValid()));
     EXPECT_THAT(mir_window_get_error_message(window), MatchesRegex(".*Lookup.*failed.*"));
 
