@@ -162,8 +162,8 @@ typedef enum MirBufferUsage
 } MirBufferUsage;
 
 /**
- * MirSurfaceParameters is the structure of minimum required information that
- * you must provide to Mir in order to create a surface.
+ * MirWindowParameters is the structure of minimum required information that
+ * you must provide to Mir in order to create a window.
  */
 typedef struct MirSurfaceParameters
 {
@@ -181,8 +181,7 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters; /* __attribute__((deprecated("Use MirWindowParameters instead"))) */
-typedef MirSurfaceParameters MirWindowParameters;
+} MirSurfaceParameters __attribute__((deprecated("Use MirWindowParameters instead")));
 
 enum { mir_platform_package_max = 32 };
 
@@ -494,6 +493,8 @@ __attribute__((deprecated("Use mir_window_event_callback instead")));
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
 __attribute__((deprecated("Use mir_window_id_callback instead")));
+
+typedef MirSurfaceParameters MirWindowParameters;
 
 #pragma GCC diagnostic pop
 
