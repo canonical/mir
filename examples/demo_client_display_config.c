@@ -49,69 +49,31 @@ struct ClientContext
     volatile sig_atomic_t reconfigure;
 };
 
-struct Card
-{
-    uint32_t card_id;
-    uint32_t available_outputs;
-};
-
-struct Cards
-{
-    size_t num_cards;
-    struct Card *cards;
-};
-
-static struct Cards *cards_create(struct MirDisplayConfiguration *conf)
-{
-    struct Cards *cards = (struct Cards*) calloc(1, sizeof(struct Cards));
-    cards->num_cards = conf->num_cards;
-    cards->cards = (struct Card*) calloc(cards->num_cards, sizeof(struct Card));
-
-    for (size_t i = 0; i < cards->num_cards; i++)
-    {
-        cards->cards[i].card_id = conf->cards[i].card_id;
-        cards->cards[i].available_outputs =
-            conf->cards[i].max_simultaneous_outputs;
-    }
-
-    return cards;
-}
-
-static void cards_free(struct Cards *cards)
-{
-    free(cards->cards);
-    free(cards);
-}
-
-static struct Card *cards_find_card(struct Cards *cards, uint32_t card_id)
-{
-    for (size_t i = 0; i < cards->num_cards; i++)
-    {
-        if (cards->cards[i].card_id == card_id)
-            return &cards->cards[i];
-    }
-
-    fprintf(stderr, "Error: Couldn't find card with id: %u\n", card_id);
-    abort();
-}
-
 static void print_current_configuration(MirConnection *connection)
 {
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
+    MirDisplayConfig *conf = mir_connection_create_display_configuration(connection);
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    for (uint32_t i = 0; i < num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->outputs[i];
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        int id = mir_output_get_id(output);
+        int position_x = mir_output_get_position_x(output);
+        int position_y = mir_output_get_position_y(output);
+        bool used = mir_output_is_enabled(output);
+        bool connected = mir_output_get_connection_state(output) ==
+            mir_output_connection_state_connected;
+
         printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d",
-               output->output_id, output->connected,
-               output->used, output->position_x, output->position_y);
-        if (output->current_mode < output->num_modes)
+               id, connected, used, position_x, position_y);
+
+        MirOutputMode const* current = mir_output_get_current_mode(output);
+        if (current)
         {
-            MirDisplayMode *mode = &output->modes[output->current_mode];
             printf(" mode: %dx%d@%.2f\n",
-                   mode->horizontal_resolution,
-                   mode->vertical_resolution,
-                   mode->refresh_rate);
+                mir_output_mode_get_width(current),
+                mir_output_mode_get_height(current),
+                mir_output_mode_get_refresh_rate(current));
         }
         else
         {
@@ -119,19 +81,12 @@ static void print_current_configuration(MirConnection *connection)
         }
     }
 
-    mir_display_config_destroy(conf);
+    mir_display_config_release(conf);
 }
 
-static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
+static int apply_configuration(MirConnection *connection, MirDisplayConfig *conf)
 {
-    MirWaitHandle* handle = mir_connection_apply_display_config(connection, conf);
-    if (!handle)
-    {
-        printf("Failed to apply configuration, check that the configuration is valid.\n");
-        return 0;
-    }
-
-    mir_wait_for(handle);
+    mir_connection_apply_session_display_config(connection, conf);
     const char* error = mir_connection_get_error_message(connection);
 
     if (!strcmp(error, ""))
@@ -146,103 +101,109 @@ static int apply_configuration(MirConnection *connection, MirDisplayConfiguratio
     }
 }
 
-static void configure_display_clone(struct MirDisplayConfiguration *conf)
+static void configure_display_clone(MirDisplayConfig *conf)
 {
-    struct Cards *cards = cards_create(conf);
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->outputs[i];
-        struct Card *card = cards_find_card(cards, output->card_id);
+        MirOutput* output = mir_display_config_get_mutable_output(conf, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        int state = mir_output_get_connection_state(output);
 
-        if (output->connected && output->num_modes > 0 &&
-            card->available_outputs > 0)
+        if (state == mir_output_connection_state_connected &&
+            num_modes > 0)
         {
-            output->used = 1;
-            output->current_mode = 0;
-            output->position_x = 0;
-            output->position_y = 0;
-            --card->available_outputs;
+            mir_output_enable(output);
         }
     }
-
-    cards_free(cards);
 }
 
-static void configure_display_horizontal(struct MirDisplayConfiguration *conf)
+static void configure_display_horizontal(MirDisplayConfig *conf)
 {
-    struct Cards *cards = cards_create(conf);
-
     uint32_t max_x = 0;
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
-    {
-        MirDisplayOutput *output = &conf->outputs[i];
-        struct Card *card = cards_find_card(cards, output->card_id);
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-        if (output->connected && output->num_modes > 0 &&
-            card->available_outputs > 0)
+    for (size_t i = 0; i < num_outputs; i++)
+    {
+        MirOutput* output = mir_display_config_get_mutable_output(conf, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        int state = mir_output_get_connection_state(output);
+
+        if (state == mir_output_connection_state_connected &&
+            num_modes > 0)
         {
-            output->used = 1;
-            output->current_mode = 0;
-            output->position_x = max_x;
-            output->position_y = 0;
-            max_x += output->modes[0].horizontal_resolution;
-            --card->available_outputs;
+            mir_output_enable(output);
+            mir_output_set_position(output, max_x, 0);
+
+            MirOutputMode const* current = mir_output_get_current_mode(output);
+            max_x += mir_output_mode_get_width(current);
         }
     }
-
-    cards_free(cards);
 }
 
-static void configure_display_vertical(struct MirDisplayConfiguration *conf)
+static void configure_display_vertical(MirDisplayConfig *conf)
 {
-    struct Cards *cards = cards_create(conf);
-
     uint32_t max_y = 0;
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
-    {
-        MirDisplayOutput *output = &conf->outputs[i];
-        struct Card *card = cards_find_card(cards, output->card_id);
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-        if (output->connected && output->num_modes > 0 &&
-            card->available_outputs > 0)
+    for (size_t i = 0; i < num_outputs; i++)
+    {
+        MirOutput* output = mir_display_config_get_mutable_output(conf, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        int state = mir_output_get_connection_state(output);
+
+        if (state == mir_output_connection_state_connected &&
+            num_modes > 0)
         {
-            output->used = 1;
-            output->current_mode = 0;
-            output->position_x = 0;
-            output->position_y = max_y;
-            max_y += output->modes[0].vertical_resolution;
-            --card->available_outputs;
+            mir_output_enable(output);
+            mir_output_set_position(output, 0, max_y);
+
+            MirOutputMode const* current = mir_output_get_current_mode(output);
+            max_y += mir_output_mode_get_height(current);
         }
     }
-
-    cards_free(cards);
 }
 
-static void configure_display_single(struct MirDisplayConfiguration *conf, int output_num)
+static void configure_display_single(MirDisplayConfig *conf, int output_num)
 {
     uint32_t num_connected = 0;
     uint32_t output_to_enable = output_num;
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->outputs[i];
-        if (output->connected && output->num_modes > 0)
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        int state = mir_output_get_connection_state(output);
+
+        if (state == mir_output_connection_state_connected &&
+            num_modes > 0)
+        {
             ++num_connected;
+        }
     }
 
     if (output_to_enable > num_connected)
         output_to_enable = num_connected;
 
-    for (uint32_t i = 0; i < conf->num_outputs; i++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->outputs[i];
-        if (output->connected && output->num_modes > 0)
+        MirOutput *output = mir_display_config_get_mutable_output(conf, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        int state = mir_output_get_connection_state(output);
+
+        if (state == mir_output_connection_state_connected &&
+            num_modes > 0)
         {
-            output->used = (--output_to_enable == 0);
-            output->current_mode = 0;
-            output->position_x = 0;
-            output->position_y = 0;
+            if (--output_to_enable == 0)
+            {
+                mir_output_enable(output);
+            }
+            else
+            {
+                mir_output_disable(output);
+            }
         }
     }
 }
@@ -250,8 +211,8 @@ static void configure_display_single(struct MirDisplayConfiguration *conf, int o
 static void configure_display(struct ClientContext *context, ConfigurationMode mode,
                               int mode_data)
 {
-    MirDisplayConfiguration *conf =
-        mir_connection_create_display_config(context->connection);
+    MirDisplayConfig *conf =
+        mir_connection_create_display_configuration(context->connection);
 
     if (mode == configuration_mode_clone)
     {
@@ -280,7 +241,7 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
         context->mode_data = mode_data;
     }
 
-    mir_display_config_destroy(conf);
+    mir_display_config_release(conf);
 }
 
 static void display_change_callback(MirConnection *connection, void *context)

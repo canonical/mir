@@ -19,8 +19,8 @@
 #include "server_example_input_device_config.h"
 
 #include "mir/input/device_capability.h"
-#include "mir/input/mir_pointer_configuration.h"
-#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/device.h"
 #include "mir/options/option.h"
@@ -157,7 +157,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 	auto optional_pointer_config = device->pointer_configuration();
         if (optional_pointer_config.is_set())
         {
-            MirPointerConfiguration pointer_config( optional_pointer_config.value() );
+            MirPointerConfig pointer_config( optional_pointer_config.value() );
             pointer_config.cursor_acceleration_bias(touchpad_cursor_acceleration_bias);
             pointer_config.vertical_scroll_scale(touchpad_scroll_speed_scale);
             pointer_config.horizontal_scroll_scale(touchpad_scroll_speed_scale);
@@ -167,7 +167,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 	auto optional_touchpad_config = device->touchpad_configuration();
         if (optional_touchpad_config.is_set())
         {
-            MirTouchpadConfiguration touch_config( optional_touchpad_config.value() );
+            MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             touch_config.disable_while_typing(disable_while_typing);
             touch_config.click_mode(click_mode);
             touch_config.scroll_mode(scroll_mode);
@@ -179,7 +179,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 	auto optional_pointer_config = device->pointer_configuration();
         if (optional_pointer_config.is_set())
         {
-            MirPointerConfiguration pointer_config( optional_pointer_config.value() );
+            MirPointerConfig pointer_config( optional_pointer_config.value() );
             pointer_config.acceleration(mouse_profile);
             pointer_config.cursor_acceleration_bias(mouse_cursor_acceleration_bias);
             pointer_config.vertical_scroll_scale(mouse_scroll_speed_scale);

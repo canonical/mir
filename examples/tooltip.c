@@ -113,7 +113,7 @@ static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* con
     mir_window_spec_set_min_height(spec, height);
     mir_window_spec_set_max_height(spec, height);
 
-    MirWindow* tooltip = mir_window_create_sync(spec);
+    MirWindow* tooltip = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     MirBufferStream* const bs = mir_window_get_buffer_stream(tooltip);

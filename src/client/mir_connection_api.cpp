@@ -248,8 +248,8 @@ try
 {
     mir::require(mir_connection_is_valid(connection));
 
-    auto devices = connection->the_input_devices();
-    return reinterpret_cast<MirInputConfig*>(devices->clone_devices());
+    auto wrapper = connection->the_input_devices();
+    return new MirInputConfig{wrapper->devices()};
 }
 catch (std::exception const& ex)
 {
@@ -270,8 +270,7 @@ void mir_connection_set_input_config_change_callback(
 
 void mir_input_config_destroy(MirInputConfig const* config)
 {
-    auto device_infos = reinterpret_cast<mp::InputDevices const*>(config);
-    delete device_infos;
+    delete config;
 }
 
 void mir_connection_preview_base_display_configuration(
