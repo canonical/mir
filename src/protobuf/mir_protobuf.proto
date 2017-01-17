@@ -254,6 +254,7 @@ message Connection {
   repeated uint32 surface_pixel_format = 5;
   optional InputDevices input_devices = 6;
   optional string input_configuration = 7;
+  optional bool coordinate_translation_present = 8; 
 
   optional string error = 127;
   optional StructuredError structured_error = 128;

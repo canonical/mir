@@ -24,6 +24,7 @@
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
+#include "mir_toolkit/extensions/window_coordinate_translation.h"
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
 #include "mir/frontend/surface_id.h"
@@ -395,6 +396,7 @@ private:
     bool validate_user_display_config(MirDisplayConfiguration const* config);
 
     int const nbuffers;
+    mir::optional_value<MirExtensionWindowCoordinateTranslationV1> translation_ext;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

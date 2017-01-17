@@ -31,3 +31,8 @@ geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<m
 
     return scene_surface->top_left() + geom::Displacement{x, y};
 }
+
+bool ms::DefaultCoordinateTranslator::translation_supported() const
+{
+    return true;
+}
