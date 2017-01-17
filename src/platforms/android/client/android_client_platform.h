@@ -22,7 +22,6 @@
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_egl.h"
 #include "mir_toolkit/extensions/android_buffer.h"
-#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 
 namespace mir
 {
@@ -57,7 +56,6 @@ private:
     MirExtensionAndroidEGLV1 android_types_extension;
     MirExtensionFencedBuffersV1 fence_extension;
     MirExtensionAndroidBufferV1 buffer_extension;
-    MirExtensionHardwareBufferStreamV1 hw_stream;
 };
 
 }

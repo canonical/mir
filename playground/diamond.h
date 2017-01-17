@@ -40,7 +40,7 @@ typedef struct
 } Diamond;
 
 Diamond setup_diamond();
-Diamond setup_diamond_import(EGLImageKHR img, int use_shim);
+Diamond setup_diamond_import(EGLImageKHR img);
 void destroy_diamond(Diamond* info);
 void render_diamond(Diamond* info, int width, int height);
 

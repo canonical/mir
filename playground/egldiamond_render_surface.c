@@ -22,7 +22,6 @@
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_egl_platform_shim.h"
 #include "diamond.h"
 
 #include <assert.h>
@@ -111,7 +110,6 @@ int main(int argc, char *argv[])
 {
     //once full transition to Mir platform has been made, internal shim will be removed,
     //and the examples/ will use MirConnection/MirRenderSurface/MirBuffer as their egl types.
-    int use_shim = 1;
     int swapinterval = 1;
     char* socket = NULL; 
     int c;
@@ -122,9 +120,6 @@ int main(int argc, char *argv[])
             case 'm':
                 socket = optarg;
                 break;
-            case 'e':
-                use_shim = 0;
-                break;
             case 'n':
                 swapinterval = 0;
                 break;
@@ -133,7 +128,6 @@ int main(int argc, char *argv[])
                 printf(
                     "Usage:\n"
                     "\t-m mir_socket\n"
-                    "\t-e use egl library directly, instead of using shim\n"
                     "\t-n use swapinterval 0\n"
                     "\t-h this message\n");
                 return -1;
@@ -162,11 +156,6 @@ int main(int argc, char *argv[])
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    if (use_shim)
-        printf("internal EGL driver shim in use\n");
-    else
-        printf("using EGL driver directly\n");
-
     connection = mir_connect_sync(socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
@@ -189,10 +178,7 @@ int main(int argc, char *argv[])
 
     bool const filled = fill_buffer(buffer);
 
-    if (use_shim)
-        egldisplay = future_driver_eglGetDisplay(connection);
-    else
-        egldisplay = eglGetDisplay(connection);
+    egldisplay = eglGetDisplay(connection);
 
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
@@ -221,10 +207,7 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
-    if (use_shim)
-        eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
-    else
-        eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
+    eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
 
     //The format field is only used for default-created streams.
     //width and height are the logical width the user wants the window to be
@@ -259,16 +242,8 @@ int main(int argc, char *argv[])
     {
         static EGLint const image_attrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
 
-        if (use_shim)
-        {
-            eglCreateImageKHR = future_driver_eglCreateImageKHR; 
-            eglDestroyImageKHR = future_driver_eglDestroyImageKHR; 
-        }
-        else
-        {
-            eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR"); 
-            eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR"); 
-        }
+        eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR"); 
+        eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR"); 
         if (filled)
             image = eglCreateImageKHR(egldisplay, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, buffer, image_attrs);
     }
@@ -282,7 +257,7 @@ int main(int argc, char *argv[])
     else
     {
         printf("MirBuffer import supported by driver. Should see yellow/blue stripes\n");
-        diamond = setup_diamond_import(image, use_shim);
+        diamond = setup_diamond_import(image);
     }
 
     EGLint viewport_width = -1;
@@ -293,10 +268,7 @@ int main(int argc, char *argv[])
         eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &viewport_width);
         eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &viewport_height);
         render_diamond(&diamond, viewport_width, viewport_height);
-        if (use_shim)
-            future_driver_eglSwapBuffers(egldisplay, eglsurface);
-        else
-            eglSwapBuffers(egldisplay, eglsurface);
+        eglSwapBuffers(egldisplay, eglsurface);
     }
 
     destroy_diamond(&diamond);
@@ -304,10 +276,7 @@ int main(int argc, char *argv[])
     if (image)
         eglDestroyImageKHR(egldisplay, image);
 
-    if (use_shim) 
-        future_driver_eglTerminate(egldisplay);
-    else
-        eglTerminate(egldisplay);
+    eglTerminate(egldisplay);
     mir_render_surface_release(render_surface);
     mir_window_release_sync(window);
     mir_connection_release(connection);

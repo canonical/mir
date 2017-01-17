@@ -17,7 +17,6 @@
  */
 
 #include "diamond.h"
-#include "mir_egl_platform_shim.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -132,21 +131,14 @@ Diamond setup_diamond_common()
     return info;
 }
 
-Diamond setup_diamond_import(EGLImageKHR img, int use_shim)
+Diamond setup_diamond_import(EGLImageKHR img)
 {
     Diamond diamond = setup_diamond_common();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if (use_shim)
-    {
-        future_driver_glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
-    }
-    else
-    {
-        PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
-            (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
-    }
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
+        (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
     return diamond;
 }
 

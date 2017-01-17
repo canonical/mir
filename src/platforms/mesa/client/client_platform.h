@@ -22,7 +22,6 @@
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
-#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 
 struct gbm_device;
 
@@ -64,7 +63,6 @@ private:
     MirExtensionMesaDRMAuthV1 drm_extensions;
     MirExtensionSetGbmDeviceV1 mesa_auth;
     MirExtensionGbmBufferV1 gbm_buffer;
-    MirExtensionHardwareBufferStreamV1 hw_stream;
 };
 
 }
