@@ -110,18 +110,18 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
     running = 0;
 }
 
-static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
-    int value = mir_surface_event_get_attribute_value(sev);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(sev);
+    int value = mir_window_event_get_attribute_value(sev);
 
     switch (attrib)
     {
-    case mir_surface_attrib_visibility:
-        printf("Window %s\n", value == mir_surface_visibility_exposed ?
+    case mir_window_attrib_visibility:
+        printf("Window %s\n", value == mir_window_visibility_exposed ?
                                "exposed" : "occluded");
         break;
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:
@@ -129,19 +129,19 @@ static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
     }
 }
 
-static void handle_surface_output_event(MirSurfaceOutputEvent const* out)
+static void handle_window_output_event(MirWindowOutputEvent const* out)
 {
     static char const* const form_factor_name[6] =
         {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
-    unsigned ff = mir_surface_output_event_get_form_factor(out);
+    unsigned ff = mir_window_output_event_get_form_factor(out);
     char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
 
-    refresh_rate = mir_surface_output_event_get_refresh_rate(out);
+    refresh_rate = mir_window_output_event_get_refresh_rate(out);
 
     printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
-           mir_surface_output_event_get_output_id(out),
-           mir_surface_output_event_get_dpi(out),
-           mir_surface_output_event_get_scale(out),
+           mir_window_output_event_get_output_id(out),
+           mir_window_output_event_get_dpi(out),
+           mir_window_output_event_get_scale(out),
            form_factor,
            refresh_rate);
 }
@@ -161,11 +161,11 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     case mir_event_type_input:
         mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
         break;
-    case mir_event_type_surface:
-        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+    case mir_event_type_window:
+        mir_eglapp_handle_window_event(mir_event_get_window_event(ev));
         break;
-    case mir_event_type_surface_output:
-        handle_surface_output_event(mir_event_get_surface_output_event(ev));
+    case mir_event_type_window_output:
+        handle_window_output_event(mir_event_get_window_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
@@ -182,7 +182,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
                    mir_resize_event_get_height(resize));
         }
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         printf("Received close event from server.\n");
         running = 0;
         break;
@@ -191,27 +191,22 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     }
 }
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
+static MirOutput const* find_active_output(
+    MirDisplayConfig const* conf)
 {
-    const MirDisplayOutput *output = NULL;
-    int d;
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (d = 0; d < (int)conf->num_outputs; d++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        MirOutputConnectionState state = mir_output_get_connection_state(output);
+        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
         {
-            output = out;
-            break;
+            return output;
         }
     }
 
-    return output;
+    return NULL;
 }
 
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)
@@ -443,10 +438,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */
-    MirDisplayConfiguration* display_config =
-        mir_connection_create_display_config(connection);
+    MirDisplayConfig* display_config =
+        mir_connection_create_display_configuration(connection);
 
-    const MirDisplayOutput *output = find_active_output(display_config);
+    MirOutput const* output = find_active_output(display_config);
 
     if (output == NULL)
     {
@@ -454,19 +449,25 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         return 0;
     }
 
-    const MirDisplayMode *mode = &output->modes[output->current_mode];
+    MirOutputMode const* mode = mir_output_get_current_mode(output);
+
+    int pos_x = mir_output_get_position_x(output);
+    int pos_y = mir_output_get_position_y(output);
+
+    int mode_width  = mir_output_mode_get_width(mode);
+    int mode_height = mir_output_mode_get_height(mode);
 
     printf("Current active output is %dx%d %+d%+d\n",
-           mode->horizontal_resolution, mode->vertical_resolution,
-           output->position_x, output->position_y);
+        mode_width, mode_height,
+        pos_x, pos_y);
 
     if (fullscreen)  /* TODO: Use surface states for this */
     {
-        *width = mode->horizontal_resolution;
-        *height = mode->vertical_resolution;
+        *width  = mode_width;
+        *height = mode_height;
     }
 
-    mir_display_config_destroy(display_config);
+    mir_display_config_release(display_config);
 
     MirWindowSpec *spec =
         mir_create_normal_window_spec(connection, *width, *height);
@@ -486,7 +487,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     if (output_id != mir_display_output_id_invalid)
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     CHECK(mir_window_is_valid(window), "Can't create a window");

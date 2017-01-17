@@ -44,7 +44,7 @@ struct FocusSurface
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_event_handler(spec, FocusSurface::handle_event, this);
 
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
@@ -57,26 +57,27 @@ struct FocusSurface
 
     static void handle_event(MirWindow* window, MirEvent const* ev, void* context)
     {
-        if (mir_event_type_surface == mir_event_get_type(ev))
+        if (mir_event_type_window == mir_event_get_type(ev))
         {
-            auto surface_ev = mir_event_get_surface_event(ev);
-            if (mir_surface_attrib_focus == mir_surface_event_get_attribute(surface_ev))
+            auto surface_ev = mir_event_get_window_event(ev);
+            auto attrib = mir_window_event_get_attribute(surface_ev);
+            if (mir_window_attrib_focus == attrib)
             {
                 auto self = static_cast<FocusSurface*>(context);
                 self->log_focus_event(window,
-                    static_cast<MirSurfaceFocusState>(mir_surface_event_get_attribute_value(surface_ev)));
+                    static_cast<MirWindowFocusState>(mir_window_event_get_attribute_value(surface_ev)));
             }
         }
     }
 
-    void log_focus_event(MirSurface*, MirSurfaceFocusState state)
+    void log_focus_event(MirWindow*, MirWindowFocusState state)
     {
         std::lock_guard<std::mutex> lk(mutex);
         focus_events.push_back(state);
         cv.notify_all();
     }
 
-    MirSurface* native_handle() const
+    MirWindow* native_handle() const
     {
         return window;
     }
@@ -88,7 +89,7 @@ struct FocusSurface
         released = true;
     }
 
-    void expect_focus_event_sequence(std::vector<MirSurfaceFocusState> const& seq)
+    void expect_focus_event_sequence(std::vector<MirWindowFocusState> const& seq)
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!cv.wait_for(lk, timeout, [this, &seq]
@@ -104,7 +105,7 @@ struct FocusSurface
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    std::vector<MirSurfaceFocusState> focus_events;
+    std::vector<MirWindowFocusState> focus_events;
     bool released {false};
     MirConnection* connection = nullptr;
     MirWindow* window = nullptr;
@@ -124,7 +125,7 @@ struct ClientFocusNotification : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
 {
-    std::vector<MirSurfaceFocusState> const focus_sequence = {mir_surface_focused, mir_surface_unfocused};
+    std::vector<MirWindowFocusState> const focus_sequence = {mir_window_focus_state_focused, mir_window_focus_state_unfocused};
     auto window = make_surface();
     window->release();
     window->expect_focus_event_sequence(focus_sequence);
@@ -132,10 +133,10 @@ TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
 
 TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
-    std::vector<MirSurfaceFocusState> const initial_focus = {mir_surface_focused};
-    std::vector<MirSurfaceFocusState> const focus_sequence1 =
-        {mir_surface_focused, mir_surface_unfocused, mir_surface_focused, mir_surface_unfocused};
-    std::vector<MirSurfaceFocusState> const focus_sequence2 = {mir_surface_focused, mir_surface_unfocused};
+    std::vector<MirWindowFocusState> const initial_focus = {mir_window_focus_state_focused};
+    std::vector<MirWindowFocusState> const focus_sequence1 =
+        {mir_window_focus_state_focused, mir_window_focus_state_unfocused, mir_window_focus_state_focused, mir_window_focus_state_unfocused};
+    std::vector<MirWindowFocusState> const focus_sequence2 = {mir_window_focus_state_focused, mir_window_focus_state_unfocused};
 
     auto surface1 = make_surface();
     surface1->expect_focus_event_sequence(initial_focus);

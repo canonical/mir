@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "../buffer_stream_arrangement.h"
+#include "buffer_stream_arrangement.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include <gmock/gmock.h>

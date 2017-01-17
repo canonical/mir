@@ -19,7 +19,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/spin_wait.h"
 
@@ -84,7 +83,7 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         connection = conn;
     }
 
-    virtual void surface_created(MirSurface* new_surface)
+    virtual void surface_created(MirWindow* new_surface)
     {
         std::this_thread::sleep_for(10ms);
         window = new_surface;
@@ -96,13 +95,11 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         ++buffers;
     }
 
-    void surface_released(MirSurface*)
+    void surface_released(MirWindow*)
     {
         std::this_thread::sleep_for(10ms);
         window = nullptr;
     }
-
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 }

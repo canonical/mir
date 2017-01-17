@@ -125,7 +125,7 @@ struct SurfaceStackCompositor : public Test
 {
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
-        buffers(std::make_shared<mc::BufferMap>(std::make_shared<NiceMock<mtd::MockEventSink>>(), std::make_shared<mtd::StubBufferAllocator>())),
+        buffers(std::make_shared<mc::BufferMap>(std::make_shared<NiceMock<mtd::MockEventSink>>())),
         stream(std::make_shared<mc::Stream>(policy_factory, buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
@@ -138,9 +138,9 @@ struct SurfaceStackCompositor : public Test
             std::shared_ptr<mtd::StubInputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)},
-        stub_buffer_id(buffers->add_buffer(mg::BufferProperties{ { 1, 1 }, mir_pixel_format_abgr_8888, mg::BufferUsage::software})),
-        stub_buffer((*buffers)[stub_buffer_id])
+        stub_buffer(std::make_shared<mtd::StubBuffer>())
     {
+        buffers->add_buffer(stub_buffer);
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
@@ -156,7 +156,6 @@ struct SurfaceStackCompositor : public Test
     std::list<ms::StreamInfo> const streams;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
-    mg::BufferID stub_buffer_id;
     std::shared_ptr<mg::Buffer> stub_buffer;
     CountingDisplaySyncGroup stub_primary_db;
     CountingDisplaySyncGroup stub_secondary_db;

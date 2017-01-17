@@ -111,7 +111,7 @@ public:
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
-        MirSurface *surface,
+        MirWindow *surface,
         mir_surface_callback callback,
         void *context);
 

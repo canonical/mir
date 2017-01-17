@@ -41,7 +41,7 @@ namespace mis = mir::input::synthesis;
 namespace
 {
 std::chrono::seconds const max_wait{4};
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx);
 }
 
 class ClientCookies : public mtf::ConnectedClientHeadlessServer
@@ -62,7 +62,7 @@ public:
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_fullscreen_on_output(spec, 1);
         mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
@@ -96,26 +96,26 @@ public:
 namespace
 {
 
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
     auto client_cookie = static_cast<ClientCookies*>(ctx);
 
-    if (event_type == mir_event_type_surface)
+    if (event_type == mir_event_type_window)
     {
-        auto event = mir_event_get_surface_event(ev);
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto event = mir_event_get_window_event(ev);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
         std::lock_guard<std::mutex> lk(client_cookie->mutex);
-        if (attrib == mir_surface_attrib_visibility &&
-            value == mir_surface_visibility_exposed)
+        if (attrib == mir_window_attrib_visibility &&
+            value == mir_window_visibility_exposed)
         {
             client_cookie->exposed = true;
         }
 
-        if (attrib == mir_surface_attrib_focus &&
-            value == mir_surface_focused)
+        if (attrib == mir_window_attrib_focus &&
+            value == mir_window_focus_state_focused)
         {
             client_cookie->focused = true;
         }

@@ -43,7 +43,7 @@ extern "C" {
  * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
  *
- * \return                  A handle that can be passed to mir_window_create() to complete construction.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
  */
 MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
                                              int width, int height);
@@ -69,7 +69,7 @@ MirWindowSpec* mir_create_normal_window_spec(MirConnection* connection,
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_window_create()
+ * \return                  A handle that can be passed to mir_create_window()
  *                          to complete construction.
  */
 MirWindowSpec*
@@ -100,7 +100,7 @@ mir_create_menu_window_spec(MirConnection* connection,
  *                          location.
  * \param [in] edge         The preferred edge direction to attach to. Use
  *                          mir_edge_attachment_any for no preference.
- * \return                  A handle that can be passed to mir_window_create()
+ * \return                  A handle that can be passed to mir_create_window()
  *                          to complete construction.
  */
 MirWindowSpec*
@@ -163,7 +163,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
  * \param [in] connection   Connection the window will be created on
  * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
- * \return                  A handle that can be passed to mir_window_create() to complete construction.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
  */
 MirWindowSpec*
 mir_create_input_method_window_spec(MirConnection* connection,
@@ -171,15 +171,15 @@ mir_create_input_method_window_spec(MirConnection* connection,
 
 /**
  * Create a window specification.
- * This can be used with mir_window_create() to create a window or with
+ * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
- * \remark For use with mir_window_create() at least the type, width, height,
+ * \remark For use with mir_create_window() at least the type, width, height,
  * format and buffer_usage must be set. (And for types requiring a parent that
  * too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_window_create() or mir_window_apply_spec()
+ *                          mir_create_window() or mir_window_apply_spec()
  */
 MirWindowSpec* mir_create_window_spec(MirConnection* connection);
 
@@ -193,7 +193,7 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
 
 /**
  * Update a window specification with a window type.
- * This can be used with mir_window_create() to create a window or with
+ * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
  * \remark For use with mir_window_apply_spec() the shell need not support
  * arbitrary changes of type and some target types may require the setting of
@@ -208,7 +208,7 @@ void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent);
  * \param [in] spec         Specification to mutate
  * \param [in] type         the target type of the window
  */
-void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type);
+void mir_window_spec_set_type(MirWindowSpec* spec, MirWindowType type);
 
 /**
  * Set the requested name.
@@ -345,7 +345,7 @@ void mir_window_spec_set_max_aspect_ratio(MirWindowSpec* spec, unsigned width, u
  * \param [in] spec         Specification to mutate
  * \param [in] output_id    ID of output to place window on. From MirDisplayOutput.output_id
  *
- * \note    If this call returns %true then a valid window returned from mir_window_create() is
+ * \note    If this call returns %true then a valid window returned from mir_create_window() is
  *          guaranteed to be fullscreen on the specified output. An invalid window is returned
  *          if the server unable to, or policy prevents it from, honouring this request.
  */
@@ -357,7 +357,7 @@ void mir_window_spec_set_fullscreen_on_output(MirWindowSpec* spec, uint32_t outp
  * \param [in] mode    Requested preferred orientation
  *
  * \note    If the server is unable to create a window with the preferred orientation at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientationMode mode);
 
@@ -375,9 +375,9 @@ void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientati
  *                              mir_edge_attachment_any for no preference.
  * \return                      False if the operation is invalid for this window type.
  *
- * \note    If the parent window becomes invalid before mir_window_create() is processed,
+ * \note    If the parent window becomes invalid before mir_create_window() is processed,
  *          it will return an invalid window. If the parent window is valid at the time
- *          mir_window_create() is called but is later closed, this window will also receive
+ *          mir_create_window() is called but is later closed, this window will also receive
  *          a close event.
  */
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
@@ -391,9 +391,9 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
  * \param [in] state   Requested state
  *
  * \note    If the server is unable to create a window with the requested state at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
-void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state);
+void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state);
 
 /**
  * Set a collection of input rectangles associated with the spec.
@@ -492,7 +492,7 @@ void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
  *
  * \note    If this call returns %true then the server is guaranteed to honour this request.
  *          If the server is unable to create a window with this pixel format at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format);
 
@@ -505,7 +505,7 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
  *
  * \note    If this call returns %true then the server is guaranteed to honour this request.
  *          If the server is unable to create a window with this buffer usage at
- *          the point mir_window_create() is called it will instead return an invalid window.
+ *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage);
 
@@ -560,7 +560,7 @@ void mir_window_apply_spec(MirWindow* window, MirWindowSpec* spec);
  *                                      non-null MirWindow*, but the window may be invalid in
  *                                      case of an error.
  */
-void mir_window_create(MirWindowSpec* requested_specification,
+void mir_create_window(MirWindowSpec* requested_specification,
                        mir_window_callback callback, void* context);
 
 /**
@@ -569,7 +569,7 @@ void mir_window_create(MirWindowSpec* requested_specification,
  * \return                              The new window. This is guaranteed non-null, but may be invalid
  *                                      in the case of error.
  */
-MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification);
+MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification);
 
 /**
  * Release the supplied window and any associated buffer.
@@ -636,7 +636,7 @@ MirBufferStream* mir_window_get_buffer_stream(MirWindow* window);
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
  * connection has been released.
- *   \param [in] window  The window
+ *   \param [in] window   The window
  *   \return              A text description of any error resulting in an
  *                        invalid window, or the empty string "" if the
  *                        connection is valid.
@@ -661,11 +661,106 @@ MirOrientation mir_window_get_orientation(MirWindow* window);
 /**
  * Attempts to raise the window to the front.
  *
- * \param [in] window The window to raise
+ * \param [in] window  The window to raise
  * \param [in] cookie  A cookie instance obtained from an input event.
  *                     An invalid cookie will terminate the client connection.
  */
 void mir_window_raise(MirWindow* window, MirCookie const* cookie);
+
+/**
+ * Get the type (purpose) of a window.
+ *   \param [in] window   The window to query
+ *   \return              The type of the window
+ */
+MirWindowType mir_window_get_type(MirWindow* window);
+
+/**
+ * Change the state of a window.
+ *   \param [in] window  The window to operate on
+ *   \param [in] state   The new state of the window
+ *   \return             A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_window_set_state(MirWindow* window,
+                                     MirWindowState state);
+
+/**
+ * Get the current state of a window.
+ *   \param [in] window  The window to query
+ *   \return             The state of the window
+ */
+MirWindowState mir_window_get_state(MirWindow* window);
+
+/**
+ * Query the focus state for a window.
+ *   \param [in] window  The window to operate on
+ *   \return             The focus state of said window
+ */
+MirWindowFocusState mir_window_get_focus_state(MirWindow* window);
+
+/**
+ * Query the visibility state for a window.
+ *   \param [in] window  The window to operate on
+ *   \return             The visibility state of said window
+ */
+MirWindowVisibility mir_window_get_visibility(MirWindow* window);
+
+/**
+ * Query the DPI value of the window (dots per inch). This will vary depending
+ * on the physical display configuration and where the window is within it.
+ *   \return  The DPI of the window, or zero if unknown.
+ */
+int mir_window_get_dpi(MirWindow* window);
+
+/**
+ * Choose the cursor state for a window: whether a cursor is shown,
+ * and which cursor if so.
+ *    \param [in] window     The window to operate on
+ *    \param [in] parameters The configuration parameters obtained
+ *                           from mir_cursor* family of functions.
+ *    \return                A wait handle that can be passed to mir_wait_for,
+ *                           or NULL if parameters is invalid.
+ *
+ */
+MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
+
+/**
+ * Request to set the preferred orientations of a window.
+ * The request may be rejected by the server; to check wait on the
+ * result and check the applied value using mir_window_get_preferred_orientation
+ *   \param [in] window      The window to operate on
+ *   \param [in] orientation The preferred orientation modes
+ *   \return                 A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
+
+/**
+ * Get the preferred orientation modes of a window.
+ *   \param [in] window   The window to query
+ *   \return              The preferred orientation modes
+ */
+MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
+
+/**
+ * \brief Request an ID for the window that can be shared cross-process and
+ *        across restarts.
+ *
+ * This call acquires a MirPersistentId for this MirWindow. This MirPersistentId
+ * can be serialized to a string, stored or sent to another process, and then
+ * later deserialized to refer to the same window.
+ *
+ * \param [in]     window    The window to acquire a persistent reference to.
+ * \param [in]     callback  Callback to invoke when the request completes.
+ * \param [in,out] context   User data passed to completion callback.
+ */
+void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context);
+
+/**
+ * \brief Request a persistent ID for a window and wait for the result
+ * \param [in] window  The window to acquire a persistent ID for.
+ * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ *         be freed with a call to mir_persistent_id_release()
+ */
+MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window);
 
 // Functions in this pragma section are to be deprecated
 //#pragma GCC diagnostic push
@@ -842,10 +937,10 @@ bool mir_surface_is_valid(MirSurface *surface);
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context);
-//__attribute__((deprecated("use mir_window_create() instead")));
+//__attribute__((deprecated("use mir_create_window() instead")));
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
-//__attribute__((deprecated("use mir_window_create_sync() instead")));
+//__attribute__((deprecated("use mir_create_window_sync() instead")));
 
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
@@ -870,28 +965,15 @@ char const* mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 //__attribute__((deprecated("use mir_window_get_parameters() instead")));
 
-/**
- * Get the type (purpose) of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The type of the surface
- */
-MirSurfaceType mir_surface_get_type(MirSurface *surface);
+MirSurfaceType mir_surface_get_type(MirSurface* surface);
+//__attribute__((deprecated("use mir_window_get_type() instead")));
 
-/**
- * Change the state of a surface.
- *   \param [in] surface  The surface to operate on
- *   \param [in] state    The new state of the surface
- *   \return              A wait handle that can be passed to mir_wait_for
- */
 MirWaitHandle* mir_surface_set_state(MirSurface *surface,
                                      MirSurfaceState state);
+//__attribute__((deprecated("use mir_window_set_state() instead")));
 
-/**
- * Get the current state of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The state of the surface
- */
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_state() instead")));
 
 /**
  * Set the swapinterval for the default stream.
@@ -910,81 +992,32 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval)
 __attribute__((deprecated("Swap interval should be set on the backing content")));
 
-/**
- * Query the DPI value of the surface (dots per inch). This will vary depending
- * on the physical display configuration and where the surface is within it.
- *   \return  The DPI of the surface, or zero if unknown.
- */
 int mir_surface_get_dpi(MirSurface* surface);
-    
-/**
- * Query the focus state for a surface.
- *   \param [in] surface The surface to operate on
- *   \return             The focus state of said surface
- */
+//__attribute__((deprecated("use mir_window_get_dpi() instead")));
+
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_focus_state() instead")));
 
-/**
- * Query the visibility state for a surface.
- *   \param [in] surface The surface to operate on
- *   \return             The visibility state of said surface
- */
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_visibility() instead")));
 
-/**
- * Choose the cursor state for a surface: whether a cursor is shown, 
- * and which cursor if so.
- *    \param [in] surface    The surface to operate on
- *    \param [in] parameters The configuration parameters obtained
- *                           from mir_cursor* family of functions.
- *    \return                A wait handle that can be passed to mir_wait_for,
- *                           or NULL if parameters is invalid.
- *
- */
 MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
+//__attribute__((deprecated("use mir_window_configure_cursor() instead")));
 
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
 //__attribute__((deprecated("use mir_window_get_orientation() instead")));
 
-/**
- * Request to set the preferred orientations of a surface.
- * The request may be rejected by the server; to check wait on the
- * result and check the applied value using mir_surface_get_preferred_orientation
- *   \param [in] surface     The surface to operate on
- *   \param [in] orientation The preferred orientation modes
- *   \return                 A wait handle that can be passed to mir_wait_for
- */
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
+//__attribute__((deprecated("use mir_window_set_preferred_orientation() instead")));
 
-/**
- * Get the preferred orientation modes of a surface.
- *   \param [in] surface  The surface to query
- *   \return              The preferred orientation modes
- */
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_get_preferred_orientation() instead")));
 
-/**
- * \brief Request an ID for the surface that can be shared cross-process and
- *        across restarts.
- *
- * This call acquires a MirPersistentId for this MirSurface. This MirPersistentId
- * can be serialized to a string, stored or sent to another process, and then
- * later deserialized to refer to the same surface.
- *
- * \param [in]     surface   The surface to acquire a persistent reference to.
- * \param [in]     callback  Callback to invoke when the request completes.
- * \param [in,out] context   User data passed to completion callback.
- * \return A MirWaitHandle that can be used in mir_wait_for to await completion.
- */
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context);
+//__attribute__((deprecated("use mir_window_request_persistent_id() instead")));
 
-/**
- * \brief Request a persistent ID for a surface and wait for the result
- * \param [in] surface  The surface to acquire a persistent ID for.
- * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
- *         be freed with a call to mir_persistent_id_release()
- */
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface);
+//__attribute__((deprecated("use mir_window_request_persistent_id_sync() instead")));
 
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 //__attribute__((deprecated("use mir_window_raise() instead")));

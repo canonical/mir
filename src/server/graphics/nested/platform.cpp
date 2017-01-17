@@ -73,17 +73,12 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties) override
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if ((buffer_properties.size.width >= mir::geometry::Width{480}) &&
-            (buffer_properties.size.height >= mir::geometry::Height{480}))
-        {
-            return std::make_shared<mgn::Buffer>(connection, buffer_properties);
-        }
+        if (passthrough_candidate(properties.size))
+            return std::make_shared<mgn::Buffer>(connection, properties);
         else
-        {
-            return guest_allocator->alloc_buffer(buffer_properties);
-        }
+            return guest_allocator->alloc_buffer(properties);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats() override
@@ -92,6 +87,10 @@ public:
     }
 
 private:
+    bool passthrough_candidate(mir::geometry::Size size)
+    {
+        return (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
+    }
     std::shared_ptr<mgn::HostConnection> const connection;
     std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
 };

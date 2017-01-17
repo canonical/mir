@@ -40,7 +40,7 @@ MirWindow *create_window(MirConnection *connection)
     mir_window_spec_set_name(spec, "frame-uniformity-test");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     
     if (!mir_window_is_valid(window))
@@ -52,14 +52,14 @@ MirWindow *create_window(MirConnection *connection)
     return window;
 }
 
-void input_callback(MirSurface * /* surface */, MirEvent const* event, void* context)
+void input_callback(MirWindow * /* surface */, MirEvent const* event, void* context)
 {
     auto results = static_cast<TouchSamples*>(context);
     
     results->record_pointer_coordinates(std::chrono::high_resolution_clock::now(), *event);
 }
 
-void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
+void collect_input_and_frame_timing(MirWindow *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
     mir_window_set_event_handler(surface, input_callback, results.get());
     

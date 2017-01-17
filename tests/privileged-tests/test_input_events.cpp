@@ -47,7 +47,7 @@ namespace
 
 template <typename T> using UPtrWithDeleter = std::unique_ptr<T,void(*)(T*)>;
 using MirConnectionUPtr = UPtrWithDeleter<MirConnection>;
-using MirSurfaceUPtr = UPtrWithDeleter<MirSurface>;
+using MirSurfaceUPtr = UPtrWithDeleter<MirWindow>;
 using EvDevUPtr = UPtrWithDeleter<libevdev>;
 using EvDevUInputUPtr = UPtrWithDeleter<libevdev_uinput>;
 
@@ -161,7 +161,7 @@ struct InputEvents : testing::Test
         wait_for_socket(nested_socket);
     }
 
-    static void handle_input(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_input(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const handler = static_cast<MockInputHandler*>(context);
         auto const type = mir_event_get_type(ev);
@@ -191,8 +191,8 @@ struct InputEvents : testing::Test
         bool const success = mt::spin_wait_for_condition_or_timeout(
             [&]
             {
-                return mir_surface_get_visibility(window) == mir_surface_visibility_exposed &&
-                       mir_surface_get_focus(window) == mir_surface_focused;
+                return mir_window_get_visibility(window) == mir_window_visibility_exposed &&
+                       mir_window_get_focus_state(window) == mir_window_focus_state_focused;
             },
             std::chrono::seconds{5});
 
@@ -209,10 +209,10 @@ struct InputEvents : testing::Test
         mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
         auto spec = mir_create_normal_window_spec(connection, 640, 480);
         mir_window_spec_set_pixel_format(spec, pixel_format);
-        auto const window = mir_window_create_sync(spec);
+        auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
-            throw std::runtime_error("Failed to create MirSurface");
+            throw std::runtime_error("Failed to create MirWindow");
 
         mir_window_set_event_handler(window, handle_input, handler);
         mir_buffer_stream_swap_buffers_sync(

@@ -120,7 +120,7 @@ private:
         mir_window_spec_set_pixel_format(spec, pf);
         mir_surface_spec_add_render_surface(
             spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
-        auto window = mir_window_create_sync(spec);
+        auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         return window;
     }
@@ -142,7 +142,7 @@ private:
         MirWindowSpec* spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());
         mir_window_spec_set_pixel_format(spec, pf);
-        auto window = mir_window_create_sync(spec);
+        auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         spec = mir_create_window_spec(connection);
         mir_surface_spec_add_render_surface(
@@ -393,7 +393,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     auto spec = mir_create_normal_window_spec(
         connection, size.width.as_int(), size.height.as_int());
     mir_window_spec_set_pixel_format(spec, pf);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     spec = mir_create_window_spec(connection);

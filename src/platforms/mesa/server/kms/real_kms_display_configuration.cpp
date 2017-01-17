@@ -179,26 +179,6 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
     return conf_mode_index;
 }
 
-mg::GammaCurves mgm::RealKMSDisplayConfiguration::get_drm_gamma(
-    drmModeCrtc const* crtc) const
-{
-    uint32_t gamma_size = crtc->gamma_size;
-    uint16_t red[gamma_size];
-    uint16_t green[gamma_size];
-    uint16_t blue[gamma_size];
-
-    int ret;
-    if ((ret = drmModeCrtcGetGamma(drm_fd, crtc->crtc_id, gamma_size, red, green, blue)) != 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "drmModeCrtcGetGamma Failed"));
-    }
-
-    return {GammaCurve(red, red + gamma_size),
-            GammaCurve(green, green + gamma_size),
-            GammaCurve(blue, blue + gamma_size)};
-}
-
 void mgm::RealKMSDisplayConfiguration::update()
 {
     kms::DRMModeResources resources{drm_fd};
@@ -327,7 +307,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
             current_mode_info = resources.crtc(encoder->crtc_id)->mode;
 
             auto crtc = resources.crtc(encoder->crtc_id);
-            gamma = get_drm_gamma(crtc.get());
+            if (crtc->gamma_size > 0)
+                gamma = mg::LinearGammaLUTs(crtc->gamma_size);
         }
     }
 

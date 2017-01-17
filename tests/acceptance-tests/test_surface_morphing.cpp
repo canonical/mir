@@ -57,7 +57,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
 };
 
 struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
@@ -104,7 +104,7 @@ struct SurfaceMorphing : mtf::ConnectedClientHeadlessServer
 
         specifier(spec);
 
-        auto const window = mir_window_create_sync(spec);
+        auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         return SurfaceHandle{window};
@@ -158,8 +158,8 @@ private:
 
 struct TypePair
 {
-    MirSurfaceType from;
-    MirSurfaceType to;
+    MirWindowType from;
+    MirWindowType to;
 
     friend std::ostream& operator<<(std::ostream& out, TypePair const& types)
         { return out << "from:" << types.from << ", to:" << types.to; }
@@ -187,7 +187,7 @@ TEST_P(TargetWithoutParent, not_setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -203,7 +203,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -221,7 +221,7 @@ TEST_P(TargetWithoutParent, setting_parent_fails)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         Times(0);
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -244,7 +244,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -262,7 +262,7 @@ TEST_P(TargetNeedingParent, setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -288,7 +288,7 @@ TEST_P(TargetNeedingParent, not_setting_parent_fails)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         Times(0);
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -310,7 +310,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -328,7 +328,7 @@ TEST_P(TargetMayHaveParent, setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
         WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
     change_surface(window, [&](MirWindowSpec* spec)
@@ -345,7 +345,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
        {
-           mir_window_spec_set_type(spec, mir_surface_type_normal);
+           mir_window_spec_set_type(spec, mir_window_type_normal);
            mir_window_spec_set_width(spec, width);
            mir_window_spec_set_height(spec, height);
            mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -363,7 +363,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
     latest_shell_surface()->add_observer(mt::fake_shared(surface_observer));
 
-    EXPECT_CALL(surface_observer, attrib_changed(mir_surface_attrib_type, new_type)).
+    EXPECT_CALL(surface_observer, attrib_changed(mir_window_attrib_type, new_type)).
     WillOnce(InvokeWithoutArgs([&] { change_observed(); }));
 
 
@@ -375,21 +375,21 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_utility},
-        TypePair{mir_surface_type_utility, mir_surface_type_normal},
-        TypePair{mir_surface_type_dialog, mir_surface_type_utility},
-        TypePair{mir_surface_type_dialog, mir_surface_type_normal}
+        TypePair{mir_window_type_normal, mir_window_type_utility},
+        TypePair{mir_window_type_utility, mir_window_type_normal},
+        TypePair{mir_window_type_dialog, mir_window_type_utility},
+        TypePair{mir_window_type_dialog, mir_window_type_normal}
     ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetNeedingParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_satellite},
-        TypePair{mir_surface_type_utility, mir_surface_type_satellite},
-        TypePair{mir_surface_type_dialog, mir_surface_type_satellite}
+        TypePair{mir_window_type_normal, mir_window_type_satellite},
+        TypePair{mir_window_type_utility, mir_window_type_satellite},
+        TypePair{mir_window_type_dialog, mir_window_type_satellite}
     ));
 
 INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetMayHaveParent,
     Values(
-        TypePair{mir_surface_type_normal, mir_surface_type_dialog},
-        TypePair{mir_surface_type_utility, mir_surface_type_dialog}
+        TypePair{mir_window_type_normal, mir_window_type_dialog},
+        TypePair{mir_window_type_utility, mir_window_type_dialog}
     ));

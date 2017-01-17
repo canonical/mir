@@ -48,7 +48,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
     MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
@@ -149,7 +149,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         server.the_shell()->handle(*drag_event);
     }
 
-    void wait_for_arbitrary_change(MirSurface* surface)
+    void wait_for_arbitrary_change(MirWindow* surface)
     {
         auto const new_title = __PRETTY_FUNCTION__;
 
@@ -179,7 +179,7 @@ private:
     }
 };
 
-struct SurfaceSpecificationCase : SurfaceSpecification, ::testing::WithParamInterface<MirSurfaceType> {};
+struct SurfaceSpecificationCase : SurfaceSpecification, ::testing::WithParamInterface<MirWindowType> {};
 using SurfaceWithoutParent = SurfaceSpecificationCase;
 using SurfaceNeedingParent = SurfaceSpecificationCase;
 using SurfaceMayHaveParent = SurfaceSpecificationCase;
@@ -210,7 +210,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -235,7 +235,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -260,7 +260,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -285,7 +285,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -310,7 +310,7 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -339,7 +339,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -368,7 +368,7 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -397,7 +397,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -427,7 +427,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -457,7 +457,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -494,7 +494,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
 
     auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -564,7 +564,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -590,7 +590,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -632,7 +632,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
 
     auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_window_spec_set_type(spec, mir_surface_type_normal);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
             mir_window_spec_set_pixel_format(spec, pixel_format);
@@ -669,10 +669,10 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceWithoutParent,
-    Values(mir_surface_type_utility, mir_surface_type_normal));
+    Values(mir_window_type_utility, mir_window_type_normal));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceNeedingParent,
-    Values(mir_surface_type_satellite, mir_surface_type_gloss, mir_surface_type_tip));
+    Values(mir_window_type_satellite, mir_window_type_gloss, mir_window_type_tip));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceMayHaveParent,
-    Values(mir_surface_type_dialog, mir_surface_type_freestyle));
+    Values(mir_window_type_dialog, mir_window_type_freestyle));

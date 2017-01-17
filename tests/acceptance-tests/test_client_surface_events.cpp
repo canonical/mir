@@ -51,15 +51,59 @@ using namespace testing;
 
 namespace
 {
+// Assert our MirSurfaceAttrib is 1to1 to MirWindowAttrib
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_type) ==
+    static_cast<int32_t>(mir_window_attrib_type),
+    "mir_surface_attrib_type != mir_window_attrib_type");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_state) ==
+    static_cast<int32_t>(mir_window_attrib_state),
+    "mir_surface_attrib_state != mir_window_attrib_state");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_swapinterval) ==
+    static_cast<int32_t>(mir_window_attrib_swapinterval),
+    "mir_surface_attrib_swapinterval != mir_window_attrib_swapinterval");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_focus) ==
+    static_cast<int32_t>(mir_window_attrib_focus),
+    "mir_surface_attrib_focus != mir_window_attrib_focus");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_dpi) ==
+    static_cast<int32_t>(mir_window_attrib_dpi),
+    "mir_surface_attrib_dpi != mir_window_attrib_dpi");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_visibility) ==
+    static_cast<int32_t>(mir_window_attrib_visibility),
+    "mir_surface_attrib_visibility != mir_window_attrib_visibility");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attrib_preferred_orientation) ==
+    static_cast<int32_t>(mir_window_attrib_preferred_orientation),
+    "mir_surface_attrib_preferred_orientation != mir_window_attrib_preferred_orientation");
+
+static_assert(
+    static_cast<int32_t>(mir_surface_attribs) ==
+    static_cast<int32_t>(mir_window_attribs),
+    "mir_surface_attribs != mir_window_attribs");
+
+static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
+    "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
+
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
-    MirSurface* other_surface;
+    MirWindow* other_surface;
 
     std::mutex last_event_mutex;
-    MirEventType event_filter{mir_event_type_surface};
+    MirEventType event_filter{mir_event_type_window};
     std::condition_variable last_event_cv;
     MirEvent const* last_event = nullptr;
-    MirSurface* last_event_surface = nullptr;
+    MirWindow* last_event_surface = nullptr;
 
     std::shared_ptr<ms::Surface> scene_surface;
 
@@ -153,36 +197,36 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
     {
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
+        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
+        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_vertmaximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_fullscreen));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
     }
 
     {
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
+        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_fullscreen));
-    }
-
-    reset_last_event();
-
-    {
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_THAT(last_event, mt::SurfaceEvent(mir_surface_attrib_state, mir_surface_state_vertmaximized));
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
     }
 
     reset_last_event();
 
     {
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
+        mir_wait_for(mir_window_set_state(window, mir_window_state_vertmaximized));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_vertmaximized));
+    }
+
+    reset_last_event();
+
+    {
+        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(777)));
+        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_maximized));
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -232,7 +276,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 
 TEST_F(ClientSurfaceEvents, surface_receives_close_event)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
     scene_surface->request_client_surface_close();
 
@@ -241,7 +285,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_close_event)
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
     EXPECT_THAT(last_event_surface, Eq(window));
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_surface));
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_window));
 }
 
 TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
@@ -255,8 +299,8 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
     {
         reset_last_event();
 
-        mir_wait_for(mir_surface_set_preferred_orientation(window, mode));
-        EXPECT_THAT(mir_surface_get_preferred_orientation(window), Eq(mode));
+        mir_wait_for(mir_window_set_preferred_orientation(window, mode));
+        EXPECT_THAT(mir_window_get_preferred_orientation(window), Eq(mode));
     }
 }
 
@@ -281,7 +325,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     ASSERT_FALSE(current_mode.empty());
 
-    set_event_filter(mir_event_type_surface_output);
+    set_event_filter(mir_event_type_window_output);
     reset_last_event();
 
     auto display_controller = server.the_display_configuration_controller();
@@ -291,20 +335,20 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
-    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_surface_output));
-    auto output_event = mir_event_get_surface_output_event(last_event);
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_window_output));
+    auto output_event = mir_event_get_window_output_event(last_event);
 
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(output_event), FloatEq(scale));
+    EXPECT_THAT(mir_window_output_event_get_form_factor(output_event), Eq(form_factor));
+    EXPECT_THAT(mir_window_output_event_get_scale(output_event), FloatEq(scale));
 
-    auto id = mir_surface_output_event_get_output_id(output_event);
+    auto id = mir_window_output_event_get_output_id(output_event);
     ASSERT_THAT(current_mode.find(id), Ne(current_mode.end()));
-    EXPECT_THAT(mir_surface_output_event_get_refresh_rate(output_event), Eq(current_mode[id].vrefresh_hz));
+    EXPECT_THAT(mir_window_output_event_get_refresh_rate(output_event), Eq(current_mode[id].vrefresh_hz));
 }
 
 TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 {
-    set_event_filter(mir_event_type_close_surface);
+    set_event_filter(mir_event_type_close_window);
 
     mir_window_set_event_handler(window, nullptr, nullptr);
     scene_surface->request_client_surface_close();
@@ -314,29 +358,30 @@ TEST_F(ClientSurfaceEvents, can_unset_surface_event_handler)
 
 namespace
 {
-bool is_focus_event_with_value(MirEvent const* event, MirSurfaceFocusState state)
+bool is_focus_event_with_value(MirEvent const* event, MirWindowFocusState state)
 {
-    if (mir_event_get_type(event) != mir_event_type_surface)
+    if (mir_event_get_type(event) != mir_event_type_window)
     {
         return false;
     }
 
-    auto surface_event = mir_event_get_surface_event(event);
-    if (mir_surface_event_get_attribute(surface_event) != mir_surface_attrib_focus)
+    auto window_event = mir_event_get_window_event(event);
+    auto attrib = mir_window_event_get_attribute(window_event);
+    if (attrib != mir_window_attrib_focus)
     {
         return false;
     }
-    return mir_surface_event_get_attribute_value(surface_event) == state;
+    return mir_window_event_get_attribute_value(window_event) == state;
 }
 
 bool is_focus_event(MirEvent const* event)
 {
-    return is_focus_event_with_value(event, mir_surface_focused);
+    return is_focus_event_with_value(event, mir_window_focus_state_focused);
 }
 
 bool is_unfocus_event(MirEvent const* event)
 {
-    return is_focus_event_with_value(event, mir_surface_unfocused);
+    return is_focus_event_with_value(event, mir_window_focus_state_unfocused);
 }
 }
 
@@ -350,7 +395,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     mt::Signal focus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_focus_event(event))
@@ -369,7 +414,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
     mt::Signal unfocus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_unfocus_event(event))
@@ -394,7 +439,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     mt::Signal focus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_focus_event(event))
@@ -413,7 +458,7 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
     mt::Signal unfocus_received;
     mir_window_set_event_handler(
         window,
-        [](MirSurface*, MirEvent const* event, void* ctx)
+        [](MirWindow*, MirEvent const* event, void* ctx)
         {
             auto& done = *reinterpret_cast<mt::Signal*>(ctx);
             if (is_unfocus_event(event))
@@ -465,9 +510,9 @@ class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
     }
 };
 
-void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
+void raise_signal_on_close_event(MirWindow*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_close_surface)
+    if (mir_event_get_type(ev) == mir_event_type_close_window)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -486,7 +531,7 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
 
     mir_window_spec_release(spec);
 
@@ -519,9 +564,9 @@ struct EventContext
     MirEvent const* event;
 };
 
-void surface_output_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+void surface_output_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface_output)
+    if (mir_event_get_type(ev) == mir_event_type_window_output)
     {
         auto out_event = reinterpret_cast<EventContext*>(ctx);
         out_event->event = mir_event_ref(ev);
@@ -558,7 +603,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
 
         ASSERT_FALSE(current_mode.empty());
 
-        set_event_filter(mir_event_type_surface_output);
+        set_event_filter(mir_event_type_window_output);
         reset_last_event();
 
         auto const display_controller = server.the_display_configuration_controller();
@@ -577,18 +622,18 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     auto spec = mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_TRUE(context.captured.wait_for(10s));
-    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_surface_output));
-    auto surface_event = mir_event_get_surface_output_event(context.event);
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));
-    auto id = mir_surface_output_event_get_output_id(surface_event);
+    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_window_output));
+    auto window_event = mir_event_get_window_output_event(context.event);
+    EXPECT_THAT(mir_window_output_event_get_form_factor(window_event), Eq(form_factor));
+    EXPECT_THAT(mir_window_output_event_get_scale(window_event), Eq(scale));
+    auto id = mir_window_output_event_get_output_id(window_event);
     EXPECT_THAT(display_ids, Contains(Eq(id)));
     ASSERT_THAT(current_mode.find(id), Ne(current_mode.end()));
-    EXPECT_THAT(mir_surface_output_event_get_refresh_rate(surface_event),
+    EXPECT_THAT(mir_window_output_event_get_refresh_rate(window_event),
                 Eq(current_mode[id].vrefresh_hz));
 
     mir_window_release_sync(window);

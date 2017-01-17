@@ -293,9 +293,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         display_configuration->update_configuration(seq.display_configuration());
     }
 
-    if (seq.has_input_devices())
+    if (seq.has_input_configuration())
     {
-        input_devices->update_devices(seq.input_devices());
+        input_devices->update_devices(seq.input_configuration());
     }
 
     if (seq.has_lifecycle_event())
@@ -400,7 +400,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
                     switch (e->type())
                     {
-                    case mir_event_type_surface:
+                    case mir_event_type_window:
                         surface_id = e->to_surface()->id();
                         break;
                     case mir_event_type_resize:
@@ -409,16 +409,16 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     case mir_event_type_orientation:
                         surface_id = e->to_orientation()->surface_id();
                         break;
-                    case mir_event_type_close_surface:
+                    case mir_event_type_close_window:
                         surface_id = e->to_close_surface()->surface_id();
                         break;
                     case mir_event_type_keymap:
                         surface_id = e->to_keymap()->surface_id();
                         break;
-                    case mir_event_type_surface_output:
+                    case mir_event_type_window_output:
                         surface_id = e->to_surface_output()->surface_id();
                         break;
-                    case mir_event_type_surface_placement:
+                    case mir_event_type_window_placement:
                         surface_id = e->to_surface_placement()->id();
                         break;
                     default:

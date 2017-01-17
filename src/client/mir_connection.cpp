@@ -46,6 +46,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
+#include "mir/platform_message.h"
 #include "mir_error.h"
 
 #include <algorithm>
@@ -353,7 +354,7 @@ MirWaitHandle* MirConnection::create_surface(
         if (request != surface_requests.end())
         {
             auto id = next_error_id(lock);
-            auto surf = std::make_shared<MirSurface>(
+            auto surf = std::make_shared<MirWindow>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
             auto wh = (*request)->wh;
@@ -410,7 +411,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         }
     }
 
-    std::shared_ptr<MirSurface> surf {nullptr};
+    std::shared_ptr<MirWindow> surf {nullptr};
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
         std::string reason;
@@ -421,12 +422,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         if (!surface_proto->has_id()) 
             reason +=  "Server assigned surface no id";
         auto id = next_error_id(lock);
-        surf = std::make_shared<MirSurface>(reason, this, id, request->wh);
+        surf = std::make_shared<MirWindow>(reason, this, id, request->wh);
         surface_map->insert(id, surf);
     }
     else
     {
-        surf = std::make_shared<MirSurface>(
+        surf = std::make_shared<MirWindow>(
             this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
@@ -459,7 +460,7 @@ void MirConnection::set_error_message(std::string const& error)
  "only 0, 1, or 2 arguments in the NewCallback function */
 struct MirConnection::SurfaceRelease
 {
-    MirSurface* surface;
+    MirWindow* surface;
     MirWaitHandle* handle;
     mir_surface_callback callback;
     void* context;
@@ -499,7 +500,7 @@ void MirConnection::released(SurfaceRelease data)
 }
 
 MirWaitHandle* MirConnection::release_surface(
-        MirSurface *surface,
+        MirWindow *surface,
         mir_surface_callback callback,
         void * context)
 {
@@ -575,9 +576,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             this->pong(serial);
         });
 
-        if (connect_result->has_input_devices())
+        if (connect_result->has_input_configuration())
         {
-            input_devices->update_devices(connect_result->input_devices());
+            input_devices->update_devices(connect_result->input_configuration());
         }
     }
     catch (std::exception const& e)
@@ -654,19 +655,15 @@ MirWaitHandle* MirConnection::disconnect()
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    auto reply = mir_platform_message_create(platform_operation_reply->opcode());
+    auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
 
     set_error_message(platform_operation_reply->error());
 
-    mir_platform_message_set_data(
-        reply,
-        platform_operation_reply->data().data(),
-        platform_operation_reply->data().size());
-
-    mir_platform_message_set_fds(
-        reply,
+    auto const char_data = static_cast<char const*>(platform_operation_reply->data().data());
+    reply->data.assign(char_data, char_data + platform_operation_reply->data().size());
+    reply->fds.assign(
         platform_operation_reply->fd().data(),
-        platform_operation_reply->fd().size());
+        platform_operation_reply->fd().data() + platform_operation_reply->fd().size());
 
     callback(this, reply, context);
 
@@ -687,13 +684,10 @@ MirWaitHandle* MirConnection::platform_operation(
 
     mp::PlatformOperationMessage protobuf_request;
 
-    protobuf_request.set_opcode(mir_platform_message_get_opcode(request));
-    auto const request_data = mir_platform_message_get_data(request);
-    auto const request_fds = mir_platform_message_get_fds(request);
-
-    protobuf_request.set_data(request_data.data, request_data.size);
-    for (size_t i = 0; i != request_fds.num_fds; ++i)
-        protobuf_request.add_fd(request_fds.fds[i]);
+    protobuf_request.set_opcode(request->opcode);
+    protobuf_request.set_data(request->data.data(), request->data.size());
+    for (size_t i = 0; i != request->fds.size(); ++i)
+        protobuf_request.add_fd(request->fds[i]);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(

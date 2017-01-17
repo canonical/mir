@@ -24,9 +24,11 @@
 #include "src/server/graphics/nested/host_stream.h"
 #include "src/server/graphics/nested/host_chain.h"
 #include "src/server/graphics/nested/host_surface_spec.h"
+#include "src/client/display_configuration.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
+#include "mir/input/mir_input_config.h"
 #include "mir_toolkit/mir_connection.h"
 #include <gmock/gmock.h>
 #include "mir/test/gmock_fixes.h"
@@ -55,17 +57,18 @@ public:
 
     EGLNativeDisplayType egl_native_display() override { return {}; }
 
-    std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+    std::shared_ptr<MirDisplayConfig> create_display_config() override
     {
-        return std::shared_ptr<MirDisplayConfiguration>{
-            new MirDisplayConfiguration{0, nullptr, 0, nullptr}};
+        auto display_conf = mir::protobuf::DisplayConfiguration{};
+        return std::shared_ptr<MirDisplayConfig>{
+            new MirDisplayConfig{display_conf}};
     }
 
     void set_display_config_change_callback(std::function<void()> const&) override
     {
     }
 
-    void apply_display_config(MirDisplayConfiguration&) override {}
+    void apply_display_config(MirDisplayConfig&) override {}
 
     std::shared_ptr<graphics::nested::HostSurface>
         create_surface(
@@ -92,8 +95,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new mir::protobuf::InputDevices),
-                                                   mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_destroy);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
@@ -139,6 +141,14 @@ public:
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     
     std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat)
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t)
     {
         return nullptr;
     }

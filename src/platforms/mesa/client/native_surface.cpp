@@ -116,7 +116,7 @@ try
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
-    surface->request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    surface->request_and_wait_for_configure(mir_window_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)

@@ -30,12 +30,9 @@
 #include "mir/test/death.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_client_platform.h"
-#include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_test_framework/stub_client_platform_options.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir/test/doubles/stub_client_buffer_factory.h"
-#include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -46,141 +43,15 @@
 
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
-
-namespace
-{
-enum Method : uint64_t
-{
-    none = 0,
-    the_client_platform_factory = 1<<0,
-    create_client_platform      = 1<<1,
-    create_egl_native_window    = 1<<2,
-    create_buffer_factory       = 1<<3
-};
-
-std::string const exception_text{"Ducks!"};
-
-template<Method name, Method failure_set>
-bool should_fail()
-{
-    return (name & failure_set);
-}
-
-template<Method failure_set>
-class ConfigurableFailurePlatform : public mir::client::ClientPlatform
-{
-public:
-    ConfigurableFailurePlatform(mcl::ClientContext* context)
-    {
-        mir::SharedLibrary dummy_client_module{mtf::client_platform("dummy.so")};
-        stub_platform =
-            dummy_client_module.load_function<mcl::CreateClientPlatform>("create_client_platform")(context, nullptr);
-    }
-
-    void use_egl_native_window(std::shared_ptr<void> /*native_window*/, mir::client::EGLNativeSurface* /*window*/) override
-    {
-    }
-
-    std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface *window) override
-    {
-        if (should_fail<Method::create_egl_native_window, failure_set>())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        }
-        return stub_platform->create_egl_native_window(window);
-    }
-
-    void populate(MirPlatformPackage& package) const override
-    {
-        stub_platform->populate(package);
-    }
-
-    MirPlatformMessage* platform_operation(MirPlatformMessage const* message) override
-    {
-        return stub_platform->platform_operation(message);
-    }
-
-    MirPlatformType platform_type() const override
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        return MirPlatformType::mir_platform_type_gbm;
-    }
-    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override
-    {
-        if (should_fail<Method::create_buffer_factory, failure_set>())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        }
-        return stub_platform->create_buffer_factory();
-    }
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
-    {
-        return stub_platform->create_egl_native_display();
-    }
-    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer* buffer) const override
-    {
-        return stub_platform->convert_native_buffer(buffer);
-    }
-    MirPixelFormat get_egl_pixel_format(EGLDisplay dpy, EGLConfig config) const override
-    {
-        return stub_platform->get_egl_pixel_format(dpy, config);
-    }
-    void* request_interface(char const*, int) override
-    {
-        return nullptr;
-    }
-
-private:
-    mir::UniqueModulePtr<mcl::ClientPlatform> stub_platform;
-};
-
-template<Method failure_set>
-class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
-{
-    std::shared_ptr<mir::client::ClientPlatform>
-    create_client_platform(mir::client::ClientContext* context) override
-    {
-        if (should_fail<Method::create_client_platform, failure_set>())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        }
-        return std::make_shared<ConfigurableFailurePlatform<failure_set>>(context);
-    }
-};
-
-template<Method failure_set>
-class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
-{
-    using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
-
-    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
-    {
-        if (should_fail<Method::the_client_platform_factory, failure_set>())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
-        }
-        return std::make_shared<ConfigurableFailureFactory<failure_set>>();
-    }
-};
-}
 
 using ClientLibraryErrors = mtf::HeadlessInProcessServer;
 
-TEST_F(ClientLibraryErrors, exception_in_client_configuration_constructor_generates_error)
-{
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::the_client_platform_factory>> stubby;
-
-    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(exception_text));
-    mir_connection_release(connection);
-}
-
 TEST_F(ClientLibraryErrors, exception_in_platform_construction_generates_error)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_client_platform>> stubby;
+    std::string const exception_text{"Ducks!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_client_platform,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -192,7 +63,6 @@ TEST_F(ClientLibraryErrors, exception_in_platform_construction_generates_error)
 TEST_F(ClientLibraryErrors, connecting_to_garbage_socket_returns_appropriate_error)
 {
     using namespace testing;
-    mtf::UsingStubClientPlatform stubby;
 
     auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
     ASSERT_THAT(connection, NotNull());
@@ -210,7 +80,11 @@ TEST_F(ClientLibraryErrors, connecting_to_garbage_socket_returns_appropriate_err
 
 TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+    std::string const exception_text{"Avocado!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_buffer_factory,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
+
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -218,7 +92,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -231,7 +105,10 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
 
 TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+    std::string const exception_text{"Extravaganza!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_buffer_factory,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -251,7 +128,10 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 {
     using namespace testing;
 
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+    std::string const exception_text{"Master!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_buffer_factory,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -259,7 +139,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     mir_window_release_sync(window);
@@ -268,7 +148,7 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
 
 namespace
 {
-void recording_surface_callback(MirSurface*, void* ctx)
+void recording_surface_callback(MirWindow*, void* ctx)
 {
     auto called = static_cast<bool*>(ctx);
     *called = true;
@@ -277,7 +157,10 @@ void recording_surface_callback(MirSurface*, void* ctx)
 
 TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+    std::string const exception_text{"Beep! Boop!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_buffer_factory,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -285,7 +168,7 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -301,7 +184,10 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
 
 TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_reply_processing)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_egl_native_window>> stubby;
+    std::string const exception_text{"...---...!"};
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_egl_native_window,
+        std::make_exception_ptr(std::runtime_error{exception_text}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -309,7 +195,7 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_NE(window, nullptr);
@@ -341,7 +227,7 @@ TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
     };
     mir_window_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
 
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     EXPECT_THAT(window, Not(IsValid()));
     EXPECT_THAT(mir_window_get_error_message(window), MatchesRegex(".*Lookup.*failed.*"));
 
@@ -356,8 +242,6 @@ using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_fatal)
 {
-    mtf::UsingStubClientPlatform stubby;
-
     auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
@@ -367,21 +251,11 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_f
 }
 
 
-TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_malconstructed_connection_is_fatal)
-{
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::the_client_platform_factory>> stubby;
-
-    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    ASSERT_FALSE(mir_connection_is_valid(connection));
-    MIR_EXPECT_DEATH(mtf::make_any_surface(connection), "");
-
-    mir_connection_release(connection);
-}
-
 TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_connection_is_fatal)
 {
-    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_client_platform>> stubby;
+    mtf::add_client_platform_error(
+        mtf::FailurePoint::create_client_platform,
+        std::make_exception_ptr(std::runtime_error{""}));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -434,6 +308,5 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_screencast_with_invalid_connection)
 {
-    MirScreencastParameters params{{0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-    MIR_EXPECT_DEATH(mir_connection_create_screencast_sync(nullptr, &params), "");
+    MIR_EXPECT_DEATH(mir_create_screencast_spec(nullptr), "");
 }

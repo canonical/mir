@@ -251,6 +251,7 @@ message Connection {
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
   optional InputDevices input_devices = 6;
+  optional string input_configuration = 7;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -332,6 +333,7 @@ message EventSequence {
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
   optional InputDevices input_devices = 6;
+  optional string input_configuration = 7;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -382,6 +384,7 @@ message CursorSetting {
 
 message SocketFDRequest {
   required int32 number = 1;
+  required int32 prompt_session_id = 2;
 }
 
 message SocketFD {
@@ -394,6 +397,13 @@ message SocketFD {
 
 message PromptSessionParameters {
   required int32 application_pid = 1;
+}
+
+message PromptSession {
+  optional int32 id = 1;
+
+  optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message PlatformOperationMessage {

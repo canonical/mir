@@ -168,7 +168,7 @@ bool msh::SystemCompositorWindowManager::handle_pointer_event(MirPointerEvent co
 int msh::SystemCompositorWindowManager::set_surface_attribute(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface,
-    MirSurfaceAttrib attrib,
+    MirWindowAttrib attrib,
     int value)
 {
     return surface->configure(attrib, value);

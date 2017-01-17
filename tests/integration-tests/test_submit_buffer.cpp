@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -97,7 +97,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
                 std::reverse(buffer_id_seq.begin(), buffer_id_seq.end());
             }
 
-            mg::BufferID add_buffer(mg::BufferProperties const& props) override
+            mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const& buffer) override
             {
                 struct BufferIdWrapper : mg::Buffer
                 {
@@ -133,7 +133,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
 
                 auto id = buffer_id_seq.back();
                 buffer_id_seq.pop_back();
-                b = std::make_shared<BufferIdWrapper>(alloc->alloc_buffer(props), id);
+                b = std::make_shared<BufferIdWrapper>(buffer, id);
                 sink->add_buffer(*b);
                 return id; 
             }
@@ -169,8 +169,11 @@ struct StubStreamFactory : public msc::BufferStreamFactory
 
 struct StubBufferPacker : public mg::PlatformIpcOperations
 {
-    StubBufferPacker(std::shared_ptr<mir::Fd> const& last_fd) :
-        last_fd{last_fd}
+    StubBufferPacker(
+        std::shared_ptr<mir::Fd> const& last_fd,
+        std::shared_ptr<mg::PlatformIpcOperations> const& underlying_ops) :
+        last_fd{last_fd},
+        underlying_ops{underlying_ops}
     {
         *last_fd = mir::Fd{-1};
     }
@@ -190,43 +193,48 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return std::make_shared<mg::PlatformIPCPackage>();
+        return underlying_ops->connection_ipc_package();
     }
 
     mg::PlatformOperationMessage platform_operation(
-        unsigned int const, mg::PlatformOperationMessage const&) override
+        unsigned int const opcode, mg::PlatformOperationMessage const& msg) override
     {
-        return mg::PlatformOperationMessage();
+        return underlying_ops->platform_operation(opcode, msg);
     }
 private:
     std::shared_ptr<mir::Fd> const last_fd;
+    std::shared_ptr<mg::PlatformIpcOperations> const underlying_ops;
 };
 
-struct StubPlatform : public mtd::NullPlatform
+struct StubPlatform : public mg::Platform
 {
-    StubPlatform(std::shared_ptr<mir::Fd> const& last_fd) : last_fd(last_fd)
+    StubPlatform(std::shared_ptr<mir::Fd> const& last_fd)
+        : last_fd(last_fd),
+          underlying_platform{mtf::make_stubbed_server_graphics_platform({geom::Rectangle{{0,0},{1,1}}})}
     {
     }
 
     mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
-        return mir::make_module_ptr<mtd::StubBufferAllocator>();
+        return underlying_platform->create_buffer_allocator();
     }
 
     mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
-        return mir::make_module_ptr<StubBufferPacker>(last_fd);
+        return mir::make_module_ptr<StubBufferPacker>(
+            last_fd,
+            underlying_platform->make_ipc_operations());
     }
 
     mir::UniqueModulePtr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLConfig> const&) override
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& policy,
+        std::shared_ptr<mg::GLConfig> const& config) override
     {
-        std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
-        return mir::make_module_ptr<mtd::StubDisplay>(rect);
+        return underlying_platform->create_display(policy, config);
     }
 
     std::shared_ptr<mir::Fd> const last_fd;
+    std::shared_ptr<mg::Platform> const underlying_platform;
 };
 
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
@@ -261,7 +269,6 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
     std::shared_ptr<mir::Fd> last_unpacked_fd{std::make_shared<mir::Fd>()};
     ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, last_unpacked_fd};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     void request_completed()
     {
@@ -313,8 +320,8 @@ bool spin_wait_for_id(mg::BufferID id, MirWindow* window, std::chrono::time_poin
 {
     while(Clock::now() < pt)
     {
-        //auto z = mir_debug_surface_current_buffer_id(window);
-        if (mir_debug_surface_current_buffer_id(window) == id.as_value())
+        //auto z = mir_debug_window_current_buffer_id(window);
+        if (mir_debug_window_current_buffer_id(window) == id.as_value())
             return true;
         std::this_thread::yield();
     }

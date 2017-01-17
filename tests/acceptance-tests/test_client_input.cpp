@@ -19,7 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "mir/input/mir_touchpad_configuration.h"
+#include "mir/input/mir_touchpad_config.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -73,7 +73,7 @@ struct MockEventFilter : public mi::EventFilter
 const int surface_width = 100;
 const int surface_height = 100;
 
-void null_event_handler(MirSurface*, MirEvent const*, void*)
+void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -97,7 +97,7 @@ struct Client
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_name(spec, name.c_str());
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
@@ -112,31 +112,31 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+        if (mir_window_attrib_visibility == attrib &&
+            mir_window_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
-            mir_surface_focused == value)
+        if (mir_window_attrib_focus == attrib &&
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            client->handle_window_event(window_event);
 
         }
         if (type == mir_event_type_input)
@@ -330,8 +330,6 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 {
-    mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
-    
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client first_client(new_connection(), first);
 
@@ -648,68 +646,6 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     first_client.all_events_received.wait_for(2s);
 }
 
-TEST_F(TestClientInput, receives_one_touch_event_per_frame)
-{
-    positions[first] = screen_geometry;
-    Client first_client(new_connection(), first);
-
-    int const frame_rate = 60;
-    int const input_rate = 500;
-    int const nframes = 100;
-    int const nframes_error = 80;
-    int const inputs_per_frame = input_rate / frame_rate;
-    int const ninputs = nframes * inputs_per_frame;
-    auto const frame_time = 1000ms / frame_rate;
-    auto const input_interval = std::chrono::duration<double>(1s) / input_rate;
-
-    int received_input_events = 0;
-
-    EXPECT_CALL(first_client, handle_input(_))
-        .Times(Between(nframes-nframes_error, nframes+nframes_error))
-        .WillRepeatedly(InvokeWithoutArgs(
-            [&]()
-            {
-                ++received_input_events;
-                if (received_input_events >= nframes-nframes_error)
-                    first_client.all_events_received.raise();
-            }));
-
-    fake_touch_screen->emit_event(mis::a_touch_event()
-                                  .at_position({0,0}));
-
-    ASSERT_THAT(input_rate, Ge(2 * frame_rate));
-    ASSERT_THAT(ninputs, Gt(2 * nframes));
-
-    fake_touch_screen->emit_touch_sequence(
-        [this](int i)
-        {
-            auto const x = i;
-            auto const y = 2*i;
-            return mis::a_touch_event()
-                .with_action(mis::TouchParameters::Action::Move)
-                .at_position({x,y});
-        },
-        ninputs,
-        input_interval
-        );
-
-    // The main thing we're testing for is that too many events don't arrive
-    // so we wait a little to check the cooked event stream has stopped:
-    std::this_thread::sleep_for(200 * frame_time);
-
-    // Wait for the expected minimum number of events (should be quick but
-    // some CI runs are actually incredibly slow to finish)
-    ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
-
-    // Remove reference to local received_input_events
-    Mock::VerifyAndClearExpectations(&first_client);
-
-    float const client_input_events_per_frame =
-        (float)received_input_events / nframes;
-    EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
-    EXPECT_THAT(client_input_events_per_frame, Lt(2.0f));
-}
-
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
 {
     Client first_client(new_connection(), first);
@@ -987,16 +923,16 @@ TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
     ASSERT_THAT(mouse, Ne(nullptr));
 
-    auto pointer_config = mir_input_device_get_pointer_configuration(mouse);
+    auto pointer_config = mir_input_device_get_pointer_config(mouse);
 
-    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_none));
-    EXPECT_THAT(mir_pointer_configuration_get_vertical_scroll_scale(pointer_config), Eq(1.0));
-    EXPECT_THAT(mir_pointer_configuration_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_none));
+    EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.0));
+    EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
 
     mir_input_config_destroy(config);
 }
 
-TEST_F(TestClientInput, no_touchpad_configuration_on_mouse)
+TEST_F(TestClientInput, no_touchpad_config_on_mouse)
 {
     wait_for_input_devices();
 
@@ -1004,35 +940,35 @@ TEST_F(TestClientInput, no_touchpad_configuration_on_mouse)
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
 
-    EXPECT_THAT(mir_input_device_get_touchpad_configuration(mouse), Eq(nullptr));
+    EXPECT_THAT(mir_input_device_get_touchpad_config(mouse), Eq(nullptr));
     mir_input_config_destroy(config);
 }
 
-TEST_F(TestClientInput, pointer_configuration_is_mutable)
+TEST_F(TestClientInput, pointer_config_is_mutable)
 {
     wait_for_input_devices();
 
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
-    auto pointer_config = mir_input_device_get_mutable_pointer_configuration(mouse);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
-    mir_pointer_configuration_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
-    mir_pointer_configuration_set_acceleration_bias(pointer_config, 1.0);
-    mir_pointer_configuration_set_horizontal_scroll_scale(pointer_config, 1.2);
-    mir_pointer_configuration_set_vertical_scroll_scale(pointer_config, 1.4);
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+    mir_pointer_config_set_acceleration_bias(pointer_config, 1.0);
+    mir_pointer_config_set_horizontal_scroll_scale(pointer_config, 1.2);
+    mir_pointer_config_set_vertical_scroll_scale(pointer_config, 1.4);
 
-    EXPECT_THAT(mir_pointer_configuration_get_vertical_scroll_scale(pointer_config), Eq(1.4));
-    EXPECT_THAT(mir_pointer_configuration_get_horizontal_scroll_scale(pointer_config), Eq(1.2));
-    EXPECT_THAT(mir_pointer_configuration_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
-    EXPECT_THAT(mir_pointer_configuration_get_acceleration_bias(pointer_config), Eq(1.0));
+    EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.4));
+    EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.2));
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(1.0));
 
     mir_input_config_destroy(config);
 }
 
-TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
+TEST_F(TestClientInput, touchpad_config_can_be_querried)
 {
-    MirTouchpadConfiguration const default_configuration;
+    MirTouchpadConfig const default_configuration;
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
@@ -1046,20 +982,20 @@ TEST_F(TestClientInput, touchpad_configuration_can_be_querried)
                                                  mir_input_device_capability_touchpad);
     ASSERT_THAT(touchpad, Ne(nullptr));
 
-    auto touchpad_config = mir_input_device_get_touchpad_configuration(touchpad);
+    auto touchpad_config = mir_input_device_get_touchpad_config(touchpad);
 
-    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(default_configuration.click_mode()));
-    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode()));
-    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button()));
-    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click()));
-    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation()));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
+    EXPECT_THAT(mir_touchpad_config_get_click_modes(touchpad_config), Eq(default_configuration.click_mode()));
+    EXPECT_THAT(mir_touchpad_config_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode()));
+    EXPECT_THAT(mir_touchpad_config_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button()));
+    EXPECT_THAT(mir_touchpad_config_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click()));
+    EXPECT_THAT(mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation()));
+    EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
+    EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
 
     mir_input_config_destroy(config);
 }
 
-TEST_F(TestClientInput, touchpad_configuration_is_mutable)
+TEST_F(TestClientInput, touchpad_config_is_mutable)
 {
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
@@ -1072,26 +1008,26 @@ TEST_F(TestClientInput, touchpad_configuration_is_mutable)
                                                  mir_input_device_capability_touchpad);
     ASSERT_THAT(touchpad, Ne(nullptr));
 
-    auto touchpad_config = mir_input_device_get_mutable_touchpad_configuration(touchpad);
+    auto touchpad_config = mir_input_device_get_mutable_touchpad_config(touchpad);
 
-    mir_touchpad_configuration_set_click_modes(touchpad_config, mir_touchpad_click_mode_area_to_click);
-    mir_touchpad_configuration_set_scroll_modes(touchpad_config, mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll);
-    mir_touchpad_configuration_set_button_down_scroll_button(touchpad_config, 10);
-    mir_touchpad_configuration_set_tap_to_click(touchpad_config, true);
-    mir_touchpad_configuration_set_middle_mouse_button_emulation(touchpad_config, true);
-    mir_touchpad_configuration_set_disable_with_mouse(touchpad_config, true);
-    mir_touchpad_configuration_set_disable_while_typing(touchpad_config, false);
+    mir_touchpad_config_set_click_modes(touchpad_config, mir_touchpad_click_mode_area_to_click);
+    mir_touchpad_config_set_scroll_modes(touchpad_config, mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll);
+    mir_touchpad_config_set_button_down_scroll_button(touchpad_config, 10);
+    mir_touchpad_config_set_tap_to_click(touchpad_config, true);
+    mir_touchpad_config_set_middle_mouse_button_emulation(touchpad_config, true);
+    mir_touchpad_config_set_disable_with_mouse(touchpad_config, true);
+    mir_touchpad_config_set_disable_while_typing(touchpad_config, false);
 
-    EXPECT_THAT(mir_touchpad_configuration_get_click_modes(touchpad_config), Eq(mir_touchpad_click_mode_area_to_click));
-    EXPECT_THAT(mir_touchpad_configuration_get_scroll_modes(touchpad_config),
+    EXPECT_THAT(mir_touchpad_config_get_click_modes(touchpad_config), Eq(mir_touchpad_click_mode_area_to_click));
+    EXPECT_THAT(mir_touchpad_config_get_scroll_modes(touchpad_config),
                 Eq(static_cast<MirTouchpadClickModes>(
                     mir_touchpad_scroll_mode_edge_scroll
                   | mir_touchpad_scroll_mode_button_down_scroll)));
-    EXPECT_THAT(mir_touchpad_configuration_get_button_down_scroll_button(touchpad_config), Eq(10));
-    EXPECT_THAT(mir_touchpad_configuration_get_tap_to_click(touchpad_config), Eq(true));
-    EXPECT_THAT(mir_touchpad_configuration_get_middle_mouse_button_emulation(touchpad_config), Eq(true));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_with_mouse(touchpad_config), Eq(true));
-    EXPECT_THAT(mir_touchpad_configuration_get_disable_while_typing(touchpad_config), Eq(false));
+    EXPECT_THAT(mir_touchpad_config_get_button_down_scroll_button(touchpad_config), Eq(10));
+    EXPECT_THAT(mir_touchpad_config_get_tap_to_click(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(false));
 
     mir_input_config_destroy(config);
 }

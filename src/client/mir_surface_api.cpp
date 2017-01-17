@@ -42,7 +42,7 @@ mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_normal;
+    spec->type = mir_window_type_normal;
     return spec;
 }
 
@@ -57,7 +57,7 @@ mir_create_menu_window_spec(MirConnection* connection,
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_menu;
+    spec->type = mir_window_type_menu;
     spec->parent = parent;
     spec->aux_rect = *rect;
     spec->edge_attachment = edge;
@@ -74,7 +74,7 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
     mir::require(rect != nullptr);
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_tip;
+    spec->type = mir_window_type_tip;
     spec->parent = parent;
     spec->aux_rect = *rect;
     spec->edge_attachment = edge;
@@ -88,7 +88,7 @@ MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
     mir::require(mir_window_is_valid(parent));
 
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_dialog;
+    spec->type = mir_window_type_dialog;
     spec->parent = parent;
 
     return spec;
@@ -99,7 +99,7 @@ mir_create_dialog_window_spec(MirConnection* connection,
                               int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_dialog;
+    spec->type = mir_window_type_dialog;
     return spec;
 }
 
@@ -108,7 +108,7 @@ mir_create_input_method_window_spec(MirConnection* connection,
                                     int width, int height)
 {
     auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
-    spec->type = mir_surface_type_inputmethod;
+    spec->type = mir_window_type_inputmethod;
     return spec;
 }
 
@@ -137,7 +137,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_window_spec_set_type(MirWindowSpec* spec, MirSurfaceType type)
+void mir_window_spec_set_type(MirWindowSpec* spec, MirWindowType type)
 try
 {
     mir::require(spec);
@@ -274,7 +274,7 @@ try
 {
     mir::require(spec);
     spec->output_id = output_id;
-    spec->state = mir_surface_state_fullscreen;
+    spec->state = mir_window_state_fullscreen;
 }
 catch (std::exception const& ex)
 {
@@ -301,7 +301,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     mir::require(attachment_rect != nullptr);
 
     if (!spec->type.is_set() ||
-        spec->type.value() != mir_surface_type_inputmethod)
+        spec->type.value() != mir_window_type_inputmethod)
     {
         return false;
     }
@@ -312,7 +312,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
     return true;
 }
 
-void mir_window_spec_set_state(MirWindowSpec* spec, MirSurfaceState state)
+void mir_window_spec_set_state(MirWindowSpec* spec, MirWindowState state)
 try
 {
     mir::require(spec);
@@ -511,6 +511,23 @@ static MirWaitHandle* window_release_helper(
     }
 }
 
+static MirWaitHandle* mir_window_request_persistent_id_helper(
+    MirWindow* window,
+    mir_window_id_callback callback, void* context)
+{
+    mir::require(mir_window_is_valid(window));
+
+    try
+    {
+        return window->request_persistent_id(callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
 class WindowSync
 {
 public:
@@ -540,16 +557,16 @@ void set_result(MirWindow* result, WindowSync* context)
 }
 }
 
-void mir_window_create(MirWindowSpec* requested_specification,
+void mir_create_window(MirWindowSpec* requested_specification,
                        mir_window_callback callback, void* context)
 {
     window_create_helper(requested_specification, callback, context);
 }
 
-MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification)
+MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification)
 {
     WindowSync ws;
-    mir_window_create(requested_specification,
+    mir_create_window(requested_specification,
                       reinterpret_cast<mir_window_callback>(set_result),
                       &ws);
     return ws.wait_for_result();
@@ -622,6 +639,197 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie)
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
+}
+
+MirWindowType mir_window_get_type(MirWindow* window)
+{
+    MirWindowType type = mir_window_type_normal;
+
+    if (window)
+    {
+        // Only the client will ever change the type of a window so it is
+        // safe to get the type from a local cache surf->attrib().
+
+        int t = window->attrib(mir_window_attrib_type);
+        type = static_cast<MirWindowType>(t);
+    }
+
+    return type;
+}
+
+MirWaitHandle* mir_window_set_state(MirWindow* window, MirWindowState state)
+{
+    try
+    {
+        return window ? window->configure(mir_window_attrib_state, state) : nullptr;
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
+MirWindowState mir_window_get_state(MirWindow* window)
+{
+    MirWindowState state = mir_window_state_unknown;
+
+    try
+    {
+        if (window)
+        {
+            int s = window->attrib(mir_window_attrib_state);
+
+            if (s == mir_window_state_unknown)
+            {
+                window->configure(mir_window_attrib_state,
+                    mir_window_state_unknown)->wait_for_all();
+                s = window->attrib(mir_window_attrib_state);
+            }
+
+            state = static_cast<MirWindowState>(s);
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
+MirWindowFocusState mir_window_get_focus_state(MirWindow* window)
+{
+    MirWindowFocusState state = mir_window_focus_state_unfocused;
+
+    try
+    {
+        if (window)
+        {
+            state = static_cast<MirWindowFocusState>(window->attrib(mir_window_attrib_focus));
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
+MirWindowVisibility mir_window_get_visibility(MirWindow* window)
+{
+    MirWindowVisibility state = static_cast<MirWindowVisibility>(mir_window_visibility_occluded);
+
+    try
+    {
+        if (window)
+        {
+            state = static_cast<MirWindowVisibility>(window->attrib(mir_window_attrib_visibility));
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return state;
+}
+
+int mir_window_get_dpi(MirWindow* window)
+{
+    int dpi = -1;
+
+    try
+    {
+        if (window)
+        {
+            dpi = window->attrib(mir_window_attrib_dpi);
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return dpi;
+}
+
+MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+
+    try
+    {
+        if (window)
+            result = window->configure_cursor(cursor);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+
+MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirWaitHandle *result{nullptr};
+    try
+    {
+        result = window->set_preferred_orientation(mode);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+
+MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirOrientationMode mode = mir_orientation_mode_any;
+
+    try
+    {
+        mode = static_cast<MirOrientationMode>(window->attrib(mir_window_attrib_preferred_orientation));
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return mode;
+}
+
+void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
+{
+    mir_window_request_persistent_id_helper(window, callback, context);
+}
+
+namespace
+{
+void assign_surface_id_result(MirWindow*, MirPersistentId* id, void* context)
+{
+    void** result_ptr = reinterpret_cast<void**>(context);
+    *result_ptr = id;
+}
+}
+
+MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirPersistentId* result = nullptr;
+    mir_wait_for(mir_window_request_persistent_id_helper(window,
+                                                         &assign_surface_id_result,
+                                                         &result));
+    return result;
 }
 
 // These functions will be deprecated soon
@@ -702,7 +910,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
-    return mir_window_create_sync(requested_specification);
+    return mir_create_window_sync(requested_specification);
 }
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
@@ -758,7 +966,7 @@ void mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 
 void mir_surface_spec_set_state(MirSurfaceSpec* spec, MirSurfaceState state)
 {
-    mir_window_spec_set_state(spec, state);
+    mir_window_spec_set_state(spec, static_cast<MirWindowState>(state));
 }
 
 void mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
@@ -849,7 +1057,7 @@ void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 
 void mir_surface_spec_set_type(MirSurfaceSpec* spec, MirSurfaceType type)
 {
-    mir_window_spec_set_type(spec, type);
+    mir_window_spec_set_type(spec, static_cast<MirWindowType>(type));
 }
 
 void mir_surface_spec_set_width_increment(MirSurfaceSpec* spec, unsigned width_inc)
@@ -938,59 +1146,17 @@ void mir_surface_release_sync(MirSurface* surface)
 
 MirSurfaceType mir_surface_get_type(MirSurface* surf)
 {
-    MirSurfaceType type = mir_surface_type_normal;
-
-    if (surf)
-    {
-        // Only the client will ever change the type of a surface so it is
-        // safe to get the type from a local cache surf->attrib().
-
-        int t = surf->attrib(mir_surface_attrib_type);
-        type = static_cast<MirSurfaceType>(t);
-    }
-
-    return type;
+    return static_cast<MirSurfaceType>(mir_window_get_type(surf));
 }
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
 {
-    try
-    {
-        return surf ? surf->configure(mir_surface_attrib_state, state) : nullptr;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
+    return mir_window_set_state(surf, static_cast<MirWindowState>(state));
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface* surf)
 {
-    MirSurfaceState state = mir_surface_state_unknown;
-
-    try
-    {
-        if (surf)
-        {
-            int s = surf->attrib(mir_surface_attrib_state);
-
-            if (s == mir_surface_state_unknown)
-            {
-                surf->configure(mir_surface_attrib_state,
-                                mir_surface_state_unknown)->wait_for_all();
-                s = surf->attrib(mir_surface_attrib_state);
-            }
-
-            state = static_cast<MirSurfaceState>(s);
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceState>(mir_window_get_state(surf));
 }
 
 MirOrientation mir_surface_get_orientation(MirSurface *surface)
@@ -1041,111 +1207,32 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 
 int mir_surface_get_dpi(MirSurface* surf)
 {
-    int dpi = -1;
-
-    try
-    {
-        if (surf)
-        {
-            dpi = surf->attrib(mir_surface_attrib_dpi);
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return dpi;
+    return mir_window_get_dpi(surf);
 }
 
 MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 {
-    MirSurfaceFocusState state = mir_surface_unfocused;
-
-    try
-    {
-        if (surf)
-        {
-            state = static_cast<MirSurfaceFocusState>(surf->attrib(mir_surface_attrib_focus));
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceFocusState>(mir_window_get_focus_state(surf));
 }
 
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 {
-    MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(mir_surface_visibility_occluded);
-
-    try
-    {
-        if (surf)
-        {
-            state = static_cast<MirSurfaceVisibility>(surf->attrib(mir_surface_attrib_visibility));
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return state;
+    return static_cast<MirSurfaceVisibility>(mir_window_get_visibility(surf));
 }
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = nullptr;
-    
-    try
-    {
-        if (surface)
-            result = surface->configure_cursor(cursor);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    return mir_window_configure_cursor(surface, cursor);
 }
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 {
-    mir::require(mir_window_is_valid(surf));
-
-    MirOrientationMode mode = mir_orientation_mode_any;
-
-    try
-    {
-        mode = static_cast<MirOrientationMode>(surf->attrib(mir_surface_attrib_preferred_orientation));
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return mode;
+    return mir_window_get_preferred_orientation(surf);
 }
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
 {
-    mir::require(mir_window_is_valid(surf));
-
-    MirWaitHandle *result{nullptr};
-    try
-    {
-        result = surf->set_preferred_orientation(mode);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    return mir_window_set_preferred_orientation(surf, mode);
 }
 
 void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
@@ -1160,28 +1247,15 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
 
 MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
 {
-    mir::require(mir_window_is_valid(surface));
-
-    return surface->request_persistent_id(callback, context);
-}
-
-namespace
-{
-void assign_surface_id_result(MirSurface*, MirPersistentId* id, void* context)
-{
-    void** result_ptr = reinterpret_cast<void**>(context);
-    *result_ptr = id;
-}
+    return mir_window_request_persistent_id_helper(surface, callback, context);
 }
 
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
-    mir::require(mir_window_is_valid(surface));
-
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_surface_request_persistent_id(surface,
-                                                   &assign_surface_id_result,
-                                                   &result));
+    mir_wait_for(mir_window_request_persistent_id_helper(surface,
+                                                  &assign_surface_id_result,
+                                                  &result));
     return result;
 }
 

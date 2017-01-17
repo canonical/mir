@@ -48,6 +48,11 @@
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/input/input_device_hub.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/input/device.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
@@ -180,13 +185,26 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    auto input_devices = response->mutable_input_devices();
+    MirInputConfig temp;
     hub->for_each_input_device(
-        [input_devices](auto const& dev)
+        [&temp](auto const& dev)
         {
-            auto dev_info = input_devices->add_device_info();
-            detail::pack_protobuf_input_device_info(*dev_info, dev);
+            MirInputDevice conf(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
+            auto ptr_conf = dev.pointer_configuration();
+            auto tpd_conf = dev.touchpad_configuration();
+            auto kbd_conf = dev.keyboard_configuration();
+
+            if (ptr_conf.is_set())
+                conf.set_pointer_config(ptr_conf.value());
+            if (tpd_conf.is_set())
+                conf.set_touchpad_config(tpd_conf.value());
+            if (kbd_conf.is_set())
+                conf.set_keyboard_config(kbd_conf.value());
+
+            temp.add_device_config(conf);
         });
+
+    response->set_input_configuration(mi::serialize_input_config(temp));
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
@@ -241,10 +259,10 @@ void mf::SessionMediator::create_surface(
         params.with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()));
 
     if (request->has_type())
-        params.of_type(static_cast<MirSurfaceType>(request->type()));
+        params.of_type(static_cast<MirWindowType>(request->type()));
 
     if (request->has_state())
-        params.with_state(static_cast<MirSurfaceState>(request->state()));
+        params.with_state(static_cast<MirWindowState>(request->state()));
 
     if (request->has_pref_orientation())
         params.with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
@@ -350,13 +368,13 @@ void mf::SessionMediator::create_surface(
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
     
-    for (unsigned int i = 0; i < mir_surface_attribs; i++)
+    for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
         
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
-        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
+        setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirWindowAttrib>(i)));
     }
 
     if (legacy_stream)
@@ -508,7 +526,7 @@ void mf::SessionMediator::configure_surface(
     mir::protobuf::SurfaceSetting* response,
     google::protobuf::Closure* done)
 {
-    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
+    auto attrib = static_cast<MirWindowAttrib>(request->attrib());
 
     // Required response fields:
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());
@@ -891,11 +909,12 @@ void mf::SessionMediator::release_buffer_stream(
 }
 
 
-std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
+auto mf::SessionMediator::prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const
+-> std::function<void(std::shared_ptr<mf::Session> const&)>
 {
-    return [this](std::shared_ptr<mf::Session> const& session)
+    return [this, prompt_session_id](std::shared_ptr<mf::Session> const& session)
     {
-        auto prompt_session = weak_prompt_session.lock();
+        auto prompt_session = prompt_sessions.fetch(prompt_session_id);
         if (prompt_session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
@@ -951,7 +970,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const connect_handler = prompt_session_connect_handler();
+    auto const connect_handler = prompt_session_connect_handler(detail::PromptSessionId(parameters->prompt_session_id()));
 
     auto const fds_requested = parameters->number();
 
@@ -1038,7 +1057,7 @@ void mf::SessionMediator::platform_operation(
 
 void mf::SessionMediator::start_prompt_session(
     const ::mir::protobuf::PromptSessionParameters* request,
-    ::mir::protobuf::Void* /*response*/,
+    ::mir::protobuf::PromptSession* response,
     ::google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
@@ -1046,21 +1065,18 @@ void mf::SessionMediator::start_prompt_session(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    if (weak_prompt_session.lock())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
-
     ms::PromptSessionCreationParameters parameters;
     parameters.application_pid = request->application_pid();
 
     observer->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
-    weak_prompt_session = shell->start_prompt_session_for(session, parameters);
+    response->set_id(prompt_sessions.insert(shell->start_prompt_session_for(session, parameters)).as_value());
 
     done->Run();
 }
 
 void mf::SessionMediator::stop_prompt_session(
-    const ::mir::protobuf::Void*,
+    protobuf::PromptSession const* request,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
@@ -1069,12 +1085,13 @@ void mf::SessionMediator::stop_prompt_session(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const prompt_session = weak_prompt_session.lock();
+    detail::PromptSessionId const id{request->id()};
+    auto const prompt_session = prompt_sessions.fetch(id);
 
     if (!prompt_session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-    weak_prompt_session.reset();
+    prompt_sessions.remove(id);
 
     observer->session_stop_prompt_session_called(session->name());
 
@@ -1200,4 +1217,26 @@ void mf::SessionMediator::destroy_screencast_sessions()
 
     for (auto const& id : ids_to_untrack)
         screencast_buffer_tracker.remove_session(id);
+}
+
+
+auto mf::detail::PromptSessionStore::insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    auto const id = PromptSessionId{++next_id};
+    sessions[id] = session;
+    return id;
+}
+
+auto mf::detail::PromptSessionStore::fetch(PromptSessionId session) const
+-> std::shared_ptr<PromptSession>
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    return sessions[session].lock();
+}
+
+void mf::detail::PromptSessionStore::remove(PromptSessionId session)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    sessions.erase(session);
 }

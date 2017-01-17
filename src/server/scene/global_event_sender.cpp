@@ -76,7 +76,7 @@ void ms::GlobalEventSender::update_buffer(graphics::Buffer&)
 {
 }
 
-void ms::GlobalEventSender::error_buffer(graphics::BufferProperties const&, std::string const&)
+void ms::GlobalEventSender::error_buffer(geometry::Size, MirPixelFormat, std::string const&)
 {
 }
 

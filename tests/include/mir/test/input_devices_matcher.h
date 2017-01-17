@@ -23,34 +23,28 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <algorithm>
 
 namespace mir
 {
-namespace protobuf
-{
-static void PrintTo(mir::protobuf::InputDeviceInfo const &, ::std::ostream*) __attribute__ ((unused));
-void PrintTo(mir::protobuf::InputDeviceInfo const&, ::std::ostream*) {}
-}
-
 namespace test
 {
-MATCHER_P(InputDevicesMatch, devices, "")
+MATCHER_P(InputConfigurationMatches, devices, "")
 {
-    using std::begin;
-    using std::end;
-    if (distance(begin(devices), end(devices)) != distance(begin(arg), end(arg)))
+    if (devices.size() != arg.size())
         return false;
-    return std::equal(begin(arg), end(arg),
-                      begin(devices),
-                      [](auto const& lhs, std::shared_ptr<input::Device> const& rhs)
-                      {
-                          return lhs.id() == rhs->id() &&
-                              lhs.name() == rhs->name() &&
-                              lhs.unique_id() == rhs->unique_id() &&
-                              lhs.capabilities() == rhs->capabilities().value();
-                      });
-
+    auto it = begin(devices);
+    auto result = true;
+    arg.for_each(
+        [&it, &result](auto const& conf)
+        {
+           auto const device = *it++;
+           if (conf.id() != device->id() ||
+               conf.name() != device->name() ||
+               conf.unique_id() != device->unique_id() ||
+               conf.capabilities() != device->capabilities())
+               result = false;
+        });
+    return result;
 }
 }
 }

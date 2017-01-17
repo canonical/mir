@@ -34,6 +34,7 @@ namespace protobuf
 class PromptSessionParameters;
 class SocketFD;
 class Void;
+class PromptSession;
 }
 /// The client-side library implementation namespace
 namespace client
@@ -82,7 +83,7 @@ private:
     std::atomic<MirPromptSessionState> state;
 
     std::mutex mutable session_mutex; // Protects session
-    std::unique_ptr<mir::protobuf::Void> session;
+    std::unique_ptr<mir::protobuf::PromptSession> session;
 
     std::mutex mutable event_handler_mutex; // Need another mutex for callback access to members
     std::function<void(MirPromptSessionState)> handle_prompt_session_state_change;

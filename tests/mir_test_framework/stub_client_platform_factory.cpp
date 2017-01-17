@@ -55,15 +55,34 @@ int get_fence(MirBuffer*)
 {
     return -1;
 }
+
+void throw_exception_if_requested(
+    std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
+    mtf::FailurePoint here)
+{
+    if (fail_at.count(here))
+    {
+        std::rethrow_exception(fail_at.at(here));
+    }
+}
 }
 
-mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
+mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context)
+    : StubClientPlatform(context, std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{})
+{
+}
+
+mtf::StubClientPlatform::StubClientPlatform(
+    mir::client::ClientContext* context,
+    std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>&& fail_at) :
     context{context},
     flavor_ext_1{favorite_flavor_1},
     flavor_ext_9{favorite_flavor_9},
     animal_ext{animal_name},
-    fence_ext{get_fence, nullptr, nullptr}
+    fence_ext{get_fence, nullptr, nullptr},
+    fail_at{std::move(fail_at)}
 {
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_client_platform);
 }
 
 MirPlatformType mtf::StubClientPlatform::platform_type() const
@@ -83,6 +102,8 @@ MirPlatformMessage* mtf::StubClientPlatform::platform_operation(MirPlatformMessa
 
 std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::create_buffer_factory()
 {
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_buffer_factory);
+
     struct StubPlatformBufferFactory : mcl::ClientBufferFactory
     {
         std::shared_ptr<mcl::ClientBuffer> create_buffer(
@@ -106,6 +127,7 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_egl_native_window);
     if (surface)
         return std::shared_ptr<void>{surface, [](void*){}};
     return std::make_shared<int>(332);
@@ -163,6 +185,8 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
 std::shared_ptr<mcl::ClientPlatform>
 mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
-    return std::make_shared<StubClientPlatform>(context);
+    return std::make_shared<StubClientPlatform>(
+        context,
+        std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{});
 }
 

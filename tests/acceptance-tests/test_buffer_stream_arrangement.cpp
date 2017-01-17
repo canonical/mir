@@ -217,7 +217,7 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     mir_window_spec_set_streams(spec, infos.data(), infos.size());
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     EXPECT_TRUE(mir_window_is_valid(window)) << mir_window_get_error_message(window);
 }
@@ -270,7 +270,7 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
     auto spec = mir_create_normal_window_spec(connection, 100, 100);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_streams(spec, infos.data(), infos.size());
-    auto window = mir_window_create_sync(spec);
+    auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     EXPECT_TRUE(mir_window_is_valid(window));
     EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));

@@ -28,7 +28,7 @@
 /// A simple orange client surface with a simple grey tooltip
 
 static MirPixelFormat select_pixel_format(MirConnection* connection);
-static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* const parent, const MirPixelFormat format);
+static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format);
 
 typedef struct Color
 {
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     mir_window_apply_spec(parent, spec);
     mir_window_spec_release(spec);
 
-    MirSurface* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
+    MirWindow* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
     while (mir_eglapp_running())
     {
     }
@@ -97,7 +97,7 @@ static MirPixelFormat select_pixel_format(MirConnection* connection)
     return pixel_format;
 }
 
-static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* const parent, const MirPixelFormat format)
+static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format)
 {
     MirRectangle zone = { 0, 0, 10, 10 };
     int const width = 50;
@@ -113,7 +113,7 @@ static MirSurface* create_tooltip(MirConnection* const connection, MirSurface* c
     mir_window_spec_set_min_height(spec, height);
     mir_window_spec_set_max_height(spec, height);
 
-    MirSurface* tooltip = mir_window_create_sync(spec);
+    MirWindow* tooltip = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     MirBufferStream* const bs = mir_window_get_buffer_stream(tooltip);

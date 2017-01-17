@@ -37,12 +37,9 @@ namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
 mc::BufferStreamFactory::BufferStreamFactory(
-    std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
     std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory) :
-    gralloc(gralloc),
     policy_factory{policy_factory}
 {
-    assert(gralloc);
     assert(policy_factory);
 }
 
@@ -66,5 +63,5 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
         std::shared_ptr<mf::BufferSink> const& sink)
 {
-    return std::make_shared<mc::BufferMap>(sink, gralloc);
+    return std::make_shared<mc::BufferMap>(sink);
 }
