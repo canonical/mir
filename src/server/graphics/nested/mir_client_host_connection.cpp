@@ -66,7 +66,7 @@ namespace
 {
 mgn::UniqueInputConfig make_input_config(MirConnection* con)
 {
-    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_destroy);
+    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_release);
 }
 
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)

@@ -377,7 +377,7 @@ MirWaitHandle* mir_connection_platform_operation(
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
- * \warning return value must be destroyed via mir_input_config_destroy()
+ * \warning return value must be destroyed via mir_input_config_release()
  * \warning may return null if connection is invalid
  * \param [in]  connection        The connection
  * \return      structure that describes the input configuration
@@ -385,12 +385,23 @@ MirWaitHandle* mir_connection_platform_operation(
 MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
+ * \deprecated  Use mir_input_config_release() instead.
+ *
  * Release this snapshot of the input configuration.
  * This invalidates any pointers retrieved from this structure.
  *
  * \param [in] config  The input configuration
  */
-void mir_input_config_destroy(MirInputConfig const* config);
+void mir_input_config_destroy(MirInputConfig const* config) __attribute__ ((deprecated("use mir_input_config_release instead")));
+
+/**
+ * Release this snapshot of the input configuration.
+ * This invalidates any pointers retrieved from this structure.
+ *
+ * \param [in] config  The input configuration
+ */
+void mir_input_config_release(MirInputConfig const* config);
+
 
 /**
  * Register a callback to be called when the input devices change.
