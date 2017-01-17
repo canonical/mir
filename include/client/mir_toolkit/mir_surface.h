@@ -621,6 +621,9 @@ void mir_window_set_event_handler(MirWindow* window,
  * Retrieve the primary MirBufferStream associated with a window (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  *
+ *   \deprecated Users should use mir_window_spec_set_streams() to arrange
+ *               the content of a window, instead of relying on a stream
+ *               being created by default.
  *   \warning If the window was created with, or modified to have a
  *            MirWindowSpec containing streams added through
  *            mir_window_spec_set_streams(), the default stream will
