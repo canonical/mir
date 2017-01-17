@@ -26,11 +26,13 @@
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 #include "buffer_stream_configuration.h"
+#include "frame_clock.h"
 
 #include "mir_toolkit/client_types.h"
 
 #include <EGL/eglplatform.h>
 
+#include <unordered_set>
 #include <queue>
 #include <memory>
 #include <mutex>
@@ -97,6 +99,8 @@ public:
 
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
@@ -133,8 +137,9 @@ private:
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
     void on_scale_set(float scale);
     void release_cpu_region();
-    MirWaitHandle* force_swap_interval(int interval);
+    MirWaitHandle* set_server_swap_interval(int i);
     void init_swap_interval();
+    void wait_for_vsync();
 
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -143,6 +148,8 @@ private:
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
     optional_value<int> user_swap_interval;
+    int current_swap_interval;
+    bool using_client_side_vsync;
     BufferStreamConfiguration interval_config;
     float scale_;
 
@@ -161,6 +168,10 @@ private:
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
     MirRenderSurface* render_surface_;
+
+    std::unordered_set<MirWindow*> users;
+    std::shared_ptr<FrameClock> frame_clock;
+    mir::time::PosixTimestamp last_vsync;
 };
 
 }
