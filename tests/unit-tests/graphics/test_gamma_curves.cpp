@@ -21,47 +21,76 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <algorithm>
+
 namespace mg = mir::graphics;
 
 namespace
 {
-mg::GammaCurve const r{1};
-mg::GammaCurve const g{2};
-mg::GammaCurve const b{3};
+MATCHER(IsMonotonicallyIncreasing, "")
+{
+    return std::is_sorted(std::begin(arg), std::end(arg));
 }
-
-class MockGammaCurves : public testing::Test
+}
+class GammaCurves : public testing::Test
 {
 public:
-    MockGammaCurves() :
-        gamma(r, g, b)
-    {
-    }
-
-    mg::GammaCurves gamma;
+    mg::GammaCurve const r{1};
+    mg::GammaCurve const g{2};
+    mg::GammaCurve const b{3};
+    mg::GammaCurves gamma{r, g, b};
 };
 
-TEST_F(MockGammaCurves, test_uint16_gamma_curves_size)
+TEST_F(GammaCurves, have_correct_size)
 {
     EXPECT_THAT(gamma.red.size(), r.size());
+    EXPECT_THAT(gamma.green.size(), g.size());
+    EXPECT_THAT(gamma.blue.size(), b.size());
 }
 
-TEST_F(MockGammaCurves, test_uint16_gamma_curves_rgb_correct)
+TEST_F(GammaCurves, have_expected_content)
 {
-    ASSERT_THAT(gamma.red.size(), r.size());
-    EXPECT_THAT(gamma.red[0], r[0]);
-    EXPECT_THAT(gamma.green[0], g[0]);
-    EXPECT_THAT(gamma.blue[0], b[0]);
+    using namespace testing;
+    EXPECT_THAT(gamma.red, ContainerEq(r));
+    EXPECT_THAT(gamma.green, ContainerEq(g));
+    EXPECT_THAT(gamma.blue, ContainerEq(b));
 }
 
-TEST(GammaCurvesEmpty, test_gamma_curves_empty)
+TEST_F(GammaCurves, are_empty_by_default)
 {
     mg::GammaCurves gamma;
 
     EXPECT_THAT(gamma.red.size(), 0);
+    EXPECT_THAT(gamma.green.size(), 0);
+    EXPECT_THAT(gamma.blue.size(), 0);
 }
 
-TEST(GammaCurvesEmpty, test_invalid_lut_size_gamma_curves_throw)
+TEST_F(GammaCurves, throw_with_differing_lut_sizes)
 {
     EXPECT_THROW({ mg::GammaCurves({1}, {2, 3}, {4, 5, 6}); }, std::logic_error);
 }
+
+TEST(LinearGammaLUTs, throw_when_size_is_too_small)
+{
+    EXPECT_THROW({ mg::LinearGammaLUTs(1); }, std::logic_error);
+}
+
+TEST(LinearGammaLUTs, have_expected_size)
+{
+    int const expected_size = 10;
+    mg::LinearGammaLUTs luts(expected_size);
+
+    EXPECT_THAT(luts.red.size(), expected_size);
+    EXPECT_THAT(luts.green.size(), expected_size);
+    EXPECT_THAT(luts.blue.size(), expected_size);
+}
+
+TEST(LinearGammaLUTs, is_monotonically_increasing)
+{
+    mg::LinearGammaLUTs luts(256);
+
+    EXPECT_THAT(luts.red, IsMonotonicallyIncreasing());
+    EXPECT_THAT(luts.green, IsMonotonicallyIncreasing());
+    EXPECT_THAT(luts.blue, IsMonotonicallyIncreasing());
+}
+
