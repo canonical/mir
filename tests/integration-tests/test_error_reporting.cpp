@@ -20,7 +20,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/deferred_in_process_server.h"
 
 #include "mir/test/doubles/stub_ipc_factory.h"
@@ -66,7 +65,6 @@ struct ConnectionErrorServer : mtd::StubDisplayServer
 struct ErrorReporting : mtf::DeferredInProcessServer
 {
     std::unique_ptr<mir::DefaultServerConfiguration> server_configuration;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     void start_server_with_config(std::unique_ptr<mir::DefaultServerConfiguration> config)
     {
@@ -134,7 +132,7 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
     auto const spec = mir_create_normal_window_spec(connection, 640, 480);
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    auto const window  = mir_window_create_sync(spec);
+    auto const window  = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     ASSERT_TRUE(window != NULL);

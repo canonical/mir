@@ -502,8 +502,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_touchpad_config_set_tap_to_click;
     mir_connection_request_extension;
     mir_output_get_model;
-    mir_connection_apply_session_display_configuration;
-    mir_connection_remove_session_display_configuration;
+    mir_connection_apply_session_display_config;
+    mir_connection_remove_session_display_config;
     mir_blob_from_display_config;
     mir_blob_to_display_config;
     mir_create_menu_window_spec;
@@ -541,8 +541,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_spec_set_buffer_usage;
     mir_window_spec_set_streams;
     mir_window_apply_spec;
-    mir_window_create;
-    mir_window_create_sync;
+    mir_create_window;
+    mir_create_window_sync;
     mir_window_release;
     mir_window_release_sync;
     mir_window_is_valid;

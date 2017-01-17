@@ -56,9 +56,9 @@ public:
     virtual ~HostConnection() = default;
 
     virtual EGLNativeDisplayType egl_native_display() = 0;
-    virtual std::shared_ptr<MirDisplayConfiguration> create_display_config() = 0;
+    virtual std::shared_ptr<MirDisplayConfig> create_display_config() = 0;
     virtual void set_display_config_change_callback(std::function<void()> const& cb) = 0;
-    virtual void apply_display_config(MirDisplayConfiguration&) = 0;
+    virtual void apply_display_config(MirDisplayConfig&) = 0;
     virtual std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const = 0;
     virtual std::unique_ptr<HostChain> create_chain() const = 0;
     virtual std::unique_ptr<HostSurfaceSpec> create_surface_spec() = 0;
@@ -77,6 +77,8 @@ public:
     virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
+    virtual std::shared_ptr<NativeBuffer> create_buffer(mir::geometry::Size, MirPixelFormat format) = 0;
+    virtual std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) = 0;
     virtual bool supports_passthrough() = 0;
 
 protected:

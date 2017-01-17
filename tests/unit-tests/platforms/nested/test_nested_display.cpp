@@ -48,7 +48,7 @@ namespace
 class SingleDisplayHostConnection : public mtd::StubHostConnection
 {
 public:
-    std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+    std::shared_ptr<MirDisplayConfig> create_display_config() override
     {
         return mt::build_trivial_configuration();
     }
@@ -57,7 +57,7 @@ public:
 class MockApplyDisplayConfigHostConnection : public SingleDisplayHostConnection
 {
 public:
-    MOCK_METHOD1(apply_display_config, void(MirDisplayConfiguration&));
+    MOCK_METHOD1(apply_display_config, void(MirDisplayConfig&));
 };
 
 struct NestedDisplay : testing::Test
@@ -306,7 +306,7 @@ TEST_F(NestedDisplay, changing_output_does_not_preserve_framebuffers)
     class MultiDisplayHostConnection : public mtd::StubHostConnection
     {
     public:
-        std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+        std::shared_ptr<MirDisplayConfig> create_display_config() override
         {
             // This builds a 3-monitor configuration...
             return mt::build_non_trivial_configuration();
