@@ -52,6 +52,19 @@ std::mutex handle_mutex;
 std::unordered_set<MirWindow*> valid_surfaces;
 }
 
+MirPersistentId::MirPersistentId(std::string const& string_id)
+    : string_id{string_id}
+{
+}
+
+std::string const&MirPersistentId::as_string()
+{
+    return string_id;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfaceSpec::MirSurfaceSpec(
     MirConnection* connection, int width, int height, MirPixelFormat format)
     : connection{connection},
@@ -78,16 +91,6 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters co
 }
 
 MirSurfaceSpec::MirSurfaceSpec() = default;
-
-MirPersistentId::MirPersistentId(std::string const& string_id)
-    : string_id{string_id}
-{
-}
-
-std::string const&MirPersistentId::as_string()
-{
-    return string_id;
-}
 
 MirSurface::MirSurface(
     std::string const& error,
@@ -672,3 +675,5 @@ MirConnection* MirSurface::connection() const
 {
     return connection_;
 }
+
+#pragma GCC diagnostic pop

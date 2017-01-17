@@ -82,6 +82,20 @@ struct ContentInfo
     mir::optional_value<mir::geometry::Size> size;
 };
 
+struct MirPersistentId
+{
+public:
+    MirPersistentId(std::string const& string_id);
+
+    std::string const& as_string();
+
+private:
+    std::string const string_id;
+};
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 struct MirSurfaceSpec
 {
     MirSurfaceSpec();
@@ -143,17 +157,6 @@ struct MirSurfaceSpec
         mir::geometry::Point hotspot;
     };
     mir::optional_value<RenderSurfaceCursor> rendersurface_cursor;
-};
-
-struct MirPersistentId
-{
-public:
-    MirPersistentId(std::string const& string_id);
-
-    std::string const& as_string();
-
-private:
-    std::string const string_id;
 };
 
 struct MirSurface
@@ -263,5 +266,7 @@ private:
     uint32_t output_id;
 
 };
+
+#pragma GCC diagnostic pop
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */
