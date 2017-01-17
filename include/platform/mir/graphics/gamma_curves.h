@@ -33,14 +33,25 @@ class GammaCurves
 {
 public:
     GammaCurves() = default;
+    GammaCurves(GammaCurves const& other) = default;
+    GammaCurves(GammaCurves&& other) = default;
 
     GammaCurves(GammaCurve const& red,
                 GammaCurve const& green,
                 GammaCurve const& blue);
 
+    GammaCurves& operator=(GammaCurves const& other) = default;
+    GammaCurves& operator=(GammaCurves&& other) = default;
+
     GammaCurve red;
     GammaCurve green;
     GammaCurve blue;
+};
+
+class LinearGammaLUTs : public GammaCurves
+{
+public:
+    explicit LinearGammaLUTs(int size);
 };
 
 }

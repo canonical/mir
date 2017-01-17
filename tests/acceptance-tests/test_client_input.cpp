@@ -97,7 +97,7 @@ struct Client
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_name(spec, name.c_str());
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
@@ -330,8 +330,6 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 {
-    mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
-    
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client first_client(new_connection(), first);
 
@@ -646,68 +644,6 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                                   .at_position({abs_touch_x_2, abs_touch_y_2}));
 
     first_client.all_events_received.wait_for(2s);
-}
-
-TEST_F(TestClientInput, receives_one_touch_event_per_frame)
-{
-    positions[first] = screen_geometry;
-    Client first_client(new_connection(), first);
-
-    int const frame_rate = 60;
-    int const input_rate = 500;
-    int const nframes = 100;
-    int const nframes_error = 80;
-    int const inputs_per_frame = input_rate / frame_rate;
-    int const ninputs = nframes * inputs_per_frame;
-    auto const frame_time = 1000ms / frame_rate;
-    auto const input_interval = std::chrono::duration<double>(1s) / input_rate;
-
-    int received_input_events = 0;
-
-    EXPECT_CALL(first_client, handle_input(_))
-        .Times(Between(nframes-nframes_error, nframes+nframes_error))
-        .WillRepeatedly(InvokeWithoutArgs(
-            [&]()
-            {
-                ++received_input_events;
-                if (received_input_events >= nframes-nframes_error)
-                    first_client.all_events_received.raise();
-            }));
-
-    fake_touch_screen->emit_event(mis::a_touch_event()
-                                  .at_position({0,0}));
-
-    ASSERT_THAT(input_rate, Ge(2 * frame_rate));
-    ASSERT_THAT(ninputs, Gt(2 * nframes));
-
-    fake_touch_screen->emit_touch_sequence(
-        [this](int i)
-        {
-            auto const x = i;
-            auto const y = 2*i;
-            return mis::a_touch_event()
-                .with_action(mis::TouchParameters::Action::Move)
-                .at_position({x,y});
-        },
-        ninputs,
-        input_interval
-        );
-
-    // The main thing we're testing for is that too many events don't arrive
-    // so we wait a little to check the cooked event stream has stopped:
-    std::this_thread::sleep_for(200 * frame_time);
-
-    // Wait for the expected minimum number of events (should be quick but
-    // some CI runs are actually incredibly slow to finish)
-    ASSERT_TRUE(first_client.all_events_received.wait_for(120s));
-
-    // Remove reference to local received_input_events
-    Mock::VerifyAndClearExpectations(&first_client);
-
-    float const client_input_events_per_frame =
-        (float)received_input_events / nframes;
-    EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
-    EXPECT_THAT(client_input_events_per_frame, Lt(2.0f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)

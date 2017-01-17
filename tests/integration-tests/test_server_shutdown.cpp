@@ -29,7 +29,6 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/testing_server_configuration.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
@@ -57,7 +56,6 @@ namespace
 struct ServerShutdown : testing::Test, mtf::ServerRunner
 {
     std::unique_ptr<mir::DefaultServerConfiguration> server_configuration;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     mir::DefaultServerConfiguration& server_config() override
     {

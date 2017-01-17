@@ -595,6 +595,8 @@ ACTION(CopyRequestToResponse)
 }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(MirConnectionTest, uses_client_platform_for_platform_operation)
 {
     unsigned int const opcode{42};
@@ -648,6 +650,7 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
     mir_platform_message_release(returned_response);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(MirConnectionTest, wait_handle_is_signalled_during_stream_creation_error)
 {

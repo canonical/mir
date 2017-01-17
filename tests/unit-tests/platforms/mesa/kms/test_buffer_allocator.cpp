@@ -192,6 +192,23 @@ MATCHER_P(has_flag_set, flag, "")
     return arg & flag;
 }
 
+TEST_F(MesaBufferAllocatorTest, uses_gbm_with_proper_pf_and_flags_for_hardware_buffers)
+{
+    using namespace testing;
+    auto flags = GBM_BO_USE_CURSOR;
+    auto pf = GBM_FORMAT_RGBX5551; 
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_, pf, flags));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+    allocator->alloc_buffer( { 1000, 1000}, pf, flags);
+}
+
+TEST_F(MesaBufferAllocatorTest, creates_software_buffer_without_utilizing_gbm)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
+    allocator->alloc_software_buffer( { 1000, 1000}, mir_pixel_format_abgr_8888);
+}
+
 TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer)
 {
     using namespace testing;

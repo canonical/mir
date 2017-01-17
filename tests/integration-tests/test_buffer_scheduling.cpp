@@ -213,7 +213,7 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
-    void error_buffer(mg::BufferProperties const&, std::string const&) {}
+    void error_buffer(geom::Size, MirPixelFormat, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
@@ -471,7 +471,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mc::BufferMap>(sink, std::make_shared<mtd::StubBufferAllocator>());
+        map = std::make_shared<mc::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
             drop_policy,
             map,
@@ -490,8 +490,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                map->add_buffer(
-                    mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
+                map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);

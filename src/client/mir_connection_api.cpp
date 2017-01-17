@@ -18,7 +18,6 @@
 
 #define MIR_LOG_COMPONENT "MirConnectionAPI"
 
-#include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/default_configuration.h"
 #include "mir/input/input_devices.h"
@@ -46,107 +45,48 @@ void assign_result(void* result, void** context)
     if (context)
         *context = result;
 }
-
-class DefaultMirConnectionAPI : public mcl::MirConnectionAPI
-{
-public:
-    MirWaitHandle* connect(
-        mcl::ConfigurationFactory configuration,
-        char const* socket_file,
-        char const* name,
-        mir_connected_callback callback,
-        void* context) override
-    {
-        try
-        {
-            std::string sock;
-            if (socket_file)
-                sock = socket_file;
-            else
-            {
-                auto socket_env = getenv("MIR_SOCKET");
-                if (socket_env && socket_env[0])
-                    sock = socket_env;
-                else
-                    sock = mir::default_server_socket;
-            }
-
-            auto const conf = configuration(sock);
-
-            auto connection = std::make_unique<MirConnection>(*conf);
-            auto const result = connection->connect(name, callback, context);
-            connection.release();
-            return result;
-        }
-        catch (std::exception const& x)
-        {
-            MirConnection* error_connection = new MirConnection(x.what());
-            mcl::ErrorConnections::instance().insert(error_connection);
-            callback(error_connection, context);
-            return nullptr;
-        }
-    }
-
-    void release(MirConnection* connection) override
-    {
-        if (!mcl::ErrorConnections::instance().contains(connection))
-        {
-            try
-            {
-                auto wait_handle = connection->disconnect();
-                wait_handle->wait_for_all();
-            }
-            catch (std::exception const& ex)
-            {
-                // We're implementing a C API so no exceptions are to be
-                // propagated. And that's OK because if disconnect() fails,
-                // we don't care why. We're finished with the connection anyway.
-
-                MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-            }
-        }
-        else
-        {
-            mcl::ErrorConnections::instance().remove(connection);
-        }
-
-        delete connection;
-    }
-
-    mcl::ConfigurationFactory configuration_factory() override
-    {
-        return [](std::string const& socket) {
-            return std::unique_ptr<mcl::ConnectionConfiguration>{
-                new mcl::DefaultConnectionConfiguration{socket}
-            };
-        };
-    }
-};
-
-DefaultMirConnectionAPI default_api;
 }
-
-mcl::MirConnectionAPI* mir_connection_api_impl{&default_api};
 
 MirWaitHandle* mir_connect(
     char const* socket_file,
     char const* name,
     mir_connected_callback callback,
     void* context)
+try
 {
     try
     {
-        return mir_connection_api_impl->connect(mir_connection_api_impl->configuration_factory(),
-                                                socket_file,
-                                                name,
-                                                callback,
-                                                context);
+        std::string sock;
+        if (socket_file)
+            sock = socket_file;
+        else
+        {
+            auto socket_env = getenv("MIR_SOCKET");
+            if (socket_env && socket_env[0])
+                sock = socket_env;
+            else
+                sock = mir::default_server_socket;
+        }
+
+        mcl::DefaultConnectionConfiguration conf(sock);
+
+        auto connection = std::make_unique<MirConnection>(conf);
+        auto const result = connection->connect(name, callback, context);
+        connection.release();
+        return result;
     }
-    catch (std::exception const& ex)
+    catch (std::exception const& x)
     {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        MirConnection* error_connection = new MirConnection(x.what());
+        mcl::ErrorConnections::instance().insert(error_connection);
+        callback(error_connection, context);
         return nullptr;
     }
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 MirConnection* mir_connect_sync(
@@ -172,15 +112,25 @@ char const* mir_connection_get_error_message(MirConnection* connection)
 }
 
 void mir_connection_release(MirConnection* connection)
+try
 {
-    try
+    std::unique_ptr<MirConnection> scoped_deleter{connection};
+    if (!mcl::ErrorConnections::instance().contains(connection))
     {
-        return mir_connection_api_impl->release(connection);
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
     }
-    catch (std::exception const& ex)
+    else
     {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        mcl::ErrorConnections::instance().remove(connection);
     }
+}
+catch (std::exception const& ex)
+{
+    // We're implementing a C API so no exceptions are to be
+    // propagated. And that's OK because if disconnect() fails,
+    // we don't care why. We're finished with the connection anyway.
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_connection_get_platform(
@@ -426,7 +376,7 @@ void mir_connection_set_error_callback(
     }
 }
 
-void mir_connection_apply_session_display_configuration(MirConnection* connection, MirDisplayConfig const* display_config)
+void mir_connection_apply_session_display_config(MirConnection* connection, MirDisplayConfig const* display_config)
 try
 {
     connection->configure_session_display(*display_config);
@@ -436,7 +386,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_remove_session_display_configuration(MirConnection* connection)
+void mir_connection_remove_session_display_config(MirConnection* connection)
 try
 {
     connection->remove_session_display();

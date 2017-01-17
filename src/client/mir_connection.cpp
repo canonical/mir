@@ -46,6 +46,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
+#include "mir/platform_message.h"
 #include "mir_error.h"
 
 #include <algorithm>
@@ -654,19 +655,15 @@ MirWaitHandle* MirConnection::disconnect()
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    auto reply = mir_platform_message_create(platform_operation_reply->opcode());
+    auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
 
     set_error_message(platform_operation_reply->error());
 
-    mir_platform_message_set_data(
-        reply,
-        platform_operation_reply->data().data(),
-        platform_operation_reply->data().size());
-
-    mir_platform_message_set_fds(
-        reply,
+    auto const char_data = static_cast<char const*>(platform_operation_reply->data().data());
+    reply->data.assign(char_data, char_data + platform_operation_reply->data().size());
+    reply->fds.assign(
         platform_operation_reply->fd().data(),
-        platform_operation_reply->fd().size());
+        platform_operation_reply->fd().data() + platform_operation_reply->fd().size());
 
     callback(this, reply, context);
 
@@ -687,13 +684,10 @@ MirWaitHandle* MirConnection::platform_operation(
 
     mp::PlatformOperationMessage protobuf_request;
 
-    protobuf_request.set_opcode(mir_platform_message_get_opcode(request));
-    auto const request_data = mir_platform_message_get_data(request);
-    auto const request_fds = mir_platform_message_get_fds(request);
-
-    protobuf_request.set_data(request_data.data, request_data.size);
-    for (size_t i = 0; i != request_fds.num_fds; ++i)
-        protobuf_request.add_fd(request_fds.fds[i]);
+    protobuf_request.set_opcode(request->opcode);
+    protobuf_request.set_data(request->data.data(), request->data.size());
+    for (size_t i = 0; i != request->fds.size(); ++i)
+        protobuf_request.add_fd(request->fds[i]);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(

@@ -56,6 +56,7 @@ public:
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
     MOCK_METHOD1(sync_to_display, void(bool));
     MOCK_METHOD1(dispatch_driver_request_buffer_count, void(unsigned int));
+    MOCK_METHOD1(dispatch_driver_request_buffer_size, void(mir::geometry::Size));
 
     std::shared_ptr<mga::NativeBuffer> buffer;
 };
@@ -145,6 +146,14 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_hook_calls_set_buffer)
     EXPECT_CALL(*mock_driver_interpreter, dispatch_driver_request_buffer_count(size));
     ASSERT_NE(nullptr, window.perform);
     window.perform(&window, NATIVE_WINDOW_SET_BUFFER_COUNT, size);
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_perform_hook_calls_set_buffer_size)
+{
+    mir::geometry::Size size { 1091, 100 };
+    EXPECT_CALL(*mock_driver_interpreter, dispatch_driver_request_buffer_size(size));
+    ASSERT_NE(nullptr, window.perform);
+    window.perform(&window, NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS, size.width, size.height);
 }
 
 /* setSwapInterval hook tests */
