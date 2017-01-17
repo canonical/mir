@@ -1066,6 +1066,7 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(increased_acceleration));
+    mir_input_config_destroy(config);
 }
 
 TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
@@ -1099,6 +1100,7 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
     pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    mir_input_config_destroy(config);
 }
 
 TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
