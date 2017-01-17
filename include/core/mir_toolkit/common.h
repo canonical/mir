@@ -92,8 +92,7 @@ typedef enum MirWindowType
     mir_window_type_dialog,
     mir_window_type_gloss,
     mir_window_type_freestyle,
-    mir_window_type_popover,      /**< \deprecated  Choose "menu" or "tip" */
-    mir_window_type_menu = mir_window_type_popover,
+    mir_window_type_menu,
     mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
     mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_window_type_tip,          /**< AKA "tooltip"                       */
