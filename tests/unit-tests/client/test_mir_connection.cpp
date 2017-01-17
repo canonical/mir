@@ -843,7 +843,27 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
     EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
 
-    connection->allocate_buffer(size, format, usage, nullptr, nullptr);
+    connection->allocate_buffer(size, format, nullptr, nullptr);
+}
+
+TEST_F(MirConnectionTest, can_alloc_native_buffer_from_connection)
+{
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
+    geom::Size size { 32, 11 };
+    auto native_format = 342u;
+    auto native_flags = 0x44;
+    mp::BufferAllocation mp_alloc;
+    mp_alloc.mutable_id()->set_value(-1);
+    auto params = mp_alloc.add_buffer_requests();
+    params->set_width(size.width.as_int());
+    params->set_height(size.height.as_int());
+    params->set_native_format(native_format);
+    params->set_flags(native_flags);
+    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, _, mir_buffer_usage_hardware, nullptr, nullptr));
+
+    connection->allocate_buffer(size, native_format, native_flags, nullptr, nullptr);
 }
 
 TEST_F(MirConnectionTest, can_release_buffer_from_connection)
