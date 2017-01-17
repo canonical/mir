@@ -21,6 +21,7 @@
 #include "cursor_configuration.h"
 #include "mir/mir_buffer_stream.h"
 #include "mir_wait_handle.h"
+#include "frame_clock.h"
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
@@ -32,6 +33,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/time/posix_timestamp.h"
 
 #include <memory>
 #include <functional>
@@ -217,9 +219,13 @@ public:
 
     MirWaitHandle* request_persistent_id(mir_window_id_callback callback, void* context);
     MirConnection* connection() const;
+
+    std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
+
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
+    void configure_frame_clock();
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_window_id_callback callback, void* context);
@@ -245,6 +251,8 @@ private:
 
     //Deprecated functions can cause MirSurfaces to be created with a default stream
     std::shared_ptr<MirBufferStream> default_stream;
+    typedef std::unordered_set<std::shared_ptr<MirBufferStream>> StreamSet;
+    StreamSet streams;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
@@ -253,6 +261,8 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_window_attribs];
     MirOrientation orientation = mir_orientation_normal;
+
+    std::shared_ptr<mir::client::FrameClock> const frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;

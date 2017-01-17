@@ -21,6 +21,7 @@
 #include "cursor_configuration.h"
 #include "make_protobuf_object.h"
 #include "mir_protobuf.pb.h"
+#include "connection_surface_map.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
@@ -31,6 +32,7 @@
 #include "mir/input/xkb_mapper.h"
 #include "mir/cookie/cookie.h"
 #include "mir_cookie.h"
+#include "mir/time/posix_timestamp.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -45,6 +47,8 @@ namespace mircv = mi::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
+
+using mir::client::FrameClock;
 
 namespace
 {
@@ -99,6 +103,7 @@ MirSurface::MirSurface(
     std::shared_ptr<MirWaitHandle> const& handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn),
+    frame_clock(std::make_shared<FrameClock>()),
     creation_handle(handle)
 {
     surface->set_error(error);
@@ -106,6 +111,8 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
+
+    configure_frame_clock();
 }
 
 MirSurface::MirSurface(
@@ -129,12 +136,19 @@ MirSurface::MirSurface(
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
+      frame_clock(std::make_shared<FrameClock>()),
       creation_handle(handle),
       size({surface_proto.width(), surface_proto.height()}),
       format(static_cast<MirPixelFormat>(surface_proto.pixel_format())),
       usage(static_cast<MirBufferUsage>(surface_proto.buffer_usage())),
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
+    if (default_stream)
+    {
+        streams.insert(default_stream);
+        default_stream->adopted_by(this);
+    }
+
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {
         auto const& attrib = surface_proto.attributes(i);
@@ -158,10 +172,23 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
+
+    configure_frame_clock();
 }
 
 MirSurface::~MirSurface()
 {
+    StreamSet old_streams;
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        old_streams = std::move(streams);
+    }
+
+    // Do callbacks without holding the lock
+    for (auto const& s : old_streams)
+        s->unadopted_by(this);
+
     {
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
         valid_surfaces.erase(this);
@@ -173,6 +200,18 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
         close(surface->fd(i));
+}
+
+void MirSurface::configure_frame_clock()
+{
+    /*
+     * TODO: Implement frame_clock->set_resync_callback(...) when IPC to get
+     *       timestamps from the server exists.
+     *       Until we do, client-side vsync will perform suboptimally (it is
+     *       randomly up to one frame out of phase with the real display).
+     *       However even while it's suboptimal it's dramatically lower latency
+     *       than the old approach and still totally eliminates nesting lag.
+     */
 }
 
 MirWindowParameters MirSurface::get_parameters() const
@@ -461,6 +500,36 @@ void MirSurface::handle_event(MirEvent const& e)
             default_stream->set_size(size);
         break;
     }
+    case mir_event_type_window_output:
+    {
+        /*
+         * We set the frame clock according to the (maximum) refresh rate of
+         * the display. Note that we don't do the obvious thing and measure
+         * previous vsyncs mainly because that's a very unreliable predictor
+         * of the desired maximum refresh rate in the case of GSync/FreeSync
+         * and panel self-refresh. You can't assume the previous frame
+         * represents the display running at full native speed and so should
+         * not measure it. Instead we conveniently have
+         * mir_window_output_event_get_refresh_rate that tells us the full
+         * native speed of the most relevant output...
+         */
+        auto soevent = mir_event_get_surface_output_event(&e);
+        auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+        if (rate > 10.0)  // should be >0, but 10 to workaround LP: #1639725
+        {
+            std::chrono::nanoseconds const ns(
+                static_cast<long>(1000000000L / rate));
+            frame_clock->set_period(ns);
+        }
+        /* else: The graphics driver has not provided valid timing so we will
+         *       default to swap interval 0 behaviour.
+         *       Or would people prefer some different fallback?
+         *         - Re-enable server-side vsync?
+         *         - Rate limit to 60Hz?
+         *         - Just fix LP: #1639725?
+         */
+        break;
+    }
     default:
         break;
     };
@@ -612,17 +681,30 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
 
     if (spec.streams.is_set())
     {
+        std::shared_ptr<mir::client::ConnectionSurfaceMap> map;
+        StreamSet old_streams, new_streams;
+
         /*
-         * Note that we don't check for errors from modify_surface. So in
-         * updating default_stream here, we're just assuming it will succeed.
-         * Seems to be a harmless assumption to have made so far and much
-         * simpler than communicating back suceessful mappings from the server,
-         * but there is a prototype started for that: lp:~vanvugt/mir/adoption
+         * Note that we are updating our local copy of 'streams' before the
+         * server has updated its copy. That's mainly because we have never yet
+         * implemented any kind of client-side error handling for when
+         * modify_surface fails and is rejected. There's a prototype started
+         * along those lines in lp:~vanvugt/mir/adoption, but it does not seem
+         * to be important to block on...
+         *   The worst case is still perfectly acceptable: That is if the server
+         * rejects the surface spec our local copy of streams is wrong. That's
+         * a harmless consequence which just means the stream is now
+         * synchronized to the output the client intended even though the server
+         * is refusing to display it.
          */
         {
             std::lock_guard<decltype(mutex)> lock(mutex);
             default_stream = nullptr;
+            old_streams = std::move(streams);
+            streams.clear();  // Leave the container valid before we unlock
+            map = connection_->connection_surface_map();
         }
+
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
@@ -634,6 +716,27 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
                 new_stream->set_width(stream.size.value().width.as_int());
                 new_stream->set_height(stream.size.value().height.as_int());
             }
+
+            mir::frontend::BufferStreamId id(stream.stream_id);
+            if (auto bs = map->stream(id))
+                new_streams.insert(bs);
+            /* else: we could implement stream ID validation here, which we've
+             * never had before.
+             * The only problem with that plan is that we have some tests
+             * that rely on the ability to pass in invalid stream IDs so those
+             * need fixing.
+             */
+        }
+
+        // Worth optimizing and avoiding the intersection of both sets?....
+        for (auto const& old_stream : old_streams)
+            old_stream->unadopted_by(this);
+        for (auto const& new_stream : new_streams)
+            new_stream->adopted_by(this);
+        // ... probably not, since we can std::move(new_streams) this way...
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+            streams = std::move(new_streams);
         }
     }
 
@@ -674,6 +777,11 @@ MirWaitHandle* MirSurface::modify(MirWindowSpec const& spec)
 MirConnection* MirSurface::connection() const
 {
     return connection_;
+}
+
+std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
+{
+    return frame_clock;
 }
 
 #pragma GCC diagnostic pop
