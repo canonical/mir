@@ -159,8 +159,8 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
  *                         (Ignored for buffer streams)
  * \param logical_height   The height that the content will be displayed at
  *                         (Ignored for buffer streams)
- * \param displacement_x   The x displacement from the top-left corner of the MirSurface
- * \param displacement_y   The y displacement from the top-left corner of the MirSurface
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow
  */
 void mir_surface_spec_add_render_surface(
     MirWindowSpec* spec,

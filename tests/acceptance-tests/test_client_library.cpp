@@ -370,10 +370,10 @@ TEST_F(ClientLibrary, creates_surface)
 TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
 {   // An attempt at a regression test for race LP: #1653658
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 123, 456, mir_pixel_format_abgr_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 123, 456);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     window = mir_window_create_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_THAT(window, IsValid());
 

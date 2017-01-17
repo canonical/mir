@@ -106,7 +106,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
-    mir::optional_value<MirSurface*> parent;
+    mir::optional_value<MirWindow*> parent;
     std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
@@ -130,7 +130,7 @@ struct MirSurfaceSpec
 
     struct EventHandler
     {
-        mir_surface_event_callback callback;
+        mir_window_event_callback callback;
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
@@ -200,7 +200,7 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(mir_surface_event_callback callback,
+    void set_event_handler(mir_window_event_callback callback,
                            void* context);
     void handle_event(MirEvent const& e);
 
@@ -212,14 +212,14 @@ public:
 
     static bool is_valid(MirSurface* query);
 
-    MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirWaitHandle* request_persistent_id(mir_window_id_callback callback, void* context);
     MirConnection* connection() const;
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
-    void acquired_persistent_id(mir_surface_id_callback callback, void* context);
+    void acquired_persistent_id(mir_window_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};

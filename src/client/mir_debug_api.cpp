@@ -38,9 +38,8 @@ bool mir_debug_window_coords_to_screen(MirWindow* window,
     return window->translate_to_screen_coordinates(x, y, screen_x, screen_y);
 }
 
-// These functions will be deprecated soon
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
 {
@@ -59,4 +58,4 @@ bool mir_debug_surface_coords_to_screen(MirSurface* surface,
     return mir_debug_window_coords_to_screen(surface, x, y, screen_x, screen_y);
 }
 
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop

@@ -550,11 +550,11 @@ private:
     mt::Signal received;
 };
 
-void surface_placement_event_callback(MirWindow* /*window*/, MirEvent const* event, void* context)
+void window_placement_event_callback(MirWindow* /*window*/, MirEvent const* event, void* context)
 {
     if (mir_event_get_type(event) == mir_event_type_window_placement)
     {
-        auto const placement_event = mir_event_get_surface_placement_event(event);
+        auto const placement_event = mir_event_get_window_placement_event(event);
         static_cast<PlacementCheck*>(context)->check(placement_event);
     }
 }
@@ -589,7 +589,7 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     PlacementCheck placement_check{placement};
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(surface_spec, format);
-    mir_window_spec_set_event_handler(surface_spec, &surface_placement_event_callback, &placement_check);
+    mir_window_spec_set_event_handler(surface_spec, &window_placement_event_callback, &placement_check);
     auto window = mir_window_create_sync(surface_spec);
     mir_window_spec_release(surface_spec);
 
