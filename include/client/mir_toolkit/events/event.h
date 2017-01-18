@@ -229,8 +229,8 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \param [in] event The event
  * \return           The associated MirSurfaceOutputEvent
  */
-MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event);
-/* __attribute__((deprecated("use mir_event_get_window_output_event))) */
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event)
+__attribute__((deprecated("use mir_event_get_window_output_event")));
 
 /**
  * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
@@ -266,8 +266,8 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \param [in] event The event
  * \return           The associated MirSurfacePlacementEvent
  */
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
-/* __attribute__((deprecated("use mir_event_get_window_placement_event))) */
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
+__attribute__((deprecated("use mir_event_get_window_placement_event")));
 
 /**
  * Retrieve the MirWindowPlacementEvent associated with a MirEvent of

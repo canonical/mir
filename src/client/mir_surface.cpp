@@ -53,8 +53,21 @@ using mir::client::FrameClock;
 namespace
 {
 std::mutex handle_mutex;
-std::unordered_set<MirSurface*> valid_surfaces;
+std::unordered_set<MirWindow*> valid_surfaces;
 }
+
+MirPersistentId::MirPersistentId(std::string const& string_id)
+    : string_id{string_id}
+{
+}
+
+std::string const&MirPersistentId::as_string()
+{
+    return string_id;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec::MirSurfaceSpec(
     MirConnection* connection, int width, int height, MirPixelFormat format)
@@ -82,16 +95,6 @@ MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters co
 }
 
 MirSurfaceSpec::MirSurfaceSpec() = default;
-
-MirPersistentId::MirPersistentId(std::string const& string_id)
-    : string_id{string_id}
-{
-}
-
-std::string const&MirPersistentId::as_string()
-{
-    return string_id;
-}
 
 MirSurface::MirSurface(
     std::string const& error,
@@ -246,7 +249,7 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
-void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* context)
+void MirSurface::acquired_persistent_id(mir_window_id_callback callback, void* context)
 {
     if (!persistent_id->has_error())
     {
@@ -259,7 +262,7 @@ void MirSurface::acquired_persistent_id(mir_surface_id_callback callback, void* 
     persistent_id_wait_handle.result_received();
 }
 
-MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callback, void* context)
+MirWaitHandle* MirSurface::request_persistent_id(mir_window_id_callback callback, void* context)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
 
@@ -439,7 +442,7 @@ int MirSurface::attrib(MirWindowAttrib at) const
     return attrib_cache[at];
 }
 
-void MirSurface::set_event_handler(mir_surface_event_callback callback,
+void MirSurface::set_event_handler(mir_window_event_callback callback,
                                    void* context)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -497,7 +500,7 @@ void MirSurface::handle_event(MirEvent const& e)
             default_stream->set_size(size);
         break;
     }
-    case mir_event_type_surface_output:
+    case mir_event_type_window_output:
     {
         /*
          * We set the frame clock according to the (maximum) refresh rate of
@@ -507,7 +510,7 @@ void MirSurface::handle_event(MirEvent const& e)
          * and panel self-refresh. You can't assume the previous frame
          * represents the display running at full native speed and so should
          * not measure it. Instead we conveniently have
-         * mir_surface_output_event_get_refresh_rate that tells us the full
+         * mir_window_output_event_get_refresh_rate that tells us the full
          * native speed of the most relevant output...
          */
         auto soevent = mir_event_get_surface_output_event(&e);
@@ -780,3 +783,5 @@ std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
 {
     return frame_clock;
 }
+
+#pragma GCC diagnostic pop

@@ -49,7 +49,7 @@ mir_create_normal_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_menu_window_spec(MirConnection* connection,
                             int width, int height,
-                            MirSurface* parent,
+                            MirWindow* parent,
                             MirRectangle* rect,
                             MirEdgeAttachment edge)
 {
@@ -66,7 +66,7 @@ mir_create_menu_window_spec(MirConnection* connection,
 
 MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
                                           int width, int height,
-                                          MirSurface* parent,
+                                          MirWindow* parent,
                                           MirRectangle* rect,
                                           MirEdgeAttachment edge)
 {
@@ -83,7 +83,7 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
 
 MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
                                                    int width, int height,
-                                                   MirSurface* parent)
+                                                   MirWindow* parent)
 {
     mir::require(mir_window_is_valid(parent));
 
@@ -832,9 +832,8 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     return result;
 }
 
-// These functions will be deprecated soon
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,
@@ -1297,7 +1296,7 @@ MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
     return result;
 }
 
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 bool mir_persistent_id_is_valid(MirPersistentId* id)
 {
