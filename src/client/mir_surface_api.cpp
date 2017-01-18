@@ -512,8 +512,7 @@ static MirWaitHandle* window_release_helper(
 }
 
 static MirWaitHandle* mir_window_request_persistent_id_helper(
-    MirWindow* window,
-    mir_window_id_callback callback, void* context)
+    MirWindow* window, MirWindowIdCallback callback, void* context)
 {
     mir::require(mir_window_is_valid(window));
 
@@ -1283,7 +1282,7 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
     return mir_window_get_buffer_stream(surface);
 }
 
-MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
 {
     return mir_window_request_persistent_id_helper(surface, callback, context);
 }
