@@ -243,7 +243,9 @@ mir::geometry::Rectangle extents_of(
 
 mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
-    return extents_of(modes, current_mode_index, orientation, top_left);
+    return overridden_extents.is_set() ?
+           overridden_extents.value() :
+           extents_of(modes, current_mode_index, orientation, top_left);
 }
 
 bool mg::DisplayConfigurationOutput::valid() const
@@ -304,7 +306,9 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
 
 mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
 {
-    return extents_of(modes, current_mode_index, orientation, top_left);
+    return overridden_extents.is_set() ?
+           overridden_extents.value() :
+           extents_of(modes, current_mode_index, orientation, top_left);
 }
 
 
