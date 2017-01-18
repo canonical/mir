@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
@@ -63,6 +64,8 @@ typedef struct MirDemoState
 
     int* client_fds;
     unsigned int client_fd_count;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -87,13 +90,18 @@ static void prompt_session_event_callback(MirPromptSession* prompt_session,
 static void client_fd_callback(MirPromptSession* prompt_session, size_t count, int const* fds, void* context)
 {
     (void)prompt_session;
-    ((MirDemoState*)context)->client_fds = malloc(sizeof(int)*count);
+    MirDemoState* mcd = (MirDemoState*)context;
+    mcd->client_fds = malloc(sizeof(int)*count);
     unsigned int i = 0;
     for (; i < count; i++)
     {
-        ((MirDemoState*)context)->client_fds[i] = fds[i];
+        mcd->client_fds[i] = fds[i];
     }
-    ((MirDemoState*)context)->client_fd_count = count;
+
+    pthread_mutex_lock(&mcd->mutex);
+    mcd->client_fd_count = count;
+    pthread_cond_signal(&mcd->cond);
+    pthread_mutex_unlock(&mcd->mutex);
 }
 ///\internal [Callback_tag]
 
@@ -132,6 +140,9 @@ void stop_session(MirDemoState* mcd, const char* name)
         printf("%s: Window released\n", name);
     }
 
+    pthread_cond_destroy(&mcd->cond);
+    pthread_mutex_destroy(&mcd->mutex);
+
     // We should release our connection
     mir_connection_release(mcd->connection);
     printf("%s: Connection released\n", name);
@@ -147,6 +158,18 @@ void helper(const char* server)
     mcd.client_fd_count = 0;
     start_session(server, "helper", &mcd);
 
+    int error = pthread_mutex_init(&mcd.mutex, NULL);
+    if (error)
+    {
+        fprintf(stderr, "Failed to init mutex: %s", strerror(error));
+    }
+
+    error = pthread_cond_init(&mcd.cond, NULL);
+    if (error)
+    {
+        fprintf(stderr, "Failed to init cond: %s", strerror(error));
+    }
+
     // We create a prompt session
     mcd.prompt_session = mir_connection_create_prompt_session_sync(mcd.connection, getpid(), prompt_session_event_callback, &mcd);
     assert(mcd.prompt_session != NULL);
@@ -154,10 +177,15 @@ void helper(const char* server)
     assert(mcd.state == mir_prompt_session_state_started);
     puts("helper: Started prompt session");
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd));
-#pragma GCC diagnostic pop
+    mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd);
+
+    pthread_mutex_lock(&mcd.mutex);
+    while (mcd.client_fd_count == 0)
+    {
+        pthread_cond_wait(&mcd.cond, &mcd.mutex);
+    }
+    pthread_mutex_unlock(&mcd.mutex);
+
     assert(mcd.client_fd_count == 1);
     puts("helper: Added waiting FD");
 
