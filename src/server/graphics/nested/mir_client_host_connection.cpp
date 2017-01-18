@@ -66,7 +66,7 @@ namespace
 {
 mgn::UniqueInputConfig make_input_config(MirConnection* con)
 {
-    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_destroy);
+    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_release);
 }
 
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
@@ -134,7 +134,7 @@ public:
             mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
     }
 
-    void set_event_handler(mir_surface_event_callback cb, void* context) override
+    void set_event_handler(MirWindowEventCallback cb, void* context) override
     {
         mir_window_set_event_handler(mir_surface, cb, context);
     }

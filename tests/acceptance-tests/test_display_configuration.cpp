@@ -76,6 +76,11 @@ public:
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
 };
 
+// TODO There already is a test new display config acceptance tests so these can be
+// removed once we remove these functions.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
     bool configure_display_is_allowed(mf::SessionCredentials const&) override
@@ -144,7 +149,6 @@ void display_change_handler(MirConnection* connection, void* context)
 TEST_F(LegacyDisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     std::atomic<bool> callback_called{false};
-
     mir_connection_set_display_config_change_callback(connection, &display_change_handler, &callback_called);
 
     MirConnection* unsubscribed_connection = mir_connect_sync(new_connection().c_str(), "notifier");
@@ -576,3 +580,4 @@ TEST_F(LegacyDisplayConfigurationTest,
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 }
+#pragma GCC diagnostic pop

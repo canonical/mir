@@ -44,10 +44,13 @@ int mir_debug_window_id(MirWindow *window);
  */
 uint32_t mir_debug_window_current_buffer_id(MirWindow *window);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 /**
- * Get the screen coordinates corresponding to a pair of window coordinates
- * \pre                               The window is valid
- * \param   [in] window               The window
+ * Get the screen coordinates corresponding to a pair of surface coordinates
+ * \pre                               The surface is valid
+ * \param   [in] surface              The surface
  * \param   [in] x, y                 Surface coordinates to map to screen coordinates
  * \param   [out] screen_x, screen_y  The screen coordinates corresponding to x, y.
  * \return                            True if screen_x and screen_y contain values
@@ -59,22 +62,18 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow *window);
  *          This call will only be interesting for automated testing, where both the client
  *          and shell state is known and constrained.
  */
-bool mir_debug_surface_coords_to_screen(MirWindow *window,
+bool mir_debug_surface_coords_to_screen(MirSurface *surface,
                                        int x, int y,
-                                       int* screen_x, int* screen_y);
-//__attribute__((deprecated("Use mir_extension_window_coordinate_translation instead")));
+                                       int* screen_x, int* screen_y)
+__attribute__((deprecated("Use mir_extension_window_coordinate_translation instead")));
 
-// Functions in this pragma section are to be deprecated
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+int mir_debug_surface_id(MirSurface *surface)
+__attribute__((deprecated("Use mir_debug_window_id() instead")));
 
-int mir_debug_surface_id(MirSurface *surface);
-//__attribute__((deprecated("Use mir_debug_window_id() instead")));
+uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface)
+__attribute__((deprecated("Use mir_debug_window_current_buffer_id() instead")));
 
-uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
-//__attribute__((deprecated("Use mir_debug_window_current_buffer_id() instead")));
-
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

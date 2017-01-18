@@ -125,6 +125,8 @@ TEST_F(ClientLibraryCallbacks, connect_callback_is_called_before_wait_handler_ha
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -146,6 +148,7 @@ TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_han
         [this] { return window != nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handler_has_result)
 {
@@ -168,6 +171,8 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, release_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -187,3 +192,4 @@ TEST_F(ClientLibraryCallbacks, release_surface_callback_is_called_before_wait_ha
         [this] { return window == nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop
