@@ -45,6 +45,8 @@
 namespace mcl = mir::client;
 namespace mclm = mir::client::mesa;
 namespace mtf = mir_test_framework;
+namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -121,8 +123,6 @@ TEST_F(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
 
 TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
 {
-    using namespace testing;
-
     int const success{0};
     auto const gbm_dev_dummy = reinterpret_cast<gbm_device*>(this);
 
@@ -144,8 +144,6 @@ TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
 
 TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
 {
-    using namespace testing;
-
     MirPlatformPackage pkg;
     platform->populate(pkg);
     int const previous_data_count{pkg.data_items};
@@ -172,8 +170,6 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
 
 TEST_F(MesaClientPlatformTest, returns_gbm_compatible_pixel_formats_only)
 {
-    using namespace testing;
-
     auto const d = reinterpret_cast<EGLDisplay>(0x1234);
     auto const c = reinterpret_cast<EGLConfig>(0x5678);
 
@@ -209,7 +205,6 @@ TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_sur
 
 TEST_F(MesaClientPlatformTest, can_allocate_buffer)
 {
-    using namespace testing;
     using namespace std::literals::chrono_literals;
 
     mtd::StubConnectionConfiguration conf(platform);
@@ -230,4 +225,23 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
         GBM_FORMAT_ARGB8888, 0,
         [] (::MirBuffer*, void*) {}, nullptr);
     EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
+}
+
+TEST_F(MesaClientPlatformTest, converts_gbm_format_correctly)
+{
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_argb_8888), Eq(GBM_FORMAT_ARGB8888));
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_xrgb_8888), Eq(GBM_FORMAT_XRGB8888));
+}
+
+TEST_F(MesaClientPlatformTest, converts_gbm_flags_correctly)
+{
+    auto render_flag = GBM_BO_USE_RENDERING;
+    auto render_and_scanout_flag = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+
+    geom::Size large_size {800, 600}; 
+    geom::Size small_size {400, 100}; 
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_software, large_size), Eq(render_and_scanout_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_software, small_size), Eq(render_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_hardware, large_size), Eq(render_and_scanout_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_hardware, small_size), Eq(render_flag));
 }

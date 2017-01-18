@@ -52,7 +52,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     uint32_t native_format_for(MirPixelFormat) const override;
     uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
-    
+
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;
 

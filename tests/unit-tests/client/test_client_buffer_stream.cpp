@@ -103,6 +103,14 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return nullptr;
     }
+    uint32_t native_format_for(MirPixelFormat) const override
+    {
+        return 0u;
+    }
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override
+    {
+        return 0u;
+    }
 
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
