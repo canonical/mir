@@ -771,7 +771,10 @@ TEST_F(ClientLibrary, accesses_platform_package)
     MirPlatformPackage platform_package;
     ::memset(&platform_package, -1, sizeof(platform_package));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_connection_get_platform(connection, &platform_package);
+#pragma GCC diagnostic pop
     EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
 
     mir_connection_release(connection);

@@ -93,6 +93,7 @@ void mir_connection_release(MirConnection *connection);
  *   \param [out] platform_package  Structure to be populated
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+//__attribute__((deprecated("use platform extensions instead")));
 
 /**
  * Query graphics platform module.
