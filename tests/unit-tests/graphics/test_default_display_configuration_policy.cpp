@@ -65,6 +65,7 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
         mir_subpixel_arrangement_unknown,
         {},
         mir_output_gamma_unsupported,
+        {},
         {}
     };
 }

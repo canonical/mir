@@ -341,7 +341,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            mir_power_mode_on, mir_orientation_normal,
                            1.0f, mir_form_factor_monitor,
                            kms_subpixel_to_mir_subpixel(connector.subpixel),
-                           gamma, mir_output_gamma_supported, std::move(edid)});
+                           gamma, mir_output_gamma_supported, std::move(edid),
+                           {}});
     }
     else
     {

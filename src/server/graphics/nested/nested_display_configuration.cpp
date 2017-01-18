@@ -127,7 +127,8 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.subpixel_arrangement,
         local_config.gamma,
         local_config.gamma_supported,
-        {}
+        {},
+        {}  // TODO: Requires client API for getting logical size
     };
 }
 

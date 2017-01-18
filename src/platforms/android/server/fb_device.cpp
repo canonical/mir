@@ -92,6 +92,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
         mir_subpixel_arrangement_unknown,
         {},
         mir_output_gamma_unsupported,
+        {},
         {}
     };
 }

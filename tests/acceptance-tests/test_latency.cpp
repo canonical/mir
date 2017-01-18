@@ -255,6 +255,7 @@ struct TimeTrackingDisplay : mtd::NullDisplay
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         };
         outputs.push_back(output);

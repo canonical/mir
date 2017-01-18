@@ -117,6 +117,7 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
+                {},
                 {}
             },
             {
@@ -142,6 +143,7 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
+                {},
                 {}
             },
             {
@@ -167,6 +169,7 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
+                {},
                 {}
             }}}
     {

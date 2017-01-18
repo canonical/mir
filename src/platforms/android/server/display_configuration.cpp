@@ -69,6 +69,7 @@ mg::DisplayConfigurationOutput make_virtual_config()
         subpixel_arrangement,
         {},
         mir_output_gamma_unsupported,
+        {},
         {}
     };
 }

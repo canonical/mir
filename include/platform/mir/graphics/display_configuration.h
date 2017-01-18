@@ -24,6 +24,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 #include "mir/graphics/gamma_curves.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -129,6 +130,8 @@ struct DisplayConfigurationOutput
 
     /** EDID of the display, if non-empty */
     std::vector<uint8_t> edid;
+
+    mir::optional_value<geometry::Rectangle> overridden_extents;
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */

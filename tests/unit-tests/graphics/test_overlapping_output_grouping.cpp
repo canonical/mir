@@ -100,6 +100,7 @@ public:
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
+                {},
                 {}
             };
 
