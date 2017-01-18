@@ -146,7 +146,7 @@ struct MirSurfaceSpec
 
     struct EventHandler
     {
-        mir_window_event_callback callback;
+        MirWindowEventCallback callback;
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
@@ -205,7 +205,7 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(mir_window_event_callback callback,
+    void set_event_handler(MirWindowEventCallback callback,
                            void* context);
     void handle_event(MirEvent const& e);
 
@@ -217,7 +217,7 @@ public:
 
     static bool is_valid(MirSurface* query);
 
-    MirWaitHandle* request_persistent_id(mir_window_id_callback callback, void* context);
+    MirWaitHandle* request_persistent_id(MirWindowIdCallback callback, void* context);
     MirConnection* connection() const;
 
     std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
@@ -228,7 +228,7 @@ private:
     void configure_frame_clock();
     void on_configured();
     void on_cursor_configured();
-    void acquired_persistent_id(mir_window_id_callback callback, void* context);
+    void acquired_persistent_id(MirWindowIdCallback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
