@@ -270,6 +270,11 @@ void mir_connection_set_input_config_change_callback(
 
 void mir_input_config_destroy(MirInputConfig const* config)
 {
+    mir_input_config_release(config);
+}
+
+void mir_input_config_release(MirInputConfig const* config)
+{
     delete config;
 }
 

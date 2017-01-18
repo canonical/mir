@@ -83,7 +83,7 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_window_callback)(MirWindow *window, void *client_context);
+typedef void (*MirWindowCallback)(MirWindow *window, void *client_context);
 
 /**
  * Callback to be passed when calling:
@@ -100,7 +100,7 @@ typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client
  *   \param [in] event       The event to be handled
  *   \param [in,out] context The context provided by client
  */
-typedef void (*mir_window_event_callback)(
+typedef void (*MirWindowEventCallback)(
     MirWindow* window, MirEvent const* event, void* context);
 
 /**
@@ -147,7 +147,7 @@ typedef void (*mir_client_fd_callback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
 
 
-typedef void (*mir_window_id_callback)(
+typedef void (*MirWindowIdCallback)(
     MirWindow* window, MirPersistentId* id, void* context);
 
 /**
@@ -484,15 +484,15 @@ typedef void (*mir_error_callback)(
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
-__attribute__((deprecated("Use mir_window_callback instead")));
+__attribute__((deprecated("Use MirWindowCallback instead")));
 
 typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context)
-__attribute__((deprecated("Use mir_window_event_callback instead")));
+__attribute__((deprecated("Use MirWindowEventCallback instead")));
 
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
-__attribute__((deprecated("Use mir_window_id_callback instead")));
+__attribute__((deprecated("Use MirWindowIdCallback instead")));
 
 typedef MirSurfaceParameters MirWindowParameters;
 
