@@ -24,6 +24,7 @@
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 #include "mir_test_framework/visible_surface.h"
 #include "mir/options/option.h"
@@ -240,12 +241,36 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingDisplay(Stats& stats)
         : group{stats}
     {
+        mg::DisplayConfigurationOutput output{
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{1},
+            mg::DisplayConfigurationOutputType::hdmia,
+            std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+            {{{1920,1080}, refresh_rate}},  // <=== Refresh rate must be valid
+            0, mir::geometry::Size{}, true, true, mir::geometry::Point{}, 0,
+            mir_pixel_format_abgr_8888, mir_power_mode_on,
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown,
+            {},
+            mir_output_gamma_unsupported,
+            {}
+        };
+        outputs.push_back(output);
+    }
+
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        return std::make_unique<mtd::StubDisplayConfig>(outputs);
     }
 
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
         f(group);
     }
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
     TimeTrackingGroup group;
 };
  
@@ -288,7 +313,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
+TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
 {
     auto stream = mir_window_get_buffer_stream(surface);
     auto const deadline = steady_clock::now() + 60s;
@@ -308,7 +333,7 @@ TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 
     auto average_latency = display.group.average_latency();
 
-    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
+    EXPECT_NEAR(1.0f, average_latency, error_margin);
 }
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
