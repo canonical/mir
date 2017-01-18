@@ -978,7 +978,6 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
 /**
  * Set the swapinterval for the default stream.
  *   \warning EGL users should use eglSwapInterval directly.
- *   \warning Only swapinterval of 0 or 1 is supported.
  *   \warning If the surface was created with, or modified to have a
  *            MirSurfaceSpec containing streams added through
  *            mir_window_spec_set_streams(), the default stream will

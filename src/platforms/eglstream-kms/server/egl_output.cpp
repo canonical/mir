@@ -269,7 +269,7 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     }
 
     EGLAttrib const crtc_filter[] = {
-        EGL_DRM_PLANE_EXT, plane_id,
+        EGL_DRM_PLANE_EXT, static_cast<EGLAttrib>(plane_id),
         EGL_NONE};
     int found_layers{0};
     if (eglGetOutputLayersEXT(display, crtc_filter, &layer, 1, &found_layers) != EGL_TRUE)

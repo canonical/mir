@@ -601,6 +601,7 @@ TEST_F(HwcDevice, rejects_empty_list)
 
 //LP: #1369763. We could get swapinterval 0 to work with overlays, but we'd need
 //the vsync signal from hwc to reach the client, so the client can rate-limit its submissions.
+// Update: We have client-side vsync now so it should be possible to do this...
 TEST_F(HwcDevice, rejects_list_containing_interval_0)
 {
     mga::HwcDevice device(mock_device);
