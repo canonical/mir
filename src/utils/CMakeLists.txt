@@ -7,9 +7,6 @@ include_directories(
 )
 
 # Note that production binaries don't have underscores in their names
-mir_add_wrapped_executable(mirping ping.c)
-target_link_libraries(mirping mirclient)
-
 mir_add_wrapped_executable(mirout out.c)
 target_link_libraries(mirout mirclient m)
 
