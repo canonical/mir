@@ -16,14 +16,11 @@ set(
   default_configuration.cpp
   screencast_display_buffer.cpp
   compositing_screencast.cpp
-  timeout_frame_dropping_policy_factory.cpp
   stream.cpp
   multi_monitor_arbiter.cpp
   buffer_map.cpp
   dropping_schedule.cpp
   queueing_schedule.cpp
-  ${PROJECT_SOURCE_DIR}/src/include/server/mir/compositor/frame_dropping_policy.h
-  ${PROJECT_SOURCE_DIR}/src/include/server/mir/compositor/frame_dropping_policy_factory.h
 )
 
 ADD_LIBRARY(

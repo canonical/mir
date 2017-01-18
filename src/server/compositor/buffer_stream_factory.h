@@ -22,7 +22,6 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/scene/buffer_stream_factory.h"
-#include "mir/compositor/frame_dropping_policy_factory.h"
 
 #include <memory>
 
@@ -38,7 +37,7 @@ namespace compositor
 class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
-    BufferStreamFactory(std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory);
+    BufferStreamFactory();
 
     virtual ~BufferStreamFactory() {}
 
@@ -50,9 +49,6 @@ public:
         graphics::BufferProperties const&) override;
     virtual std::shared_ptr<frontend::ClientBuffers> create_buffer_map(
         std::shared_ptr<frontend::BufferSink> const& sink) override;
-
-private:
-    std::shared_ptr<FrameDroppingPolicyFactory> const policy_factory;
 };
 
 }

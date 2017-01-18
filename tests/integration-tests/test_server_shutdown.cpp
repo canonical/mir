@@ -31,7 +31,6 @@
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
-#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 
 #include "mir/test/doubles/stub_renderer.h"
 
@@ -119,12 +118,6 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
         {
             return display_buffer_compositor_factory(
                 [] { return std::make_shared<mtd::NullDisplayBufferCompositorFactory>(); });
-        }
-        // Don't drop frames, so the clients can block waiting for a buffer
-        std::shared_ptr<mc::FrameDroppingPolicyFactory> the_frame_dropping_policy_factory() override
-        {
-            return frame_dropping_policy_factory(
-                [] { return std::make_shared<mtd::StubFrameDroppingPolicyFactory>(); });
         }
     };
     server_configuration.reset(new ServerConfig{});

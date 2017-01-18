@@ -34,7 +34,6 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_input_sender.h"
 #include "mir/test/doubles/null_display_sync_group.h"
-#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 
@@ -126,7 +125,7 @@ struct SurfaceStackCompositor : public Test
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
         buffers(std::make_shared<mc::BufferMap>(std::make_shared<NiceMock<mtd::MockEventSink>>())),
-        stream(std::make_shared<mc::Stream>(policy_factory, buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        stream(std::make_shared<mc::Stream>(buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(
@@ -144,7 +143,6 @@ struct SurfaceStackCompositor : public Test
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
-    mtd::StubFrameDroppingPolicyFactory policy_factory;
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
     ms::SurfaceStack stack{null_scene_report};
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};

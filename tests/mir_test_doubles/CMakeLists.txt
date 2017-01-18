@@ -15,7 +15,6 @@ set(
   TEST_UTILS_SRCS
 
   mock_input_device.cpp
-  mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp

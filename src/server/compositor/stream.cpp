@@ -23,8 +23,6 @@
 #include "temporary_buffers.h"
 #include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
-#include "mir/compositor/frame_dropping_policy_factory.h"
-#include "mir/compositor/frame_dropping_policy.h"
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
@@ -38,31 +36,8 @@ enum class mc::Stream::ScheduleMode {
     Dropping
 };
 
-mc::Stream::DroppingCallback::DroppingCallback(Stream* stream) :
-    stream(stream)
-{
-}
-
-void mc::Stream::DroppingCallback::operator()()
-{
-    stream->drop_frame();
-}
-
-void mc::Stream::DroppingCallback::lock()
-{
-    guard_lock = std::unique_lock<std::mutex>{stream->mutex};
-}
-
-void mc::Stream::DroppingCallback::unlock()
-{
-    if (guard_lock.owns_lock())
-        guard_lock.unlock();
-}
-
 mc::Stream::Stream(
-    mc::FrameDroppingPolicyFactory const& policy_factory,
     std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
-    drop_policy(policy_factory.create_policy(std::make_unique<DroppingCallback>(this))),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(map),
@@ -98,8 +73,6 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
         schedule->schedule((*buffers)[buffer->id()]);
-        if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
-            drop_policy->swap_now_blocking();
     }
     observers.frame_posted(1, buffer->size());
 }
@@ -129,10 +102,6 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex);
-        drop_policy->swap_unblocked();
-    }
     return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
@@ -235,10 +204,4 @@ void mc::Stream::disassociate_buffer(mg::BufferID id)
 
 void mc::Stream::set_scale(float)
 {
-}
-
-void mc::Stream::drop_frame()
-{
-    if (schedule->num_scheduled() > 1)
-        buffers->send_buffer(schedule->next_buffer()->id());
 }
