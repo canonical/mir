@@ -193,8 +193,8 @@ struct DisabledCursorClient : CursorClient
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_wait_for(mir_window_configure_cursor(window, conf));
 #pragma GCC diagnostic pop
+        mir_window_configure_cursor(window, conf);
         mir_cursor_configuration_destroy(conf);
     }
 };
@@ -215,8 +215,8 @@ struct NamedCursorClient : CursorClient
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto conf = mir_cursor_configuration_from_name(cursor_name.c_str());
-        mir_wait_for(mir_window_configure_cursor(window, conf));
 #pragma GCC diagnostic pop
+        mir_window_configure_cursor(window, conf);
         mir_cursor_configuration_destroy(conf);
     }
 
@@ -386,10 +386,10 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             auto conf1 = mir_cursor_configuration_from_name(cursor_name.c_str());
             auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-
-            mir_wait_for(mir_window_configure_cursor(window, conf1));
-            mir_wait_for(mir_window_configure_cursor(window, conf2));
 #pragma GCC diagnostic pop
+
+            mir_window_configure_cursor(window, conf1);
+            mir_window_configure_cursor(window, conf2);
 
             mir_cursor_configuration_destroy(conf1);
             mir_cursor_configuration_destroy(conf2);
@@ -432,10 +432,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
             mir_buffer_stream_swap_buffers_sync(stream);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            mir_wait_for(mir_window_configure_cursor(window, conf));
-#pragma GCC diagnostic pop
+            mir_window_configure_cursor(window, conf);
             
             mir_cursor_configuration_destroy(conf);            
             
