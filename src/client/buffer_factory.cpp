@@ -82,7 +82,7 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobu
     }
     else
     {
-        printf("MAKIN BUF\n");
+        printf("MAKIN BUF %i\n", (*request_it)->usage);
         b = std::make_unique<Buffer>(
             (*request_it)->cb, (*request_it)->cb_context,
             buffer.buffer_id(),

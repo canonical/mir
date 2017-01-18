@@ -68,6 +68,7 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
+        printf("USAGA %i\n", usage);
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
         auto buf_params = request.add_buffer_requests();
@@ -299,6 +300,7 @@ mcl::BufferStream::BufferStream(
 
     try
     {
+        printf("USAGE !!!! %i sw %i hw %i\n", protobuf_bs->buffer_usage(), mir_buffer_usage_software, mir_buffer_usage_hardware);
         buffer_depository = std::make_unique<BufferDepository>(
             client_platform->create_buffer_factory(), factory,
             std::make_shared<Requests>(server, protobuf_bs->id().value(), client_platform),

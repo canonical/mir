@@ -22,6 +22,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
+#include "mir_toolkit/client_types.h"
 
 #include <vector>
 #include <memory>
@@ -50,9 +51,12 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
 //        return std::make_shared<StubBuffer>(
     }
 
-    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t)
+    std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t flags)
     {
-        graphics::BufferProperties properties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::software};
+        printf("ALLOC HARDWARE\n");
+        graphics::BufferProperties properties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
+        if (mir_buffer_usage_software == static_cast<MirBufferUsage>(flags))
+            properties.usage = graphics::BufferUsage::software; 
         return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
     }
 

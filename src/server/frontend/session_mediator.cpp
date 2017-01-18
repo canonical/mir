@@ -383,6 +383,7 @@ void mf::SessionMediator::create_surface(
     {
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         response->mutable_buffer_stream()->set_pixel_format(legacy_stream->pixel_format());
+        printf("LEGACY STREAM %i\n", request->buffer_usage());
         response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
         legacy_default_stream_map[surf_id] = buffer_stream_id;
     }
@@ -900,7 +901,8 @@ void mf::SessionMediator::create_buffer_stream(
     mg::BufferProperties props(stream_size,
         static_cast<MirPixelFormat>(request->pixel_format()),
         usage);
-    
+   
+    printf("IN SESS, mediator %i\n",(int) usage); 
     auto const buffer_stream_id = session->create_buffer_stream(props);
     auto stream = session->get_buffer_stream(buffer_stream_id);
     
