@@ -73,9 +73,17 @@ public:
         auto buf_params = request.add_buffer_requests();
         buf_params->set_width(size.width.as_int());
         buf_params->set_height(size.height.as_int());
-        buf_params->set_native_format(platform->native_format_for(format));
-        buf_params->set_flags(platform->native_flags_for(static_cast<MirBufferUsage>(usage), size));
 
+        if (usage == mir_buffer_usage_hardware)
+        {
+            buf_params->set_native_format(platform->native_format_for(format));
+            buf_params->set_flags(platform->native_flags_for(static_cast<MirBufferUsage>(usage), size));
+        }
+        else
+        {
+            buf_params->set_pixel_format(format);
+            buf_params->set_buffer_usage(usage);
+        }
         auto protobuf_void = std::make_shared<mp::Void>();
         server.allocate_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
