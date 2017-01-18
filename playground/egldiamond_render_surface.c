@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 
     mir_window_spec_set_event_handler(spec, resize_callback, render_surface);
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");

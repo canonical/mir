@@ -44,7 +44,7 @@ struct FocusSurface
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_event_handler(spec, FocusSurface::handle_event, this);
 
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
 
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));

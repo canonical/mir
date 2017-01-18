@@ -81,7 +81,7 @@ struct Client
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
         mir_window_spec_set_name(spec, name.c_str());
-        window = mir_window_create_sync(spec);
+        window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
         {
@@ -206,7 +206,6 @@ struct PointerConfinement : mtf::HeadlessInProcessServer
     std::string first{"first"};
     std::string second{"second"};
     mtf::ClientPositions positions;
-    mtf::TemporaryEnvironmentValue disable_batching{"MIR_CLIENT_INPUT_RATE", "0"};
 };
 
 TEST_F(PointerConfinement, test_we_hit_pointer_confined_boundary)

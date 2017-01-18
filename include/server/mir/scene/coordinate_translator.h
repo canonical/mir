@@ -57,6 +57,7 @@ public:
      */
     virtual geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface,
                                               int32_t x, int32_t y) = 0;
+    virtual bool translation_supported() const = 0;
 };
 
 

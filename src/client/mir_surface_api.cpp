@@ -557,16 +557,16 @@ void set_result(MirWindow* result, WindowSync* context)
 }
 }
 
-void mir_window_create(MirWindowSpec* requested_specification,
+void mir_create_window(MirWindowSpec* requested_specification,
                        mir_window_callback callback, void* context)
 {
     window_create_helper(requested_specification, callback, context);
 }
 
-MirWindow* mir_window_create_sync(MirWindowSpec* requested_specification)
+MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification)
 {
     WindowSync ws;
-    mir_window_create(requested_specification,
+    mir_create_window(requested_specification,
                       reinterpret_cast<mir_window_callback>(set_result),
                       &ws);
     return ws.wait_for_result();
@@ -826,12 +826,7 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirPersistentId* result = nullptr;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_window_request_persistent_id_helper(window,
-                                                         &assign_surface_id_result,
-                                                         &result));
-#pragma GCC diagnostic pop
+    mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 
@@ -913,7 +908,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_modal_dialog(MirConnection* conne
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
-    return mir_window_create_sync(requested_specification);
+    return mir_create_window_sync(requested_specification);
 }
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
@@ -1207,7 +1202,7 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface)
 
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
-    if ((interval < 0) || (interval > 1))
+    if (interval < 0)
         return nullptr;
 
     try
@@ -1294,12 +1289,7 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirPersistentId* result = nullptr;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_window_request_persistent_id_helper(surface,
-                                                  &assign_surface_id_result,
-                                                  &result));
-#pragma GCC diagnostic pop
+    mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 

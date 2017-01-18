@@ -37,9 +37,9 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_type,
     mir_surface_attrib_state,
     mir_surface_attrib_swapinterval, /**< \deprecated  Do not listen for events
-        reporting this attribute. Use the
-        "mir_*_get_swapinterval()" functions
-        instead if you wish query its value */
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
@@ -57,7 +57,10 @@ typedef enum MirWindowAttrib
     /* Do not specify values...code relies on 0...N ordering. */
     mir_window_attrib_type,
     mir_window_attrib_state,
-    mir_window_attrib_swapinterval,
+    mir_window_attrib_swapinterval, /**< \deprecated  Do not listen for events
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
     mir_window_attrib_focus,
     mir_window_attrib_dpi,
     mir_window_attrib_visibility,
@@ -89,8 +92,7 @@ typedef enum MirWindowType
     mir_window_type_dialog,
     mir_window_type_gloss,
     mir_window_type_freestyle,
-    mir_window_type_popover,      /**< \deprecated  Choose "menu" or "tip" */
-    mir_window_type_menu = mir_window_type_popover,
+    mir_window_type_menu,
     mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
     mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_window_type_tip,          /**< AKA "tooltip"                       */

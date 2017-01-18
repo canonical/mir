@@ -87,16 +87,10 @@ char const* mcl::PresentationChain::error_msg() const
 
 void mcl::PresentationChain::set_dropping_mode()
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(interval_config.set_swap_interval(0));
-#pragma GCC diagnostic pop
+    interval_config.set_swap_interval(0)->wait_for_all();
 }
 
 void mcl::PresentationChain::set_queueing_mode()
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(interval_config.set_swap_interval(1));
-#pragma GCC diagnostic push
+    interval_config.set_swap_interval(1)->wait_for_all();
 }

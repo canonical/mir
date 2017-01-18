@@ -67,6 +67,7 @@ MIRPLATFORM_0.25 {
     mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
     mir::graphics::GraphicBufferAllocator::operator*;
     mir::graphics::GraphicBufferAllocator::supported_pixel_formats*;
+    mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
     mir::graphics::module_for_device*;
     mir::graphics::operator*;
     mir::graphics::Platform::create_buffer_allocator*;

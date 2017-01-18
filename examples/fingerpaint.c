@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
-
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
@@ -409,10 +407,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // We do our own resampling now. We can keep up with raw input...
-    // TODO: Replace setenv with a proper Mir function (LP: #1439590)
-    setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
-
     conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
@@ -451,7 +445,7 @@ int main(int argc, char *argv[])
     mir_window_spec_set_name(spec, "Mir Fingerpaint");
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    window = mir_window_create_sync(spec);
+    window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     if (window != NULL)
