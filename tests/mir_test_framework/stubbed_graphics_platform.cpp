@@ -129,6 +129,27 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
             std::make_shared<mtf::NativeBuffer>(properties), properties,
             mir::geometry::Stride{ properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)});
     }
+
+    std::shared_ptr<mg::Buffer> alloc_software_buffer(geom::Size sz, MirPixelFormat pf) override
+    {
+        if (sz.width == geom::Width{0} ||
+            sz.height == geom::Height{0})
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Request for allocation of buffer with invalid size"));
+        }
+        return mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+    }
+    std::shared_ptr<mg::Buffer> alloc_buffer(geom::Size sz, uint32_t pf, uint32_t flags) override
+    {
+        if (sz.width == geom::Width{0} ||
+            sz.height == geom::Height{0})
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Request for allocation of buffer with invalid size"));
+        }
+        return mtd::StubBufferAllocator::alloc_buffer(sz, pf, flags);
+    }
 };
 
 class StubIpcOps : public mg::PlatformIpcOperations
