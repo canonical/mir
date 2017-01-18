@@ -243,8 +243,8 @@ mir::geometry::Rectangle extents_of(
 
 mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
-    return overridden_extents.is_set() ?
-           overridden_extents.value() :
+    return custom_logical_size.is_set() ?
+           mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left);
 }
 
@@ -300,14 +300,14 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         gamma(master.gamma),
         gamma_supported(master.gamma_supported),
         edid(*reinterpret_cast<std::vector<uint8_t const>*>(&master.edid)),
-        overridden_extents(master.overridden_extents)
+        custom_logical_size(master.custom_logical_size)
 {
 }
 
 mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
 {
-    return overridden_extents.is_set() ?
-           overridden_extents.value() :
+    return custom_logical_size.is_set() ?
+           mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left);
 }
 
