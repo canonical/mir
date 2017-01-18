@@ -84,6 +84,20 @@ struct ContentInfo
     mir::optional_value<mir::geometry::Size> size;
 };
 
+struct MirPersistentId
+{
+public:
+    MirPersistentId(std::string const& string_id);
+
+    std::string const& as_string();
+
+private:
+    std::string const string_id;
+};
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 struct MirSurfaceSpec
 {
     MirSurfaceSpec();
@@ -108,7 +122,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
-    mir::optional_value<MirSurface*> parent;
+    mir::optional_value<MirWindow*> parent;
     std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
@@ -132,7 +146,7 @@ struct MirSurfaceSpec
 
     struct EventHandler
     {
-        mir_surface_event_callback callback;
+        mir_window_event_callback callback;
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
@@ -145,17 +159,6 @@ struct MirSurfaceSpec
         mir::geometry::Point hotspot;
     };
     mir::optional_value<RenderSurfaceCursor> rendersurface_cursor;
-};
-
-struct MirPersistentId
-{
-public:
-    MirPersistentId(std::string const& string_id);
-
-    std::string const& as_string();
-
-private:
-    std::string const string_id;
 };
 
 struct MirSurface
@@ -202,7 +205,7 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(mir_surface_event_callback callback,
+    void set_event_handler(mir_window_event_callback callback,
                            void* context);
     void handle_event(MirEvent const& e);
 
@@ -214,7 +217,7 @@ public:
 
     static bool is_valid(MirSurface* query);
 
-    MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirWaitHandle* request_persistent_id(mir_window_id_callback callback, void* context);
     MirConnection* connection() const;
 
     std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
@@ -225,7 +228,7 @@ private:
     void configure_frame_clock();
     void on_configured();
     void on_cursor_configured();
-    void acquired_persistent_id(mir_surface_id_callback callback, void* context);
+    void acquired_persistent_id(mir_window_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
@@ -273,5 +276,7 @@ private:
     uint32_t output_id;
 
 };
+
+#pragma GCC diagnostic pop
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

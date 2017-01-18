@@ -347,7 +347,7 @@ MirConnection::~MirConnection() noexcept
 
 MirWaitHandle* MirConnection::create_surface(
     MirWindowSpec const& spec,
-    mir_surface_callback callback,
+    mir_window_callback callback,
     void * context)
 {
     auto response = std::make_shared<mp::Surface>();
@@ -480,7 +480,7 @@ struct MirConnection::SurfaceRelease
 {
     MirWindow* surface;
     MirWaitHandle* handle;
-    mir_surface_callback callback;
+    mir_window_callback callback;
     void* context;
 };
 
@@ -519,7 +519,7 @@ void MirConnection::released(SurfaceRelease data)
 
 MirWaitHandle* MirConnection::release_surface(
         MirWindow *surface,
-        mir_surface_callback callback,
+        mir_window_callback callback,
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;
