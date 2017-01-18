@@ -37,6 +37,26 @@
 
 namespace mcl = mir::client;
 
+namespace
+{
+MirWaitHandle* mir_configure_cursor_helper(MirWindow* window, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+
+    try
+    {
+        if (window)
+            result = window->configure_cursor(cursor);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+}
+
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
@@ -755,21 +775,9 @@ int mir_window_get_dpi(MirWindow* window)
     return dpi;
 }
 
-MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
+void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = nullptr;
-
-    try
-    {
-        if (window)
-            result = window->configure_cursor(cursor);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    mir_configure_cursor_helper(window, cursor);
 }
 
 MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
@@ -1258,7 +1266,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    return mir_window_configure_cursor(surface, cursor);
+    return mir_configure_cursor_helper(surface, cursor);
 }
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
