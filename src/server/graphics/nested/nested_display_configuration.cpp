@@ -133,8 +133,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.subpixel_arrangement,
         local_config.gamma,
         local_config.gamma_supported,
-        {}
-//        std::move(edid)
+        std::move(edid)
     };
 }
 
