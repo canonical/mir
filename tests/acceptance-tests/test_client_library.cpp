@@ -597,6 +597,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_window_release_sync(window);
 
+
     mir_window_spec_set_width(spec, 800);
     mir_window_spec_set_height(spec, 600);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
@@ -604,7 +605,6 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     window = mir_create_window_sync(spec);
     bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
-
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
@@ -619,6 +619,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
     mir_window_release_sync(window);
+
     mir_window_spec_release(spec);
     mir_connection_release(connection);
 }
