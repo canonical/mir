@@ -34,8 +34,8 @@ class MirBuffer;
 class ConnectionSurfaceMap : public SurfaceMap
 {
 public:
-    virtual std::shared_ptr<MirSurface> surface(frontend::SurfaceId) const override;
-    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface);
+    virtual std::shared_ptr<MirWindow> surface(frontend::SurfaceId) const override;
+    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirWindow> const& surface);
     void erase(frontend::SurfaceId surface_id);
 
     virtual std::shared_ptr<MirBufferStream> stream(frontend::BufferStreamId) const override;
@@ -55,7 +55,7 @@ public:
     std::shared_ptr<MirRenderSurface> render_surface(void* render_surface_key) const;
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirWindow>> surfaces;
     std::shared_timed_mutex mutable stream_guard;
     std::unordered_map<frontend::BufferStreamId, std::shared_ptr<MirBufferStream>> streams;
     std::unordered_map<frontend::BufferStreamId, std::shared_ptr<MirPresentationChain>> chains;

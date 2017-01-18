@@ -38,9 +38,9 @@ extern "C" {
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface /* __attribute__((deprecated("Use MirWindow instead"))) */;
+typedef struct MirSurface MirSurface __attribute__((deprecated("Use MirWindow instead")));
 typedef struct MirSurface MirWindow;
-typedef struct MirSurfaceSpec MirSurfaceSpec /* __attribute__((deprecated("Use MirWindowSpec instead"))) */;
+typedef struct MirSurfaceSpec MirSurfaceSpec __attribute__((deprecated("Use MirWindowSpec instead")));
 typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
@@ -78,16 +78,11 @@ typedef struct MirPlatformMessage MirPlatformMessage;
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 
 /**
- * Callback to be passed when calling:
- *  - mir_connection_create_surface
- *  - mir_surface_swap_buffers
- *  - mir_surface_release
- *   \param [in] surface             the surface being updated
+ * Callback to be passed when calling window functions :
+ *   \param [in] window             the window being updated
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
-/* __attribute__((deprecated("Use mir_window_callback instead"))) */;
 typedef void (*mir_window_callback)(MirWindow *window, void *client_context);
 
 /**
@@ -100,14 +95,11 @@ typedef void (*mir_window_callback)(MirWindow *window, void *client_context);
 typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client_context);
 
 /**
- * Callback for handling of surface events.
- *   \param [in] surface     The surface on which an event has occurred
+ * Callback for handling of window events.
+ *   \param [in] window     The window on which an event has occurred
  *   \param [in] event       The event to be handled
  *   \param [in,out] context The context provided by client
  */
-typedef void (*mir_surface_event_callback)(
-    MirSurface* surface, MirEvent const* event, void* context);
-/* __attribute__((deprecated("Use mir_window_event_callback instead"))) */
 typedef void (*mir_window_event_callback)(
     MirWindow* window, MirEvent const* event, void* context);
 
@@ -155,9 +147,6 @@ typedef void (*mir_client_fd_callback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
 
 
-typedef void (*mir_surface_id_callback)(
-    MirSurface* surface, MirPersistentId* id, void* context);
-/* __attribute__((deprecated("Use mir_window_id_callback instead"))) */
 typedef void (*mir_window_id_callback)(
     MirWindow* window, MirPersistentId* id, void* context);
 
@@ -173,8 +162,8 @@ typedef enum MirBufferUsage
 } MirBufferUsage;
 
 /**
- * MirSurfaceParameters is the structure of minimum required information that
- * you must provide to Mir in order to create a surface.
+ * MirWindowParameters is the structure of minimum required information that
+ * you must provide to Mir in order to create a window.
  */
 typedef struct MirSurfaceParameters
 {
@@ -192,8 +181,7 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters; /* __attribute__((deprecated("Use MirWindowParameters instead"))) */
-typedef MirSurfaceParameters MirWindowParameters;
+} MirSurfaceParameters __attribute__((deprecated("Use MirWindowParameters instead")));
 
 enum { mir_platform_package_max = 32 };
 
@@ -491,6 +479,24 @@ typedef void (*mir_error_callback)(
     MirConnection* connection,
     MirError const* error,
     void* context);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
+__attribute__((deprecated("Use mir_window_callback instead")));
+
+typedef void (*mir_surface_event_callback)(
+    MirSurface* surface, MirEvent const* event, void* context)
+__attribute__((deprecated("Use mir_window_event_callback instead")));
+
+typedef void (*mir_surface_id_callback)(
+    MirSurface* surface, MirPersistentId* id, void* context)
+__attribute__((deprecated("Use mir_window_id_callback instead")));
+
+typedef MirSurfaceParameters MirWindowParameters;
+
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }
