@@ -56,9 +56,13 @@ namespace
 class Requests : public mcl::ServerBufferRequests
 {
 public:
-    Requests(mclr::DisplayServer& server, int stream_id) :
+    Requests(
+        mclr::DisplayServer& server,
+        int stream_id,
+        std::shared_ptr<mcl::ClientPlatform> const& platform) :
         server(server),
-        stream_id(stream_id)
+        stream_id(stream_id),
+        platform(platform)
     {
     }
 
@@ -69,8 +73,8 @@ public:
         auto buf_params = request.add_buffer_requests();
         buf_params->set_width(size.width.as_int());
         buf_params->set_height(size.height.as_int());
-        buf_params->set_pixel_format(format);
-        buf_params->set_buffer_usage(usage);
+        buf_params->set_native_format(platform->native_format_for(format));
+        buf_params->set_flags(platform->native_flags_for(static_cast<MirBufferUsage>(usage), size));
 
         auto protobuf_void = std::make_shared<mp::Void>();
         server.allocate_buffers(&request, protobuf_void.get(),
@@ -106,6 +110,7 @@ public:
 private:
     mclr::DisplayServer& server;
     int stream_id;
+    std::shared_ptr<mcl::ClientPlatform> const platform;
 };
 
 mir::optional_value<int> parse_env_for_swap_interval()
@@ -296,7 +301,8 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<BufferDepository>(
             client_platform->create_buffer_factory(), factory,
-            std::make_shared<Requests>(server, protobuf_bs->id().value()), map,
+            std::make_shared<Requests>(server, protobuf_bs->id().value(), client_platform),
+            map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
             protobuf_bs->buffer_usage(), nbuffers);
 

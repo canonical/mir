@@ -23,6 +23,7 @@
 #include "mir/client_platform.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
 #include "mir_test_framework/stub_platform_extension.h"
 #include "mir_test_framework/stub_client_platform_options.h"
 
@@ -49,6 +50,9 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
+    uint32_t native_format_for(MirPixelFormat) const override;
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
+    
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;
 
@@ -56,6 +60,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirExtensionFavoriteFlavorV9 flavor_ext_9;
     MirExtensionAnimalNamesV1 animal_ext;
     MirExtensionFencedBuffersV1 fence_ext;
+    MirExtensionGbmBufferV1 buffer_ext;
 
     std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>> const fail_at;
 };

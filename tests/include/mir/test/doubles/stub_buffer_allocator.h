@@ -52,9 +52,8 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t)
     {
-        printf("ALLOC HW\n");
-        return std::make_shared<StubBuffer>(
-            graphics::BufferProperties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware});
+        graphics::BufferProperties properties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::software};
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats()

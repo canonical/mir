@@ -56,6 +56,15 @@ int get_fence(MirBuffer*)
     return -1;
 }
 
+void allocate_buffer(
+    MirConnection* connection, int width, int height, unsigned int pf, unsigned int flags, mir_buffer_callback cb, void* cb_context)
+{
+    printf("in fakey extension\n");
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, pf, flags, cb, cb_context);
+}
+
 void throw_exception_if_requested(
     std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
     mtf::FailurePoint here)
@@ -80,6 +89,7 @@ mtf::StubClientPlatform::StubClientPlatform(
     flavor_ext_9{favorite_flavor_9},
     animal_ext{animal_name},
     fence_ext{get_fence, nullptr, nullptr},
+    buffer_ext{allocate_buffer},
     fail_at{std::move(fail_at)}
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_client_platform);
@@ -168,6 +178,16 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
     return mir_pixel_format_argb_8888;
 }
 
+uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
+{
+    return 0u;
+}
+
+uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
+{
+    return 0u;
+}
+
 void* mtf::StubClientPlatform::request_interface(char const* name, int version)
 {
     if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 1))
@@ -178,6 +198,8 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
         return &animal_ext;
     if (!strcmp(name, "mir_extension_fenced_buffers") && (version == 1))
         return &fence_ext;
+    if (!strcmp(name, "mir_extension_gbm_buffer") && (version == 1))
+        return &buffer_ext;
     return nullptr;
 }
 

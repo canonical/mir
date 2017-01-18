@@ -84,6 +84,7 @@ uses_android_input(mir-protected-test-framework)
 
 target_link_libraries(mir-test-framework-static
 
+  mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

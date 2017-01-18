@@ -54,6 +54,8 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     void set_gbm_device(gbm_device*);
+    uint32_t native_format_for(MirPixelFormat) const;
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const;
 
 private:
     ClientContext* const context;

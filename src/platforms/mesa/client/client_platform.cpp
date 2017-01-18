@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <cstring>
 
+namespace mgm=mir::graphics::mesa;
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
@@ -276,4 +277,17 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &gbm_buffer;
 
     return nullptr;
+}
+
+uint32_t mclm::ClientPlatform::native_format_for(MirPixelFormat format) const
+{
+    return mgm::mir_format_to_gbm_format(format);
+}
+
+uint32_t mclm::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size size) const
+{
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
+    if (size.width.as_uint32_t() >= 800 && size.height.as_uint32_t() >= 600)
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    return bo_flags;
 }

@@ -599,6 +599,7 @@ public:
         cv.wait(lk, [&]{ return handle; });
         if (!mir_buffer_is_valid(handle))
         {
+            printf("BAD\n");
             mir_buffer_release(handle);
             BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
         }
