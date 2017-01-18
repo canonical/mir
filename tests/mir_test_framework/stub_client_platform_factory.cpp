@@ -178,16 +178,6 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
     return mir_pixel_format_argb_8888;
 }
 
-uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
-{
-    return 0u;
-}
-
-uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
-{
-    return 0u;
-}
-
 void* mtf::StubClientPlatform::request_interface(char const* name, int version)
 {
     if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 1))
