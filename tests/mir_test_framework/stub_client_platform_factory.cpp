@@ -59,7 +59,6 @@ int get_fence(MirBuffer*)
 void allocate_buffer(
     MirConnection* connection, int width, int height, unsigned int pf, unsigned int flags, mir_buffer_callback cb, void* cb_context)
 {
-    printf("in fakey extension\n");
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(
         mir::geometry::Size{width, height}, pf, flags, cb, cb_context);
@@ -122,14 +121,7 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
         {
             mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::software;
             if (package->data[0] == static_cast<int>(mir::graphics::BufferUsage::hardware))
-            {
-                printf("CREATING HARD BUFFER HERE\n");
                 usage = mir::graphics::BufferUsage::hardware;
-            }
-            else
-            {
-                printf("CREATEING NO BUF\n");
-            }
             mir::graphics::BufferProperties properties {size, pf, usage }; 
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
                 std::make_shared<mtf::NativeBuffer>(properties));
@@ -166,17 +158,14 @@ MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::N
     native_buffer.fd[0] = buf->fd;
     native_buffer.width = buf->properties.size.width.as_int();
     native_buffer.height = buf->properties.size.height.as_int();
-    printf("COVERT %i %i use %i\n", native_buffer.width, native_buffer.height, (int)buf->properties.usage);
     //bit of mesa specific leakage into the client api here.
     if (native_buffer.width >= 800 && native_buffer.height >= 600 &&
         buf->properties.usage == mir::graphics::BufferUsage::hardware)
     {
-        printf("CAN SCAN\n");
         native_buffer.flags |= mir_buffer_flag_can_scanout;
     }
     else
     {
-        printf("CANNOT SCAN\n");
         native_buffer.flags &= ~mir_buffer_flag_can_scanout;
     }
 

@@ -75,11 +75,6 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if (properties.usage == mg::BufferUsage::software)
-            printf("HAD TO FALLBACK to sw\n");
-        else
-            printf("HAD TO FALLBACK to hw\n");
-
         return guest_allocator->alloc_buffer(properties);
     }
 

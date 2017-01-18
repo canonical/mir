@@ -39,21 +39,17 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& properties)
     {
-        printf("ALLOC LEGACY\n");
         return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), properties.size);
     }
 
     std::shared_ptr<graphics::Buffer> alloc_software_buffer(geometry::Size sz, MirPixelFormat pf)
     {
-        printf("ALLOC SW\n");
         graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
         return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
-//        return std::make_shared<StubBuffer>(
     }
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t flags)
     {
-        printf("ALLOC HARDWARE\n");
         graphics::BufferProperties properties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
         if (mir_buffer_usage_software == static_cast<MirBufferUsage>(flags))
             properties.usage = graphics::BufferUsage::software; 

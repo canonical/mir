@@ -50,7 +50,6 @@ void mcl::BufferFactory::expect_buffer(
     mir_buffer_callback cb,
     void* cb_context)
 {
-    printf("req %i x %i\n", size.width.as_int(), size.height.as_int());
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
         std::make_unique<AllocationRequest>(factory, connection, size, format, usage, cb, cb_context));
@@ -59,7 +58,6 @@ void mcl::BufferFactory::expect_buffer(
 std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    printf("BACK %i x %i\n", buffer.width(), buffer.height());
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
         {
@@ -67,22 +65,17 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobu
         });
 
     if (request_it == allocation_requests.end())
-    {
-        printf("COULD NOT FINED\n");
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
-    }
 
     std::unique_ptr<mcl::MirBuffer> b;
     if (buffer.has_error())
     {
-        printf("BUFFER HAS ERROR %s\n", buffer.error().c_str());
         b = std::make_unique<ErrorBuffer>(
             buffer.error(), error_id--, 
             (*request_it)->cb, (*request_it)->cb_context, (*request_it)->connection);
     }
     else
     {
-        printf("MAKIN BUF %i\n", (*request_it)->usage);
         b = std::make_unique<Buffer>(
             (*request_it)->cb, (*request_it)->cb_context,
             buffer.buffer_id(),
