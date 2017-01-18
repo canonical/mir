@@ -246,55 +246,6 @@ TEST_F(Stream, reports_format)
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }
 
-TEST_F(Stream, triggering_policy_gives_a_buffer_back)
-{
-    for (auto& buffer : buffers)
-        stream.submit_buffer(buffer);
-    stream.lock_compositor_buffer(this);
-
-    Mock::VerifyAndClearExpectations(&mock_sink);
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_));
-    //framedrop_factory.trigger_policies();
-    Mock::VerifyAndClearExpectations(&mock_sink);
-}
-
-TEST_F(Stream, doesnt_drop_the_only_frame_when_arbiter_has_none)
-{
-    stream.submit_buffer(buffers[0]);
-    Mock::VerifyAndClearExpectations(&mock_sink);
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_))
-        .Times(0);
-    //framedrop_factory.trigger_policies();
-    Mock::VerifyAndClearExpectations(&mock_sink);
-}
-
-TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_longer_queue)
-{
-    stream.submit_buffer(buffers[0]);
-    stream.lock_compositor_buffer(this);
-    stream.submit_buffer(buffers[1]);
-    stream.submit_buffer(buffers[2]);
-
-    Mock::VerifyAndClearExpectations(&mock_sink);
-    EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
-        .Times(1);
-    //framedrop_factory.trigger_policies();
-    Mock::VerifyAndClearExpectations(&mock_sink);
-}
-
-TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_2_buffer_queue)
-{
-    stream.submit_buffer(buffers[0]);
-    stream.lock_compositor_buffer(this);
-    stream.submit_buffer(buffers[1]);
-
-    Mock::VerifyAndClearExpectations(&mock_sink);
-    EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
-        .Times(0);
-    //framedrop_factory.trigger_policies();
-    Mock::VerifyAndClearExpectations(&mock_sink);
-}
-
 TEST_F(Stream, returns_buffers_to_client_when_told_to_bring_queue_up_to_date)
 {
     stream.submit_buffer(buffers[0]);
