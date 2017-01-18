@@ -30,7 +30,6 @@ namespace graphics
 {
 
 struct BufferProperties;
-struct BufferAttribute;
 
 /**
  * Interface to graphic buffer allocation.
