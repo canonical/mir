@@ -165,6 +165,7 @@ struct UserDisplayConfigurationOutput
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
     std::vector<uint8_t const> const& edid;
+    mir::optional_value<geometry::Rectangle>& overridden_extents;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
