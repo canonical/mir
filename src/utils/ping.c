@@ -104,11 +104,6 @@ int main(int argc, char *argv[])
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    static const MirOrientationMode types[2] =
-    {
-        mir_orientation_mode_portrait_any,
-        mir_orientation_mode_landscape_any
-    };
     int t = 1;
 
     printf("Connected to server: %s\n", server == NULL ? "<default>" : server);
@@ -117,16 +112,15 @@ int main(int argc, char *argv[])
         long long start, duration;
 
         start = now();
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_preferred_orientation(window, types[t]));
-#pragma GCC diagnostic pop
+        MirConnection* new_conn = mir_connect_sync(server, __FILE__);
         duration = now() - start;
         t ^= 1;
 
         printf("Round-trip time: %ld.%06ld milliseconds\n",
                (long)(duration / 1000000),
                (long)(duration % 1000000));
+
+        mir_connection_release(new_conn);
 
         if (interval) sleep(interval);
     }
