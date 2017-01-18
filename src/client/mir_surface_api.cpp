@@ -343,7 +343,7 @@ catch (std::exception const& ex)
 }
 
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                       mir_window_event_callback callback,
+                                       MirWindowEventCallback callback,
                                        void* context)
 try
 {
@@ -473,7 +473,7 @@ catch (std::exception const& ex)
 namespace
 {
 static MirWaitHandle* window_create_helper(MirWindowSpec* requested_specification,
-                                           mir_window_callback callback, void* context)
+                                           MirWindowCallback callback, void* context)
 {
     mir::require(requested_specification != nullptr);
     mir::require(requested_specification->type.is_set());
@@ -493,7 +493,7 @@ static MirWaitHandle* window_create_helper(MirWindowSpec* requested_specificatio
 
 static MirWaitHandle* window_release_helper(
     MirWindow* window,
-    mir_window_callback callback, void* context)
+    MirWindowCallback callback, void* context)
 {
     mir::require(window);
 
@@ -512,8 +512,7 @@ static MirWaitHandle* window_release_helper(
 }
 
 static MirWaitHandle* mir_window_request_persistent_id_helper(
-    MirWindow* window,
-    mir_window_id_callback callback, void* context)
+    MirWindow* window, MirWindowIdCallback callback, void* context)
 {
     mir::require(mir_window_is_valid(window));
 
@@ -558,7 +557,7 @@ void set_result(MirWindow* result, WindowSync* context)
 }
 
 void mir_create_window(MirWindowSpec* requested_specification,
-                       mir_window_callback callback, void* context)
+                       MirWindowCallback callback, void* context)
 {
     window_create_helper(requested_specification, callback, context);
 }
@@ -567,14 +566,14 @@ MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification)
 {
     WindowSync ws;
     mir_create_window(requested_specification,
-                      reinterpret_cast<mir_window_callback>(set_result),
+                      reinterpret_cast<MirWindowCallback>(set_result),
                       &ws);
     return ws.wait_for_result();
 }
 
 void mir_window_release(
     MirWindow* window,
-    mir_window_callback callback,
+    MirWindowCallback callback,
     void *context)
 {
     window_release_helper(window, callback, context);
@@ -584,7 +583,7 @@ void mir_window_release_sync(MirWindow* window)
 {
     WindowSync ws;
     mir_window_release(window,
-                       reinterpret_cast<mir_window_callback>(set_result),
+                       reinterpret_cast<MirWindowCallback>(set_result),
                        &ws);
     ws.wait_for_result();
 }
@@ -595,7 +594,7 @@ bool mir_window_is_valid(MirWindow* window)
 }
 
 void mir_window_set_event_handler(MirWindow* window,
-                                  mir_window_event_callback callback,
+                                  MirWindowEventCallback callback,
                                   void* context)
 {
     window->set_event_handler(callback, context);
@@ -807,7 +806,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
     return mode;
 }
 
-void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
+void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
 {
     mir_window_request_persistent_id_helper(window, callback, context);
 }
@@ -1282,7 +1281,7 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
     return mir_window_get_buffer_stream(surface);
 }
 
-MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
 {
     return mir_window_request_persistent_id_helper(surface, callback, context);
 }
