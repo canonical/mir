@@ -41,7 +41,7 @@ size_t mir_input_config_device_count(MirInputConfig const* config);
 /**
  * Retrieve the input device at given \a index.
  *
- * The pointer returned stays valid until mir_input_config_destroy
+ * The pointer returned stays valid until mir_input_config_release
  * is called with \a config.
  *
  * \param [in] config   The input configuration snapshot
@@ -55,7 +55,7 @@ MirInputDevice const* mir_input_config_get_device(
 /**
  * Retrieve the input device by \a id.
  *
- * The MirInputDevice returned stays valid until mir_input_config_destroy
+ * The MirInputDevice returned stays valid until mir_input_config_release
  * is called with \a config. If no device with the given \a id is found
  * NULL will be returned.
  *
@@ -71,7 +71,7 @@ MirInputDevice const* mir_input_config_get_device_by_id(
 /**
  * Retrieve the input device at given \a index.
  *
- * The pointer returned stays valid until mir_input_config_destroy
+ * The pointer returned stays valid until mir_input_config_release
  * is called with \a config.
  *
  * \param [in] config   The input configuration snapshot
@@ -85,7 +85,7 @@ MirInputDevice* mir_input_config_get_mutable_device(
 /**
  * Retrieve the input device by \a id.
  *
- * The MirInputDevice returned stays valid until mir_input_config_destroy
+ * The MirInputDevice returned stays valid until mir_input_config_release
  * is called with \a config. If no device with the given \a id is found
  * NULL will be returned.
  *

@@ -95,7 +95,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_release);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
