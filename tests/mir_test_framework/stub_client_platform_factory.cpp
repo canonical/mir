@@ -181,6 +181,16 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
     return nullptr;
 }
 
+uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
+{
+    return 0u;
+}
+
+uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
+{
+    return 0u;
+}
+
 std::shared_ptr<mcl::ClientPlatform>
 mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
