@@ -484,15 +484,15 @@ typedef void (*mir_error_callback)(
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
-__attribute__((deprecated("Use mir_window_callback instead")));
+__attribute__((deprecated("Use MirWindowCallback instead")));
 
 typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context)
-__attribute__((deprecated("Use mir_window_event_callback instead")));
+__attribute__((deprecated("Use MirWindowEventCallback instead")));
 
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
-__attribute__((deprecated("Use mir_window_id_callback instead")));
+__attribute__((deprecated("Use MirWindowIdCallback instead")));
 
 typedef MirSurfaceParameters MirWindowParameters;
 

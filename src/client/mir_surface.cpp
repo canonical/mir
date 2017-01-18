@@ -249,7 +249,7 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
-void MirSurface::acquired_persistent_id(mir_window_id_callback callback, void* context)
+void MirSurface::acquired_persistent_id(MirWindowIdCallback callback, void* context)
 {
     if (!persistent_id->has_error())
     {
@@ -262,7 +262,7 @@ void MirSurface::acquired_persistent_id(mir_window_id_callback callback, void* c
     persistent_id_wait_handle.result_received();
 }
 
-MirWaitHandle* MirSurface::request_persistent_id(mir_window_id_callback callback, void* context)
+MirWaitHandle* MirSurface::request_persistent_id(MirWindowIdCallback callback, void* context)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
 
@@ -442,7 +442,7 @@ int MirSurface::attrib(MirWindowAttrib at) const
     return attrib_cache[at];
 }
 
-void MirSurface::set_event_handler(mir_window_event_callback callback,
+void MirSurface::set_event_handler(MirWindowEventCallback callback,
                                    void* context)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
