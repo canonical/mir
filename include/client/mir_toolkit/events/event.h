@@ -55,7 +55,7 @@ typedef enum
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent
-/*__attribute__ ((deprecated("use MirWindowEvent instead")))*/;
+__attribute__ ((deprecated("use MirWindowEvent instead")));
 typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;

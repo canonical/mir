@@ -101,7 +101,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib attribute, int value)
 {
-    auto e = new_event<MirSurfaceEvent>();
+    auto e = new_event<MirWindowEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_attrib(attribute);

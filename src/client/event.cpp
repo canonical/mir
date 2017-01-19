@@ -112,7 +112,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     return ev->to_input();
 })
 
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+MirWindowEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return mir_event_get_window_event(ev);
 })
@@ -200,7 +200,7 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) MIR_
 })
 #pragma GCC diagnostic pop
 
-int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+int mir_surface_event_get_attribute_value(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return mir_window_event_get_attribute_value(ev);
 })
