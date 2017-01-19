@@ -303,7 +303,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
@@ -331,7 +331,7 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
@@ -364,7 +364,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
     client_1.run();
@@ -374,7 +374,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_2.run();
@@ -407,7 +407,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
     client_1.run();
@@ -417,7 +417,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_2.run();
@@ -467,7 +467,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
         .Times(1)
-        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillOnce(mt::WakeUp(&wait));
 
     InSequence seq;
     EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1)));
@@ -528,7 +528,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
     mt::Signal wait;
 
     EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(InvokeWithoutArgs([&] { wait.raise(); }));
+        .WillRepeatedly(mt::WakeUp(&wait));
 
     client.run();
 
@@ -584,7 +584,7 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 
         EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
             .Times(1)
-            .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+            .WillOnce(mt::WakeUp(&wait));
 
         client.run();
 
