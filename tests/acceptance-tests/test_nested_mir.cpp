@@ -75,11 +75,6 @@ using namespace std::chrono_literals;
 
 namespace
 {
-ACTION_P(RaiseSignal, signal)
-{
-    signal->raise();
-}
-
 struct MockSessionMediatorReport : mf::SessionMediatorObserver
 {
     MockSessionMediatorReport()
@@ -748,7 +743,7 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_))
         .Times(1)
-        .WillOnce(RaiseSignal(&signal));
+        .WillOnce(mt::WakeUp(&signal));
 
     NestedMirRunner{new_connection()};
 
