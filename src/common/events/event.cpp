@@ -193,14 +193,14 @@ MirKeymapEvent const* MirEvent::to_keymap() const
     return static_cast<MirKeymapEvent const*>(this);
 }
 
-MirSurfaceOutputEvent* MirEvent::to_surface_output()
+MirWindowOutputEvent* MirEvent::to_surface_output()
 {
-    return static_cast<MirSurfaceOutputEvent*>(this);
+    return static_cast<MirWindowOutputEvent*>(this);
 }
 
-MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
+MirWindowOutputEvent const* MirEvent::to_surface_output() const
 {
-    return static_cast<MirSurfaceOutputEvent const*>(this);
+    return static_cast<MirWindowOutputEvent const*>(this);
 }
 
 MirInputDeviceStateEvent* MirEvent::to_input_device_state()

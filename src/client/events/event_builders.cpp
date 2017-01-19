@@ -127,7 +127,7 @@ mir::EventUPtr mev::make_event(
     MirFormFactor form_factor,
     uint32_t output_id)
 {
-    auto e = new_event<MirSurfaceOutputEvent>();
+    auto e = new_event<MirWindowOutputEvent>();
 
     e->set_surface_id(surface_id.as_value());
     e->set_dpi(dpi);

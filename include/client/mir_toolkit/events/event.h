@@ -67,7 +67,7 @@ typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
-/* __attribute__ ((deprecated("use MirWindowOutputEvent instead")))*/;
+__attribute__ ((deprecated("use MirWindowOutputEvent instead")));
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent

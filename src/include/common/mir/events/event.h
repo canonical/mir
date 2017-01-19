@@ -52,14 +52,14 @@ struct MirEvent
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;
 
-    MirCloseWindowEvent* to_close_surface(); // TODO rename {arg}
-    MirCloseWindowEvent const* to_close_surface() const;
+    MirCloseWindowEvent* to_close_surface(); // TODO rename (breaks mircommon ABI)
+    MirCloseWindowEvent const* to_close_surface() const;  // TODO rename (breaks mircommon ABI)
 
     MirKeymapEvent* to_keymap();
     MirKeymapEvent const* to_keymap() const;
 
-    MirSurfaceOutputEvent* to_surface_output();
-    MirSurfaceOutputEvent const* to_surface_output() const;
+    MirWindowOutputEvent* to_surface_output();  // TODO rename (breaks mircommon ABI)
+    MirWindowOutputEvent const* to_surface_output() const;  // TODO rename (breaks mircommon ABI)
 
     MirInputDeviceStateEvent* to_input_device_state();
     MirInputDeviceStateEvent const* to_input_device_state() const;
