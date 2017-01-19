@@ -75,6 +75,11 @@ using namespace std::chrono_literals;
 
 namespace
 {
+ACTION_P(RaiseSignal, signal)
+{
+    signal->raise();
+}
+
 struct MockSessionMediatorReport : mf::SessionMediatorObserver
 {
     MockSessionMediatorReport()
@@ -738,11 +743,16 @@ struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, Clie
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
+    mt::Signal signal;
     InSequence seq;
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
-    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_))
+        .Times(1)
+        .WillOnce(RaiseSignal(&signal));
 
     NestedMirRunner{new_connection()};
+
+    EXPECT_TRUE(signal.wait_for(30s));
 }
 
 TEST_F(NestedServerWithTwoDisplays, sees_expected_outputs)
