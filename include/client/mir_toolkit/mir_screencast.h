@@ -142,8 +142,8 @@ char const *mir_screencast_get_error_message(MirScreencast *screencast);
  */
 MirScreencast* mir_connection_create_screencast_sync(
     MirConnection* connection,
-    MirScreencastParameters* parameters);
-/* __attribute__ ((deprecated("use mir_screencast_create_sync instead"))); */
+    MirScreencastParameters* parameters)
+__attribute__ ((deprecated("use mir_screencast_create_sync instead")));
 
 /**
  * Release the specified screencast.

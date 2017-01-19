@@ -20,7 +20,7 @@
 #define MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 
 #include "session_event_sink.h"
-#include "session_event_handler_register.h"
+#include "mir/scene/session_event_handler_register.h"
 
 #include <vector>
 #include <mutex>

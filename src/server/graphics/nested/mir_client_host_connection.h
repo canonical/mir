@@ -60,7 +60,6 @@ public:
                             std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
     ~MirClientHostConnection();
 
-    std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
     std::shared_ptr<MirDisplayConfig> create_display_config() override;
     std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;

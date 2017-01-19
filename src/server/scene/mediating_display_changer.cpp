@@ -20,9 +20,9 @@
 #include <boost/throw_exception.hpp>
 #include <unordered_set>
 #include "mediating_display_changer.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
-#include "session_event_handler_register.h"
+#include "mir/scene/session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/rectangles.h"
