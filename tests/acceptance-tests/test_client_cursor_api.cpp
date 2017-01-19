@@ -30,6 +30,8 @@
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_surface_observer.h"
+#include "mir/test/doubles/observant_shell.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/spin_wait.h"
@@ -40,11 +42,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace msc = mir::scene;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
@@ -54,6 +58,8 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+
+std::chrono::seconds const timeout{5};
 
 struct MockCursor : public mg::Cursor
 {
@@ -227,7 +233,10 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 {
     // mtf::add_fake_input_device needs this library to be loaded each test, for the tests
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
-    MockCursor cursor;
+    ::testing::NiceMock<MockCursor> cursor;
+    std::shared_ptr<::testing::NiceMock<mtd::MockSurfaceObserver>> mock_surface_observer =
+        std::make_shared<::testing::NiceMock<mtd::MockSurfaceObserver>>();
+
     mtf::SurfaceGeometries client_geometries;
 
     TestClientCursorAPI()
@@ -247,6 +256,11 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
                     client_geometries,
                     server.the_shell_display_layout());
             });
+
+        server.wrap_shell([&, this](auto const& wrapped)
+        {
+            return std::make_shared<mtd::ObservantShell>(wrapped, mock_surface_observer);
+        });
     }
 
     void expect_client_shutdown()
@@ -285,8 +299,16 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
@@ -305,8 +327,16 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     InSequence seq;
     EXPECT_CALL(cursor, hide());
@@ -330,10 +360,26 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     client_geometries[client_name_2] =
         geom::Rectangle{{2, 0}, {1, 1}};
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_1.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
+    wait.reset();
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
+    NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_2.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     InSequence seq;
     EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1)));
@@ -357,10 +403,26 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
     client_geometries[client_name_2] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_1.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
+    wait.reset();
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
+    NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
     client_2.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     EXPECT_CALL(cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
@@ -401,12 +463,20 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
     ChangingCursorClient client{new_connection(), client_name_1, client_cursor_1};
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .Times(1)
+        .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
     InSequence seq;
     EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1)));
     EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     client.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     expectations_satisfied.wait_for(std::chrono::seconds{5});
 
@@ -455,7 +525,14 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .WillRepeatedly(InvokeWithoutArgs([&] { wait.raise(); }));
+
     client.run();
+
+    EXPECT_TRUE(wait.wait_for(timeout));
 
     expectations_satisfied.wait_for(std::chrono::seconds{500});
 
@@ -502,7 +579,16 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
 
     { // Ensure we finalize the client prior stopping the nested server
         FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
+
+        mt::Signal wait;
+
+        EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+            .Times(1)
+            .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
+
         client.run();
+
+        EXPECT_TRUE(wait.wait_for(timeout));
 
         expectations_satisfied.wait_for(std::chrono::seconds{60});
         expect_client_shutdown();
