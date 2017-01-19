@@ -314,13 +314,6 @@ mgn::MirClientHostConnection::~MirClientHostConnection()
     mir_connection_release(mir_connection);
 }
 
-std::vector<int> mgn::MirClientHostConnection::platform_fd_items()
-{
-    MirPlatformPackage pkg;
-    mir_connection_get_platform(mir_connection, &pkg);
-    return std::vector<int>(pkg.fd, pkg.fd + pkg.fd_items);
-}
-
 EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 {
     return reinterpret_cast<EGLNativeDisplayType>(

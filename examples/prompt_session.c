@@ -117,17 +117,6 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
     assert(mir_connection_is_valid(mcd->connection));
     assert(strcmp(mir_connection_get_error_message(mcd->connection), "") == 0);
     printf("%s: Connected\n", name);
-
-    // We can query information about the platform we're running on
-    {
-        MirPlatformPackage platform_package;
-        platform_package.data_items = -1;
-        platform_package.fd_items = -1;
-
-        mir_connection_get_platform(mcd->connection, &platform_package);
-        assert(0 <= platform_package.data_items);
-        assert(0 <= platform_package.fd_items);
-    }
 }
 
 void stop_session(MirDemoState* mcd, const char* name)

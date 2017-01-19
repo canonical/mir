@@ -84,17 +84,6 @@ int demo_client(const char* server, int buffer_swap_count)
         return 1;
     }
 
-    // We can query information about the platform we're running on
-    {
-        MirPlatformPackage platform_package;
-        platform_package.data_items = -1;
-        platform_package.fd_items = -1;
-
-        mir_connection_get_platform(mcd.connection, &platform_package);
-        assert(0 <= platform_package.data_items);
-        assert(0 <= platform_package.fd_items);
-    }
-
     {
         MirModuleProperties properties = { NULL, -1, -1, -1, NULL };
 
