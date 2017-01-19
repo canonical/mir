@@ -64,7 +64,7 @@ struct MirEvent
     MirInputDeviceStateEvent* to_input_device_state();
     MirInputDeviceStateEvent const* to_input_device_state() const;
 
-    MirSurfacePlacementEvent const* to_surface_placement() const;
+    MirWindowPlacementEvent const* to_surface_placement() const;    // TODO rename (breaks mircommon ABI)
 
     static mir::EventUPtr deserialize(std::string const& bytes);
     static std::string serialize(MirEvent const* event);

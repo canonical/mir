@@ -414,12 +414,12 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
     return ev->device_pointer_buttons(index);
 })
 
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
+MirWindowPlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return mir_event_get_window_placement_event(event);
 })
 
-MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
+MirRectangle mir_surface_placement_get_relative_position(MirWindowPlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return mir_window_placement_get_relative_position(event);
 })

@@ -71,7 +71,7 @@ __attribute__ ((deprecated("use MirWindowOutputEvent instead")));
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent
-/*__attribute__ ((deprecated("use MirWindowPlacementEvent instead")))*/;
+__attribute__ ((deprecated("use MirWindowPlacementEvent instead")));
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;

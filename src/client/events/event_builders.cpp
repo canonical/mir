@@ -141,7 +141,7 @@ mir::EventUPtr mev::make_event(
 
 mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement)
 {
-    auto e = new_event<MirSurfacePlacementEvent>();
+    auto e = new_event<MirWindowPlacementEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_placement({
