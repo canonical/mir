@@ -16,28 +16,36 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
+#ifndef MIR_FRONTEND_INPUT_CONFIGURATION_CHANGER_H_
+#define MIR_FRONTEND_INPUT_CONFIGURATION_CHANGER_H_
 
-#include "mir/input/input_device_hub.h"
+#include <memory>
 
+class MirInputConfig;
 namespace mir
 {
-namespace test
+namespace frontend
 {
-namespace doubles
-{
+class Session;
 
-struct MockInputDeviceHub : input::InputDeviceHub
+class InputConfigurationChanger
 {
-    MOCK_METHOD1(add_observer, void(std::shared_ptr<input::InputDeviceObserver> const&));
-    MOCK_METHOD1(remove_observer, void(std::weak_ptr<input::InputDeviceObserver> const&));
-    MOCK_METHOD1(for_each_input_device, void(std::function<void(input::Device const&)> const&));
-    MOCK_METHOD1(for_each_mutable_input_device, void(std::function<void(input::Device&)> const&));
+public:
+    InputConfigurationChanger() = default;
+    virtual ~InputConfigurationChanger() = default;
+
+    virtual MirInputConfig base_configuration() = 0;
+    virtual void configure(std::shared_ptr<Session> const&, MirInputConfig &&) = 0;
+    virtual void set_base_configuration(MirInputConfig &&) = 0;
+
+protected:
+    InputConfigurationChanger(InputConfigurationChanger const& cp) = delete;
+    InputConfigurationChanger& operator=(InputConfigurationChanger const& cp) = delete;
+
 };
 
 }
 }
-}
 
 #endif
+

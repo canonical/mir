@@ -21,6 +21,9 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -38,6 +41,27 @@
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
+
+namespace
+{
+MirInputDevice from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
+{
+    MirInputDevice conf(device->id(), device->capabilities(), device->name(), device->unique_id());
+
+    auto ptr_conf = device->pointer_configuration();
+    auto tpd_conf = device->touchpad_configuration();
+    auto kbd_conf = device->keyboard_configuration();
+
+    if (ptr_conf.is_set())
+        conf.set_pointer_config(ptr_conf.value());
+    if (tpd_conf.is_set())
+        conf.set_touchpad_config(tpd_conf.value());
+    if (kbd_conf.is_set())
+        conf.set_keyboard_config(kbd_conf.value());
+
+    return conf;
+}
+}
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mf::EventSink> const& sink,
@@ -240,7 +264,14 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
 void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
-    for (auto const& item : handles)
+    for (auto const item : handles)
+        callback(*item);
+}
+
+void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
+{
+    std::unique_lock<std::mutex> lock(observer_guard);
+    for (auto item : handles)
         callback(*item);
 }
 
@@ -260,7 +291,8 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
-    sink->handle_input_device_change(handles);
+    config.add_device_config(from_handle(handle));
+    sink->handle_input_config_change(config);
 
     for (auto const& observer : observers)
     {
@@ -297,7 +329,8 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         return;
 
     handles.erase(handle_it, end(handles));
-    sink->handle_input_device_change(handles);
+    config.remove_device_by_id(id);
+    sink->handle_input_config_change(config);
 
     if (ready && 0 == handles.size())
     {
