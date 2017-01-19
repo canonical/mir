@@ -44,6 +44,8 @@ namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Assert our MirSurfaceType is 1to1 to MirWindowType
 static_assert(
     static_cast<int32_t>(mir_surface_type_normal) ==
@@ -149,6 +151,7 @@ static_assert(
     "mir_surface_visibility_exposed != mir_window_visibility_exposed");
 static_assert(sizeof(MirSurfaceVisibility) == sizeof(MirWindowVisibility),
     "sizeof(MirSurfaceVisibility) != sizeof(MirWindowVisibility)");
+#pragma GCC diagnostic pop
 
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
