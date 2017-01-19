@@ -294,40 +294,6 @@ __attribute__((deprecated("use mir_window_raise() instead")));
 
 #pragma GCC diagnostic pop
 
-/**
- * \brief Check the validity of a MirPersistentId
- * \param [in] id  The MirPersistentId
- * \return True iff the MirPersistentId contains a valid ID value.
- *
- * \note This does not guarantee that the ID refers to a currently valid object.
- */
-bool mir_persistent_id_is_valid(MirPersistentId* id);
-
-/**
- * \brief Free a MirPersistentId
- * \param [in] id  The MirPersistentId to free
- * \note This frees only the client-side representation; it has no effect on the
- *       object referred to by \arg id.
- */
-void mir_persistent_id_release(MirPersistentId* id);
-
-/**
- * \brief Get a string representation of a MirSurfaceId
- * \param [in] id  The ID to serialise
- * \return A string representation of id. This string is owned by the MirSurfaceId,
- *         and must not be freed by the caller.
- *
- * \see mir_surface_id_from_string
- */
-char const* mir_persistent_id_as_string(MirPersistentId* id);
-
-/**
- * \brief Deserialise a string representation of a MirSurfaceId
- * \param [in] string_representation  Serialised representation of the ID
- * \return The deserialised MirSurfaceId
- */
-MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
-
 #ifdef __cplusplus
 }
 /**@}*/
