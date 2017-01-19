@@ -145,7 +145,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) M
     return ev->to_orientation();
 })
 
-MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+MirCloseWindowEvent const* mir_event_get_close_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_close_window);
 

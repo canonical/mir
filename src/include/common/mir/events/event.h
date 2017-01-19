@@ -52,8 +52,8 @@ struct MirEvent
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;
 
-    MirCloseSurfaceEvent* to_close_surface();
-    MirCloseSurfaceEvent const* to_close_surface() const;
+    MirCloseWindowEvent* to_close_surface(); // TODO rename {arg}
+    MirCloseWindowEvent const* to_close_surface() const;
 
     MirKeymapEvent* to_keymap();
     MirKeymapEvent const* to_keymap() const;

@@ -173,14 +173,14 @@ MirOrientationEvent const* MirEvent::to_orientation() const
     return static_cast<MirOrientationEvent const*>(this);
 }
 
-MirCloseSurfaceEvent* MirEvent::to_close_surface()
+MirCloseWindowEvent* MirEvent::to_close_surface()
 {
-    return static_cast<MirCloseSurfaceEvent*>(this);
+    return static_cast<MirCloseWindowEvent*>(this);
 }
 
-MirCloseSurfaceEvent const* MirEvent::to_close_surface() const
+MirCloseWindowEvent const* MirEvent::to_close_surface() const
 {
-    return static_cast<MirCloseSurfaceEvent const*>(this);
+    return static_cast<MirCloseWindowEvent const*>(this);
 }
 
 MirKeymapEvent* MirEvent::to_keymap()

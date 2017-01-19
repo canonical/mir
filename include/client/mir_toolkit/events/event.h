@@ -61,7 +61,7 @@ typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
-/*__attribute__ ((deprecated("use MirCloseWindowEvent instead")))*/;
+__attribute__ ((deprecated("use MirCloseWindowEvent instead")));
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
@@ -174,6 +174,9 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  */
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event);
 
+// Ignore use of deprecate MirCloseSurfaceEvent typedef in deprecated function (for now)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
  * type mir_event_type_close_surface. The event is a request to close
@@ -191,6 +194,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event
 __attribute__ ((deprecated))
 /// @endcond
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
+#pragma GCC diagnostic pop
 
 /**
  * Retrieve the MirKeymapEvent associated with a MirEvent of
