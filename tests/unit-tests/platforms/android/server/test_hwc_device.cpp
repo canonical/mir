@@ -24,6 +24,7 @@
 #include "src/platforms/android/server/hwc_configuration.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/doubles/mock_framebuffer_bundle.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_hwc_device_wrapper.h"
@@ -602,9 +603,14 @@ TEST_F(HwcDevice, rejects_empty_list)
 // Regression test for LP: #1657755
 TEST_F(HwcDevice, accepts_list_containing_interval_0)
 {
-    mga::HwcDevice device(mock_device);
+    using namespace ::testing;
 
-    auto renderable = std::make_shared<mtd::StubRenderable>();
+    mga::HwcDevice device(mock_device);
+    auto renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
+
+    ON_CALL(*renderable, swap_interval())
+        .WillByDefault(Return(0));
+
     mg::RenderableList renderlist{renderable};
     EXPECT_TRUE(device.compatible_renderlist(renderlist));
 }
