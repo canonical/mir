@@ -18,6 +18,9 @@
 
 #include "mir/events/surface_output_event.h"
 
+// MirSurfaceOutputEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfaceOutputEvent::MirSurfaceOutputEvent()
 {
     event.initSurfaceOutput();
