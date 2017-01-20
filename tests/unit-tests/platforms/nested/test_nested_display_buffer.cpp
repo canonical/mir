@@ -54,7 +54,7 @@ class EventHostSurface : public mgn::HostSurface
 public:
     EGLNativeWindowType egl_native_window() override { return {}; }
 
-    void set_event_handler(mir_surface_event_callback cb, void* ctx) override
+    void set_event_handler(MirWindowEventCallback cb, void* ctx) override
     {
         std::lock_guard<std::mutex> lock{event_mutex};
         event_handler = cb;
@@ -79,14 +79,14 @@ public:
     }
 private:
     std::mutex event_mutex;
-    mir_surface_event_callback event_handler;
+    MirWindowEventCallback event_handler;
     void* event_context;
 };
 
 struct MockHostSurface : mgn::HostSurface
 {
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
-    MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
+    MOCK_METHOD2(set_event_handler, void(MirWindowEventCallback, void*));
     MOCK_METHOD1(apply_spec, void(mgn::HostSurfaceSpec&));
 };
 

@@ -24,6 +24,7 @@
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
+#include "mir_toolkit/extensions/window_coordinate_translation.h"
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
 #include "mir/frontend/surface_id.h"
@@ -108,11 +109,11 @@ public:
 
     MirWaitHandle* create_surface(
         MirWindowSpec const& spec,
-        mir_surface_callback callback,
+        MirWindowCallback callback,
         void * context);
     MirWaitHandle* release_surface(
         MirWindow *surface,
-        mir_surface_callback callback,
+        MirWindowCallback callback,
         void *context);
 
     MirPromptSession* create_prompt_session();
@@ -230,13 +231,13 @@ private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirWindowSpec const& spec) :
+        SurfaceCreationRequest(MirWindowCallback cb, void* context, MirWindowSpec const& spec) :
             cb(cb), context(context), spec(spec),
               response(std::make_shared<mir::protobuf::Surface>()),
               wh(std::make_shared<MirWaitHandle>())
         {
         }
-        mir_surface_callback cb;
+        MirWindowCallback cb;
         void* context;
         MirWindowSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
@@ -372,6 +373,7 @@ private:
     bool validate_user_display_config(MirDisplayConfiguration const* config);
 
     int const nbuffers;
+    mir::optional_value<MirExtensionWindowCoordinateTranslationV1> translation_ext;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

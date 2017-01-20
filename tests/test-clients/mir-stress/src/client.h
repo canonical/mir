@@ -20,7 +20,7 @@
 #define MIR_STRESS_TEST_CLIENT_H_
 
 #include <memory>
-
+#include <mir_toolkit/client_types.h>
 
 /// A simple state machine that knows how to connect to a mir server,
 /// issue some devices, and exit cleanly.
@@ -39,10 +39,6 @@ public:
     virtual void disconnect() =0;
 };
 
-
-struct MirConnection;
-struct MirSurface;
-
 class UnacceleratedClient: public ClientStateMachine
 {
 public:
@@ -53,7 +49,7 @@ public:
     void disconnect() override;
 private:
     MirConnection* connection_;
-    MirSurface* surface_;
+    MirWindow* surface_;
 };
 
 #endif

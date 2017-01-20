@@ -72,38 +72,47 @@ void shutdown(int)
     running = false;
 }
 
-uint32_t get_first_valid_output_id(MirDisplayConfiguration const& display_config)
+uint32_t get_first_valid_output_id(MirDisplayConfig const& display_config)
 {
-    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
+    size_t num_outputs = mir_display_config_get_num_outputs(&display_config);
+    for (unsigned int i = 0; i < num_outputs; ++i)
     {
-        MirDisplayOutput const& output = display_config.outputs[i];
+        auto output = mir_display_config_get_output(&display_config, i);
+        auto state  = mir_output_get_connection_state(output);
+        size_t num_modes = mir_output_get_num_modes(output);
 
-        if (output.connected && output.used &&
-            output.current_mode < output.num_modes)
+        if (state == mir_output_connection_state_connected &&
+            mir_output_is_enabled(output) &&
+            mir_output_get_current_mode_index(output) < num_modes)
         {
-            return output.output_id;
+            return mir_output_get_id(output);
         }
     }
 
     throw std::runtime_error("Couldn't find a valid output to screencast");
 }
 
-MirRectangle get_screen_region_from(MirDisplayConfiguration const& display_config, uint32_t output_id)
+MirRectangle get_screen_region_from(MirDisplayConfig const& display_config, uint32_t output_id)
 {
     if (output_id == mir_display_output_id_invalid)
         output_id = get_first_valid_output_id(display_config);
 
-    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
+    size_t num_outputs = mir_display_config_get_num_outputs(&display_config);
+    for (unsigned int i = 0; i < num_outputs; ++i)
     {
-        MirDisplayOutput const& output = display_config.outputs[i];
+        auto output = mir_display_config_get_output(&display_config, i);
+        size_t num_modes = mir_output_get_num_modes(output);
+        size_t id = mir_output_get_id(output);
 
-        if (output.output_id == output_id &&
-            output.current_mode < output.num_modes)
+        if (id == output_id &&
+            mir_output_get_current_mode_index(output) < num_modes)
         {
-            MirDisplayMode const& mode = output.modes[output.current_mode];
-            return MirRectangle{output.position_x, output.position_y,
-                                mode.horizontal_resolution,
-                                mode.vertical_resolution};
+            auto pos_x  = mir_output_get_position_x(output);
+            auto pos_y  = mir_output_get_position_y(output);
+            auto mode   = mir_output_get_current_mode(output);
+            uint32_t width  = mir_output_mode_get_width(mode);
+            uint32_t height = mir_output_mode_get_height(mode);
+            return MirRectangle{pos_x, pos_y, width, height};
         }
     }
 
@@ -111,12 +120,13 @@ MirRectangle get_screen_region_from(MirDisplayConfiguration const& display_confi
 }
 
 ScreencastConfiguration get_screencast_config(MirConnection* connection,
-                           MirDisplayConfiguration const& display_config,
-                           std::vector<int> const& requested_size,
-                           std::vector<int> const& requested_region,
-                           uint32_t output_id)
+                                              MirDisplayConfig const& display_config,
+                                              std::vector<int> const& requested_size,
+                                              std::vector<int> const& requested_region,
+                                              uint32_t output_id)
 {
     ScreencastConfiguration config;
+
     if (requested_region.size() == 4)
     {
         /* TODO: the region should probably be validated
@@ -152,25 +162,36 @@ ScreencastConfiguration get_screencast_config(MirConnection* connection,
     return config;
 }
 
-double get_capture_rate_limit(MirDisplayConfiguration const& display_config, ScreencastConfiguration const& config)
+double get_capture_rate_limit(MirDisplayConfig const& display_config, ScreencastConfiguration const& config)
 {
     mir::geometry::Rectangle screencast_area{
         {config.region.left,  config.region.top},
         {config.region.width, config.region.height}};
 
     double highest_refresh_rate = 0.0;
-    for (unsigned int i = 0; i < display_config.num_outputs; ++i)
+    size_t num_outputs = mir_display_config_get_num_outputs(&display_config);
+    for (unsigned int i = 0; i < num_outputs; ++i)
     {
-        MirDisplayOutput const& output = display_config.outputs[i];
-        if (output.connected && output.used &&
-            output.current_mode < output.num_modes)
+        auto output = mir_display_config_get_output(&display_config, i);
+        auto state  = mir_output_get_connection_state(output);
+
+        size_t num_modes = mir_output_get_num_modes(output);
+
+        if (state == mir_output_connection_state_connected &&
+            mir_output_is_enabled(output) &&
+            mir_output_get_current_mode_index(output) < num_modes)
         {
-            MirDisplayMode const& mode = output.modes[output.current_mode];
+            auto pos_x   = mir_output_get_position_x(output);
+            auto pos_y   = mir_output_get_position_y(output);
+            auto mode    = mir_output_get_current_mode(output);
+            auto refresh = mir_output_mode_get_refresh_rate(mode);
+            uint32_t width   = mir_output_mode_get_width(mode);
+            uint32_t height  = mir_output_mode_get_height(mode);
+
             mir::geometry::Rectangle display_area{
-                {output.position_x, output.position_y},
-                {mode.horizontal_resolution, mode.vertical_resolution}};
-            if (display_area.overlaps(screencast_area) && mode.refresh_rate > highest_refresh_rate)
-                highest_refresh_rate = mode.refresh_rate;
+                {pos_x, pos_y}, {width, height}};
+            if (display_area.overlaps(screencast_area) && refresh > highest_refresh_rate)
+                highest_refresh_rate = refresh;
         }
     }
 
@@ -524,8 +545,8 @@ try
     }
 
     auto const display_config = mir::raii::deleter_for(
-        mir_connection_create_display_config(connection.get()),
-        &mir_display_config_destroy);
+        mir_connection_create_display_configuration(connection.get()),
+        &mir_display_config_release);
 
     if (display_config == nullptr)
         throw std::runtime_error("Failed to get display configuration\n");

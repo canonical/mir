@@ -39,13 +39,13 @@ class PromptSessionManager;
 class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 namespace shell
 {
 class InputTargeter;
-class SurfaceSpecification;
+struct SurfaceSpecification;
 class SurfaceStack;
 
 class Shell :
