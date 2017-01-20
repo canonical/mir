@@ -1094,13 +1094,6 @@ void handle_structured_error(HandleError<T>* handler)
     {
         handler->on_error(*handler->result);
     }
-    else
-    {
-        if (handler->result->has_error())
-        {
-            handler->on_error(*handler->result);
-        }
-    }
     delete handler;
 }
 
