@@ -91,6 +91,7 @@ static void client_fd_callback(MirPromptSession* prompt_session, size_t count, i
 {
     (void)prompt_session;
     MirDemoState* mcd = (MirDemoState*)context;
+    pthread_mutex_lock(&mcd->mutex);
     mcd->client_fds = malloc(sizeof(int)*count);
     unsigned int i = 0;
     for (; i < count; i++)
@@ -98,7 +99,6 @@ static void client_fd_callback(MirPromptSession* prompt_session, size_t count, i
         mcd->client_fds[i] = fds[i];
     }
 
-    pthread_mutex_lock(&mcd->mutex);
     mcd->client_fd_count = count;
     pthread_cond_signal(&mcd->cond);
     pthread_mutex_unlock(&mcd->mutex);
