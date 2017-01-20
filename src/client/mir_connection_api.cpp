@@ -39,22 +39,11 @@ namespace mi = mir::input;
 
 namespace
 {
-struct ConnectContext
-{
-    std::mutex mutex;
-    std::condition_variable connect_cv;
-    MirConnection* connection{nullptr};
-};
-
-void assign_result(MirConnection* result, void* context)
+// assign_result is compatible with all 2-parameter callbacks
+void assign_result(void* result, void** context)
 {
     if (context)
-    {
-        auto connect_context = static_cast<ConnectContext*>(context);
-        std::lock_guard<std::mutex> lock(connect_context->mutex);
-        connect_context->connection = result;
-        connect_context->connect_cv.notify_one();
-    }
+        *context = result;
 }
 }
 
@@ -104,14 +93,18 @@ MirConnection* mir_connect_sync(
     char const* server,
     char const* app_name)
 {
-    ConnectContext context;
+    MirConnection* conn = nullptr;
+    auto wh = mir_connect(server, app_name,
+                          reinterpret_cast<mir_connected_callback>
+                          (assign_result),
+                          &conn);
 
-    mir_connect(server, app_name, assign_result, &context);
+    if (wh != nullptr)
+    {
+        wh->wait_for_all();
+    }
 
-    std::unique_lock<std::mutex> lock(context.mutex);
-    context.connect_cv.wait(lock, [&] { return context.connection != nullptr; });
-
-    return context.connection;
+    return conn;
 }
 
 bool mir_connection_is_valid(MirConnection* connection)

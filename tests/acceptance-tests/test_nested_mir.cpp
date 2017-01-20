@@ -370,7 +370,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<ObservantShell>(wrapped, stub_observer);
+            return std::make_shared<mtf::ObservantShell>(wrapped, stub_observer);
         });
 
         mtf::HeadlessInProcessServer::SetUp();

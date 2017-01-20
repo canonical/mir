@@ -283,7 +283,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<ObservantShell>(wrapped, mock_surface_observer);
+            return std::make_shared<mtf::ObservantShell>(wrapped, mock_surface_observer);
         });
     }
 
