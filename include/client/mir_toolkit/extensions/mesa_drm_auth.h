@@ -27,7 +27,7 @@ extern "C" {
 
 struct MirConnection;
 
-typedef void (*mir_auth_fd_callback)(
+typedef void (*MirAuthFdCallback)(
     int auth_fd, void* context);
 /*
  * Request authenticated FD from server.
@@ -35,9 +35,9 @@ typedef void (*mir_auth_fd_callback)(
  * \param [in] cb           The callback triggered on server response
  * \param [in] context      The context for the callback
  */
-typedef void (*mir_extension_mesa_drm_auth_fd)(MirConnection*, mir_auth_fd_callback cb, void* context);
+typedef void (*MirExtensionMesaDrmAuthFd)(MirConnection*, MirAuthFdCallback cb, void* context);
 
-typedef void (*mir_auth_magic_callback)(
+typedef void (*MirAuthMagicCallback)(
     int response, void* context);
 /*
  * Request magic cookie from server.
@@ -46,13 +46,13 @@ typedef void (*mir_auth_magic_callback)(
  * \param [in] cb           The callback triggered on server response
  * \param [in] context      The context for the callback
  */
-typedef void (*mir_extension_mesa_drm_auth_magic)(
-    MirConnection* connection, int magic, mir_auth_magic_callback cb, void* context);
+typedef void (*MirExtensionMesaDrmAuthMagic)(
+    MirConnection* connection, int magic, MirAuthMagicCallback cb, void* context);
 
 typedef struct MirExtensionMesaDRMAuthV1
 {
-    mir_extension_mesa_drm_auth_fd drm_auth_fd;
-    mir_extension_mesa_drm_auth_magic drm_auth_magic;
+    MirExtensionMesaDrmAuthFd drm_auth_fd;
+    MirExtensionMesaDrmAuthMagic drm_auth_magic;
 } MirExtensionMesaDRMAuthV1;
 
 static inline MirExtensionMesaDRMAuthV1 const* mir_extension_mesa_drm_auth_v1(

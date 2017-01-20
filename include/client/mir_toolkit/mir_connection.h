@@ -92,7 +92,8 @@ void mir_connection_release(MirConnection *connection);
  *   \param [in]  connection        The connection
  *   \param [out] platform_package  Structure to be populated
  */
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
+__attribute__((deprecated("use platform extensions instead")));
 
 /**
  * Query graphics platform module.
@@ -153,8 +154,8 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
-MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
-/* __attribute__ ((deprecated("use mir_connection_create_display_configuration instead"))); */
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
+__attribute__ ((deprecated("use mir_connection_create_display_configuration instead")));
 
 /**
  * Query the display
@@ -185,7 +186,8 @@ void mir_connection_set_display_config_change_callback(
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed
  */
-void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
+__attribute__ ((deprecated("use mir_display_config_release instead")));
 
 /**
  * Apply the display configuration
@@ -200,7 +202,8 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
  *   \param [in] display_configuration  The display_configuration to apply
  *   \return                            A handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
+__attribute__ ((deprecated("use mir_connection_apply_session_display_config instead")));
 
 /**
  * Apply the display config for the connection
@@ -249,7 +252,8 @@ void mir_connection_remove_session_display_config(MirConnection* connection);
  */
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration);
+    MirDisplayConfiguration const* display_configuration)
+__attribute__ ((deprecated("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration")));
 
 
 /**
@@ -377,7 +381,7 @@ MirWaitHandle* mir_connection_platform_operation(
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
- * \warning return value must be destroyed via mir_input_config_destroy()
+ * \warning return value must be destroyed via mir_input_config_release()
  * \warning may return null if connection is invalid
  * \param [in]  connection        The connection
  * \return      structure that describes the input configuration
@@ -385,12 +389,24 @@ MirWaitHandle* mir_connection_platform_operation(
 MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
+ * \deprecated  Use mir_input_config_release() instead.
+ *
  * Release this snapshot of the input configuration.
  * This invalidates any pointers retrieved from this structure.
  *
  * \param [in] config  The input configuration
  */
-void mir_input_config_destroy(MirInputConfig const* config);
+void mir_input_config_destroy(MirInputConfig const* config)
+__attribute__ ((deprecated("use mir_input_config_release instead")));
+
+/**
+ * Release this snapshot of the input configuration.
+ * This invalidates any pointers retrieved from this structure.
+ *
+ * \param [in] config  The input configuration
+ */
+void mir_input_config_release(MirInputConfig const* config);
+
 
 /**
  * Register a callback to be called when the input devices change.

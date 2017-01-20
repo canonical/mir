@@ -21,6 +21,7 @@
 #include "cursor_configuration.h"
 #include "mir/mir_buffer_stream.h"
 #include "mir_wait_handle.h"
+#include "frame_clock.h"
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
@@ -32,6 +33,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/time/posix_timestamp.h"
 
 #include <memory>
 #include <functional>
@@ -82,6 +84,20 @@ struct ContentInfo
     mir::optional_value<mir::geometry::Size> size;
 };
 
+struct MirPersistentId
+{
+public:
+    MirPersistentId(std::string const& string_id);
+
+    std::string const& as_string();
+
+private:
+    std::string const string_id;
+};
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 struct MirSurfaceSpec
 {
     MirSurfaceSpec();
@@ -106,7 +122,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> pref_orientation;
 
-    mir::optional_value<MirSurface*> parent;
+    mir::optional_value<MirWindow*> parent;
     std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
@@ -130,7 +146,7 @@ struct MirSurfaceSpec
 
     struct EventHandler
     {
-        mir_surface_event_callback callback;
+        MirWindowEventCallback callback;
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
@@ -143,17 +159,6 @@ struct MirSurfaceSpec
         mir::geometry::Point hotspot;
     };
     mir::optional_value<RenderSurfaceCursor> rendersurface_cursor;
-};
-
-struct MirPersistentId
-{
-public:
-    MirPersistentId(std::string const& string_id);
-
-    std::string const& as_string();
-
-private:
-    std::string const string_id;
 };
 
 struct MirSurface
@@ -200,7 +205,7 @@ public:
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
-    void set_event_handler(mir_surface_event_callback callback,
+    void set_event_handler(MirWindowEventCallback callback,
                            void* context);
     void handle_event(MirEvent const& e);
 
@@ -212,14 +217,18 @@ public:
 
     static bool is_valid(MirSurface* query);
 
-    MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirWaitHandle* request_persistent_id(MirWindowIdCallback callback, void* context);
     MirConnection* connection() const;
+
+    std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
+
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
+    void configure_frame_clock();
     void on_configured();
     void on_cursor_configured();
-    void acquired_persistent_id(mir_surface_id_callback callback, void* context);
+    void acquired_persistent_id(MirWindowIdCallback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
@@ -242,6 +251,8 @@ private:
 
     //Deprecated functions can cause MirSurfaces to be created with a default stream
     std::shared_ptr<MirBufferStream> default_stream;
+    typedef std::unordered_set<std::shared_ptr<MirBufferStream>> StreamSet;
+    StreamSet streams;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
@@ -250,6 +261,8 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_window_attribs];
     MirOrientation orientation = mir_orientation_normal;
+
+    std::shared_ptr<mir::client::FrameClock> const frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
@@ -263,5 +276,7 @@ private:
     uint32_t output_id;
 
 };
+
+#pragma GCC diagnostic pop
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */
