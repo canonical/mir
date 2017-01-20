@@ -37,8 +37,11 @@ struct MirEvent
     MirInputEvent* to_input();
     MirInputEvent const* to_input() const;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirInputConfigurationEvent* to_input_configuration();
     MirInputConfigurationEvent const* to_input_configuration() const;
+#pragma GCC diagnostic pop
 
     MirWindowEvent* to_surface();
     MirWindowEvent const* to_surface() const;

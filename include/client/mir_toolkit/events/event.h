@@ -65,7 +65,8 @@ typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
+typedef struct MirInputConfigurationEvent MirInputConfigurationEvent 
+    __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")));
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
     __attribute__ ((deprecated("use MirWindowOutputEvent instead")));
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
@@ -206,6 +207,8 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the MirInputConfig associated with a MirEvent of
  * type mir_event_type_input_configuration. The event signifies that the
@@ -220,6 +223,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 __attribute__((deprecated))
 /// @endcond
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
+#pragma GCC diagnostic pop
 
 /**
  * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type
