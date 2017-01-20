@@ -30,14 +30,14 @@ using mir::client::ConnectionSurfaceMap;
 using mir::frontend::SurfaceId;
 using mir::frontend::BufferStreamId;
 
-std::shared_ptr<MirSurface> ConnectionSurfaceMap::surface(SurfaceId id) const
+std::shared_ptr<MirWindow> ConnectionSurfaceMap::surface(SurfaceId id) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     auto const found = surfaces.find(id);
     return found != surfaces.end() ? found->second : nullptr;
 }
 
-void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
+void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirWindow> const& surface)
 {
     std::lock_guard<decltype(guard)> lk(guard);
     surfaces[surface_id] = surface;

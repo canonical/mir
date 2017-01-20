@@ -109,14 +109,14 @@ void mir_presentation_chain_submit_buffer(
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the dimensions or displacements to exceed the 
- *                  bounds of MirSurface may result in clipping to the size
- *                  of the MirSurface, at the server's discretion.
+ *                  bounds of MirWindow may result in clipping to the size
+ *                  of the MirWindow, at the server's discretion.
  *
  * \param spec             The surface_spec to be updated.
  * \param width            The width that the content will displayed at.
  * \param height           The height that the content will be displayed at.
- * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
- * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow.
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow.
  * \param chain            The chain containing the content to be displayed.
  */
 void mir_surface_spec_add_presentation_chain(
@@ -133,12 +133,12 @@ void mir_surface_spec_add_presentation_chain(
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the displacements to exceed the 
- *                  bounds of MirSurface may result in clipping to the size
- *                  of the MirSurface, at the server's discretion.
+ *                  bounds of MirWindow may result in clipping to the size
+ *                  of the MirWindow, at the server's discretion.
  *
  * \param spec             The surface_spec to be updated.
- * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
- * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow.
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow.
  * \param stream           The stream containing the content to be displayed.
  */
 void mir_surface_spec_add_buffer_stream(

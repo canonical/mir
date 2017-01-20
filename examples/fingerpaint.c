@@ -425,7 +425,18 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirPixelFormat pixel_format = mir_output_get_current_pixel_format(output);
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
+    size_t num_pfs = mir_output_get_num_pixel_formats(output);
+
+    for (size_t i = 0; i < num_pfs; i++)
+    {
+        MirPixelFormat f = mir_output_get_pixel_format(output, i);
+        if (BYTES_PER_PIXEL(f) == 4)
+        {
+            pixel_format = f;
+            break;
+        }
+    }
 
     if (pixel_format == mir_pixel_format_invalid)
     {
@@ -453,7 +464,7 @@ int main(int argc, char *argv[])
         MirBufferStream* bs = mir_window_get_buffer_stream(window);
         mir_buffer_stream_set_swapinterval(bs, swap_interval);
         mir_window_set_event_handler(window, &on_event, &canvas);
-    
+
         canvas.width = width;
         canvas.height = height;
         canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
@@ -465,7 +476,7 @@ int main(int argc, char *argv[])
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
             signal(SIGHUP, shutdown);
-        
+
             clear_region(&canvas, &background);
 
             while (running)

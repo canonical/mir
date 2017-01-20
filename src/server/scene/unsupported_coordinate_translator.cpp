@@ -32,3 +32,8 @@ mg::Point ms::UnsupportedCoordinateTranslator::surface_to_screen(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error{"Unsupported feature requested"});
 }
+
+bool ms::UnsupportedCoordinateTranslator::translation_supported() const
+{
+    return false;
+}
