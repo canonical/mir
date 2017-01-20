@@ -89,7 +89,7 @@ struct StubSession : scene::Session
 
     void destroy_surface(std::weak_ptr<scene::Surface> const& surface) override;
 
-    void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
+    void send_input_config(MirInputConfig const& config) override;
 
     graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
     graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;

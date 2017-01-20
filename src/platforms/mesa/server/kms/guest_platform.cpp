@@ -58,8 +58,10 @@ mgm::GuestPlatform::GuestPlatform(
     std::shared_ptr<NestedContext> const& nested_context)
     : nested_context{nested_context}
 {
-    auto const fds = nested_context->platform_fd_items();
-    gbm.setup(fds.at(0));
+    auto ext = nested_context->auth_extension();
+    if (!ext.is_set())
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not access drm auth fd"));
+    gbm.setup(ext.value()->auth_fd());
     set_guest_gbm_device(*nested_context, gbm.device);
 }
 

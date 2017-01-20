@@ -88,7 +88,7 @@ public:
 
     void send_display_config(graphics::DisplayConfiguration const& info) override;
     void send_error(ClientVisibleError const& error) override;
-    void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
+    void send_input_config(MirInputConfig const& devices) override;
 
     void set_lifecycle_state(MirLifecycleState state) override;
 

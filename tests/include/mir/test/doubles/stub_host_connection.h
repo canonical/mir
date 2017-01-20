@@ -53,8 +53,6 @@ public:
     {
     }
 
-    std::vector<int> platform_fd_items() override { return {}; }
-
     EGLNativeDisplayType egl_native_display() override { return {}; }
 
     std::shared_ptr<MirDisplayConfig> create_display_config() override
