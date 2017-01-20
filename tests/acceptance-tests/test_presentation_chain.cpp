@@ -68,7 +68,7 @@ public:
     SurfaceWithChain(SurfaceWithChain const&) = delete;
     SurfaceWithChain& operator=(SurfaceWithChain const&) = delete;
 
-    operator MirSurface*()
+    operator MirWindow*()
     {
         return window;
     }
@@ -83,7 +83,7 @@ public:
         mir_window_release_sync(window);
     }
 protected:
-    SurfaceWithChain(MirConnection* connection, std::function<MirSurface*(Chain&)> const& fn) :
+    SurfaceWithChain(MirConnection* connection, std::function<MirWindow*(Chain&)> const& fn) :
         chain_(connection),
         window(fn(chain_))
     {
@@ -105,7 +105,7 @@ struct SurfaceWithChainFromStart : SurfaceWithChain
     {
     }
 private:
-    MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
+    MirWindow* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
         auto spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());
@@ -129,7 +129,7 @@ struct SurfaceWithChainFromReassociation : SurfaceWithChain
     {
     }
 private:
-    MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
+    MirWindow* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
         MirWindowSpec* spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());

@@ -37,16 +37,16 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_type,
     mir_surface_attrib_state,
     mir_surface_attrib_swapinterval, /**< \deprecated  Do not listen for events
-        reporting this attribute. Use the
-        "mir_*_get_swapinterval()" functions
-        instead if you wish query its value */
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
     mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
-} MirSurfaceAttrib; /* __attribute__ ((deprecated("use MirWindowAttrib"))); */
+} MirSurfaceAttrib __attribute__ ((deprecated("use MirWindowAttrib")));
 
 /**
  * Attributes of a window that the client and server/shell may wish to
@@ -57,7 +57,10 @@ typedef enum MirWindowAttrib
     /* Do not specify values...code relies on 0...N ordering. */
     mir_window_attrib_type,
     mir_window_attrib_state,
-    mir_window_attrib_swapinterval,
+    mir_window_attrib_swapinterval, /**< \deprecated  Do not listen for events
+                                          reporting this attribute. Use the
+                                          "mir_*_get_swapinterval()" functions
+                                          instead if you wish query its value */
     mir_window_attrib_focus,
     mir_window_attrib_dpi,
     mir_window_attrib_visibility,
@@ -80,7 +83,7 @@ typedef enum MirSurfaceType
     mir_surface_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_surface_type_tip,          /**< AKA "tooltip"                       */
     mir_surface_types
-} MirSurfaceType; /* __attribute__ ((deprecated("use MirWindowType"))); */
+} MirSurfaceType __attribute__ ((deprecated("use MirWindowType")));
 
 typedef enum MirWindowType
 {
@@ -110,7 +113,7 @@ typedef enum MirSurfaceState
     mir_surface_state_horizmaximized,
     mir_surface_state_hidden,
     mir_surface_states
-} MirSurfaceState; /* __attribute__ ((deprecated("use MirWindowState"))); */
+} MirSurfaceState __attribute__ ((deprecated("use MirWindowState")));
 
 typedef enum MirWindowState
 {
@@ -132,7 +135,7 @@ typedef enum MirSurfaceFocusState
 {
     mir_surface_unfocused = 0,
     mir_surface_focused
-} MirSurfaceFocusState; /* __attribute__ ((deprecated("use MirWindowFocusState"))); */
+} MirSurfaceFocusState __attribute__ ((deprecated("use MirWindowFocusState")));
 
 typedef enum MirWindowFocusState
 {
@@ -144,7 +147,7 @@ typedef enum MirSurfaceVisibility
 {
     mir_surface_visibility_occluded = 0,
     mir_surface_visibility_exposed
-} MirSurfaceVisibility; /* __attribute__ ((deprecated("use MirWindowFocusState"))); */
+} MirSurfaceVisibility __attribute__ ((deprecated("use MirWindowFocusState")));
 
 typedef enum MirWindowVisibility
 {

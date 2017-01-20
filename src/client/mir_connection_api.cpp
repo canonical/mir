@@ -273,7 +273,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_apply_input_config(MirConnection* connection, MirInputConfig const* config) try
+void mir_connection_apply_session_input_config(MirConnection* connection, MirInputConfig const* config) try
 {
     if (!connection)
         return;
@@ -296,6 +296,11 @@ catch (std::exception const& ex)
 }
 
 void mir_input_config_destroy(MirInputConfig const* config)
+{
+    mir_input_config_release(config);
+}
+
+void mir_input_config_release(MirInputConfig const* config)
 {
     delete config;
 }

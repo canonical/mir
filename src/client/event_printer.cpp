@@ -130,6 +130,8 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientation orientation)
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
 {
     switch (attribute)
@@ -146,22 +148,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
-{
-    switch (attribute)
-    {
-    PRINT(mir_window_attrib,type);
-    PRINT(mir_window_attrib,dpi);
-    PRINT(mir_window_attrib,focus);
-    PRINT(mir_window_attrib,state);
-    PRINT(mir_window_attrib,visibility);
-    PRINT(mir_window_attrib,swapinterval);
-    PRINT(mir_window_attrib,preferred_orientation);
-    default:
-        return out << static_cast<int>(attribute) << "<INVALID>";
-    }
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
 {
     switch (state)
@@ -173,34 +159,12 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirWindowFocusState state)
-{
-    switch (state)
-    {
-    PRINT(mir_window_focus_state,focused);
-    PRINT(mir_window_focus_state,unfocused);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
 {
     switch (state)
     {
     PRINT(mir_surface_visibility,exposed);
     PRINT(mir_surface_visibility,occluded);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirWindowVisibility state)
-{
-    switch (state)
-    {
-    PRINT(mir_window_visibility,exposed);
-    PRINT(mir_window_visibility,occluded);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
@@ -224,6 +188,62 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
+{
+    switch (state)
+    {
+    PRINT(mir_surface_state,unknown);
+    PRINT(mir_surface_state,restored);
+    PRINT(mir_surface_state,minimized);
+    PRINT(mir_surface_state,maximized);
+    PRINT(mir_surface_state,vertmaximized);
+    PRINT(mir_surface_state,fullscreen);
+    PRINT(mir_surface_state,horizmaximized);
+    PRINT(mir_surface_state,hidden);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+#pragma GCC diagnostic pop
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
+{
+    switch (attribute)
+    {
+    PRINT(mir_window_attrib,type);
+    PRINT(mir_window_attrib,dpi);
+    PRINT(mir_window_attrib,focus);
+    PRINT(mir_window_attrib,state);
+    PRINT(mir_window_attrib,visibility);
+    PRINT(mir_window_attrib,swapinterval);
+    PRINT(mir_window_attrib,preferred_orientation);
+    default:
+        return out << static_cast<int>(attribute) << "<INVALID>";
+    }
+}
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowFocusState state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_focus_state,focused);
+    PRINT(mir_window_focus_state,unfocused);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowVisibility state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_visibility,exposed);
+    PRINT(mir_window_visibility,occluded);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
 {
     switch (type)
@@ -239,23 +259,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
     PRINT(mir_window_type,tip);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
-{
-    switch (state)
-    {
-    PRINT(mir_surface_state,unknown);
-    PRINT(mir_surface_state,restored);
-    PRINT(mir_surface_state,minimized);
-    PRINT(mir_surface_state,maximized);
-    PRINT(mir_surface_state,vertmaximized);
-    PRINT(mir_surface_state,fullscreen);
-    PRINT(mir_surface_state,horizmaximized);
-    PRINT(mir_surface_state,hidden);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
     }
 }
 

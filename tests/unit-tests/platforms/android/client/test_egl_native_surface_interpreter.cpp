@@ -60,7 +60,7 @@ struct MockMirSurface : public mcl::EGLNativeSurface
     MOCK_METHOD2(request_and_wait_for_configure, void(MirWindowAttrib, int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
     MOCK_METHOD1(set_size, void(geom::Size));
-    MirSurfaceParameters params;
+    MirWindowParameters params;
     std::shared_ptr<mtd::MockClientBuffer> client_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> buffer;
 };

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
     mir_event_type_key,
@@ -55,22 +53,25 @@ typedef enum
     mir_event_type_surface_placement, /*__attribute__ ((deprecated("use mir_event_type_window_placement instead"))), */
     mir_event_type_window_placement = mir_event_type_surface_placement,
 } MirEventType;
-#pragma GCC diagnostic pop
 
-typedef struct MirSurfaceEvent MirSurfaceEvent; /* __attribute__ ((deprecated("use MirWindowEvent instead"))); */
+typedef struct MirSurfaceEvent MirSurfaceEvent
+/*__attribute__ ((deprecated("use MirWindowEvent instead")))*/;
 typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
-typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent; /* __attribute__ ((deprecated("use MirCloseWindowEvent instead"))); */
+typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
+/*__attribute__ ((deprecated("use MirCloseWindowEvent instead")))*/;
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
-typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
+typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
+/* __attribute__ ((deprecated("use MirWindowOutputEvent instead")))*/;
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
-typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent; /* __attribute__ ((deprecated("use MirWindowPlacementEvent instead"))); */
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent
+/*__attribute__ ((deprecated("use MirWindowPlacementEvent instead")))*/;
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
@@ -130,8 +131,8 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  * \param [in] event The event
  * \return           The associated MirSurfaceEvent
  */
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event);
-/* __attribute__ ((deprecated("use mir_event_get_window_event instead"))); */
+MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event)
+__attribute__ ((deprecated("use mir_event_get_window_event instead")));
 
 /**
  * Retrieve the MirWindowEvent associated with a MirEvent of
@@ -229,8 +230,8 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \param [in] event The event
  * \return           The associated MirSurfaceOutputEvent
  */
-MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event);
-/* __attribute__((deprecated("use mir_event_get_window_output_event))) */
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event)
+__attribute__((deprecated("use mir_event_get_window_output_event")));
 
 /**
  * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
@@ -266,8 +267,8 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \param [in] event The event
  * \return           The associated MirSurfacePlacementEvent
  */
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event);
-/* __attribute__((deprecated("use mir_event_get_window_placement_event))) */
+MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
+__attribute__((deprecated("use mir_event_get_window_placement_event")));
 
 /**
  * Retrieve the MirWindowPlacementEvent associated with a MirEvent of
