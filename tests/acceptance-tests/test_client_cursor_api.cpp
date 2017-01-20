@@ -21,6 +21,7 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/input/cursor_images.h"
 #include "mir/input/input_device_info.h"
+#include "mir/scene/surface_observer.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/executable_path.h"
@@ -29,9 +30,8 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
+#include "mir_test_framework/observant_shell.h"
 #include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_surface_observer.h"
-#include "mir/test/doubles/observant_shell.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/spin_wait.h"
@@ -55,11 +55,35 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
-
 namespace
 {
 
 std::chrono::seconds const timeout{5};
+class MockSurfaceObserver : public msc::SurfaceObserver
+{
+public:
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
+    MOCK_METHOD1(resized_to, void(geom::Size const& size));
+    MOCK_METHOD1(moved_to, void(geom::Point const& top_left));
+    MOCK_METHOD1(hidden_set_to, void(bool hide));
+    MOCK_METHOD2(frame_posted, void(int frames_available, geom::Size const& size));
+    MOCK_METHOD1(alpha_set_to, void(float alpha));
+    MOCK_METHOD1(orientation_set_to, void(MirOrientation orientation));
+    MOCK_METHOD1(transformation_set_to, void(glm::mat4 const& t));
+    MOCK_METHOD1(reception_mode_set_to, void(mi::InputReceptionMode mode));
+    MOCK_METHOD1(cursor_image_set_to, void(mg::CursorImage const& image));
+    MOCK_METHOD0(client_surface_close_requested, void());
+    MOCK_METHOD5(keymap_changed, void(
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options));
+    MOCK_METHOD1(renamed, void(char const* name));
+    MOCK_METHOD0(cursor_image_removed, void());
+    MOCK_METHOD1(placed_relative, void(geom::Rectangle const& placement));
+};
+
 
 struct MockCursor : public mg::Cursor
 {
@@ -234,8 +258,8 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
     // mtf::add_fake_input_device needs this library to be loaded each test, for the tests
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
     ::testing::NiceMock<MockCursor> cursor;
-    std::shared_ptr<::testing::NiceMock<mtd::MockSurfaceObserver>> mock_surface_observer =
-        std::make_shared<::testing::NiceMock<mtd::MockSurfaceObserver>>();
+    std::shared_ptr<::testing::NiceMock<MockSurfaceObserver>> mock_surface_observer =
+        std::make_shared<::testing::NiceMock<MockSurfaceObserver>>();
 
     mtf::SurfaceGeometries client_geometries;
 
@@ -259,7 +283,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<mtd::ObservantShell>(wrapped, mock_surface_observer);
+            return std::make_shared<ObservantShell>(wrapped, mock_surface_observer);
         });
     }
 

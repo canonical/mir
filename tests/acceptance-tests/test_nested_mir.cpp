@@ -43,7 +43,7 @@
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/fake_input_device.h"
-#include "mir/test/doubles/observant_shell.h"
+#include "mir_test_framework/observant_shell.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/display_config_matchers.h"
@@ -370,7 +370,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<mtd::ObservantShell>(wrapped, stub_observer);
+            return std::make_shared<ObservantShell>(wrapped, stub_observer);
         });
 
         mtf::HeadlessInProcessServer::SetUp();
