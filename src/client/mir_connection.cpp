@@ -43,6 +43,8 @@
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
+#include "mir/require.h"
+#include "mir/uncaught.h"
 
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_input_config_serialization.h"
@@ -246,6 +248,22 @@ void populate_protobuf_display_configuration(
     }
 }
 
+void translate_coordinates(
+    MirWindow* window,
+    int x, int y,
+    int* screen_x, int* screen_y)
+try
+{
+    mir::require(window && screen_x && screen_y);
+    window->translate_to_screen_coordinates(x, y, screen_x, screen_y);
+}
+catch (std::exception& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    *screen_x = 0;
+    *screen_y = 0;
+}
+
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }
@@ -332,7 +350,7 @@ MirConnection::~MirConnection() noexcept
 
 MirWaitHandle* MirConnection::create_surface(
     MirWindowSpec const& spec,
-    mir_surface_callback callback,
+    MirWindowCallback callback,
     void * context)
 {
     auto response = std::make_shared<mp::Surface>();
@@ -465,7 +483,7 @@ struct MirConnection::SurfaceRelease
 {
     MirWindow* surface;
     MirWaitHandle* handle;
-    mir_surface_callback callback;
+    MirWindowCallback callback;
     void* context;
 };
 
@@ -504,7 +522,7 @@ void MirConnection::released(SurfaceRelease data)
 
 MirWaitHandle* MirConnection::release_surface(
         MirWindow *surface,
-        mir_surface_callback callback,
+        MirWindowCallback callback,
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;
@@ -551,6 +569,12 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             set_error_message("Failed to connect: not accepted by server");
 
         connect_done = true;
+
+        if (connect_result->has_coordinate_translation_present() &&
+            connect_result->coordinate_translation_present())
+        {
+            translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
+        }
 
         /*
          * We need to create the client platform after the connection has been
@@ -1070,6 +1094,13 @@ void handle_structured_error(HandleError<T>* handler)
     {
         handler->on_error(*handler->result);
     }
+    else
+    {
+        if (handler->result->has_error())
+        {
+            handler->on_error(*handler->result);
+        }
+    }
     delete handler;
 }
 
@@ -1472,21 +1503,33 @@ void* MirConnection::request_interface(char const* name, int version)
 {
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+
+    if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
+        return &translation_ext.value();
+
     return platform->request_interface(name, version);
 }
 
 void MirConnection::apply_input_configuration(MirInputConfig const* config)
 {
-    mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_config(*config));
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
-    server.apply_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.apply_input_configuration(&request,
+                                     store_error_result->result.get(),
+                                     gp::NewCallback(&handle_structured_error, store_error_result));
 }
 
 void MirConnection::set_base_input_configuration(MirInputConfig const* config)
 {
-    mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_config(*config));
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
 
-    server.set_base_input_configuration(&req, ignored.get(), gp::NewCallback(ignore));
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.set_base_input_configuration(&request,
+                                        store_error_result->result.get(),
+                                        gp::NewCallback(&handle_structured_error, store_error_result));
 }

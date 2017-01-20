@@ -36,7 +36,7 @@ public:
     }
     MirErrorDomain domain() const noexcept override
     {
-        return mir_error_domain_display_configuration;
+        return mir_error_domain_input_configuration;
     }
     uint32_t code() const noexcept override
     {

@@ -57,12 +57,15 @@ class MesaGuestPlatformTest : public ::testing::Test
 public:
     MesaGuestPlatformTest()
     {
+        int fake_fd = 4939;
         ON_CALL(mock_nested_context, platform_fd_items())
             .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
         ON_CALL(mock_nested_context, set_gbm_extension())
             .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>{mock_gbm_ext}));
         ON_CALL(mock_nested_context, auth_extension())
             .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
+        ON_CALL(*mock_ext, auth_fd())
+            .WillByDefault(Return(mir::Fd{mir::IntOwnedFd{fake_fd}}));
     }
 
 protected:
@@ -80,9 +83,11 @@ TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
     int const auth_fd{13};
 
     EXPECT_CALL(mock_nested_context, set_gbm_extension());
-    EXPECT_CALL(mock_nested_context, auth_extension());
+    EXPECT_CALL(mock_nested_context, auth_extension())
+        .Times(2);
     EXPECT_CALL(*mock_ext, auth_fd())
-        .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
+        .Times(2)
+        .WillRepeatedly(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
 
     mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
     auto ipc_ops = native.make_ipc_operations();

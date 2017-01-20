@@ -868,7 +868,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
             break;
 
         std::this_thread::sleep_for(10ms);
-        mir_input_config_destroy(config);
+        mir_input_config_release(config);
         config = mir_connection_create_input_config(con);
     }
 
@@ -882,7 +882,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
                                         uint32_t(mir_input_device_capability_touchscreen |
                                                  mir_input_device_capability_multitouch)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
     mir_connection_release(con);
 }
 
@@ -913,7 +913,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
     EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
                                                                          mir_input_device_capability_pointer)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
@@ -935,7 +935,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
 
     auto config = mir_connection_create_input_config(a_client.connection);
     EXPECT_THAT(mir_input_config_device_count(config), Eq(2u));
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
@@ -953,7 +953,7 @@ TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
     EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.0));
     EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, no_touchpad_config_on_mouse)
@@ -965,7 +965,7 @@ TEST_F(TestClientInput, no_touchpad_config_on_mouse)
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
 
     EXPECT_THAT(mir_input_device_get_touchpad_config(mouse), Eq(nullptr));
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, pointer_config_is_mutable)
@@ -987,7 +987,7 @@ TEST_F(TestClientInput, pointer_config_is_mutable)
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(1.0));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, touchpad_config_can_be_querried)
@@ -1016,7 +1016,7 @@ TEST_F(TestClientInput, touchpad_config_can_be_querried)
     EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
     EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, touchpad_config_is_mutable)
@@ -1053,7 +1053,7 @@ TEST_F(TestClientInput, touchpad_config_is_mutable)
     EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(true));
     EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(false));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
@@ -1078,8 +1078,8 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
         },
         &changes_complete
         );
-    mir_connection_apply_input_config(a_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_connection_apply_session_input_config(a_client.connection, config);
+    mir_input_config_release(config);
 
     EXPECT_TRUE(changes_complete.wait_for(10s));
 
@@ -1089,6 +1089,7 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(increased_acceleration));
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
@@ -1113,7 +1114,7 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
         &changes_complete
         );
     mir_connection_set_base_input_config(unfocused_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 
     EXPECT_TRUE(changes_complete.wait_for(10s));
 
@@ -1122,6 +1123,7 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
     pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
@@ -1145,8 +1147,8 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
         },
         &expect_no_changes
         );
-    mir_connection_apply_input_config(unfocused_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_connection_apply_session_input_config(unfocused_client.connection, config);
+    mir_input_config_release(config);
 
     EXPECT_FALSE(expect_no_changes.wait_for(10s));
     mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
@@ -1173,7 +1175,7 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
         &changes_complete
         );
     mir_connection_set_base_input_config(focused_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 
     changes_complete.wait_for(10s);
 
@@ -1182,7 +1184,7 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
     pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
@@ -1199,12 +1201,12 @@ TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
         [](MirConnection*, MirError const* error, void* context)
         {
             if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
-                mir_error_get_code(error) == mir_input_configuration_error_unauthorized)
+                mir_error_get_code(error) == mir_input_configuration_error_base_configuration_unauthorized)
                 static_cast<mt::Signal*>(context)->raise();
         },
         &wait_for_error);
     mir_connection_set_base_input_config(unauthed_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 
     EXPECT_TRUE(wait_for_error.wait_for(10s));
 }
@@ -1223,12 +1225,12 @@ TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
         [](MirConnection*, MirError const* error, void* context)
         {
             if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
-                mir_error_get_code(error) == mir_input_configuration_error_base_configuration_unauthorized)
+                mir_error_get_code(error) == mir_input_configuration_error_unauthorized)
                 static_cast<mt::Signal*>(context)->raise();
         },
         &wait_for_error);
-    mir_connection_apply_input_config(unauthed_client.connection, config);
-    mir_input_config_destroy(config);
+    mir_connection_apply_session_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
 
     EXPECT_TRUE(wait_for_error.wait_for(10s));
 }

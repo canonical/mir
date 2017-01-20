@@ -37,7 +37,8 @@ typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
  * \param [in] event  The placement event
  * \return            The position relative to the parent surface
  */
-MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event);
+MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event)
+__attribute__ ((deprecated("use mir_window_placement_get_relative_position instead")));
 
 #ifdef __cplusplus
 }

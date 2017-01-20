@@ -186,7 +186,7 @@ public:
     UniqueInputConfig get_input_config()
     {
         auto config = mir_connection_create_input_config(connection);
-        return {config,&mir_input_config_destroy};
+        return {config, &mir_input_config_release};
     }
 
     void on_input_config(std::function<void(MirInputConfig const*)> const& handler)
@@ -196,7 +196,7 @@ public:
 
     void apply_config(MirInputConfig* configuration)
     {
-        mir_connection_apply_input_config(connection, configuration);
+        mir_connection_apply_session_input_config(connection, configuration);
     }
 
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)

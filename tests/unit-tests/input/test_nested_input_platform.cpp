@@ -81,7 +81,7 @@ struct TestNestedInputPlatform : Test
         config.add_device_config(dev);
         mgn::UniqueInputConfig input_config(
             new MirInputConfig(config),
-            mir_input_config_destroy);
+            mir_input_config_release);
         mock_host_connection.device_change_callback(std::move(input_config));
 
         platform.dispatchable()->dispatch(mir::dispatch::readable);
@@ -126,7 +126,7 @@ TEST_F(TestNestedInputPlatform, registers_devices)
     devices.add_device_config(a_mouse);
     mgn::UniqueInputConfig input_config(
         new MirInputConfig(devices),
-        mir_input_config_destroy);
+        mir_input_config_release);
     mock_host_connection.device_change_callback(std::move(input_config));
 
     platform.dispatchable()->dispatch(mir::dispatch::readable);
