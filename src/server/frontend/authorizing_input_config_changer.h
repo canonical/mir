@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas <andreas.pokorny@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_FRONTEND_AUTHORIZING_INPUT_CONFIG_CHANGER_H_
