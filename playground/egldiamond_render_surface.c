@@ -223,7 +223,12 @@ int main(int argc, char *argv[])
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
-    CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
+    if (eglsurface == EGL_NO_SURFACE)
+    {
+        printf("eglCreateWindowSurface failed. "
+               "This is likely because the egl driver does not support the usage of MirRenderSurface\n");
+        return 0;
+    }
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
                               ctxattribs);
