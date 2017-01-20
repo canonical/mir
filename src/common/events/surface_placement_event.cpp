@@ -18,6 +18,9 @@
 
 #include "mir/events/surface_placement_event.h"
 
+// MirSurfacePlacementEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfacePlacementEvent::MirSurfacePlacementEvent()
 {
     event.initSurfacePlacement();
