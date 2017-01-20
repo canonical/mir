@@ -110,7 +110,7 @@ struct Client
         mir_window_spec_release(spec);
     }
 
-    void handle_window_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
         auto const attrib = mir_window_event_get_attribute(event);
         auto const value = mir_window_event_get_attribute_value(event);

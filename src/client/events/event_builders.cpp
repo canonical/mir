@@ -101,7 +101,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib attribute, int value)
 {
-    auto e = new_event<MirSurfaceEvent>();
+    auto e = new_event<MirWindowEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_attrib(attribute);
@@ -127,7 +127,7 @@ mir::EventUPtr mev::make_event(
     MirFormFactor form_factor,
     uint32_t output_id)
 {
-    auto e = new_event<MirSurfaceOutputEvent>();
+    auto e = new_event<MirWindowOutputEvent>();
 
     e->set_surface_id(surface_id.as_value());
     e->set_dpi(dpi);
@@ -141,7 +141,7 @@ mir::EventUPtr mev::make_event(
 
 mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement)
 {
-    auto e = new_event<MirSurfacePlacementEvent>();
+    auto e = new_event<MirWindowPlacementEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_placement({

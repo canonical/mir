@@ -18,6 +18,9 @@
 
 #include "mir/events/surface_event.h"
 
+// MirSurfaceEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfaceEvent::MirSurfaceEvent()
 {
     event.initSurface();
