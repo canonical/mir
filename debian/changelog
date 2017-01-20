@@ -1,6 +1,77 @@
 mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * TODO
+  * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 43
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 6
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . New/improved toolkit APIs: MirInputConfig and related functions,
+        MirWindow and related functions, DisplayConfig and related functions,
+        MirScreencastSpec and related functions,
+      . Deprecate legacy toolkit APIs that will be removed in Mir 1.0
+      . Server-side support for configuring input configuration
+      . Introduce toolkit extension mechanism for platform specific APIs.
+      . Toolkit extensions for: mesa_drm_auth, set_gbm_device and
+        window_coordinate_translation
+      . screencasting to a specific MirBuffer.
+      . Add DisplayConfigurationController::base_configuration() so downstreams
+        can get the base configuration. (Weirdly they can already set it.).
+      . x11 platform: allow adjustable scale parameter.
+      . mirout: output EDID  with the -v (verbose) flag.
+      . mirout: Add newer attributes only available in the new display
+        config API: scaling factor, subpixel arrangement and form factor.
+      . mirout: Log the orientation and logical size of each output too.
+      . Replace the mir::Server-overridable Reports with Observers.
+      . Add xkbcommon to mirclient.pc Requires.private.
+    - Bugs fixed:
+      . Make tests less sensitive to slow execution in CI (LP: #1643432,
+        LP: #1647573, LP: #1655293, LP: #1653658, LP: #1640366, LP: #1379685
+        and LP: #1396006)
+      . Provide missing EDID data in nested servers (LP: #1651633)
+      . Introducing client-side vsync, part 1. For dramatically lower latency
+        and improved smoothness. (LP: #1240909, LP: #1388490, LP: #1591328,
+        LP: #1624188)
+      . Remove input resampling. (LP: #1570698 and LP: #1576600)
+      . Initialize gamma LUTs with a linear ramp. (LP: #1656164)
+      . Remove the "phase one" restriction of one prompt session per prompt
+        provider. (LP: #1494197)
+      . Avoid a tear down of the compositors caused by nested server
+        reconfiguring the second display. (LP:1523621)
+      . When we modify a surface spec lets make sure to also set the event
+        handler. (LP: 1654612)
+      . Use MIR_EXPECT_DEATH to ensure no core files are left behind
+        (LP: #1654478)
+      . If we take *any* rectangles for our set region we can sometimes get
+        the base set region of 0,0,100,100 of the window. We need to first
+        expect 0,0,100,100 then we then expect our 0,0,200,100. (LP: #1606418)
+      . Be sure to call the expect call before the real call. (LP: #1653789)
+      . Add missing dependency of mirtest-dev on mir-renderer-gl-dev
+        (LP: #1651391)
+      . Use threadsafe death test mechanism. (LP: #1647573)
+      . mir-demos: Don't interpret two fingers as resizing the window.
+        (LP: #1586311)
+      . Don't leak touch events to clients once we've recognised a window
+        manipulation gesture is in progress (3 or 4 fingers) (LP: #1646700)
+      . eglapp: Disable fullscreen mode if the user specified a custom size
+        on the command line (LP: #1644075)
+      . Add mir::Server::add_pre_init_callback() so that downstreams can,
+        for example, register DisplayConfigurationObservers before
+        initialization starts (LP: #1645284)
+      . Add a DisplayConfigurationObserver::base_configuration_updated()
+        (LP: #1644189)
+      . Avoid unnecessary compositor tear-down/recreate cycle for
+        DisplayConfiguration changes that don't require it (LP: #1556142)
+      . Fix duplicated motion events on enter and filter out enter events in
+        nested input platform (LP: #1639749)
+      . Add missing #includes which strangely only caused build failures when
+        cross compiling!? (LP: #1642473)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
 
