@@ -500,10 +500,18 @@ typedef enum MirInputConfigurationError {
     /**
      * Input configuration was attempted but was rejected by driver
      */
-     mir_input_configuration_error_rejected_by_driver
+     mir_input_configuration_error_rejected_by_driver,
+
+    /**
+     * Client is not permitted to change global input configuration
+     */
+     mir_input_configuration_error_base_configuration_unauthorized,
+
+    /**
+     * Client is not permitted to change its input configuration
+     */
+     mir_input_configuration_error_unauthorized,
 } MirInputConfigurationError;
-
-
 
 typedef void (*mir_error_callback)(
     MirConnection* connection,

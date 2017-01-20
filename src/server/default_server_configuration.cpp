@@ -133,6 +133,17 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return true;
         }
+
+        bool configure_input_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
     };
     return session_authorizer(
         [&]()
