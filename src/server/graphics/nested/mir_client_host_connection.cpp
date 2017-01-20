@@ -689,7 +689,7 @@ public:
         host_buffer->available(buffer);
     }
 
-    void available(MirBuffer* buffer)
+    void available(MirBuffer* buffer) override
     {
         std::unique_lock<std::mutex> lk(mut);
         if (!handle)
