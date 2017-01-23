@@ -208,6 +208,16 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
+    if (eglsurface == EGL_NO_SURFACE)
+    {
+        printf("eglCreateWindowSurface failed. "
+               "This is likely because the egl driver does not support the usage of MirRenderSurface\n");
+        mir_render_surface_release(render_surface);
+        mir_connection_release(connection);   
+        eglTerminate(egldisplay);
+        return 0;
+    }
+
 
     //The format field is only used for default-created streams.
     //width and height are the logical width the user wants the window to be
@@ -222,13 +232,6 @@ int main(int argc, char *argv[])
 
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
-
-    if (eglsurface == EGL_NO_SURFACE)
-    {
-        printf("eglCreateWindowSurface failed. "
-               "This is likely because the egl driver does not support the usage of MirRenderSurface\n");
-        return 0;
-    }
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
                               ctxattribs);
