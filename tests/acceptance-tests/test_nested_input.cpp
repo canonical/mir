@@ -186,7 +186,7 @@ public:
     UniqueInputConfig get_input_config()
     {
         auto config = mir_connection_create_input_config(connection);
-        return {config, &mir_input_config_release};
+        return {config,&mir_input_config_release};
     }
 
     void on_input_config(std::function<void(MirInputConfig const*)> const& handler)
