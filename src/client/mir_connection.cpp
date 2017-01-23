@@ -522,33 +522,34 @@ MirWaitHandle* MirConnection::release_surface(
         MirWindowCallback callback,
         void * context)
 {
-    auto new_wait_handle = new MirWaitHandle;
+    auto wait_handle = std::make_unique<MirWaitHandle>();
+    auto raw_wait_handle = wait_handle.get();
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
+        release_wait_handles.push_back(std::move(wait_handle));
     }
 
     if (!mir_window_is_valid(surface))
     {
-        new_wait_handle->expect_result();
-        new_wait_handle->result_received();
+        raw_wait_handle->expect_result();
+        raw_wait_handle->result_received();
         callback(surface, context);
         auto id = surface->id();
         surface_map->erase(mf::SurfaceId(id));
-        return new_wait_handle;    
+        return raw_wait_handle;    
     }
 
-    SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
+    SurfaceRelease surf_release{surface, raw_wait_handle, callback, context};
 
     mp::SurfaceId message;
     message.set_value(surface->id());
 
-    new_wait_handle->expect_result();
+    raw_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
-    return new_wait_handle;
+    return raw_wait_handle;
 }
 
 MirPromptSession* MirConnection::create_prompt_session()
@@ -641,8 +642,7 @@ void MirConnection::done_disconnect()
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
         std::lock_guard<decltype(release_wait_handle_guard)> lock(release_wait_handle_guard);
-        for (auto handle : release_wait_handles)
-            delete handle;
+        release_wait_handles.clear();
     }
 
     {
@@ -1189,23 +1189,24 @@ MirWaitHandle* MirConnection::release_buffer_stream(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    auto new_wait_handle = new MirWaitHandle;
+    auto wait_handle = std::make_unique<MirWaitHandle>();
+    auto raw_wait_handle = wait_handle.get();
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value(), nullptr };
+    StreamRelease stream_release{stream, raw_wait_handle, callback, context, stream->rpc_id().as_value(), nullptr };
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(stream->rpc_id().as_value());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
+        release_wait_handles.push_back(std::move(wait_handle));
     }
 
-    new_wait_handle->expect_result();
+    raw_wait_handle->expect_result();
     server.release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
-    return new_wait_handle;
+    return raw_wait_handle;
 }
 
 void MirConnection::release_consumer_stream(MirBufferStream* stream)
