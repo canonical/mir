@@ -29,14 +29,17 @@
 extern "C" {
 #endif
 
+// Ignore use of deprecate MirSurfaceEvent typedef in deprecated functions (for now)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the attribute index configured with a given MirSurfaceEvent
  *
  * \param [in] event The event
  * \return           The associated attribute
  */
-MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event);
-/* __attribute__ ((deprecated("use make_event with mir_window_event_get_attribute instead"))); */
+MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event)
+__attribute__ ((deprecated("use mir_window_event_get_attribute instead")));
 
 /**
  * Retrieve the new value of the associated attribute for a given MirSurfaceEvent
@@ -44,8 +47,9 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event);
  * \param [in] event The event
  * \return           The associated attribute value
  */
-int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event);
-/* __attribute__ ((deprecated("use make_event with mir_window_event_get_attribute_value instead"))); */
+int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event)
+__attribute__ ((deprecated("use make_event with mir_window_event_get_attribute_value instead")));
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

@@ -107,6 +107,12 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
     uint32_t preferred_index = mir_output_get_preferred_mode_index(output);
     uint32_t current_index   = mir_output_get_current_mode_index(output);
 
+    std::vector<uint8_t> edid;
+    auto edid_size = mir_output_get_edid_size(output);
+    auto edid_start = mir_output_get_edid(output);
+    if (edid_size && edid_start)
+        edid.assign(edid_start, edid_start+edid_size);
+
     return mg::DisplayConfigurationOutput{
         DisplayConfigurationOutputId(output_id),
         DisplayConfigurationCardId(0), // Information not around
@@ -127,7 +133,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.subpixel_arrangement,
         local_config.gamma,
         local_config.gamma_supported,
-        {},
+        std::move(edid),
         {}  // TODO: Requires client API for getting logical size
     };
 }

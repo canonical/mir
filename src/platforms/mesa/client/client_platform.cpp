@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <cstring>
 
+namespace mgm=mir::graphics::mesa;
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
@@ -63,7 +64,7 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 
 struct AuthFdContext
 {
-    mir_auth_fd_callback cb;
+    MirAuthFdCallback cb;
     void* context;
 };
 
@@ -79,7 +80,7 @@ void auth_fd_cb(
     delete ctx;
 }
 
-void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
+void auth_fd_ext(MirConnection* conn, MirAuthFdCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_fd);
@@ -89,7 +90,7 @@ void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 
 struct AuthMagicContext
 {
-    mir_auth_magic_callback cb;
+    MirAuthMagicCallback cb;
     void* context;
 };
 
@@ -103,7 +104,7 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
     delete ctx;
 }
 
-void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
+void auth_magic_ext(MirConnection* conn, int magic, MirAuthMagicCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_magic);
@@ -288,4 +289,17 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &gbm_buffer;
 
     return nullptr;
+}
+
+uint32_t mclm::ClientPlatform::native_format_for(MirPixelFormat format) const
+{
+    return mgm::mir_format_to_gbm_format(format);
+}
+
+uint32_t mclm::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size size) const
+{
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
+    if (size.width.as_uint32_t() >= 800 && size.height.as_uint32_t() >= 600)
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    return bo_flags;
 }

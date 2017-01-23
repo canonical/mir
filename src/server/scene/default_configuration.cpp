@@ -32,7 +32,7 @@
 #include "gl_pixel_buffer.h"
 #include "global_event_sender.h"
 #include "mediating_display_changer.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_stack.h"

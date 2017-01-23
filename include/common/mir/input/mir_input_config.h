@@ -95,6 +95,7 @@ public:
     void for_each(std::function<void(MirInputDevice &)> const& visitor);
     bool operator==(MirInputConfig const& rhs) const;
     bool operator!=(MirInputConfig const& rhs) const;
+    using value_type = MirInputDevice;
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
