@@ -117,6 +117,23 @@ void ms::TimeoutApplicationNotRespondingDetector::register_observer(
     std::shared_ptr<Observer> const& observer)
 {
     observers.add(observer);
+
+    std::vector<Session const*> unresponsive_sessions;
+    {
+        std::lock_guard<std::mutex> lock{session_mutex};
+        for (auto const& session_pair : sessions)
+        {
+            if (session_pair.second->flagged_as_unresponsive)
+            {
+                unresponsive_sessions.push_back(session_pair.first);
+            }
+        }
+    }
+
+    for (auto const& unresponsive_session : unresponsive_sessions)
+    {
+       observer->session_unresponsive(unresponsive_session);
+    }
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_observer(
