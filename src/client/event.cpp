@@ -149,7 +149,7 @@ MirCloseWindowEvent const* mir_event_get_close_surface_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_close_window);
 
-    return ev->to_close_surface();
+    return ev->to_close_window();
 })
 
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
@@ -180,7 +180,7 @@ MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* ev
 {
     expect_event_type(ev, mir_event_type_window_output);
 
-    return ev->to_surface_output();
+    return ev->to_window_output();
 })
 
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
@@ -426,7 +426,7 @@ MirRectangle mir_surface_placement_get_relative_position(MirWindowPlacementEvent
 
 MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return event->to_surface_placement();
+    return event->to_window_placement();
 })
 
 MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
