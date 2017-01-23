@@ -212,9 +212,12 @@ MIR_COMMON_0.25_PRIVATE {
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
        MirEvent::to_surface*;
+# The above line matches these, but added to document why they disappeared
+#       MirEvent::to_surface_output*;   *** removed in Mir 0.26 ***
+#       MirEvent::to_surface_placement*;*** removed in Mir 0.26 ***
        MirEvent::to_resize*;
        MirEvent::to_orientation*;
-       MirEvent::to_close_surface*;
+#       MirEvent::to_close_surface*;    *** removed in Mir 0.26 ***
        MirEvent::to_keymap*;
        MirEvent::to_input*;
        MirEvent::to_prompt_session*;
@@ -472,5 +475,8 @@ MIR_COMMON_0.26 {
       typeinfo?for?MirKeyboardConfig;
       typeinfo?for?MirInputConfig;
       typeinfo?for?MirInputDevice;
+      MirEvent::to_close_window*;
+      MirEvent::to_window_output*;
+      MirEvent::to_window_placement*;
   };
 } MIR_COMMON_0.25;
