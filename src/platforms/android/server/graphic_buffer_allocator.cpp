@@ -82,22 +82,6 @@ mga::GraphicBufferAllocator::GraphicBufferAllocator(
         alloc_dev_ptr, cmdstream_sync_factory, quirks);
 }
 
-namespace
-{
-uint32_t convert_to_android_usage(mg::BufferUsage usage)
-{
-    switch (usage)
-    {
-    case mg::BufferUsage::hardware:
-        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
-    case mg::BufferUsage::software:
-        return (GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE);
-    default:
-        return -1;
-    }
-}
-}
-
 std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
     mg::BufferProperties const& properties)
 {
@@ -106,7 +90,7 @@ std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
         alloc_device->alloc_buffer(
             properties.size, 
             mga::to_android_format(properties.format),
-            convert_to_android_usage(properties.usage)),
+            mga::convert_to_android_usage(properties.usage)),
         egl_extensions);
 }
 
@@ -142,7 +126,7 @@ std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
         alloc_device->alloc_buffer(
             size,
             mga::to_android_format(format),
-            convert_to_android_usage(mg::BufferUsage::software)),
+            mga::convert_to_android_usage(mg::BufferUsage::software)),
         egl_extensions);
 }
 
