@@ -511,10 +511,10 @@ void MirConnection::released(StreamRelease data)
 
 void MirConnection::released(SurfaceRelease data)
 {
-    data.callback(data.surface, data.context);
-    data.handle->result_received();
     surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
+    data.callback(data.surface, data.context);
+    data.handle->result_received();
 }
 
 MirWaitHandle* MirConnection::release_surface(
