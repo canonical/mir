@@ -18,6 +18,9 @@
 
 #include "mir/events/surface_placement_event.h"
 
+// MirSurfacePlacementEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirSurfacePlacementEvent::MirSurfacePlacementEvent()
 {
     event.initSurfacePlacement();
@@ -48,7 +51,7 @@ void MirSurfacePlacementEvent::set_placement(MirRectangle const& placement)
     rect.setHeight(placement.height);
 }
 
-MirSurfacePlacementEvent const* MirEvent::to_surface_placement() const
+MirSurfacePlacementEvent const* MirEvent::to_window_placement() const
 {
     return static_cast<MirSurfacePlacementEvent const*>(this);
 }

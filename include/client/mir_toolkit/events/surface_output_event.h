@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+// Ignore use of deprecate MirSurfaceOutputEvent typedef in deprecated functions (for now)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the DPI of the new output configuration of a MirSurfaceOutputEvent
  *
@@ -78,6 +81,8 @@ __attribute__ ((deprecated("use mir_window_output_event_get_refresh_rate instead
  */
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 __attribute__ ((deprecated("use mir_window_output_event_get_output_id instead")));
+
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

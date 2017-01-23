@@ -18,6 +18,9 @@
 
 #include "mir/events/close_surface_event.h"
 
+// MirCloseSurfaceEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirCloseSurfaceEvent::MirCloseSurfaceEvent()
 {
     event.initCloseSurface();

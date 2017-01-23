@@ -19,6 +19,7 @@
 #include "mir/scene/null_session_listener.h"
 #include "src/server/scene/application_session.h"
 
+#include "mir/test/signal.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_framework/in_process_server.h"
@@ -28,8 +29,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <chrono>
+
 namespace ms = mir::scene;
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
+
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -82,8 +88,12 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
     auto const handler = std::make_shared<MockStateHandler>();
     mir_connection_set_lifecycle_event_callback(connection, lifecycle_callback, handler.get());
 
-    EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_will_suspend))).Times(1);
+    mt::Signal signal;
+    EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_will_suspend))).Times(1)
+        .WillOnce(mt::WakeUp(&signal));
     EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_connection_lost))).Times(AtMost(1));
 
     mir_connection_release(connection);
+
+    EXPECT_TRUE(signal.wait_for(30s));
 }

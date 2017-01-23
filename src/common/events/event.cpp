@@ -173,14 +173,14 @@ MirOrientationEvent const* MirEvent::to_orientation() const
     return static_cast<MirOrientationEvent const*>(this);
 }
 
-MirCloseSurfaceEvent* MirEvent::to_close_surface()
+MirCloseWindowEvent* MirEvent::to_close_window()
 {
-    return static_cast<MirCloseSurfaceEvent*>(this);
+    return static_cast<MirCloseWindowEvent*>(this);
 }
 
-MirCloseSurfaceEvent const* MirEvent::to_close_surface() const
+MirCloseWindowEvent const* MirEvent::to_close_window() const
 {
-    return static_cast<MirCloseSurfaceEvent const*>(this);
+    return static_cast<MirCloseWindowEvent const*>(this);
 }
 
 MirKeymapEvent* MirEvent::to_keymap()
@@ -193,14 +193,14 @@ MirKeymapEvent const* MirEvent::to_keymap() const
     return static_cast<MirKeymapEvent const*>(this);
 }
 
-MirSurfaceOutputEvent* MirEvent::to_surface_output()
+MirWindowOutputEvent* MirEvent::to_window_output()
 {
-    return static_cast<MirSurfaceOutputEvent*>(this);
+    return static_cast<MirWindowOutputEvent*>(this);
 }
 
-MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
+MirWindowOutputEvent const* MirEvent::to_window_output() const
 {
-    return static_cast<MirSurfaceOutputEvent const*>(this);
+    return static_cast<MirWindowOutputEvent const*>(this);
 }
 
 MirInputDeviceStateEvent* MirEvent::to_input_device_state()
