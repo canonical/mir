@@ -62,29 +62,22 @@ using namespace testing;
 
 namespace
 {
-struct BufferStreamCallback
+template<class T>
+struct Callback
 {
-    static void created(MirBufferStream* stream, void *client_context)
+    static void created(T* object, void* client_context)
     {
-        auto const context = reinterpret_cast<BufferStreamCallback*>(client_context);
+        auto const context = reinterpret_cast<Callback*>(client_context);
         context->invoked = true;
-        context->resulting_stream = stream;
+        context->result = object;
     }
-    bool invoked = false;
-    MirBufferStream* resulting_stream = nullptr;
+    bool invoked{false};
+    T* result{nullptr};
 };
 
-struct RenderSurfaceCallback
-{
-    static void created(MirRenderSurface* s, void *client_context)
-    {
-        auto const context = reinterpret_cast<RenderSurfaceCallback*>(client_context);
-        context->invoked = true;
-        context->resulting_surface = s;
-    }
-    bool invoked = false;
-    MirRenderSurface* resulting_surface = nullptr;
-};
+using RenderSurfaceCallback = Callback<MirRenderSurface>;
+using PresentationChainCallback = Callback<MirPresentationChain>;
+using BufferStreamCallback = Callback<MirBufferStream>;
 
 struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
@@ -214,7 +207,8 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
     MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
     MOCK_METHOD2(request_interface, void*(char const*, int));
-
+    MOCK_CONST_METHOD1(native_format_for, uint32_t(MirPixelFormat));
+    MOCK_CONST_METHOD2(native_flags_for, uint32_t(MirBufferUsage, mir::geometry::Size));
     mcl::ClientContext* client_context = nullptr;
 };
 
@@ -689,8 +683,8 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_error_and_err
         2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware,
         nullptr, &BufferStreamCallback::created, &callback);
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_stream);
-    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
+    ASSERT_THAT(callback.result, NotNull());
+    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.result),
         StrEq("Error processing buffer stream response: " + error_msg));
 }
 
@@ -707,8 +701,8 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
         &BufferStreamCallback::created, &callback);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_stream);
-    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
+    ASSERT_THAT(callback.result, NotNull());
+    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.result),
         StrEq("Error processing buffer stream response: no ID in response (disconnected?)"));
 }
 
@@ -759,7 +753,7 @@ TEST_F(MirConnectionTest, callback_is_invoked_after_rs_creation_error)
     auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_surface);
+    ASSERT_THAT(callback.result, NotNull());
     EXPECT_THAT(actual_rs->get_error_message(),
         StrEq("Error creating MirRenderSurface: " + error_msg));
 }
@@ -777,7 +771,7 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
     auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_surface);
+    ASSERT_THAT(callback.result, NotNull());
     EXPECT_THAT(actual_rs->get_error_message(),
         StrEq("Error creating MirRenderSurface: no ID in response (disconnected?)"));
 }
@@ -805,7 +799,7 @@ TEST_F(MirConnectionTest, release_render_surface_calls_server)
     auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_surface);
+    ASSERT_THAT(callback.result, NotNull());
 
     mp::BufferStreamId expected_request;
     expected_request.set_value(actual_rs->stream_id().as_value());
@@ -830,7 +824,7 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
     auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_surface);
+    ASSERT_THAT(callback.result, NotNull());
     EXPECT_CALL(*mock_channel, buffer_stream_release(_))
         .Times(0);
     connection->release_render_surface_with_content(native_window);
@@ -871,4 +865,25 @@ TEST_F(MirConnectionTest, can_release_buffer_from_connection)
     EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg)));
 
     connection->release_buffer(&mock_buffer);
+}
+
+TEST_F(MirConnectionTest, release_surface_releases_resources_before_invoking_callback)
+{
+    using WindowCallback = Callback<MirWindow>;
+
+    connection->connect("MirClientSurfaceTest", connected_callback, nullptr)->wait_for_all();
+
+    MirWindowSpec spec(connection.get(), 640, 480, mir_pixel_format_abgr_8888);
+    WindowCallback callback;
+    connection->create_surface(spec, &WindowCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_THAT(callback.result, NotNull());
+
+    auto release_cb = [](MirWindow* w, void*)
+    {
+        EXPECT_FALSE(MirWindow::is_valid(w));
+    };
+
+    connection->release_surface(callback.result, release_cb, nullptr);
 }

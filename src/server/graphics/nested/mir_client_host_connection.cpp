@@ -526,9 +526,16 @@ struct Chain : mgn::HostChain
         mir_render_surface_release(render_surface);
     }
 
+    static void buffer_available(MirBuffer* buffer, void* context)
+    {
+        auto host_buffer = static_cast<mgn::NativeBuffer*>(context);
+        host_buffer->available(buffer);
+    }
+
     void submit_buffer(mgn::NativeBuffer& buffer) override
     {
-        mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
+        mir_presentation_chain_submit_buffer(chain, buffer.client_handle(),
+                    buffer_available, &buffer);
     }
 
     void set_submission_mode(mgn::SubmissionMode mode) override
@@ -701,7 +708,7 @@ public:
         host_buffer->available(buffer);
     }
 
-    void available(MirBuffer* buffer)
+    void available(MirBuffer* buffer) override
     {
         std::unique_lock<std::mutex> lk(mut);
         if (!handle)

@@ -410,16 +410,16 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         surface_id = e->to_orientation()->surface_id();
                         break;
                     case mir_event_type_close_window:
-                        surface_id = e->to_close_surface()->surface_id();
+                        surface_id = e->to_close_window()->surface_id();
                         break;
                     case mir_event_type_keymap:
                         surface_id = e->to_keymap()->surface_id();
                         break;
                     case mir_event_type_window_output:
-                        surface_id = e->to_surface_output()->surface_id();
+                        surface_id = e->to_window_output()->surface_id();
                         break;
                     case mir_event_type_window_placement:
-                        surface_id = e->to_surface_placement()->id();
+                        surface_id = e->to_window_placement()->id();
                         break;
                     default:
                         is_surface_event = false;

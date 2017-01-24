@@ -341,7 +341,7 @@ private:
     MirWaitHandle set_base_display_configuration_wait_handle;
 
     std::mutex release_wait_handle_guard;
-    std::vector<MirWaitHandle*> release_wait_handles;
+    std::vector<std::unique_ptr<MirWaitHandle>> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
     std::shared_ptr<mir::input::InputDevices> const input_devices;
