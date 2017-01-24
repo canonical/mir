@@ -377,7 +377,8 @@ void mir_connection_get_available_surface_formats(
 MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
+    mir_platform_operation_callback callback, void* context)
+__attribute__ ((deprecated("use platform specific extensions instead")));
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
