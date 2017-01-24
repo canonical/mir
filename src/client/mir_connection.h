@@ -217,7 +217,7 @@ public:
 
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback callback, void* context);
+        MirBufferCallback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
     auto create_render_surface_with_content(
