@@ -56,7 +56,7 @@ public:
     MirConnection* connection() const override;
     MirRenderSurface* render_surface() const override;
 
-    MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
+    MirWaitHandle* release(MirBufferStreamCallback callback, void* context);
 private:
     std::string const error;
     MirConnection* const connection_;

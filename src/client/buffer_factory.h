@@ -43,7 +43,7 @@ public:
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context) = 0;
     virtual void cancel_requests_with_context(void*) = 0;
 
@@ -62,7 +62,7 @@ public:
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context) override;
     void cancel_requests_with_context(void*) override;
 
@@ -77,7 +77,7 @@ private:
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
-            mir_buffer_callback cb,
+            MirBufferCallback cb,
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
@@ -85,7 +85,7 @@ private:
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;
-        mir_buffer_callback cb;
+        MirBufferCallback cb;
         void* cb_context;
     };
     std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;

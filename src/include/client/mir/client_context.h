@@ -35,7 +35,7 @@ public:
     virtual void populate_graphics_module(MirModuleProperties& graphics_module) = 0;
     virtual MirWaitHandle* platform_operation(
         MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context) = 0;
+        MirPlatformOperationCallback callback, void* context) = 0;
 
 protected:
     ClientContext() = default;

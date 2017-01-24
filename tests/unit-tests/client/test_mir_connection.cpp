@@ -86,7 +86,7 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context));
 };
 

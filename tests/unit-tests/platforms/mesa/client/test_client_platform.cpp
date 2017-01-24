@@ -64,7 +64,7 @@ struct StubClientContext : mcl::ClientContext
         memset(&graphics_module, 0, sizeof(graphics_module));
     }
     MirWaitHandle* platform_operation(
-        MirPlatformMessage const*, mir_platform_operation_callback, void*) override
+        MirPlatformMessage const*, MirPlatformOperationCallback, void*) override
     {
         return nullptr;
     }
