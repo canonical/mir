@@ -266,7 +266,8 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * \param [in]  type  The MirDisplayOutputType to describe.
  * \returns           The name of the output type.
  */
-char const* mir_display_output_type_name(MirDisplayOutputType type);
+char const* mir_display_output_type_name(MirDisplayOutputType type)
+__attribute__((deprecated("use mir_output_type_name instead")));
 
 /**
  * Get the textual name of an output type.
