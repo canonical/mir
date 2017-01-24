@@ -51,6 +51,8 @@ using namespace testing;
 
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Assert our MirSurfaceAttrib is 1to1 to MirWindowAttrib
 static_assert(
     static_cast<int32_t>(mir_surface_attrib_type) ==
@@ -94,6 +96,7 @@ static_assert(
 
 static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
     "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
+#pragma GCC diagnostic pop
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {

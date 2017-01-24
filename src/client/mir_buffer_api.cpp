@@ -49,6 +49,42 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+MirBuffer* mir_connection_allocate_buffer_sync(
+    MirConnection* connection, 
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage)
+try
+{
+    mir::require(connection);
+
+    struct BufferInfo
+    {
+        MirBuffer* buffer = nullptr;
+        std::mutex mutex;
+        std::condition_variable cv;
+    } info;
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, 
+        [](MirBuffer* buffer, void* c)
+        {
+            mir::require(buffer);
+            mir::require(c);
+            auto context = reinterpret_cast<BufferInfo*>(c);
+            std::unique_lock<decltype(context->mutex)> lk(context->mutex);
+            context->buffer = buffer;
+            context->cv.notify_all();
+        }, &info);
+
+    std::unique_lock<decltype(info.mutex)> lk(info.mutex);
+    info.cv.wait(lk, [&]{ return info.buffer; });
+    return info.buffer;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
 void ignore(MirBuffer*, void*){}
 void mir_buffer_release(MirBuffer* b) 
 try
@@ -169,19 +205,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return "MirBuffer: unknown error";
-}
-
-void mir_buffer_set_callback(
-    MirBuffer* b, mir_buffer_callback available_callback, void* available_context)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    buffer->set_callback(available_callback, available_context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)

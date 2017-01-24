@@ -44,6 +44,8 @@ namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Assert our MirSurfaceType is 1to1 to MirWindowType
 static_assert(
     static_cast<int32_t>(mir_surface_type_normal) ==
@@ -149,6 +151,7 @@ static_assert(
     "mir_surface_visibility_exposed != mir_window_visibility_exposed");
 static_assert(sizeof(MirSurfaceVisibility) == sizeof(MirWindowVisibility),
     "sizeof(MirSurfaceVisibility) != sizeof(MirWindowVisibility)");
+#pragma GCC diagnostic pop
 
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
@@ -820,7 +823,10 @@ TEST_F(ClientLibrary, accesses_display_info)
     {
         auto output = mir_display_config_get_output(configuration, i);
         ASSERT_THAT(output, NotNull());
-        EXPECT_GE(mir_output_get_num_modes(output), mir_output_get_current_mode_index(output));
+        // Since these return types are changing make the types explicit:
+        int const num_modes = mir_output_get_num_modes(output);
+        int const current_mode_index = mir_output_get_current_mode_index(output);
+        EXPECT_GE(num_modes, current_mode_index);
         EXPECT_GE(mir_output_get_num_pixel_formats(output), 0);
     }
 
