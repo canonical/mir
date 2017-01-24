@@ -224,7 +224,7 @@ int main(int argc, char** argv)
         b = buffer_available[i].buffer;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        mir_presentation_chain_submit_buffer(chain, b);
+        mir_presentation_chain_submit_buffer(chain, b, available_callback, &buffer_available[i]);
 
         if ((i == num_prerendered_frames - 1) || (i == 0))
             inc *= -1; 

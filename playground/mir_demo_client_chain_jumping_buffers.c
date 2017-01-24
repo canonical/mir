@@ -250,7 +250,8 @@ int main(int argc, char** argv)
             b = buffer_available[spare_buffer].buffer;
             pthread_mutex_unlock(&buffer_available[spare_buffer].lock);
 
-            mir_presentation_chain_submit_buffer(chain[i], b);
+            mir_presentation_chain_submit_buffer(
+                chain[i], b, available_callback, &buffer_available[spare_buffer]);
 
             //just looks like a blur if we don't slow things down
             ualarm(500000, 0);
