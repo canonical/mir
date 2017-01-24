@@ -31,10 +31,7 @@ extern "C" {
 #endif
 
 /** Allocate a MirBuffer and do not wait for the server to return it.
- *
- *  The callback will be called when the buffer is available for use.
- *  It will be called once when created, and once per every
- *  mir_presentation_chain_submit_buffer.
+ *  The callback will be called when the buffer is created.
  *
  *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
@@ -51,6 +48,20 @@ void mir_connection_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
+/** Allocate a MirBuffer and wait for the server to return it.
+ *
+ *   \param [in] connection            The connection
+ *   \param [in] width                 Requested buffer width
+ *   \param [in] height                Requested buffer height
+ *   \param [in] buffer_usage          Requested buffer usage
+ *   \return                           The buffer
+ **/
+MirBuffer* mir_connection_allocate_buffer_sync(
+    MirConnection* connection,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage);
+
 /** Test for a valid buffer
  *   \param [in] buffer    The buffer
  *   \return               True if the buffer is valid, or false otherwise.
@@ -66,17 +77,6 @@ bool mir_buffer_is_valid(MirBuffer* buffer);
  *                         connection is valid.
  **/
 char const *mir_buffer_get_error_message(MirBuffer* buffer);
-
-/** Reassign the callback that the MirBuffer will call when the buffer is
- *  available for use again
- *  \param [in] buffer      The buffer
- *  \param [in] available_callback    The callback called when the buffer
- *                                     is available
- *  \param [in] available_context     The context for the available_callback
- */
-void mir_buffer_set_callback(
-    MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context);
 
 /**
  * Access the MirBufferPackage
