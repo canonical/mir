@@ -45,6 +45,8 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
         time (LP: #1494197)
       . Changing scale, formFactor or DPI in display configuration causes
         renderer teardown/recreate unnecessarily (LP: #1556142)
+      . [testsfail] ApplicationNotRespondingDetection.failure_to_pong_is_
+        noticed (LP: #1570327)
       . CI failure in TestClientInput.receives_one_touch_event_per_frame
         (LP: #1570698)
       . Mir-on-X mouse input is jerky/stuttery compared to Mir-on-KMS
@@ -87,6 +89,7 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . [ FAILED ] ThreadedDispatcherDeathTest.destroying_dispatcher_from_a_
         callback_is_an_error (LP: #1647573)
       . [regression] eglapps now all have window title "default" (LP: #1647575)
+      . [ FAILED ] LifecycleEventTest.lifecycle_event_test (LP: #1649758)
       . Package mirtest-dev is missing a dependency on mir-renderer-gl-dev
         (LP: #1651391)
       . EDID data is missing in nested servers (LP: #1651633)
@@ -112,6 +115,9 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
         error: narrowing conversion of ‘..._drmModeConnector::connector_id’
         from ‘uint32_t {aka unsigned int}’ to ‘EGLAttrib {aka int}’ inside { }
         [-Werror=narrowing] (LP: #1656633)
+      . [regression] Mir cross-compile to vivid/armhf FTBFS with:
+        mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
+        (LP: #1658605)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
 
