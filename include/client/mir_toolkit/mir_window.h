@@ -727,9 +727,8 @@ void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const
  * result and check the applied value using mir_window_get_preferred_orientation
  *   \param [in] window      The window to operate on
  *   \param [in] orientation The preferred orientation modes
- *   \return                 A wait handle that can be passed to mir_wait_for
 */
-MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
+void mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
 
 /**
  * Get the preferred orientation modes of a window.

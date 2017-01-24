@@ -316,7 +316,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_preferred_orientation(window, mode));
+        mir_wait_for(mir_surface_set_preferred_orientation(window, mode));
 #pragma GCC diagnostic pop
         EXPECT_THAT(mir_window_get_preferred_orientation(window), Eq(mode));
     }
