@@ -39,6 +39,8 @@ namespace mtd = mir::test::doubles;
 using namespace mir::geometry;
 using namespace testing;
 
+using namespace std::literals::chrono_literals;
+
 namespace
 {
 class MockSurfaceObserver : public ms::NullSurfaceObserver
@@ -569,14 +571,19 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     auto const initial_state = GetParam().from;
     auto const new_state = GetParam().to;
 
-    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
-    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
+    mt::Signal received_initial_state;
+    mt::Signal received_new_state;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_window_set_state(window, initial_state));
-    mir_wait_for(mir_window_set_state(window, new_state));
-#pragma GCC diagnostic pop
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)))
+        .WillOnce(InvokeWithoutArgs([&]{ received_initial_state.raise(); }));
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)))
+        .WillOnce(InvokeWithoutArgs([&]{ received_new_state.raise(); }));
+
+    mir_window_set_state(window, initial_state);
+    mir_window_set_state(window, new_state);
+
+    received_initial_state.wait_for(400ms);
+    received_new_state.wait_for(400ms);
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,

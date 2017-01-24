@@ -241,14 +241,14 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
         {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_maximized));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_restored));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_fullscreen));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_minimized));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_maximized));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_restored));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_fullscreen));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_minimized));
 #pragma GCC diagnostic pop
         }
     }
@@ -409,25 +409,25 @@ TEST_F(ClientLibrary, can_set_surface_state)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_window_set_state(window, mir_window_state_horizmaximized));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_horizmaximized));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
 
-    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(888)));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
+    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(888)));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
 
     // Stress-test synchronization logic with some flooding
     for (int i = 0; i < 100; i++)
     {
         mir_window_set_state(window, mir_window_state_maximized);
         mir_window_set_state(window, mir_window_state_restored);
-        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-        ASSERT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+        ASSERT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
     }
 #pragma GCC diagnostic pop
 

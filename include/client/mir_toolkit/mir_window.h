@@ -678,9 +678,8 @@ MirWindowType mir_window_get_type(MirWindow* window);
  * Change the state of a window.
  *   \param [in] window  The window to operate on
  *   \param [in] state   The new state of the window
- *   \return             A wait handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_window_set_state(MirWindow* window,
+void mir_window_set_state(MirWindow* window,
                                      MirWindowState state);
 
 /**
