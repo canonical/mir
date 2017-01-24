@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <GLES2/gl2.h>
-#include <mir_toolkit/mir_surface.h>
+#include <mir_toolkit/mir_window.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
