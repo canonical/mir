@@ -55,15 +55,15 @@ public:
 
     ~MirPromptSession();
 
-    MirWaitHandle* start(pid_t application_pid, mir_prompt_session_callback callback, void* context);
-    MirWaitHandle* stop(mir_prompt_session_callback callback, void* context);
+    MirWaitHandle* start(pid_t application_pid, MirPromptSessionCallback callback, void* context);
+    MirWaitHandle* stop(MirPromptSessionCallback callback, void* context);
 
     MirWaitHandle* new_fds_for_prompt_providers(
         unsigned int no_of_fds,
-        mir_client_fd_callback callback,
+        MirClientFdCallback callback,
         void * context);
 
-    void register_prompt_session_state_change_callback(mir_prompt_session_state_change_callback callback, void* context);
+    void register_prompt_session_state_change_callback(MirPromptSessionStateChangeCallback callback, void* context);
 
     char const* get_error_message();
 
@@ -89,9 +89,9 @@ private:
     std::function<void(MirPromptSessionState)> handle_prompt_session_state_change;
 
     void set_state(MirPromptSessionState new_state);
-    void done_start(mir_prompt_session_callback callback, void* context);
-    void done_stop(mir_prompt_session_callback callback, void* context);
-    void done_fds_for_prompt_providers(mir_client_fd_callback callback, void* context);
+    void done_start(MirPromptSessionCallback callback, void* context);
+    void done_stop(MirPromptSessionCallback callback, void* context);
+    void done_fds_for_prompt_providers(MirClientFdCallback callback, void* context);
     MirPromptSession(MirPromptSession const&) = delete;
     MirPromptSession& operator=(MirPromptSession const&) = delete;
 };

@@ -53,7 +53,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context)
 try
 {
@@ -74,7 +74,7 @@ try
 {
     MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+        reinterpret_cast<MirBufferStreamCallback>(assign_result), &stream)->wait_for_all();
     return stream;
 }
 catch (std::exception const& ex)
@@ -85,7 +85,7 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_buffer_stream_release(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 {
     auto connection = buffer_stream->connection();
@@ -109,7 +109,7 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_buffer_stream_swap_buffers(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 try
 {

@@ -35,7 +35,7 @@ void null_callback(MirPromptSession*, void*) {}
 MirPromptSession *mir_connection_create_prompt_session_sync(
     MirConnection* connection,
     pid_t application_pid,
-    mir_prompt_session_state_change_callback state_change_callback,
+    MirPromptSessionStateChangeCallback state_change_callback,
     void* context)
 {
     try
@@ -58,7 +58,7 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
 MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
     MirPromptSession *prompt_session,
     unsigned int no_of_fds,
-    mir_client_fd_callback callback,
+    MirClientFdCallback callback,
     void * context)
 {
     try
