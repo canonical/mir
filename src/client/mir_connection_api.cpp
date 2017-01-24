@@ -94,9 +94,8 @@ MirConnection* mir_connect_sync(
     char const* app_name)
 {
     MirConnection* conn = nullptr;
-<<<<<<< TREE
     auto wh = mir_connect(server, app_name,
-                          reinterpret_cast<mir_connected_callback>
+                          reinterpret_cast<MirConnectedCallback>
                           (assign_result),
                           &conn);
 
@@ -105,12 +104,6 @@ MirConnection* mir_connect_sync(
         wh->wait_for_all();
     }
 
-=======
-    mir_wait_for(mir_connect(server, app_name,
-                             reinterpret_cast<MirConnectedCallback>
-                                             (assign_result),
-                             &conn));
->>>>>>> MERGE-SOURCE
     return conn;
 }
 
