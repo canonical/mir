@@ -676,18 +676,16 @@ MirWindowType mir_window_get_type(MirWindow* window)
     return type;
 }
 
-MirWaitHandle* mir_window_set_state(MirWindow* window, MirWindowState state)
+void mir_window_set_state(MirWindow* window, MirWindowState state)
+try
 {
-    try
-    {
-        return window ? window->configure(mir_window_attrib_state, state) : nullptr;
+    mir::require(mir_window_is_valid(window));
+        window->configure(mir_window_attrib_state, state);
     }
     catch (std::exception const& ex)
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
     }
-}
 
 MirWindowState mir_window_get_state(MirWindow* window)
 {
@@ -1192,8 +1190,15 @@ MirSurfaceType mir_surface_get_type(MirSurface* surf)
 }
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
+try
 {
-    return mir_window_set_state(surf, static_cast<MirWindowState>(state));
+    mir::require(mir_window_is_valid(surf));
+    return surf->configure(mir_window_attrib_state, state);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface* surf)

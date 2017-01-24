@@ -197,13 +197,13 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(ClientSurfaceEvents, surface_receives_state_events)
+TEST_F(ClientSurfaceEvents, window_receives_state_events)
 {
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_vertmaximized));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
 #pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
@@ -214,7 +214,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
 #pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
@@ -226,7 +226,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_state(window, mir_window_state_vertmaximized));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
 #pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
@@ -239,8 +239,8 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(777)));
-        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_maximized));
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
 #pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
