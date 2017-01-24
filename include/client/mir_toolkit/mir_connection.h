@@ -50,7 +50,7 @@ extern "C" {
 MirWaitHandle *mir_connect(
     char const *server,
     char const *app_name,
-    mir_connected_callback callback,
+    MirConnectedCallback callback,
     void *context);
 
 /**
@@ -113,7 +113,7 @@ void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProp
  *   \param [in,out] context    User data passed to the callback function
  */
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
-    mir_lifecycle_event_callback callback, void* context);
+    MirLifecycleEventCallback callback, void* context);
 
 
 /**
@@ -134,7 +134,7 @@ void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
  * \param [in] context          User data passed to the callback function
  */
 void mir_connection_set_ping_event_callback(MirConnection* connection,
-    mir_ping_event_callback callback, void* context);
+    MirPingEventCallback callback, void* context);
 
 
 /**
@@ -180,7 +180,7 @@ MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* con
  */
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
-    mir_display_config_callback callback, void* context);
+    MirDisplayConfigCallback callback, void* context);
 
 /**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
@@ -377,7 +377,7 @@ void mir_connection_get_available_surface_formats(
 MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
+    MirPlatformOperationCallback callback, void* context);
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
@@ -420,7 +420,7 @@ void mir_input_config_release(MirInputConfig const* config);
  */
 void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
-    mir_input_config_callback callback, void* context);
+    MirInputConfigCallback callback, void* context);
 
 /**
  * Register a callback to be called on non-fatal errors
@@ -431,7 +431,7 @@ void mir_connection_set_input_config_change_callback(
  */
 void mir_connection_set_error_callback(
     MirConnection* connection,
-    mir_error_callback callback,
+    MirErrorCallback callback,
     void* context);
 
 #ifdef __cplusplus

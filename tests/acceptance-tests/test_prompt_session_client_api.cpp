@@ -253,7 +253,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
 constexpr pid_t PromptSessionClientAPI::application_session_pid;
 
-mir_prompt_session_state_change_callback const null_state_change_callback{nullptr};
+MirPromptSessionStateChangeCallback const null_state_change_callback{nullptr};
 constexpr char const* const PromptSessionClientAPI::provider_name[];
 
 extern "C" void prompt_session_state_change_callback(

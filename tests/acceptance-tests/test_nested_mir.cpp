@@ -663,7 +663,7 @@ struct Client
 
 struct ClientWithADisplayChangeCallback : virtual Client
 {
-    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir)
     {
         mir_connection_set_display_config_change_callback(connection, callback, context);
@@ -727,7 +727,7 @@ struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPa
 
 struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
 {
-    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir),
         ClientWithADisplayChangeCallback(nested_mir, callback, context),
         ClientWithAPaintedSurface(nested_mir)
