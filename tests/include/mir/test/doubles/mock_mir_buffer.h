@@ -53,7 +53,7 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_METHOD0(increment_age, void());
     MOCK_CONST_METHOD0(valid, bool());
     MOCK_CONST_METHOD0(error_message, char const*());
-    MOCK_METHOD2(set_callback, void(mir_buffer_callback callback, void* context));
+    MOCK_METHOD2(set_callback, void(MirBufferCallback callback, void* context));
 };
 
 using StubMirBuffer = testing::NiceMock<MockMirBuffer>; 

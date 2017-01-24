@@ -43,6 +43,7 @@
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/observant_shell.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/display_config_matchers.h"
@@ -252,148 +253,6 @@ struct StubSurfaceObserver : msc::NullSurfaceObserver
     bool removed = false;
 };
 
-struct ObservantShell : msh::Shell
-{
-    ObservantShell(
-        std::shared_ptr<msh::Shell> const& wrapped,
-        std::shared_ptr<msc::SurfaceObserver> const& surface_observer) :
-        wrapped(wrapped),
-        surface_observer(surface_observer)
-    {
-    }
-
-    void add_display(geom::Rectangle const& area) override
-    {
-        return wrapped->add_display(area);
-    }
-
-    void remove_display(geom::Rectangle const& area) override
-    {
-        return wrapped->remove_display(area);
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        return wrapped->handle(event);
-    }
-
-    void focus_next_session() override
-    {
-        wrapped->focus_next_session();
-    }
-
-    auto focused_session() const -> std::shared_ptr<msc::Session> override
-    {
-        return wrapped->focused_session();
-    }
-
-    void set_focus_to(
-        std::shared_ptr<msc::Session> const& focus_session,
-        std::shared_ptr<msc::Surface> const& focus_surface) override
-    {
-        return wrapped->set_focus_to(focus_session, focus_surface);
-    }
-
-    std::shared_ptr<msc::Surface> focused_surface() const override
-    {
-        return wrapped->focused_surface();
-    }
-
-    auto surface_at(geom::Point cursor) const -> std::shared_ptr<msc::Surface> override
-    {
-        return wrapped->surface_at(cursor);
-    }
-
-    void raise(msh::SurfaceSet const& surfaces) override
-    {
-        wrapped->raise(surfaces);
-    }
-
-    std::shared_ptr<msc::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        return wrapped->open_session(client_pid, name, sink);
-    }
-
-    void close_session(std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->close_session(session);
-    }
-
-    std::shared_ptr<msc::PromptSession> start_prompt_session_for(
-        std::shared_ptr<msc::Session> const& session,
-        msc::PromptSessionCreationParameters const& params) override
-    {
-        return wrapped->start_prompt_session_for(session, params);
-    }
-
-    void add_prompt_provider_for(
-        std::shared_ptr<msc::PromptSession> const& prompt_session,
-        std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->add_prompt_provider_for(prompt_session, session);
-    }
-
-    void stop_prompt_session(std::shared_ptr<msc::PromptSession> const& prompt_session) override
-    {
-        wrapped->stop_prompt_session(prompt_session);
-    }
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<msc::Session> const& session,
-        msc::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        auto id = wrapped->create_surface(session, params, sink);
-        auto window = session->surface(id);
-        window->add_observer(surface_observer);
-        return id;
-    }
-
-    void modify_surface(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        msh::SurfaceSpecification  const& modifications) override
-    {
-        wrapped->modify_surface(session, window, modifications);
-    }
-
-    void destroy_surface(std::shared_ptr<msc::Session> const& session, mf::SurfaceId window) override
-    {
-        wrapped->destroy_surface(session, window);
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        MirWindowAttrib attrib,
-        int value) override
-    {
-        return wrapped->set_surface_attribute(session, window, attrib, value);
-    }
-
-    int get_surface_attribute(
-        std::shared_ptr<msc::Surface> const& window,
-        MirWindowAttrib attrib) override
-    {
-        return wrapped->get_surface_attribute(window, attrib);
-    }
-
-    void raise_surface(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        uint64_t timestamp) override
-    {
-        return wrapped->raise_surface(session, window, timestamp);
-    }
-
-private:
-    std::shared_ptr<msh::Shell> const wrapped;
-    std::shared_ptr<msc::SurfaceObserver> const surface_observer;
-};
-
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -511,7 +370,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<ObservantShell>(wrapped, stub_observer);
+            return std::make_shared<mtf::ObservantShell>(wrapped, stub_observer);
         });
 
         mtf::HeadlessInProcessServer::SetUp();
@@ -663,7 +522,7 @@ struct Client
 
 struct ClientWithADisplayChangeCallback : virtual Client
 {
-    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir)
     {
         mir_connection_set_display_config_change_callback(connection, callback, context);
@@ -727,7 +586,7 @@ struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPa
 
 struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
 {
-    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir),
         ClientWithADisplayChangeCallback(nested_mir, callback, context),
         ClientWithAPaintedSurface(nested_mir)
@@ -1011,7 +870,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_window_configure_cursor(client.window, conf));
+    mir_window_configure_cursor(client.window, conf);
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1093,7 +952,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_window_configure_cursor(client.window, conf));
+    mir_window_configure_cursor(client.window, conf);
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);

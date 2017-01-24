@@ -21,6 +21,25 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
+//for clang
+#ifndef __has_feature
+  #define __has_feature(x) 0  // Compatibility with non-clang
+#endif
+
+//for clang
+#ifndef __has_extension
+  #define __has_extension __has_feature // Compatibility with pre-3.0
+#endif
+
+#if __GNUC__ >= 6 || \
+    (__has_extension(attribute_deprecated_with_message) && \
+     __has_extension(enumerator_attributes))
+  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
+      ENUM __attribute__ ((deprecated("Use " #INSTEAD " instead")))
+#else
+  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
+      ENUM
+#endif
 /**
  * \addtogroup mir_toolkit
  * @{
@@ -420,12 +439,15 @@ typedef enum MirShellChrome
  * Pointer Confinement
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum MirPointerConfinementState
 {
     mir_pointer_unconfined,
-    mir_pointer_confined_to_surface, /* __attribute__ ((deprecated("use mir_pointer_confined_to_window"))); */
+    MIR_DEPRECATED_ENUM(mir_pointer_confined_to_surface, "mir_pointer_confined_to_window"),
     mir_pointer_confined_to_window = mir_pointer_confined_to_surface,
 } MirPointerConfinementState;
+#pragma GCC diagnostic pop
 
 /**
  * Supports gamma correction
