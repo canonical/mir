@@ -1171,10 +1171,11 @@ TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
 
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
-    auto keyboard = get_mutable_device_with_capabilities(config, mir_input_device_capability_keyboard|mir_input_device_capability_alpha_numeric);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
 
-    // Touchpad configuration is not applicable to keyboards
-    keyboard->set_touchpad_config(MirTouchpadConfig{});
+    float out_of_range = 3.0f;
+    mir_pointer_config_set_acceleration_bias(pointer_config, out_of_range);
 
     mt::Signal wait_for_error;
     mir_connection_set_error_callback(

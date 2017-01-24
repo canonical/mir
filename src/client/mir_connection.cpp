@@ -1505,22 +1505,24 @@ void* MirConnection::request_interface(char const* name, int version)
 
 void MirConnection::apply_input_configuration(MirInputConfig const* config)
 {
-    mp::Void request;
     auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
-    mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_config(*config));
 
-    server.apply_input_configuration(&req, ignored.get(),
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.apply_input_configuration(&request,
+                                     store_error_result->result.get(),
                                      gp::NewCallback(&handle_structured_error, store_error_result));
 }
 
 void MirConnection::set_base_input_configuration(MirInputConfig const* config)
 {
-    mp::Void request;
     auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
-    mp::InputConfigurationRequest req;
-    req.set_input_configuration(mi::serialize_input_config(*config));
 
-    server.set_base_input_configuration(&req, ignored.get(),
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.set_base_input_configuration(&request,
+                                        store_error_result->result.get(),
                                         gp::NewCallback(&handle_structured_error, store_error_result));
 }
