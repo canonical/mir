@@ -38,7 +38,7 @@ class Buffer : public MirBuffer
 {
 public:
     Buffer(
-        mir_buffer_callback cb, void* context,
+        MirBufferCallback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
@@ -63,7 +63,7 @@ public:
     void increment_age() override;
     bool valid() const override;
     char const* error_message() const override;
-    void set_callback(mir_buffer_callback callback, void* context) override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 private:
     int const buffer_id;
     std::shared_ptr<ClientBuffer> const buffer;

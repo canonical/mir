@@ -500,7 +500,7 @@ struct MirConnection::StreamRelease
 {
     MirBufferStream* stream;
     MirWaitHandle* handle;
-    mir_buffer_stream_callback callback;
+    MirBufferStreamCallback callback;
     void* context;
     int rpc_id;
     void* rs;
@@ -523,10 +523,10 @@ void MirConnection::released(StreamRelease data)
 
 void MirConnection::released(SurfaceRelease data)
 {
-    data.callback(data.surface, data.context);
-    data.handle->result_received();
     surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
+    data.callback(data.surface, data.context);
+    data.handle->result_received();
 }
 
 MirWaitHandle* MirConnection::release_surface(
@@ -534,33 +534,34 @@ MirWaitHandle* MirConnection::release_surface(
         MirWindowCallback callback,
         void * context)
 {
-    auto new_wait_handle = new MirWaitHandle;
+    auto wait_handle = std::make_unique<MirWaitHandle>();
+    auto raw_wait_handle = wait_handle.get();
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
+        release_wait_handles.push_back(std::move(wait_handle));
     }
 
     if (!mir_window_is_valid(surface))
     {
-        new_wait_handle->expect_result();
-        new_wait_handle->result_received();
+        raw_wait_handle->expect_result();
+        raw_wait_handle->result_received();
         callback(surface, context);
         auto id = surface->id();
         surface_map->erase(mf::SurfaceId(id));
-        return new_wait_handle;    
+        return raw_wait_handle;    
     }
 
-    SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
+    SurfaceRelease surf_release{surface, raw_wait_handle, callback, context};
 
     mp::SurfaceId message;
     message.set_value(surface->id());
 
-    new_wait_handle->expect_result();
+    raw_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
-    return new_wait_handle;
+    return raw_wait_handle;
 }
 
 MirPromptSession* MirConnection::create_prompt_session()
@@ -568,7 +569,7 @@ MirPromptSession* MirConnection::create_prompt_session()
     return new MirPromptSession(display_server(), event_handler_register);
 }
 
-void MirConnection::connected(mir_connected_callback callback, void * context)
+void MirConnection::connected(MirConnectedCallback callback, void * context)
 {
     try
     {
@@ -635,7 +636,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 
 MirWaitHandle* MirConnection::connect(
     const char* app_name,
-    mir_connected_callback callback,
+    MirConnectedCallback callback,
     void * context)
 {
     {
@@ -659,8 +660,7 @@ void MirConnection::done_disconnect()
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
         std::lock_guard<decltype(release_wait_handle_guard)> lock(release_wait_handle_guard);
-        for (auto handle : release_wait_handles)
-            delete handle;
+        release_wait_handles.clear();
     }
 
     {
@@ -695,7 +695,7 @@ MirWaitHandle* MirConnection::disconnect()
 }
 
 void MirConnection::done_platform_operation(
-    mir_platform_operation_callback callback, void* context)
+    MirPlatformOperationCallback callback, void* context)
 {
     auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
 
@@ -714,7 +714,7 @@ void MirConnection::done_platform_operation(
 
 MirWaitHandle* MirConnection::platform_operation(
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context)
+    MirPlatformOperationCallback callback, void* context)
 {
     auto const client_response = platform->platform_operation(request);
     if (client_response)
@@ -897,7 +897,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
     MirRenderSurface* render_surface,
-    mir_buffer_stream_callback mbs_callback,
+    MirBufferStreamCallback mbs_callback,
     void *context)
 {
     mp::BufferStreamParameters params;
@@ -995,17 +995,17 @@ MirPixelFormat MirConnection::egl_pixel_format(EGLDisplay disp, EGLConfig conf) 
     return platform->get_egl_pixel_format(disp, conf);
 }
 
-void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
+void MirConnection::register_lifecycle_event_callback(MirLifecycleEventCallback callback, void* context)
 {
     lifecycle_control->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
-void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
+void MirConnection::register_ping_event_callback(MirPingEventCallback callback, void* context)
 {
     ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
-void MirConnection::register_error_callback(mir_error_callback callback, void* context)
+void MirConnection::register_error_callback(MirErrorCallback callback, void* context)
 {
     error_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
@@ -1017,7 +1017,7 @@ void MirConnection::pong(int32_t serial)
     server.pong(&pong, void_response.get(), pong_callback.get());
 }
 
-void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
+void MirConnection::register_display_change_callback(MirDisplayConfigCallback callback, void* context)
 {
     display_configuration->set_display_change_handler(std::bind(callback, this, context));
 }
@@ -1204,26 +1204,27 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
 
 MirWaitHandle* MirConnection::release_buffer_stream(
     MirBufferStream* stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context)
 {
-    auto new_wait_handle = new MirWaitHandle;
+    auto wait_handle = std::make_unique<MirWaitHandle>();
+    auto raw_wait_handle = wait_handle.get();
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value(), nullptr };
+    StreamRelease stream_release{stream, raw_wait_handle, callback, context, stream->rpc_id().as_value(), nullptr };
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(stream->rpc_id().as_value());
 
     {
         std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
+        release_wait_handles.push_back(std::move(wait_handle));
     }
 
-    new_wait_handle->expect_result();
+    raw_wait_handle->expect_result();
     server.release_buffer_stream(
         &buffer_stream_id, void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
-    return new_wait_handle;
+    return raw_wait_handle;
 }
 
 void MirConnection::release_consumer_stream(MirBufferStream* stream)
@@ -1250,7 +1251,7 @@ std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain
 }
 
 void MirConnection::create_presentation_chain(
-    mir_presentation_chain_callback callback,
+    MirPresentationChainCallback callback,
     void *context)
 {
     mir::protobuf::BufferStreamParameters params;
@@ -1361,7 +1362,7 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 
 void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback callback, void* context)
+    MirBufferCallback callback, void* context)
 {
     mp::BufferAllocation request;
     request.mutable_id()->set_value(-1);
@@ -1474,7 +1475,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
 
 auto MirConnection::create_render_surface_with_content(
     mir::geometry::Size logical_size,
-    mir_render_surface_callback callback,
+    MirRenderSurfaceCallback callback,
     void* context)
 -> MirRenderSurface*
 {

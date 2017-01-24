@@ -30,7 +30,7 @@ mcl::BufferFactory::AllocationRequest::AllocationRequest(
     std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
     MirConnection* connection,
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback cb, void* cb_context) :
+    MirBufferCallback cb, void* cb_context) :
     native_buffer_factory(native_buffer_factory),
     connection(connection),
     size(size),
@@ -47,7 +47,7 @@ void mcl::BufferFactory::expect_buffer(
     geometry::Size size,
     MirPixelFormat format,
     MirBufferUsage usage,
-    mir_buffer_callback cb,
+    MirBufferCallback cb,
     void* cb_context)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
