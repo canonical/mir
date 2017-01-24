@@ -104,7 +104,8 @@ __attribute__((deprecated("use platform extensions instead")));
  *   \param [in]  connection    The connection
  *   \param [out] properties    Structure to be populated
  */
-void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties);
+void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
+__attribute__((deprecated("use graphics module extension instead")));
 
 /**
  * Register a callback to be called when a Lifecycle state change occurs.

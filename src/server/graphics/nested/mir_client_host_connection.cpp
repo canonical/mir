@@ -34,6 +34,7 @@
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_buffer.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -463,7 +464,11 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
 {
     MirModuleProperties properties = { nullptr, 0, 0, 0, nullptr };
 
-    mir_connection_get_graphics_module(mir_connection, &properties);
+    auto ext = mir_extension_graphics_module_v1(mir_connection);
+    if (!ext)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No graphics_module extension present"));
+
+    ext->graphics_module(mir_connection, &properties);
 
     if (properties.filename == nullptr)
     {

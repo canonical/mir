@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
@@ -259,6 +260,17 @@ catch (std::exception& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     *screen_x = 0;
     *screen_y = 0;
+}
+
+void get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
+try
+{
+    mir::require(connection && properties);
+    connection->populate_graphics_module(*properties);
+}
+catch (std::exception& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 std::mutex connection_guard;
@@ -572,6 +584,12 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
             connect_result->coordinate_translation_present())
         {
             translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
+        }
+
+        if (connect_result->has_platform() &&
+            connect_result->platform().has_graphics_module())
+        {
+            graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
         }
 
         /*
@@ -1497,6 +1515,8 @@ void* MirConnection::request_interface(char const* name, int version)
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
         return &translation_ext.value();
+    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1) && graphics_module_extension.is_set())
+        return &graphics_module_extension.value();
 
     return platform->request_interface(name, version);
 }
