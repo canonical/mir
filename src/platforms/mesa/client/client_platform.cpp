@@ -125,7 +125,7 @@ void allocate_buffer_gbm(
     int width, int height,
     unsigned int gbm_pixel_format,
     unsigned int gbm_bo_flags,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 {
     //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
     //this will return an error buffer for now. In the future, we should share MirConnection

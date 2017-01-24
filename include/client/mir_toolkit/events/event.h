@@ -215,7 +215,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
  * input device configuration has changed.
  *
  * \deprecated Input devices and changes to the input devices are indicated
- * via the mir_input_config_change_callback
+ * via the MirInputConfigCallback
  * \param [in] event The event
  * \return           The associated MirInputConfigurationEvent
  */
