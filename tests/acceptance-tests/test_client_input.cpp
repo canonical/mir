@@ -741,8 +741,6 @@ TEST_F(TestClientInput, event_filter_may_consume_events)
 
     Client first_client(new_connection(), first);
 
-    EXPECT_CALL(*mock_event_filter, handle(mt::InputConfigurationEvent())).Times(AnyNumber()).WillRepeatedly(Return(false));
-
     InSequence seq;
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(Return(true));
     EXPECT_CALL(*mock_event_filter, handle(_)).WillOnce(
