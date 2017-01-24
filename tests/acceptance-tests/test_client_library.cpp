@@ -239,6 +239,8 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     {
         for (int i = 0; i < 10; i++)
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             mir_wait_for_one(mir_window_set_state(surf,
                                             mir_window_state_maximized));
             mir_wait_for_one(mir_window_set_state(surf,
@@ -247,6 +249,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
                                             mir_window_state_fullscreen));
             mir_wait_for_one(mir_window_set_state(surf,
                                             mir_window_state_minimized));
+#pragma GCC diagnostic pop
         }
     }
 };
@@ -260,7 +263,10 @@ TEST_F(ClientLibrary, client_library_connects_and_disconnects)
 {
     MirWaitHandle* wh = mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this);
     EXPECT_THAT(wh, NotNull());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     ASSERT_THAT(connection, NotNull());
     EXPECT_TRUE(mir_connection_is_valid(connection));
@@ -343,7 +349,10 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
 
 TEST_F(ClientLibrary, creates_surface)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     int request_width = 640, request_height = 480;
     MirPixelFormat request_format = mir_pixel_format_abgr_8888;
@@ -398,6 +407,8 @@ TEST_F(ClientLibrary, can_set_surface_state)
 
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_restored));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
 
@@ -418,6 +429,7 @@ TEST_F(ClientLibrary, can_set_surface_state)
         mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
         ASSERT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
     }
+#pragma GCC diagnostic pop
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -675,7 +687,10 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
     int const n_surfaces = 13;
     size_t old_surface_count = 0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     auto const spec =
         mir_create_normal_window_spec(connection, 640, 480);
@@ -710,12 +725,18 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
 
 TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     window = mtf::make_any_surface(connection);
 
     buffers = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, this));
+#pragma GCC diagnostic pop
     EXPECT_THAT(buffers, Eq(1));
 
     mir_window_release(window, release_surface_callback, this);
@@ -769,7 +790,10 @@ TEST_F(ClientLibrary, highly_threaded_client)
 TEST_F(ClientLibrary, accesses_platform_package)
 {
     using namespace testing;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     MirPlatformPackage platform_package;
     ::memset(&platform_package, -1, sizeof(platform_package));
@@ -785,7 +809,10 @@ TEST_F(ClientLibrary, accesses_platform_package)
 
 TEST_F(ClientLibrary, accesses_display_info)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     auto configuration = mir_connection_create_display_configuration(connection);
     ASSERT_THAT(configuration, NotNull());
@@ -809,7 +836,10 @@ TEST_F(ClientLibrary, accesses_display_info)
 
 TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     auto const surf_one = mtf::make_any_surface(connection);
     auto const surf_two = mtf::make_any_surface(connection);

@@ -88,7 +88,10 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_is_notified_of_attribute_ch
     EXPECT_CALL(*mock_window_manager,
         set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_window_state_maximized)));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_set_state(window, mir_window_state_maximized));
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_maximized));
 }
@@ -109,7 +112,10 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribut
         set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_window_state_maximized)))
         .WillOnce(Invoke(set_to_vertmax));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_set_state(window, mir_window_state_maximized));
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_vertmaximized));
 }

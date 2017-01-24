@@ -187,7 +187,10 @@ TEST_F(LegacyDisplayConfigurationTest, display_change_request_for_unauthorized_c
 
     auto configuration = mir_connection_create_display_config(connection);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
     EXPECT_THAT(mir_connection_get_error_message(connection),
                 testing::HasSubstr("not authorized to apply display configurations"));
 
@@ -236,7 +239,10 @@ struct DisplayClient : SimpleClient
     void apply_config()
     {
         auto configuration = mir_connection_create_display_config(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
         EXPECT_STREQ("", mir_connection_get_error_message(connection));
         mir_display_config_destroy(configuration);
     }
@@ -249,7 +255,10 @@ struct DisplayClient : SimpleClient
 
     void set_base_config(MirDisplayConfiguration* configuration)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
+#pragma GCC diagnostic pop
         EXPECT_STREQ("", mir_connection_get_error_message(connection));
     }
 };
@@ -287,7 +296,10 @@ TEST_F(LegacyDisplayConfigurationTest, focusing_client_with_display_config_confi
 
     /* Apply the display config while not focused */
     auto const configuration = mir_connection_create_display_config(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+#pragma GCC diagnostic pop
     mir_display_config_destroy(configuration);
 
     wait_for_server_actions_to_finish(*server.the_main_loop());
@@ -505,7 +517,10 @@ TEST_F(LegacyDisplayConfigurationTest,
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto configuration = mir_connection_create_display_config(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
+#pragma GCC diagnostic pop
     EXPECT_THAT(mir_connection_get_error_message(connection),
                 testing::HasSubstr("not authorized to set base display configuration"));
 

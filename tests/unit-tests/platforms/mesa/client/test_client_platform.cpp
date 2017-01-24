@@ -197,7 +197,10 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
 
     mtd::StubConnectionConfiguration conf(platform);
     MirConnection connection(conf);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+#pragma GCC diagnostic pop
 
     int width = 32;
     int height = 90;

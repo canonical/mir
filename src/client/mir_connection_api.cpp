@@ -94,10 +94,16 @@ MirConnection* mir_connect_sync(
     char const* app_name)
 {
     MirConnection* conn = nullptr;
-    mir_wait_for(mir_connect(server, app_name,
-                             reinterpret_cast<MirConnectedCallback>
-                                             (assign_result),
-                             &conn));
+    auto wh = mir_connect(server, app_name,
+                          reinterpret_cast<MirConnectedCallback>
+                          (assign_result),
+                          &conn);
+
+    if (wh != nullptr)
+    {
+        wh->wait_for_all();
+    }
+
     return conn;
 }
 

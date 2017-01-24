@@ -43,10 +43,8 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
         auto prompt_session = connection->create_prompt_session();
         if (state_change_callback)
             prompt_session->register_prompt_session_state_change_callback(state_change_callback, context);
+        prompt_session->start(application_pid, null_callback, nullptr)->wait_for_all();
 
-        mir_wait_for(prompt_session->start(application_pid,
-                     null_callback,
-                     nullptr));
         return prompt_session;
     }
     catch (std::exception const& ex)
@@ -79,7 +77,7 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
 void mir_prompt_session_release_sync(
     MirPromptSession *prompt_session)
 {
-    mir_wait_for(prompt_session->stop(&null_callback, nullptr));
+    prompt_session->stop(&null_callback, nullptr)->wait_for_all();
     delete prompt_session;
 }
 

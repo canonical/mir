@@ -27,12 +27,6 @@
 static MirConnection *connection = 0;
 static MirWindow* window = 0;
 
-static void connection_callback(MirConnection *new_connection, void *context)
-{
-    (void)context;
-    connection = new_connection;
-}
-
 static void close_connection()
 {
     if (connection)
@@ -46,7 +40,7 @@ void demo_client(const char* server)
 {
     atexit(&close_connection);
 
-    mir_wait_for(mir_connect(server, __FILE__, connection_callback, NULL));
+    connection = mir_connect_sync(server, __FILE__);
     assert(mir_connection_is_valid(connection));
 
     MirPixelFormat pixel_format;

@@ -572,8 +572,11 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
     EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_window_set_state(window, initial_state));
     mir_wait_for(mir_window_set_state(window, new_state));
+#pragma GCC diagnostic pop
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,
