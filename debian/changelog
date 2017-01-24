@@ -1,6 +1,123 @@
 mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * TODO
+  * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 43
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 6
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . New/improved toolkit APIs: MirInputConfig and related functions,
+        MirWindow and related functions, DisplayConfig and related functions,
+        MirScreencastSpec and related functions,
+      . Support for configuring input configuration
+      . Introduce toolkit extension mechanism for platform specific APIs.
+      . Toolkit extensions for: mesa_drm_auth, set_gbm_device and
+        window_coordinate_translation
+      . Screencasting to a specific MirBuffer.
+      . Add DisplayConfigurationController::base_configuration() so downstreams
+        can get the base configuration. (Weirdly they can already set it.).
+      . x11 platform: allow adjustable scale parameter.
+      . Added EDID support: client API, server logging and in mirout.
+      . mirout: Add newer attributes only available in the new display
+        config API: scaling factor, subpixel arrangement and form factor.
+      . mirout: Log the orientation and logical size of each output too.
+      . Replace the mir::Server-overridable Reports with Observers.
+      . Add xkbcommon to mirclient.pc Requires.private.
+      . Deprecate legacy toolkit APIs that will be removed in Mir 1.0
+      . Introduced 'client-side vsync', which dramatically reduces latency
+        from the client to the screen (particularly for nested servers like
+        Unity8).
+    - Bugs fixed:
+      . [performance] Restore support for better-than-triple buffering by
+        default. (LP: #1240909)
+      . Frame rate is artificially low on Diamondville Intel Atom systems due
+        to aggressive power management (LP: #1388490)
+      . [testsfail] failure in CI in
+        AndroidInputReceiverSetup.slow_raw_input_doesnt_cause_frameskipping
+        (LP: #1394369)
+      . [trusted prompt sessions] Can't open two prompt sessions at the same
+        time (LP: #1494197)
+      . Changing scale, formFactor or DPI in display configuration causes
+        renderer teardown/recreate unnecessarily (LP: #1556142)
+      . [testsfail] ApplicationNotRespondingDetection.failure_to_pong_is_
+        noticed (LP: #1570327)
+      . CI failure in TestClientInput.receives_one_touch_event_per_frame
+        (LP: #1570698)
+      . Mir-on-X mouse input is jerky/stuttery compared to Mir-on-KMS
+        (LP: #1576600)
+      . [regression] Two fingers in mir_proving_server now resizes/moves app
+        windows (two finger apps unusable) (LP: #1586311)
+      . Pointer/cursor input lag in unity8 session (LP: #1591328)
+      . PointerConfinement.test_we_update_our_confined_region_on_a_resize
+        (LP: #1606418)
+      . [ FAILED ] ClientLatency.throttled_input_rate_yields_lower_latency
+        (LP: #1624188)
+      . Valgrind failure on mir_acceptance_tests - leak on incoming buffer in
+        Requests::free_buffer(int) (LP: #1628794)
+      . Add support for returning monitor EDIDs (LP: #1634868)
+      . When pointer motion crosses window borders SurfaceInputDispatcher
+        injected events increase accumulated relative motion (LP: #1639749)
+      . [ FAILED ] ClientLatency.dropping_latency_is_limited_to_one (AKA
+        dropping_latency_is_closer_to_zero_than_one) (LP: #1640366)
+      . Server::override_the_coordinate_translator() cannot be effectively used
+        downstream (LP: #1641166)
+      . [regression] FTBFS when cross compiling to yakkety from zesty:
+        test_client_extensions.cpp: error: ‘Ne’ was not declared in this scope
+        (LP: #1642473)
+      . [regression] mir_proving_server crashes with std::exception::what:
+        add_options() must be called before the_options() (LP: #1642504)
+      . [ FAILED ] NestedServer.nested_platform_connects_and_disconnects
+        (LP: #1643432)
+      . googletest 1.8.0-2 (on zesty) breaks existing builds [add_library
+        cannot create target "gmock" ...] (LP: #1644062)
+      . [regression] Those mir_demo_client_* which default to fullscreen now
+        ignore the size parameter (-s WIDTHxHEIGHT) (LP: #1644075)
+      . Shell doesn't know when base display config has changed (LP: #1644189)
+      . miral::ActiveOutputsMonitor (and therefore miral-shell --window-manager
+        tiling) are broken by lp:mir (LP: #1645284)
+      . mir_proving_server's four finger swipe to switch apps leaks touch
+        events to the clients (LP: #1646700)
+      . [regression] Cross compiling from zesty to yakkety fails with *** No
+        rule to make target 'gmock/libs/googlemock/gtest/libgtest.a' (LP:
+        #1646704)
+      . [ FAILED ] ThreadedDispatcherDeathTest.destroying_dispatcher_from_a_
+        callback_is_an_error (LP: #1647573)
+      . [regression] eglapps now all have window title "default" (LP: #1647575)
+      . [ FAILED ] LifecycleEventTest.lifecycle_event_test (LP: #1649758)
+      . Package mirtest-dev is missing a dependency on mir-renderer-gl-dev
+        (LP: #1651391)
+      . EDID data is missing in nested servers (LP: #1651633)
+      . [regression] Latency for fullscreen interval 0 clients (e.g. games and
+        benchmarks) increased with the introduction of nested passthrough
+        (LP: #1651638)
+      . Race between MirConnection::released() and
+        MirConnection::~MirConnection() causes deadlocks, possible crashes and
+        memory corruption (LP: #1653658)
+      . DisplayConfigurationTest.configure_session_removed_display failure
+        (LP: #1653789)
+      . [regression] Development headers reference unknown header
+        "mir_toolkit/mir_input_device_types.h" so some clients can't build at
+        all any more (LP: #1654023)
+      . [regression] mir_acceptance_tests' death tests leave behind core files
+        (LP: #1654478)
+      . Setting the event handler after the surface has been created does
+        nothing (LP: #1654612)
+      . [ FAILED ] RaiseSurfaces.key_event_with_cookie (LP: #1655293)
+      . Black screen with Raspberry Pi 3 VC4 Mesa driver (LP: #1656164)
+      . i386 FTBFS:
+        src/platforms/eglstream-kms/server/kms_display_configuration.cpp:88:47:
+        error: narrowing conversion of ‘..._drmModeConnector::connector_id’
+        from ‘uint32_t {aka unsigned int}’ to ‘EGLAttrib {aka int}’ inside { }
+        [-Werror=narrowing] (LP: #1656633)
+      . [regression] Mir cross-compile to vivid/armhf FTBFS with:
+        mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
+        (LP: #1658605)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
 

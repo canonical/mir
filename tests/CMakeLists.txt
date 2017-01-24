@@ -28,6 +28,12 @@ endif()
 if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
   # INSTANTIATE_TEST_CASE_P hits this like a slice of lemon wrapped around a large gold brick.
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+else()
+  # GCC is a bit less flexible than clang and needs a bigger hammer...
+  if (NOT MIR_USE_PRECOMPILED_HEADERS)
+    # Work around the Google Test headers not being C++11 friendly (LP: #1658604)
+    string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  endif()
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")

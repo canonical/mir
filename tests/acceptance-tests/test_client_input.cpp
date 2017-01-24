@@ -20,6 +20,7 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_input_config.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -1235,3 +1236,30 @@ TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
     EXPECT_TRUE(wait_for_error.wait_for(10s));
 }
 
+TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    float out_of_range = 3.0f;
+    mir_pointer_config_set_acceleration_bias(pointer_config, out_of_range);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        a_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_rejected_by_driver)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_apply_session_input_config(a_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}

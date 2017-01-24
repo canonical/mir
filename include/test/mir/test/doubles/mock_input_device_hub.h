@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
 
 #include "mir/input/input_device_hub.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {

@@ -253,7 +253,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
 constexpr pid_t PromptSessionClientAPI::application_session_pid;
 
-mir_prompt_session_state_change_callback const null_state_change_callback{nullptr};
+MirPromptSessionStateChangeCallback const null_state_change_callback{nullptr};
 constexpr char const* const PromptSessionClientAPI::provider_name[];
 
 extern "C" void prompt_session_state_change_callback(
@@ -479,8 +479,11 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
     the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, no_of_prompt_providers, &client_fd_callback, this));
+#pragma GCC diagnostic pop
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -525,8 +528,11 @@ TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, no_of_prompt_providers, &client_fd_callback, this));
+#pragma GCC diagnostic pop
 
     DummyPromptProvider provider1{std::move(actual_fds[0]), provider_name[0]};
     DummyPromptProvider provider2{std::move(actual_fds[1]), provider_name[1]};
@@ -590,8 +596,11 @@ TEST_F(PromptSessionClientAPI,
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, no_of_prompt_providers, &client_fd_callback, this));
+#pragma GCC diagnostic pop
 
     DummyPromptProvider provider1{std::move(actual_fds[0]), provider_name[0]};
     DummyPromptProvider provider2{std::move(actual_fds[1]), provider_name[1]};
