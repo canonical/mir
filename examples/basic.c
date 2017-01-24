@@ -60,14 +60,6 @@ typedef struct MirDemoState
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
-///\internal [Callback_tag]
-// Callback to update MirDemoState on connection
-static void connection_callback(MirConnection *new_connection, void *context)
-{
-    ((MirDemoState*)context)->connection = new_connection;
-}
-///\internal [Callback_tag]
-
 int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
@@ -77,8 +69,7 @@ int demo_client(const char* server, int buffer_swap_count)
     puts("Starting");
 
     ///\internal [connect_tag]
-    // Call mir_connect and wait for callback to complete.
-    mir_wait_for(mir_connect(server, __FILE__, connection_callback, &mcd));
+    mcd.connection = mir_connect_sync(server, __FILE__);
     puts("Connected");
     ///\internal [connect_tag]
 
