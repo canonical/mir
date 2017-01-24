@@ -50,7 +50,7 @@ void assign_result(void* result, void** context)
 MirWaitHandle* mir_connect(
     char const* socket_file,
     char const* name,
-    mir_connected_callback callback,
+    MirConnectedCallback callback,
     void* context)
 try
 {
@@ -95,7 +95,7 @@ MirConnection* mir_connect_sync(
 {
     MirConnection* conn = nullptr;
     mir_wait_for(mir_connect(server, app_name,
-                             reinterpret_cast<mir_connected_callback>
+                             reinterpret_cast<MirConnectedCallback>
                                              (assign_result),
                              &conn));
     return conn;
@@ -155,7 +155,7 @@ catch (std::exception const& ex)
 
 void mir_connection_set_lifecycle_event_callback(
     MirConnection* connection,
-    mir_lifecycle_event_callback callback,
+    MirLifecycleEventCallback callback,
     void* context)
 {
     if (!mcl::ErrorConnections::instance().contains(connection))
@@ -164,7 +164,7 @@ void mir_connection_set_lifecycle_event_callback(
 
 void mir_connection_set_ping_event_callback(
     MirConnection* connection,
-    mir_ping_event_callback callback,
+    MirPingEventCallback callback,
     void* context)
 {
     if (!mcl::ErrorConnections::instance().contains(connection))
@@ -200,7 +200,7 @@ void mir_display_config_release(MirDisplayConfig* config)
 
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
-    mir_display_config_callback callback,
+    MirDisplayConfigCallback callback,
     void* context)
 {
     if (connection)
@@ -259,7 +259,7 @@ catch (std::exception const& ex)
 
 void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
-    mir_input_config_callback callback,
+    MirInputConfigCallback callback,
     void* context)
 {
     if (!connection)
@@ -351,7 +351,7 @@ void mir_connection_get_available_surface_formats(
 MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context)
+    MirPlatformOperationCallback callback, void* context)
 {
     try
     {
@@ -366,7 +366,7 @@ MirWaitHandle* mir_connection_platform_operation(
 
 void mir_connection_set_error_callback(
     MirConnection* connection,
-    mir_error_callback callback,
+    MirErrorCallback callback,
     void* context)
 {
     mir::require(mir_connection_is_valid(connection));

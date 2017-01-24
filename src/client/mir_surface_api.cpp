@@ -912,7 +912,7 @@ MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 }
 
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
-                                  mir_surface_callback callback, void* context)
+                                  MirSurfaceCallback callback, void* context)
 {
     return window_create_helper(requested_specification, callback, context);
 }
@@ -978,7 +978,7 @@ void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
 }
 
 void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
-                                        mir_surface_event_callback callback,
+                                        MirSurfaceEventCallback callback,
                                         void* context)
 {
     mir_window_spec_set_event_handler(spec, callback, context);
@@ -1148,7 +1148,7 @@ bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
                                                     edge);
 }
 
-void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
+void mir_surface_set_event_handler(MirSurface* surface, MirSurfaceEventCallback callback, void* context)
 {
     mir_window_set_event_handler(surface, callback, context);
 }
@@ -1170,7 +1170,7 @@ void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* param
 
 MirWaitHandle* mir_surface_release(
     MirSurface* surface,
-    mir_surface_callback callback, void* context)
+    MirSurfaceCallback callback, void* context)
 {
     return window_release_helper(surface, callback, context);
 }
