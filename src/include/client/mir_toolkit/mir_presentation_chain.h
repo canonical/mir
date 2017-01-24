@@ -87,15 +87,19 @@ void mir_presentation_chain_release(MirPresentationChain* presentation_chain);
  *  The server will notify the client when the buffer is available again via
  *  the callback registered during buffer creation.
  *
- *   \warning: Once submitted, the buffer cannot be modified until the server 
- *             has returned it. There's no guarantee about how long a server
- *             may hold the submitted buffer.
+ *   \warning: Once submitted, the buffer cannot be modified or resubmitted
+ *             until the server has returned it. There's no guarantee about
+ *             how long a server may hold the submitted buffer.
  *
- *   \param [in] presentation_chain  The presentation chain
- *   \param [in] buffer              The buffer to be submitted
+ *   \param [in] presentation_chain     The presentation chain
+ *   \param [in] buffer                 The buffer to be submitted
+ *   \param [in] available_callback     The callback called when the buffer
+ *                                      is available
+ *   \param [in] available_context      The context for the available_callback
  **/
 void mir_presentation_chain_submit_buffer(
-    MirPresentationChain* presentation_chain, MirBuffer* buffer);
+    MirPresentationChain* presentation_chain, MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context);
 
 /**
  * Set the MirSurfaceContent to display a MirPresentationChain.

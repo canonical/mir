@@ -55,19 +55,19 @@ struct MirEvent
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;
 
-    MirCloseWindowEvent* to_close_surface(); // TODO rename (breaks mircommon ABI)
-    MirCloseWindowEvent const* to_close_surface() const;  // TODO rename (breaks mircommon ABI)
+    MirCloseWindowEvent* to_close_window();
+    MirCloseWindowEvent const* to_close_window() const;
 
     MirKeymapEvent* to_keymap();
     MirKeymapEvent const* to_keymap() const;
 
-    MirWindowOutputEvent* to_surface_output();  // TODO rename (breaks mircommon ABI)
-    MirWindowOutputEvent const* to_surface_output() const;  // TODO rename (breaks mircommon ABI)
+    MirWindowOutputEvent* to_window_output();
+    MirWindowOutputEvent const* to_window_output() const;
 
     MirInputDeviceStateEvent* to_input_device_state();
     MirInputDeviceStateEvent const* to_input_device_state() const;
 
-    MirWindowPlacementEvent const* to_surface_placement() const;    // TODO rename (breaks mircommon ABI)
+    MirWindowPlacementEvent const* to_window_placement() const;
 
     static mir::EventUPtr deserialize(std::string const& bytes);
     static std::string serialize(MirEvent const* event);
