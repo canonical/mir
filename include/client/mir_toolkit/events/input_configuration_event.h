@@ -44,8 +44,11 @@ typedef enum
 {
     mir_input_configuration_action_configuration_changed,
     mir_input_configuration_action_device_reset
-} MirInputConfigurationAction;
+} MirInputConfigurationAction
+__attribute__((deprecated));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the input configuration action which occurred.
  *
@@ -69,6 +72,7 @@ int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const*
  * \return       The device id or -1 if not applicable to events of this action
  */
 MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev) __attribute__((deprecated));
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }
