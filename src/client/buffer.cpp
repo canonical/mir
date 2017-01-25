@@ -23,7 +23,7 @@
 namespace mcl = mir::client;
 
 mcl::Buffer::Buffer(
-    mir_buffer_callback cb, void* context,
+    MirBufferCallback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
     MirConnection* connection,
@@ -135,7 +135,7 @@ char const* mcl::Buffer::error_message() const
     return "";
 }
 
-void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
+void mcl::Buffer::set_callback(MirBufferCallback callback, void* context)
 {
     cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

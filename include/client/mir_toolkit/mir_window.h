@@ -678,9 +678,8 @@ MirWindowType mir_window_get_type(MirWindow* window);
  * Change the state of a window.
  *   \param [in] window  The window to operate on
  *   \param [in] state   The new state of the window
- *   \return             A wait handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_window_set_state(MirWindow* window,
+void mir_window_set_state(MirWindow* window,
                                      MirWindowState state);
 
 /**
@@ -717,11 +716,9 @@ int mir_window_get_dpi(MirWindow* window);
  *    \param [in] window     The window to operate on
  *    \param [in] parameters The configuration parameters obtained
  *                           from mir_cursor* family of functions.
- *    \return                A wait handle that can be passed to mir_wait_for,
- *                           or NULL if parameters is invalid.
  *
  */
-MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
+void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
 
 /**
  * Request to set the preferred orientations of a window.
@@ -729,9 +726,8 @@ MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfigura
  * result and check the applied value using mir_window_get_preferred_orientation
  *   \param [in] window      The window to operate on
  *   \param [in] orientation The preferred orientation modes
- *   \return                 A wait handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
+*/
+void mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode orientation);
 
 /**
  * Get the preferred orientation modes of a window.

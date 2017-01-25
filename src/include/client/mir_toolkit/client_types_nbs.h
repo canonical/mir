@@ -33,8 +33,8 @@ typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef struct MirRenderSurface MirRenderSurface;
 
-typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
-typedef void (*mir_render_surface_callback)(MirRenderSurface*, void* context);
+typedef void (*MirBufferCallback)(MirBuffer*, void* context);
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context);
 
 #ifdef __cplusplus
 }

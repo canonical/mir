@@ -66,7 +66,7 @@ char const *mir_presentation_chain_get_error_message(
  **/
 void mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context);
+    MirBufferCallback available_callback, void* available_context);
 
 #ifdef __cplusplus
 }

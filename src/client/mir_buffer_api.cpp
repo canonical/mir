@@ -38,7 +38,7 @@ void mir_connection_allocate_buffer(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage usage,
-    mir_buffer_callback cb, void* context)
+    MirBufferCallback cb, void* context)
 try
 {
     mir::require(connection);

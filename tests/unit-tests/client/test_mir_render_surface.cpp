@@ -215,7 +215,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_be_created_and_released)
 
     auto const render_surface_returned = connection->create_render_surface_with_content(
         {10, 10},
-        reinterpret_cast<mir_render_surface_callback>(assign_result),
+        reinterpret_cast<MirRenderSurfaceCallback>(assign_result),
         &render_surface_from_callback);
 
     EXPECT_THAT(render_surface_from_callback, NotNull());

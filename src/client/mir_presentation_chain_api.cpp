@@ -32,7 +32,7 @@ namespace mcl = mir::client;
 void mir_presentation_chain_submit_buffer(
     MirPresentationChain* chain,
     MirBuffer* b,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 try
 {
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
