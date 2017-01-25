@@ -48,7 +48,7 @@ typedef enum
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
     mir_event_type_keymap,
-    MIR_DEPRECATED_ENUM(mir_event_type_input_configuration, "mir_connection_set_input_config_change_callback and mir_event_type_input_device_state instead"),
+    MIR_DEPRECATED_ENUM(mir_event_type_input_configuration, "mir_connection_set_input_config_change_callback and mir_event_type_input_device_state"),
     MIR_DEPRECATED_ENUM(mir_event_type_surface_output, "mir_event_type_window_output"),
     mir_event_type_window_output = mir_event_type_surface_output,
     mir_event_type_input_device_state,
