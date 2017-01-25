@@ -75,14 +75,14 @@ public:
     MirScreencast(
         MirScreencastSpec const& spec,
         mir::client::rpc::DisplayServer& server,
-        mir_screencast_callback callback, void* context);
+        MirScreencastCallback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
     bool valid();
     char const* get_error_message();
 
     MirWaitHandle* release(
-        mir_screencast_callback callback, void* context);
+        MirScreencastCallback callback, void* context);
 
     EGLNativeWindowType egl_native_window();
 
@@ -95,9 +95,9 @@ public:
 
 private:
     void screencast_created(
-        mir_screencast_callback callback, void* context);
+        MirScreencastCallback callback, void* context);
     void released(
-        mir_screencast_callback callback, void* context);
+        MirScreencastCallback callback, void* context);
 
     std::mutex mutable mutex;
     mir::client::rpc::DisplayServer* const server{nullptr};

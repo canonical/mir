@@ -51,6 +51,8 @@ using namespace testing;
 
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Assert our MirSurfaceAttrib is 1to1 to MirWindowAttrib
 static_assert(
     static_cast<int32_t>(mir_surface_attrib_type) ==
@@ -94,6 +96,7 @@ static_assert(
 
 static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
     "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
+#pragma GCC diagnostic pop
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
@@ -194,11 +197,14 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 };
 }
 
-TEST_F(ClientSurfaceEvents, surface_receives_state_events)
+TEST_F(ClientSurfaceEvents, window_receives_state_events)
 {
     {
-        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_vertmaximized));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
+#pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -206,7 +212,10 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     }
 
     {
-        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
+#pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
@@ -215,7 +224,10 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_window_set_state(window, mir_window_state_vertmaximized));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
+#pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -225,8 +237,11 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     reset_last_event();
 
     {
-        mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(777)));
-        mir_wait_for(mir_window_set_state(other_surface, mir_window_state_maximized));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
+#pragma GCC diagnostic pop
 
         std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -299,7 +314,10 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
     {
         reset_last_event();
 
-        mir_wait_for(mir_window_set_preferred_orientation(window, mode));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_surface_set_preferred_orientation(window, mode));
+#pragma GCC diagnostic pop
         EXPECT_THAT(mir_window_get_preferred_orientation(window), Eq(mode));
     }
 }

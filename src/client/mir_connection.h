@@ -24,6 +24,8 @@
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
+#include "mir_toolkit/extensions/window_coordinate_translation.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
 #include "mir/frontend/surface_id.h"
@@ -108,11 +110,11 @@ public:
 
     MirWaitHandle* create_surface(
         MirWindowSpec const& spec,
-        mir_surface_callback callback,
+        MirWindowCallback callback,
         void * context);
     MirWaitHandle* release_surface(
         MirWindow *surface,
-        mir_surface_callback callback,
+        MirWindowCallback callback,
         void *context);
 
     MirPromptSession* create_prompt_session();
@@ -121,23 +123,23 @@ public:
 
     MirWaitHandle* connect(
         const char* app_name,
-        mir_connected_callback callback,
+        MirConnectedCallback callback,
         void * context);
 
     MirWaitHandle* disconnect();
 
     MirWaitHandle* platform_operation(
         MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context) override;
+        MirPlatformOperationCallback callback, void* context) override;
 
-    void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
+    void register_lifecycle_event_callback(MirLifecycleEventCallback callback, void* context);
 
-    void register_ping_event_callback(mir_ping_event_callback callback, void* context);
+    void register_ping_event_callback(MirPingEventCallback callback, void* context);
     void pong(int32_t serial);
 
-    void register_display_change_callback(mir_display_config_callback callback, void* context);
+    void register_display_change_callback(MirDisplayConfigCallback callback, void* context);
 
-    void register_error_callback(mir_error_callback callback, void* context);
+    void register_error_callback(MirErrorCallback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties) override;
@@ -149,14 +151,12 @@ public:
     std::shared_ptr<MirBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs);
 
-    typedef void (*buffer_stream_callback)(mir::client::BufferStream* stream, void* context);
-
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
         MirRenderSurface* render_surface,
-        mir_buffer_stream_callback mbs_callback,
+        MirBufferStreamCallback mbs_callback,
         void *context);
     std::shared_ptr<mir::client::BufferStream> create_client_buffer_stream_with_id(
         int width, int height,
@@ -164,16 +164,12 @@ public:
         mir::protobuf::BufferStream const& a_protobuf_bs);
     MirWaitHandle* release_buffer_stream(
         MirBufferStream*,
-        mir_buffer_stream_callback callback,
+        MirBufferStreamCallback callback,
         void *context);
 
-    void create_presentation_chain(
-        mir_presentation_chain_callback callback,
-        void *context);
     std::shared_ptr<mir::client::PresentationChain> create_presentation_chain_with_id(
         MirRenderSurface* render_surface,
         mir::protobuf::BufferStream const& a_protobuf_bs);
-    void release_presentation_chain(MirPresentationChain* context);
 
     void release_consumer_stream(MirBufferStream*);
 
@@ -218,12 +214,12 @@ public:
 
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback callback, void* context);
+        MirBufferCallback callback, void* context);
     void release_buffer(mir::client::MirBuffer* buffer);
 
     auto create_render_surface_with_content(
         mir::geometry::Size logical_size,
-        mir_render_surface_callback callback,
+        MirRenderSurfaceCallback callback,
         void* context) -> MirRenderSurface*;
     void release_render_surface_with_content(
         void* render_surface);
@@ -234,13 +230,13 @@ private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
-        SurfaceCreationRequest(mir_surface_callback cb, void* context, MirWindowSpec const& spec) :
+        SurfaceCreationRequest(MirWindowCallback cb, void* context, MirWindowSpec const& spec) :
             cb(cb), context(context), spec(spec),
               response(std::make_shared<mir::protobuf::Surface>()),
               wh(std::make_shared<MirWaitHandle>())
         {
         }
-        mir_surface_callback cb;
+        MirWindowCallback cb;
         void* context;
         MirWindowSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
@@ -253,7 +249,7 @@ private:
     {
         StreamCreationRequest(
             MirRenderSurface* rs,
-            mir_buffer_stream_callback mbs_cb,
+            MirBufferStreamCallback mbs_cb,
             void* context,
             mir::protobuf::BufferStreamParameters const& params)
             : rs(rs),
@@ -265,7 +261,7 @@ private:
         {
         }
         MirRenderSurface* rs;
-        mir_buffer_stream_callback mbs_callback;
+        MirBufferStreamCallback mbs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;
@@ -275,23 +271,10 @@ private:
     void stream_created(StreamCreationRequest*);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
-    struct ChainCreationRequest
-    {
-        ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
-            callback(cb), context(context),
-            response(std::make_shared<mir::protobuf::BufferStream>())
-        {
-        }
-
-        mir_presentation_chain_callback callback;
-        void* context;
-        std::shared_ptr<mir::protobuf::BufferStream> response;
-    };
-
     struct RenderSurfaceCreationRequest
     {
         RenderSurfaceCreationRequest(
-            mir_render_surface_callback cb,
+            MirRenderSurfaceCallback cb,
             void* context,
             std::shared_ptr<void> native_window,
             mir::geometry::Size size) :
@@ -303,7 +286,7 @@ private:
         {
         }
 
-        mir_render_surface_callback callback;
+        MirRenderSurfaceCallback callback;
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
         std::shared_ptr<MirWaitHandle> const wh;
@@ -311,12 +294,9 @@ private:
         mir::geometry::Size logical_size;
     };
 
-    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
-    void context_created(ChainCreationRequest*);
     void render_surface_created(RenderSurfaceCreationRequest*);
     void render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request);
-    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
@@ -360,7 +340,7 @@ private:
     MirWaitHandle set_base_display_configuration_wait_handle;
 
     std::mutex release_wait_handle_guard;
-    std::vector<MirWaitHandle*> release_wait_handles;
+    std::vector<std::unique_ptr<MirWaitHandle>> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
     std::shared_ptr<mir::input::InputDevices> const input_devices;
@@ -385,13 +365,15 @@ private:
 
     void set_error_message(std::string const& error);
     void done_disconnect();
-    void connected(mir_connected_callback callback, void * context);
+    void connected(MirConnectedCallback callback, void * context);
     void released(SurfaceRelease);
     void released(StreamRelease);
-    void done_platform_operation(mir_platform_operation_callback, void* context);
+    void done_platform_operation(MirPlatformOperationCallback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration const* config);
 
     int const nbuffers;
+    mir::optional_value<MirExtensionWindowCoordinateTranslationV1> translation_ext;
+    mir::optional_value<MirExtensionGraphicsModuleV1> graphics_module_extension;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

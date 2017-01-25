@@ -171,7 +171,7 @@ void create_buffer(
     int width, int height,
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 {
     //TODO: pass actual gralloc flags along
     (void) gralloc_usage_flags;
@@ -289,4 +289,14 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
     if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
         return &fence_extension;
     return nullptr;
+}
+
+uint32_t mcla::AndroidClientPlatform::native_format_for(MirPixelFormat format) const
+{
+    return mga::to_android_format(format);
+}
+
+uint32_t mcla::AndroidClientPlatform::native_flags_for(MirBufferUsage usage, mir::geometry::Size) const
+{
+    return mga::convert_to_android_usage(static_cast<mir::graphics::BufferUsage>(usage));
 }

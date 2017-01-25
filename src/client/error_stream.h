@@ -41,6 +41,8 @@ public:
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     MirNativeBuffer* get_current_buffer_package() override;
     MirPlatformType platform_type() override;
     frontend::BufferStreamId rpc_id() const override;
@@ -54,7 +56,7 @@ public:
     MirConnection* connection() const override;
     MirRenderSurface* render_surface() const override;
 
-    MirWaitHandle* release(mir_buffer_stream_callback callback, void* context);
+    MirWaitHandle* release(MirBufferStreamCallback callback, void* context);
 private:
     std::string const error;
     MirConnection* const connection_;

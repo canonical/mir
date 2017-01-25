@@ -111,7 +111,10 @@ TEST_F(ClientLibraryCallbacks, connect_callback_is_called_before_wait_handler_ha
     auto const wh = mir_connect(
         new_connection().c_str(), __PRETTY_FUNCTION__,
         connection_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(connection.load(), NotNull());
 
@@ -122,6 +125,8 @@ TEST_F(ClientLibraryCallbacks, connect_callback_is_called_before_wait_handler_ha
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -130,7 +135,10 @@ TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_han
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
     auto const wh = mir_surface_create(spec, create_surface_callback, this);
     mir_window_spec_release(spec);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(window.load(), NotNull());
 
@@ -140,6 +148,7 @@ TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_han
         [this] { return window != nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handler_has_result)
 {
@@ -148,7 +157,10 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
 
     auto const wh = mir_buffer_stream_swap_buffers(
         mir_window_get_buffer_stream(window), swap_buffers_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(buffers, Eq(1));
 
@@ -159,13 +171,18 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, release_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     window = mtf::make_any_surface(connection);
 
     auto const wh = mir_surface_release(window, release_surface_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(window.load(), IsNull());
 
@@ -175,3 +192,4 @@ TEST_F(ClientLibraryCallbacks, release_surface_callback_is_called_before_wait_ha
         [this] { return window == nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop

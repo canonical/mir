@@ -115,7 +115,7 @@ MirScreencast::MirScreencast(std::string const& error)
 MirScreencast::MirScreencast(
     MirScreencastSpec const& spec,
     mir::client::rpc::DisplayServer& the_server,
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
     : server{&the_server},
       connection{spec.connection},
       protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()},
@@ -154,7 +154,7 @@ char const* MirScreencast::get_error_message()
     return empty_error_message.c_str();
 }
 
-MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* context)
+MirWaitHandle* MirScreencast::release(MirScreencastCallback callback, void* context)
 {
     release_wait_handle.expect_result();
     if (valid() && server)
@@ -180,7 +180,7 @@ MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* co
 }
 
 void MirScreencast::screencast_created(
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
 {
     printf("CREATED!\n");
     if (!protobuf_screencast->has_error() && connection)
@@ -206,7 +206,7 @@ void MirScreencast::screencast_created(
 }
 
 void MirScreencast::released(
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
 {
     callback(this, context);
 

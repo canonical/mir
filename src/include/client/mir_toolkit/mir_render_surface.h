@@ -36,7 +36,7 @@ extern "C" {
  * \param [in] connection                       A valid connection
  * \param [in] width                            The width in pixels
  * \param [in] height                           The height in pixels
- * \param [in] mir_render_surface_callback      Callback to be invoked when the request completes.
+ * \param [in] MirRenderSurfaceCallback         Callback to be invoked when the request completes.
  *                                              The callback is guaranteed to be called and called
  *                                              with a non-null MirRenderSurface*, but the render
  *                                              surface may be invalid in case of error.
@@ -45,7 +45,7 @@ extern "C" {
 void mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
-    mir_render_surface_callback callback,
+    MirRenderSurfaceCallback callback,
     void* context);
 
 /**
@@ -159,8 +159,8 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
  *                         (Ignored for buffer streams)
  * \param logical_height   The height that the content will be displayed at
  *                         (Ignored for buffer streams)
- * \param displacement_x   The x displacement from the top-left corner of the MirSurface
- * \param displacement_y   The y displacement from the top-left corner of the MirSurface
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow
  */
 void mir_surface_spec_add_render_surface(
     MirWindowSpec* spec,

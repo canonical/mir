@@ -253,6 +253,7 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       user_swap_interval(parse_env_for_swap_interval()),
+      using_client_side_vsync(false),
       interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
@@ -264,6 +265,16 @@ mcl::BufferStream::BufferStream(
       factory(factory),
       render_surface_(render_surface)
 {
+    /*
+     * Since we try to use client-side vsync where possible, a separate
+     * copy of the current swap interval is required to represent that
+     * the stream might have a non-zero interval while we want the server
+     * to use a zero interval. This is not stored inside interval_config
+     * because with some luck interval_config will eventually go away
+     * leaving just int current_swap_interval.
+     */
+    current_swap_interval = interval_config.swap_interval();
+
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -354,6 +365,10 @@ MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done
     std::unique_lock<decltype(mutex)> lock(mutex);
     perf_report->end_frame(id);
 
+    if (!using_client_side_vsync &&
+        current_swap_interval != interval_config.swap_interval())
+        set_server_swap_interval(current_swap_interval);
+
     secured_region.reset();
 
     // TODO: We can fix the strange "ID casting" used below in the second phase
@@ -406,9 +421,73 @@ MirWindowParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
+void mcl::BufferStream::wait_for_vsync()
+{
+    mir::time::PosixTimestamp last, target;
+    std::shared_ptr<FrameClock> clock;
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (!frame_clock)
+            return;
+        last = last_vsync;
+        clock = frame_clock;
+    }
+
+    target = clock->next_frame_after(last);
+    sleep_until(target);
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (target > last_vsync)
+            last_vsync = target;
+    }
+}
+
+MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
+{
+    /*
+     * TODO: Remove these functions in future, after
+     *       mir_buffer_stream_swap_buffers has been converted to use
+     *       client-side vsync, and the server has been told to always use
+     *       dropping for BufferStream. Then there will be no need to ever
+     *       change the server swap interval from zero.
+     */
+    buffer_depository->set_interval(i);
+    return interval_config.set_swap_interval(i);
+}
+
 void mcl::BufferStream::swap_buffers_sync()
 {
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = true;
+    }
+
+    /*
+     * Until recently it seemed like server-side vsync could co-exist with
+     * client-side vsync. However my original theory that it was risky has
+     * proven to be true. If we leave server-side vsync throttling to interval
+     * one at the same time as using client-side, there's a risk the server
+     * will not get scheduled sufficiently to drain the queue as fast as
+     * we fill it, creating lag. The acceptance test `ClientLatency' has now
+     * proven this is a real problem so we must be sure to put the server in
+     * interval 0 when using client-side vsync. This guarantees that random
+     * scheduling imperfections won't create queuing lag.
+     */
+    if (interval_config.swap_interval() != 0)
+        set_server_swap_interval(0);
+
     swap_buffers([](){})->wait_for_all();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = false;
+    }
+
+    int interval = swap_interval();
+    for (int i = 0; i < interval; ++i)
+        wait_for_vsync();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)
@@ -418,7 +497,8 @@ void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, i
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
         " on BufferStream but only mir_window_attrib_swapinterval is supported")); 
     }
-    mir_wait_for(set_swap_interval(interval));
+
+    set_swap_interval(interval)->wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -428,16 +508,42 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 
 int mcl::BufferStream::swap_interval() const
 {
-    return interval_config.swap_interval();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return current_swap_interval;
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    if (user_swap_interval.is_set())
-        interval = user_swap_interval.value();
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    current_swap_interval = user_swap_interval.is_set() ?
+        user_swap_interval.value() : interval;
 
-    buffer_depository->set_interval(interval);
-    return interval_config.set_swap_interval(interval);
+    return set_server_swap_interval(current_swap_interval);
+}
+
+void mcl::BufferStream::adopted_by(MirWindow* win)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    /*
+     * Yes, we're storing raw pointers here. That's safe so long as MirWindow
+     * remembers to always call unadopted_by prior to its destruction.
+     *   The alternative of MirWindow passing in a shared_ptr to itself is
+     * actually uglier than this...
+     */
+    users.insert(win);
+    if (!frame_clock)
+        frame_clock = win->get_frame_clock();
+}
+
+void mcl::BufferStream::unadopted_by(MirWindow* win)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    users.erase(win);
+    if (frame_clock == win->get_frame_clock())
+    {
+        frame_clock = users.empty() ? nullptr
+                                    : (*users.begin())->get_frame_clock();
+    }
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

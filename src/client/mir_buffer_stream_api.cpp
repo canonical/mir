@@ -53,7 +53,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context)
 try
 {
@@ -74,7 +74,7 @@ try
 {
     MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+        reinterpret_cast<MirBufferStreamCallback>(assign_result), &stream)->wait_for_all();
     return stream;
 }
 catch (std::exception const& ex)
@@ -85,7 +85,7 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_buffer_stream_release(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 {
     auto connection = buffer_stream->connection();
@@ -109,10 +109,17 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_buffer_stream_swap_buffers(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 try
 {
+    /*
+     * TODO: Add client-side vsync support for mir_buffer_stream_swap_buffers()
+     *       Not in a hurry though, because the old server-side vsync is still
+     *       present and AFAIK the only user of swap_buffers callbacks is Xmir.
+     *       There are many ways to approach the problem and some more
+     *       contentious than others, so do it later.
+     */
     return buffer_stream->swap_buffers([buffer_stream, callback, context]{
             if (callback)
                 callback(buffer_stream, context);
@@ -209,7 +216,7 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* buffer_stream)
 MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* buffer_stream, int interval)
 try
 {
-    if ((interval < 0) || (interval > 1))
+    if (interval < 0)
         return nullptr;
 
     if (!buffer_stream)

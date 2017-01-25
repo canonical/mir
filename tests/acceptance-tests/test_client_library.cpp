@@ -44,6 +44,8 @@ namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // Assert our MirSurfaceType is 1to1 to MirWindowType
 static_assert(
     static_cast<int32_t>(mir_surface_type_normal) ==
@@ -149,6 +151,7 @@ static_assert(
     "mir_surface_visibility_exposed != mir_window_visibility_exposed");
 static_assert(sizeof(MirSurfaceVisibility) == sizeof(MirWindowVisibility),
     "sizeof(MirSurfaceVisibility) != sizeof(MirWindowVisibility)");
+#pragma GCC diagnostic pop
 
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
@@ -236,14 +239,17 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     {
         for (int i = 0; i < 10; i++)
         {
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_maximized));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_restored));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_fullscreen));
-            mir_wait_for_one(mir_window_set_state(surf,
-                                            mir_window_state_minimized));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_maximized));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_restored));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_fullscreen));
+            mir_wait_for_one(mir_surface_set_state(surf,
+                                            mir_surface_state_minimized));
+#pragma GCC diagnostic pop
         }
     }
 };
@@ -257,7 +263,10 @@ TEST_F(ClientLibrary, client_library_connects_and_disconnects)
 {
     MirWaitHandle* wh = mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this);
     EXPECT_THAT(wh, NotNull());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     ASSERT_THAT(connection, NotNull());
     EXPECT_TRUE(mir_connection_is_valid(connection));
@@ -340,7 +349,10 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
 
 TEST_F(ClientLibrary, creates_surface)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     int request_width = 640, request_height = 480;
     MirPixelFormat request_format = mir_pixel_format_abgr_8888;
@@ -370,10 +382,10 @@ TEST_F(ClientLibrary, creates_surface)
 TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
 {   // An attempt at a regression test for race LP: #1653658
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 123, 456, mir_pixel_format_abgr_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 123, 456);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     window = mir_create_window_sync(spec);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_THAT(window, IsValid());
 
@@ -395,26 +407,29 @@ TEST_F(ClientLibrary, can_set_surface_state)
 
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_restored));
 
-    mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(999)));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
 
-    mir_wait_for(mir_window_set_state(window, mir_window_state_horizmaximized));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
+    mir_wait_for(mir_surface_set_state(window, mir_surface_state_horizmaximized));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
 
-    mir_wait_for(mir_window_set_state(window, static_cast<MirWindowState>(888)));
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_horizmaximized));
+    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(888)));
+    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
 
     // Stress-test synchronization logic with some flooding
     for (int i = 0; i < 100; i++)
     {
         mir_window_set_state(window, mir_window_state_maximized);
         mir_window_set_state(window, mir_window_state_restored);
-        mir_wait_for(mir_window_set_state(window, mir_window_state_fullscreen));
-        ASSERT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
+        ASSERT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
     }
+#pragma GCC diagnostic pop
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
@@ -672,7 +687,10 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
     int const n_surfaces = 13;
     size_t old_surface_count = 0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     auto const spec =
         mir_create_normal_window_spec(connection, 640, 480);
@@ -707,12 +725,18 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
 
 TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     window = mtf::make_any_surface(connection);
 
     buffers = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, this));
+#pragma GCC diagnostic pop
     EXPECT_THAT(buffers, Eq(1));
 
     mir_window_release(window, release_surface_callback, this);
@@ -766,12 +790,18 @@ TEST_F(ClientLibrary, highly_threaded_client)
 TEST_F(ClientLibrary, accesses_platform_package)
 {
     using namespace testing;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     MirPlatformPackage platform_package;
     ::memset(&platform_package, -1, sizeof(platform_package));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_connection_get_platform(connection, &platform_package);
+#pragma GCC diagnostic pop
     EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
 
     mir_connection_release(connection);
@@ -779,27 +809,37 @@ TEST_F(ClientLibrary, accesses_platform_package)
 
 TEST_F(ClientLibrary, accesses_display_info)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
-    auto configuration = mir_connection_create_display_config(connection);
+    auto configuration = mir_connection_create_display_configuration(connection);
     ASSERT_THAT(configuration, NotNull());
-    ASSERT_GT(configuration->num_outputs, 0u);
-    ASSERT_THAT(configuration->outputs, NotNull());
-    for (auto i=0u; i < configuration->num_outputs; i++)
+
+    size_t num_outputs = mir_display_config_get_num_outputs(configuration);
+    ASSERT_GT(num_outputs, 0u);
+    for (auto i=0u; i < num_outputs; i++)
     {
-        MirDisplayOutput* disp = &configuration->outputs[i];
-        ASSERT_THAT(disp, NotNull());
-        EXPECT_GE(disp->num_modes, disp->current_mode);
-        EXPECT_GE(disp->num_output_formats, disp->current_format);
+        auto output = mir_display_config_get_output(configuration, i);
+        ASSERT_THAT(output, NotNull());
+        // Since these return types are changing make the types explicit:
+        int const num_modes = mir_output_get_num_modes(output);
+        int const current_mode_index = mir_output_get_current_mode_index(output);
+        EXPECT_GE(num_modes, current_mode_index);
+        EXPECT_GE(mir_output_get_num_pixel_formats(output), 0);
     }
 
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
     mir_connection_release(connection);
 }
 
 TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
+#pragma GCC diagnostic pop
 
     auto const surf_one = mtf::make_any_surface(connection);
     auto const surf_two = mtf::make_any_surface(connection);
@@ -808,6 +848,11 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     ASSERT_THAT(surf_two, NotNull());
 
     buffers = 0;
+
+    // StubDisplayConfiguration is set to 60Hz and we now actually honour
+    // that. So to avoid 1024 frames taking 17 seconds or so...
+    mir_buffer_stream_set_swapinterval(mir_window_get_buffer_stream(surf_one), 0);
+    mir_buffer_stream_set_swapinterval(mir_window_get_buffer_stream(surf_two), 0);
 
     while (buffers < 1024)
     {
@@ -941,12 +986,14 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     auto surface_spec = mir_create_normal_window_spec(connection, 780, 555);
     mir_window_spec_set_pixel_format(surface_spec, mir_pixel_format_xbgr_8888);
     // We need to specify a valid output id, so we need to find which ones are valid...
-    auto configuration = mir_connection_create_display_config(connection);
-    ASSERT_THAT(configuration->num_outputs, Ge(1u));
+    auto configuration = mir_connection_create_display_configuration(connection);
+    auto num_outputs = mir_display_config_get_num_outputs(configuration);
+    ASSERT_THAT(num_outputs, Ge(1u));
 
-    auto const requested_output = configuration->outputs[0];
+    auto output = mir_display_config_get_output(configuration, 0);
 
-    mir_window_spec_set_fullscreen_on_output(surface_spec, requested_output.output_id);
+    auto id = mir_output_get_id(output);
+    mir_window_spec_set_fullscreen_on_output(surface_spec, id);
 
     auto window = mir_create_window_sync(surface_spec);
     mir_window_spec_release(surface_spec);
@@ -957,18 +1004,17 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     mir_buffer_stream_get_current_buffer(
         mir_window_get_buffer_stream(window), &native_buffer);
 
-    int const mode_width =
-        requested_output.modes[requested_output.current_mode].  horizontal_resolution;
+    auto current_mode = mir_output_get_current_mode(output);
+    int const mode_width = mir_output_mode_get_width(current_mode);
     EXPECT_THAT(native_buffer->width, Eq(mode_width));
-    int const mode_height =
-        requested_output.modes[requested_output.current_mode].vertical_resolution;
+    int const mode_height = mir_output_mode_get_height(current_mode);
     EXPECT_THAT(native_buffer->height, Eq(mode_height));
 
 // TODO: This is racy. Fix in subsequent "send all the things on construction" branch
 //    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_fullscreen));
 
     mir_window_release_sync(window);
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
     mir_connection_release(connection);
 }
 

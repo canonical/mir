@@ -37,6 +37,26 @@
 
 namespace mcl = mir::client;
 
+namespace
+{
+MirWaitHandle* mir_configure_cursor_helper(MirWindow* window, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+
+    try
+    {
+        if (window)
+            result = window->configure_cursor(cursor);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+}
+
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
@@ -49,7 +69,7 @@ mir_create_normal_window_spec(MirConnection* connection,
 MirWindowSpec*
 mir_create_menu_window_spec(MirConnection* connection,
                             int width, int height,
-                            MirSurface* parent,
+                            MirWindow* parent,
                             MirRectangle* rect,
                             MirEdgeAttachment edge)
 {
@@ -66,7 +86,7 @@ mir_create_menu_window_spec(MirConnection* connection,
 
 MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
                                           int width, int height,
-                                          MirSurface* parent,
+                                          MirWindow* parent,
                                           MirRectangle* rect,
                                           MirEdgeAttachment edge)
 {
@@ -83,7 +103,7 @@ MirWindowSpec* mir_create_tip_window_spec(MirConnection* connection,
 
 MirWindowSpec* mir_create_modal_dialog_window_spec(MirConnection* connection,
                                                    int width, int height,
-                                                   MirSurface* parent)
+                                                   MirWindow* parent)
 {
     mir::require(mir_window_is_valid(parent));
 
@@ -343,7 +363,7 @@ catch (std::exception const& ex)
 }
 
 void mir_window_spec_set_event_handler(MirWindowSpec* spec,
-                                       mir_window_event_callback callback,
+                                       MirWindowEventCallback callback,
                                        void* context)
 try
 {
@@ -473,7 +493,7 @@ catch (std::exception const& ex)
 namespace
 {
 static MirWaitHandle* window_create_helper(MirWindowSpec* requested_specification,
-                                           mir_window_callback callback, void* context)
+                                           MirWindowCallback callback, void* context)
 {
     mir::require(requested_specification != nullptr);
     mir::require(requested_specification->type.is_set());
@@ -493,7 +513,7 @@ static MirWaitHandle* window_create_helper(MirWindowSpec* requested_specificatio
 
 static MirWaitHandle* window_release_helper(
     MirWindow* window,
-    mir_window_callback callback, void* context)
+    MirWindowCallback callback, void* context)
 {
     mir::require(window);
 
@@ -512,8 +532,7 @@ static MirWaitHandle* window_release_helper(
 }
 
 static MirWaitHandle* mir_window_request_persistent_id_helper(
-    MirWindow* window,
-    mir_window_id_callback callback, void* context)
+    MirWindow* window, MirWindowIdCallback callback, void* context)
 {
     mir::require(mir_window_is_valid(window));
 
@@ -558,7 +577,7 @@ void set_result(MirWindow* result, WindowSync* context)
 }
 
 void mir_create_window(MirWindowSpec* requested_specification,
-                       mir_window_callback callback, void* context)
+                       MirWindowCallback callback, void* context)
 {
     window_create_helper(requested_specification, callback, context);
 }
@@ -567,14 +586,14 @@ MirWindow* mir_create_window_sync(MirWindowSpec* requested_specification)
 {
     WindowSync ws;
     mir_create_window(requested_specification,
-                      reinterpret_cast<mir_window_callback>(set_result),
+                      reinterpret_cast<MirWindowCallback>(set_result),
                       &ws);
     return ws.wait_for_result();
 }
 
 void mir_window_release(
     MirWindow* window,
-    mir_window_callback callback,
+    MirWindowCallback callback,
     void *context)
 {
     window_release_helper(window, callback, context);
@@ -584,7 +603,7 @@ void mir_window_release_sync(MirWindow* window)
 {
     WindowSync ws;
     mir_window_release(window,
-                       reinterpret_cast<mir_window_callback>(set_result),
+                       reinterpret_cast<MirWindowCallback>(set_result),
                        &ws);
     ws.wait_for_result();
 }
@@ -595,7 +614,7 @@ bool mir_window_is_valid(MirWindow* window)
 }
 
 void mir_window_set_event_handler(MirWindow* window,
-                                  mir_window_event_callback callback,
+                                  MirWindowEventCallback callback,
                                   void* context)
 {
     window->set_event_handler(callback, context);
@@ -657,18 +676,16 @@ MirWindowType mir_window_get_type(MirWindow* window)
     return type;
 }
 
-MirWaitHandle* mir_window_set_state(MirWindow* window, MirWindowState state)
+void mir_window_set_state(MirWindow* window, MirWindowState state)
+try
 {
-    try
-    {
-        return window ? window->configure(mir_window_attrib_state, state) : nullptr;
+    mir::require(mir_window_is_valid(window));
+        window->configure(mir_window_attrib_state, state);
     }
     catch (std::exception const& ex)
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
     }
-}
 
 MirWindowState mir_window_get_state(MirWindow* window)
 {
@@ -755,38 +772,20 @@ int mir_window_get_dpi(MirWindow* window)
     return dpi;
 }
 
-MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
+void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = nullptr;
-
-    try
-    {
-        if (window)
-            result = window->configure_cursor(cursor);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    mir_configure_cursor_helper(window, cursor);
 }
 
-MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
+void mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
+try
 {
     mir::require(mir_window_is_valid(window));
-
-    MirWaitHandle *result{nullptr};
-    try
-    {
-        result = window->set_preferred_orientation(mode);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    window->set_preferred_orientation(mode);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
@@ -807,7 +806,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
     return mode;
 }
 
-void mir_window_request_persistent_id(MirWindow* window, mir_window_id_callback callback, void* context)
+void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
 {
     mir_window_request_persistent_id_helper(window, callback, context);
 }
@@ -826,15 +825,12 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_window_request_persistent_id_helper(window,
-                                                         &assign_surface_id_result,
-                                                         &result));
+    mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 
-// These functions will be deprecated soon
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,
@@ -1016,52 +1012,10 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* str
     mir_window_spec_set_streams(spec, streams, size);
 }
 
-void mir_surface_spec_add_presentation_chain(
-    MirSurfaceSpec* spec,
-    int width, int height,
-    int displacement_x, int displacement_y,
-    MirPresentationChain* client_chain)
-try
-{
-    mir::require(spec && client_chain);
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
-
-    ContentInfo info{
-        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_buffer_stream(
-    MirSurfaceSpec* spec,
-    int displacement_x, int displacement_y,
-    int width, int height,
-    MirBufferStream* stream)
-try
-{
-    mir::require(spec && stream);
-    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
-
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     MirRenderSurface* render_surface,
-    int /*logical_width*/, int /*logical_height*/,
+    int logical_width, int logical_height,
     int displacement_x, int displacement_y)
 try
 {
@@ -1070,7 +1024,11 @@ try
 
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
+    ContentInfo info {
+        {displacement_x, displacement_y},
+        rs->stream_id().as_value(),
+        mir::geometry::Size{ logical_width, logical_height }
+    };
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);
@@ -1188,8 +1146,15 @@ MirSurfaceType mir_surface_get_type(MirSurface* surf)
 }
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
+try
 {
-    return mir_window_set_state(surf, static_cast<MirWindowState>(state));
+    mir::require(mir_window_is_valid(surf));
+    return surf->configure(mir_window_attrib_state, state);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface* surf)
@@ -1204,7 +1169,7 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface)
 
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
-    if ((interval < 0) || (interval > 1))
+    if (interval < 0)
         return nullptr;
 
     try
@@ -1260,7 +1225,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    return mir_window_configure_cursor(surface, cursor);
+    return mir_configure_cursor_helper(surface, cursor);
 }
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
@@ -1269,8 +1234,15 @@ MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 }
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
+try
 {
-    return mir_window_set_preferred_orientation(surf, mode);
+    mir::require(mir_window_is_valid(surf));
+    return surf->set_preferred_orientation(mode);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
@@ -1283,7 +1255,7 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
     return mir_window_get_buffer_stream(surface);
 }
 
-MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surface_id_callback callback, void* context)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
 {
     return mir_window_request_persistent_id_helper(surface, callback, context);
 }
@@ -1291,13 +1263,11 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, mir_surfac
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_window_request_persistent_id_helper(surface,
-                                                  &assign_surface_id_result,
-                                                  &result));
+    mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 bool mir_persistent_id_is_valid(MirPersistentId* id)
 {

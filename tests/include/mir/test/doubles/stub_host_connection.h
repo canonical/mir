@@ -53,8 +53,6 @@ public:
     {
     }
 
-    std::vector<int> platform_fd_items() override { return {}; }
-
     EGLNativeDisplayType egl_native_display() override { return {}; }
 
     std::shared_ptr<MirDisplayConfig> create_display_config() override
@@ -95,7 +93,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_release);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
@@ -112,6 +110,7 @@ public:
     {
         struct NullStream : graphics::nested::HostStream
         {
+            MirRenderSurface* rs() const override { return nullptr; }
             MirBufferStream* handle() const override { return nullptr; }
             EGLNativeWindowType egl_native_window() const override { return 0; }
         };
@@ -122,6 +121,7 @@ public:
     {
         struct NullHostChain : graphics::nested::HostChain
         {
+            MirRenderSurface* rs() const override { return nullptr; }
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
             void set_submission_mode(graphics::nested::SubmissionMode) override {}
@@ -133,7 +133,7 @@ public:
     {
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
-        void set_event_handler(mir_surface_event_callback, void*) override {}
+        void set_event_handler(MirWindowEventCallback, void*) override {}
         void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;

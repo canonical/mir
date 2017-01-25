@@ -43,6 +43,7 @@
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/observant_shell.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/display_config_matchers.h"
@@ -252,148 +253,6 @@ struct StubSurfaceObserver : msc::NullSurfaceObserver
     bool removed = false;
 };
 
-struct ObservantShell : msh::Shell
-{
-    ObservantShell(
-        std::shared_ptr<msh::Shell> const& wrapped,
-        std::shared_ptr<msc::SurfaceObserver> const& surface_observer) :
-        wrapped(wrapped),
-        surface_observer(surface_observer)
-    {
-    }
-
-    void add_display(geom::Rectangle const& area) override
-    {
-        return wrapped->add_display(area);
-    }
-
-    void remove_display(geom::Rectangle const& area) override
-    {
-        return wrapped->remove_display(area);
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        return wrapped->handle(event);
-    }
-
-    void focus_next_session() override
-    {
-        wrapped->focus_next_session();
-    }
-
-    auto focused_session() const -> std::shared_ptr<msc::Session> override
-    {
-        return wrapped->focused_session();
-    }
-
-    void set_focus_to(
-        std::shared_ptr<msc::Session> const& focus_session,
-        std::shared_ptr<msc::Surface> const& focus_surface) override
-    {
-        return wrapped->set_focus_to(focus_session, focus_surface);
-    }
-
-    std::shared_ptr<msc::Surface> focused_surface() const override
-    {
-        return wrapped->focused_surface();
-    }
-
-    auto surface_at(geom::Point cursor) const -> std::shared_ptr<msc::Surface> override
-    {
-        return wrapped->surface_at(cursor);
-    }
-
-    void raise(msh::SurfaceSet const& surfaces) override
-    {
-        wrapped->raise(surfaces);
-    }
-
-    std::shared_ptr<msc::Session> open_session(
-        pid_t client_pid,
-        std::string const& name,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        return wrapped->open_session(client_pid, name, sink);
-    }
-
-    void close_session(std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->close_session(session);
-    }
-
-    std::shared_ptr<msc::PromptSession> start_prompt_session_for(
-        std::shared_ptr<msc::Session> const& session,
-        msc::PromptSessionCreationParameters const& params) override
-    {
-        return wrapped->start_prompt_session_for(session, params);
-    }
-
-    void add_prompt_provider_for(
-        std::shared_ptr<msc::PromptSession> const& prompt_session,
-        std::shared_ptr<msc::Session> const& session) override
-    {
-        wrapped->add_prompt_provider_for(prompt_session, session);
-    }
-
-    void stop_prompt_session(std::shared_ptr<msc::PromptSession> const& prompt_session) override
-    {
-        wrapped->stop_prompt_session(prompt_session);
-    }
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<msc::Session> const& session,
-        msc::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        auto id = wrapped->create_surface(session, params, sink);
-        auto window = session->surface(id);
-        window->add_observer(surface_observer);
-        return id;
-    }
-
-    void modify_surface(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        msh::SurfaceSpecification  const& modifications) override
-    {
-        wrapped->modify_surface(session, window, modifications);
-    }
-
-    void destroy_surface(std::shared_ptr<msc::Session> const& session, mf::SurfaceId window) override
-    {
-        wrapped->destroy_surface(session, window);
-    }
-
-    int set_surface_attribute(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        MirWindowAttrib attrib,
-        int value) override
-    {
-        return wrapped->set_surface_attribute(session, window, attrib, value);
-    }
-
-    int get_surface_attribute(
-        std::shared_ptr<msc::Surface> const& window,
-        MirWindowAttrib attrib) override
-    {
-        return wrapped->get_surface_attribute(window, attrib);
-    }
-
-    void raise_surface(
-        std::shared_ptr<msc::Session> const& session,
-        std::shared_ptr<msc::Surface> const& window,
-        uint64_t timestamp) override
-    {
-        return wrapped->raise_surface(session, window, timestamp);
-    }
-
-private:
-    std::shared_ptr<msh::Shell> const wrapped;
-    std::shared_ptr<msc::SurfaceObserver> const surface_observer;
-};
-
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -511,7 +370,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
-            return std::make_shared<ObservantShell>(wrapped, stub_observer);
+            return std::make_shared<mtf::ObservantShell>(wrapped, stub_observer);
         });
 
         mtf::HeadlessInProcessServer::SetUp();
@@ -628,19 +487,19 @@ struct Client
 
     ~Client() { mir_connection_release(connection); }
 
-    void update_display_configuration(void (*changer)(MirDisplayConfiguration* config))
+    void update_display_configuration(void (*changer)(MirDisplayConfig* config))
     {
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_configuration(connection);
         changer(configuration);
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-        mir_display_config_destroy(configuration);
+        mir_connection_apply_session_display_config(connection, configuration);
+        mir_display_config_release(configuration);
     }
 
-    void update_display_configuration_applied_to(MockDisplay& display, void (*changer)(MirDisplayConfiguration* config))
+    void update_display_configuration_applied_to(MockDisplay& display, void (*changer)(MirDisplayConfig* config))
     {
         mt::Signal initial_condition;
 
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_configuration(connection);
 
         changer(configuration);
 
@@ -649,10 +508,10 @@ struct Client
         EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_connection_apply_session_display_config(connection, configuration);
 
         initial_condition.wait_for(timeout);
-        mir_display_config_destroy(configuration);
+        mir_display_config_release(configuration);
 
         Mock::VerifyAndClearExpectations(&display);
         ASSERT_TRUE(initial_condition.raised());
@@ -663,7 +522,7 @@ struct Client
 
 struct ClientWithADisplayChangeCallback : virtual Client
 {
-    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir)
     {
         mir_connection_set_display_config_change_callback(connection, callback, context);
@@ -727,7 +586,7 @@ struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPa
 
 struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
 {
-    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
         Client(nested_mir),
         ClientWithADisplayChangeCallback(nested_mir, callback, context),
         ClientWithAPaintedSurface(nested_mir)
@@ -738,11 +597,16 @@ struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, Clie
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
+    mt::Signal signal;
     InSequence seq;
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
-    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&signal));
 
     NestedMirRunner{new_connection()};
+
+    EXPECT_TRUE(signal.wait_for(30s));
 }
 
 TEST_F(NestedServerWithTwoDisplays, sees_expected_outputs)
@@ -931,13 +795,16 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 
     mt::Signal condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
+    EXPECT_CALL(*the_mock_display_configuration_report(), session_configuration_applied(_, _))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
 
     client.update_display_configuration(
-        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
+        [](MirDisplayConfig* config) {
+            auto output = mir_display_config_get_mutable_output(config, 0);
+            mir_output_disable(output);
+    });
 
-    condition.wait_for(timeout);
+    ASSERT_TRUE(condition.wait_for(timeout));
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
@@ -947,7 +814,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    auto const configuration = mir_connection_create_display_config(client.connection);
+    auto const configuration = mir_connection_create_display_configuration(client.connection);
 
     for (auto new_orientation :
         {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
@@ -958,19 +825,23 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
         mt::Signal config_reported;
 
-        for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
-            output->orientation = new_orientation;
+        size_t num_outputs = mir_display_config_get_num_outputs(configuration);
+        for (auto i = 0u; i < num_outputs; i++)
+        {
+            auto output = mir_display_config_get_mutable_output(configuration, i);
+            mir_output_set_orientation(output, new_orientation);
+        }
 
         EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(Pointee(mt::DisplayConfigMatches(configuration))))
             .WillRepeatedly(InvokeWithoutArgs([&] { config_reported.raise(); }));
 
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
+        mir_connection_apply_session_display_config(client.connection, configuration);
 
         config_reported.wait_for(timeout);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
 }
 
 TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
@@ -999,7 +870,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
                     }));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_window_configure_cursor(client.window, conf));
+    mir_window_configure_cursor(client.window, conf);
     mir_cursor_configuration_destroy(conf);
 
     EXPECT_TRUE(condition.wait_for(timeout));
@@ -1081,7 +952,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
         .WillOnce(mt::WakeUp(&condition));
 
     auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
-    mir_wait_for(mir_window_configure_cursor(client.window, conf));
+    mir_window_configure_cursor(client.window, conf);
     mir_cursor_configuration_destroy(conf);
 
     std::this_thread::sleep_for(500ms);
@@ -1207,8 +1078,12 @@ TEST_F(NestedServerWithTwoDisplays, display_configuration_reset_when_application
             EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
                 .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
 
+
             client.update_display_configuration(
-                [](MirDisplayConfiguration* config) { config->outputs->used = false; });
+                [](MirDisplayConfig* config) {
+                    auto output = mir_display_config_get_mutable_output(config, 0);
+                    mir_output_disable(output);
+            });
 
             // Wait for initial config to be applied
             initial_condition.wait_for(timeout);
@@ -1280,11 +1155,11 @@ TEST_F(NestedServer, when_monitor_unplugs_client_is_notified_of_new_display_conf
 
     ASSERT_TRUE(client_config_changed.raised());
 
-    auto const configuration = mir_connection_create_display_config(client.connection);
+    auto const configuration = mir_connection_create_display_configuration(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(*new_config));
 
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
 }
 
 TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_monitor_unplugs_configuration_is_reset)
@@ -1343,8 +1218,11 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    client.update_display_configuration_applied_to(display,
-        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
+    client.update_display_configuration(
+        [](MirDisplayConfig* config) {
+            auto output = mir_display_config_get_mutable_output(config, 0);
+            mir_output_disable(output);
+    });
 
     auto const expect_config = hw_display_config_for_unplug();
 
@@ -1385,11 +1263,11 @@ TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_c
     expected_config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
         { output.top_left = {0, 0}; });
 
-    auto const configuration = mir_connection_create_display_config(client.connection);
+    auto const configuration = mir_connection_create_display_configuration(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(expected_config));
 
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
 }
 
 TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_monitor_plugged_in_configuration_is_reset)
@@ -1454,8 +1332,11 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    client.update_display_configuration_applied_to(display,
-        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
+    client.update_display_configuration(
+        [](MirDisplayConfig* config) {
+            auto output = mir_display_config_get_mutable_output(config, 0);
+            mir_output_disable(output);
+    });
 
     auto const new_config = hw_display_config_for_plugin();
 
@@ -1490,8 +1371,20 @@ TEST_F(NestedServerWithTwoDisplays,
         [](MirConnection*, void* context) { static_cast<mt::Signal*>(context)->raise(); },
         &condition);
 
-    client.update_display_configuration_applied_to(display,
-        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
+    mt::Signal initial_condition;
+
+    EXPECT_CALL(*the_mock_display_configuration_report(), configuration_applied(_))
+        .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.raise(); }));
+
+    client.update_display_configuration(
+        [](MirDisplayConfig* config) {
+            auto output = mir_display_config_get_mutable_output(config, 0);
+            mir_output_disable(output);
+    });
+
+    initial_condition.wait_for(timeout);
+    Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+    ASSERT_TRUE(initial_condition.raised());
 
     auto const new_config = hw_display_config_for_unplug();
 
@@ -1501,11 +1394,11 @@ TEST_F(NestedServerWithTwoDisplays,
 
     EXPECT_TRUE(condition.raised());
 
-    auto const configuration = mir_connection_create_display_config(client.connection);
+    auto const configuration = mir_connection_create_display_configuration(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(*new_config));
 
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
@@ -1523,7 +1416,10 @@ TEST_F(NestedServer,
         &client_config_changed);
 
     client.update_display_configuration_applied_to(display,
-        [](MirDisplayConfiguration* config) { config->outputs->used = true; });
+        [](MirDisplayConfig* config) {
+            auto output = mir_display_config_get_mutable_output(config, 0);
+            mir_output_enable(output);
+    });
 
     auto const new_hw_config = hw_display_config_for_unplug();
 
@@ -1544,7 +1440,11 @@ TEST_F(NestedServer,
     if (client_config_changed.raised())
     {
         client.update_display_configuration(
-            [](MirDisplayConfiguration* config) { config->outputs->orientation = mir_orientation_inverted; });
+            [](MirDisplayConfig* config) {
+
+                auto output = mir_display_config_get_mutable_output(config, 0);
+                mir_output_set_orientation(output, mir_orientation_inverted);
+        });
     }
 
     host_config_change.wait_for(timeout);

@@ -131,6 +131,8 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
     MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
     MOCK_METHOD2(request_interface, void*(char const*, int));
+    MOCK_CONST_METHOD1(native_format_for, uint32_t(MirPixelFormat));
+    MOCK_CONST_METHOD2(native_flags_for, uint32_t(MirBufferUsage, mir::geometry::Size));
 
     mcl::ClientContext* client_context = nullptr;
 };
@@ -213,7 +215,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_be_created_and_released)
 
     auto const render_surface_returned = connection->create_render_surface_with_content(
         {10, 10},
-        reinterpret_cast<mir_render_surface_callback>(assign_result),
+        reinterpret_cast<MirRenderSurfaceCallback>(assign_result),
         &render_surface_from_callback);
 
     EXPECT_THAT(render_surface_from_callback, NotNull());
@@ -396,8 +398,7 @@ TEST_F(MirRenderSurfaceTest, render_surface_object_is_invalid_after_creation_exc
     auto rs = connection->connection_surface_map()->render_surface(callback.resulting_render_surface);
 
     EXPECT_THAT(rs->get_error_message(),
-        StrEq("Error processing buffer stream response during render "
-              "surface creation: no ID in response (disconnected?)"));
+        StrEq("Error creating MirRenderSurface: no ID in response (disconnected?)"));
     EXPECT_FALSE(reinterpret_cast<mcl::RenderSurface*>(rs->valid()));
 }
 

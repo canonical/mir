@@ -17,6 +17,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
+)
+
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -62,6 +67,7 @@ add_library(mirclientobjects OBJECT
   default_connection_configuration.cpp
   connection_surface_map.cpp
   private.cpp
+  frame_clock.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
