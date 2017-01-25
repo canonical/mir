@@ -110,6 +110,7 @@ public:
     {
         struct NullStream : graphics::nested::HostStream
         {
+            MirRenderSurface* rs() const override { return nullptr; }
             MirBufferStream* handle() const override { return nullptr; }
             EGLNativeWindowType egl_native_window() const override { return 0; }
         };
@@ -120,6 +121,7 @@ public:
     {
         struct NullHostChain : graphics::nested::HostChain
         {
+            MirRenderSurface* rs() const override { return nullptr; }
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
             void set_submission_mode(graphics::nested::SubmissionMode) override {}

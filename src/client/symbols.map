@@ -364,17 +364,12 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_map;
     mir_buffer_unmap;
-    mir_buffer_set_callback;
     mir_buffer_release;
-    mir_connection_create_presentation_chain_sync;
     mir_presentation_chain_is_valid;
     mir_presentation_chain_get_error_message;
-    mir_connection_create_presentation_chain;
     mir_connection_allocate_buffer;
+    mir_connection_allocate_buffer_sync;
     mir_presentation_chain_submit_buffer;
-    mir_presentation_chain_release;
-    mir_surface_spec_add_presentation_chain;
-    mir_surface_spec_add_buffer_stream;
     mir_buffer_get_width;
     mir_buffer_get_height;
     mir_buffer_get_pixel_format;
