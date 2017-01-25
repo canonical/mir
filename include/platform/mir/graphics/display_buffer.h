@@ -22,6 +22,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/renderable.h>
 #include <mir_toolkit/common.h>
+#include <glm/glm.hpp>
 
 #include <memory>
 
@@ -67,26 +68,14 @@ public:
     **/
     virtual bool overlay(RenderableList const& renderlist) = 0;
 
-    /** Returns the orientation of the display buffer relative to how the
-     *  user should see it (the orientation of the output).
-     *  This tells us how much (if any) rotation the renderer needs to do.
-     *  If your DisplayBuffer can do the rotation itself then this will
-     *  always return mir_orientation_normal. If the DisplayBuffer does not
-     *  implement the rotation itself then this function will return the
-     *  amount of rotation the renderer must do to make things "look right".
+    /**
+     * Returns a transformation that the renderer must apply to all rendering.
+     * There is usually no transformation required (just the identity matrix)
+     * but in other cases this will represent transformations that the display
+     * hardware is unable to do itself, such as screen rotation, flipping,
+     * reflection, scaling or keystone correction.
      */
-    virtual MirOrientation orientation() const = 0;
-
-    /** Returns the mirror mode of the display buffer relative to orientation
-     *
-     *  If your DisplayBuffer can do the mirroring itself then this will
-     *  always return mir_mirror_mode_none. If the DisplayBuffer does not
-     *  implement the mirroring itself then this function will return the
-     *  mirror mode the renderer must do after rotation to make things
-     *  "look right".
-     *
-     */
-    virtual MirMirrorMode mirror_mode() const = 0;
+    virtual glm::mat4 transformation() const = 0;
 
     /** Returns a pointer to the native display buffer object backing this
      *  display buffer.

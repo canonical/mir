@@ -112,9 +112,7 @@ public:
 
     void swap_buffers() override;
 
-    MirOrientation orientation() const override;
-
-    MirMirrorMode mirror_mode() const override;
+    glm::mat4 transformation() const override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 

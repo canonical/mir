@@ -44,8 +44,7 @@ public:
     }
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
     MOCK_METHOD1(overlay, bool(graphics::RenderableList const&));
-    MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(mirror_mode, MirMirrorMode());
+    MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_METHOD0(native_display_buffer, graphics::NativeDisplayBuffer*());
 };
 
