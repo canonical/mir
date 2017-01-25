@@ -89,7 +89,6 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . [ FAILED ] ThreadedDispatcherDeathTest.destroying_dispatcher_from_a_
         callback_is_an_error (LP: #1647573)
       . [regression] eglapps now all have window title "default" (LP: #1647575)
-      . [ FAILED ] LifecycleEventTest.lifecycle_event_test (LP: #1649758)
       . Package mirtest-dev is missing a dependency on mir-renderer-gl-dev
         (LP: #1651391)
       . EDID data is missing in nested servers (LP: #1651633)
