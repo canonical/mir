@@ -62,7 +62,7 @@ char const *mir_presentation_chain_get_error_message(
  */
 void mir_connection_create_presentation_chain(
     MirConnection* connection,
-    mir_presentation_chain_callback callback,
+    MirPresentationChainCallback callback,
     void* context);
 
 /**
@@ -99,7 +99,7 @@ void mir_presentation_chain_release(MirPresentationChain* presentation_chain);
  **/
 void mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context);
+    MirBufferCallback available_callback, void* available_context);
 
 /**
  * Set the MirSurfaceContent to display a MirPresentationChain.

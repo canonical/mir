@@ -74,7 +74,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context);
 
 /**
@@ -112,7 +112,7 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
  */
 MirWaitHandle *mir_buffer_stream_release(
     MirBufferStream * buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context);
 
 /**
@@ -169,7 +169,7 @@ void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
  */
 MirWaitHandle *mir_buffer_stream_swap_buffers(
     MirBufferStream *buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context);
 
 /**

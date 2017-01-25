@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
@@ -261,6 +262,17 @@ catch (std::exception& ex)
     *screen_y = 0;
 }
 
+void get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
+try
+{
+    mir::require(connection && properties);
+    connection->populate_graphics_module(*properties);
+}
+catch (std::exception& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }
@@ -488,7 +500,7 @@ struct MirConnection::StreamRelease
 {
     MirBufferStream* stream;
     MirWaitHandle* handle;
-    mir_buffer_stream_callback callback;
+    MirBufferStreamCallback callback;
     void* context;
     int rpc_id;
     void* rs;
@@ -557,7 +569,7 @@ MirPromptSession* MirConnection::create_prompt_session()
     return new MirPromptSession(display_server(), event_handler_register);
 }
 
-void MirConnection::connected(mir_connected_callback callback, void * context)
+void MirConnection::connected(MirConnectedCallback callback, void * context)
 {
     try
     {
@@ -572,6 +584,12 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             connect_result->coordinate_translation_present())
         {
             translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
+        }
+
+        if (connect_result->has_platform() &&
+            connect_result->platform().has_graphics_module())
+        {
+            graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
         }
 
         /*
@@ -618,7 +636,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 
 MirWaitHandle* MirConnection::connect(
     const char* app_name,
-    mir_connected_callback callback,
+    MirConnectedCallback callback,
     void * context)
 {
     {
@@ -677,7 +695,7 @@ MirWaitHandle* MirConnection::disconnect()
 }
 
 void MirConnection::done_platform_operation(
-    mir_platform_operation_callback callback, void* context)
+    MirPlatformOperationCallback callback, void* context)
 {
     auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
 
@@ -696,7 +714,7 @@ void MirConnection::done_platform_operation(
 
 MirWaitHandle* MirConnection::platform_operation(
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context)
+    MirPlatformOperationCallback callback, void* context)
 {
     auto const client_response = platform->platform_operation(request);
     if (client_response)
@@ -879,7 +897,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
     MirRenderSurface* render_surface,
-    mir_buffer_stream_callback mbs_callback,
+    MirBufferStreamCallback mbs_callback,
     void *context)
 {
     mp::BufferStreamParameters params;
@@ -977,17 +995,17 @@ MirPixelFormat MirConnection::egl_pixel_format(EGLDisplay disp, EGLConfig conf) 
     return platform->get_egl_pixel_format(disp, conf);
 }
 
-void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
+void MirConnection::register_lifecycle_event_callback(MirLifecycleEventCallback callback, void* context)
 {
     lifecycle_control->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
-void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
+void MirConnection::register_ping_event_callback(MirPingEventCallback callback, void* context)
 {
     ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
-void MirConnection::register_error_callback(mir_error_callback callback, void* context)
+void MirConnection::register_error_callback(MirErrorCallback callback, void* context)
 {
     error_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
@@ -999,7 +1017,7 @@ void MirConnection::pong(int32_t serial)
     server.pong(&pong, void_response.get(), pong_callback.get());
 }
 
-void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
+void MirConnection::register_display_change_callback(MirDisplayConfigCallback callback, void* context)
 {
     display_configuration->set_display_change_handler(std::bind(callback, this, context));
 }
@@ -1186,7 +1204,7 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
 
 MirWaitHandle* MirConnection::release_buffer_stream(
     MirBufferStream* stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context)
 {
     auto wait_handle = std::make_unique<MirWaitHandle>();
@@ -1233,7 +1251,7 @@ std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain
 }
 
 void MirConnection::create_presentation_chain(
-    mir_presentation_chain_callback callback,
+    MirPresentationChainCallback callback,
     void *context)
 {
     mir::protobuf::BufferStreamParameters params;
@@ -1344,7 +1362,7 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 
 void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback callback, void* context)
+    MirBufferCallback callback, void* context)
 {
     mp::BufferAllocation request;
     request.mutable_id()->set_value(-1);
@@ -1457,7 +1475,7 @@ void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request
 
 auto MirConnection::create_render_surface_with_content(
     mir::geometry::Size logical_size,
-    mir_render_surface_callback callback,
+    MirRenderSurfaceCallback callback,
     void* context)
 -> MirRenderSurface*
 {
@@ -1497,6 +1515,8 @@ void* MirConnection::request_interface(char const* name, int version)
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
         return &translation_ext.value();
+    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1) && graphics_module_extension.is_set())
+        return &graphics_module_extension.value();
 
     return platform->request_interface(name, version);
 }

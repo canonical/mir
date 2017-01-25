@@ -86,7 +86,7 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context));
 };
 
@@ -608,13 +608,15 @@ TEST_F(MirConnectionTest, uses_client_platform_for_platform_operation)
 
     auto connect_wh =
         connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
-    mir_wait_for(connect_wh);
+    connect_wh->wait_for_all();
 
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
         request.get(), assign_response, &returned_response);
-    mir_wait_for(op_wh);
+
+    if (op_wh)
+        op_wh->wait_for_all();
 
     EXPECT_THAT(returned_response, Eq(response.get()));
 }
@@ -633,13 +635,13 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
 
     auto connect_wh =
         connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
-    mir_wait_for(connect_wh);
+    connect_wh->wait_for_all();
 
     MirPlatformMessage* returned_response{nullptr};
 
     auto op_wh = connection->platform_operation(
         request.get(), assign_response, &returned_response);
-    mir_wait_for(op_wh);
+    op_wh->wait_for_all();
 
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
     mir_platform_message_release(returned_response);

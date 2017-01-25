@@ -54,7 +54,7 @@ Running Mir
 The binaries created in the bin subdirectory of the project directory can be
 used directly. For example,
 
-    $ bin/mir_demo_server --launch_client bin/mir_demo_client_multiwin
+    $ bin/mir_demo_server --launch-client bin/mir_demo_client_multiwin
 
 Other examples described elsewhere in this documentation assume you're using the
 installed version and simply need "bin/" adding to specify the local build.  
