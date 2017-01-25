@@ -31,6 +31,7 @@
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_buffer.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
@@ -215,7 +216,9 @@ class MirClientHostStream : public mgn::HostStream
 {
 public:
     MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
-        stream(mir_connection_create_buffer_stream_sync(connection,
+        render_surface(mir_connection_create_render_surface_sync(connection,
+            properties.size.width.as_int(), properties.size.height.as_int())),
+        stream(mir_render_surface_get_buffer_stream(render_surface,
             properties.size.width.as_int(), properties.size.height.as_int(),
             properties.format,
             (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
@@ -224,7 +227,7 @@ public:
 
     ~MirClientHostStream()
     {
-        mir_buffer_stream_release_sync(stream);
+        mir_render_surface_release(render_surface);
     }
 
     EGLNativeWindowType egl_native_window() const override
@@ -236,7 +239,14 @@ public:
     {
         return stream;
     }
+
+    MirRenderSurface* rs() const override
+    {
+        return render_surface;
+    }
+
 private:
+    MirRenderSurface* const render_surface;
     MirBufferStream* const stream;
 };
 
@@ -510,13 +520,15 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
 
 struct Chain : mgn::HostChain
 {
+
     Chain(MirConnection* connection) :
-        chain(mir_connection_create_presentation_chain_sync(connection))
+        render_surface(mir_connection_create_render_surface_sync(connection, 0, 0)),
+        chain(mir_render_surface_get_presentation_chain(render_surface))
     {
     }
     ~Chain()
     {
-        mir_presentation_chain_release(chain);
+        mir_render_surface_release(render_surface);
     }
 
     static void buffer_available(MirBuffer* buffer, void* context)
@@ -543,7 +555,14 @@ struct Chain : mgn::HostChain
     {
         return chain;
     }
+
+    MirRenderSurface* rs() const override
+    {
+        return render_surface;
+    }
+
 private:
+    MirRenderSurface* const render_surface;
     MirPresentationChain* chain;
 };
 
@@ -758,16 +777,18 @@ public:
 
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(),
-            disp.dx.as_int(), disp.dy.as_int(), chain.handle());
+        mir_surface_spec_add_render_surface(
+            spec, chain.rs(),
+            size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int());
     }
 
     void add_stream(mgn::HostStream& stream, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_buffer_stream(spec,
-            disp.dx.as_int(), disp.dy.as_int(),
-            size.width.as_int(), size.height.as_int(), stream.handle());
+        mir_surface_spec_add_render_surface(
+            spec, stream.rs(),
+            size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int());
     }
 
     MirWindowSpec* handle() override

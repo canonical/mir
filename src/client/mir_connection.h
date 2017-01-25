@@ -167,13 +167,9 @@ public:
         MirBufferStreamCallback callback,
         void *context);
 
-    void create_presentation_chain(
-        MirPresentationChainCallback callback,
-        void *context);
     std::shared_ptr<mir::client::PresentationChain> create_presentation_chain_with_id(
         MirRenderSurface* render_surface,
         mir::protobuf::BufferStream const& a_protobuf_bs);
-    void release_presentation_chain(MirPresentationChain* context);
 
     void release_consumer_stream(MirBufferStream*);
 
@@ -275,19 +271,6 @@ private:
     void stream_created(StreamCreationRequest*);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
-    struct ChainCreationRequest
-    {
-        ChainCreationRequest(MirPresentationChainCallback cb, void* context) :
-            callback(cb), context(context),
-            response(std::make_shared<mir::protobuf::BufferStream>())
-        {
-        }
-
-        MirPresentationChainCallback callback;
-        void* context;
-        std::shared_ptr<mir::protobuf::BufferStream> response;
-    };
-
     struct RenderSurfaceCreationRequest
     {
         RenderSurfaceCreationRequest(
@@ -311,12 +294,9 @@ private:
         mir::geometry::Size logical_size;
     };
 
-    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     std::vector<std::shared_ptr<RenderSurfaceCreationRequest>> render_surface_requests;
-    void context_created(ChainCreationRequest*);
     void render_surface_created(RenderSurfaceCreationRequest*);
     void render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request);
-    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.

@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 
@@ -45,8 +46,14 @@ struct Chain
     Chain& operator=(Chain const&) = delete;
 
     Chain(MirConnection* connection) :
-        chain(mir_connection_create_presentation_chain_sync(connection))
+        rs(mir_connection_create_render_surface_sync(connection, 0, 0)),
+        chain(mir_render_surface_get_presentation_chain(rs))
     {
+    }
+
+    MirRenderSurface* content()
+    {
+        return rs;
     }
 
     operator MirPresentationChain*()
@@ -56,9 +63,10 @@ struct Chain
 
     ~Chain()
     {
-        mir_presentation_chain_release(chain);
+        mir_render_surface_release(rs);
     }
 private:
+    MirRenderSurface* rs;
     MirPresentationChain* chain;
 };
 
@@ -110,8 +118,8 @@ private:
         auto spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());
         mir_window_spec_set_pixel_format(spec, pf);
-        mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
+        mir_surface_spec_add_render_surface(
+            spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
         auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         return window;
@@ -137,8 +145,8 @@ private:
         auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         spec = mir_create_window_spec(connection);
-        mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
+        mir_surface_spec_add_render_surface(
+            spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
         mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
         return window;
@@ -342,9 +350,13 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
 
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
 {
-    auto chain = mir_connection_create_presentation_chain_sync(connection);
-    auto stream = mir_connection_create_buffer_stream_sync(connection, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
+    auto rs_chain = mir_connection_create_render_surface_sync(connection, 1, 1);
+    auto chain = mir_render_surface_get_presentation_chain(rs_chain);
+    auto rs_stream = mir_connection_create_render_surface_sync(connection, 1, 1);
+    auto stream = mir_render_surface_get_buffer_stream(rs_stream, 25, 12, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
+    ASSERT_TRUE(mir_render_surface_is_valid(rs_chain));
+    ASSERT_TRUE(mir_render_surface_is_valid(rs_stream));
 
     auto spec = mir_create_normal_window_spec(
         connection, size.width.as_int(), size.height.as_int());
@@ -353,8 +365,8 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_window_spec_release(spec);
 
     spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_presentation_chain(
-        spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
+    mir_surface_spec_add_render_surface(
+        spec, rs_chain, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
 
@@ -366,15 +378,15 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_presentation_chain_submit_buffer(chain, context.buffer(), buffer_callback, &context);
 
     spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_buffer_stream(spec, 0, 0, size.width.as_int(), size.height.as_int(), stream);
+    mir_surface_spec_add_render_surface(spec, rs_stream, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
-    mir_presentation_chain_release(chain);
+    mir_render_surface_release(rs_chain);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
 
-    mir_buffer_stream_release_sync(stream);
+    mir_render_surface_release(rs_stream);
     mir_window_release_sync(window);
 }
 
