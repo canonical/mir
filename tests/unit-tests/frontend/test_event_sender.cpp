@@ -34,8 +34,10 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/variable_length_array.h"
 
 #include <gtest/gtest.h>
@@ -73,27 +75,27 @@ struct StubDevice : mi::Device
     {
         return device_unique_id;
     }
-    mir::optional_value<mi::PointerConfiguration> pointer_configuration() const override
+    mir::optional_value<MirPointerConfig> pointer_configuration() const override
     {
         return {};
     }
-    void apply_pointer_configuration(mi::PointerConfiguration const&) override
+    void apply_pointer_configuration(MirPointerConfig const&) override
     {
     }
 
-    mir::optional_value<mi::TouchpadConfiguration> touchpad_configuration() const override
+    mir::optional_value<MirTouchpadConfig> touchpad_configuration() const override
     {
         return {};
     }
-    void apply_touchpad_configuration(mi::TouchpadConfiguration const&) override
+    void apply_touchpad_configuration(MirTouchpadConfig const&) override
     {
     }
 
-    mir::optional_value<mi::KeyboardConfiguration> keyboard_configuration() const override
+    mir::optional_value<MirKeyboardConfig> keyboard_configuration() const override
     {
         return {};
     }
-    void apply_keyboard_configuration(mi::KeyboardConfiguration const&) override
+    void apply_keyboard_configuration(MirKeyboardConfig const&) override
     {
     }
 
@@ -156,7 +158,7 @@ TEST_F(EventSender, sends_noninput_events)
 {
     using namespace testing;
 
-    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_surface_attrib_focus, mir_surface_focused);
+    auto surface_ev = mev::make_event(mf::SurfaceId{1}, mir_window_attrib_focus, mir_window_focus_state_focused);
     auto resize_ev = mev::make_event(mf::SurfaceId{1}, {10, 10});
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -194,42 +196,46 @@ TEST_F(EventSender, sends_input_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices{
-        std::make_shared<StubDevice>(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad",
-                                     "5352"),
-        std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
-                                     "keybaord", "7853")};
+    MirInputDevice tpd(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad", "5352");
+    MirInputDevice kbd(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric, "keyboard",
+                                "5352");
+
+    MirInputConfig devices;
+    devices.add_device_config(tpd);
+    devices.add_device_config(kbd);
 
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
+            EXPECT_THAT(received_input_config, Eq(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(devices);
 }
 
 TEST_F(EventSender, sends_empty_sequence_of_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices;
+    MirInputConfig empty;
 
     auto msg_validator = make_validator(
-        [&devices](auto const& seq)
+        [&empty](auto const& seq)
         {
-            EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
+            auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
+            EXPECT_THAT(received_input_config, Eq(empty));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(empty);
 }
 
 TEST_F(EventSender, can_send_error_buffer)
@@ -260,7 +266,7 @@ TEST_F(EventSender, can_send_error_buffer)
                 sent_buffer.resize(size);
                 memcpy(sent_buffer.data(), data, size); 
             }));
-    event_sender.error_buffer(properties, error_msg);
+    event_sender.error_buffer(properties.size, properties.format, error_msg);
     ASSERT_THAT(sent_buffer.size(), Eq(expected_buffer.size()));
     EXPECT_FALSE(memcmp(sent_buffer.data(), expected_buffer.data(), sent_buffer.size()));
 }

@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ERROR_BUFFER_H
 #define MIR_CLIENT_ERROR_BUFFER_H
 
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ class ErrorBuffer : public MirBuffer
 public:
     ErrorBuffer(
         std::string const& error_msg, int buffer_id,
-        mir_buffer_callback cb, void* context, MirConnection* connection);
+        MirBufferCallback cb, void* context, MirConnection* connection);
 
     int rpc_id() const override;
     void submitted() override;
@@ -38,22 +38,20 @@ public:
     void received(MirBufferPackage const& update_message) override;
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
-    void set_fence(mir::Fd, MirBufferAccess) override;
-    mir::Fd get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
+    void unmap_region() override;
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
     MirConnection* allocating_connection() const override;
     void increment_age() override;
-    void set_callback(mir_buffer_callback callback, void* context) override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 
     bool valid() const override;
     char const* error_message() const override;
 private:
     std::string const error_msg;
     int const buffer_id;
-    mir_buffer_callback const cb;
+    MirBufferCallback const cb;
     void* const cb_context;
     MirConnection* connection;
 };

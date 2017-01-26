@@ -103,8 +103,6 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
-    std::shared_ptr<compositor::BufferStream> buffer_stream() const;
-
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
@@ -119,10 +117,10 @@ public:
     graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
 
-    MirSurfaceType type() const override;
-    MirSurfaceState state() const override;
-    int configure(MirSurfaceAttrib attrib, int value) override;
-    int query(MirSurfaceAttrib attrib) const override;
+    MirWindowType type() const override;
+    MirWindowState state() const override;
+    int configure(MirWindowAttrib attrib, int value) override;
+    int query(MirWindowAttrib attrib) const override;
     void hide() override;
     void show() override;
     
@@ -154,12 +152,12 @@ public:
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
-    MirSurfaceType set_type(MirSurfaceType t);  // Use configure() to make public changes
-    MirSurfaceState set_state(MirSurfaceState s);
+    MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
+    MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
-    MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
+    MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
-    MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
@@ -180,12 +178,12 @@ private:
 
     std::list<StreamInfo> layers;
     // Surface attributes:
-    MirSurfaceType type_ = mir_surface_type_normal;
-    MirSurfaceState state_ = mir_surface_state_restored;
+    MirWindowType type_ = mir_window_type_normal;
+    MirWindowState state_ = mir_window_state_restored;
     int swapinterval_ = 1;
-    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
     int dpi_ = 0;
-    MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
+    MirWindowVisibility visibility_ = mir_window_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
     MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
 

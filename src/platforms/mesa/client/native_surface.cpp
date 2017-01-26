@@ -42,7 +42,7 @@ static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
 }
 
 static int get_parameters_static(MirMesaEGLNativeSurface* surface,
-                                  MirSurfaceParameters* surface_parameters)
+                                  MirWindowParameters* surface_parameters)
 {
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->get_parameters(surface_parameters);
@@ -77,7 +77,7 @@ try
     if (starting)
         starting = false;
     else
-        surface->request_and_wait_for_next_buffer();
+        surface->swap_buffers_sync();
 
     auto buffer = surface->get_current_buffer();
 
@@ -94,12 +94,12 @@ catch (std::exception const& e)
     return MIR_MESA_FALSE;
 }
 
-int mclm::NativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
+int mclm::NativeSurface::get_parameters(MirWindowParameters* surface_parameters)
 try
 {
     THROW_IF_NULL(surface);
     auto params = surface->get_parameters();
-    memcpy(surface_parameters, &params, sizeof(MirSurfaceParameters));
+    memcpy(surface_parameters, &params, sizeof(MirWindowParameters));
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)
@@ -116,7 +116,7 @@ try
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
-    surface->request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    surface->request_and_wait_for_configure(mir_window_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
 }
 catch (std::exception const& e)

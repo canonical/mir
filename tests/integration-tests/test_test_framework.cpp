@@ -18,7 +18,6 @@
 
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
@@ -48,7 +47,6 @@ struct DemoInProcessServer : mir_test_framework::InProcessServer
 
 struct DemoInProcessServerWithStubClientPlatform : DemoInProcessServer
 {
-    mir_test_framework::UsingStubClientPlatform using_stub_client_platform;
 };
 }
 
@@ -80,7 +78,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
     mir::test::Signal connection_released;
 
     unsigned fd_count_after_one_surface_lifetime = 0;
-               
+
     mir::test::AutoJoinThread t{
         [&]
         {
@@ -89,10 +87,10 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
 
              for (int i = 0; i < 16; ++i)
              {
-                auto const surface = mtf::make_any_surface(connection);
+                auto const window = mtf::make_any_surface(connection);
 
-                EXPECT_TRUE(mir_surface_is_valid(surface));
-                mir_surface_release_sync(surface);
+                EXPECT_TRUE(mir_window_is_valid(window));
+                mir_window_release_sync(window);
 
                 if (i == 0)
                 {
@@ -105,15 +103,14 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
 
         }};
-    
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{10}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
         << "Client hung" << std::endl;
 
     // Investigation revealed we leak a differing number of fds (3, 0) on
     // Mesa/Android over the entire lifetime of the client library. So we
     // verify here only that we don't leak any FDs beyond those created up to
-    // the lifetime of the first surface.
+    // the lifetime of the first window.
     //
     // Note that when using NBS, not all FDs are guaranteed to have been closed
     // when mir_connection_release() returns, due to the asynchronous nature

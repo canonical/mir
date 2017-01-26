@@ -119,7 +119,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     }
 }
 
-MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::ScreencastStream::swap_buffers(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     secured_region.reset();
@@ -169,10 +169,10 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
     screencast_wait_handle.result_received();
 }
 
-MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
+MirWindowParameters mcl::ScreencastStream::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "Screencast",
         buffer_size.width.as_int(),
         buffer_size.height.as_int(),
@@ -181,9 +181,9 @@ MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::ScreencastStream::request_and_wait_for_next_buffer()
+void mcl::ScreencastStream::swap_buffers_sync()
 {
-    next_buffer([](){})->wait_for_all();
+    swap_buffers([](){})->wait_for_all();
 }
 
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
@@ -254,7 +254,7 @@ void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set cache size on screencast is invalid"));
 }
 
-void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+void mcl::ScreencastStream::request_and_wait_for_configure(MirWindowAttrib, int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set attrib on screencast is invalid"));
 }
@@ -262,6 +262,14 @@ void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib, int
 MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+}
+
+void mcl::ScreencastStream::adopted_by(MirWindow*)
+{
+}
+
+void mcl::ScreencastStream::unadopted_by(MirWindow*)
+{
 }
 
 void mcl::ScreencastStream::set_size(geom::Size)

@@ -36,6 +36,7 @@
 #include <memory>
 #include <system_error>
 #include <boost/throw_exception.hpp>
+#include <atomic>
 
 namespace mircv = mir::input::receiver;
 namespace mircva = mircv::android;
@@ -154,7 +155,8 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
                                    std::make_shared<mircv::XKBMapper>(),
                                    [&last_event](MirEvent* ev)
                                    {
-                                       if (ev->type() == mir_event_type_key)
+                                       if (ev->type() == mir_event_type_input &&
+                                           ev->to_input()->input_type() == mir_input_event_type_key)
                                        {
                                            last_event = *ev->to_input()->to_keyboard();
                                        }
@@ -169,7 +171,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
-    EXPECT_EQ(mir_event_type_key, last_event.type());
+    EXPECT_EQ(mir_input_event_type_key, last_event.input_type());
     EXPECT_EQ(producer.testing_key_event_scan_code, last_event.scan_code());
 }
 
@@ -192,7 +194,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     EXPECT_TRUE(producer.must_receive_handled_signal());
 }
 
-TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
+TEST_F(AndroidInputReceiverSetup, receiver_consumes_all_motion_events)
 {
     mircva::InputReceiver receiver{channel.client_fd(),
                                    std::make_shared<mircv::XKBMapper>(),
@@ -202,14 +204,18 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     TestingInputProducer producer(channel.server_fd());
 
     // Produce 3 motion events before client handles any.
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
-    producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
+    int const nevents = 3;
+    for (int i = 0; i < nevents; ++i)
+        producer.produce_a_pointer_event(0, 0, std::chrono::nanoseconds(0));
 
     flush_channels();
 
-    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
-    receiver.dispatch(md::FdEvent::readable);
+    for (int j = 0; j < nevents; ++j)
+    {
+        EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(),
+                                            next_event_timeout));
+        receiver.dispatch(md::FdEvent::readable);
+    }
 
     // Now there should be no events
     EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
@@ -217,50 +223,33 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 
 TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 {  // Regression test for LP: #1372300
-    using namespace testing;
     using namespace std::chrono;
     using namespace std::literals::chrono_literals;
 
-    auto t = 0ns;
-
-    std::unique_ptr<MirEvent> ev;
-    bool handler_called{false};
+    std::atomic_int handler_called{0};
 
     mircva::InputReceiver receiver{channel.client_fd(),
                                    std::make_shared<mircv::XKBMapper>(),
-                                   [&ev, &handler_called](MirEvent* event)
+                                   [&handler_called](MirEvent*)
                                    {
-                                       ev.reset(new MirEvent(*event));
-                                       handler_called = true;
+                                       ++handler_called;
                                    },
-                                   std::make_shared<mircv::NullInputReceiverReport>(),
-                                   [&t](int)
-                                   {
-                                       return t;
-                                   }};
+                                   std::make_shared<mircv::NullInputReceiverReport>()};
     TestingInputProducer producer(channel.server_fd());
 
     nanoseconds const one_frame = duration_cast<nanoseconds>(1s) / 59;
 
-    producer.produce_a_pointer_event(123, 456, t);
-    producer.produce_a_key_event();
+    producer.produce_a_pointer_event(123, 456, 0ns);
+    producer.produce_a_pointer_event(234, 567, one_frame);
     flush_channels();
 
-    // Key events don't get resampled. Will be reported first.
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
-    EXPECT_TRUE(handler_called);
-    ASSERT_EQ(mir_event_type_key, ev->type());
+    EXPECT_EQ(1, handler_called);
 
-    t += 2 * one_frame;  // Account for the slower 59Hz event rate
-    // The motion is still too new. Won't be reported yet, but is batched.
-    // and since batching is locked to the event rate android_input_receiver
-    // will wake up in one frame..
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 2 * one_frame));
     receiver.dispatch(md::FdEvent::readable);
-
-    EXPECT_TRUE(handler_called);
-    EXPECT_EQ(mir_event_type_motion, ev->type());
+    EXPECT_EQ(2, handler_called);
 }
 
 TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
@@ -284,62 +273,6 @@ TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
     receiver.dispatch(md::FdEvent::readable);
     EXPECT_TRUE(handler_called);
     EXPECT_TRUE(producer.must_receive_handled_signal());
-}
-
-TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
-{
-    using namespace testing;
-    using namespace std::chrono;
-    using namespace std::literals::chrono_literals;
-
-    std::chrono::nanoseconds t;
-
-    int frames_triggered = 0;
-
-    mircva::InputReceiver receiver{channel.client_fd(),
-                                   std::make_shared<mircv::XKBMapper>(),
-                                   [&frames_triggered](MirEvent*)
-                                   {
-                                       ++frames_triggered;
-                                   },
-                                   std::make_shared<mircv::NullInputReceiverReport>(),
-                                   [&t](int)
-                                   {
-                                       return t;
-                                   }};
-    TestingInputProducer producer(channel.server_fd());
-
-    std::chrono::nanoseconds const device_sample_interval = duration_cast<nanoseconds>(1s) / 250;
-    std::chrono::nanoseconds const frame_interval = duration_cast<nanoseconds>(1s) / 60;
-    std::chrono::nanoseconds const gesture_duration = 1s;
-
-    std::chrono::nanoseconds last_produced = 0ns;
-
-    for (t = 0ns; t < gesture_duration; t += 1ms)
-    {
-        if (!t.count() || t >= (last_produced + device_sample_interval))
-        {
-            last_produced = t;
-            float a = t.count() * M_PI / 1000000.0f;
-            float x = 500.0f * sinf(a);
-            float y = 1000.0f * cosf(a);
-            producer.produce_a_pointer_event(x, y, t);
-            flush_channels();
-        }
-
-        if (mt::fd_is_readable(receiver.watch_fd()))
-        {
-            receiver.dispatch(md::FdEvent::readable);
-        }
-    }
-
-    // If the rendering time resulting from the gesture is longer than the
-    // gesture itself then that's laggy...
-    std::chrono::nanoseconds render_duration = frame_interval * frames_triggered;
-    EXPECT_THAT(render_duration, Le(gesture_duration));
-
-    int average_lag_milliseconds = (render_duration - gesture_duration) / (frames_triggered * 1ms);
-    EXPECT_THAT(average_lag_milliseconds, Le(1));
 }
 
 TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)

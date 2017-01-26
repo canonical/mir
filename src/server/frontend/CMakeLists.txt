@@ -8,6 +8,8 @@ set(
   protobuf_message_processor.cpp
   protobuf_responder.cpp
   protobuf_buffer_packer.cpp
+  protobuf_input_converter.cpp
+  protobuf_input_converter.h
   published_socket_connector.cpp
   protobuf_connection_creator.cpp
   socket_connection.cpp
@@ -27,6 +29,8 @@ set(
   reordering_message_sender.h
   event_sink_factory.h
   screencast_buffer_tracker.cpp
+  session_mediator_observer_multiplexer.cpp
+  session_mediator_observer_multiplexer.h
 )
 
 add_library(

@@ -181,10 +181,10 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
+static void redraw(MirWindow *window, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
-    MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
+    MirBufferStream *bs = mir_window_get_buffer_stream(window);
 
     mir_buffer_stream_get_graphics_region(bs, &backbuffer);
     clear_region(&backbuffer, background);
@@ -195,7 +195,7 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
-    MirSurface *surf;
+    MirWindow* window;
     MirGraphicsRegion canvas;
     unsigned int f;
     unsigned int const pf_size = 32;
@@ -250,28 +250,27 @@ int main(int argc, char *argv[])
 
     int width = 500;
     int height = 500;
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
     if (spec == NULL)
     {
-        fprintf(stderr, "Could not create a surface spec.\n");
+        fprintf(stderr, "Could not create a window spec.\n");
         mir_connection_release(conn);
         return 1;
     }
-
+    mir_window_spec_set_pixel_format(spec, pixel_format);
     {
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
         name[sizeof(name)-1] = '\0';
-        mir_surface_spec_set_name(spec, name);
+        mir_window_spec_set_name(spec, name);
     }
 
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
-    if (surf != NULL)
+    if (window != NULL)
     {
         canvas.width = width;
         canvas.height = height;
@@ -304,7 +303,7 @@ int main(int argc, char *argv[])
 
                 draw_box(&canvas, x, y, box_width, foreground);
 
-                redraw(surf, &canvas);
+                redraw(window, &canvas);
                 usleep(1000000 / hz);
             }
 
@@ -315,7 +314,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to malloc canvas\n");
         }
 
-        mir_surface_release_sync(surf);
+        mir_window_release_sync(window);
     }
     else
     {

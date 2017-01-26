@@ -215,7 +215,7 @@ TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
         buffer_list.push_back(fbs->buffer_for_render()->id());
     std::sort(buffer_list.begin(), buffer_list.end());
     buffer_list.erase(std::unique(buffer_list.begin(), buffer_list.end()), buffer_list.end());
-    EXPECT_THAT(buffer_list.size(), Eq(2));
+    EXPECT_THAT(buffer_list.size(), Eq(2u));
 }
 
 TEST_F(HalComponentFactory, doesnt_complain_if_version_is_supported)

@@ -34,7 +34,7 @@ void shutdown(int)
 auto query_input_config(MirConnection* con)
 {
     return std::unique_ptr<MirInputConfig, void (*)(MirInputConfig const*)>(mir_connection_create_input_config(con),
-                                                                            &mir_input_config_destroy);
+                                                                            &mir_input_config_release);
 }
 
 std::string capability_to_string(MirInputDeviceCapabilities caps)

@@ -1,4 +1,5 @@
 usr/include/mirclient/mir_toolkit/*.h
+usr/include/mirclient/mir_toolkit/extensions/*.h
 usr/include/mirclient/mir/events/*.h
 usr/include/mirclient/mir/event_printer.h
 usr/include/mirclient/mir_toolkit/events

@@ -25,7 +25,7 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/keymap_event.h"
-#include "mir/events/motion_event.h"
+#include "mir/events/touch_event.h"
 #include "mir/events/orientation_event.h"
 #include "mir/events/prompt_session_event.h"
 #include "mir/events/resize_event.h"
@@ -79,12 +79,10 @@ MirEventType MirEvent::type() const
 {
     switch (event.asReader().which())
     {
-    case mir::capnp::Event::Which::KEY:
-        return mir_event_type_key;
-    case mir::capnp::Event::Which::MOTION_SET:
-        return mir_event_type_motion;
+    case mir::capnp::Event::Which::INPUT:
+        return mir_event_type_input;
     case mir::capnp::Event::Which::SURFACE:
-        return mir_event_type_surface;
+        return mir_event_type_window;
     case mir::capnp::Event::Which::RESIZE:
         return mir_event_type_resize;
     case mir::capnp::Event::Which::PROMPT_SESSION:
@@ -92,7 +90,7 @@ MirEventType MirEvent::type() const
     case mir::capnp::Event::Which::ORIENTATION:
         return mir_event_type_orientation;
     case mir::capnp::Event::Which::CLOSE_SURFACE:
-        return mir_event_type_close_surface;
+        return mir_event_type_close_window;
     case mir::capnp::Event::Which::KEYMAP:
         return mir_event_type_keymap;
 #pragma GCC diagnostic push
@@ -101,11 +99,11 @@ MirEventType MirEvent::type() const
         return mir_event_type_input_configuration;
 #pragma GCC diagnostic pop
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
-        return mir_event_type_surface_output;
+        return mir_event_type_window_output;
     case mir::capnp::Event::Which::INPUT_DEVICE:
         return mir_event_type_input_device_state;
     case mir::capnp::Event::Which::SURFACE_PLACEMENT:
-        return mir_event_type_surface_placement;
+        return mir_event_type_window_placement;
     default:
         mir::log_critical("unknown event type.");
         abort();
@@ -135,14 +133,14 @@ MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
 }
 #pragma GCC diagnostic pop
 
-MirSurfaceEvent* MirEvent::to_surface()
+MirWindowEvent* MirEvent::to_surface()
 {
-    return static_cast<MirSurfaceEvent*>(this);
+    return static_cast<MirWindowEvent*>(this);
 }
 
-MirSurfaceEvent const* MirEvent::to_surface() const
+MirWindowEvent const* MirEvent::to_surface() const
 {
-    return static_cast<MirSurfaceEvent const*>(this);
+    return static_cast<MirWindowEvent const*>(this);
 }
 
 MirResizeEvent* MirEvent::to_resize()
@@ -175,14 +173,14 @@ MirOrientationEvent const* MirEvent::to_orientation() const
     return static_cast<MirOrientationEvent const*>(this);
 }
 
-MirCloseSurfaceEvent* MirEvent::to_close_surface()
+MirCloseWindowEvent* MirEvent::to_close_window()
 {
-    return static_cast<MirCloseSurfaceEvent*>(this);
+    return static_cast<MirCloseWindowEvent*>(this);
 }
 
-MirCloseSurfaceEvent const* MirEvent::to_close_surface() const
+MirCloseWindowEvent const* MirEvent::to_close_window() const
 {
-    return static_cast<MirCloseSurfaceEvent const*>(this);
+    return static_cast<MirCloseWindowEvent const*>(this);
 }
 
 MirKeymapEvent* MirEvent::to_keymap()
@@ -195,14 +193,14 @@ MirKeymapEvent const* MirEvent::to_keymap() const
     return static_cast<MirKeymapEvent const*>(this);
 }
 
-MirSurfaceOutputEvent* MirEvent::to_surface_output()
+MirWindowOutputEvent* MirEvent::to_window_output()
 {
-    return static_cast<MirSurfaceOutputEvent*>(this);
+    return static_cast<MirWindowOutputEvent*>(this);
 }
 
-MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
+MirWindowOutputEvent const* MirEvent::to_window_output() const
 {
-    return static_cast<MirSurfaceOutputEvent const*>(this);
+    return static_cast<MirWindowOutputEvent const*>(this);
 }
 
 MirInputDeviceStateEvent* MirEvent::to_input_device_state()

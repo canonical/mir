@@ -54,7 +54,7 @@ class EventHostSurface : public mgn::HostSurface
 public:
     EGLNativeWindowType egl_native_window() override { return {}; }
 
-    void set_event_handler(mir_surface_event_callback cb, void* ctx) override
+    void set_event_handler(MirWindowEventCallback cb, void* ctx) override
     {
         std::lock_guard<std::mutex> lock{event_mutex};
         event_handler = cb;
@@ -79,14 +79,14 @@ public:
     }
 private:
     std::mutex event_mutex;
-    mir_surface_event_callback event_handler;
+    MirWindowEventCallback event_handler;
     void* event_context;
 };
 
 struct MockHostSurface : mgn::HostSurface
 {
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
-    MOCK_METHOD2(set_event_handler, void(mir_surface_event_callback, void*));
+    MOCK_METHOD2(set_event_handler, void(MirWindowEventCallback, void*));
     MOCK_METHOD1(apply_spec, void(mgn::HostSurfaceSpec&));
 };
 
@@ -94,10 +94,13 @@ struct MockNestedChain : mgn::HostChain
 {
     MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_METHOD0(handle, MirPresentationChain*());
+    MOCK_METHOD1(set_submission_mode, void(mgn::SubmissionMode));
+    MOCK_CONST_METHOD0(rs, MirRenderSurface*());
 };
 
 struct MockNestedStream : mgn::HostStream
 {
+    MOCK_CONST_METHOD0(rs, MirRenderSurface*());
     MOCK_CONST_METHOD0(handle, MirBufferStream*());
     MOCK_CONST_METHOD0(egl_native_window, EGLNativeWindowType());
 };
@@ -115,16 +118,14 @@ struct StubNestedBuffer :
     mtd::NullClientBuffer mutable null_buffer;
     MirBuffer* client_handle() const override { return reinterpret_cast<::MirBuffer*>(&null_buffer); }
     void sync(MirBufferAccess, std::chrono::nanoseconds) override {}
-    MirGraphicsRegion get_graphics_region() override
-    {
-        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr };
-    }
+    std::unique_ptr<mgn::GraphicsRegion> get_graphics_region() override { return nullptr; }
     geom::Size size() const override { return {}; }
     MirPixelFormat format() const override { return mir_pixel_format_invalid; }
     void on_ownership_notification(std::function<void()> const& f) override { fn = f; }
     MirBufferPackage* package() const override { return nullptr; }
     mir::Fd fence() const override { return mir::Fd{mir::Fd::invalid}; }
     void set_fence(mir::Fd) override {}
+    void available(MirBuffer*) override {}
     std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
     {
         return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{};
@@ -410,7 +411,7 @@ TEST_F(NestedDisplayBuffer, rejects_list_containing_buffers_with_different_size_
     EXPECT_FALSE(display_buffer->overlay(list));
 }
 
-/* Once we have synchronous MirSurface scene updates, we can probably
+/* Once we have synchronous MirWindow scene updates, we can probably
  * passthrough more than one renderable if needed
  */
 TEST_F(NestedDisplayBuffer, rejects_list_containing_multiple_onscreen_renderables)
@@ -435,4 +436,42 @@ TEST_F(NestedDisplayBuffer, accepts_list_containing_multiple_renderables_with_fu
 
     auto display_buffer = create_display_buffer(host_connection);
     EXPECT_TRUE(display_buffer->overlay(list));
+}
+
+//bit subtle, but if a swapinterval 0 nested-client is submitting its buffers to 
+//a swapinterval-1 host chain, then its spare buffers will end up being owned by
+//the host, and stop swapinterval 0 from working.
+TEST_F(NestedDisplayBuffer, coordinates_clients_interval_setting_with_host)
+{
+    NiceMock<MockHostSurface> mock_host_surface;
+    auto mock_chain = std::make_unique<NiceMock<MockNestedChain>>();
+    auto mock_stream = std::make_unique<NiceMock<MockNestedStream>>();
+
+    Sequence seq;
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::dropping))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::queueing))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_chain, set_submission_mode(mgn::SubmissionMode::dropping))
+        .InSequence(seq);
+
+    mtd::MockHostConnection mock_host_connection;
+    EXPECT_CALL(mock_host_connection, create_surface(_,_,_,_,_))
+        .WillOnce(Return(mt::fake_shared(mock_host_surface)));
+
+    EXPECT_CALL(mock_host_connection, create_stream(_))
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_stream); }));
+    EXPECT_CALL(mock_host_connection, create_chain())
+        .WillOnce(InvokeWithoutArgs([&] { return std::move(mock_chain); }));
+    auto display_buffer = create_display_buffer(mt::fake_shared(mock_host_connection));
+
+    auto nested_buffer1 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer2 = std::make_shared<StubNestedBuffer>();
+    auto nested_buffer3 = std::make_shared<StubNestedBuffer>();
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::StubRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
+    EXPECT_TRUE(display_buffer->overlay(
+      { std::make_shared<mtd::IntervalZeroRenderable>(std::make_shared<StubNestedBuffer>(), rectangle) }));
 }

@@ -36,12 +36,12 @@ TEST_F(ClientWithCustomDisplayConfiguration,
     auto second_connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto second_surface = mtf::make_any_surface(connection);
-    ASSERT_TRUE(mir_surface_is_valid(second_surface));
+    ASSERT_TRUE(mir_window_is_valid(second_surface));
 
-    auto configuration = mir_connection_create_display_config(connection);
-    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+    auto configuration = mir_connection_create_display_configuration(connection);
+    mir_connection_apply_session_display_config(connection, configuration);
     EXPECT_STREQ("", mir_connection_get_error_message(connection));
-    mir_display_config_destroy(configuration);
+    mir_display_config_release(configuration);
 
     mir_connection_release(second_connection);
 

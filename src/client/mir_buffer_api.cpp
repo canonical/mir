@@ -38,7 +38,7 @@ void mir_connection_allocate_buffer(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage usage,
-    mir_buffer_callback cb, void* context)
+    MirBufferCallback cb, void* context)
 try
 {
     mir::require(connection);
@@ -47,6 +47,42 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBuffer* mir_connection_allocate_buffer_sync(
+    MirConnection* connection, 
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage)
+try
+{
+    mir::require(connection);
+
+    struct BufferInfo
+    {
+        MirBuffer* buffer = nullptr;
+        std::mutex mutex;
+        std::condition_variable cv;
+    } info;
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, 
+        [](MirBuffer* buffer, void* c)
+        {
+            mir::require(buffer);
+            mir::require(c);
+            auto context = reinterpret_cast<BufferInfo*>(c);
+            std::unique_lock<decltype(context->mutex)> lk(context->mutex);
+            context->buffer = buffer;
+            context->cv.notify_all();
+        }, &info);
+
+    std::unique_lock<decltype(info.mutex)> lk(info.mutex);
+    info.cv.wait(lk, [&]{ return info.buffer; });
+    return info.buffer;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void ignore(MirBuffer*, void*){}
@@ -64,59 +100,35 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-int mir_buffer_get_fence(MirBuffer* b)
+bool mir_buffer_map(MirBuffer* b, MirGraphicsRegion* region, MirBufferLayout* layout)
 try
 {
     mir::require(b);
+    mir::require(region);
+    mir::require(layout);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->get_fence();
+    *layout = mir_buffer_layout_linear;
+    *region = buffer->map_region();
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return mir::Fd::invalid;
+    *region = MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
+    *layout = mir_buffer_layout_unknown;
+    return false;
 }
 
-void mir_buffer_associate_fence(MirBuffer* b, int fence, MirBufferAccess access)
+void mir_buffer_unmap(MirBuffer* b)
 try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    buffer->set_fence(mir::Fd(fence), access);
+    buffer->unmap_region();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-int mir_buffer_wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-     
-    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout)) ? 0 : -1;
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return -1;
-}
-
-MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-
-    return buffer->map_region();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
 }
 
 unsigned int mir_buffer_get_width(MirBuffer* b)
@@ -195,19 +207,6 @@ catch (std::exception const& ex)
     return "MirBuffer: unknown error";
 }
 
-void mir_buffer_set_callback(
-    MirBuffer* b, mir_buffer_callback available_callback, void* available_context)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    buffer->set_callback(available_callback, available_context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
 MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)
 try
 {
@@ -221,7 +220,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_buffer_egl_image_parameters(
+bool mir_buffer_get_egl_image_parameters(
     MirBuffer* b, EGLenum* type, EGLClientBuffer* client_buffer, EGLint** attr)
 try
 {
@@ -231,8 +230,10 @@ try
     mir::require(attr);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->client_buffer()->egl_image_creation_parameters(type, client_buffer, attr);
+    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }

@@ -22,7 +22,7 @@
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
-#include "client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
@@ -63,7 +63,7 @@ class ClientBuffer;
 class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
-class ScreencastStream : public EGLNativeSurface, public ClientBufferStream
+class ScreencastStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     ScreencastStream(
@@ -72,19 +72,21 @@ public:
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStream const& protobuf_bs);
 
-    MirSurfaceParameters get_parameters() const override;
-    MirWaitHandle* next_buffer(std::function<void()> const& done) override;
+    MirWindowParameters get_parameters() const override;
+    MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     uint32_t get_current_buffer_id() override;
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
-    void request_and_wait_for_next_buffer() override;
-    void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
+    void swap_buffers_sync() override;
+    void request_and_wait_for_configure(MirWindowAttrib attrib, int) override;
     MirNativeBuffer* get_current_buffer_package() override;
     MirPlatformType platform_type() override;
 

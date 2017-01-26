@@ -40,7 +40,8 @@ mcl::PresentationChain::PresentationChain(
     stream_id(stream_id),
     server(server),
     native_buffer_factory(native_buffer_factory),
-    mir_buffer_factory(mir_buffer_factory)
+    mir_buffer_factory(mir_buffer_factory),
+    interval_config{server, frontend::BufferStreamId{stream_id}}
 {
 }
 
@@ -82,4 +83,14 @@ MirConnection* mcl::PresentationChain::connection() const
 char const* mcl::PresentationChain::error_msg() const
 {
     return "";
+}
+
+void mcl::PresentationChain::set_dropping_mode()
+{
+    interval_config.set_swap_interval(0)->wait_for_all();
+}
+
+void mcl::PresentationChain::set_queueing_mode()
+{
+    interval_config.set_swap_interval(1)->wait_for_all();
 }

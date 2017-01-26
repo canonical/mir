@@ -74,7 +74,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context);
 
 /**
@@ -112,7 +112,7 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
  */
 MirWaitHandle *mir_buffer_stream_release(
     MirBufferStream * buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context);
 
 /**
@@ -169,7 +169,7 @@ void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
  */
 MirWaitHandle *mir_buffer_stream_swap_buffers(
     MirBufferStream *buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context);
 
 /**
@@ -187,8 +187,9 @@ void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
  *   \pre                          The buffer stream is valid
  *   \param [in] buffer_stream     The buffer stream
  *   \param [out] graphics_region  Structure to be populated
+ *   \return                       True if the region is valid, false otherwise.
  */
-void mir_buffer_stream_get_graphics_region(
+bool mir_buffer_stream_get_graphics_region(
     MirBufferStream *buffer_stream,
     MirGraphicsRegion *graphics_region);
 
@@ -218,7 +219,6 @@ void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scal
 /**
  * Set the swapinterval for the stream.
  *   \warning EGL users should use eglSwapInterval directly.
- *   \warning Only swapinterval of 0 or 1 is supported.
  *   \param [in] stream   The buffer stream
  *   \param [in] interval The number of vblank signals that
  *                        mir_buffer_stream_swap_buffers will wait for

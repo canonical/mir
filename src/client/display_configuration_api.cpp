@@ -21,40 +21,25 @@
 #include "mir/output_type_names.h"
 #include "display_configuration.h"
 #include "mir/uncaught.h"
+#include "mir/graphics/edid.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
+// We never create this type, just use pointers to it to opaquify mp::DisplayOutput
+struct MirOutput : mp::DisplayOutput { MirOutput() = delete; };
+
 namespace
 {
-mp::DisplayConfiguration* client_to_config(MirDisplayConfig* config)
-{
-    return reinterpret_cast<mp::DisplayConfiguration*>(config);
-}
-
-mp::DisplayConfiguration const* client_to_config(MirDisplayConfig const* config)
-{
-    return reinterpret_cast<mp::DisplayConfiguration const*>(config);
-}
 
 MirOutput* output_to_client(mp::DisplayOutput* output)
 {
-    return reinterpret_cast<MirOutput*>(output);
+    return static_cast<MirOutput*>(output);
 }
 
 MirOutput const* output_to_client(mp::DisplayOutput const* output)
 {
-    return reinterpret_cast<MirOutput const*>(output);
-}
-
-mp::DisplayOutput* client_to_output(MirOutput* client)
-{
-    return reinterpret_cast<mp::DisplayOutput*>(client);
-}
-
-mp::DisplayOutput const* client_to_output(MirOutput const* client)
-{
-    return reinterpret_cast<mp::DisplayOutput const*>(client);
+    return static_cast<MirOutput const*>(output);
 }
 
 mp::DisplayMode const* client_to_mode(MirOutputMode const* client)
@@ -68,69 +53,76 @@ MirOutputMode const* mode_to_client(mp::DisplayMode const* mode)
 }
 }
 
-int mir_display_config_get_num_outputs(MirDisplayConfig const* client)
+int mir_display_config_get_num_outputs(MirDisplayConfig const* config)
 {
-    auto config = client_to_config(client);
     return config->display_output_size();
 }
 
-MirOutput const* mir_display_config_get_output(MirDisplayConfig const* client_config, size_t index)
+MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config, size_t index)
 {
-    auto config = client_to_config(client_config);
-
-    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(client_config)));
+    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(config)));
 
     return output_to_client(&config->display_output(index));
 }
 
-MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* client_config, size_t index)
+MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, size_t index)
 {
-    auto config = client_to_config(client_config);
-
-    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(client_config)));
+    mir::require(index < static_cast<size_t>(mir_display_config_get_num_outputs(config)));
 
     return output_to_client(config->mutable_display_output(index));
 }
 
-bool mir_output_is_enabled(MirOutput const* client_output)
+bool mir_output_is_enabled(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return (output->used() != 0);
 }
 
-void mir_output_enable(MirOutput* client_output)
+void mir_output_enable(MirOutput* output)
 {
-    auto output = client_to_output(client_output);
-
     output->set_used(1);
 }
 
-void mir_output_disable(MirOutput* client_output)
+void mir_output_disable(MirOutput* output)
 {
-    auto output = client_to_output(client_output);
-
     output->set_used(0);
 }
 
-int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* client_config)
+char const* mir_output_get_model(MirOutput const* output)
 {
-    auto config = client_to_config(client_config);
+    // In future this might be provided by the server itself...
+    if (output->has_model())
+        return output->model().c_str();
 
+    // But if not we use the same member for caching our EDID probe...
+    using mir::graphics::Edid;
+    if (mir_output_get_edid_size(output) >= Edid::minimum_size)
+    {
+        auto edid = reinterpret_cast<Edid const*>(mir_output_get_edid(output));
+        Edid::MonitorName name;
+        if (!edid->get_monitor_name(name))
+        {
+            auto len = edid->get_manufacturer(name);
+            snprintf(name+len, sizeof(name)-len, " %hu", edid->product_code());
+        }
+        const_cast<MirOutput*>(output)->set_model(name);
+        return output->model().c_str();
+    }
+
+    return nullptr;
+}
+
+int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
+{
     return config->display_card(0).max_simultaneous_outputs();
 }
 
-int mir_output_get_id(MirOutput const* client_output)
+int mir_output_get_id(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->output_id();
 }
 
-MirOutputType mir_output_get_type(MirOutput const* client_output)
+MirOutputType mir_output_get_type(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirOutputType>(output->type());
 }
 
@@ -144,25 +136,19 @@ char const* mir_output_type_name(MirOutputType type)
     return mir::output_type_name(type);
 }
 
-int mir_output_get_physical_width_mm(MirOutput const *client_output)
+int mir_output_get_physical_width_mm(MirOutput const *output)
 {
-    auto output = client_to_output(client_output);
-
     return output->physical_width_mm();
 }
 
-int mir_output_get_num_modes(MirOutput const* client_output)
+int mir_output_get_num_modes(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->mode_size();
 }
 
-MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* client_output)
+MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
-    if (output->preferred_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    if (output->preferred_mode() >= static_cast<size_t>(mir_output_get_num_modes(output)))
     {
         return nullptr;
     }
@@ -172,11 +158,9 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* client_outpu
     }
 }
 
-size_t mir_output_get_preferred_mode_index(MirOutput const* client_output)
+size_t mir_output_get_preferred_mode_index(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
-    if (output->preferred_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    if (output->preferred_mode() >= static_cast<size_t>(mir_output_get_num_modes(output)))
     {
         return std::numeric_limits<size_t>::max();
     }
@@ -186,11 +170,9 @@ size_t mir_output_get_preferred_mode_index(MirOutput const* client_output)
     }
 }
 
-MirOutputMode const* mir_output_get_current_mode(MirOutput const* client_output)
+MirOutputMode const* mir_output_get_current_mode(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
-    if (output->current_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    if (output->current_mode() >= static_cast<size_t>(mir_output_get_num_modes(output)))
     {
         return nullptr;
     }
@@ -200,11 +182,9 @@ MirOutputMode const* mir_output_get_current_mode(MirOutput const* client_output)
     }
 }
 
-size_t mir_output_get_current_mode_index(MirOutput const* client_output)
+size_t mir_output_get_current_mode_index(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
-    if (output->current_mode() >= static_cast<size_t>(mir_output_get_num_modes(client_output)))
+    if (output->current_mode() >= static_cast<size_t>(mir_output_get_num_modes(output)))
     {
         return std::numeric_limits<size_t>::max();
     }
@@ -215,9 +195,8 @@ size_t mir_output_get_current_mode_index(MirOutput const* client_output)
 }
 
 
-void mir_output_set_current_mode(MirOutput* client_output, MirOutputMode const* client_mode)
+void mir_output_set_current_mode(MirOutput* output, MirOutputMode const* client_mode)
 {
-    auto output = client_to_output(client_output);
     auto mode = client_to_mode(client_mode);
 
     int index = -1;
@@ -231,151 +210,113 @@ void mir_output_set_current_mode(MirOutput* client_output, MirOutputMode const* 
     }
 
     mir::require(index >= 0);
-    mir::require(index < mir_output_get_num_modes(client_output));
+    mir::require(index < mir_output_get_num_modes(output));
 
     output->set_current_mode(static_cast<uint32_t>(index));
 }
 
-MirOutputMode const* mir_output_get_mode(MirOutput const* client_output, size_t index)
+MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index)
 {
-    auto output = client_to_output(client_output);
-
     return mode_to_client(&output->mode(index));
 }
 
-int mir_output_get_num_pixel_formats(MirOutput const* client_output)
+int mir_output_get_num_pixel_formats(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->pixel_format_size();
 }
 
-MirPixelFormat mir_output_get_pixel_format(MirOutput const* client_output, size_t index)
+MirPixelFormat mir_output_get_pixel_format(MirOutput const* output, size_t index)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirPixelFormat>(output->pixel_format(index));
 }
 
-MirPixelFormat mir_output_get_current_pixel_format(MirOutput const* client_output)
+MirPixelFormat mir_output_get_current_pixel_format(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirPixelFormat>(output->current_format());
 }
 
-void mir_output_set_pixel_format(MirOutput* client_output, MirPixelFormat format)
+void mir_output_set_pixel_format(MirOutput* output, MirPixelFormat format)
 {
-    auto output = client_to_output(client_output);
-
     // TODO: Maybe check format validity?
     output->set_current_format(format);
 }
 
-int mir_output_get_position_x(MirOutput const* client_output)
+int mir_output_get_position_x(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->position_x();
 }
 
-int mir_output_get_position_y(MirOutput const* client_output)
+int mir_output_get_position_y(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->position_y();
 }
 
-void mir_output_set_position(MirOutput* client_output, int x, int y)
+void mir_output_set_position(MirOutput* output, int x, int y)
 {
-    auto output = client_to_output(client_output);
-
     output->set_position_x(x);
     output->set_position_y(y);
 }
 
-MirOutputConnectionState mir_output_get_connection_state(MirOutput const *client_output)
+MirOutputConnectionState mir_output_get_connection_state(MirOutput const *output)
 {
-    auto output = client_to_output(client_output);
-
     // TODO: actually plumb through mir_output_connection_state_unknown.
     return output->connected() == 0 ? mir_output_connection_state_disconnected :
            mir_output_connection_state_connected;
 }
 
-int mir_output_get_physical_height_mm(MirOutput const *client_output)
+int mir_output_get_physical_height_mm(MirOutput const *output)
 {
-    auto output = client_to_output(client_output);
-
     return output->physical_height_mm();
 }
 
-MirPowerMode mir_output_get_power_mode(MirOutput const* client_output)
+MirPowerMode mir_output_get_power_mode(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirPowerMode>(output->power_mode());
 }
 
-void mir_output_set_power_mode(MirOutput* client_output, MirPowerMode mode)
+void mir_output_set_power_mode(MirOutput* output, MirPowerMode mode)
 {
-    auto output = client_to_output(client_output);
-
     output->set_power_mode(mode);
 }
 
-MirOrientation mir_output_get_orientation(MirOutput const* client_output)
+MirOrientation mir_output_get_orientation(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirOrientation>(output->orientation());
 }
 
-void mir_output_set_orientation(MirOutput* client_output, MirOrientation orientation)
+void mir_output_set_orientation(MirOutput* output, MirOrientation orientation)
 {
-    auto output = client_to_output(client_output);
-
     output->set_orientation(orientation);
 }
 
 
-float mir_output_get_scale_factor(MirOutput const* client_output)
+float mir_output_get_scale_factor(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->scale_factor();
 }
 
-MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* client_output)
+MirSubpixelArrangement mir_output_get_subpixel_arrangement(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return static_cast<MirSubpixelArrangement>(output->subpixel_arrangement());
 }
 
-uint32_t mir_output_get_gamma_size(MirOutput const* client_output)
+uint32_t mir_output_get_gamma_size(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return (output->gamma_red().size() / (sizeof(uint16_t) / sizeof(char)));
 }
 
-bool mir_output_is_gamma_supported(MirOutput const* client_output)
+bool mir_output_is_gamma_supported(MirOutput const* output)
 {
-    auto output = client_to_output(client_output);
-
     return output->gamma_supported();
 }
 
-void mir_output_get_gamma(MirOutput const* client_output,
+void mir_output_get_gamma(MirOutput const* output,
                           uint16_t* red,
                           uint16_t* green,
                           uint16_t* blue,
                           uint32_t  size)
 try
 {
-    auto output = client_to_output(client_output);
-
     auto red_bytes = output->gamma_red();
     auto green_bytes = output->gamma_green();
     auto blue_bytes = output->gamma_blue();
@@ -395,15 +336,13 @@ try
     abort();
 }
 
-void mir_output_set_gamma(MirOutput* client_output,
+void mir_output_set_gamma(MirOutput* output,
                           uint16_t const* red,
                           uint16_t const* green,
                           uint16_t const* blue,
                           uint32_t  size)
 try
 {
-    auto output = client_to_output(client_output);
-
     // Since we are going from a uint16_t to a char (int8_t) we are doubling the size
     output->set_gamma_red(reinterpret_cast<char const*>(red),
         size * (sizeof(uint16_t) / sizeof(char)));
@@ -412,16 +351,19 @@ try
     output->set_gamma_blue(reinterpret_cast<char const*>(blue),
         size * (sizeof(uint16_t) / sizeof(char)));
 
-    mir::require(size == mir_output_get_gamma_size(client_output));
+    mir::require(size == mir_output_get_gamma_size(output));
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
 }
 
-MirFormFactor mir_output_get_form_factor(MirOutput const* client_output)
+void mir_output_set_scale_factor(MirOutput* output, float scale)
 {
-    auto output = client_to_output(client_output);
+    output->set_scale_factor(scale);
+}
 
+MirFormFactor mir_output_get_form_factor(MirOutput const* output)
+{
     return static_cast<MirFormFactor>(output->form_factor());
 }
 
@@ -444,4 +386,22 @@ double mir_output_mode_get_refresh_rate(MirOutputMode const* client_mode)
     auto mode = client_to_mode(client_mode);
 
     return mode->refresh_rate();
+}
+
+uint8_t const* mir_output_get_edid(MirOutput const* output)
+{
+    if (output->has_edid())
+    {
+        return reinterpret_cast<uint8_t const*>(output->edid().data());
+    }
+    return nullptr;
+}
+
+size_t mir_output_get_edid_size(MirOutput const* output)
+{
+    if (output->has_edid())
+    {
+        return output->edid().length();
+    }
+    return 0;
 }

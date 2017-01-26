@@ -23,7 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 #include "atomic_callback.h"
-#include "mir_buffer.h"
+#include "mir/mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -38,7 +38,7 @@ class Buffer : public MirBuffer
 {
 public:
     Buffer(
-        mir_buffer_callback cb, void* context,
+        MirBufferCallback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
@@ -52,10 +52,7 @@ public:
 
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
-
-    void set_fence(Fd, MirBufferAccess) override;
-    Fd get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
+    void unmap_region() override;
 
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
@@ -66,7 +63,7 @@ public:
     void increment_age() override;
     bool valid() const override;
     char const* error_message() const override;
-    void set_callback(mir_buffer_callback callback, void* context) override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 private:
     int const buffer_id;
     std::shared_ptr<ClientBuffer> const buffer;

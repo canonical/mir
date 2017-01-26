@@ -57,13 +57,9 @@ class TouchScreen:
 
 ####### TEST #######
 
-# Disable input resampling so that the event_time field of input events,
-# used to calculate latency, is accurate
-no_resampling_env = {"MIR_CLIENT_INPUT_RATE": "0"}
-
 host = Server(reports=["input"])
-nested = Server(host=host, reports=["client-input-receiver"], env=no_resampling_env)
-client = Client(server=nested, reports=["client-input-receiver"], options=["-f"], env=no_resampling_env)
+nested = Server(host=host, reports=["client-input-receiver"])
+client = Client(server=nested, reports=["client-input-receiver"], options=["-f"])
 
 test = PerformanceTest([host, nested, client])
 touch_screen = TouchScreen()

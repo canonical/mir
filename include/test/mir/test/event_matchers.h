@@ -377,6 +377,21 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER_P2(PointerEnterEventWithPosition, x, y, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_enter)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+        return false;
+    return true;
+}
+
+
 MATCHER_P(PointerEventWithModifiers, modifiers, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
@@ -403,6 +418,26 @@ MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
         return false;
     return true;
 }
+
+MATCHER_P2(PointerEnterEventWithDiff, expect_dx, expect_dy, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_enter)
+        return false;
+    auto const error = 0.00001f;
+    auto const actual_dx = mir_pointer_event_axis_value(pev,
+                                                mir_pointer_axis_relative_x);
+    if (std::abs(expect_dx - actual_dx) > error)
+        return false;
+    auto const actual_dy = mir_pointer_event_axis_value(pev,
+                                                mir_pointer_axis_relative_y);
+    if (std::abs(expect_dy - actual_dy) > error)
+        return false;
+    return true;
+}
+
 
 MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
 {
@@ -453,15 +488,16 @@ MATCHER(PointerMovementEvent, "")
     return true;
 }
 
-MATCHER_P2(SurfaceEvent, attrib, value, "")
+MATCHER_P2(WindowEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_surface)
+    if (mir_event_get_type(as_address) != mir_event_type_window)
         return false;
-    auto surface_ev = mir_event_get_surface_event(as_address);
-    if (mir_surface_event_get_attribute(surface_ev) != attrib)
+    auto surface_ev = mir_event_get_window_event(as_address);
+    auto window_attrib = mir_window_event_get_attribute(surface_ev);
+    if (window_attrib != attrib)
         return false;
-    if (mir_surface_event_get_attribute_value(surface_ev) != value)
+    if (mir_window_event_get_attribute_value(surface_ev) != value)
         return false;
     return true;
 }
@@ -495,6 +531,8 @@ MATCHER_P(InputDeviceIdMatches, device_id, "")
     return mir_input_event_get_device_id(input_event) == device_id;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MATCHER(InputConfigurationEvent, "")
 {
     auto as_address = to_address(arg);
@@ -502,6 +540,7 @@ MATCHER(InputConfigurationEvent, "")
         return true;
     return false;
 }
+#pragma GCC diagnostic pop
 
 MATCHER(InputDeviceStateEvent, "")
 {
@@ -539,6 +578,21 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         return true;
     }
     return false;
+}
+
+MATCHER_P2(DeviceStateWithPosition, x, y, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_device_state)
+        return false;
+    auto device_state = mir_event_get_input_device_state_event(as_address);
+    return x == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x) &&
+        y == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
+}
+
+MATCHER_P(RectanglesMatches, rectangles, "")
+{
+    return arg == rectangles;
 }
 
 }

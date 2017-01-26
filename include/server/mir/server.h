@@ -28,9 +28,12 @@
 
 namespace mir
 {
+template<class Observer>
+class ObserverRegistrar;
+
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
-namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationReport; }
+namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorObserver; }
+namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -53,7 +56,7 @@ class SurfaceStack;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class BufferStreamFactory; 
+class BufferStreamFactory;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
@@ -63,7 +66,7 @@ class CoordinateTranslator;
 }
 namespace input
 {
-class SeatReport;
+class SeatObserver;
 }
 
 class Fd;
@@ -187,6 +190,11 @@ public:
  *  These allow the user to insert logic into startup or error handling.
  *  For obvious reasons they should be called before run().
  *  @{ */
+    /// Add a callback to be invoked when the settings have been applied, but before
+    /// the server has been initialized. This allows client code to get access Mir objects.
+    /// If multiple callbacks are added they will be invoked in the sequence added.
+    void add_pre_init_callback(std::function<void()> const& pre_init_callback);
+
     /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
     /// If multiple callbacks are added they will be invoked in the sequence added.
@@ -243,10 +251,6 @@ public:
     void override_the_display_buffer_compositor_factory(
         Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
 
-    /// Sets an override functor for creating the display configuration report.
-    void override_the_display_configuration_report(
-        Builder<graphics::DisplayConfigurationReport> const& report_builder);
-
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
@@ -283,12 +287,6 @@ public:
 
     /// Sets an override functor for creating the session listener.
     void override_the_session_listener(Builder<scene::SessionListener> const& session_listener_builder);
-
-    /// Sets an override functor for creating the session mediator report.
-    void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
-
-    /// Sets an override functor for creating the seat report.
-    void override_the_seat_report(Builder<input::SeatReport> const& seat_report_builder);
 
     /// Sets an override functor for creating the shell.
     void override_the_shell(Builder<shell::Shell> const& wrapper);
@@ -415,6 +413,19 @@ public:
 
     /// \return the persistent surface store
     auto the_persistent_surface_store() const -> std::shared_ptr<shell::PersistentSurfaceStore>;
+
+    /// \return a registrar to add and remove DisplayConfigurationChangeObservers
+    auto the_display_configuration_observer_registrar() const ->
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>;
+
+    /// \return a registrar to add and remove SeatObservers
+    auto the_seat_observer_registrar() const ->
+        std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
+
+    /// \return a registrar to add and remove SessionMediatorObservers
+    auto the_session_mediator_observer_registrar() const ->
+        std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>>;
+
 
 /** @} */
 

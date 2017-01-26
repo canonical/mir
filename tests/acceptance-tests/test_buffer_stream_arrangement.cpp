@@ -33,15 +33,12 @@ namespace mt = mir::test;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace
-{
-MirPixelFormat an_available_format(MirConnection* connection)
+MirPixelFormat mt::Stream::an_available_format(MirConnection* connection)
 {
     MirPixelFormat format{mir_pixel_format_invalid};
     unsigned int valid_formats{0};
     mir_connection_get_available_surface_formats(connection, &format, 1, &valid_formats);
     return format;
-}
 }
 
 mt::RelativeRectangle::RelativeRectangle(
@@ -61,21 +58,32 @@ bool mt::operator==(mt::RelativeRectangle const& a, mt::RelativeRectangle const&
         (a.physical_size == b.physical_size);
 }
 
-mt::Stream::Stream(MirConnection* connection,
-    geom::Size physical_size,
-    geom::Rectangle position) :
-    stream(mir_connection_create_buffer_stream_sync(
-        connection,
-        physical_size.width.as_int(),
-        physical_size.height.as_int(),
-        an_available_format(connection),
-        mir_buffer_usage_hardware)),
-    position_{position}
+mt::Stream::Stream(
+    geometry::Rectangle position,
+    std::function<MirBufferStream*()> const& create_stream) :
+    position_{position},
+    stream(create_stream())
 {
     swap_buffers();
 }
 
-mt::Stream::~Stream()
+mt::LegacyStream::LegacyStream(MirConnection* connection,
+    geom::Size physical_size,
+    geom::Rectangle position) :
+    Stream(position,
+        [&] {
+            return mir_connection_create_buffer_stream_sync(
+                connection,
+                physical_size.width.as_int(),
+                physical_size.height.as_int(),
+                an_available_format(connection),
+                mir_buffer_usage_hardware);
+            })
+{
+    swap_buffers();
+}
+
+mt::LegacyStream::~LegacyStream()
 {
     mir_buffer_stream_release_sync(stream);
 }
@@ -169,13 +177,13 @@ void mt::BufferStreamArrangementBase::SetUp()
     server.the_cursor()->hide();
 
     streams.emplace_back(
-        std::make_unique<Stream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
+        std::make_unique<LegacyStream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
     int const additional_streams{3};
     for (auto i = 0; i < additional_streams; i++)
     {
         geom::Size size{30 * i + 1, 40* i + 1};
         geom::Point position{i * 2, i * 3};
-        streams.emplace_back(std::make_unique<Stream>(connection, size, geom::Rectangle{position, size}));
+        streams.emplace_back(std::make_unique<LegacyStream>(connection, size, geom::Rectangle{position, size}));
     }
 }
 
@@ -198,19 +206,21 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
             stream->position().y.as_int()};
     }
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+    auto const spec = mir_create_normal_window_spec(
+        connection,
+        surface_size.width.as_int(),
+        surface_size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_window_spec_set_streams(spec, infos.data(), infos.size());
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
+    window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+    EXPECT_TRUE(mir_window_is_valid(window)) << mir_window_get_error_message(window);
 }
-
 
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
@@ -224,10 +234,10 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
             stream->position().y.as_int()};
     }
 
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
+    auto change_spec = mir_create_window_spec(connection);
+    mir_window_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_window_apply_spec(window, change_spec);
+    mir_window_spec_release(change_spec);
 
     std::vector<mt::RelativeRectangle> positions;
     i = 0;
@@ -257,18 +267,18 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
             stream->position().y.as_int()};
     }
 
-    auto spec = mir_connection_create_spec_for_normal_surface(
-        connection, 100, 100, mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    EXPECT_TRUE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
+    auto spec = mir_create_normal_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_streams(spec, infos.data(), infos.size());
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+    EXPECT_TRUE(mir_window_is_valid(window));
+    EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));
 }
 
 TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_stream_gives_null)
 {
-    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_surface_get_buffer_stream(surface)));
+    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_window_get_buffer_stream(window)));
 
     std::vector<MirBufferStreamInfo> infos(streams.size());
     auto i = 0u;
@@ -279,10 +289,10 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
             stream->position().x.as_int(),
             stream->position().y.as_int()};
     }
-    auto change_spec = mir_connection_create_spec_for_changes(connection);
-    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
-    mir_surface_apply_spec(surface, change_spec);
-    mir_surface_spec_release(change_spec);
+    auto change_spec = mir_create_window_spec(connection);
+    mir_window_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_window_apply_spec(window, change_spec);
+    mir_window_spec_release(change_spec);
 
-    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+    EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
 }

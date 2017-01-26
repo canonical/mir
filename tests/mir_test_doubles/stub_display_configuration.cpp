@@ -92,7 +92,8 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
             mir_form_factor_monitor,
             subpixel_arrangement,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         }
 {
 }
@@ -120,7 +121,8 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
         mir_form_factor_monitor,
         mir_subpixel_arrangement_unknown,
         {},
-        mir_output_gamma_unsupported
+        mir_output_gamma_unsupported,
+        {}
     }
 {
     if (modes.empty())
@@ -136,15 +138,13 @@ mtd::StubDisplayConfig::StubDisplayConfig() :
 
 mtd::StubDisplayConfig::StubDisplayConfig(StubDisplayConfig const& other) :
     graphics::DisplayConfiguration(),
-    cards(other.cards),
-      outputs(other.outputs)
+    outputs(other.outputs)
 {
 }
 
 mtd::StubDisplayConfig::StubDisplayConfig(graphics::DisplayConfiguration const& other) :
     graphics::DisplayConfiguration()
 {
-    other.for_each_card([this](auto card) { cards.push_back(card); });
     other.for_each_output(
         [this](graphics::DisplayConfigurationOutput const& output)
             {
@@ -208,7 +208,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
         geometry::Point top_left{};
         graphics::DisplayConfigurationOutput output{
             graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
-            graphics::DisplayConfigurationCardId{1},
+            graphics::DisplayConfigurationCardId{0},
             graphics::DisplayConfigurationOutputType::vga,
             pfs,
             connected(i) ? modes : std::vector<graphics::DisplayConfigurationMode>{},
@@ -224,17 +224,12 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         };
 
         outputs.push_back(output);
     }
-    graphics::DisplayConfigurationCard card{
-        graphics::DisplayConfigurationCardId{1},
-        5
-    };
-
-    cards.push_back(card);
 }
 
 mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const& rects)
@@ -245,7 +240,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const
         graphics::DisplayConfigurationOutput output
             {
                 graphics::DisplayConfigurationOutputId{id},
-                graphics::DisplayConfigurationCardId{1},
+                graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},
@@ -256,49 +251,23 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const
                 mir_form_factor_monitor,
                 mir_subpixel_arrangement_unknown,
                 {},
-                mir_output_gamma_unsupported
+                mir_output_gamma_unsupported,
+                {}
             };
 
         outputs.push_back(output);
         ++id;
     }
-
-    graphics::DisplayConfigurationCard card{
-        graphics::DisplayConfigurationCardId{static_cast<int>(1)},
-        rects.size()
-    };
-
-    cards.push_back(card);
-}
-
-mtd::StubDisplayConfig::StubDisplayConfig(std::vector<graphics::DisplayConfigurationOutput> const& outputs)
-{
-    graphics::DisplayConfigurationCard card{
-        graphics::DisplayConfigurationCardId{static_cast<int>(1)},
-        outputs.size()
-    };
-
-    cards.push_back(card);
-    this->outputs = outputs;
-
-    for (auto& output : this->outputs)
-    {
-        output.card_id = cards[0].id;
-    }
 }
 
 mtd::StubDisplayConfig::StubDisplayConfig(
-    std::vector<graphics::DisplayConfigurationCard> const& cards,
     std::vector<graphics::DisplayConfigurationOutput> const& outputs) :
-    cards(cards),
     outputs(outputs)
 {
 }
 
-void mtd::StubDisplayConfig::for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const
+void mtd::StubDisplayConfig::for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> /*f*/) const
 {
-    for (auto const& card : cards)
-        f(card);
 }
 
 void mtd::StubDisplayConfig::for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const

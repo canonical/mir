@@ -22,6 +22,7 @@
 #include "mir/client_buffer.h"
 #include "mir/client_context.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
+#include "mir_test_framework/stub_platform_extension.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <unistd.h>
@@ -32,9 +33,56 @@ namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context) :
-    context{context}
+namespace
 {
+char const* favorite_flavor_1()
+{
+    static char const* favorite = "banana";
+    return favorite;
+}
+char const* favorite_flavor_9()
+{
+    static char const* favorite = "rhubarb";
+    return favorite;
+}
+char const* animal_name()
+{
+    static char const* name = "bobcat";
+    return name;
+}
+
+int get_fence(MirBuffer*)
+{
+    return -1;
+}
+
+void throw_exception_if_requested(
+    std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
+    mtf::FailurePoint here)
+{
+    if (fail_at.count(here))
+    {
+        std::rethrow_exception(fail_at.at(here));
+    }
+}
+}
+
+mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context)
+    : StubClientPlatform(context, std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{})
+{
+}
+
+mtf::StubClientPlatform::StubClientPlatform(
+    mir::client::ClientContext* context,
+    std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>&& fail_at) :
+    context{context},
+    flavor_ext_1{favorite_flavor_1},
+    flavor_ext_9{favorite_flavor_9},
+    animal_ext{animal_name},
+    fence_ext{get_fence, nullptr, nullptr},
+    fail_at{std::move(fail_at)}
+{
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_client_platform);
 }
 
 MirPlatformType mtf::StubClientPlatform::platform_type() const
@@ -54,6 +102,8 @@ MirPlatformMessage* mtf::StubClientPlatform::platform_operation(MirPlatformMessa
 
 std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::create_buffer_factory()
 {
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_buffer_factory);
+
     struct StubPlatformBufferFactory : mcl::ClientBufferFactory
     {
         std::shared_ptr<mcl::ClientBuffer> create_buffer(
@@ -77,7 +127,10 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
-    return std::shared_ptr<void>{surface ? surface : reinterpret_cast<void*>(0xBEEFBABE), [](void*){}};
+    throw_exception_if_requested(this->fail_at, FailurePoint::create_egl_native_window);
+    if (surface)
+        return std::shared_ptr<void>{surface, [](void*){}};
+    return std::make_shared<int>(332);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
@@ -116,9 +169,34 @@ MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConf
     return mir_pixel_format_argb_8888;
 }
 
+void* mtf::StubClientPlatform::request_interface(char const* name, int version)
+{
+    if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 1))
+        return &flavor_ext_1;
+    if (!strcmp(name, "mir_extension_favorite_flavor") && (version == 9))
+        return &flavor_ext_9;
+    if (!strcmp(name, "mir_extension_animal_names") && (version == 1))
+        return &animal_ext;
+    if (!strcmp(name, "mir_extension_fenced_buffers") && (version == 1))
+        return &fence_ext;
+    return nullptr;
+}
+
+uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
+{
+    return 0u;
+}
+
+uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
+{
+    return 0u;
+}
 
 std::shared_ptr<mcl::ClientPlatform>
 mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
-    return std::make_shared<StubClientPlatform>(context);
+    return std::make_shared<StubClientPlatform>(
+        context,
+        std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>{});
 }
+

@@ -33,14 +33,8 @@ typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef struct MirRenderSurface MirRenderSurface;
 
-typedef void (*mir_buffer_callback)(MirBuffer*, void* context);
-typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
-typedef enum MirBufferAccess
-{
-    mir_none,
-    mir_read,
-    mir_read_write,
-} MirBufferAccess;
+typedef void (*MirBufferCallback)(MirBuffer*, void* context);
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context);
 
 #ifdef __cplusplus
 }

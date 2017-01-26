@@ -48,6 +48,7 @@ void fill(mp::DisplayOutput* out)
     out->set_output_id(8);
     out->set_connected(1);
     out->set_used(1);
+    out->set_scale_factor(1.0f);
     out->set_physical_width_mm(11);
     out->set_physical_height_mm(12);
     out->set_orientation(90);
@@ -82,7 +83,7 @@ TEST(TestDisplayConfiguration, configuration_storage)
 
     info = internal_config.copy_to_client();
     EXPECT_THAT(*info, mt::DisplayConfigMatches(new_result));
-    EXPECT_EQ(1u, called_count);
+    EXPECT_EQ(1, called_count);
 
     mcl::delete_config_storage(info);
 }

@@ -54,7 +54,7 @@ void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffe
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
     sync_fence.wait();
 
-    surface.request_and_wait_for_next_buffer();
+    surface.swap_buffers_sync();
 }
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_format(int format)
@@ -92,10 +92,18 @@ int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
 
 void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 { 
-    surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
+    surface.request_and_wait_for_configure(mir_window_attrib_swapinterval, should_sync);
 }
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
 {
     surface.set_buffer_cache_size(count);
+}
+
+void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_size(geometry::Size size)
+{
+    auto params = surface.get_parameters();
+    if (geometry::Size{params.width, params.height} == size)
+        return;
+    surface.set_size(size);
 }

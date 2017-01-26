@@ -32,6 +32,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -58,7 +59,7 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const&) : 
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) : 
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -68,6 +69,7 @@ ms::ApplicationSession::ApplicationSession(
     session_listener(session_listener),
     event_sink(sink),
     buffers(buffer_stream_factory->create_buffer_map(sink)),
+    gralloc(gralloc),
     next_surface_id(0)
 {
     assert(surface_stack);
@@ -140,11 +142,11 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     surface_stack->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())
-        surface->configure(mir_surface_attrib_state, params.state.value());
+        surface->configure(mir_window_attrib_state, params.state.value());
     if (params.type.is_set())
-        surface->configure(mir_surface_attrib_type, params.type.value());
+        surface->configure(mir_window_attrib_type, params.type.value());
     if (params.preferred_orientation.is_set())
-        surface->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
     if (params.input_shape.is_set())
         surface->set_input_region(params.input_shape.value());
 
@@ -211,17 +213,17 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
         {
             switch (s.second->type())
             {
-            case mir_surface_type_normal:       /**< AKA "regular"                       */
-            case mir_surface_type_utility:      /**< AKA "floating"                      */
-            case mir_surface_type_dialog:
-            case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-            case mir_surface_type_freestyle:
-            case mir_surface_type_menu:
-            case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+            case mir_window_type_normal:       /**< AKA "regular"                       */
+            case mir_window_type_utility:      /**< AKA "floating"                      */
+            case mir_window_type_dialog:
+            case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+            case mir_window_type_freestyle:
+            case mir_window_type_menu:
+            case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
                 return true;
 
-            case mir_surface_type_gloss:
-            case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+            case mir_window_type_gloss:
+            case mir_window_type_tip:          /**< AKA "tooltip"                       */
             default:
                 // Cannot have input focus - skip it
                 return false;
@@ -336,9 +338,9 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     }
 }
 
-void ms::ApplicationSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void ms::ApplicationSession::send_input_config(MirInputConfig const& config)
 {
-    event_sink->handle_input_device_change(devices);
+    event_sink->handle_input_config_change(config);
 }
 
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
@@ -436,7 +438,15 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
 
 mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
 {
-    return buffers->add_buffer(properties);
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_buffer(properties));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(properties.size, properties.format, e.what());
+        throw;
+    }
 }
 
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)

@@ -20,6 +20,11 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "event_sender.h"
 #include "mir/events/serialization.h"
 #include "message_sender.h"
@@ -35,6 +40,7 @@ namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
 namespace mev = mir::events;
 namespace mp = mir::protobuf;
+namespace mi = mir::input;
 
 mfd::EventSender::EventSender(
     std::shared_ptr<MessageSender> const& socket_sender,
@@ -91,18 +97,11 @@ void mfd::EventSender::send_ping(int32_t serial)
     send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void mfd::EventSender::handle_input_config_change(MirInputConfig const& config)
 {
     mp::EventSequence seq;
 
-    for(const auto & dev : devices)
-    {
-        auto dev_info = seq.add_input_devices();
-        dev_info->set_name(dev->name());
-        dev_info->set_id(dev->id());
-        dev_info->set_unique_id(dev->unique_id());
-        dev_info->set_capabilities(dev->capabilities().value());
-    }
+    seq.set_input_configuration(mi::serialize_input_config(config));
     send_event_sequence(seq, {});
 }
 
@@ -137,14 +136,14 @@ void mfd::EventSender::add_buffer(graphics::Buffer& buffer)
     send_buffer(seq, buffer, mg::BufferIpcMsgType::full_msg);
 }
 
-void mfd::EventSender::error_buffer(graphics::BufferProperties const& properties, std::string const& error)
+void mfd::EventSender::error_buffer(geometry::Size size, MirPixelFormat, std::string const& error)
 {
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
     request->set_operation(mir::protobuf::BufferOperation::add);
     request->mutable_buffer()->set_error(error);
-    request->mutable_buffer()->set_width(properties.size.width.as_int());
-    request->mutable_buffer()->set_height(properties.size.height.as_int());
+    request->mutable_buffer()->set_width(size.width.as_int());
+    request->mutable_buffer()->set_height(size.height.as_int());
     send_event_sequence(seq, {});
 }
 

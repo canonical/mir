@@ -24,23 +24,45 @@
 
 namespace
 {
-void assign_result(void* result, void** context)
+class RenderSurfaceResult
 {
-    if (context)
-        *context = result;
+public:
+    void set_result(MirRenderSurface* result)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        rs = result;
+        cv.notify_all();
+    }
+
+    MirRenderSurface* wait_for_result()
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        cv.wait(lk, [this] { return rs; });
+        return rs;
+    }
+
+private:
+    MirRenderSurface* rs = nullptr;
+    std::mutex mutex;
+    std::condition_variable cv;
+};
+
+void set_result(MirRenderSurface* result, RenderSurfaceResult* context)
+{
+    context->set_result(result);
 }
 
 // 'Native window handle' (a.k.a. client-visible render surface) to connection map
 class RenderSurfaceToConnectionMap
 {
 public:
-    void insert(void* const render_surface_key, MirConnection* const connection)
+    void insert(MirRenderSurface* render_surface_key, MirConnection* connection)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         connections[render_surface_key] = connection;
     }
 
-    void erase(void* const render_surface_key)
+    void erase(MirRenderSurface* render_surface_key)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         auto conn_it = connections.find(render_surface_key);
@@ -48,7 +70,7 @@ public:
             connections.erase(conn_it);
     }
 
-    MirConnection* connection(void* const render_surface_key) const
+    MirConnection* connection(MirRenderSurface* render_surface_key) const
     {
         std::shared_lock<decltype(guard)> lk(guard);
         auto const it = connections.find(render_surface_key);
@@ -59,20 +81,46 @@ public:
     }
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<void*, MirConnection*> connections;
+    std::unordered_map<MirRenderSurface*, MirConnection*> connections;
 };
 
 RenderSurfaceToConnectionMap connection_map;
 }
 
-MirRenderSurface* mir_connection_create_render_surface(
-    MirConnection* connection, int width, int height)
+void mir_connection_create_render_surface(
+    MirConnection* connection,
+    int width, int height,
+    MirRenderSurfaceCallback callback,
+    void* context)
 try
 {
     mir::require(connection);
-    auto rs = connection->create_render_surface({width, height});
-    connection_map.insert(static_cast<void*>(rs), connection);
-    return rs;
+    if (auto rs = connection->create_render_surface_with_content({width, height}, callback, context))
+    {
+        connection_map.insert(rs, connection);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Error creating native window"));
+    }
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirRenderSurface* mir_connection_create_render_surface_sync(
+    MirConnection* connection,
+    int width, int height)
+try
+{
+    RenderSurfaceResult result;
+    mir_connection_create_render_surface(
+        connection,
+        width, height,
+        reinterpret_cast<MirRenderSurfaceCallback>(set_result),
+        &result);
+    return result.wait_for_result();
 }
 catch (std::exception const& ex)
 {
@@ -85,10 +133,10 @@ bool mir_render_surface_is_valid(
 try
 {
     mir::require(render_surface);
-    auto conn = connection_map.connection(static_cast<void*>(render_surface));
+    auto conn = connection_map.connection(render_surface);
     auto rs = conn->connection_surface_map()->render_surface(render_surface);
     mir::require(rs != nullptr);
-    return true;
+    return rs->valid();
 }
 catch (std::exception const& ex)
 {
@@ -96,42 +144,46 @@ catch (std::exception const& ex)
     return false;
 }
 
+char const *mir_render_surface_get_error_message(
+    MirRenderSurface* render_surface)
+try
+{
+    mir::require(render_surface);
+    auto conn = connection_map.connection(render_surface);
+    auto rs = conn->connection_surface_map()->render_surface(render_surface);
+    return rs->get_error_message();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return ex.what();
+}
+
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
 try
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
-    auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    if (rs->stream_id().as_value() >= 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Render surface still holds content"));
-
-    connection_map.erase(static_cast<void*>(render_surface));
-    connection->release_render_surface(render_surface);
+    auto connection = connection_map.connection(render_surface);
+    connection_map.erase(render_surface);
+    connection->release_render_surface_with_content(render_surface);
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-MirWaitHandle* mir_render_surface_create_buffer_stream(
-        MirRenderSurface* render_surface,
-        int width, int height,
-        MirPixelFormat format,
-        MirBufferUsage usage,
-        mir_buffer_stream_callback callback,
-        void* context)
+MirBufferStream* mir_render_surface_get_buffer_stream(
+    MirRenderSurface* render_surface,
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage)
 try
 {
     mir::require(render_surface);
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    return rs->create_buffer_stream(
-        width, height,
-        format,
-        usage,
-        callback,
-        context);
+    return rs->get_buffer_stream(width, height, format, usage);
 }
 catch (std::exception const& ex)
 {
@@ -139,26 +191,14 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirBufferStream* mir_render_surface_create_buffer_stream_sync(
-    MirRenderSurface* render_surface,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage)
+MirPresentationChain* mir_render_surface_get_presentation_chain(
+    MirRenderSurface* render_surface)
 try
 {
-    MirBufferStream* stream = nullptr;
-    auto wh = mir_render_surface_create_buffer_stream(
-        render_surface,
-        width, height,
-        format,
-        usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result),
-        &stream);
-
-    if (wh)
-        wh->wait_for_all();
-
-    return stream;
+    mir::require(render_surface);
+    auto connection = connection_map.connection(render_surface);
+    auto rs = connection->connection_surface_map()->render_surface(render_surface);
+    return rs->get_presentation_chain();
 }
 catch (std::exception const& ex)
 {
@@ -168,7 +208,8 @@ catch (std::exception const& ex)
 
 void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, int* height)
 {
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    mir::require(render_surface && width && height);
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     auto size = rs->size();
     *width = size.width.as_int();
@@ -177,7 +218,18 @@ void mir_render_surface_get_size(MirRenderSurface* render_surface, int* width, i
 
 void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, int height)
 {
-    auto connection = connection_map.connection(static_cast<void*>(render_surface));
+    mir::require(render_surface);
+    auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
     rs->set_size({width, height});
+}
+
+void mir_surface_spec_set_cursor_render_surface(
+    MirWindowSpec* spec,
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+{
+    auto connection = connection_map.connection(surface);
+    auto rs = connection->connection_surface_map()->render_surface(surface);
+    spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }

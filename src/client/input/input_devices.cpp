@@ -17,16 +17,17 @@
  */
 
 #include "mir/input/input_devices.h"
+#include "mir/input/mir_input_config_serialization.h"
 
 namespace mi = mir::input;
 
-void mi::InputDevices::update_devices(std::vector<DeviceData> && data)
+void mi::InputDevices::update_devices(std::string const& config_buffer)
 {
     std::function<void()> stored_callback;
 
     {
         std::unique_lock<std::mutex> lock(devices_access);
-        devices = std::move(data);
+        configuration = mi::deserialize_input_config(config_buffer);
         stored_callback = callback;
     }
 
@@ -34,10 +35,10 @@ void mi::InputDevices::update_devices(std::vector<DeviceData> && data)
         stored_callback();
 }
 
-std::vector<mi::DeviceData> mi::InputDevices::copy_devices()
+MirInputConfig mi::InputDevices::devices()
 {
     std::unique_lock<std::mutex> lock(devices_access);
-    return devices;
+    return configuration;
 }
 
 void mi::InputDevices::set_change_callback(std::function<void()> const& new_callback)

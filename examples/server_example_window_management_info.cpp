@@ -59,17 +59,17 @@ bool me::SurfaceInfo::can_be_active() const
 {
     switch (type)
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+    case mir_window_type_normal:       /**< AKA "regular"                       */
+    case mir_window_type_utility:      /**< AKA "floating"                      */
+    case mir_window_type_dialog:
+    case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_window_type_freestyle:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         return true;
 
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    case mir_window_type_gloss:
+    case mir_window_type_tip:          /**< AKA "tooltip"                       */
     default:
         // Cannot have input focus
         return false;
@@ -80,10 +80,10 @@ bool me::SurfaceInfo::must_have_parent() const
 {
     switch (type)
     {
-    case mir_surface_type_overlay:;
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_satellite:
-    case mir_surface_type_tip:
+    case mir_window_type_gloss:;
+    case mir_window_type_inputmethod:
+    case mir_window_type_satellite:
+    case mir_window_type_tip:
         return true;
 
     default:
@@ -91,19 +91,19 @@ bool me::SurfaceInfo::must_have_parent() const
     }
 }
 
-bool me::SurfaceInfo::can_morph_to(MirSurfaceType new_type) const
+bool me::SurfaceInfo::can_morph_to(MirWindowType new_type) const
 {
     switch (new_type)
     {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
-    case mir_surface_type_satellite:
+    case mir_window_type_normal:
+    case mir_window_type_utility:
+    case mir_window_type_satellite:
         switch (type)
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-        case mir_surface_type_dialog:
-        case mir_surface_type_satellite:
+        case mir_window_type_normal:
+        case mir_window_type_utility:
+        case mir_window_type_dialog:
+        case mir_window_type_satellite:
             return true;
 
         default:
@@ -111,14 +111,14 @@ bool me::SurfaceInfo::can_morph_to(MirSurfaceType new_type) const
         }
         break;
 
-    case mir_surface_type_dialog:
+    case mir_window_type_dialog:
         switch (type)
         {
-        case mir_surface_type_normal:
-        case mir_surface_type_utility:
-        case mir_surface_type_dialog:
-        case mir_surface_type_popover:
-        case mir_surface_type_satellite:
+        case mir_window_type_normal:
+        case mir_window_type_utility:
+        case mir_window_type_dialog:
+        case mir_window_type_menu:
+        case mir_window_type_satellite:
             return true;
 
         default:
@@ -137,8 +137,8 @@ bool me::SurfaceInfo::must_not_have_parent() const
 {
     switch (type)
     {
-    case mir_surface_type_normal:
-    case mir_surface_type_utility:
+    case mir_window_type_normal:
+    case mir_window_type_utility:
         return true;
 
     default:
@@ -150,8 +150,8 @@ bool me::SurfaceInfo::is_visible() const
 {
     switch (state)
     {
-    case mir_surface_state_hidden:
-    case mir_surface_state_minimized:
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
         return false;
     default:
         break;
@@ -166,45 +166,6 @@ struct mir::examples::SurfaceInfo::StreamPainter
     StreamPainter() = default;
     StreamPainter(StreamPainter const&) = delete;
     StreamPainter& operator=(StreamPainter const&) = delete;
-};
-
-struct mir::examples::SurfaceInfo::SwappingPainter
-    : mir::examples::SurfaceInfo::StreamPainter
-{
-    SwappingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
-        buffer_stream{buffer_stream}, buffer{nullptr}
-    {
-        swap_buffers(nullptr);
-        if (!buffer)
-            throw std::runtime_error("no buffer after swap");
-    }
-
-    void swap_buffers(graphics::Buffer* buf)
-    {
-        auto const callback = [this](mir::graphics::Buffer* new_buffer)
-            {
-                buffer.store(new_buffer);
-            };
-
-        buffer_stream->swap_buffers(buf, callback);
-    }
-
-    void paint(int intensity) override
-    {
-        if (graphics::Buffer* buf = buffer.exchange(nullptr))
-        {
-            auto const format = buffer_stream->pixel_format();
-            auto const sz = buf->size().height.as_int() *
-                            buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-            std::vector<unsigned char> pixels(sz, intensity);
-            if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buf->native_buffer_base()))
-                pixel_source->write(pixels.data(), sz);
-            swap_buffers(buf);
-        }
-    }
-
-    std::shared_ptr<frontend::BufferStream> const buffer_stream;
-    std::atomic<graphics::Buffer*> buffer;
 };
 
 struct mir::examples::SurfaceInfo::AllocatingPainter
@@ -236,7 +197,7 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
         std::vector<unsigned char> pixels(sz, intensity);
         if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base()))
             pixel_source->write(pixels.data(), sz);
-        buffer_stream->swap_buffers(buffer.get(), [](mg::Buffer*){});
+        buffer_stream->submit_buffer(buffer);
 
         std::swap(front_buffer, back_buffer);
     }
@@ -259,14 +220,7 @@ void mir::examples::SurfaceInfo::init_titlebar(
     std::shared_ptr<scene::Surface> const& surface)
 {
     auto stream = surface->primary_buffer_stream();
-    try
-    {
-        stream_painter = std::make_shared<SwappingPainter>(stream);
-    }
-    catch (...)
-    {
-        stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
-    }
+    stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
 }
 
 void mir::examples::SurfaceInfo::paint_titlebar(int intensity)
@@ -369,19 +323,19 @@ void me::SurfaceInfo::constrain_resize(
 
     switch (state)
     {
-    case mir_surface_state_restored:
+    case mir_window_state_restored:
         break;
 
         // "A vertically maximised surface is anchored to the top and bottom of
         // the available workspace and can have any width."
-    case mir_surface_state_vertmaximized:
+    case mir_window_state_vertmaximized:
         new_pos.y = surface->top_left().y;
         new_size.height = surface->size().height;
         break;
 
         // "A horizontally maximised surface is anchored to the left and right of
         // the available workspace and can have any height"
-    case mir_surface_state_horizmaximized:
+    case mir_window_state_horizmaximized:
         new_pos.x = surface->top_left().x;
         new_size.width = surface->size().width;
         break;
@@ -389,7 +343,7 @@ void me::SurfaceInfo::constrain_resize(
         // "A maximised surface is anchored to the top, bottom, left and right of the
         // available workspace. For example, if the launcher is always-visible then
         // the left-edge of the surface is anchored to the right-edge of the launcher."
-    case mir_surface_state_maximized:
+    case mir_window_state_maximized:
     default:
         new_pos.x = surface->top_left().x;
         new_pos.y = surface->top_left().y;
@@ -402,15 +356,15 @@ void me::SurfaceInfo::constrain_resize(
     requested_size = new_size;
 }
 
-bool me::SurfaceInfo::needs_titlebar(MirSurfaceType type)
+bool me::SurfaceInfo::needs_titlebar(MirWindowType type)
 {
     switch (type)
     {
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:
+    case mir_window_type_freestyle:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:
+    case mir_window_type_gloss:
+    case mir_window_type_tip:
         // No decorations for these surface types
         return false;
     default:

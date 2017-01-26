@@ -19,6 +19,7 @@
 #define MIR_CLIENT_CLIENT_PLATFORM_H_
 
 #include "mir/graphics/native_buffer.h"
+#include "mir/geometry/size.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
@@ -61,13 +62,19 @@ public:
      */
     virtual MirPlatformMessage* platform_operation(MirPlatformMessage const* request) = 0;
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
+
+    virtual void* request_interface(char const* name, int version) = 0;
+
     // EGLNativeWindowType differs between platforms, so can't reasonably be used in the
     // platform-independent interface.
+    // The following will be deprecated soon in favor of request_interface
     virtual std::shared_ptr<void> create_egl_native_window(EGLNativeSurface* surface) = 0;
     virtual void use_egl_native_window(std::shared_ptr<void> native_window, EGLNativeSurface* surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
     virtual MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const = 0;
     virtual MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const = 0;
+    virtual uint32_t native_format_for(MirPixelFormat) const = 0;
+    virtual uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const = 0;
 };
 
 }

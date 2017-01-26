@@ -92,8 +92,8 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
-    MirSurfaceState state{mir_surface_state_fullscreen};
-    MirSurfaceType type{mir_surface_type_dialog};
+    MirWindowState state{mir_window_state_fullscreen};
+    MirWindowType type{mir_window_type_dialog};
     MirOrientationMode mode{mir_orientation_mode_landscape};
     mf::SurfaceId surf_id{1000};
 

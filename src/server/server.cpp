@@ -88,7 +88,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(compositor)\
     MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
-    MACRO(display_configuration_report)\
     MACRO(gl_config)\
     MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
@@ -98,8 +97,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
-    MACRO(session_mediator_report)\
-    MACRO(seat_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
@@ -132,7 +129,10 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
     MACRO(the_application_not_responding_detector)\
-    MACRO(the_persistent_surface_store)
+    MACRO(the_persistent_surface_store)\
+    MACRO(the_display_configuration_observer_registrar)\
+    MACRO(the_seat_observer_registrar)\
+    MACRO(the_session_mediator_observer_registrar)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -148,6 +148,7 @@ struct mir::Server::Self
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
 
+    std::function<void()> pre_init_callback{[]{}};
     std::function<void()> init_callback{[]{}};
     std::function<void()> stop_callback{[]{}};
     int argc{0};
@@ -287,6 +288,19 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     self->argv = argv;
 }
 
+void mir::Server::add_pre_init_callback(std::function<void()> const& pre_init_callback)
+{
+    auto const& existing = self->pre_init_callback;
+
+    auto const updated = [=]
+        {
+            existing();
+            pre_init_callback();
+        };
+
+    self->pre_init_callback = updated;
+}
+
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
     auto const& existing = self->init_callback;
@@ -386,6 +400,8 @@ void mir::Server::run()
 
         if (self->emergency_cleanup_handler)
             emergency_cleanup->add(self->emergency_cleanup_handler);
+
+        self->pre_init_callback();
 
         run_mir(
             *self->server_config,

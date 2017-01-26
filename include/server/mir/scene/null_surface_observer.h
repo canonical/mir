@@ -31,7 +31,7 @@ public:
     NullSurfaceObserver() = default;
     virtual ~NullSurfaceObserver() = default;
 
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void attrib_changed(MirWindowAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void hidden_set_to(bool hide) override;

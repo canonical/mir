@@ -28,12 +28,20 @@ namespace graphics
 namespace nested
 {
 class NativeBuffer;
+
+enum class SubmissionMode
+{
+    queueing,
+    dropping
+};
 class HostChain
 {
 public:
     virtual ~HostChain() = default;
     virtual void submit_buffer(NativeBuffer&) = 0;
+    virtual void set_submission_mode(SubmissionMode mode) = 0;
     virtual MirPresentationChain* handle() = 0;
+    virtual MirRenderSurface* rs() const = 0;
 protected:
     HostChain() = default;
     HostChain(HostChain const&) = delete;

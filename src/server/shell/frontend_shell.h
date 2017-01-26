@@ -79,13 +79,13 @@ struct FrontendShell : mf::Shell
     int set_surface_attribute(
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) override;
 
     int get_surface_attribute(
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
-        MirSurfaceAttrib attrib) override;
+        MirWindowAttrib attrib) override;
 
     void raise_surface(
         std::shared_ptr<mf::Session> const& session,

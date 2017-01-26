@@ -77,6 +77,16 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
         display_output.gamma.green.size() * sizeof(uint16_t) / sizeof(char));
     protobuf_output.set_gamma_blue(reinterpret_cast<int8_t const*>(display_output.gamma.blue.data()),
         display_output.gamma.blue.size() * sizeof(uint16_t) / sizeof(char));
+
+    /*
+     * Extra sanity check; the EDID header is 128 bytes, so a valid EDID must be
+     * at least that big.
+     */
+    size_t const min_edid_size = 128;
+    if (display_output.edid.size() >= min_edid_size)
+    {
+        protobuf_output.set_edid(display_output.edid.data(), display_output.edid.size());
+    }
 }
 
 }

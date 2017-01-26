@@ -293,6 +293,13 @@ try
 
     switch(key)
     {
+        case NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS:
+        {
+            auto width = va_arg(args, int);
+            auto height = va_arg(args, int);
+            driver_interpreter->dispatch_driver_request_buffer_size({width, height});
+            break;
+        }
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
         {
             auto format = va_arg(args, int);

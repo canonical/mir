@@ -1,9 +1,5 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-)
-
 set(
   SOURCES
 
@@ -17,7 +13,6 @@ set(
   test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
-  test_client_library.cpp
   test_client_library_callbacks.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
@@ -61,21 +56,58 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
+  test_client_extensions.cpp
+  test_client_cursor_api.cpp
+  test_client_library_errors.cpp
+  test_shell_control_of_surface_configuration.cpp
+  test_client_library.cpp
+  test_presentation_chain.cpp
+  test_render_surface.cpp
+  test_buffer_stream_arrangement1.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
-add_subdirectory(throwback)
-add_subdirectory(staging)
+# BEGIN "throwbacks"
+# The following tests use still files we have chosen not to support in the public API
+# TODO update these "throwback" tests to rely only on the public APIs
+
+  # uses BasicWindowManager<>
+  set_source_files_properties(test_client_cursor_api.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+  # uses UsingClientPlatform
+  set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
+
+  # uses CanonicalWindowManager
+  set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
+
+  # uses src/include/common/mir/protobuf/protocol_version.h
+  set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
+# END "throwbacks"
+
+# BEGIN "staging"
+# The following tests use files we do not yet support in the public API
+# TODO update the public APIs
+  set_source_files_properties(test_presentation_chain.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+
+  set_source_files_properties(test_render_surface.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+
+  set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
+          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
+# END "staging"
 
 mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
-  $<TARGET_OBJECTS:acceptance-test-throwback>
-  $<TARGET_OBJECTS:acceptance-test-staging>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)

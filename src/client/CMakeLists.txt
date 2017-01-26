@@ -17,6 +17,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
+)
+
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -62,6 +67,7 @@ add_library(mirclientobjects OBJECT
   default_connection_configuration.cpp
   connection_surface_map.cpp
   private.cpp
+  frame_clock.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
@@ -76,6 +82,7 @@ add_library(mirclientobjects OBJECT
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
+  error_render_surface.cpp
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp
@@ -90,16 +97,20 @@ add_library(mirclientobjects OBJECT
   mir_error.cpp
   mir_error.h
   mir_error_api.cpp
+  buffer_stream_configuration.cpp
   error_handler.h
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_display_configuration.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
+  mir_extension_core.cpp
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
 )
 
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
+add_dependencies(mirclientobjects mircapnproto)
 
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)

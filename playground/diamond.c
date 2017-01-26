@@ -17,6 +17,7 @@
  */
 
 #include "diamond.h"
+#include "mir_egl_platform_shim.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -30,12 +31,12 @@ GLfloat const vertices[] =
     -1.0f, 0.0f,
 };
 
-GLfloat const colors[] =
+GLfloat const texcoords[] =
 {
-    1.0f, 0.2f, 0.2f, 1.0f,
-    0.2f, 1.0f, 0.2f, 1.0f,
-    0.2f, 0.2f, 1.0f, 1.0f,
-    0.2f, 0.2f, 0.2f, 1.0f,
+    0.0f, 0.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
 };
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -60,37 +61,33 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-void render_diamond(Diamond* info, EGLDisplay egldisplay, EGLSurface eglsurface)
+void render_diamond(Diamond* info, int width, int height)
 {
-    EGLint width = -1;
-    EGLint height = -1;
     glClear(GL_COLOR_BUFFER_BIT);
-    if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &width) &&
-        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &height))
-    {
-        glViewport(0, 0, width, height);
-    }
+    glViewport(0, 0, width, height);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, info->num_vertices);
 }
 
-Diamond setup_diamond()
+Diamond setup_diamond_common()
 {
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     char const vertex_shader_src[] =
         "attribute vec2 pos;                                \n"
-        "attribute vec4 color;                              \n"
-        "varying   vec4 dest_color;                         \n"
+        "attribute vec2 texcoord;                           \n"
+        "varying vec2 v_texcoord;                           \n"
         "void main()                                        \n"
         "{                                                  \n"
-        "    dest_color = color;                            \n"
         "    gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);    \n"
+        "    v_texcoord = texcoord;                         \n"
         "}                                                  \n";
     char const fragment_shader_src[] =
-        "precision mediump float;             \n"
-        "varying   vec4 dest_color;           \n"
-        "void main()                          \n"
-        "{                                    \n"
-        "    gl_FragColor = dest_color;       \n"
-        "}                                    \n";
+        "precision mediump float;                       \n"
+        "varying vec2 v_texcoord;                       \n"
+        "uniform sampler2D tex;                         \n"
+        "void main()                                    \n"
+        "{                                              \n"
+        "   gl_FragColor = texture2D(tex, v_texcoord);  \n"
+        "}                                              \n";
 
     GLint linked = 0;
     Diamond info;
@@ -114,20 +111,69 @@ Diamond setup_diamond()
     }
 
     glUseProgram(info.program);
+
     info.pos = glGetAttribLocation(info.program, "pos");
-    info.color = glGetAttribLocation(info.program, "color");
+    info.texuniform = glGetUniformLocation(info.program, "tex");
+    info.texcoord = glGetAttribLocation(info.program, "texcoord");
     info.num_vertices = num_vertices;
+
+    glUniform1i(info.pos, 0);
+    glUniform1i(info.texuniform, 0);
     glVertexAttribPointer(info.pos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-    glVertexAttribPointer(info.color, 4, GL_FLOAT, GL_FALSE, 0, colors);
+    glVertexAttribPointer(info.texcoord, 2, GL_FLOAT, GL_FALSE, 0, texcoords);
     glEnableVertexAttribArray(info.pos);
-    glEnableVertexAttribArray(info.color);
+    glEnableVertexAttribArray(info.texcoord);
+
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &info.texid);
+    glBindTexture(GL_TEXTURE_2D, info.texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     return info;
+}
+
+Diamond setup_diamond_import(EGLImageKHR img, int use_shim)
+{
+    Diamond diamond = setup_diamond_common();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (use_shim)
+    {
+        future_driver_glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
+    }
+    else
+    {
+        PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
+            (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, img);
+    }
+    return diamond;
+}
+
+Diamond setup_diamond()
+{
+    Diamond diamond = setup_diamond_common();
+    static unsigned char data[] = {
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0x00, 0x00, 0xFF,
+        0xFF, 0x00, 0x00, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF
+    };
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        2, 2, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE,
+        data);
+    return diamond;
 }
 
 void destroy_diamond(Diamond* info)
 {
+    glDeleteTextures(1, &info->texid);
     glDisableVertexAttribArray(info->pos);
-    glDisableVertexAttribArray(info->color);
+    glDisableVertexAttribArray(info->texcoord);
     glDeleteShader(info->vertex_shader);
     glDeleteShader(info->fragment_shader);
     glDeleteProgram(info->program);

@@ -24,14 +24,6 @@
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 
-namespace mir
-{
-namespace client
-{
-class ClientBufferStream;
-}
-}
-
 class MirRenderSurface
 {
 public:
@@ -39,16 +31,13 @@ public:
     virtual mir::frontend::BufferStreamId stream_id() const = 0;
     virtual mir::geometry::Size size() const = 0;
     virtual void set_size(mir::geometry::Size) = 0;
-
-    virtual MirWaitHandle* create_buffer_stream(
+    virtual bool valid() const = 0;
+    virtual MirBufferStream* get_buffer_stream(
         int width, int height,
         MirPixelFormat format,
-        MirBufferUsage buffer_usage,
-        mir_buffer_stream_callback callback,
-        void* context) = 0;
-    virtual MirWaitHandle* release_buffer_stream(
-        mir_buffer_stream_callback callback,
-        void* context) = 0;
+        MirBufferUsage buffer_usage) = 0;
+    virtual MirPresentationChain* get_presentation_chain() = 0;
+    virtual char const* get_error_message() const = 0;
     virtual ~MirRenderSurface() = default;
 protected:
     MirRenderSurface(MirRenderSurface const&) = delete;

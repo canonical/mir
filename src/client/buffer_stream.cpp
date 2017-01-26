@@ -72,9 +72,8 @@ public:
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.allocate_buffers(&request,  protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.allocate_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -84,9 +83,8 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.release_buffers(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.release_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -96,22 +94,32 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.submit_buffer(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.submit_buffer(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    static void ignore_response(mp::Void* void_response)
+    static void ignore_response(std::shared_ptr<mp::Void>)
     {
-        delete void_response;
     }
 
 private:
     mclr::DisplayServer& server;
-    mp::Void protobuf_void;
     int stream_id;
 };
+
+mir::optional_value<int> parse_env_for_swap_interval()
+{
+    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+    {
+        mir::log_info("overriding swapinterval setting because of presence of MIR_CLIENT_FORCE_SWAP_INTERVAL");
+        return {atoi(env)};
+    }
+    else
+    {
+        return {};
+    }
+}
 }
 
 namespace mir
@@ -228,20 +236,6 @@ struct BufferDepository
 }
 }
 
-// Needed to create an ErrorBufferStream through the MirConnection API
-// TODO: remove once streams can only be created through MirRenderSurface API
-mcl::BufferStream::BufferStream(
-    mir::client::rpc::DisplayServer& server,
-    std::weak_ptr<mcl::SurfaceMap> const& map)
-        : display_server{server},
-          client_platform{nullptr},
-          perf_report{nullptr},
-          nbuffers{0},
-          map{map},
-          factory{nullptr}
-{
-}
-
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
     MirRenderSurface* render_surface,
@@ -256,9 +250,11 @@ mcl::BufferStream::BufferStream(
     geom::Size ideal_size,
     size_t nbuffers)
     : connection_(connection),
-      display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
+      user_swap_interval(parse_env_for_swap_interval()),
+      using_client_side_vsync(false),
+      interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -269,7 +265,16 @@ mcl::BufferStream::BufferStream(
       factory(factory),
       render_surface_(render_surface)
 {
-    init_swap_interval();
+    /*
+     * Since we try to use client-side vsync where possible, a separate
+     * copy of the current swap interval is required to represent that
+     * the stream might have a non-zero interval while we want the server
+     * to use a zero interval. This is not stored inside interval_config
+     * because with some luck interval_config will eventually go away
+     * leaving just int current_swap_interval.
+     */
+    current_swap_interval = interval_config.swap_interval();
+
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -291,7 +296,7 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<BufferDepository>(
             client_platform->create_buffer_factory(), factory,
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
+            std::make_shared<Requests>(server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
             protobuf_bs->buffer_usage(), nbuffers);
 
@@ -301,8 +306,8 @@ mcl::BufferStream::BufferStream(
         // knowing the swap interval is not a precondition to creation. It's
         // only a precondition to your second and subsequent swaps, so don't
         // bother the creation parameters with this stuff...
-        if (fixed_swap_interval)
-            force_swap_interval(swap_interval_);
+        if (user_swap_interval.is_set())
+            set_swap_interval(user_swap_interval.value());
     }
     catch (std::exception const& error)
     {
@@ -319,54 +324,6 @@ mcl::BufferStream::BufferStream(
     if (!valid())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
     perf_report->name_surface(surface_name.c_str());
-}
-
-void mcl::BufferStream::init_swap_interval()
-{
-    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
-    if (env)
-    {
-        swap_interval_ = atoi(env);
-        fixed_swap_interval = true;
-    }
-    else
-    {
-        swap_interval_ = 1;
-        fixed_swap_interval = false;
-    }
-}
-
-
-mcl::BufferStream::BufferStream(
-    MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> creation_wait_handle,
-    mclr::DisplayServer& server,
-    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const& map,
-    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
-    mp::BufferStreamParameters const& parameters,
-    std::shared_ptr<mcl::PerfReport> const& perf_report,
-    size_t nbuffers)
-    : connection_(connection),
-      display_server(server),
-      client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      swap_interval_(1),
-      perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle),
-      map(map),
-      factory(factory)
-{
-    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
-
-    buffer_depository = std::make_unique<BufferDepository>(
-        client_platform->create_buffer_factory(), factory,
-        std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
-        ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
-    egl_native_window_ = client_platform->create_egl_native_window(this);
 }
 
 mcl::BufferStream::~BufferStream()
@@ -402,11 +359,15 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done)
 {
     auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
     perf_report->end_frame(id);
+
+    if (!using_client_side_vsync &&
+        current_swap_interval != interval_config.swap_interval())
+        set_server_swap_interval(current_swap_interval);
 
     secured_region.reset();
 
@@ -447,11 +408,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
-MirSurfaceParameters mcl::BufferStream::get_parameters() const
+MirWindowParameters mcl::BufferStream::get_parameters() const
 {
     auto size = buffer_depository->size();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "",
         size.width.as_int(),
         size.height.as_int(),
@@ -460,31 +421,85 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::BufferStream::request_and_wait_for_next_buffer()
+void mcl::BufferStream::wait_for_vsync()
 {
-    next_buffer([](){})->wait_for_all();
-}
+    mir::time::PosixTimestamp last, target;
+    std::shared_ptr<FrameClock> clock;
 
-void mcl::BufferStream::on_swap_interval_set(int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    swap_interval_ = interval;
-    interval_wait_handle.result_received();
-}
-
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    if (attrib != mir_surface_attrib_swapinterval)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
-        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (!frame_clock)
+            return;
+        last = last_vsync;
+        clock = frame_clock;
     }
 
-    auto i = interval;
-    lock.unlock();
-    set_swap_interval(i);
-    interval_wait_handle.wait_for_all();
+    target = clock->next_frame_after(last);
+    sleep_until(target);
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (target > last_vsync)
+            last_vsync = target;
+    }
+}
+
+MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
+{
+    /*
+     * TODO: Remove these functions in future, after
+     *       mir_buffer_stream_swap_buffers has been converted to use
+     *       client-side vsync, and the server has been told to always use
+     *       dropping for BufferStream. Then there will be no need to ever
+     *       change the server swap interval from zero.
+     */
+    buffer_depository->set_interval(i);
+    return interval_config.set_swap_interval(i);
+}
+
+void mcl::BufferStream::swap_buffers_sync()
+{
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = true;
+    }
+
+    /*
+     * Until recently it seemed like server-side vsync could co-exist with
+     * client-side vsync. However my original theory that it was risky has
+     * proven to be true. If we leave server-side vsync throttling to interval
+     * one at the same time as using client-side, there's a risk the server
+     * will not get scheduled sufficiently to drain the queue as fast as
+     * we fill it, creating lag. The acceptance test `ClientLatency' has now
+     * proven this is a real problem so we must be sure to put the server in
+     * interval 0 when using client-side vsync. This guarantees that random
+     * scheduling imperfections won't create queuing lag.
+     */
+    if (interval_config.swap_interval() != 0)
+        set_server_swap_interval(0);
+
+    swap_buffers([](){})->wait_for_all();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = false;
+    }
+
+    int interval = swap_interval();
+    for (int i = 0; i < interval; ++i)
+        wait_for_vsync();
+}
+
+void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)
+{
+    if (attrib != mir_window_attrib_swapinterval)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
+        " on BufferStream but only mir_window_attrib_swapinterval is supported")); 
+    }
+
+    if (auto wh = set_swap_interval(interval))
+        wh->wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -494,31 +509,42 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 
 int mcl::BufferStream::swap_interval() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return swap_interval_;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return current_swap_interval;
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    if (fixed_swap_interval)
-        return nullptr;
-    else
-        return force_swap_interval(interval);
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    current_swap_interval = user_swap_interval.is_set() ?
+        user_swap_interval.value() : interval;
+
+    return set_server_swap_interval(current_swap_interval);
 }
 
-MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
+void mcl::BufferStream::adopted_by(MirWindow* win)
 {
-    mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(protobuf_bs->id().value());
-    configuration.set_swapinterval(interval);
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    /*
+     * Yes, we're storing raw pointers here. That's safe so long as MirWindow
+     * remembers to always call unadopted_by prior to its destruction.
+     *   The alternative of MirWindow passing in a shared_ptr to itself is
+     * actually uglier than this...
+     */
+    users.insert(win);
+    if (!frame_clock)
+        frame_clock = win->get_frame_clock();
+}
 
-    buffer_depository->set_interval(interval);
-
-    interval_wait_handle.expect_result();
-    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
-
-    return &interval_wait_handle;
+void mcl::BufferStream::unadopted_by(MirWindow* win)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    users.erase(win);
+    if (frame_clock == win->get_frame_clock())
+    {
+        frame_clock = users.empty() ? nullptr
+                                    : (*users.begin())->get_frame_clock();
+    }
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

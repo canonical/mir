@@ -213,12 +213,12 @@ struct StubEventSink : public mf::EventSink
         protobuffer->set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(request);
     }
-    void error_buffer(mg::BufferProperties const&, std::string const&) {}
+    void error_buffer(geom::Size, MirPixelFormat, std::string const&) {}
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
     void handle_error(mir::ClientVisibleError const&) {}
-    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
+    void handle_input_config_change(MirInputConfig const&) {}
     void send_ping(int32_t) {}
 
     std::shared_ptr<StubIpcSystem> ipc;
@@ -446,7 +446,7 @@ void repeat_system_until(
     }
 }
 
-size_t unique_ids_in(std::vector<BufferEntry> log)
+int unique_ids_in(std::vector<BufferEntry> log)
 {
     std::sort(log.begin(), log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
@@ -471,7 +471,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mc::BufferMap>(sink, std::make_shared<mtd::StubBufferAllocator>());
+        map = std::make_shared<mc::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
             drop_policy,
             map,
@@ -479,19 +479,18 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
         ipc->on_server_bound_transfer(
-            [weak_stream](mp::Buffer& buffer)
+            [weak_stream, this](mp::Buffer& buffer)
             {
                 auto submit_stream = weak_stream.lock();
                 if (!submit_stream)
                     return;
-                mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
-                submit_stream->swap_buffers(&b, [](mg::Buffer*){});
+                mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
+                submit_stream->submit_buffer((*map)[id]);
             });
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                map->add_buffer(
-                    mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
+                map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);
@@ -1175,7 +1174,7 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 // Test that dynamic queue scaling/throttling actually works
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
-    int const discard = 3;
+    auto const discard = 3u;
 
     for (int frame = 0; frame < 20; frame++)
     {

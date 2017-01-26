@@ -19,12 +19,11 @@
 #ifndef MIR_CLIENT_SURFACE_MAP_H_
 #define MIR_CLIENT_SURFACE_MAP_H_
 
+#include <mir_toolkit/client_types.h>
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include <functional>
 #include <memory>
-
-struct MirSurface;
 
 namespace mir
 {
@@ -35,16 +34,13 @@ class Buffer;
 namespace client
 {
 class MirBuffer;
-class ClientBufferStream;
 
 class SurfaceMap
 {
 public:
-    virtual void with_surface_do(
-        frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const = 0;
-    virtual void with_stream_do(
-        frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const = 0;
-    virtual void with_all_streams_do(std::function<void(ClientBufferStream*)> const&) const = 0;
+    virtual std::shared_ptr<MirWindow> surface(frontend::SurfaceId) const = 0;
+    virtual std::shared_ptr<MirBufferStream> stream(frontend::BufferStreamId) const = 0;
+    virtual void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const = 0;
     virtual std::shared_ptr<MirBuffer> buffer(int buffer_id) const = 0;
     virtual void insert(int buffer_id, std::shared_ptr<MirBuffer> const& buffer) = 0;
     virtual void erase(int buffer_id) = 0;  

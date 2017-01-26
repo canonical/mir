@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,15 +20,15 @@
 #include <boost/throw_exception.hpp>
 #include <unordered_set>
 #include "mediating_display_changer.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
-#include "session_event_handler_register.h"
+#include "mir/scene/session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/server_action_queue.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
@@ -131,7 +131,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
-    std::shared_ptr<mg::DisplayConfigurationReport> const& report,
+    std::shared_ptr<mg::DisplayConfigurationObserver> const& observer,
     std::shared_ptr<mi::InputRegion> const& region,
     std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
@@ -140,7 +140,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
-      report{report},
+      observer{observer},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
       region{region},
@@ -180,7 +180,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                 });
         });
 
-    report->initial_configuration(*base_configuration_);
+    observer->initial_configuration(base_configuration_);
     update_input_rectangles(*base_configuration_);
 }
 
@@ -191,6 +191,7 @@ void ms::MediatingDisplayChanger::configure(
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
         config_map[session] = conf;
+        observer->session_configuration_applied(session, conf);
 
         if (session != focused_session.lock())
             return;
@@ -217,6 +218,43 @@ void ms::MediatingDisplayChanger::configure(
                     {
                         session->send_error(DisplayConfigurationFailedError{});
                     }
+                }
+            }
+        });
+}
+
+void ms::MediatingDisplayChanger::remove_session_configuration(
+    std::shared_ptr<mf::Session> const& session)
+{
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        if (config_map.find(session) != config_map.end())
+        {
+            config_map.erase(session);
+            observer->session_configuration_removed(session);
+        }
+
+        if (session != focused_session.lock())
+            return;
+    }
+
+    std::weak_ptr<mf::Session> const weak_session{session};
+
+    server_action_queue->enqueue(
+        this,
+        [this, weak_session]
+        {
+            if (auto const session = weak_session.lock())
+            {
+                std::lock_guard<std::mutex> lg{configuration_mutex};
+
+                try
+                {
+                    apply_base_config();
+                }
+                catch (std::exception const&)
+                {
+                    session->send_error(DisplayConfigurationFailedError{});
                 }
             }
         });
@@ -349,6 +387,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
                 try
                 {
                     apply_base_config();
+                    observer->base_configuration_updated(base_configuration_);
                 }
                 catch (std::exception const&)
                 {
@@ -409,8 +448,6 @@ bool configuration_has_new_outputs_enabled(
 void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
-    report->new_configuration(*conf);
-
     auto existing_configuration = display->configuration();
     try
     {
@@ -423,10 +460,11 @@ void ms::MediatingDisplayChanger::apply_config(
             display->configure(*conf);
         }
 
+        observer->configuration_applied(conf);
         update_input_rectangles(*conf);
         base_configuration_applied = false;
     }
-    catch (...)
+    catch (std::exception const& e)
     {
         try
         {
@@ -442,10 +480,12 @@ void ms::MediatingDisplayChanger::apply_config(
                 [this] { compositor->start(); }};
             display->configure(*existing_configuration);
         }
-        catch (...)
+        catch (std::exception const& e)
         {
-            // OMG WHY HAS EVERYTHING EXPLODED?
+            observer->catastrophic_configuration_error(std::move(existing_configuration), e);
+            throw;
         }
+        observer->configuration_failed(conf, e);
         throw;
     }
 }
@@ -528,6 +568,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
             if (base_configuration_applied)
                 apply_base_config();
 
+            observer->base_configuration_updated(conf);
             send_config_to_all_sessions(conf);
         });
 }

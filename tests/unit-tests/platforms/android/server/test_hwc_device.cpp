@@ -24,6 +24,7 @@
 #include "src/platforms/android/server/hwc_configuration.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/doubles/mock_framebuffer_bundle.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_hwc_device_wrapper.h"
@@ -165,7 +166,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
         .InSequence(seq)
         .WillOnce(Invoke([&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
         {
-            ASSERT_EQ(contents[0]->numHwLayers, 3);
+            ASSERT_EQ(contents[0]->numHwLayers, 3u);
             contents[0]->hwLayers[0].compositionType = HWC_OVERLAY;
             contents[0]->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
             contents[0]->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
@@ -237,7 +238,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     int* list_retire_fence = nullptr;
     auto set_fences_fn = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 2);
+        ASSERT_EQ(contents[0]->numHwLayers, 2u);
         contents[0]->hwLayers[1].releaseFenceFd = fb_release_fence;
         contents[0]->retireFenceFd = hwc_retire_fence;
         list_retire_fence = &contents[0]->retireFenceFd;
@@ -276,7 +277,7 @@ TEST_F(HwcDevice, commits_correct_list_with_rejected_renderables)
 
     auto set_fences_fn = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 2);
+        ASSERT_EQ(contents[0]->numHwLayers, 2u);
         contents[0]->hwLayers[1].releaseFenceFd = fb_release_fence;
         contents[0]->retireFenceFd = -1;
     };
@@ -324,7 +325,7 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
 
     auto set_fences_fn = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 3);
+        ASSERT_EQ(contents[0]->numHwLayers, 3u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence1;
         contents[0]->hwLayers[1].releaseFenceFd = release_fence2;
         contents[0]->retireFenceFd = -1;
@@ -386,7 +387,7 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
     ON_CALL(*mock_device, prepare(_))
         .WillByDefault(Invoke([&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
         {
-            ASSERT_EQ(contents[0]->numHwLayers, 3);
+            ASSERT_EQ(contents[0]->numHwLayers, 3u);
             contents[0]->hwLayers[0].compositionType = HWC_OVERLAY;
             contents[0]->hwLayers[1].compositionType = HWC_FRAMEBUFFER;
             contents[0]->hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
@@ -500,7 +501,7 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     auto updated_buffer = std::make_shared<mtd::StubBuffer>(native_buffer, size1);
     auto set_fences_fn = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 3);
+        ASSERT_EQ(contents[0]->numHwLayers, 3u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence1;
         contents[0]->hwLayers[1].releaseFenceFd = release_fence2;
         contents[0]->retireFenceFd = -1;
@@ -577,7 +578,7 @@ TEST_F(HwcDevice, does_not_own_framebuffer_buffers_past_set)
     EXPECT_CALL(*mock_device, prepare(_))
        .WillOnce(Invoke([&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
         {
-            ASSERT_THAT(contents[0]->numHwLayers, Ge(2));
+            ASSERT_THAT(contents[0]->numHwLayers, Ge(2u));
             contents[0]->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
             contents[0]->hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
@@ -599,15 +600,19 @@ TEST_F(HwcDevice, rejects_empty_list)
     EXPECT_FALSE(device.compatible_renderlist(renderlist));
 }
 
-//LP: #1369763. We could get swapinterval 0 to work with overlays, but we'd need
-//the vsync signal from hwc to reach the client, so the client can rate-limit its submissions.
-TEST_F(HwcDevice, rejects_list_containing_interval_0)
+// Regression test for LP: #1657755
+TEST_F(HwcDevice, accepts_list_containing_interval_0)
 {
-    mga::HwcDevice device(mock_device);
+    using namespace ::testing;
 
-    auto renderable = std::make_shared<mtd::StubTransformedRenderable>();
+    mga::HwcDevice device(mock_device);
+    auto renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
+
+    ON_CALL(*renderable, swap_interval())
+        .WillByDefault(Return(0));
+
     mg::RenderableList renderlist{renderable};
-    EXPECT_FALSE(device.compatible_renderlist(renderlist));
+    EXPECT_TRUE(device.compatible_renderlist(renderlist));
 }
 
 //TODO: we could accept a 90 degree transform
@@ -676,14 +681,14 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
     auto set_fences = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
         ASSERT_THAT(contents[0], testing::NotNull());
-        ASSERT_EQ(contents[0]->numHwLayers, 2);
+        ASSERT_EQ(contents[0]->numHwLayers, 2u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence1;
         contents[0]->retireFenceFd = -1;
     };
     auto set_fences2 = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
         ASSERT_THAT(contents[0], testing::NotNull());
-        ASSERT_EQ(contents[0]->numHwLayers, 3);
+        ASSERT_EQ(contents[0]->numHwLayers, 3u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence2;
         contents[0]->hwLayers[1].releaseFenceFd = release_fence3;
         contents[0]->retireFenceFd = -1;
@@ -778,14 +783,14 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     };
     auto set_fences = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 3);
+        ASSERT_EQ(contents[0]->numHwLayers, 3u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence1;
         contents[0]->hwLayers[1].releaseFenceFd = release_fence2;
         contents[0]->retireFenceFd = -1;
     };
     auto set_fences2 = [&](std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& contents)
     {
-        ASSERT_EQ(contents[0]->numHwLayers, 3);
+        ASSERT_EQ(contents[0]->numHwLayers, 3u);
         contents[0]->hwLayers[0].releaseFenceFd = release_fence3;
         contents[0]->hwLayers[1].releaseFenceFd = release_fence4;
         contents[0]->retireFenceFd = -1;

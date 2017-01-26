@@ -37,6 +37,8 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/cookie/authority.h"
 #include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
@@ -89,6 +91,8 @@ struct InputDeviceHubTest : ::testing::Test
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
     NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
+    NiceMock<mtd::MockInputDevice> mouse{"mouse","dev-4", mi::DeviceCapability::pointer};
+    NiceMock<mtd::MockInputDevice> touchpad{"tpd","dev-5", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
@@ -231,3 +235,4 @@ TEST_F(InputDeviceHubTest, emit_stop_receiving_input_after_last_device_added)
     hub.remove_device(mt::fake_shared(another_device));
     observer_loop.trigger_server_actions();
 }
+

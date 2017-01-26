@@ -9,6 +9,9 @@
 #include <cstring>
 #include <unistd.h>
 
+//whole test should be removed once the platform messages are removed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace mtf = mir_test_framework;
 
 namespace
@@ -40,7 +43,10 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
         auto const platform_op_done = mir_connection_platform_operation(
             connection, request, assign_reply, &reply);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(platform_op_done);
+#pragma GCC diagnostic pop
 
         mir_platform_message_release(request);
 
@@ -58,7 +64,10 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
         auto const platform_op_done = mir_connection_platform_operation(
                 connection, request, assign_reply, &reply);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_wait_for(platform_op_done);
+#pragma GCC diagnostic pop
 
         mir_platform_message_release(request);
 
@@ -174,7 +183,7 @@ TEST_F(ClientPlatformOperation, exchanges_fd_items_with_platform)
     EXPECT_THAT(reply, MessageDataIsEmpty());
 
     auto const reply_fds = mir_platform_message_get_fds(reply);
-    EXPECT_THAT(reply_fds.num_fds, Eq(1));
+    EXPECT_THAT(reply_fds.num_fds, Eq(1u));
 
     auto const reply_fd = reply_fds.fds[0];
     EXPECT_THAT(reply_fd, Ne(pipe.read_fd()));
@@ -186,3 +195,4 @@ TEST_F(ClientPlatformOperation, exchanges_fd_items_with_platform)
     close(reply_fd);
     mir_platform_message_release(reply);
 }
+#pragma GCC diagnostic pop

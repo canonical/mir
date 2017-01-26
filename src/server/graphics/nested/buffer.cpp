@@ -19,6 +19,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "host_connection.h"
 #include "buffer.h"
@@ -121,7 +122,7 @@ public:
         std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
         std::shared_ptr<mgn::HostConnection> const& connection) :
         TextureAccess(buffer, native_buffer, connection),
-        stride_(geom::Stride{native_buffer->get_graphics_region().stride})
+        stride_(geom::Stride{native_buffer->get_graphics_region()->stride})
     {
     }
 
@@ -133,21 +134,21 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
         auto region = native_buffer->get_graphics_region();
-        if (!region.vaddr)
+        if (!region->vaddr)
             BOOST_THROW_EXCEPTION(std::logic_error("could not map buffer"));
 
-        for (int i = 0; i < region.height; i++)
+        for (int i = 0; i < region->height; i++)
         {
             int line_offset_in_buffer = stride().as_uint32_t() * i;
-            int line_offset_in_source = bpp * region.width * i;
-            memcpy(region.vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region.width * bpp);
+            int line_offset_in_source = bpp * region->width * i;
+            memcpy(region->vaddr + line_offset_in_buffer, pixels + line_offset_in_source, region->width * bpp);
         }
     }
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
         auto region = native_buffer->get_graphics_region();
-        do_with_pixels(reinterpret_cast<unsigned char*>(region.vaddr));
+        do_with_pixels(reinterpret_cast<unsigned char*>(region->vaddr));
     }
 
     geom::Stride stride() const override
@@ -176,6 +177,25 @@ mgn::Buffer::Buffer(
     connection(connection),
     buffer(connection->create_buffer(properties)),
     native_base(create_native_base(properties.usage))
+{
+}
+
+mgn::Buffer::Buffer(
+    std::shared_ptr<HostConnection> const& connection,
+    geom::Size size, uint32_t native_format, uint32_t native_flags) :
+    connection(connection),
+    buffer(connection->create_buffer(size, native_format, native_flags)),
+    native_base(std::make_shared<TextureAccess>(*this, buffer, connection))
+{
+}
+
+mgn::Buffer::Buffer(
+    std::shared_ptr<HostConnection> const& connection,
+    geom::Size size,
+    MirPixelFormat format) :
+    connection(connection),
+    buffer(connection->create_buffer(size, format)),
+    native_base(std::make_shared<PixelAndTextureAccess>(*this, buffer, connection))
 {
 }
 

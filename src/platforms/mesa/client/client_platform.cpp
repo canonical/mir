@@ -24,13 +24,16 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
 #include "mir/weak_egl.h"
+#include "mir/platform_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
+#include "gbm_format_conversions.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cstring>
 
+namespace mgm=mir::graphics::mesa;
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
@@ -58,6 +61,95 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 {
     return ((a - 1) / b) + 1;
 }
+
+struct AuthFdContext
+{
+    MirAuthFdCallback cb;
+    void* context;
+};
+
+void auth_fd_cb(
+    MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    AuthFdContext* ctx = reinterpret_cast<AuthFdContext*>(context);
+    int auth_fd{-1};
+
+    if (reply->fds.size() == 1)
+        auth_fd = reply->fds[0];
+    ctx->cb(auth_fd, ctx->context);
+    delete ctx;
+}
+
+void auth_fd_ext(MirConnection* conn, MirAuthFdCallback cb, void* context)
+{
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+    MirPlatformMessage msg(MirMesaPlatformOperation::auth_fd);
+    auto ctx = new AuthFdContext{cb, context};
+    connection->platform_operation(&msg, auth_fd_cb, ctx);
+}
+
+struct AuthMagicContext
+{
+    MirAuthMagicCallback cb;
+    void* context;
+};
+
+void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
+{
+    AuthMagicContext* ctx = reinterpret_cast<AuthMagicContext*>(context);
+    int auth_magic_response{-1};
+    if (reply->data.size() == sizeof(auth_magic_response))
+        memcpy(&auth_magic_response, reply->data.data(), sizeof(auth_magic_response));
+    ctx->cb(auth_magic_response, ctx->context);
+    delete ctx;
+}
+
+void auth_magic_ext(MirConnection* conn, int magic, MirAuthMagicCallback cb, void* context)
+{
+    auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
+    MirPlatformMessage msg(MirMesaPlatformOperation::auth_magic);
+    auto m = reinterpret_cast<char*>(&magic);
+    msg.data.assign(m, m + sizeof(magic));
+    auto ctx = new AuthMagicContext{cb, context};
+    connection->platform_operation(&msg, auth_magic_cb, ctx);
+}
+
+void set_device(gbm_device* device, void* context)
+{
+    auto platform = reinterpret_cast<mclm::ClientPlatform*>(context);
+    platform->set_gbm_device(device);
+}
+
+void allocate_buffer_gbm(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int gbm_pixel_format,
+    unsigned int gbm_bo_flags,
+    MirBufferCallback available_callback, void* available_context)
+{
+    //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
+    //this will return an error buffer for now. In the future, we should share MirConnection
+    //and mcl::ErrorBuffer so the platforms can use them. 
+    if (gbm_bo_flags)
+    {
+        mir_connection_allocate_buffer(
+            connection, width, height, mir_pixel_format_invalid, mir_buffer_usage_hardware,
+            available_callback, available_context);
+    }
+
+    mir_connection_allocate_buffer(
+        connection,
+        width, height,
+        mir::graphics::mesa::gbm_format_to_mir_format(gbm_pixel_format),
+        mir_buffer_usage_hardware,
+        available_callback, available_context);
+}
+
+}
+
+void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
+{
+    gbm_dev = device;
 }
 
 mclm::ClientPlatform::ClientPlatform(
@@ -67,7 +159,10 @@ mclm::ClientPlatform::ClientPlatform(
     : context{context},
       buffer_file_ops{buffer_file_ops},
       display_container(display_container),
-      gbm_dev{nullptr}
+      gbm_dev{nullptr},
+      drm_extensions{auth_fd_ext, auth_magic_ext},
+      mesa_auth{set_device, this},
+      gbm_buffer{allocate_buffer_gbm}
 {
 }
 
@@ -121,21 +216,20 @@ void mclm::ClientPlatform::populate(MirPlatformPackage& package) const
 MirPlatformMessage* mclm::ClientPlatform::platform_operation(
     MirPlatformMessage const* msg)
 {
-    auto const op = mir_platform_message_get_opcode(msg);
-    auto const msg_data = mir_platform_message_get_data(msg);
-
-    if (op == MirMesaPlatformOperation::set_gbm_device &&
-        msg_data.size == sizeof(MirMesaSetGBMDeviceRequest))
+    if (msg->opcode == MirMesaPlatformOperation::set_gbm_device &&
+        msg->data.size() == sizeof(MirMesaSetGBMDeviceRequest))
     {
         MirMesaSetGBMDeviceRequest set_gbm_device_request{nullptr};
-        std::memcpy(&set_gbm_device_request, msg_data.data, msg_data.size);
+        std::memcpy(&set_gbm_device_request, msg->data.data(), msg->data.size());
 
         gbm_dev = set_gbm_device_request.device;
 
         static int const success{0};
-        MirMesaSetGBMDeviceResponse const response{success};
-        auto const response_msg = mir_platform_message_create(op);
-        mir_platform_message_set_data(response_msg, &response, sizeof(response));
+        MirMesaSetGBMDeviceResponse response{success};
+
+        auto response_msg = new MirPlatformMessage(msg->opcode);
+        auto r = reinterpret_cast<char*>(&response);
+        response_msg->data.assign(r, r + sizeof(response));
 
         return response_msg;
     }
@@ -183,4 +277,29 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
     }
 
     return mir_format;
+}
+
+void* mclm::ClientPlatform::request_interface(char const* extension_name, int version)
+{
+    if (!strcmp("mir_extension_mesa_drm_auth", extension_name) && (version == 1))
+        return &drm_extensions;
+    if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
+        return &mesa_auth;
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
+        return &gbm_buffer;
+
+    return nullptr;
+}
+
+uint32_t mclm::ClientPlatform::native_format_for(MirPixelFormat format) const
+{
+    return mgm::mir_format_to_gbm_format(format);
+}
+
+uint32_t mclm::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size size) const
+{
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
+    if (size.width.as_uint32_t() >= 800 && size.height.as_uint32_t() >= 600)
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    return bo_flags;
 }

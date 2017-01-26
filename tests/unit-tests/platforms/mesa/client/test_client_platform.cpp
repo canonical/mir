@@ -20,13 +20,22 @@
 #include "mir/shared_library.h"
 #include "mir/raii.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "src/client/mir_connection.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir_protobuf.pb.h"
+#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir/test/doubles/stub_connection_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
+
+#include "gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,6 +45,8 @@
 namespace mcl = mir::client;
 namespace mclm = mir::client::mesa;
 namespace mtf = mir_test_framework;
+namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -52,17 +63,25 @@ struct StubClientContext : mcl::ClientContext
     {
         memset(&graphics_module, 0, sizeof(graphics_module));
     }
+    MirWaitHandle* platform_operation(
+        MirPlatformMessage const*, MirPlatformOperationCallback, void*) override
+    {
+        return nullptr;
+    }
 };
 
 struct MesaClientPlatformTest : testing::Test
 {
     MirPlatformMessage* set_gbm_device(gbm_device* dev)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto request_msg = mir::raii::deleter_for(
             mir_platform_message_create(MirMesaPlatformOperation::set_gbm_device),
             &mir_platform_message_release);
         MirMesaSetGBMDeviceRequest const request{dev};
         mir_platform_message_set_data(request_msg.get(), &request, sizeof(request));
+#pragma GCC diagnostic pop
 
         return platform->platform_operation(request_msg.get());
     }
@@ -92,17 +111,18 @@ TEST_F(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
 
 TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
 {
-    using namespace testing;
-
     int const success{0};
     auto const gbm_dev_dummy = reinterpret_cast<gbm_device*>(this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto response_msg = mir::raii::deleter_for(
         set_gbm_device(gbm_dev_dummy),
         &mir_platform_message_release);
 
     ASSERT_THAT(response_msg, NotNull());
     auto const response_data = mir_platform_message_get_data(response_msg.get());
+#pragma GCC diagnostic pop
     ASSERT_THAT(response_data.size, Eq(sizeof(MirMesaSetGBMDeviceResponse)));
 
     MirMesaSetGBMDeviceResponse response{-1};
@@ -112,19 +132,22 @@ TEST_F(MesaClientPlatformTest, handles_set_gbm_device_platform_operation)
 
 TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
 {
-    using namespace testing;
-
     MirPlatformPackage pkg;
     platform->populate(pkg);
     int const previous_data_count{pkg.data_items};
     auto const gbm_dev_dummy = reinterpret_cast<gbm_device*>(this);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto response_msg = mir::raii::deleter_for(
         set_gbm_device(gbm_dev_dummy),
         &mir_platform_message_release);
+#pragma GCC diagnostic pop
 
     platform->populate(pkg);
-    EXPECT_THAT(pkg.data_items, Eq(previous_data_count + (sizeof(gbm_dev_dummy) / sizeof(int))));
+    EXPECT_THAT(pkg.data_items,
+                Eq(static_cast<int>(previous_data_count +
+                                    (sizeof(gbm_dev_dummy) / sizeof(int)))));
 
     gbm_device* device_in_package{nullptr};
     std::memcpy(&device_in_package, &pkg.data[previous_data_count],
@@ -135,8 +158,6 @@ TEST_F(MesaClientPlatformTest, appends_gbm_device_to_platform_package)
 
 TEST_F(MesaClientPlatformTest, returns_gbm_compatible_pixel_formats_only)
 {
-    using namespace testing;
-
     auto const d = reinterpret_cast<EGLDisplay>(0x1234);
     auto const c = reinterpret_cast<EGLConfig>(0x5678);
 
@@ -168,4 +189,50 @@ TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_sur
 {
     auto egl_native_window = platform->create_egl_native_window(nullptr);
     EXPECT_NE(nullptr, egl_native_window);
+}
+
+TEST_F(MesaClientPlatformTest, can_allocate_buffer)
+{
+    using namespace std::literals::chrono_literals;
+
+    mtd::StubConnectionConfiguration conf(platform);
+    MirConnection connection(conf);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+#pragma GCC diagnostic pop
+
+    int width = 32;
+    int height = 90;
+    auto ext = static_cast<MirExtensionGbmBufferV1*>(
+        platform->request_interface("mir_extension_gbm_buffer", 1));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_gbm, Ne(nullptr));
+
+    auto call_count = conf.channel->channel_call_count;
+    ext->allocate_buffer_gbm(
+        &connection,
+        width, height,
+        GBM_FORMAT_ARGB8888, 0,
+        [] (::MirBuffer*, void*) {}, nullptr);
+    EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
+}
+
+TEST_F(MesaClientPlatformTest, converts_gbm_format_correctly)
+{
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_argb_8888), Eq(GBM_FORMAT_ARGB8888));
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_xrgb_8888), Eq(GBM_FORMAT_XRGB8888));
+}
+
+TEST_F(MesaClientPlatformTest, converts_gbm_flags_correctly)
+{
+    auto render_flag = GBM_BO_USE_RENDERING;
+    auto render_and_scanout_flag = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+
+    geom::Size large_size {800, 600}; 
+    geom::Size small_size {400, 100}; 
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_software, large_size), Eq(render_and_scanout_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_software, small_size), Eq(render_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_hardware, large_size), Eq(render_and_scanout_flag));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_hardware, small_size), Eq(render_flag));
 }

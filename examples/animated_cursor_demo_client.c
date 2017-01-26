@@ -66,7 +66,7 @@ void animate_cursor(MirBufferStream *stream)
     mir_buffer_stream_swap_buffers_sync(stream);
 }
 
-MirBufferStream* make_cursor_stream(MirConnection *connection, MirSurface *surface)
+MirBufferStream* make_cursor_stream(MirConnection *connection, MirWindow *surface)
 {
     MirBufferStream* stream = mir_connection_create_buffer_stream_sync(connection,
       24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);
@@ -74,7 +74,7 @@ MirBufferStream* make_cursor_stream(MirConnection *connection, MirSurface *surfa
     animate_cursor(stream);
 
     MirCursorConfiguration* conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(surface, conf));
+    mir_window_configure_cursor(surface, conf);
     mir_cursor_configuration_destroy(conf);
     
     return stream;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     mir_eglapp_swap_buffers();
 
     MirBufferStream* stream = make_cursor_stream(mir_eglapp_native_connection(),
-        mir_eglapp_native_surface());
+        mir_eglapp_native_window());
 
     while (mir_eglapp_running())
     {

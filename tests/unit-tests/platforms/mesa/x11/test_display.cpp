@@ -222,3 +222,27 @@ TEST_F(X11DisplayTest, adjusts_resolution_with_respect_to_screen_size)
 
     EXPECT_THAT(reported_resolution, Eq(geom::Size{pixel.width.as_uint32_t()-border, pixel.height.as_uint32_t()-border}));
 }
+
+TEST_F(X11DisplayTest, updates_scale_property_correctly)
+{
+    auto const scale = 2.2f;
+    auto display = create_display();
+    auto config = display->configuration();
+
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput &conf_output)
+    {
+        conf_output.scale = scale;
+    });
+    display->configure(*config.get());
+
+    auto new_scale = 1.0f;
+    config = display->configuration();
+    config->for_each_output(
+        [&new_scale](mg::DisplayConfigurationOutput const& output)
+        {
+            new_scale = output.scale;
+        }
+        );
+
+    EXPECT_THAT(new_scale, Eq(scale));
+}

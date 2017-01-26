@@ -17,12 +17,11 @@
  */
 
 #include "global_event_sender.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
 
 namespace mg=mir::graphics;
 namespace ms=mir::scene;
-namespace mi=mir::input;
 
 ms::GlobalEventSender::GlobalEventSender(std::shared_ptr<SessionContainer> const& session_container)
     : sessions(session_container)
@@ -47,11 +46,11 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
-void ms::GlobalEventSender::handle_input_device_change(std::vector<std::shared_ptr<mi::Device>> const& devices)
+void ms::GlobalEventSender::handle_input_config_change(MirInputConfig const& config)
 {
-    sessions->for_each([&devices](std::shared_ptr<ms::Session> const& session)
+    sessions->for_each([&config](std::shared_ptr<ms::Session> const& session)
     {
-        session->send_input_device_change(devices);
+        session->send_input_config(config);
     });
 }
 
@@ -76,7 +75,7 @@ void ms::GlobalEventSender::update_buffer(graphics::Buffer&)
 {
 }
 
-void ms::GlobalEventSender::error_buffer(graphics::BufferProperties const&, std::string const&)
+void ms::GlobalEventSender::error_buffer(geometry::Size, MirPixelFormat, std::string const&)
 {
 }
 

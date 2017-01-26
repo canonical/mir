@@ -99,6 +99,19 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return mir_pixel_format_invalid;
     }
+    void* request_interface(char const*, int) override
+    {
+        return nullptr;
+    }
+    uint32_t native_format_for(MirPixelFormat) const override
+    {
+        return 0u;
+    }
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override
+    {
+        return 0u;
+    }
+
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
 };
@@ -302,7 +315,7 @@ TEST_F(ClientBufferStream, uses_buffer_message_from_server)
     service_requests_for(1);
 }
 
-TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
+TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_swap_buffers)
 {
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -313,10 +326,10 @@ TEST_F(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 }
 
-TEST_F(ClientBufferStream, invokes_callback_on_next_buffer)
+TEST_F(ClientBufferStream, invokes_callback_on_swap_buffers)
 {
     mp::Buffer buffer;
     mcl::BufferStream bs{
@@ -331,7 +344,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_next_buffer)
             InvokeWithoutArgs([&bs, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
-    bs.next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
+    bs.swap_buffers([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
     EXPECT_EQ(callback_invoked, true);
 }
 
@@ -385,7 +398,7 @@ TEST_F(ClientBufferStream, returns_current_client_buffer)
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
 
     async_buffer_arrives(protobuf_buffer_2);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
@@ -416,7 +429,7 @@ TEST_F(ClientBufferStream, caches_width_and_height_in_case_of_partial_updates)
     service_requests_for(1);
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
     async_buffer_arrives(protobuf_buffer_2);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
@@ -476,7 +489,7 @@ TEST_F(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
     bs.secure_for_cpu_write();
     bs.secure_for_cpu_write();
 
-    bs.request_and_wait_for_next_buffer();
+    bs.swap_buffers_sync();
     EXPECT_EQ(&second_expected_memory_region, bs.secure_for_cpu_write().get());
     bs.secure_for_cpu_write();
     bs.secure_for_cpu_write();
@@ -528,7 +541,7 @@ TEST_F(ClientBufferStream, perf_report_starts_frame_at_securing)
     (void)bs.secure_for_cpu_write();
 }
 
-TEST_F(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
+TEST_F(ClientBufferStream, perf_report_ends_frame_at_swap_buffers)
 {
     NiceMock<MockPerfReport> mock_perf_report;
     EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(1);
@@ -543,12 +556,12 @@ TEST_F(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
     service_requests_for(2);
 
     (void)bs.get_current_buffer();
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 }
 
 TEST_F(ClientBufferStream, receives_unsolicited_buffer)
 {
-    int id = 88;
+    auto id = 88u;
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
@@ -574,7 +587,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
     async_buffer_arrives(another_buffer_package);
-    bs.next_buffer([]{});
+    bs.swap_buffers([]{});
 
     EXPECT_THAT(bs.get_current_buffer().get(), Eq(&second_mock_client_buffer));
     EXPECT_THAT(bs.get_current_buffer_id(), Eq(id));
@@ -608,7 +621,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
             started = true;
             cv.notify_all();
         }
-        bs.request_and_wait_for_next_buffer();
+        bs.swap_buffers_sync();
     });
 
     std::unique_lock<decltype(mutex)> lk(mutex);
@@ -619,7 +632,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 
     EXPECT_THROW({
-        bs.request_and_wait_for_next_buffer();
+        bs.swap_buffers_sync();
     }, std::exception);
 }
 
@@ -635,7 +648,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_hand
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    wh = bs.next_buffer(
+    wh = bs.swap_buffers(
         [&]
         {
             if (wh)
@@ -657,7 +670,7 @@ TEST_F(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
         response, perf_report, "", size, nbuffers};
     service_requests_for(mock_protobuf_server.alloc_count);
 
-    wh = bs.next_buffer(
+    wh = bs.swap_buffers(
         [&]
         {
             if (wh)
@@ -759,7 +772,7 @@ TEST_F(ClientBufferStream, keeps_accurate_buffer_id)
         async_buffer_arrives(buffer);
     }
 
-    EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
+    EXPECT_THAT(stream.get_current_buffer_id(), Eq(10u));
 }
 
 //LP: #1584784
@@ -778,6 +791,17 @@ TEST_F(ClientBufferStream, can_cycle_through_available_buffers_without_waiting)
     for(auto i = 0u; i < mock_protobuf_server.alloc_count; i++)
     {
         bs.get_current_buffer();
-        bs.next_buffer([&count]{ count++;});
+        bs.swap_buffers([&count]{ count++;});
     }
+}
+
+TEST_F(ClientBufferStream, ignores_interval_request_when_interval_is_already_correct_value)
+{
+    mcl::BufferStream bs{
+        nullptr, nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
 }

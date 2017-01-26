@@ -80,3 +80,18 @@ MirPixelFormat mcle::ClientPlatform::get_egl_pixel_format(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error{"EGL support unimplemented"});
 }
+
+void* mcle::ClientPlatform::request_interface(char const*, int)
+{
+    return nullptr;
+}
+
+uint32_t mcle::ClientPlatform::native_format_for(MirPixelFormat) const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error{"no buffer support"});
+}
+
+uint32_t mcle::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error{"no buffer support"});
+}

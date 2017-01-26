@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types.h"
 
+#include <memory>
 #include <gmock/gmock.h>
 
 
@@ -85,6 +86,10 @@ bool compare_display_configurations(
     graphics::DisplayConfiguration const& display_config1,
     MirDisplayConfiguration const* display_config2);
 
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    std::shared_ptr<graphics::DisplayConfiguration const> & display_config1,
+    MirDisplayConfiguration const* display_config2);
 
 bool compare_display_configurations(
     testing::MatchResultListener* listener,
@@ -104,6 +109,11 @@ bool compare_display_configurations(
 bool compare_display_configurations(
     testing::MatchResultListener* listener,
     MirDisplayConfig const* config1,
+    MirDisplayConfig const* config2);
+
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
+    std::shared_ptr<graphics::DisplayConfiguration> const& config1,
     MirDisplayConfig const* config2);
 
 MATCHER_P(DisplayConfigMatches, config, "")

@@ -459,7 +459,7 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
     EXPECT_EQ(origin, outputs[0].top_left);
-    EXPECT_EQ(0, outputs[0].current_mode_index);
+    EXPECT_EQ(0u, outputs[0].current_mode_index);
     EXPECT_EQ(physical_size, outputs[0].physical_size_mm);
 
     EXPECT_FALSE(outputs[1].connected);
@@ -510,10 +510,10 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
     EXPECT_EQ(origin, outputs[0].top_left);
-    EXPECT_EQ(0, outputs[0].current_mode_index);
+    EXPECT_EQ(0u, outputs[0].current_mode_index);
     EXPECT_EQ(primary_physical_size, outputs[0].physical_size_mm);
     EXPECT_EQ(format, outputs[0].current_format);
-    ASSERT_EQ(1, outputs[0].pixel_formats.size());
+    ASSERT_EQ(1u, outputs[0].pixel_formats.size());
     EXPECT_EQ(format, outputs[0].pixel_formats[0]);
 
     ASSERT_EQ(1u, outputs[1].modes.size());
@@ -525,10 +525,10 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     EXPECT_TRUE(outputs[1].connected);
     EXPECT_TRUE(outputs[1].used);
     EXPECT_EQ(origin, outputs[1].top_left);
-    EXPECT_EQ(0, outputs[1].current_mode_index);
+    EXPECT_EQ(0u, outputs[1].current_mode_index);
     EXPECT_EQ(external_physical_size, outputs[1].physical_size_mm);
     EXPECT_EQ(format, outputs[1].current_format);
-    ASSERT_EQ(1, outputs[1].pixel_formats.size());
+    ASSERT_EQ(1u, outputs[1].pixel_formats.size());
     EXPECT_EQ(format, outputs[1].pixel_formats[0]);
 
     EXPECT_FALSE(outputs[2].connected);
@@ -911,27 +911,6 @@ TEST_F(Display, reports_vsync)
         mga::OverlayOptimization::enabled);
 
     vsync_fn(mga::DisplayName::primary, {});
-}
-
-TEST_F(Display, reports_correct_card_information)
-{
-    using namespace testing;
-    mga::Display display(
-        stub_db_factory,
-        stub_gl_program_factory,
-        stub_gl_config,
-        null_display_report,
-        null_anw_report,
-        mga::OverlayOptimization::enabled);
-
-    int num_cards = 0;
-    display.configuration()->for_each_card(
-        [&](mg::DisplayConfigurationCard const& config)
-        {
-            EXPECT_THAT(config.max_simultaneous_outputs, Eq(3));
-            num_cards++;
-        });
-    EXPECT_THAT(num_cards, Eq(1));
 }
 
 TEST_F(Display, can_configure_positioning_of_dbs)

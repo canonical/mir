@@ -24,6 +24,7 @@
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 #include "mir_test_framework/visible_surface.h"
 #include "mir/options/option.h"
@@ -36,16 +37,20 @@
 #include <mutex>
 #include <condition_variable>
 
+using namespace ::std::chrono;
+using namespace ::std::chrono_literals;
+using namespace ::testing;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mg = mir::graphics;
+
 namespace
 {
 
 unsigned int const expected_client_buffers = 3;
 int const refresh_rate = 60;
-std::chrono::microseconds const vblank_interval(1000000/refresh_rate);
+microseconds const vblank_interval(1000000/refresh_rate);
 
 class Stats
 {
@@ -67,20 +72,23 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        mir::optional_value<unsigned int> latency;
+        mir::optional_value<float> latency;
+        int buffers_within_one_frame = 0;
 
         for (auto i = submissions.begin(); i != submissions.end();)
         {
             if (i->buffer_id == submission_id)
             {
-                // The server is skipping a frame we gave it, which may or
-                // may not be a bug. TODO: investigate.
-                // EXPECT_TRUE(i == submissions.begin());
+                // The server is skipping a frame we gave it.
                 // Fix it up so our stats aren't skewed by the miss:
                 if (i != submissions.begin())
                     i = submissions.erase(submissions.begin(), i);
 
-                latency = visible_frame - i->visible_frame_when_submitted;
+                unsigned frames = visible_frame - i->visible_frame_when_submitted;
+                latency = frames;
+                if (frames == 1)
+                    ++buffers_within_one_frame;
+
                 i = submissions.erase(i);
                 if (swap_interval > 0)
                     break;
@@ -92,25 +100,23 @@ public:
             }
         }
 
+        if (buffers_within_one_frame > 1)
+            latency = latency.value() -
+                      (1.0f - (1.0f / buffers_within_one_frame));
+
         return latency;
     }
 
-    bool wait_for_posts(unsigned int count, std::chrono::milliseconds timeout)
+    unsigned int frames_composited() const
     {
-        std::unique_lock<std::mutex> lock(mutex);
-        auto const deadline = std::chrono::system_clock::now() + timeout;
-        while (visible_frame < count)
-        {
-            if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
-                return false;
-        }
-        return true;
+        std::lock_guard<std::mutex> lock(mutex);
+        return visible_frame;
     }
 
     unsigned int swap_interval{1};
 
 private:
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::condition_variable posted;
     unsigned int visible_frame{0};
 
@@ -189,11 +195,11 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        unsigned int sum {0};
+        float sum = 0.0f;
         for(auto& s : latency_list)
             sum += s;
 
-        return static_cast<float>(sum) / latency_list.size();
+        return sum / latency_list.size();
     }
 
     void dump_latency()
@@ -203,13 +209,13 @@ public:
         unsigned const size = latency_list.size();
         unsigned const cols = 10u;
 
-        fprintf(file, "%s%u frames sampled, averaging %.1f frames latency\n",
+        fprintf(file, "%s%u frames sampled, averaging %.3f frames latency\n",
                 prefix, size, average_latency());
         for (unsigned i = 0; i < size; ++i)
         {
             if ((i % cols) == 0)
                 fprintf(file, "%s%2u:", prefix, i);
-            fprintf(file, " %2d", latency_list[i]);
+            fprintf(file, " %5.2f", latency_list[i]);
             if ((i % cols) == cols-1)
                 fprintf(file, "\n");
         }
@@ -217,15 +223,15 @@ public:
             fprintf(file, "\n");
     }
 
-    unsigned int max_latency() const
+    float max_latency() const
     {
         return max;
     }
 
 private:
     std::mutex mutex;
-    std::vector<unsigned int> latency_list;
-    unsigned int max = 0;
+    std::vector<float> latency_list;
+    float max = 0;
     Stats& stats;
     IdCollectingDB db;
 };
@@ -235,12 +241,36 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingDisplay(Stats& stats)
         : group{stats}
     {
+        mg::DisplayConfigurationOutput output{
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{1},
+            mg::DisplayConfigurationOutputType::hdmia,
+            std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+            {{{1920,1080}, refresh_rate}},  // <=== Refresh rate must be valid
+            0, mir::geometry::Size{}, true, true, mir::geometry::Point{}, 0,
+            mir_pixel_format_abgr_8888, mir_power_mode_on,
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor,
+            mir_subpixel_arrangement_unknown,
+            {},
+            mir_output_gamma_unsupported,
+            {}
+        };
+        outputs.push_back(output);
+    }
+
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        return std::make_unique<mtd::StubDisplayConfig>(outputs);
     }
 
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
         f(group);
     }
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
     TimeTrackingGroup group;
 };
  
@@ -251,11 +281,12 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
-            mir_connection_create_spec_for_normal_surface(
-                connection, 100, 100, mir_pixel_format_abgr_8888),
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(
+            mir_create_normal_window_spec(connection, 100, 100),
             del);
+        mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
+
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;
 
@@ -270,7 +301,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 
     Stats stats;
     TimeTrackingDisplay display{stats};
-    unsigned int test_submissions{100};
+    unsigned int test_frames{100};
 
     // We still have a margin for error here. The client and server will
     // be scheduled somewhat unpredictably which affects results. Also
@@ -278,23 +309,93 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
     std::unique_ptr<mtf::VisibleSurface> visible_surface;
-    MirSurface* surface;
+    MirWindow* surface;
 };
 }
 
-TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
+TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
 {
-    using namespace testing;
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
 
-    auto stream = mir_surface_get_buffer_stream(surface);
-    for(auto i = 0u; i < test_submissions; i++) {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+
+    auto average_latency = display.group.average_latency();
+
+    EXPECT_NEAR(1.0f, average_latency, error_margin);
+}
+
+TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    auto max_latency = display.group.max_latency();
+    EXPECT_THAT(max_latency, Le(expected_client_buffers));
+}
+
+TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    mir_buffer_stream_set_swapinterval(stream, 0);
+    stats.swap_interval = 0;
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    auto average_latency = display.group.average_latency();
+    EXPECT_THAT(average_latency, Lt(0.5f));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+}
+
+TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
+{
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
@@ -304,41 +405,50 @@ TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
     EXPECT_THAT(average_latency, Lt(expected_client_buffers));
 }
 
-TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
+TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
 {
-    using namespace testing;
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
 
-    auto stream = mir_surface_get_buffer_stream(surface);
-    for(auto i = 0u; i < test_submissions; i++) {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
-        mir_buffer_stream_swap_buffers_sync(stream);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
 
     auto max_latency = display.group.max_latency();
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
 }
 
-TEST_F(ClientLatency, dropping_latency_is_limited_to_one)
+TEST_F(ClientLatency, async_swap_dropping_latency_is_closer_to_zero_than_one)
 {
-    using namespace testing;
-
-    auto stream = mir_surface_get_buffer_stream(surface);
+    auto stream = mir_window_get_buffer_stream(surface);
     mir_buffer_stream_set_swapinterval(stream, 0);
     stats.swap_interval = 0;
+    auto const deadline = steady_clock::now() + 60s;
 
-    do
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
     {
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
-        mir_buffer_stream_swap_buffers_sync(stream);
-    } while (!stats.wait_for_posts(test_submissions, std::chrono::seconds(0)));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_wait_for(mir_buffer_stream_swap_buffers(stream, NULL, NULL));
+#pragma GCC diagnostic pop
+    }
 
-    auto max_latency = display.group.max_latency();
-    EXPECT_THAT(max_latency, Le(1u));
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    auto average_latency = display.group.average_latency();
+    EXPECT_THAT(average_latency, Lt(0.5f));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
@@ -346,25 +456,24 @@ TEST_F(ClientLatency, dropping_latency_is_limited_to_one)
 
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
-    using namespace testing;
-
     int const throttled_input_rate = refresh_rate * 3 / 4;
-    std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
-    auto next_input_event = std::chrono::high_resolution_clock::now();
+    microseconds const input_interval(1000000/throttled_input_rate);
+    auto next_input_event = high_resolution_clock::now();
+    auto stream = mir_window_get_buffer_stream(surface);
+    auto const deadline = steady_clock::now() + 60s;
 
-    auto stream = mir_surface_get_buffer_stream(surface);
-    for (auto i = 0u; i < test_submissions; i++)
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
     {
         std::this_thread::sleep_until(next_input_event);
         next_input_event += input_interval;
 
-        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
-                                     std::chrono::seconds(60)));
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();

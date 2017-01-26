@@ -23,6 +23,7 @@
 #include "mir/raii.h"
 
 #include "mir_toolkit/mir_connection.h"
+#include "mir_toolkit/mir_display_configuration.h"
 #include "mir_toolkit/mir_blob.h"
 
 #include <boost/throw_exception.hpp>
@@ -36,20 +37,20 @@ namespace mgn = mg::nested;
 
 namespace
 {
-auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
+auto copy_config(MirDisplayConfig* conf) -> std::shared_ptr<MirDisplayConfig>
 {
     auto const blob = mir::raii::deleter_for(
-        mir_blob_from_display_configuration(conf),
+        mir_blob_from_display_config(conf),
         [] (MirBlob* b) { mir_blob_release(b); });
 
-    return std::shared_ptr<MirDisplayConfiguration>{
-        mir_blob_to_display_configuration(blob.get()),
-        [] (MirDisplayConfiguration* c) { if (c) mir_display_config_destroy(c); }};
+    return std::shared_ptr<MirDisplayConfig>{
+        mir_blob_to_display_config(blob.get()),
+        [] (MirDisplayConfig* c) { if (c) mir_display_config_release(c); }};
 }
 }
 
 mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
-    std::shared_ptr<MirDisplayConfiguration> const& display_config)
+    std::shared_ptr<MirDisplayConfig> const& display_config)
     : display_config{display_config}
 {
 }
@@ -64,60 +65,87 @@ mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
 }
 
 void mgn::NestedDisplayConfiguration::for_each_card(
-    std::function<void(DisplayConfigurationCard const&)> f) const
+    std::function<void(DisplayConfigurationCard const&)> /*f*/) const
 {
-    std::for_each(
-        display_config->cards,
-        display_config->cards+display_config->num_cards,
-        [&f](MirDisplayCard const& mir_card)
-        {
-            f({DisplayConfigurationCardId(mir_card.card_id), mir_card.max_simultaneous_outputs});
-        });
+    // TODO Remove as the information is not known
+}
+
+mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_output_config_from(MirOutput const* output) const
+{
+    size_t num_pixel_formats = mir_output_get_num_pixel_formats(output);
+    std::vector<MirPixelFormat> formats;
+
+    for (size_t n_pf = 0; n_pf < num_pixel_formats; n_pf++)
+    {
+        formats.push_back(mir_output_get_pixel_format(output, n_pf));
+    }
+
+    size_t num_modes = mir_output_get_num_modes(output);
+    std::vector<DisplayConfigurationMode> modes;
+
+    for (size_t n_m = 0; n_m < num_modes; n_m++)
+    {
+        auto mode         = mir_output_get_mode(output, n_m);
+        auto width        = mir_output_mode_get_width(mode);
+        auto height       = mir_output_mode_get_height(mode);
+        auto refresh_rate = mir_output_mode_get_refresh_rate(mode);
+        modes.push_back(DisplayConfigurationMode{{width, height}, refresh_rate});
+    }
+
+    auto output_id       = mir_output_get_id(output);
+    auto output_type     = mir_output_get_type(output);
+    auto width_mm        = mir_output_get_physical_width_mm(output);
+    auto height_mm       = mir_output_get_physical_height_mm(output);
+    auto connected       = mir_output_get_connection_state(output);
+    auto used            = mir_output_is_enabled(output);
+    auto position_x      = mir_output_get_position_x(output);
+    auto position_y      = mir_output_get_position_y(output);
+    auto current_format  = mir_output_get_current_pixel_format(output);
+    auto power_mode      = mir_output_get_power_mode(output);
+    auto orientation     = mir_output_get_orientation(output);
+    auto local_config    = get_local_config_for(output_id);
+    uint32_t preferred_index = mir_output_get_preferred_mode_index(output);
+    uint32_t current_index   = mir_output_get_current_mode_index(output);
+
+    std::vector<uint8_t> edid;
+    auto edid_size = mir_output_get_edid_size(output);
+    auto edid_start = mir_output_get_edid(output);
+    if (edid_size && edid_start)
+        edid.assign(edid_start, edid_start+edid_size);
+
+    return mg::DisplayConfigurationOutput{
+        DisplayConfigurationOutputId(output_id),
+        DisplayConfigurationCardId(0), // Information not around
+        DisplayConfigurationOutputType(output_type),
+        std::move(formats),
+        std::move(modes),
+        preferred_index,
+        geometry::Size{width_mm, height_mm},
+        connected == mir_output_connection_state_connected,
+        used,
+        geometry::Point{position_x, position_y},
+        current_index,
+        current_format,
+        power_mode,
+        orientation,
+        local_config.scale,
+        local_config.form_factor,
+        local_config.subpixel_arrangement,
+        local_config.gamma,
+        local_config.gamma_supported,
+        std::move(edid)
+    };
 }
 
 void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
 {
-    std::for_each(
-        display_config->outputs,
-        display_config->outputs+display_config->num_outputs,
-        [&f, this](MirDisplayOutput const& mir_output)
-        {
-            std::vector<MirPixelFormat> formats;
-            formats.reserve(mir_output.num_output_formats);
-            for (auto p = mir_output.output_formats; p != mir_output.output_formats+mir_output.num_output_formats; ++p)
-                formats.push_back(MirPixelFormat(*p));
-
-            std::vector<DisplayConfigurationMode> modes;
-            modes.reserve(mir_output.num_modes);
-            for (auto p = mir_output.modes; p != mir_output.modes+mir_output.num_modes; ++p)
-                modes.push_back(DisplayConfigurationMode{{p->horizontal_resolution, p->vertical_resolution}, p->refresh_rate});
-
-            auto local_config = get_local_config_for(mir_output.output_id);
-
-            DisplayConfigurationOutput const output{
-                DisplayConfigurationOutputId(mir_output.output_id),
-                DisplayConfigurationCardId(mir_output.card_id),
-                DisplayConfigurationOutputType(mir_output.type),
-                std::move(formats),
-                std::move(modes),
-                mir_output.preferred_mode,
-                geometry::Size{mir_output.physical_width_mm, mir_output.physical_height_mm},
-                !!mir_output.connected,
-                !!mir_output.used,
-                geometry::Point{mir_output.position_x, mir_output.position_y},
-                mir_output.current_mode,
-                mir_output.current_format,
-                mir_output.power_mode,
-                mir_output.orientation,
-                local_config.scale,
-                local_config.form_factor,
-                local_config.subpixel_arrangement,
-                local_config.gamma,
-                local_config.gamma_supported
-            };
-
-            f(output);
-        });
+    size_t num_outputs = mir_display_config_get_num_outputs(display_config.get());
+    for (size_t n_o = 0; n_o < num_outputs; n_o++)
+    {
+        auto mir_output = mir_display_config_get_output(display_config.get(), n_o);
+        DisplayConfigurationOutput const output(create_display_output_config_from(mir_output));
+        f(output);
+    }
 }
 
 void mgn::NestedDisplayConfiguration::for_each_output(
@@ -126,71 +154,42 @@ void mgn::NestedDisplayConfiguration::for_each_output(
     // This is mostly copied and pasted from the const version above, but this
     // mutable version copies user-changes to the output structure at the end.
 
-    std::for_each(
-        display_config->outputs,
-        display_config->outputs+display_config->num_outputs,
-        [&f, this](MirDisplayOutput& mir_output)
+    size_t num_outputs = mir_display_config_get_num_outputs(display_config.get());
+    for (size_t n_o = 0; n_o < num_outputs; n_o++)
+    {
+        auto mir_output = mir_display_config_get_mutable_output(display_config.get(), n_o);
+        DisplayConfigurationOutput output(create_display_output_config_from(mir_output));
+        UserDisplayConfigurationOutput user(output);
+
+        f(user);
+
+        auto output_id = mir_output_get_id(mir_output);
+        set_local_config_for(output_id,
+            {user.scale, user.form_factor, user.subpixel_arrangement,
+             user.gamma, user.gamma_supported});
+
+        if (mir_output_get_num_modes(mir_output) > 0)
         {
-            std::vector<MirPixelFormat> formats;
-            formats.reserve(mir_output.num_output_formats);
-            for (auto p = mir_output.output_formats;
-                 p != mir_output.output_formats+mir_output.num_output_formats;
-                 ++p)
+            mir_output_set_current_mode(mir_output, mir_output_get_mode(mir_output, output.current_mode_index));
+            mir_output_set_pixel_format(mir_output, output.current_format);
+            mir_output_set_position(mir_output, output.top_left.x.as_int(), output.top_left.y.as_int());
+            mir_output_set_power_mode(mir_output, output.power_mode);
+            mir_output_set_orientation(mir_output, output.orientation);
+
+            if (output.used)
             {
-                formats.push_back(*p);
+                mir_output_enable(mir_output);
             }
-
-            std::vector<DisplayConfigurationMode> modes;
-            modes.reserve(mir_output.num_modes);
-            for (auto p = mir_output.modes;
-                 p != mir_output.modes+mir_output.num_modes;
-                 ++p)
+            else
             {
-                modes.push_back(
-                    DisplayConfigurationMode{
-                        {p->horizontal_resolution, p->vertical_resolution},
-                        p->refresh_rate});
+                mir_output_disable(mir_output);
             }
-
-            auto local_config = get_local_config_for(mir_output.output_id);
-
-            DisplayConfigurationOutput output{
-                DisplayConfigurationOutputId(mir_output.output_id),
-                DisplayConfigurationCardId(mir_output.card_id),
-                DisplayConfigurationOutputType(mir_output.type),
-                std::move(formats),
-                std::move(modes),
-                mir_output.preferred_mode,
-                geometry::Size{mir_output.physical_width_mm,
-                               mir_output.physical_height_mm},
-                !!mir_output.connected,
-                !!mir_output.used,
-                geometry::Point{mir_output.position_x, mir_output.position_y},
-                mir_output.current_mode,
-                mir_output.current_format,
-                mir_output.power_mode,
-                mir_output.orientation,
-                local_config.scale,
-                local_config.form_factor,
-                local_config.subpixel_arrangement,
-                local_config.gamma,
-                local_config.gamma_supported
-            };
-            UserDisplayConfigurationOutput user(output);
-
-            f(user);
-
-            set_local_config_for(mir_output.output_id, {user.scale, user.form_factor, user.subpixel_arrangement,
-                                                        user.gamma, user.gamma_supported});
-
-            mir_output.current_mode = output.current_mode_index;
-            mir_output.current_format = output.current_format;
-            mir_output.position_x = output.top_left.x.as_int();
-            mir_output.position_y = output.top_left.y.as_int();
-            mir_output.used = output.used;
-            mir_output.power_mode = output.power_mode;
-            mir_output.orientation = output.orientation;
-        });
+        }
+        else
+        {
+            mir_output_disable(mir_output);
+        }
+    }
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplayConfiguration::clone() const

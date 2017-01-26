@@ -181,7 +181,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector2_physical_size_mm{};
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
-    size_t const max_simultaneous_outputs{1};
 
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
@@ -207,15 +206,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
 
     resources.prepare();
 
-    /* Expected results */
-    std::vector<mg::DisplayConfigurationCard> const expected_cards =
-    {
-        {
-            mg::DisplayConfigurationCardId{0},
-            max_simultaneous_outputs
-        }
-    };
-
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
         {
@@ -237,7 +227,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -258,7 +249,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -279,7 +271,8 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         }
     };
 
@@ -287,15 +280,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
-
-    size_t card_count{0};
-
-    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
-    {
-        ASSERT_LT(card_count, expected_cards.size());
-        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
-        ++card_count;
-    });
 
     size_t output_count{0};
 
@@ -360,7 +344,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {
@@ -446,7 +430,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
         auto conf = display->configuration();
 
 
-        size_t output_count{0};
+        int output_count{0};
 
         conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                               {
@@ -557,16 +541,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     };
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
-    size_t const max_simultaneous_outputs{1};
-
-    /* Expected results */
-    std::vector<mg::DisplayConfigurationCard> const expected_cards =
-    {
-        {
-            mg::DisplayConfigurationCardId{0},
-            max_simultaneous_outputs
-        }
-    };
 
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
@@ -589,7 +563,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -610,7 +585,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -635,7 +611,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -656,7 +633,8 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -685,15 +663,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
-
-    size_t card_count{0};
-
-    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
-    {
-        ASSERT_LT(card_count, expected_cards.size());
-        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
-        ++card_count;
-    });
 
     size_t output_count{0};
 
@@ -733,15 +702,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     ASSERT_TRUE(handler_signal.wait_for(10s));
 
     conf = display->configuration();
-
-    card_count = 0;
-
-    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
-    {
-        ASSERT_LT(card_count, expected_cards.size());
-        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
-        ++card_count;
-    });
 
     output_count = 0;
 
@@ -790,7 +750,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 
@@ -816,7 +777,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             mir_form_factor_monitor,
             mir_subpixel_arrangement_unknown,
             {},
-            mir_output_gamma_unsupported
+            mir_output_gamma_unsupported,
+            {}
         },
     };
 

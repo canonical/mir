@@ -39,7 +39,7 @@ namespace mtd=mir::test::doubles;
 
 struct MockMirSurface : public mcl::EGLNativeSurface
 {
-    MockMirSurface(MirSurfaceParameters params) :
+    MockMirSurface(MirWindowParameters params) :
         params(params),
         client_buffer(std::make_shared<mtd::MockClientBuffer>()),
         buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
@@ -54,12 +54,13 @@ struct MockMirSurface : public mcl::EGLNativeSurface
                 std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
     }
 
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD0(request_and_wait_for_next_buffer, void());
-    MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
+    MOCK_METHOD0(swap_buffers_sync, void());
+    MOCK_METHOD2(request_and_wait_for_configure, void(MirWindowAttrib, int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
-    MirSurfaceParameters params;
+    MOCK_METHOD1(set_size, void(geom::Size));
+    MirWindowParameters params;
     std::shared_ptr<mtd::MockClientBuffer> client_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> buffer;
 };
@@ -79,7 +80,7 @@ protected:
             .WillByDefault(Return(std::make_shared<mtd::StubAndroidNativeBuffer>()));
     }
 
-    MirSurfaceParameters surf_params;
+    MirWindowParameters surf_params;
     std::shared_ptr<mtd::MockClientBuffer> mock_client_buffer;
 };
 
@@ -123,7 +124,7 @@ TEST_F(AndroidInterpreter, advances_surface_on_buffer_return)
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
 
-    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+    EXPECT_CALL(mock_surface, swap_buffers_sync())
         .Times(1);
 
     interpreter.driver_returns_buffer(&buffer, -1);
@@ -223,8 +224,8 @@ TEST_F(AndroidInterpreter, requests_swapinterval_change)
 {
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     testing::InSequence seq;
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 1));
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 0));
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval, 1));
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval, 0));
 
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
     interpreter.sync_to_display(true); 
@@ -243,8 +244,8 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
 TEST_F(AndroidInterpreter, returns_proper_usage_bits_based_on_surface)
 {
     using namespace testing;
-    MirSurfaceParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
-    MirSurfaceParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
+    MirWindowParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
+    MirWindowParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
@@ -260,4 +261,14 @@ TEST_F(AndroidInterpreter, returns_proper_usage_bits_based_on_surface)
         GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE;
     EXPECT_THAT(interpreter.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(software_bits));
     EXPECT_THAT(interpreter.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(hardware_bits));
+}
+
+TEST_F(AndroidInterpreter, request_to_set_buffer_size_ignores_duplicate_sizing_requests)
+{
+    geom::Size new_size { 10, 12 };
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    EXPECT_CALL(mock_surface, set_size(new_size));
+    mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
+    interpreter.dispatch_driver_request_buffer_size({surf_params.width, surf_params.height}); 
+    interpreter.dispatch_driver_request_buffer_size(new_size); 
 }

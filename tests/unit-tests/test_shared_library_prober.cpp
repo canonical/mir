@@ -75,7 +75,7 @@ public:
 TEST_F(SharedLibraryProber, returns_non_empty_list_for_path_containing_libraries)
 {
     auto libraries = mir::libraries_for_path(library_path, null_report);
-    EXPECT_GE(libraries.size(), 1);
+    EXPECT_GE(libraries.size(), 1u);
 }
 
 TEST_F(SharedLibraryProber, raises_exception_for_nonexistent_path)
@@ -116,7 +116,7 @@ TEST_F(SharedLibraryProber, non_existent_path_raises_ENOENT_error)
 TEST_F(SharedLibraryProber, path_with_no_shared_libraries_returns_empty_list)
 {
     auto libraries = mir::libraries_for_path(temporary_directory.c_str(), null_report);
-    EXPECT_EQ(0, libraries.size());
+    EXPECT_EQ(0u, libraries.size());
 }
 
 TEST_F(SharedLibraryProber, logs_start_of_probe)

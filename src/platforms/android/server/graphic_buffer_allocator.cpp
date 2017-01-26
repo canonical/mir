@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "cmdstream_sync_factory.h"
 #include "sync_fence.h"
 #include "android_native_buffer.h"
@@ -28,6 +29,7 @@
 #include "buffer.h"
 #include "device_quirks.h"
 #include "egl_sync_fence.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -56,7 +58,8 @@ mga::GraphicBufferAllocator::GraphicBufferAllocator(
     std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
     std::shared_ptr<DeviceQuirks> const& quirks)
     : egl_extensions(std::make_shared<mg::EGLExtensions>()),
-    cmdstream_sync_factory(cmdstream_sync_factory)
+    cmdstream_sync_factory(cmdstream_sync_factory),
+    quirks(quirks)
 {
     int err;
 
@@ -84,16 +87,22 @@ std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),
-        alloc_device->alloc_buffer(properties.size, properties.format, properties.usage),
+        alloc_device->alloc_buffer(
+            properties.size, 
+            mga::to_android_format(properties.format),
+            mga::convert_to_android_usage(properties.usage)),
         egl_extensions);
 }
 
 std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_framebuffer(
-    geometry::Size sz, MirPixelFormat pf)
+    geometry::Size size, MirPixelFormat pf)
 {
     return std::make_shared<Buffer>(
         reinterpret_cast<gralloc_module_t const*>(hw_module),
-        alloc_device->alloc_framebuffer(sz, pf),
+        alloc_device->alloc_buffer(
+            size, 
+            mga::to_android_format(pf),
+            quirks->fb_gralloc_bits()),
         egl_extensions);
 }
 
@@ -107,4 +116,25 @@ std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats
     };
 
     return pixel_formats;
+}
+
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+    geometry::Size size, MirPixelFormat format)
+{
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_buffer(
+            size,
+            mga::to_android_format(format),
+            mga::convert_to_android_usage(mg::BufferUsage::software)),
+        egl_extensions);
+}
+
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+    geometry::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_buffer(size, native_format, native_flags),
+        egl_extensions);
 }

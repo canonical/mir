@@ -19,65 +19,66 @@
 #include "mir_test_framework/visible_surface.h"
 namespace mtf = mir_test_framework;
 
-mtf::VisibleSurface::VisibleSurface(MirSurfaceSpec* spec) :
+mtf::VisibleSurface::VisibleSurface(MirWindowSpec* spec) :
     visible{false}
 {
-    mir_surface_spec_set_event_handler(spec, VisibleSurface::event_callback, this);
-    surface = mir_surface_create_sync(spec);
-    // Swap buffers to ensure surface is visible for event based tests
-    if (mir_surface_is_valid(surface))
+    mir_window_spec_set_event_handler(spec, VisibleSurface::event_callback, this);
+    window = mir_create_window_sync(spec);
+    // Swap buffers to ensure window is visible for event based tests
+    if (mir_window_is_valid(window))
     {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         std::unique_lock<std::mutex> lk(mutex);
         if (!cv.wait_for(lk, std::chrono::seconds(5), [this] { return visible; }))
-            throw std::runtime_error("timeout waiting for visibility of surface");
+            throw std::runtime_error("timeout waiting for visibility of window");
     }
 }
 
 mtf::VisibleSurface::~VisibleSurface()
 {
-    if (surface) mir_surface_release_sync(surface);
+    if (window) mir_window_release_sync(window);
 }
 
-void mtf::VisibleSurface::event_callback(MirSurface* surf, MirEvent const* ev, void* context)
+void mtf::VisibleSurface::event_callback(MirWindow* surf, MirEvent const* ev, void* context)
 {
-    if (mir_event_get_type(ev) == mir_event_type_surface)
+    if (mir_event_get_type(ev) == mir_event_type_window)
     {
-        if (mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
+        auto attrib = mir_window_event_get_attribute(mir_event_get_window_event(ev));
+        if (attrib == mir_window_attrib_visibility)
         {
             auto ctx = reinterpret_cast<VisibleSurface*>(context);
-            ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
+            ctx->set_visibility(surf, mir_window_event_get_attribute_value(mir_event_get_window_event(ev)));
         }
     }
 }
 
-void mtf::VisibleSurface::set_visibility(MirSurface* surf, bool vis)
+void mtf::VisibleSurface::set_visibility(MirWindow* surf, bool vis)
 {
     std::lock_guard<std::mutex> lk(mutex);
-    if (surf != surface) return;
+    if (surf != window) return;
     visible = vis;
     cv.notify_all();
 }
 
-mtf::VisibleSurface::operator MirSurface*() const
+mtf::VisibleSurface::operator MirWindow*() const
 {
-    return surface;
+    return window;
 }
 
 mtf::VisibleSurface::VisibleSurface(VisibleSurface&& that) :
-    surface{that.surface}
+    window{that.window}
 {
-    that.surface = nullptr;
+    that.window = nullptr;
 }
 
 mtf::VisibleSurface& mtf::VisibleSurface::operator=(VisibleSurface&& that)
 {
-    std::swap(that.surface, surface);
+    std::swap(that.window, window);
     return *this;
 }
 
 std::ostream& mtf::operator<<(std::ostream& os, VisibleSurface const& s)
 {
-    return os << static_cast<MirSurface*>(s);
+    return os << static_cast<MirWindow*>(s);
 }

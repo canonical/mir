@@ -21,9 +21,9 @@
 
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
-#include "mir/input/pointer_configuration.h"
-#include "mir/input/touchpad_configuration.h"
-#include "mir/input/keyboard_configuration.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/optional_value.h"
 
 namespace mir
@@ -54,28 +54,28 @@ struct StubDevice : input::Device
     {
         return device_unique_id;
     }
-    mir::optional_value<input::PointerConfiguration> pointer_configuration() const override
+    mir::optional_value<MirPointerConfig> pointer_configuration() const override
     {
         return {};
     }
-    void apply_pointer_configuration(input::PointerConfiguration const&) override
+    void apply_pointer_configuration(MirPointerConfig const&) override
     {
     }
 
-    mir::optional_value<input::TouchpadConfiguration> touchpad_configuration() const override
+    mir::optional_value<MirTouchpadConfig> touchpad_configuration() const override
     {
         return {};
     }
-    void apply_touchpad_configuration(input::TouchpadConfiguration const&) override
+    void apply_touchpad_configuration(MirTouchpadConfig const&) override
     {
     }
 
-    mir::optional_value<input::KeyboardConfiguration> keyboard_configuration() const override
+    mir::optional_value<MirKeyboardConfig> keyboard_configuration() const override
     {
         return {};
     }
 
-    void apply_keyboard_configuration(input::KeyboardConfiguration const&) override
+    void apply_keyboard_configuration(MirKeyboardConfig const&) override
     {
     }
 

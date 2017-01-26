@@ -52,7 +52,7 @@ public:
                 mt::fake_shared(native_buffer)));
     }
 
-    MirSurfaceParameters surf_params;
+    MirWindowParameters surf_params;
     const char* error_msg = "thrown as part of test";
     mg::mesa::NativeBuffer native_buffer;
     testing::NiceMock<mtd::MockClientBuffer> mock_buffer;
@@ -62,7 +62,7 @@ public:
 
 TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
 {
-    MirSurfaceParameters params;
+    MirWindowParameters params;
     EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_get_parameters(&native_surface, &params));
     EXPECT_EQ(surf_params.width, params.width);
     EXPECT_EQ(surf_params.height, params.height);
@@ -75,7 +75,7 @@ TEST_F(MesaClientNativeSurfaceTest, first_advance_skips_request)
     
     using namespace testing;
     MirBufferPackage buffer_package;
-    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+    EXPECT_CALL(mock_surface, swap_buffers_sync())
         .Times(0);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
@@ -91,7 +91,7 @@ TEST_F(MesaClientNativeSurfaceTest, basic_advance)
     InSequence seq;
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
-    EXPECT_CALL(mock_surface, request_and_wait_for_next_buffer())
+    EXPECT_CALL(mock_surface, swap_buffers_sync())
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
@@ -105,9 +105,9 @@ TEST_F(MesaClientNativeSurfaceTest, swapinterval_request)
     using namespace testing;
 
     Sequence seq;
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,0))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval,0))
         .InSequence(seq);
-    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval,1))
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_window_attrib_swapinterval,1))
         .InSequence(seq);
 
     EXPECT_EQ(MIR_MESA_TRUE, native_surface.set_swapinterval(0));
@@ -140,7 +140,7 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_get_parameters_failure)
     EXPECT_CALL(mock_surface, get_parameters())
         .WillOnce(Throw(std::runtime_error(error_msg)));
 
-    MirSurfaceParameters surface_params;
+    MirWindowParameters surface_params;
     EXPECT_EQ(MIR_MESA_FALSE, native_surface.get_parameters(&surface_params));
 }
 
@@ -158,7 +158,7 @@ TEST_F(MesaClientNativeSurfaceTest, null_native_surface_returns_error)
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
+    MirWindowParameters params;
     MirBufferPackage buffer_package;
 
     mclg::NativeSurface null_native_surface{nullptr};
@@ -175,7 +175,7 @@ TEST_F(MesaClientNativeSurfaceTest, native_surface_after_null_returns_success)
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
+    MirWindowParameters params;
     MirBufferPackage buffer_package;
 
     mclg::NativeSurface native_surface{nullptr};

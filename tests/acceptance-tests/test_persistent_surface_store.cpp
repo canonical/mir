@@ -73,7 +73,7 @@ TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
     auto const shell_server_surface = latest_shell_surface();
     ASSERT_THAT(shell_server_surface, NotNull());
 
-    MirPersistentId* client_surface_id = mir_surface_request_persistent_id_sync(surface);
+    MirPersistentId* client_surface_id = mir_window_request_persistent_id_sync(window);
     msh::PersistentSurfaceStore::Id server_surface_id = server.the_persistent_surface_store()->id_for_surface(shell_server_surface);
 
     std::string client_surface_id_string(mir_persistent_id_as_string(client_surface_id));

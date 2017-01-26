@@ -17,9 +17,9 @@
  */
 
 #include "src/server/scene/mediating_display_changer.h"
-#include "src/server/scene/session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_configuration_report.h"
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/geometry/rectangles.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
@@ -31,6 +31,7 @@
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_session_container.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/doubles/fake_alarm_factory.h"
@@ -75,7 +76,8 @@ auto display_output(
                                               mir_form_factor_phone,
                                               mir_subpixel_arrangement_unknown,
                                               {},
-                                              mir_output_gamma_unsupported
+                                              mir_output_gamma_unsupported,
+                                              {}
         };
 }
 
@@ -102,32 +104,6 @@ public:
     MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
 };
 
-class StubSessionContainer : public ms::SessionContainer
-{
-public:
-    void insert_session(std::shared_ptr<ms::Session> const& session)
-    {
-        sessions.push_back(session);
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const&)
-    {
-    }
-
-    void for_each(std::function<void(std::shared_ptr<ms::Session> const&)> f) const
-    {
-        for (auto const& session : sessions)
-            f(session);
-    }
-
-    std::shared_ptr<ms::Session> successor_of(std::shared_ptr<ms::Session> const&) const
-    {
-        return {};
-    }
-
-private:
-    std::vector<std::shared_ptr<ms::Session>> sessions;
-};
 
 struct MockDisplay : public mtd::MockDisplay
 {
@@ -168,10 +144,21 @@ struct MockServerActionQueue : mir::ServerActionQueue
     MOCK_METHOD1(resume_processing_for, void(void const*));
 };
 
-struct StubDisplayConfigurationReport : mg::DisplayConfigurationReport
+struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
-    void initial_configuration(mg::DisplayConfiguration const&) override {}
-    void new_configuration(mg::DisplayConfiguration const&) override {}
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+    void session_configuration_applied(
+        std::shared_ptr<mf::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration> const&) override {};
+    void session_configuration_removed(std::shared_ptr<mf::Session> const&) override {};
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override {}
+    void catastrophic_configuration_error(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override { }
 };
 
 
@@ -196,11 +183,11 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     testing::NiceMock<MockDisplay> mock_display;
     testing::NiceMock<mtd::MockCompositor> mock_compositor;
     testing::NiceMock<MockDisplayConfigurationPolicy> mock_conf_policy;
-    StubSessionContainer stub_session_container;
+    mtd::StubSessionContainer stub_session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
-    StubDisplayConfigurationReport display_configuration_report;
+    StubDisplayConfigurationObserver display_configuration_report;
     testing::NiceMock<mtd::MockInputRegion> mock_input_region;
     mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
@@ -903,6 +890,33 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
 
     EXPECT_CALL(mock_session1, send_display_config(_));
     EXPECT_CALL(mock_session2, send_display_config(_));
+
+    changer->set_base_configuration(mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_observer_on_set_base_configuration)
+{
+    using namespace testing;
+
+    struct MockDisplayConfigurationObserver : StubDisplayConfigurationObserver
+    {
+        MOCK_METHOD1(base_configuration_updated, void (std::shared_ptr<mg::DisplayConfiguration const> const& base_config));
+    } display_configuration_observer;
+
+    changer = std::make_shared<ms::MediatingDisplayChanger>(
+        mt::fake_shared(mock_display),
+        mt::fake_shared(mock_compositor),
+        mt::fake_shared(mock_conf_policy),
+        mt::fake_shared(stub_session_container),
+        mt::fake_shared(session_event_sink),
+        mt::fake_shared(server_action_queue),
+        mt::fake_shared(display_configuration_observer),
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
+
+    mtd::NullDisplayConfiguration conf;
+
+    EXPECT_CALL(display_configuration_observer, base_configuration_updated(_));
 
     changer->set_base_configuration(mt::fake_shared(conf));
 }

@@ -22,7 +22,7 @@
 #include <math.h>
 #include <fcntl.h>
 #include <GLES2/gl2.h>
-#include <mir_toolkit/mir_surface.h>
+#include <mir_toolkit/mir_window.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -135,14 +135,14 @@ static bool on_input_event(MirInputEvent const* ievent, State* state)
     return false;
 }
 
-static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
+static bool on_surface_event(MirWindowEvent const* wevent, State* state)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sevent);
-    int value = mir_surface_event_get_attribute_value(sevent);
+    MirWindowAttrib attrib = mir_window_event_get_attribute(wevent);
+    int value = mir_window_event_get_attribute_value(wevent);
 
-    if (attrib == mir_surface_attrib_visibility)
+    if (attrib == mir_window_attrib_visibility)
     {
-        if (value == mir_surface_visibility_exposed)
+        if (value == mir_window_visibility_exposed)
         {
             state->reset = true;
             state->occluded = false;
@@ -156,11 +156,10 @@ static bool on_surface_event(MirSurfaceEvent const* sevent, State* state)
     return false;  // Let eglapp handle the same event. We are passive.
 }
 
-static void on_event(MirSurface* surface, MirEvent const* event, void* context)
+static void on_event(MirWindow* surface, MirEvent const* event, void* context)
 {
     bool handled = true;
 
-    (void)surface;
     State* state = (State*)context;
 
     // FIXME: We presently need to know that events come in on a different
@@ -173,8 +172,8 @@ static void on_event(MirSurface* surface, MirEvent const* event, void* context)
     case mir_event_type_input:
         handled = on_input_event(mir_event_get_input_event(event), state);
         break;
-    case mir_event_type_surface:
-        handled = on_surface_event(mir_event_get_surface_event(event), state);
+    case mir_event_type_window:
+        handled = on_surface_event(mir_event_get_window_event(event), state);
         break;
     case mir_event_type_resize:
         state->resized = true;
@@ -751,8 +750,8 @@ int main(int argc, char* argv[])
         false,
         false
     };
-    MirSurface* surface = mir_eglapp_native_surface();
-    mir_surface_set_event_handler(surface, on_event, &state);
+    MirWindow* window = mir_eglapp_native_window();
+    mir_window_set_event_handler(window, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");
 
@@ -891,7 +890,7 @@ int main(int argc, char* argv[])
         last_swap_time = swap_time;
     }
 
-    mir_surface_set_event_handler(surface, NULL, NULL);
+    mir_window_set_event_handler(window, NULL, NULL);
     mir_eglapp_cleanup();
 
     pthread_join(capture_thread, NULL);

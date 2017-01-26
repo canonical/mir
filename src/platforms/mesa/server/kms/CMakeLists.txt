@@ -1,5 +1,6 @@
 include_directories(
     ${server_common_include_dirs}
+    ${PROJECT_SOURCE_DIR}/include/client
     ..
 )
 
@@ -9,6 +10,7 @@ include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/client
 )
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions

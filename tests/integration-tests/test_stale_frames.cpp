@@ -20,6 +20,9 @@
 #include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_factory.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
@@ -36,6 +39,7 @@
 #include <mutex>
 #include <condition_variable>
 
+using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
@@ -114,8 +118,66 @@ public:
     StubRenderer* renderer_ = nullptr;
 };
 
+class PostObserver : public mir::scene::NullSurfaceObserver
+{
+public:
+    PostObserver(std::function<void(int)> cb) : cb{cb}
+    {
+    }
+
+    void frame_posted(int count, geom::Size const&) override
+    {
+        cb(count);
+    }
+
+private:
+    std::function<void(int)> const cb;
+};
+
+class PublicSurfaceFactory : public mir::scene::SurfaceFactory
+{
+public:
+    using Surface = mir::scene::Surface;
+
+    PublicSurfaceFactory(std::shared_ptr<mir::scene::SurfaceFactory> const& real) : real_surface_factory{real} {}
+
+    std::shared_ptr<Surface> create_surface(
+        std::list<mir::scene::StreamInfo> const& streams,
+        mir::scene::SurfaceCreationParameters const& params) override
+    {
+        latest_surface = real_surface_factory->create_surface(streams, params);
+        return latest_surface;
+    }
+
+    std::shared_ptr<Surface> const latest() const
+    {
+        return latest_surface;
+    }
+
+    void forget_latest()
+    {
+        latest_surface.reset();
+    }
+
+private:
+    std::shared_ptr<mir::scene::SurfaceFactory> const real_surface_factory;
+    std::shared_ptr<Surface> latest_surface;
+};
+
 struct StubServerConfig : mtf::StubbedServerConfiguration
 {
+    std::shared_ptr<PublicSurfaceFactory> the_public_surface_factory()
+    {
+        return public_surface_factory(
+                   [this]{ return std::make_shared<PublicSurfaceFactory>(
+                           mtf::StubbedServerConfiguration::the_surface_factory()); });
+    }
+
+    std::shared_ptr<mir::scene::SurfaceFactory> the_surface_factory() override
+    {
+        return the_public_surface_factory();
+    }
+
     std::shared_ptr<StubRendererFactory> the_stub_renderer_factory()
     {
         return stub_renderer_factory(
@@ -128,30 +190,43 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
     }
 
     mir::CachedPtr<StubRendererFactory> stub_renderer_factory;
+    mir::CachedPtr<PublicSurfaceFactory> public_surface_factory;
 };
 
 using BasicFixture = mtf::BasicClientServerFixture<StubServerConfig>;
 
-struct StaleFrames : BasicFixture
+struct StaleFrames : BasicFixture,
+                     ::testing::WithParamInterface<int>
 {
+    StaleFrames()
+        : post_observer(std::make_shared<PostObserver>(
+            [this](int n){frame_posted(n);}))
+    {
+    }
+
     void SetUp()
     {
         BasicFixture::SetUp();
 
         client_create_surface();
+        auto pub = server_configuration.the_public_surface_factory();
+        auto surface = pub->latest();
+        ASSERT_TRUE(!!surface);
+        surface->add_observer(post_observer);
+        pub->forget_latest();
     }
 
     void TearDown()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
 
         BasicFixture::TearDown();
     }
 
     void client_create_surface()
     {
-        surface = mtf::make_any_surface(connection);
-        ASSERT_TRUE(mir_surface_is_valid(surface));
+        window = mtf::make_any_surface(connection);
+        ASSERT_TRUE(mir_window_is_valid(window));
     }
 
     std::vector<mg::BufferID> wait_for_new_rendered_buffers()
@@ -170,12 +245,45 @@ struct StaleFrames : BasicFixture
         server_configuration.the_compositor()->start();
     }
 
-    MirSurface* surface;
+    /*
+     * NOTE that we wait for surface buffer posts as opposed to display posts.
+     * The difference is that surface buffer posts will precisely match the
+     * number of client swaps for any swap interval, but display posts may be
+     * fewer than the number of swaps if the client was quick and using
+     * interval zero.
+     */
+    void frame_posted(int count)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        posts += count;
+        posted.notify_all();
+    }
+
+    bool wait_for_posts(int count, std::chrono::seconds timeout)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+        while (posts < count)
+        {
+            if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
+                return false;
+        }
+        posts -= count;
+        return true;
+    }
+
+    MirWindow* window;
+
+private:
+    std::shared_ptr<PostObserver> post_observer;
+    std::mutex mutex;
+    std::condition_variable posted;
+    int posts = 0;
 };
 
 }
 
-TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
+TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
 {
     using namespace testing;
 
@@ -183,45 +291,51 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
 
     std::set<mg::BufferID> stale_buffers;
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
+    stale_buffers.emplace(mir_debug_window_current_buffer_id(window));
 
-    auto bs = mir_surface_get_buffer_stream(surface);
+    auto bs = mir_window_get_buffer_stream(window);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
+    stale_buffers.emplace(mir_debug_window_current_buffer_id(window));
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    EXPECT_THAT(stale_buffers.size(), Eq(2));
+    EXPECT_THAT(stale_buffers.size(), Eq(2u));
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_window_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    ASSERT_TRUE(wait_for_posts(3, 60s));
     start_compositor();
 
     // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
     stale_buffers.erase(fresh_buffer);
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    ASSERT_THAT(new_buffers.size(), Eq(1));
+    ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
 }
 
-TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
+TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 {
     using namespace testing;
 
     stop_compositor();
 
-    auto bs = mir_surface_get_buffer_stream(surface);
+    auto bs = mir_window_get_buffer_stream(window);
+    mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    auto const fresh_buffer = mg::BufferID{mir_debug_window_current_buffer_id(window)};
     mir_buffer_stream_swap_buffers_sync(bs);
 
+    ASSERT_TRUE(wait_for_posts(3, 60s));
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    ASSERT_THAT(new_buffers.size(), Eq(1));
+    ASSERT_THAT(new_buffers.size(), Eq(1u));
     EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }
+
+INSTANTIATE_TEST_CASE_P(PerSwapInterval, StaleFrames, ::testing::Values(0,1));

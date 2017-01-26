@@ -22,6 +22,8 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/shell/display_configuration_controller.h"
+#include "mir/graphics/display_configuration_observer.h"
+#include "mir/observer_registrar.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_platform.h"
@@ -34,15 +36,16 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
-#include "mir/test/signal.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
 #include <atomic>
 #include <chrono>
+#include <mutex>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <future>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -92,40 +95,105 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
     std::atomic<bool> allow_configure_display{true};
     std::atomic<bool> allow_set_base_display_configuration{true};
 };
-
-void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
-{
-    mt::Signal last_action_done;
-    server_action_queue.enqueue(
-        &last_action_done,
-        [&] { last_action_done.raise(); });
-
-    last_action_done.wait_for(std::chrono::seconds{5});
-}
 }
 
 struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
 {
+    class NotifyingConfigurationObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        std::future<void> expect_configuration_change(
+            std::shared_ptr<mg::DisplayConfiguration const> const& configuration)
+        {
+            std::lock_guard<decltype(guard)> lock{guard};
+            expectations.push_back({{}, configuration});
+            return expectations.back().notifier.get_future();
+        }
+
+        MOCK_METHOD2(session_configuration_applied, void(
+            std::shared_ptr<mf::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&));
+        MOCK_METHOD1(session_configuration_removed, void(std::shared_ptr<mf::Session> const&));
+
+    protected:
+        void initial_configuration(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+        }
+
+        void configuration_applied(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            std::lock_guard<decltype(guard)> lock{guard};
+            auto match = std::find_if(
+                expectations.begin(),
+                expectations.end(),
+                [config](auto const& candidate)
+                {
+                    return *config == *candidate.value;
+                });
+
+            if (match != expectations.end())
+            {
+                match->notifier.set_value();
+                expectations.erase(match);
+            }
+        }
+
+        void base_configuration_updated(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+        }
+
+        void configuration_failed(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {
+        }
+
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {
+        }
+
+    private:
+        struct Expectation
+        {
+            std::promise<void> notifier;
+            std::shared_ptr<mg::DisplayConfiguration const> value;
+        };
+
+        std::mutex mutable guard;
+        std::vector<Expectation> expectations;
+    };
+
     void SetUp() override
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
         mtf::ConnectedClientWithASurface::SetUp();
+
+        server.the_display_configuration_observer_registrar()->register_interest(observer);
     }
 
     void apply_config_change_and_wait_for_propagation(
         std::shared_ptr<mg::DisplayConfiguration> const& new_config)
     {
-        mock_display.emit_configuration_change_event(new_config);
-        // This waits until the configuration change event has propagated to MediatingDisplayChanger...
-        mock_display.wait_for_configuration_change_handler();
-        // ...and MediatingDisplayChanger will defer *actually* processing this to the mainloop,
-        // so wait until that has been processed before returning.
-        wait_for_server_actions_to_finish(*server.the_main_loop());
+        auto future = observer->expect_configuration_change(new_config);
+
+        server.the_display_configuration_controller()->set_base_configuration(new_config);
+
+        if (future.wait_for(std::chrono::seconds{10}) != std::future_status::ready)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Timeout waiting for display configuration to apply"});
+        }
     }
 
     testing::NiceMock<MockDisplay> mock_display;
+    std::shared_ptr<NotifyingConfigurationObserver> observer{std::make_shared<NotifyingConfigurationObserver>()};
     StubAuthorizer stub_authorizer;
+    mir::test::Signal observed_changed;
 };
 
 TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
@@ -197,15 +265,38 @@ struct SimpleClient
     {
         connection = mir_connect_sync(mir_test_socket.c_str(), __PRETTY_FUNCTION__);
 
-        auto const spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        auto const spec = mir_create_normal_window_spec(connection, 100, 100);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_event_handler(spec, &handle_event, this);
+        window = mir_create_window_sync(spec);
+        mir_window_spec_release(spec);
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+
+        ready_to_accept_events.wait_for(4s);
+        if (!ready_to_accept_events.raised())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
+    }
+
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
+    {
+        auto const client = static_cast<SimpleClient*>(context);
+        auto type = mir_event_get_type(ev);
+        if (type == mir_event_type_window)
+        {
+            auto window_event = mir_event_get_window_event(ev);
+            auto const attrib  = mir_window_event_get_attribute(window_event);
+            auto const value   = mir_window_event_get_attribute_value(window_event);
+
+            std::lock_guard<std::mutex> lk(client->mutex);
+            if (mir_window_attrib_focus == attrib &&
+                mir_window_focus_state_focused == value)
+                client->ready_to_accept_events.raise();
+        }
     }
 
     void disconnect()
     {
-        mir_surface_release_sync(surface);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
 
@@ -216,7 +307,10 @@ struct SimpleClient
 
     std::string mir_test_socket;
     MirConnection* connection{nullptr};
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
+    mutable std::mutex mutex;
+    mir::test::Signal ready_to_accept_events;
+    bool focused{false};
 };
 
 struct DisplayClient : SimpleClient
@@ -311,11 +405,7 @@ TEST_P(DisplayPowerSetting, can_get_power_mode)
             output.power_mode = mode;
         });
 
-    // We don't use apply_config_change_and_wait_for_propagation() here as
-    // that simulates a hardware change to which the default configuration policy
-    // will be applied... and that switches all the enabled monitors on!
-    server.the_display_configuration_controller()->set_base_configuration(server_config);
-    wait_for_server_actions_to_finish(*server.the_main_loop());
+    apply_config_change_and_wait_for_propagation(server_config);
 
     DisplayClient client{new_connection()};
 
@@ -771,6 +861,51 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_can_set_scale_factor)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+    auto const scale_factor = 1.5f;
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(client_config.get(), i);
+
+        mir_output_set_scale_factor(output, scale_factor + 0.25f*i);
+    }
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [c = client_config.get()](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(c));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [scale_factor, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            EXPECT_THAT(output.scale, Eq(scale_factor + output_num * 0.25f));
+            ++output_num;
+        });
+
+    client.disconnect();
+}
+
+
 TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 {
     std::array<MirFormFactor, 3> const form_factors = {{
@@ -946,6 +1081,168 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 
                 ++output_num;
             });
+
+    client.disconnect();
+}
+
+namespace
+{
+MATCHER_P(PointsToIdenticalData, data, "")
+{
+    return arg == nullptr ? false : memcmp(arg, data.data(), data.size()) == 0;
+}
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_null_for_empty_edid)
+{
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = {};
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = client.get_base_config();
+
+    auto output = mir_display_config_get_output(configuration.get(), 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), IsNull());
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_edid)
+{
+    /*
+     * Valid EDID block in case we later do some parsing/quirking/validation.
+     */
+    std::vector<uint8_t> edid{
+        0xff, 0x00, 0xff, 0xff, 0xff, 0xff, 0x00, 0xff,
+        0xaf, 0x06, 0x11, 0x3d, 0x00, 0x00, 0x00, 0x00,
+        0x16, 0x00, 0x04, 0x01, 0x1f, 0x95, 0x78, 0x11,
+        0x87, 0x02, 0xa4, 0xe5, 0x50, 0x56, 0x26, 0x9e,
+        0x50, 0x0d, 0x00, 0x54, 0x00, 0x00, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+        0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x37, 0x14,
+        0xb8, 0x80, 0x38, 0x70, 0x40, 0x24, 0x10, 0x10,
+        0x00, 0x3e, 0xad, 0x35, 0x00, 0x10, 0x18, 0x00,
+        0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x20, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x41, 0x00,
+        0x4f, 0x55, 0x20, 0x0a, 0x20, 0x20, 0x20, 0x20,
+        0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0xfe, 0x00,
+        0x42, 0x00, 0x34, 0x31, 0x48, 0x30, 0x4e, 0x41,
+        0x31, 0x30, 0x31, 0x2e, 0x0a, 0x20, 0xa5, 0x00
+    };
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid = edid;
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto configuration = client.get_base_config();
+
+    auto output = mir_display_config_get_output(configuration.get(), 0);
+
+    EXPECT_THAT(mir_output_get_edid(output), PointsToIdenticalData(edid));
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_model_string_from_edid)
+{
+    static unsigned char const edid[] =
+        "\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x46\xf0\x4c\x4a\x31\x41"
+        "\x05\x19\x01\x04\xb5\x34\x20\x78\x3a\x1d\xf5\xae\x4f\x35\xb3\x25"
+        "\x0d\x50\x54\xa5\x4b\x00\x81\x80\xa9\x40\xd1\x00\x71\x4f\x01\x01"
+        "\x01\x01\x01\x01\x01\x01\x28\x3c\x80\xa0\x70\xb0\x23\x40\x30\x20"
+        "\x36\x00\x06\x44\x21\x00\x00\x1a\x00\x00\x00\xff\x00\x59\x43\x4d"
+        "\x30\x46\x35\x31\x52\x41\x31\x4a\x4c\x0a\x00\x00\x00\xfc\x00\x44"
+        "\x45\x4c\x4c\x20\x55\x32\x34\x31\x33\x0a\x20\x20\x00\x00\x00\xfd"
+        "\x00\x38\x4c\x1e\x51\x11\x00\x0a\x20\x20\x20\x20\x20\x20\x01\x42"
+        "\x02\x03\x1d\xf1\x50\x90\x05\x04\x03\x02\x07\x16\x01\x1f\x12\x13"
+        "\x14\x20\x15\x11\x06\x23\x09\x1f\x07\x83\x01\x00\x00\x02\x3a\x80"
+        "\x18\x71\x38\x2d\x40\x58\x2c\x45\x00\x06\x44\x21\x00\x00\x1e\x01"
+        "\x1d\x80\x18\x71\x1c\x16\x20\x58\x2c\x25\x00\x06\x44\x21\x00\x00"
+        "\x9e\x01\x1d\x00\x72\x51\xd0\x1e\x20\x6e\x28\x55\x00\x06\x44\x21"
+        "\x00\x00\x1e\x8c\x0a\xd0\x8a\x20\xe0\x2d\x10\x10\x3e\x96\x00\x06"
+        "\x44\x21\x00\x00\x18\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x09";
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{48},
+        {{{1920, 1200}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid.assign(edid, edid+sizeof(edid)-1);
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(
+                      std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto base_config = client.get_base_config();
+    auto output = mir_display_config_get_output(base_config.get(), 0);
+
+    EXPECT_STREQ("DELL U2413", mir_output_get_model(output));
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_fallback_string_from_edid)
+{
+    static unsigned char const edid[] =
+        "\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x46\xf0\x4c\x4a\x31\x41"
+        "\x05\x19\x01\x04\xb5\x34\x20\x78\x3a\x1d\xf5\xae\x4f\x35\xb3\x25"
+        "\x0d\x50\x54\xa5\x4b\x00\x81\x80\xa9\x40\xd1\x00\x71\x4f\x01\x01"
+        "\x01\x01\x01\x01\x01\x01\x28\x3c\x80\xa0\x70\xb0\x23\x40\x30\x20"
+        "\x36\x00\x06\x44\x21\x00\x00\x1a\x00\x00\x00\xff\x00\x59\x43\x4d"
+        "\x30\x46\x35\x31\x52\x41\x31\x4a\x4c\x0a\x00\x00\x00\x11\x00\x44"
+        "\x45\x4c\x4c\x20\x55\x32\x34\x31\x33\x0a\x20\x20\x00\x00\x00\xfd"
+        "\x00\x38\x4c\x1e\x51\x11\x00\x0a\x20\x20\x20\x20\x20\x20\x01\x42"
+        "\x02\x03\x1d\xf1\x50\x90\x05\x04\x03\x02\x07\x16\x01\x1f\x12\x13"
+        "\x14\x20\x15\x11\x06\x23\x09\x1f\x07\x83\x01\x00\x00\x02\x3a\x80"
+        "\x18\x71\x38\x2d\x40\x58\x2c\x45\x00\x06\x44\x21\x00\x00\x1e\x01"
+        "\x1d\x80\x18\x71\x1c\x16\x20\x58\x2c\x25\x00\x06\x44\x21\x00\x00"
+        "\x9e\x01\x1d\x00\x72\x51\xd0\x1e\x20\x6e\x28\x55\x00\x06\x44\x21"
+        "\x00\x00\x1e\x8c\x0a\xd0\x8a\x20\xe0\x2d\x10\x10\x3e\x96\x00\x06"
+        "\x44\x21\x00\x00\x18\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x09";
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {{{3210, 2800}, 60.0}},
+        {mir_pixel_format_abgr_8888}};
+    monitor.edid.assign(edid, edid+sizeof(edid)-1);
+
+    auto config = std::make_shared<mtd::StubDisplayConfig>(
+                      std::vector<mg::DisplayConfigurationOutput>{monitor});
+
+    apply_config_change_and_wait_for_propagation(config);
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+    auto base_config = client.get_base_config();
+    auto output = mir_display_config_get_output(base_config.get(), 0);
+
+    EXPECT_STREQ("DEL 61510", mir_output_get_model(output));
 
     client.disconnect();
 }
@@ -1521,6 +1818,247 @@ TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_t
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 100);
 
     EXPECT_TRUE(error_received.wait_for(10s));
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, configure_session_display)
+{
+    auto configuration = mir_connection_create_display_configuration(connection);
+
+    EXPECT_CALL(*observer, session_configuration_applied(_, _))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_apply_session_display_config(connection, configuration);
+
+    observed_changed.wait_for(10s);
+
+    mir_display_config_release(configuration);
+}
+
+TEST_F(DisplayConfigurationTest, configure_session_removed_display)
+{
+    auto configuration = mir_connection_create_display_configuration(connection);
+
+    EXPECT_CALL(*observer, session_configuration_applied(_, _))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_apply_session_display_config(connection, configuration);
+
+    observed_changed.wait_for(10s);
+    observed_changed.reset();
+
+    EXPECT_CALL(*observer, session_configuration_removed(_))
+        .Times(1)
+        .WillOnce(mt::WakeUp(&observed_changed));
+
+    mir_connection_remove_session_display_config(connection);
+
+    observed_changed.wait_for(10s);
+
+    mir_display_config_release(configuration);
+}
+
+TEST_F(DisplayConfigurationTest, remove_is_noop_when_no_session_configuration_set)
+{
+    EXPECT_CALL(*observer, session_configuration_removed(_))
+        .Times(0);
+
+    mir_connection_remove_session_display_config(connection);
+
+    std::this_thread::sleep_for(1s);
+}
+
+TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_change)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    std::atomic<int> times{2};
+    auto new_config = mir_connection_create_display_configuration(client.connection);
+
+    // Apply a configuration to the client, assert it has been configured for the display
+    {
+        mir_output_set_position(mir_display_config_get_mutable_output(new_config, 0), 500, 12000);
+
+        EXPECT_CALL(*observer, session_configuration_applied(_, mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+
+        mir_connection_apply_session_display_config(client.connection, new_config);
+
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+        mir_display_config_release(new_config);
+    }
+
+    // Remove the configuration, assert we have been re-configured back to the base config
+    {
+        times = 2;
+
+        EXPECT_CALL(*observer, session_configuration_removed(_))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(stub_display_config))))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+
+        mir_connection_remove_session_display_config(client.connection);
+
+        observed_changed.wait_for(10s);
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware_change)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto new_config = mir_connection_create_display_configuration(client.connection);
+    std::atomic<int> times{2};
+
+    // Set the first clients display config
+    {
+        mir_output_set_position(mir_display_config_get_mutable_output(new_config, 0), 500, 12000);
+
+        EXPECT_CALL(*observer, session_configuration_applied(_, mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+
+        mir_connection_apply_session_display_config(client.connection, new_config);
+
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+        mir_display_config_release(new_config);
+    }
+
+    DisplayClient client2{new_connection()};
+
+    // Connect and wait for the second client to get setup and config. Which will be the focused session
+    {
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(stub_display_config))))
+            .Times(1)
+            .WillOnce(mt::WakeUp(&observed_changed));
+
+        client2.connect();
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+    }
+
+    // Remove the display config from the first config and assert no hardware changes happen
+    {
+        EXPECT_CALL(*observer, session_configuration_removed(_))
+            .Times(1)
+            .WillOnce(mt::WakeUp(&observed_changed));
+        EXPECT_CALL(mock_display, configure(_))
+            .Times(0);
+
+        mir_connection_remove_session_display_config(client.connection);
+
+        observed_changed.wait_for(10s);
+        std::this_thread::sleep_for(1s);
+    }
+
+    client2.disconnect();
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_change_when_focused)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto new_config = mir_connection_create_display_configuration(client.connection);
+    std::atomic<int> times{2};
+
+    // Set the first clients display config
+    {
+        mir_output_set_position(mir_display_config_get_mutable_output(new_config, 0), 500, 12000);
+
+        EXPECT_CALL(*observer, session_configuration_applied(_, mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+
+        mir_connection_apply_session_display_config(client.connection, new_config);
+
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+    }
+
+    DisplayClient client2{new_connection()};
+
+    // Connect and wait for the second client to get setup and config. Which will be the focused session
+    {
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(stub_display_config))))
+            .Times(1)
+            .WillOnce(mt::WakeUp(&observed_changed));
+
+        client2.connect();
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+    }
+
+    // Apply the new_config to client 2 as well so we can see disconnecting will apply the base config
+    {
+        times = 2;
+
+        EXPECT_CALL(*observer, session_configuration_applied(_, mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(new_config)))
+            .Times(1)
+            .WillOnce(mt::WakeUpWhenZero(&observed_changed, &times));
+
+        mir_connection_apply_session_display_config(client2.connection, new_config);
+        observed_changed.wait_for(10s);
+        observed_changed.reset();
+        mir_display_config_release(new_config);
+    }
+
+    // Remove the display config from the first config and assert no hardware changes happen
+    {
+
+        EXPECT_CALL(*observer, session_configuration_removed(_))
+            .Times(1)
+            .WillOnce(mt::WakeUp(&observed_changed));
+        EXPECT_CALL(mock_display, configure(_))
+            .Times(0);
+
+        mir_connection_remove_session_display_config(client.connection);
+
+        observed_changed.wait_for(10s);
+        std::this_thread::sleep_for(1s);
+        observed_changed.reset();
+    }
+
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    // Disconnect client 2 which makes client 1 regain focus. Assert the base config is configured
+    {
+        EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(stub_display_config))))
+            .Times(1)
+            .WillOnce(mt::WakeUp(&observed_changed));
+
+        client2.disconnect();
+
+        observed_changed.wait_for(10s);
+    }
 
     client.disconnect();
 }

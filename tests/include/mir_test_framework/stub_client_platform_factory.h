@@ -22,6 +22,12 @@
 #include "mir/client_platform_factory.h"
 #include "mir/client_platform.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
+#include "mir_test_framework/stub_platform_extension.h"
+#include "mir_test_framework/stub_client_platform_options.h"
+
+#include <unordered_map>
+#include <exception>
 
 namespace mir_test_framework
 {
@@ -29,17 +35,32 @@ namespace mir_test_framework
 struct StubClientPlatform : public mir::client::ClientPlatform
 {
     StubClientPlatform(mir::client::ClientContext* context);
+    StubClientPlatform(
+        mir::client::ClientContext* context,
+        std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>>&& fail_at);
+
     MirPlatformType platform_type() const override;
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory() override;
+    void* request_interface(char const* name, int version) override;
     void use_egl_native_window(std::shared_ptr<void> native_window, mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<void> create_egl_native_window(mir::client::EGLNativeSurface* surface) override;
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
+    uint32_t native_format_for(MirPixelFormat) const override;
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
+
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;
+
+    MirExtensionFavoriteFlavorV1 flavor_ext_1;
+    MirExtensionFavoriteFlavorV9 flavor_ext_9;
+    MirExtensionAnimalNamesV1 animal_ext;
+    MirExtensionFencedBuffersV1 fence_ext;
+
+    std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>> const fail_at;
 };
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory

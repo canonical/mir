@@ -22,13 +22,17 @@
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
-#include "client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
+#include "buffer_stream_configuration.h"
+#include "frame_clock.h"
 
 #include "mir_toolkit/client_types.h"
 
 #include <EGL/eglplatform.h>
 
+#include <unordered_set>
 #include <queue>
 #include <memory>
 #include <mutex>
@@ -67,7 +71,7 @@ class PerfReport;
 struct MemoryRegion;
 class SurfaceMap;
 class BufferDepository;
-class BufferStream : public EGLNativeSurface, public ClientBufferStream
+class BufferStream : public EGLNativeSurface, public MirBufferStream
 {
 public:
     BufferStream(
@@ -85,37 +89,28 @@ public:
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
         geometry::Size ideal_size, size_t nbuffers);
-    // For surfaceless buffer streams
-    BufferStream(
-        MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> creation_wait_handle,
-        mir::client::rpc::DisplayServer& server,
-        std::shared_ptr<ClientPlatform> const& native_window_factory,
-        std::weak_ptr<SurfaceMap> const& map,
-        std::shared_ptr<AsyncBufferFactory> const& factory,
-        mir::protobuf::BufferStreamParameters const& parameters,
-        std::shared_ptr<PerfReport> const& perf_report,
-        size_t nbuffers);
 
     virtual ~BufferStream();
 
-    MirWaitHandle* next_buffer(std::function<void()> const& done) override;
+    MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     // Required by debug API
     uint32_t get_current_buffer_id() override;
 
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
+    void adopted_by(MirWindow*) override;
+    void unadopted_by(MirWindow*) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
     // mcl::EGLNativeSurface interface
-    MirSurfaceParameters get_parameters() const override;
-    void request_and_wait_for_next_buffer() override;
+    MirWindowParameters get_parameters() const override;
+    void swap_buffers_sync() override;
 
-    void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
+    void request_and_wait_for_configure(MirWindowAttrib attrib, int) override;
 
     MirNativeBuffer* get_current_buffer_package() override;
 
@@ -140,27 +135,27 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
-    MirWaitHandle* force_swap_interval(int interval);
+    MirWaitHandle* set_server_swap_interval(int i);
     void init_swap_interval();
+    void wait_for_vsync();
 
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
-    mir::client::rpc::DisplayServer& display_server;
     std::shared_ptr<ClientPlatform> const client_platform;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool fixed_swap_interval;
-    int swap_interval_;
+    optional_value<int> user_swap_interval;
+    int current_swap_interval;
+    bool using_client_side_vsync;
+    BufferStreamConfiguration interval_config;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     std::shared_ptr<void> egl_native_window_;
 
-    MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     std::shared_ptr<MemoryRegion> secured_region;
@@ -173,6 +168,10 @@ private:
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
     MirRenderSurface* render_surface_;
+
+    std::unordered_set<MirWindow*> users;
+    std::shared_ptr<FrameClock> frame_clock;
+    mir::time::PosixTimestamp last_vsync;
 };
 
 }

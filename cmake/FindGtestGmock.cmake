@@ -1,11 +1,17 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-if (EXISTS /usr/src/googletest)
+#
+# When cross compiling MIR_CHROOT points to our chroot.
+# When not cross compiling, it should be blank to use the host system.
+#
+set(usr ${MIR_CHROOT}/usr)
+
+if (EXISTS ${usr}/src/googletest)
   set (USING_GOOGLETEST_1_8 TRUE)
-  set (GTEST_INSTALL_DIR /usr/src/googletest/googletest/include)
+  set (GTEST_INSTALL_DIR ${usr}/src/googletest/googletest/include)
 else()
-  set (GTEST_INSTALL_DIR /usr/src/gmock/gtest/include)
+  set (GTEST_INSTALL_DIR ${usr}/src/gmock/gtest/include)
 endif()
 
 #gtest
@@ -17,7 +23,7 @@ find_path(
 #gmock
 find_path(
   GMOCK_INSTALL_DIR CMakeLists.txt
-  HINTS /usr/src/googletest /usr/src/gmock)
+  HINTS ${usr}/src/googletest ${usr}/src/gmock)
 if(${GMOCK_INSTALL_DIR} STREQUAL "GMOCK_INSTALL_DIR-NOTFOUND")
     message(FATAL_ERROR "google-mock package not found")
 endif()
@@ -55,7 +61,7 @@ if (cmake_build_type_lower MATCHES "threadsanitizer")
   list(APPEND GTEST_CMAKE_ARGS -DCMAKE_CXX_COMPILER_WORKS=1)
 endif()
 if (${CMAKE_CROSSCOMPILING})
-  if(DEFINED MIR_NDK_PATH)
+  if(DEFINED MIR_CHROOT)
     list(APPEND GTEST_CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_MODULE_PATH}/LinuxCrossCompile.cmake)
   else()
     list(APPEND GTEST_CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})

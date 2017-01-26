@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
@@ -44,38 +43,13 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         mtd::StubFrameDroppingPolicyFactory policy_factory;
         stream = std::make_shared<mc::Stream>(policy_factory,
-            std::make_shared<mc::BufferMap>(nullptr, allocator),
+            std::make_shared<mc::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 
     std::shared_ptr<mc::Stream> stream;
-    std::mutex acquire_mutex;  // must live longer than our callback/lambda
-
-    mg::Buffer* client_acquire_blocking(mg::Buffer* buffer, std::shared_ptr<mc::Stream> const& stream)
-    {
-        std::condition_variable cv;
-        bool acquired = false;
-    
-        mg::Buffer* result;
-        stream->swap_buffers(buffer,
-            [&](mg::Buffer* new_buffer)
-             {
-                std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-                result = new_buffer;
-                acquired = true;
-                cv.notify_one();
-             });
-    
-        std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-        cv.wait(lock, [&]{ return acquired; });
-    
-        return result;
-    }
 };
 
 } // namespace
@@ -87,10 +61,10 @@ TEST_F(SwapperSwappingStress, swapper)
     auto f = std::async(std::launch::async,
                 [&]
                 {
-                    mg::Buffer* buffer = nullptr;
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        buffer = client_acquire_blocking(buffer, stream);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
                     }
                     done = true;
@@ -131,10 +105,10 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto f = std::async(std::launch::async,
                 [&]
                 {
-                    mg::Buffer* buffer = nullptr;
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        buffer = client_acquire_blocking(buffer, stream);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
                     }
                     done = true;

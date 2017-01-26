@@ -34,14 +34,14 @@ class MirBuffer;
 class ConnectionSurfaceMap : public SurfaceMap
 {
 public:
-    void with_surface_do(frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const override;
-    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface);
+    virtual std::shared_ptr<MirWindow> surface(frontend::SurfaceId) const override;
+    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirWindow> const& surface);
     void erase(frontend::SurfaceId surface_id);
 
-    void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const override;
-    void with_all_streams_do(std::function<void(ClientBufferStream*)> const&) const override;
+    virtual std::shared_ptr<MirBufferStream> stream(frontend::BufferStreamId) const override;
+    void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const override;
 
-    void insert(frontend::BufferStreamId stream_id, std::shared_ptr<ClientBufferStream> const& chain);
+    void insert(frontend::BufferStreamId stream_id, std::shared_ptr<MirBufferStream> const& chain);
     void insert(frontend::BufferStreamId stream_id, std::shared_ptr<MirPresentationChain> const& chain);
     void erase(frontend::BufferStreamId surface_id);
 
@@ -55,9 +55,9 @@ public:
     std::shared_ptr<MirRenderSurface> render_surface(void* render_surface_key) const;
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirWindow>> surfaces;
     std::shared_timed_mutex mutable stream_guard;
-    std::unordered_map<frontend::BufferStreamId, std::shared_ptr<ClientBufferStream>> streams;
+    std::unordered_map<frontend::BufferStreamId, std::shared_ptr<MirBufferStream>> streams;
     std::unordered_map<frontend::BufferStreamId, std::shared_ptr<MirPresentationChain>> chains;
     std::shared_timed_mutex mutable buffer_guard;
     std::unordered_map<int, std::shared_ptr<MirBuffer>> buffers;

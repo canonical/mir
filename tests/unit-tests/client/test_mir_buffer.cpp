@@ -52,7 +52,7 @@ struct MirBufferTest : Test
     MirBufferUsage usage { mir_buffer_usage_hardware };
     MirPixelFormat format { mir_pixel_format_abgr_8888 };
     std::shared_ptr<char> vaddr { std::make_shared<char>('\0') };
-    mir_buffer_callback cb { buffer_callback };
+    MirBufferCallback cb { buffer_callback };
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
     std::chrono::nanoseconds timeout { 101 };
@@ -111,41 +111,6 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     buffer.submitted();
 
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
-}
-
-TEST_F(MirBufferTest, sets_client_buffers_fence)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-    auto access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, access));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fakefence, access);
-}
-
-TEST_F(MirBufferTest, gets_fence_from_client_buffer)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-
-    EXPECT_CALL(*mock_client_buffer, get_fence())
-        .WillOnce(Return(fakefence));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    EXPECT_THAT(fakefence, Eq(buffer.get_fence()));
-}
-
-TEST_F(MirBufferTest, waits_for_proper_access)
-{
-    mir::Fd fakefence { mir::IntOwnedFd{19} };
-    auto current_access = MirBufferAccess::mir_read;
-    auto needed_access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fakefence, current_access));
-    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout))
-        .WillOnce(Return(true));
-
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fakefence, current_access);
-    EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
 }
 
 TEST_F(MirBufferTest, callback_called_when_available_from_creation)
