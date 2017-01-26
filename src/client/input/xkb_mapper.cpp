@@ -24,7 +24,6 @@
 #include "mir/events/event_builders.h"
 
 #include <sstream>
-#include <iostream>
 #include <boost/throw_exception.hpp>
 #include <unordered_set>
 
@@ -354,11 +353,15 @@ xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code,
     if (action == mir_keyboard_action_up)
     {
         xkb_state_update_key(state.get(), scan_code, XKB_KEY_UP);
+        // TODO get the modifier state from xkbcommon and apply it
+        // for all other modifiers manually track them here:
         release_modifier(mod_change);
     }
     else if (action == mir_keyboard_action_down)
     {
         xkb_state_update_key(state.get(), scan_code, XKB_KEY_DOWN);
+        // TODO get the modifier state from xkbcommon and apply it
+        // for all other modifiers manually track them here:
         press_modifier(mod_change);
     }
 
@@ -449,20 +452,16 @@ xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_ke
 }
 
 
-// TODO \/- wrong
 void mircv::XKBMapper::XkbMappingState::press_modifier(MirInputEventModifiers mod)
 {
-    std::cout << "press modifier " << mod << " "  << modifier_state << std::endl;
     if (is_toggle_modifier(mod))
         modifier_state ^= mod;
     else
         modifier_state |= mod;
-    std::cout << "new modifier " << modifier_state << std::endl;
 }
+
 void mircv::XKBMapper::XkbMappingState::release_modifier(MirInputEventModifiers mod)
 {
-    std::cout << "release modifier " << mod << " "  << modifier_state << std::endl;
     if (!is_toggle_modifier(mod))
         modifier_state &= ~mod;
-    std::cout << "new modifier " << modifier_state << std::endl;
 }
