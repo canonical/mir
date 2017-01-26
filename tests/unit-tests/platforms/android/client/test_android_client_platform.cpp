@@ -222,9 +222,6 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
             channel_call_count++;
             c->Run();
         }
-        void discard_future_calls() override
-        {
-        }
         void wait_for_outstanding_calls() override
         {
         }

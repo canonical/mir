@@ -42,9 +42,6 @@ struct StubConnectionConfiguration : client::DefaultConnectionConfiguration
             channel_call_count++;
             c->Run();
         }
-        void discard_future_calls() override
-        {
-        }
         void wait_for_outstanding_calls() override
         {
         }
