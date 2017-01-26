@@ -48,6 +48,7 @@ void fill(mp::DisplayOutput* out)
     out->set_output_id(8);
     out->set_connected(1);
     out->set_used(1);
+    out->set_scale_factor(1.0f);
     out->set_physical_width_mm(11);
     out->set_physical_height_mm(12);
     out->set_orientation(90);

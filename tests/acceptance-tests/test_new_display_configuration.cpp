@@ -861,6 +861,51 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_can_set_scale_factor)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+    auto const scale_factor = 1.5f;
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(client_config.get(), i);
+
+        mir_output_set_scale_factor(output, scale_factor + 0.25f*i);
+    }
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [c = client_config.get()](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(c));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [scale_factor, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            EXPECT_THAT(output.scale, Eq(scale_factor + output_num * 0.25f));
+            ++output_num;
+        });
+
+    client.disconnect();
+}
+
+
 TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 {
     std::array<MirFormFactor, 3> const form_factors = {{
