@@ -1,3 +1,4 @@
+syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 
 package mir.protobuf;
@@ -46,6 +47,12 @@ message SurfaceParameters {
   optional int32 shell_chrome = 24;
   repeated StreamConfiguration stream = 25; 
   optional int32 confine_pointer = 26;
+
+  optional int32 placement_hints = 27;
+  optional int32 surface_placement_gravity = 28;
+  optional int32 aux_rect_placement_gravity = 29;
+  optional int32 aux_rect_placement_offset_x = 30;
+  optional int32 aux_rect_placement_offset_y = 31;
 }
 
 message SurfaceAspectRatio
@@ -86,6 +93,18 @@ message SurfaceSpecification {
   repeated Rectangle input_shape = 23;
   optional int32 shell_chrome = 24;
   optional int32 confine_pointer = 25;
+
+  // Intentionally missing 26 to get any further additions in line with SurfaceParameters
+  optional int32 placement_hints = 27;
+  optional int32 surface_placement_gravity = 28;
+  optional int32 aux_rect_placement_gravity = 29;
+  optional int32 aux_rect_placement_offset_x = 30;
+  optional int32 aux_rect_placement_offset_y = 31;
+
+  optional string cursor_name = 32;
+  optional BufferStreamId cursor_id = 33;
+  optional int32 hotspot_x = 34;
+  optional int32 hotspot_y = 35;    
 }
 
 message StreamConfiguration {
@@ -216,6 +235,13 @@ message DisplayOutput {
   optional sint32 orientation = 16;
   optional float scale_factor = 17;
   optional uint32 form_factor = 18;
+  optional uint32 subpixel_arrangement = 19;
+  optional bytes  gamma_red = 20;
+  optional bytes  gamma_green = 21;
+  optional bytes  gamma_blue = 22;
+  optional uint32 gamma_supported = 23;
+  optional bytes edid = 24;
+  optional string model = 25;
 }
 
 message Connection {
@@ -224,7 +250,9 @@ message Connection {
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
-  repeated InputDeviceInfo input_devices = 6;
+  optional InputDevices input_devices = 6;
+  optional string input_configuration = 7;
+  optional bool coordinate_translation_present = 8; 
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -305,7 +333,8 @@ message EventSequence {
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
-  repeated InputDeviceInfo input_devices = 6;
+  optional InputDevices input_devices = 6;
+  optional string input_configuration = 7;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;
@@ -331,6 +360,11 @@ message ScreencastId {
   required uint32 value = 1;
 }
 
+message ScreencastRequest {
+  optional ScreencastId id = 1;
+  optional uint32 buffer_id = 2;
+}
+
 message Screencast {
   optional ScreencastId screencast_id = 1;
   optional Buffer buffer = 2;
@@ -351,6 +385,7 @@ message CursorSetting {
 
 message SocketFDRequest {
   required int32 number = 1;
+  required int32 prompt_session_id = 2;
 }
 
 message SocketFD {
@@ -363,6 +398,13 @@ message SocketFD {
 
 message PromptSessionParameters {
   required int32 application_pid = 1;
+}
+
+message PromptSession {
+  optional int32 id = 1;
+
+  optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message PlatformOperationMessage {
@@ -398,9 +440,33 @@ message RaiseRequest {
   required SurfaceId surface_id = 2;
 }
 
+message InputDevices {
+  repeated InputDeviceInfo device_info = 1;
+}
+
 message InputDeviceInfo {
   optional int64 id = 1;
   optional uint32 capabilities = 2;
   optional string name = 3;
   optional string unique_id = 4;
+  optional PointerConfiguration pointer_configuration = 5;
+  optional TouchpadConfiguration touchpad_configuration = 6;
+}
+
+message PointerConfiguration {
+  optional uint32 handedness = 1;
+  optional uint32 acceleration = 2;
+  optional double acceleration_bias = 3;
+  optional double horizontal_scroll_scale = 4;
+  optional double vertical_scroll_scale = 5;
+}
+
+message TouchpadConfiguration {
+  optional uint32 click_modes = 1;
+  optional uint32 scroll_modes = 2;
+  optional int32 button_down_scroll_button = 3;
+  optional uint32 tap_to_click = 4;
+  optional uint32 middle_mouse_button_emulation = 5;
+  optional uint32 disable_with_mouse = 6;
+  optional uint32 disable_while_typing = 7;
 }

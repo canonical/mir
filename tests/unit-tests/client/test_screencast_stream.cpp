@@ -27,6 +27,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir_toolkit/mir_client_library.h"
 
+#include <exception>
 #include <atomic>
 
 namespace mp = mir::protobuf;
@@ -108,7 +109,7 @@ struct ScreencastStream : Test
 };
 }
 
-TEST_F(ScreencastStream, requests_screencast_buffer_when_next_buffer_called)
+TEST_F(ScreencastStream, requests_screencast_buffer_when_swap_buffers_called)
 {
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -116,15 +117,15 @@ TEST_F(ScreencastStream, requests_screencast_buffer_when_next_buffer_called)
     mcl::ScreencastStream stream(
         nullptr, mock_protobuf_server, 
         std::make_shared<mir_test_framework::StubClientPlatform>(nullptr), response);
-    auto wh = stream.next_buffer([]{});
+    auto wh = stream.swap_buffers([]{});
     ASSERT_THAT(wh, NotNull());
     EXPECT_FALSE(wh->is_pending());
 }
 
 TEST_F(ScreencastStream, advances_current_buffer)
 {
-    int id0 = 33;
-    int id1 = 34;
+    auto id0 = 33u;
+    auto id1 = 34u;
 
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .Times(2)
@@ -143,13 +144,62 @@ TEST_F(ScreencastStream, advances_current_buffer)
         nullptr, mock_protobuf_server, 
         std::make_shared<mir_test_framework::StubClientPlatform>(nullptr), response);
 
-    auto wh = stream.next_buffer([]{});
+    auto wh = stream.swap_buffers([]{});
     wh->wait_for_all();
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(id0));
 
-    wh = stream.next_buffer([]{});
+    wh = stream.swap_buffers([]{});
     wh->wait_for_all();
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(id1));
+}
+
+TEST_F(ScreencastStream, exception_does_not_leave_wait_handle_hanging)
+{
+    ON_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
+        .WillByDefault(mtd::RunProtobufClosure());
+    struct FailingBufferFactory : mcl::ClientBufferFactory
+    {
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat)
+        {
+            if (fail)
+                throw std::runtime_error("monkey wrench");
+            else
+                return nullptr;
+        }
+
+        void start_failing()
+        {
+            fail = true;
+        }
+
+    private:
+        bool fail = false;
+    };
+
+    struct BufferCreationFailingPlatform : mir_test_framework::StubClientPlatform
+    {
+        BufferCreationFailingPlatform(
+            std::shared_ptr<mcl::ClientBufferFactory> const& factory, mcl::ClientContext* context) :
+            StubClientPlatform(context),
+            factory(factory)
+        {
+        }
+        std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
+        {
+            return factory;
+        }
+        std::shared_ptr<mcl::ClientBufferFactory> const factory;
+    };
+    auto factory = std::make_shared<FailingBufferFactory>();
+    auto platform = std::make_shared<BufferCreationFailingPlatform>(factory, nullptr);
+
+    mcl::ScreencastStream stream(nullptr, mock_protobuf_server, platform, response);
+    factory->start_failing();
+
+    auto wh = stream.swap_buffers([]{});
+    wh->wait_for_all();
+    EXPECT_FALSE(wh->is_pending());
 }

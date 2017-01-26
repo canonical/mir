@@ -38,8 +38,6 @@ public:
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
-private:
-    TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", server_platform("input-stub.so").c_str()};
 };
 
 }

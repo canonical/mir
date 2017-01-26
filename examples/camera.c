@@ -16,13 +16,13 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#include "mir_toolkit/mir_client_library.h"
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
 #include <fcntl.h>
 #include <GLES2/gl2.h>
-#include <mir_toolkit/mir_surface.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -83,10 +83,10 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
-    (void)surface;
     State *state = (State*)context;
+    bool handled = true;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
@@ -95,21 +95,19 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
     switch (mir_event_get_type(event))
     {
-    case mir_event_type_input:
-        break;
     case mir_event_type_resize:
         state->resized = true;
         break;
-    case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
-        break;
     default:
+        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
+
+    if (!handled)
+        mir_eglapp_handle_event(surface, event, NULL);
+
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -369,17 +367,49 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_resolution, 1);
+    unsigned int win_width = 1;
+    unsigned int win_height = 1;
+
+    char const* dev_video = "/dev/video0";
+    mir_eglapp_bool ultrafast = 0;
+    struct mir_eglapp_arg custom_args[] =
+    {
+        {"-d <path>", "=", &dev_video, "Path to camera device"},
+        {"-u", "!", &ultrafast, "Ultra fast mode (low resolution)"},
+        {NULL, NULL, NULL, NULL},
+    };
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height, custom_args))
+        return 1;
+
+    // By default we prefer high resolution and low CPU usage but if you
+    // ask for ultrafast mode expect low resolution and high CPU usage...
+    enum CameraPref pref = camera_pref_resolution;
+    if (ultrafast)
+    {
+        pref = camera_pref_speed;
+        MirBufferStream* bs = mir_window_get_buffer_stream(mir_eglapp_native_window());
+        mir_buffer_stream_set_swapinterval(bs, 0);
+    }
+    Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return 0;
     }
 
-    unsigned int win_width = cam->pix.width;
-    unsigned int win_height = cam->pix.height;
-    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
-        return 1;
+    MirWindow* window = mir_eglapp_native_window();
+    if (win_width == 1)  /* Fullscreen was not chosen */
+    {
+        /* Chicken or egg? init before open_camera, before size is known */
+        MirConnection* connection = mir_eglapp_native_connection();
+        MirWindowSpec* changes = mir_create_window_spec(connection);
+        win_width = cam->pix.width;
+        win_height = cam->pix.height;
+        mir_window_spec_set_width(changes, win_width);
+        mir_window_spec_set_height(changes, win_height);
+        mir_window_apply_spec(window, changes);
+        mir_window_spec_release(changes);
+    }
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
@@ -439,8 +469,7 @@ int main(int argc, char *argv[])
         PTHREAD_MUTEX_INITIALIZER,
         true
     };
-    MirSurface *surface = mir_eglapp_native_surface();
-    mir_surface_set_event_handler(surface, on_event, &state);
+    mir_window_set_event_handler(window, on_event, &state);
 
     bool first_frame = true;
     while (mir_eglapp_running())
@@ -533,8 +562,8 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
     }
 
-    mir_surface_set_event_handler(surface, NULL, NULL);
-    mir_eglapp_shutdown();
+    mir_window_set_event_handler(window, NULL, NULL);
+    mir_eglapp_cleanup();
     close_camera(cam);
 
     return 0;

@@ -98,12 +98,13 @@ public:
     // Provide a functional version of eglSwapBuffers on stubbed platforms
     // When enabled, if an instance of mir::client::EGLNativeSurface is passed to
     // eglCreateWindowSurface, then the returned EGLSurface can be used with
-    // eglSwapBuffers to invoke EGLNativeSurface::request_and_wait_for_next_buffer
+    // eglSwapBuffers to invoke EGLNativeSurface::swap_buffers_sync
     void provide_stub_platform_buffer_swapping();
 
     typedef void (*generic_function_pointer_t)(void);
+    typedef void* AnyNativeType;
 
-    MOCK_METHOD1(eglGetDisplay, EGLDisplay(NativeDisplayType));
+    MOCK_METHOD1(eglGetDisplay, EGLDisplay(AnyNativeType));
     MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
     MOCK_METHOD1(eglTerminate, EGLBoolean(EGLDisplay));
     MOCK_METHOD2(eglQueryString,const char*(EGLDisplay, EGLint));
@@ -116,8 +117,8 @@ public:
     MOCK_METHOD4(eglGetConfigAttrib, EGLBoolean(EGLDisplay,EGLConfig,EGLint,EGLint*));
 
     // Surface management
-    MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,NativeWindowType,const EGLint*));
-    MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,NativePixmapType,const EGLint*));
+    MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
+    MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
     MOCK_METHOD3(eglCreatePbufferSurface, EGLSurface(EGLDisplay,EGLConfig,const EGLint*));
     MOCK_METHOD2(eglDestroySurface, EGLBoolean(EGLDisplay,EGLSurface));
     MOCK_METHOD4(eglQuerySurface, EGLBoolean(EGLDisplay,EGLSurface,EGLint,EGLint*));
@@ -141,7 +142,7 @@ public:
     MOCK_METHOD0(eglWaitGL, EGLBoolean());
     MOCK_METHOD1(eglWaitNative, EGLBoolean(EGLint));
     MOCK_METHOD2(eglSwapBuffers, EGLBoolean(EGLDisplay,EGLSurface));
-    MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,NativePixmapType));
+    MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,AnyNativeType));
 
     MOCK_METHOD0(eglGetError, EGLint (void));
 
@@ -152,6 +153,10 @@ public:
     MOCK_METHOD3(eglCreateSyncKHR, EGLSyncKHR(EGLDisplay, EGLenum, EGLint const*));
     MOCK_METHOD2(eglDestroySyncKHR, EGLBoolean(EGLDisplay, EGLSyncKHR));
     MOCK_METHOD4(eglClientWaitSyncKHR, EGLint(EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
+
+    MOCK_METHOD5(eglGetSyncValuesCHROMIUM, EGLBoolean(EGLDisplay, EGLSurface,
+                                                      int64_t*, int64_t*,
+                                                      int64_t*));
 
     EGLDisplay const fake_egl_display;
     EGLConfig const* const fake_configs;

@@ -25,8 +25,8 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer_factory.h"
+#include "mir/renderer/renderer.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -67,26 +67,6 @@ struct TestServerConfiguration : public mir_test_framework::StubbedServerConfigu
             });
     }
 };
-
-void swap_buffers_blocking(mf::BufferStream& stream, mg::Buffer*& buffer)
-{
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    stream.swap_buffers(buffer,
-        [&](mg::Buffer* new_buffer)
-        {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-            buffer = new_buffer;
-            done = true;
-            cv.notify_one();
-        });
-
-    std::unique_lock<decltype(mutex)> lock(mutex);
-
-    cv.wait(lock, [&]{ return done; });
-}
 
 struct StubGLBufferStream : public mtd::StubBufferStream
 {
@@ -137,16 +117,15 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     auto compositor = conf.the_compositor();
 
     compositor->start();
-    session.default_surface()->configure(mir_surface_attrib_swapinterval, 0);
+    session.default_surface()->configure(mir_window_attrib_swapinterval, 0);
 
     std::thread client_thread{
         [&session, stream_id]
         {
-            mg::Buffer* buffer{nullptr};
             for (int i = 0; i < 500; ++i)
             {
                 auto stream = session.get_buffer_stream(stream_id);
-                swap_buffers_blocking(*stream, buffer);
+                stream->submit_buffer(nullptr);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};

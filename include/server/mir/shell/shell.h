@@ -39,13 +39,13 @@ class PromptSessionManager;
 class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 namespace shell
 {
 class InputTargeter;
-class SurfaceSpecification;
+struct SurfaceSpecification;
 class SurfaceStack;
 
 class Shell :
@@ -88,12 +88,12 @@ public:
     virtual int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) = 0;
 
     virtual int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib) = 0;
+        MirWindowAttrib attrib) = 0;
 
     virtual void raise_surface(
         std::shared_ptr<scene::Session> const& session,

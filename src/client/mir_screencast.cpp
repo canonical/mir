@@ -20,7 +20,7 @@
 #include "mir_connection.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
-#include "client_buffer_stream.h"
+#include "mir/mir_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
@@ -113,7 +113,7 @@ MirScreencast::MirScreencast(std::string const& error)
 MirScreencast::MirScreencast(
     MirScreencastSpec const& spec,
     mir::client::rpc::DisplayServer& the_server,
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
     : server{&the_server},
       connection{spec.connection},
       protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()},
@@ -152,7 +152,7 @@ char const* MirScreencast::get_error_message()
     return empty_error_message.c_str();
 }
 
-MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* context)
+MirWaitHandle* MirScreencast::release(MirScreencastCallback callback, void* context)
 {
     release_wait_handle.expect_result();
     if (valid() && server)
@@ -178,7 +178,7 @@ MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* co
 }
 
 void MirScreencast::screencast_created(
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
 {
     if (!protobuf_screencast->has_error() && connection)
     {
@@ -192,7 +192,7 @@ void MirScreencast::screencast_created(
 }
 
 void MirScreencast::released(
-    mir_screencast_callback callback, void* context)
+    MirScreencastCallback callback, void* context)
 {
     callback(this, context);
 
@@ -205,7 +205,7 @@ void MirScreencast::released(
     release_wait_handle.result_received();
 }
 
-mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
+MirBufferStream* MirScreencast::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();

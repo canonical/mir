@@ -35,7 +35,7 @@ extern "C" {
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
- *                          mir_surface_create() or mir_surface_apply_spec()
+ *                          mir_create_window() or mir_window_apply_spec()
  */
 MirScreencastSpec* mir_create_screencast_spec(MirConnection* connection);
 
@@ -142,7 +142,8 @@ char const *mir_screencast_get_error_message(MirScreencast *screencast);
  */
 MirScreencast* mir_connection_create_screencast_sync(
     MirConnection* connection,
-    MirScreencastParameters* parameters);
+    MirScreencastParameters* parameters)
+__attribute__ ((deprecated("use mir_screencast_create_sync instead")));
 
 /**
  * Release the specified screencast.

@@ -17,9 +17,9 @@
  */
 
 #include "src/server/compositor/temporary_buffers.h"
+#include "src/server/compositor/buffer_acquisition.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/mock_buffer_bundle.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -103,17 +103,6 @@ TEST_F(TemporaryBuffersTest, base_test_size)
     geom::Size size;
     size = proxy_buffer.size();
     EXPECT_EQ(buffer_size, size);
-}
-
-TEST_F(TemporaryBuffersTest, base_test_stride)
-{
-    TemporaryTestBuffer proxy_buffer(mock_buffer);
-    EXPECT_CALL(*mock_buffer, stride())
-        .Times(1);
-
-    geom::Stride stride;
-    stride = proxy_buffer.stride();
-    EXPECT_EQ(buffer_stride, stride);
 }
 
 TEST_F(TemporaryBuffersTest, base_test_pixel_format)

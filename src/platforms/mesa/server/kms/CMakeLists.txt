@@ -1,5 +1,6 @@
 include_directories(
     ${server_common_include_dirs}
+    ${PROJECT_SOURCE_DIR}/include/client
     ..
 )
 
@@ -9,6 +10,7 @@ include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/client
 )
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
@@ -42,10 +44,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-mir_add_library_with_symbols(
-  mirplatformgraphicsmesakms MODULE
-
-  ${symbol_map}
+add_library(mirplatformgraphicsmesakms MODULE
   platform_symbols.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
@@ -69,6 +68,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 install(TARGETS mirplatformgraphicsmesakms LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

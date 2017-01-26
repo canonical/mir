@@ -23,7 +23,12 @@
 #include "mir/renderer/gl/render_target.h"
 #include "display.h"
 #include "host_surface.h"
+#include "passthrough_option.h"
+#include "host_chain.h"
+#include "mir_toolkit/client_types_nbs.h"
 
+#include <map>
+#include <glm/glm.hpp>
 #include <EGL/egl.h>
 
 namespace mir
@@ -33,7 +38,8 @@ namespace graphics
 namespace nested
 {
 class HostSurface;
-
+class HostStream;
+class Buffer;
 namespace detail
 {
 
@@ -44,11 +50,9 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 public:
     DisplayBuffer(
         EGLDisplayHandle const& egl_display,
-        std::shared_ptr<HostSurface> const& host_surface,
-        geometry::Rectangle const& area,
-        MirPixelFormat preferred_format,
-        std::shared_ptr<HostConnection> const& host_connection
-        );
+        DisplayConfigurationOutput best_output,
+        std::shared_ptr<HostConnection> const& host_connection,
+        PassthroughOption option);
 
     ~DisplayBuffer() noexcept;
 
@@ -60,7 +64,7 @@ public:
     MirOrientation orientation() const override;
     MirMirrorMode mirror_mode() const override;
 
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool overlay(RenderableList const& renderlist) override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 
@@ -68,15 +72,32 @@ public:
     DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
     EGLDisplayHandle const& egl_display;
+    std::shared_ptr<HostStream> const host_stream;
     std::shared_ptr<HostSurface> const host_surface;
     std::shared_ptr<HostConnection> const host_connection;
+    std::unique_ptr<HostChain> host_chain;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;
     EGLSurfaceHandle const egl_surface;
+    PassthroughOption const passthrough_option;
 
-    static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
+    static void event_thunk(MirWindow* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const& event);
+
+    enum class BackingContent
+    {
+        stream,
+        chain
+    } content;
+    glm::mat4 const identity;
+
+    std::mutex mutex;
+    typedef std::tuple<MirBuffer*, MirPresentationChain*> SubmissionInfo;
+    std::map<SubmissionInfo, std::shared_ptr<graphics::Buffer>> submitted_buffers;
+    SubmissionInfo last_submitted { nullptr, nullptr };
+
+    void release_buffer(MirBuffer* b, MirPresentationChain* c);
 };
 }
 }

@@ -23,7 +23,11 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/events/input_device_state.h"
+#include "mir/events/contact_state.h"
 
 #include <memory>
 #include <functional>
@@ -43,7 +47,10 @@ EventUPtr make_event(MirPromptSessionState state);
 // Surface resize event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
-EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
+__attribute__ ((deprecated("use make_event with MirWindowAttribute instead")));
+// Window configure event
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirWindowAttrib attribute, int value);
 // Close surface event
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
 // Keymap event
@@ -54,8 +61,12 @@ EventUPtr make_event(
     frontend::SurfaceId const& surface_id,
     int dpi,
     float scale,
+    double refresh_rate,
     MirFormFactor form_factor,
     uint32_t id);
+
+/// Surface placement event
+EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -64,6 +75,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
 void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
+void set_cursor_position(MirEvent& event, float x, float y);
 void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
 // Deprecated version with uint64_t mac
@@ -132,14 +144,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
-    MirInputDeviceId id, std::chrono::nanoseconds time);
-
-struct InputDeviceState
-{
-    MirInputDeviceId id;
-    std::vector<uint32_t> pressed_keys;
-    MirPointerButtons buttons;
-};
+    MirInputDeviceId id, std::chrono::nanoseconds time) __attribute__((deprecated));
 
 EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      MirPointerButtons pointer_buttons,
@@ -147,6 +152,14 @@ EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      float x_axis_value,
                      float y_axis_value,
                      std::vector<InputDeviceState>&& device_states);
+
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers,
+    std::vector<ContactState> const& contacts);
+
+EventUPtr clone_event(MirEvent const& event);
+void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+
 }
 }
 

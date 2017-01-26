@@ -88,13 +88,17 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
         mir_power_mode_on,
         mir_orientation_normal,
         1.0f,
-        mir_form_factor_phone
+        mir_form_factor_phone,
+        mir_subpixel_arrangement_unknown,
+        {},
+        mir_output_gamma_unsupported,
+        {}
     };
 }
 
 mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(
         std::function<void()> const&,
-        std::function<void(DisplayName)> const&)
+        std::function<void(DisplayName, mg::Frame::Timestamp)> const&)
 {
     return nullptr;
 }
@@ -113,7 +117,7 @@ void mga::FBDevice::commit(std::list<DisplayContents> const& contents)
     if (primary_contents == contents.end()) return;
     auto& context = primary_contents->context;
     auto const& buffer = context.last_rendered_buffer();
-    auto native_buffer = buffer->native_buffer_handle();
+    auto native_buffer = mga::to_native_buffer_checked(buffer->native_buffer_handle());
     native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {

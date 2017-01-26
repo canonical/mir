@@ -49,7 +49,11 @@ mg::DisplayConfigurationOutput const tmpl_output
     mir_power_mode_on,
     mir_orientation_normal,
     1.0f,
-    mir_form_factor_monitor
+    mir_form_factor_monitor,
+    mir_subpixel_arrangement_unknown,
+    {},
+    mir_output_gamma_unsupported,
+    {}
 };
 
 }

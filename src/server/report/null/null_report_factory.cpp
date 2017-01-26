@@ -24,6 +24,7 @@
 #include "session_mediator_report.h"
 #include "display_report.h"
 #include "input_report.h"
+#include "seat_report.h"
 #include "shell_report.h"
 #include "scene_report.h"
 #include "mir/logging/null_shared_library_prober_report.h"
@@ -48,7 +49,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::NullReportFactory::
     return std::make_shared<null::ConnectorReport>();
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::NullReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::NullReportFactory::create_session_mediator_report()
 {
     return std::make_shared<null::SessionMediatorReport>();
 }
@@ -61,6 +62,11 @@ std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::NullReportFa
 std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_input_report()
 {
     return std::make_shared<null::InputReport>();
+}
+
+std::shared_ptr<mir::input::SeatObserver> mir::report::NullReportFactory::create_seat_report()
+{
+    return std::make_shared<null::SeatReport>();
 }
 
 std::shared_ptr<mir::SharedLibraryProberReport> mir::report::NullReportFactory::create_shared_library_prober_report()
@@ -95,7 +101,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_repo
 {
     return NullReportFactory{}.create_connector_report();
 }
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::null_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
 {
     return NullReportFactory{}.create_session_mediator_report();
 }
@@ -106,4 +112,9 @@ std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::null_message
 std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
 {
     return NullReportFactory{}.create_input_report();
+}
+
+std::shared_ptr<mir::input::SeatObserver> mir::report::null_seat_report()
+{
+    return NullReportFactory{}.create_seat_report();
 }

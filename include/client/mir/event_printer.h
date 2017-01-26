@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -34,20 +34,31 @@ std::ostream& operator<<(std::ostream& out, MirPointerAction action);
 std::ostream& operator<<(std::ostream& out, MirPromptSessionState state);
 std::ostream& operator<<(std::ostream& out, MirOrientation orientation);
 
-std::ostream& operator<<(std::ostream& out, MirSurfaceAttrib attribute);
-std::ostream& operator<<(std::ostream& out, MirSurfaceFocusState state);
-std::ostream& operator<<(std::ostream& out, MirSurfaceVisibility state);
-std::ostream& operator<<(std::ostream& out, MirSurfaceType type);
-std::ostream& operator<<(std::ostream& out, MirSurfaceState state);
+std::ostream& operator<<(std::ostream& out, MirSurfaceAttrib attribute)
+__attribute__ ((deprecated("use << with MirWindowAttrib instead")));
+std::ostream& operator<<(std::ostream& out, MirWindowAttrib attribute);
+std::ostream& operator<<(std::ostream& out, MirSurfaceFocusState state)
+__attribute__ ((deprecated("use << with MirWindowFocusState instead")));
+std::ostream& operator<<(std::ostream& out, MirWindowFocusState state);
+std::ostream& operator<<(std::ostream& out, MirSurfaceVisibility state)
+__attribute__ ((deprecated("use << with MirWindowVisibility instead")));
+std::ostream& operator<<(std::ostream& out, MirWindowVisibility state);
+std::ostream& operator<<(std::ostream& out, MirSurfaceType type)
+__attribute__ ((deprecated("use << with MirWindowType instead")));
+std::ostream& operator<<(std::ostream& out, MirWindowType type);
+std::ostream& operator<<(std::ostream& out, MirSurfaceState state)
+__attribute__ ((deprecated("use << with MirWindowState instead")));
+std::ostream& operator<<(std::ostream& out, MirWindowState state);
 
 std::ostream& operator<<(std::ostream& out, MirPromptSessionEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirResizeEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirOrientationEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputEvent const& event);
-std::ostream& operator<<(std::ostream& out, MirCloseSurfaceEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirCloseWindowEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirKeymapEvent const& event);
-std::ostream& operator<<(std::ostream& out, MirSurfaceEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirWindowEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputDeviceStateEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirWindowPlacementEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirEvent const& event);
 
 }

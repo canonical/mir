@@ -21,7 +21,11 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/geometry/point.h"
+#include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/frontend/event_sink.h"
@@ -38,13 +42,35 @@
 namespace mi = mir::input;
 namespace mf = mir::frontend;
 
+namespace
+{
+MirInputDevice from_handle(std::shared_ptr<mi::DefaultDevice> const& device)
+{
+    MirInputDevice conf(device->id(), device->capabilities(), device->name(), device->unique_id());
+
+    auto ptr_conf = device->pointer_configuration();
+    auto tpd_conf = device->touchpad_configuration();
+    auto kbd_conf = device->keyboard_configuration();
+
+    if (ptr_conf.is_set())
+        conf.set_pointer_config(ptr_conf.value());
+    if (tpd_conf.is_set())
+        conf.set_touchpad_config(tpd_conf.value());
+    if (kbd_conf.is_set())
+        conf.set_keyboard_config(kbd_conf.value());
+
+    return conf;
+}
+}
+
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mf::EventSink> const& sink,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mi::KeyMapper> const& key_mapper)
+    std::shared_ptr<mi::KeyMapper> const& key_mapper,
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
       sink{sink},
       input_dispatchable{input_multiplexer},
@@ -52,6 +78,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       cookie_authority(cookie_authority),
       key_mapper(key_mapper),
+      server_status_listener(server_status_listener),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -201,7 +228,7 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
     return seat->get_rectangle_for(*handle);
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::set_key_state(std::vector<uint32_t> const& scan_codes)
+void mi::DefaultInputDeviceHub::RegisteredDevice::key_state(std::vector<uint32_t> const& scan_codes)
 {
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
@@ -209,7 +236,7 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::set_key_state(std::vector<uint
     seat->set_key_state(*handle, scan_codes);
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::set_pointer_state(MirPointerButtons buttons)
+void mi::DefaultInputDeviceHub::RegisteredDevice::pointer_state(MirPointerButtons buttons)
 {
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
@@ -237,7 +264,14 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
 void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
-    for (auto const& item : handles)
+    for (auto const item : handles)
+        callback(*item);
+}
+
+void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
+{
+    std::unique_lock<std::mutex> lock(observer_guard);
+    for (auto item : handles)
         callback(*item);
 }
 
@@ -257,12 +291,19 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
-    sink->handle_input_device_change(handles);
+    config.add_device_config(from_handle(handle));
+    sink->handle_input_config_change(config);
 
     for (auto const& observer : observers)
     {
         observer->device_added(handles.back());
         observer->changes_complete();
+    }
+
+    if (!ready && handles.size())
+    {
+        server_status_listener->ready_for_user_input();
+        ready = true;
     }
 }
 
@@ -288,5 +329,12 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         return;
 
     handles.erase(handle_it, end(handles));
-    sink->handle_input_device_change(handles);
+    config.remove_device_by_id(id);
+    sink->handle_input_config_change(config);
+
+    if (ready && 0 == handles.size())
+    {
+        ready = false;
+        server_status_listener->stop_receiving_input();
+    }
 }

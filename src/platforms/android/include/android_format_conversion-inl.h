@@ -19,8 +19,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
 
+#include "mir/graphics/buffer_properties.h"
 #include "mir_toolkit/common.h"
+#include <cstddef>  // to fix missing #includes in graphics.h
 #include <system/graphics.h>
+#include <hardware/gralloc.h>
 
 namespace mir
 {
@@ -66,6 +69,19 @@ inline static MirPixelFormat to_mir_format(int format)
             return mir_pixel_format_rgb_565;
         default:
             return mir_pixel_format_invalid;
+    }
+}
+
+inline static uint32_t convert_to_android_usage(BufferUsage usage)
+{
+    switch (usage)
+    {
+    case BufferUsage::hardware:
+        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+    case BufferUsage::software:
+        return (GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE);
+    default:
+        return -1;
     }
 }
 

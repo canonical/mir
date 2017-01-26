@@ -55,8 +55,7 @@ mcl::ScreencastStream::ScreencastStream(
     client_platform(client_platform),
     factory(client_platform->create_buffer_factory()),
     protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-    buffer_depository{factory}
+    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     if (!protobuf_bs->has_id())
     {
@@ -86,16 +85,26 @@ void mcl::ScreencastStream::process_buffer(mp::Buffer const& buffer)
 void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&)
 {
     if (buffer.has_error())
+    {
+        for (int i = 0; i < buffer.fd_size(); i++)
+            ::close(buffer.fd(i));
+        if (screencast_wait_handle.is_pending())
+            screencast_wait_handle.result_received();
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
+    }
+
     if (buffer.has_width() && buffer.has_height())
         buffer_size = geom::Size{buffer.width(), buffer.height()};
 
     try
     {
         auto const pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository.deposit_package(mcl::protobuf_to_native_buffer(buffer),
-                                         buffer.buffer_id(), buffer_size,
-                                         pixel_format);
+        if (current_buffer_id != buffer.buffer_id())
+        {
+            current_buffer = factory->create_buffer(
+                mcl::protobuf_to_native_buffer(buffer), buffer_size, pixel_format);
+            current_buffer_id = buffer.buffer_id();
+        }
     }
     catch (const std::runtime_error& error)
     {
@@ -104,11 +113,13 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
         protobuf_bs->set_error(
             std::string{"Error processing buffer stream creating response:"} +
             boost::diagnostic_information(error));
+        if (screencast_wait_handle.is_pending())
+            screencast_wait_handle.result_received();
         throw error;
     }
 }
 
-MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::ScreencastStream::swap_buffers(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     secured_region.reset();
@@ -132,7 +143,7 @@ MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& d
 std::shared_ptr<mcl::ClientBuffer> mcl::ScreencastStream::get_current_buffer()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer();
+    return current_buffer;
 }
 
 EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
@@ -143,9 +154,8 @@ EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
 std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    auto buffer = buffer_depository.current_buffer();
     if (!secured_region)
-        secured_region = buffer->secure_for_cpu_write();
+        secured_region = current_buffer->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -159,10 +169,10 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
     screencast_wait_handle.result_received();
 }
 
-MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
+MirWindowParameters mcl::ScreencastStream::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "Screencast",
         buffer_size.width.as_int(),
         buffer_size.height.as_int(),
@@ -171,15 +181,15 @@ MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::ScreencastStream::request_and_wait_for_next_buffer()
+void mcl::ScreencastStream::swap_buffers_sync()
 {
-    next_buffer([](){})->wait_for_all();
+    swap_buffers([](){})->wait_for_all();
 }
 
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer_id();
+    return current_buffer_id;
 }
 
 int mcl::ScreencastStream::swap_interval() const
@@ -234,12 +244,17 @@ MirConnection* mcl::ScreencastStream::connection() const
     return connection_;
 }
 
+MirRenderSurface* mcl::ScreencastStream::render_surface() const
+{
+    return nullptr;
+}
+
 void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set cache size on screencast is invalid"));
 }
 
-void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+void mcl::ScreencastStream::request_and_wait_for_configure(MirWindowAttrib, int)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set attrib on screencast is invalid"));
 }
@@ -249,9 +264,22 @@ MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
 }
 
+void mcl::ScreencastStream::adopted_by(MirWindow*)
+{
+}
+
+void mcl::ScreencastStream::unadopted_by(MirWindow*)
+{
+}
+
 void mcl::ScreencastStream::set_size(geom::Size)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set size on screencast is invalid"));
+}
+
+geom::Size mcl::ScreencastStream::size() const
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to get size on screencast is invalid"));
 }
 
 MirWaitHandle* mcl::ScreencastStream::set_scale(float)

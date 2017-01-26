@@ -42,7 +42,7 @@ namespace graphics
 {
     class Display;
     class DisplayConfigurationPolicy;
-    class DisplayConfigurationReport;
+    class DisplayConfigurationObserver;
 }
 namespace compositor { class Compositor; }
 namespace input
@@ -67,7 +67,7 @@ public:
         std::shared_ptr<SessionContainer> const& session_container,
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
         std::shared_ptr<ServerActionQueue> const& server_action_queue,
-        std::shared_ptr<graphics::DisplayConfigurationReport> const& report,
+        std::shared_ptr<graphics::DisplayConfigurationObserver> const& observer,
         std::shared_ptr<input::InputRegion> const& region,
         std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
@@ -75,6 +75,7 @@ public:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
+    void remove_session_configuration(std::shared_ptr<frontend::Session> const& session) override;
     void preview_base_configuration(
         std::weak_ptr<frontend::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
@@ -83,10 +84,12 @@ public:
         std::shared_ptr<frontend::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
 
+    void cancel_base_configuration_preview(
+        std::shared_ptr<frontend::Session> const& session) override;
+
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
-        std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-        SystemStateHandling pause_resume_system) override;
+        std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
     void pause_display_config_processing() override;
     void resume_display_config_processing() override;
@@ -99,9 +102,8 @@ private:
     void no_focus_handler();
     void session_stopping_handler(std::shared_ptr<Session> const& session);
 
-    void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-                      SystemStateHandling pause_resume_system);
-    void apply_base_config(SystemStateHandling pause_resume_system);
+    void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf);
+    void apply_base_config();
     void send_config_to_all_sessions(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf);
     void update_input_rectangles(graphics::DisplayConfiguration const& conf);
@@ -112,7 +114,7 @@ private:
     std::shared_ptr<SessionContainer> const session_container;
     std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
     std::shared_ptr<ServerActionQueue> const server_action_queue;
-    std::shared_ptr<graphics::DisplayConfigurationReport> const report;
+    std::shared_ptr<graphics::DisplayConfigurationObserver> const observer;
     std::mutex configuration_mutex;
     std::map<std::weak_ptr<frontend::Session>,
              std::shared_ptr<graphics::DisplayConfiguration>,
@@ -123,6 +125,7 @@ private:
     std::shared_ptr<input::InputRegion> const region;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     std::unique_ptr<time::Alarm> preview_configuration_timeout;
+    std::weak_ptr<frontend::Session> currently_previewing_session;
 };
 
 }

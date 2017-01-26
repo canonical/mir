@@ -19,6 +19,7 @@
 #include "real_kms_display_configuration.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/log.h"
 
 #include <cmath>
 #include <limits>
@@ -26,9 +27,12 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <system_error>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
+namespace mgk = mir::graphics::kms;
 namespace geom = mir::geometry;
 
 namespace
@@ -67,6 +71,27 @@ mg::DisplayConfigurationOutputType
 kms_connector_type_to_output_type(uint32_t connector_type)
 {
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+}
+
+MirSubpixelArrangement kms_subpixel_to_mir_subpixel(uint32_t subpixel)
+{
+    switch (subpixel)
+    {
+    case DRM_MODE_SUBPIXEL_UNKNOWN:
+        return mir_subpixel_arrangement_unknown;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_RGB:
+        return mir_subpixel_arrangement_horizontal_rgb;
+    case DRM_MODE_SUBPIXEL_HORIZONTAL_BGR:
+        return mir_subpixel_arrangement_horizontal_bgr;
+    case DRM_MODE_SUBPIXEL_VERTICAL_RGB:
+        return mir_subpixel_arrangement_vertical_rgb;
+    case DRM_MODE_SUBPIXEL_VERTICAL_BGR:
+        return mir_subpixel_arrangement_vertical_bgr;
+    case DRM_MODE_SUBPIXEL_NONE:
+        return mir_subpixel_arrangement_none;
+    default:
+        return mir_subpixel_arrangement_unknown;
+    }
 }
 
 }
@@ -153,6 +178,7 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 
     return conf_mode_index;
 }
+
 void mgm::RealKMSDisplayConfiguration::update()
 {
     kms::DRMModeResources resources{drm_fd};
@@ -164,6 +190,83 @@ void mgm::RealKMSDisplayConfiguration::update()
     {
         add_or_update_output(resources, *connector);
     });
+}
+
+namespace
+{
+std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
+{
+    std::vector<uint8_t> edid;
+
+    mgk::ObjectProperties connector_props{
+        drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
+
+    if (connector_props.has_property("EDID"))
+    {
+        /*
+         * We don't technically need the property information here, but query it
+         * anyway so we can detect if our assumptions about DRM behaviour
+         * become invalid.
+         */
+        auto property = mgk::DRMModePropertyUPtr{
+            drmModeGetProperty(drm_fd, connector_props.id_for("EDID")),
+            &drmModeFreeProperty};
+
+        if (!property)
+        {
+            mir::log_warning(
+                "Failed to get EDID property for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+            return edid;
+        }
+
+        if (!drm_property_type_is(property.get(), DRM_MODE_PROP_BLOB))
+        {
+            mir::log_warning(
+                "EDID property on connector %u has unexpected type %u",
+                connector_id,
+                property->flags);
+            return edid;
+        }
+
+        // A property ID of 0 means invalid.
+        if (connector_props["EDID"] == 0)
+        {
+            /*
+             * Log a debug message only. This will trigger for broken monitors which
+             * don't provide an EDID, which is not as unusual as you might think...
+             */
+            mir::log_debug("No EDID data available on connector %u", connector_id);
+            return edid;
+        }
+
+        auto blob = drmModeGetPropertyBlob(drm_fd, connector_props["EDID"]);
+
+        if (!blob)
+        {
+            mir::log_warning(
+                "Failed to get EDID property blob for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+
+            return edid;
+        }
+
+        edid.reserve(blob->length);
+        edid.insert(edid.begin(),
+            reinterpret_cast<uint8_t*>(blob->data),
+            reinterpret_cast<uint8_t*>(blob->data) + blob->length);
+
+        drmModeFreePropertyBlob(blob);
+
+        edid.shrink_to_fit();
+    }
+
+    return edid;
+}
 }
 
 void mgm::RealKMSDisplayConfiguration::add_or_update_output(
@@ -183,14 +286,30 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
                                          mir_pixel_format_xrgb_8888};
 
+    std::vector<uint8_t> edid;
+    if (connected)
+    {
+        /* Only ask for the EDID on connected outputs. There's obviously no monitor EDID
+         * when there is no monitor connected!
+         */
+        edid = edid_for_connector(drm_fd, connector.connector_id);
+    }
+
     drmModeModeInfo current_mode_info = drmModeModeInfo();
+    GammaCurves gamma;
 
     /* Get information about the current mode */
     if (connector.encoder_id)
     {
         auto encoder = resources.encoder(connector.encoder_id);
         if (encoder->crtc_id)
+        {
             current_mode_info = resources.crtc(encoder->crtc_id)->mode;
+
+            auto crtc = resources.crtc(encoder->crtc_id);
+            if (crtc->gamma_size > 0)
+                gamma = mg::LinearGammaLUTs(crtc->gamma_size);
+        }
     }
 
     /* Add all the available modes and find the current and preferred one */
@@ -220,7 +339,9 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
                            mir_power_mode_on, mir_orientation_normal,
-                           1.0f, mir_form_factor_monitor});
+                           1.0f, mir_form_factor_monitor,
+                           kms_subpixel_to_mir_subpixel(connector.subpixel),
+                           gamma, mir_output_gamma_supported, std::move(edid)});
     }
     else
     {
@@ -247,6 +368,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.physical_size_mm = physical_size;
         output.connected = connected;
         output.current_format = mir_pixel_format_xrgb_8888;
+        output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector.subpixel);
+        output.gamma = gamma;
     }
 }
 
@@ -292,8 +415,11 @@ bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
             {
                 auto clone = conf2.outputs[i];
 
-                // ignore difference in orientation
+                // ignore difference in orientation, scale factor, form factor, subpixel arrangement
                 clone.orientation = conf1.outputs[i].orientation;
+                clone.subpixel_arrangement = conf1.outputs[i].subpixel_arrangement;
+                clone.scale = conf1.outputs[i].scale;
+                clone.form_factor = conf1.outputs[i].form_factor;
                 compatible &= (conf1.outputs[i] == clone);
             }
             else

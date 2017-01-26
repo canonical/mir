@@ -26,6 +26,7 @@
 #include "mir_toolkit/event.h"
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -40,6 +41,7 @@ class CursorListener;
 class InputRegion;
 class InputDispatcher;
 class KeyMapper;
+class SeatObserver;
 
 /*
  * The SeatInputDeviceTracker bundles the input device properties of a group of devices defined by a seat:
@@ -56,7 +58,8 @@ public:
                            std::shared_ptr<CursorListener> const& cursor_listener,
                            std::shared_ptr<InputRegion> const& input_region,
                            std::shared_ptr<KeyMapper> const& key_mapper,
-                           std::shared_ptr<time::Clock> const& clock);
+                           std::shared_ptr<time::Clock> const& clock,
+                           std::shared_ptr<SeatObserver> const& observer);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -77,6 +80,7 @@ private:
     void update_spots();
     void update_states();
     bool filter_input_event(MirInputEvent const* event);
+    void confine_function(mir::geometry::Point& p) const;
     void confine_pointer();
 
     std::shared_ptr<InputDispatcher> const dispatcher;
@@ -85,6 +89,7 @@ private:
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<SeatObserver> const observer;
 
     struct DeviceData
     {
@@ -106,7 +111,9 @@ private:
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
-    std::function<void(mir::geometry::Point&)> confine_function;
+    mir::geometry::Rectangles confined_region;
+
+    std::mutex mutable region_mutex;
 };
 
 }

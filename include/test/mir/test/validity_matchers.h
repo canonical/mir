@@ -52,7 +52,7 @@ template<>
 bool IsValidMatcher::MatchAndExplain(MirConnection* connection, MatchResultListener* listener) const;
 
 template<>
-bool IsValidMatcher::MatchAndExplain(MirSurface* surface, MatchResultListener* listener) const;
+bool IsValidMatcher::MatchAndExplain(MirWindow* surface, MatchResultListener* listener) const;
 
 // To construct a polymorphic matcher, pass an instance of the class
 // to MakePolymorphicMatcher().  Note the return type.

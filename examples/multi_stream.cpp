@@ -27,6 +27,8 @@
 
 #include "client_helpers.h"
 
+#include <memory>
+
 namespace po = boost::program_options;
 
 namespace me = mir::examples;
@@ -203,15 +205,16 @@ int main(int argc, char* argv[])
 
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
-    me::NormalSurface surface{connection, 200, 200, true, false};
-    MirBufferStream* surface_stream = mir_surface_get_buffer_stream(surface);
-    me::BufferStream top{connection, 100, 100, true, false};
-    me::BufferStream bottom{connection, 50, 50, true, false};
+    me::NormalWindow window{connection, 200, 200, true, false};
+    MirBufferStream* surface_stream = mir_window_get_buffer_stream(window);
+    int topSize = 100, dTopSize = 2;
+    auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
+    me::BufferStream bottom(connection, 50, 50, true, false);
 
     fill_stream_with(surface_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(surface_stream);
-    fill_stream_with(top, 0, 255, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(top);
+    fill_stream_with(*top, 0, 255, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(*top);
     fill_stream_with(bottom, 0, 0, 255, 128);
     mir_buffer_stream_swap_buffers_sync(bottom);
 
@@ -227,12 +230,12 @@ int main(int argc, char* argv[])
 
     arrangement[2].displacement_x = -40;
     arrangement[2].displacement_y = -10;
-    arrangement[2].stream = top;
+    arrangement[2].stream = *top;
 
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
 
-    auto spec = mir_connection_create_spec_for_changes(connection);
+    auto spec = mir_create_window_spec(connection);
 
     int baseColour = 255, dbase = 1;
     int topColour = 255, dtop = 1;
@@ -260,22 +263,26 @@ int main(int argc, char* argv[])
         bounce_position(arrangement[2].displacement_x, top_dx, -100, 300);
         bounce_position(arrangement[2].displacement_y, top_dy, -100, 300);
 
-        mir_surface_spec_set_streams(spec, arrangement.data(), arrangement.size());
-        mir_surface_apply_spec(surface, spec);
-
         bounce_position(baseColour, dbase, 128, 255);
         bounce_position(topColour, dtop, 200, 255);
         bounce_position(bottomColour, dbottom, 100, 255);
 
+        bounce_position(topSize, dTopSize, 70, 120);
+
+        top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
+        arrangement[2].stream = *top;
+
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
-        fill_stream_with(top, 0, topColour, 0, 128);
+        fill_stream_with(*top, 0, topColour, 0, 128);
 
+        mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
-        mir_buffer_stream_swap_buffers_sync(top);
+        mir_buffer_stream_swap_buffers_sync(*top);
+        mir_window_apply_spec(window, spec);
     }
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
     close(signal_watch);
 
     std::cout << "Quitting; have a nice day." << std::endl;

@@ -35,7 +35,7 @@ namespace
 {
 struct MockBufferMap : mf::ClientBuffers
 {
-    MOCK_METHOD1(add_buffer, mg::BufferID(mg::BufferProperties const&));
+    MOCK_METHOD1(add_buffer, mg::BufferID(std::shared_ptr<mg::Buffer> const&));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
@@ -142,6 +142,7 @@ TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_can_acquire_differen
     EXPECT_THAT(cbuffer1, Ne(cbuffer2));
     arbiter.compositor_release(cbuffer2);
     arbiter.compositor_release(cbuffer1);
+    Mock::VerifyAndClearExpectations(&mock_map);
 }
 
 TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_buffer_syncs_to_fastest_compositor)
@@ -394,6 +395,8 @@ TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
     arbiter.compositor_release(b4);
     auto b6 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(b6);
+
+    Mock::VerifyAndClearExpectations(&mock_map);
 }
 
 TEST_F(MultiMonitorArbiter, can_check_if_buffers_are_ready)
@@ -458,6 +461,7 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
     EXPECT_THAT(b2, Eq(buffers[1]));
     arbiter.compositor_release(b1);
     arbiter.compositor_release(b2);
+    Mock::VerifyAndClearExpectations(&mock_map);
 } 
 
 TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenario)
@@ -513,6 +517,7 @@ TEST_F(MultiMonitorArbiter, will_ensure_smooth_monitor_production)
     EXPECT_THAT(b3, Eq(buffers[1]));
     EXPECT_THAT(b4, Eq(buffers[1]));
     EXPECT_THAT(b5, Eq(buffers[2]));
+    Mock::VerifyAndClearExpectations(&mock_map);
 } 
 
 TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
@@ -531,4 +536,12 @@ TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 
     auto b3 = arbiter.compositor_acquire(&comp_id1);
     EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
+}
+
+TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)
+{
+    mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
+    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
+    schedule.set_schedule({buffers[0]});
+    arbiter.advance_schedule();
 }

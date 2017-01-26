@@ -26,20 +26,14 @@ namespace mir
 {
 namespace graphics
 {
-
-class NativeBuffer;
 namespace android
 {
-
+class NativeBuffer;
 class Gralloc
 {
 public:
     virtual std::shared_ptr<NativeBuffer> alloc_buffer(
-        geometry::Size size, MirPixelFormat, unsigned int usage_bitmask) = 0;
-    virtual std::shared_ptr<NativeBuffer> alloc_framebuffer(
-        geometry::Size size, MirPixelFormat) = 0;
-    virtual std::shared_ptr<NativeBuffer> alloc_buffer(
-        geometry::Size size, MirPixelFormat, BufferUsage usage) = 0;
+        geometry::Size size, uint32_t android_format, uint32_t usage_bitmask) = 0;
 protected:
     Gralloc() = default;
     virtual ~Gralloc() {}

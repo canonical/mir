@@ -25,6 +25,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "native_buffer.h"
 
 #include "mir/graphics/egl_error.h"
 
@@ -55,8 +56,7 @@ mge::Platform::Platform(
     EGLDeviceEXT device,
     std::shared_ptr<EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& /*report*/)
-    : device{device},
-      display{EGL_NO_DISPLAY},
+    : display{EGL_NO_DISPLAY},
       drm_node{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)}
 {
     using namespace std::literals;
@@ -86,11 +86,14 @@ mge::Platform::Platform(
 
     EGLint major{1};
     EGLint minor{4};
+    auto const required_egl_version_major = major;
+    auto const required_egl_version_minor = minor;
     if (eglInitialize(display, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
     }
-    if (major != 1 || minor != 4)
+    if ((major < required_egl_version_major) ||
+        (major == required_egl_version_major && minor < required_egl_version_minor))
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{
             "Incompatible EGL version"s +
@@ -120,7 +123,9 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
         {
             if (msg_type == mg::BufferIpcMsgType::full_msg)
             {
-                auto native_handle = buffer.native_buffer_handle();
+                auto native_handle = std::dynamic_pointer_cast<mge::NativeBuffer>(buffer.native_buffer_handle());
+                if (!native_handle)
+                    BOOST_THROW_EXCEPTION(std::invalid_argument{"could not convert NativeBuffer"});
                 for(auto i=0; i<native_handle->data_items; i++)
                 {
                     packer.pack_data(native_handle->data[i]);
@@ -130,7 +135,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
                     packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
                 }
 
-                packer.pack_stride(buffer.stride());
+                packer.pack_stride(mir::geometry::Stride{native_handle->stride});
                 packer.pack_flags(native_handle->flags);
                 packer.pack_size(buffer.size());
             }
@@ -154,9 +159,4 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     };
 
     return mir::make_module_ptr<NoIPCOperations>();
-}
-
-EGLNativeDisplayType mge::Platform::egl_native_display() const
-{
-    return display;
 }

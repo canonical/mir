@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_H_
 
-#include "src/client/mir_buffer.h"
+#include "src/include/client/mir/mir_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -42,19 +42,18 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_METHOD0(submitted, void());
     MOCK_METHOD0(received, void());
     MOCK_METHOD1(received, void(MirBufferPackage const&));
-    MOCK_CONST_METHOD0(as_mir_native_buffer, MirNativeBuffer*());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(map_region, MirGraphicsRegion());
-
-    MOCK_METHOD2(set_fence, void(MirNativeFence*, MirBufferAccess));
-    MOCK_CONST_METHOD0(get_fence, MirNativeFence*());
-    MOCK_METHOD2(wait_fence, bool(MirBufferAccess, std::chrono::nanoseconds));
+    MOCK_METHOD0(unmap_region, void());
 
     MOCK_CONST_METHOD0(buffer_usage, MirBufferUsage());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(allocating_connection, MirConnection*());
     MOCK_METHOD0(increment_age, void());
+    MOCK_CONST_METHOD0(valid, bool());
+    MOCK_CONST_METHOD0(error_message, char const*());
+    MOCK_METHOD2(set_callback, void(MirBufferCallback callback, void* context));
 };
 
 using StubMirBuffer = testing::NiceMock<MockMirBuffer>; 

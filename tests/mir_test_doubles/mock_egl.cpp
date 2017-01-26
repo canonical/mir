@@ -49,6 +49,8 @@ void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
 EGLSyncKHR extension_eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
 EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
 EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
+EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
+    EGLSurface surface, int64_t *ust, int64_t *msc, int64_t *sbc);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -144,6 +146,10 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglDestroySyncKHR)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglClientWaitSyncKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglGetSyncValuesCHROMIUM")))
+        .WillByDefault(Return(
+            reinterpret_cast<func_ptr_t>(extension_eglGetSyncValuesCHROMIUM)
+            ));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
@@ -161,7 +167,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
     // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Invoke(
-            [&] (EGLDisplay,EGLConfig,NativeWindowType nw, EGLint const*) -> EGLSurface
+            [&] (EGLDisplay,EGLConfig,AnyNativeType nw, EGLint const*) -> EGLSurface
             {
                 return reinterpret_cast<EGLSurface>(nw);
             }));
@@ -171,7 +177,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
             [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
             {
                 auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
-                mir_surf->request_and_wait_for_next_buffer();
+                mir_surf->swap_buffers_sync();
                 return true;
             }));
 }
@@ -207,7 +213,7 @@ EGLint eglGetError (void)
 EGLDisplay eglGetDisplay (NativeDisplayType display)
 {
     CHECK_GLOBAL_MOCK(EGLDisplay);
-    return global_mock_egl->eglGetDisplay(display);
+    return global_mock_egl->eglGetDisplay(reinterpret_cast<mtd::MockEGL::AnyNativeType>(display));
 }
 
 EGLBoolean eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
@@ -261,13 +267,13 @@ EGLBoolean eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribut
 EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreateWindowSurface(dpy, config, window, attrib_list);
+    return global_mock_egl->eglCreateWindowSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(window), attrib_list);
 }
 
 EGLSurface eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config, NativePixmapType pixmap, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreatePixmapSurface(dpy, config, pixmap, attrib_list);
+    return global_mock_egl->eglCreatePixmapSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(pixmap), attrib_list);
 }
 
 EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)
@@ -377,7 +383,7 @@ EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw)
 EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType target)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglCopyBuffers(dpy, surface, target);
+    return global_mock_egl->eglCopyBuffers(dpy, surface, reinterpret_cast<mtd::MockEGL::AnyNativeType>(target));
 }
 
 /* extensions */
@@ -415,4 +421,12 @@ EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint fl
 {
     CHECK_GLOBAL_MOCK(EGLint);
     return global_mock_egl->eglClientWaitSyncKHR(dpy, sync, flags, timeout);
+}
+
+EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
+              EGLSurface surface, int64_t *ust, int64_t *msc, int64_t *sbc)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglGetSyncValuesCHROMIUM(dpy, surface,
+                                                     ust, msc, sbc);
 }

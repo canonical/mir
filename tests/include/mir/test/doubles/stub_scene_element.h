@@ -43,7 +43,7 @@ public:
     {
     }
 
-    std::shared_ptr<graphics::Renderable> renderable() const
+    std::shared_ptr<graphics::Renderable> renderable() const override
     {
         return renderable_;
     }

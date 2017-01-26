@@ -15,10 +15,7 @@ add_library(mirclientplatformandroidobjects OBJECT
   android_native_display_container.cpp
 )
 
-mir_add_library_with_symbols(
-  mirclientplatformandroid MODULE
-
-  ${symbol_map}
+add_library(mirclientplatformandroid MODULE
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
 )
 
@@ -29,6 +26,7 @@ set_target_properties(
   PREFIX ""
   SUFFIX ".so.${MIR_CLIENT_PLATFORM_ABI}"
   LINK_FLAGS "-Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 target_link_libraries(mirclientplatformandroid

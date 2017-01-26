@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "display_server.h"
-#include "buffer_stream_tracker.h"
 #include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
@@ -35,6 +34,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 namespace mir
 {
@@ -45,7 +45,6 @@ class Authority;
 namespace graphics
 {
 class Buffer;
-class Display;
 class DisplayConfiguration;
 class GraphicBufferAllocator;
 }
@@ -65,12 +64,11 @@ class ApplicationNotRespondingDetector;
 /// processes and the core of the mir system.
 namespace frontend
 {
-class ClientBufferTracker;
 class Shell;
 class Session;
 class Surface;
 class MessageResourceCache;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class EventSink;
 class EventSinkFactory;
 class MessageSender;
@@ -78,6 +76,23 @@ class DisplayChanger;
 class Screencast;
 class PromptSession;
 class BufferStream;
+
+namespace detail
+{
+typedef IntWrapper<struct PromptSessionTag> PromptSessionId;
+
+struct PromptSessionStore
+{
+    auto insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId;
+    auto fetch(PromptSessionId session) const -> std::shared_ptr<PromptSession>;
+    void remove(PromptSessionId session);
+
+private:
+    std::mutex mutable mutex;
+    int32_t next_id{0};
+    std::map<PromptSessionId, std::weak_ptr<PromptSession>> mutable sessions;
+};
+}
 
 /**
  * SessionMediator relays requests from the client process into the server.
@@ -97,7 +112,7 @@ public:
         std::shared_ptr<graphics::PlatformIpcOperations> const& ipc_operations,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
-        std::shared_ptr<SessionMediatorReport> const& report,
+        std::shared_ptr<SessionMediatorObserver> const& observer,
         std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<MessageResourceCache> const& resource_cache,
@@ -146,6 +161,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) override;
+    void remove_session_configuration(
+        mir::protobuf::Void const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void set_base_display_configuration(
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
@@ -158,6 +177,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void cancel_base_display_configuration_preview(
+        mir::protobuf::Void const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
@@ -165,6 +188,10 @@ public:
     void screencast_buffer(
         mir::protobuf::ScreencastId const* request,
         mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override;
+    void screencast_to_buffer(
+        mir::protobuf::ScreencastRequest const* request,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
     void release_screencast(
         mir::protobuf::ScreencastId const* request,
@@ -188,15 +215,11 @@ public:
         google::protobuf::Closure* done) override;
     void start_prompt_session(
         mir::protobuf::PromptSessionParameters const* request,
-        mir::protobuf::Void* response,
+        mir::protobuf::PromptSession* response,
         google::protobuf::Closure* done) override;
     void stop_prompt_session(
-        mir::protobuf::Void const* request,
+        mir::protobuf::PromptSession const* request,
         mir::protobuf::Void* response,
-        google::protobuf::Closure* done) override;
-    void exchange_buffer(
-        mir::protobuf::BufferRequest const* request,
-        mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
     void submit_buffer(
         mir::protobuf::BufferRequest const* request,
@@ -247,7 +270,8 @@ private:
     std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
         protobuf::DisplayConfiguration const*);
 
-    virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
+    virtual std::function<void(std::shared_ptr<Session> const&)>
+    prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const;
 
     void destroy_screencast_sessions();
 
@@ -258,7 +282,7 @@ private:
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
-    std::shared_ptr<SessionMediatorReport> const report;
+    std::shared_ptr<SessionMediatorObserver> const observer;
     std::shared_ptr<EventSinkFactory> const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<MessageSender> const message_sender;
@@ -271,11 +295,12 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<input::InputDeviceHub> const hub;
 
-    BufferStreamTracker buffer_stream_tracker;
     ScreencastBufferTracker screencast_buffer_tracker;
 
     std::weak_ptr<Session> weak_session;
-    std::weak_ptr<PromptSession> weak_prompt_session;
+    detail::PromptSessionStore prompt_sessions;
+
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> legacy_default_stream_map;
 };
 
 }

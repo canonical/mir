@@ -18,17 +18,20 @@
 
 #include "mir/events/close_surface_event.h"
 
-MirCloseSurfaceEvent::MirCloseSurfaceEvent() :
-    MirEvent(mir_event_type_close_surface)
+// MirCloseSurfaceEvent is a deprecated type, but we need to implement it
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+MirCloseSurfaceEvent::MirCloseSurfaceEvent()
 {
+    event.initCloseSurface();
 }
 
 int MirCloseSurfaceEvent::surface_id() const
 {
-    return surface_id_;
+    return event.asReader().getCloseSurface().getSurfaceId();
 }
 
 void MirCloseSurfaceEvent::set_surface_id(int id)
 {
-    surface_id_ = id;
+    event.getCloseSurface().setSurfaceId(id);
 }

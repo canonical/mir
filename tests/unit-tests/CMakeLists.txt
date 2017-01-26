@@ -30,6 +30,7 @@ include_directories(
   ${UMOCKDEV_INCLUDE_DIRS}
 
   ${PROJECT_SOURCE_DIR}/include/cookie
+  ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
@@ -37,8 +38,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
-  ${PROJECT_SOURCE_DIR}/src/platforms/android/include
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
@@ -80,6 +79,10 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  test_posix_rw_mutex.cpp
+  test_posix_timestamp.cpp
+  test_observer_multiplexer.cpp
+  test_edid.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
@@ -89,6 +92,7 @@ CMAKE_DEPENDENT_OPTION(
   "MIR_BUILD_UNIT_TESTS"
   OFF)
 
+add_subdirectory(platforms/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
@@ -113,7 +117,6 @@ mir_add_wrapped_executable(mir_unit_tests
 
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
-  ${MIR_COMMON_OBJECTS}
 )
 
 mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -131,14 +134,16 @@ target_link_libraries(
   mircommon
   client_platform_common
   server_platform_common
-  kms_utils
 
   mirclient-static
-  mirclientrpc-static
   mirclientlttng-static
+
+  mirsharedmesa-static
 
   mir-test-static
   mir-test-framework-static
+
+  mircommon
 
   ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -151,9 +156,9 @@ target_link_libraries(
 mir_add_wrapped_executable(mir_umock_unit_tests
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
+  $<TARGET_OBJECTS:mir-test-input-framework>
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
-  ${MIR_COMMON_OBJECTS}
 )
 
 add_dependencies(mir_umock_unit_tests GMock)
@@ -168,7 +173,6 @@ target_link_libraries(
   client_platform_common
 
   mirclient-static
-  mirclientrpc-static
   mirclientlttng-static
 
   mir-test-static
@@ -182,29 +186,6 @@ target_link_libraries(
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
-
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-target_link_libraries(mir_unit_tests
-  mirsharedmesaservercommon-static
-)
-target_link_libraries(mir_umock_unit_tests
-  mirsharedmesaservercommon-static
-)
-endif()
-
-if (MIR_BUILD_PLATFORM_ANDROID)
-target_link_libraries(mir_umock_unit_tests
-  mirsharedandroid-static
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
-)
-
-target_link_libraries(mir_unit_tests 
-  mirsharedandroid-static
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
-)
-endif()
 
 target_link_libraries(mir_unit_tests
 
@@ -243,3 +224,7 @@ install(TARGETS loadable_test_dso
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)
+
+mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "!(objdump -p *unit_tests* | grep NEEDED | grep GL)")

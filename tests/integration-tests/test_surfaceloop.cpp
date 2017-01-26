@@ -90,61 +90,6 @@ private:
     mtd::StubDisplaySyncGroup display_sync_group;
 };
 
-struct SurfaceSync
-{
-    void surface_created(MirSurface * new_surface)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        surface = new_surface;
-        signal.notify_all();
-    }
-
-    void surface_released(MirSurface * /*released_surface*/)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        surface = NULL;
-        signal.notify_all();
-    }
-
-    void wait_for_surface_create()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        signal.wait(lock, [&]{ return !!surface; });
-    }
-
-    void wait_for_surface_release()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        signal.wait(lock, [&]{ return !surface; });
-    }
-
-    std::mutex guard;
-    std::condition_variable signal;
-    MirSurface * surface{nullptr};
-};
-
-void create_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_created(surface);
-}
-
-void release_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_released(surface);
-}
-
-void wait_for_surface_create(SurfaceSync* context)
-{
-    context->wait_for_surface_create();
-}
-
-void wait_for_surface_release(SurfaceSync* context)
-{
-    context->wait_for_surface_release();
-}
-
 struct BufferCounterConfig : mtf::StubbedServerConfiguration
 {
     class CountingStubBuffer : public mtd::StubBuffer
@@ -178,32 +123,6 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
             return std::make_shared<CountingStubBuffer>();
         }
     };
-
-    class StubPlatform : public mtd::NullPlatform
-    {
-    public:
-        mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
-        {
-            return mir::make_module_ptr<StubGraphicBufferAllocator>();
-        }
-
-        mir::UniqueModulePtr<mg::Display> create_display(
-            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-            std::shared_ptr<mg::GLConfig> const&) override
-        {
-            return mir::make_module_ptr<StubDisplay>();
-        }
-    };
-
-    std::shared_ptr<mg::Platform> the_graphics_platform()
-    {
-        if (!platform)
-            platform = std::make_shared<StubPlatform>();
-
-        return platform;
-    }
-
-    std::shared_ptr<mg::Platform> platform;
 };
 
 std::mutex BufferCounterConfig::CountingStubBuffer::buffers_mutex;
@@ -215,19 +134,19 @@ int BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 {
     static const int max_surface_count = 5;
-    SurfaceSync ssync[max_surface_count];
-    MirSurfaceSpec* surface_spec;
+    MirWindow* window[max_surface_count];
+    MirWindowSpec* surface_spec;
 
     void SetUp() override
     {
         mtf::BasicClientServerFixture<BufferCounterConfig>::SetUp();
-        surface_spec = mir_connection_create_spec_for_normal_surface(
-            connection, 640, 480, mir_pixel_format_abgr_8888);
+        surface_spec = mir_create_normal_window_spec(connection, 640, 480);
+        mir_window_spec_set_pixel_format(surface_spec, mir_pixel_format_abgr_8888);
     }
 
     void TearDown() override
     {
-        mir_surface_spec_release(surface_spec);
+        mir_window_spec_release(surface_spec);
 
         mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 
@@ -246,23 +165,14 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
+        window[i] = mir_create_window_sync(surface_spec);
 
     for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_create(ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_release(ssync+i);
+        mir_window_release_sync(window[i]);
 }
 
 TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_surface_create(surface_spec, create_surface_callback, ssync+i);
-
-    for (int i = 0; i != max_surface_count; ++i)
-        wait_for_surface_create(ssync+i);
+        window[i] = mir_create_window_sync(surface_spec);
 }

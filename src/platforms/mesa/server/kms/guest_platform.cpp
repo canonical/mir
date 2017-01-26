@@ -26,6 +26,7 @@
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
+#include "mir_toolkit/extensions/set_gbm_device.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -39,36 +40,17 @@ namespace mgm = mg::mesa;
 
 namespace
 {
-
-void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* gbm_dev)
+//TODO: construction for mclm::ClientPlatform is roundabout/2-step.
+//      Might be better for the extension to be a different way to allocate
+//      MirConnection, but beyond scope of work.
+void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
 {
-    MirMesaSetGBMDeviceRequest const request{gbm_dev};
-    mg::PlatformOperationMessage request_msg;
-    request_msg.data.resize(sizeof(MirMesaSetGBMDeviceRequest));
-    std::memcpy(request_msg.data.data(), &request, sizeof(request));
-
-    auto const response_msg = nested_context.platform_operation(
-        MirMesaPlatformOperation::set_gbm_device,
-        request_msg);
-
-    if (response_msg.data.size() == sizeof(MirMesaSetGBMDeviceResponse))
-    {
-        static int const success{0};
-        MirMesaSetGBMDeviceResponse response{-1};
-        std::memcpy(&response, response_msg.data.data(), response_msg.data.size());
-        if (response.status != success)
-        {
-            std::string const msg{"Nested Mir failed to set the gbm device."};
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(std::runtime_error(msg))
-                    << boost::errinfo_errno(response.status));
-        }
-    }
+    std::string const msg{"Nested Mir failed to set the gbm device."};
+    auto ext = nested_context.set_gbm_extension();
+    if (ext.is_set())
+        ext.value()->set_gbm_device(device);
     else
-    {
-        std::string const msg{"Nested Mir failed to set the gbm device: Invalid response."};
-        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    }
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
 }
 
@@ -76,8 +58,10 @@ mgm::GuestPlatform::GuestPlatform(
     std::shared_ptr<NestedContext> const& nested_context)
     : nested_context{nested_context}
 {
-    auto const fds = nested_context->platform_fd_items();
-    gbm.setup(fds.at(0));
+    auto ext = nested_context->auth_extension();
+    if (!ext.is_set())
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not access drm auth fd"));
+    gbm.setup(ext.value()->auth_fd());
     set_guest_gbm_device(*nested_context, gbm.device);
 }
 
@@ -97,9 +81,4 @@ mir::UniqueModulePtr<mg::Display> mgm::GuestPlatform::create_display(
     std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("mgm::GuestPlatform cannot create display\n"));
-}
-
-EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
-{
-    return gbm.device;
 }

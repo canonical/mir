@@ -20,6 +20,7 @@
 #include "mir/scene/buffer_stream_factory.h"
 
 #include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
 
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
@@ -79,9 +80,9 @@ public:
         return std::make_shared<StubBufferStream>(framedropping_enabled);
     }
 
-    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&)
+    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&) override
     {
-        return nullptr;
+        return std::make_shared<mtd::StubClientBuffers>();
     }
 
 private:
@@ -111,12 +112,15 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     void SetUp()
     {
         mtf::BasicClientServerFixture<ServerConfig>::SetUp();
-        surface = mtf::make_any_surface(connection);
+        window = mtf::make_any_surface(connection);
+        stream = mir_connection_create_buffer_stream_sync(
+            connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
     }
 
     void TearDown()
     {
-        mir_surface_release_sync(surface);
+        mir_buffer_stream_release_sync(stream);
+        mir_window_release_sync(window);
         mtf::BasicClientServerFixture<ServerConfig>::TearDown();
     }
 
@@ -125,42 +129,37 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
         return server_configuration.framedropping_enabled;
     }
 
-    MirSurface* surface;
+    MirWindow* window;
+    MirBufferStream* stream;
 };
 
 }
 
 TEST_F(SwapInterval, defaults_to_one)
 {
-    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());
 }
 
 TEST_F(SwapInterval, change_to_zero_enables_framedropping)
 {
-    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
+#pragma GCC diagnostic pop
 
-    EXPECT_EQ(0, mir_surface_get_swapinterval(surface));
+    EXPECT_EQ(0, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_TRUE(framedropping_enabled());
 }
 
 TEST_F(SwapInterval, change_to_one_disables_framedropping)
 {
-    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
-    mir_wait_for(mir_surface_set_swapinterval(surface, 1));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
+    mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 1));
+#pragma GCC diagnostic pop
 
-    EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
+    EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());
-}
-
-TEST_F(SwapInterval, is_not_changed_if_requested_value_is_unsupported)
-{
-    auto const original_swapinterval = mir_surface_get_swapinterval(surface);
-    auto const original_framedropping = framedropping_enabled();
-
-    int const unsupported_swap_interval_value{2};
-    EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, unsupported_swap_interval_value));
-
-    EXPECT_EQ(original_swapinterval, mir_surface_get_swapinterval(surface));
-    EXPECT_EQ(original_framedropping, framedropping_enabled());
 }

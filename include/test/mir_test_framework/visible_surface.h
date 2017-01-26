@@ -29,21 +29,21 @@ namespace mir_test_framework
 class VisibleSurface
 {
 public:
-    explicit VisibleSurface(MirSurfaceSpec* spec);
+    explicit VisibleSurface(MirWindowSpec* spec);
     VisibleSurface(VisibleSurface&&);
     VisibleSurface& operator=(VisibleSurface&&);
     VisibleSurface(VisibleSurface const&) = delete;
     VisibleSurface& operator=(VisibleSurface const&) = delete;
 
     ~VisibleSurface();
-    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context);
-    void set_visibility(MirSurface* surf, bool vis);
-    operator MirSurface*() const;
+    static void event_callback(MirWindow* surf, MirEvent const* ev, void* context);
+    void set_visibility(MirWindow* surf, bool vis);
+    operator MirWindow*() const;
 private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    MirSurface* surface;
+    MirWindow* window;
     bool visible;
 };
 

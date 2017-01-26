@@ -21,6 +21,7 @@
 
 #include "mir/shell/shell.h"
 #include "mir/shell/window_manager_builder.h"
+#include "mir/scene/surface_observer.h"
 
 #include <mutex>
 
@@ -69,12 +70,12 @@ public:
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
+        MirWindowAttrib attrib,
         int value) override;
 
     int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
-        MirSurfaceAttrib attrib) override;
+        MirWindowAttrib attrib) override;
 
     void raise_surface(
         std::shared_ptr<scene::Session> const& session,
@@ -121,6 +122,8 @@ public:
 
     bool handle(MirEvent const& event) override;
 
+    void update_focused_surface_confined_region();
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;
@@ -135,6 +138,7 @@ private:
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
+    std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
 
     void set_focus_to_locked(
         std::unique_lock<std::mutex> const& lock,

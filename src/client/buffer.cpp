@@ -23,15 +23,14 @@
 namespace mcl = mir::client;
 
 mcl::Buffer::Buffer(
-    mir_buffer_callback cb, void* context,
+    MirBufferCallback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
     MirConnection* connection,
     MirBufferUsage usage) :
-    cb(cb),
-    cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
+    cb([this, cb, context]{ (*cb)(reinterpret_cast<::MirBuffer*>(this), context); }),
     owned(false),
     connection(connection),
     usage(usage)
@@ -60,8 +59,8 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
-    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 
+    cb();
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
@@ -74,7 +73,8 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
+
+    cb();
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -90,24 +90,10 @@ MirGraphicsRegion mcl::Buffer::map_region()
     };
 }
 
-MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
+void mcl::Buffer::unmap_region()
 {
-    return buffer->as_mir_native_buffer();
-}
-
-void mcl::Buffer::set_fence(MirNativeFence* native_fence, MirBufferAccess access)
-{
-    buffer->set_fence(native_fence, access);
-}
-
-MirNativeFence* mcl::Buffer::get_fence() const
-{
-    return buffer->get_fence();
-}
-
-bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
-{
-    return buffer->wait_fence(access, timeout);
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    mapped_region = nullptr;
 }
 
 MirConnection* mcl::Buffer::allocating_connection() const
@@ -137,4 +123,19 @@ std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
 void mcl::Buffer::increment_age()
 {
     buffer->increment_age();
+}
+
+bool mcl::Buffer::valid() const
+{
+    return true;
+}
+
+char const* mcl::Buffer::error_message() const
+{
+    return "";
+}
+
+void mcl::Buffer::set_callback(MirBufferCallback callback, void* context)
+{
+    cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

@@ -21,10 +21,17 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/server/graphics/nested/host_stream.h"
+#include "src/server/graphics/nested/host_chain.h"
+#include "src/server/graphics/nested/host_surface_spec.h"
+#include "src/client/display_configuration.h"
 #include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
 
+#include "mir/input/mir_input_config.h"
 #include "mir_toolkit/mir_connection.h"
+#include <gmock/gmock.h>
+#include "mir/test/gmock_fixes.h"
 
 namespace mir
 {
@@ -36,35 +43,37 @@ namespace doubles
 class StubHostConnection : public graphics::nested::HostConnection
 {
 public:
-    std::vector<int> platform_fd_items() override { return {}; }
+    StubHostConnection(std::shared_ptr<graphics::nested::HostSurface> const& surf) :
+        surface(surf)
+    {
+    }
+
+    StubHostConnection() :
+        StubHostConnection(std::make_shared<NullHostSurface>())
+    {
+    }
 
     EGLNativeDisplayType egl_native_display() override { return {}; }
 
-    std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+    std::shared_ptr<MirDisplayConfig> create_display_config() override
     {
-        return std::shared_ptr<MirDisplayConfiguration>{
-            new MirDisplayConfiguration{0, nullptr, 0, nullptr}};
+        auto display_conf = mir::protobuf::DisplayConfiguration{};
+        return std::shared_ptr<MirDisplayConfig>{
+            new MirDisplayConfig{display_conf}};
     }
 
     void set_display_config_change_callback(std::function<void()> const&) override
     {
     }
 
-    void apply_display_config(MirDisplayConfiguration&) override {}
+    void apply_display_config(MirDisplayConfig&) override {}
 
     std::shared_ptr<graphics::nested::HostSurface>
         create_surface(
-            int /*width*/, int /*height*/, MirPixelFormat /*pf*/, char const* /*name*/,
-            MirBufferUsage /*usage*/, uint32_t /*output_id*/) override
+            std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+            graphics::BufferProperties, char const*, uint32_t) override
     {
-        class NullHostSurface : public graphics::nested::HostSurface
-        {
-        public:
-            EGLNativeWindowType egl_native_window() override { return {}; }
-            void set_event_handler(mir_surface_event_callback, void*) override {}
-        };
-
-        return std::make_shared<NullHostSurface>();
+        return surface;
     }
 
     graphics::PlatformOperationMessage platform_operation(
@@ -73,19 +82,18 @@ public:
         return {{},{}};
     }
 
-    void set_cursor_image(graphics::CursorImage const&)
+    void set_cursor_image(graphics::CursorImage const&) override
     {
     }
-    void hide_cursor()
+    void hide_cursor() override
     {
     }
 
-    auto graphics_platform_library() -> std::string { return {}; }
+    auto graphics_platform_library() -> std::string override { return {}; }
 
-    graphics::nested::UniqueInputConfig create_input_device_config()
+    graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
-                                                   mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_release);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
@@ -97,8 +105,116 @@ public:
     void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
     {
     }
+
+    std::unique_ptr<graphics::nested::HostStream> create_stream(graphics::BufferProperties const&) const override
+    {
+        struct NullStream : graphics::nested::HostStream
+        {
+            MirRenderSurface* rs() const override { return nullptr; }
+            MirBufferStream* handle() const override { return nullptr; }
+            EGLNativeWindowType egl_native_window() const override { return 0; }
+        };
+        return std::make_unique<NullStream>();
+    }
+
+    std::unique_ptr<graphics::nested::HostChain> create_chain() const override
+    {
+        struct NullHostChain : graphics::nested::HostChain
+        {
+            MirRenderSurface* rs() const override { return nullptr; }
+            void submit_buffer(graphics::nested::NativeBuffer&) override {}
+            MirPresentationChain* handle() override { return nullptr; }
+            void set_submission_mode(graphics::nested::SubmissionMode) override {}
+        };
+        return std::make_unique<NullHostChain>();
+    }
+
+    class NullHostSurface : public graphics::nested::HostSurface
+    {
+    public:
+        EGLNativeWindowType egl_native_window() override { return {}; }
+        void set_event_handler(MirWindowEventCallback, void*) override {}
+        void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
+    };
+    std::shared_ptr<graphics::nested::HostSurface> const surface;
+    
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(graphics::BufferProperties const&)
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat)
+    {
+        return nullptr;
+    }
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t)
+    {
+        return nullptr;
+    }
+
+    MirNativeBuffer* get_native_handle(MirBuffer*)
+    {
+        return nullptr;
+    }
+
+    MirGraphicsRegion get_graphics_region(MirBuffer*)
+    {
+        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
+    }
+
+    std::unique_ptr<graphics::nested::HostSurfaceSpec> create_surface_spec()
+    {
+        struct NullSpec : graphics::nested::HostSurfaceSpec
+        {
+            void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
+            void add_stream(graphics::nested::HostStream&, geometry::Displacement, geometry::Size) override {}
+            MirWindowSpec* handle() { return nullptr; }
+        }; 
+        return std::make_unique<NullSpec>();
+    }
+    bool supports_passthrough()
+    {
+        return true;
+    }
+    optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension()
+    {
+        return {};
+    }
+    optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension()
+    {
+        return {};
+    }
+    void* request_interface(char const*, int) { return nullptr; }
 };
 
+struct MockHostConnection : StubHostConnection
+{
+    MOCK_METHOD1(set_input_device_change_callback, void (std::function<void(graphics::nested::UniqueInputConfig)> const&));
+    MOCK_METHOD1(set_input_event_callback, void (std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&));
+    MOCK_CONST_METHOD0(create_chain, std::unique_ptr<graphics::nested::HostChain>());
+    MOCK_CONST_METHOD1(create_stream, std::unique_ptr<graphics::nested::HostStream>(graphics::BufferProperties const&));
+    MOCK_METHOD5(create_surface, std::shared_ptr<graphics::nested::HostSurface>
+        (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
+         graphics::BufferProperties, char const*, uint32_t));
+    MOCK_METHOD2(request_interface, void*(char const*, int));
+
+    void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
+    {
+        if (event_callback)
+            event_callback(event, source_frame);
+    }
+
+    MockHostConnection()
+    {
+        using namespace testing;
+        ON_CALL(*this, set_input_device_change_callback(_))
+            .WillByDefault(SaveArg<0>(&device_change_callback));
+        ON_CALL(*this, set_input_event_callback(_))
+            .WillByDefault(SaveArg<0>(&event_callback));
+    }
+
+    std::function<void(graphics::nested::UniqueInputConfig)> device_change_callback;
+    std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
+};
 
 }
 }

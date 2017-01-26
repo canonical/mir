@@ -19,11 +19,14 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_prompt_session.h"
 
-#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator_observer.h"
+#include "mir/observer_registrar.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir/test/signal.h"
+
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,11 +40,10 @@ using testing::_;
 namespace
 {
 
-struct MockSessionMediatorReport : mf::SessionMediatorReport
+struct MockSessionMediatorReport : mf::SessionMediatorObserver
 {
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
@@ -72,10 +74,10 @@ struct SessionMediatorReportTest : mtf::HeadlessInProcessServer
 {
     void SetUp() override
     {
-        server.override_the_session_mediator_report(
-            [this] { return mt::fake_shared(report); });
-
         mtf::HeadlessInProcessServer::SetUp();
+
+        server.the_session_mediator_observer_registrar()->register_interest(
+            report);
     }
 
     void TearDown() override
@@ -96,7 +98,8 @@ struct SessionMediatorReportTest : mtf::HeadlessInProcessServer
         connection = nullptr;
     }
 
-    testing::NiceMock<MockSessionMediatorReport> report;
+    std::shared_ptr<testing::NiceMock<MockSessionMediatorReport>> report{
+        std::make_shared<testing::NiceMock<MockSessionMediatorReport>>()};
     MirConnection* connection = nullptr;
 };
 
@@ -104,68 +107,107 @@ struct SessionMediatorReportTest : mtf::HeadlessInProcessServer
 
 TEST_F(SessionMediatorReportTest, session_connect_called)
 {
-    EXPECT_CALL(report, session_connect_called(_));
+    EXPECT_CALL(*report, session_connect_called(_));
     connect_client();
 }
 
 TEST_F(SessionMediatorReportTest, session_disconnect_called)
 {
+    using namespace testing;
+    using namespace std::chrono_literals;
+
     connect_client();
 
-    EXPECT_CALL(report, session_disconnect_called(_));
+    auto report_received = std::make_shared<mt::Signal>();
+    ON_CALL(*report, session_disconnect_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
     disconnect_client();
-    testing::Mock::VerifyAndClearExpectations(&report);
+    EXPECT_TRUE(report_received->wait_for(10s));
 }
 
 TEST_F(SessionMediatorReportTest, session_create_and_release_surface_called)
 {
+    using namespace testing;
+    using namespace std::chrono_literals;
+
     connect_client();
 
-    EXPECT_CALL(report, session_create_surface_called(_));
-    auto const surface = mtf::make_any_surface(connection);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    auto report_received = std::make_shared<mt::Signal>();
+    ON_CALL(*report, session_create_surface_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+    auto const window = mtf::make_any_surface(connection);
+    EXPECT_TRUE(report_received->wait_for(10s));
 
-    EXPECT_CALL(report, session_release_surface_called(_));
-    mir_surface_release_sync(surface);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    report_received->reset();
+
+    ON_CALL(*report, session_release_surface_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+    mir_window_release_sync(window);
+    EXPECT_TRUE(report_received->wait_for(10s));
 }
 
-TEST_F(SessionMediatorReportTest, session_exchange_buffer_called)
+TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
 {
-    EXPECT_CALL(report, session_submit_buffer_called(_));
+    using namespace testing;
+    using namespace std::chrono_literals;
+
+    auto report_received = std::make_shared<mt::Signal>();
+    ON_CALL(*report, session_submit_buffer_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+
 
     connect_client();
 
-    auto const surface = mtf::make_any_surface(connection);
-    auto const buffer_stream = mir_surface_get_buffer_stream(surface);
+    auto const window = mtf::make_any_surface(connection);
+    auto const buffer_stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
+    EXPECT_TRUE(report_received->wait_for(10s));
 }
 
 TEST_F(SessionMediatorReportTest, session_start_and_stop_prompt_session_called)
 {
+    using namespace testing;
+    using namespace std::chrono_literals;
+
     connect_client();
 
-    EXPECT_CALL(report, session_start_prompt_session_called(_, _));
+    auto report_received = std::make_shared<mt::Signal>();
+    ON_CALL(*report, session_start_prompt_session_called(_, _))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+
     auto const prompt_session = mir_connection_create_prompt_session_sync(
         connection, getpid(), null_prompt_session_state_change_callback, nullptr);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    EXPECT_TRUE(report_received->wait_for(10s));
 
-    EXPECT_CALL(report, session_stop_prompt_session_called(_));
+    report_received->reset();
+
+    ON_CALL(*report, session_stop_prompt_session_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
     mir_prompt_session_release_sync(prompt_session);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    EXPECT_TRUE(report_received->wait_for(10s));
 }
 
 TEST_F(SessionMediatorReportTest, session_create_and_release_buffer_stream_called)
 {
+    using namespace testing;
+    using namespace std::chrono_literals;
+
     connect_client();
 
-    EXPECT_CALL(report, session_create_buffer_stream_called(_));
+    auto report_received = std::make_shared<mt::Signal>();
+    ON_CALL(*report, session_create_buffer_stream_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+
     auto const buffer_stream = mir_connection_create_buffer_stream_sync(connection,
         640, 480, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    EXPECT_TRUE(report_received->wait_for(10s));
 
-    EXPECT_CALL(report, session_release_buffer_stream_called(_));
+    report_received->reset();
+
+    ON_CALL(*report, session_release_buffer_stream_called(_))
+        .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
+
     mir_buffer_stream_release_sync(buffer_stream);
-    testing::Mock::VerifyAndClearExpectations(&report);
+    EXPECT_TRUE(report_received->wait_for(10s));
 }

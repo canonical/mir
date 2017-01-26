@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
+#include "mir/graphics/gamma_curves.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -52,22 +53,24 @@ struct DisplayConfigurationCard
  */
 enum class DisplayConfigurationOutputType
 {
-    unknown,
-    vga,
-    dvii,
-    dvid,
-    dvia,
-    composite,
-    svideo,
-    lvds,
-    component,
-    ninepindin,
-    displayport,
-    hdmia,
-    hdmib,
-    tv,
-    edp,
-    virt,
+    unknown     = mir_output_type_unknown,
+    vga         = mir_output_type_vga,
+    dvii        = mir_output_type_dvii,
+    dvid        = mir_output_type_dvid,
+    dvia        = mir_output_type_dvia,
+    composite   = mir_output_type_composite,
+    svideo      = mir_output_type_svideo,
+    lvds        = mir_output_type_lvds,
+    component   = mir_output_type_component,
+    ninepindin  = mir_output_type_ninepindin,
+    displayport = mir_output_type_displayport,
+    hdmia       = mir_output_type_hdmia,
+    hdmib       = mir_output_type_hdmib,
+    tv          = mir_output_type_tv,
+    edp         = mir_output_type_edp,
+    virt        = mir_output_type_virtual,
+    dsi         = mir_output_type_dsi,
+    dpi         = mir_output_type_dpi,
 };
 
 /**
@@ -117,6 +120,16 @@ struct DisplayConfigurationOutput
     /** Form factor of this output; phone display, tablet, monitor, TV, projector... */
     MirFormFactor form_factor;
 
+    /** Subpixel arrangement of this output */
+    MirSubpixelArrangement subpixel_arrangement;
+
+    /** The current gamma for the display */
+    GammaCurves gamma;
+    MirOutputGammaSupported gamma_supported;
+
+    /** EDID of the display, if non-empty */
+    std::vector<uint8_t> edid;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -145,6 +158,10 @@ struct UserDisplayConfigurationOutput
     MirOrientation& orientation;
     float& scale;
     MirFormFactor& form_factor;
+    MirSubpixelArrangement& subpixel_arrangement;
+    GammaCurves& gamma;
+    MirOutputGammaSupported const& gamma_supported;
+    std::vector<uint8_t const> const& edid;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;

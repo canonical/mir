@@ -92,8 +92,8 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
-    MirSurfaceState state{mir_surface_state_fullscreen};
-    MirSurfaceType type{mir_surface_type_dialog};
+    MirWindowState state{mir_window_state_fullscreen};
+    MirWindowType type{mir_window_type_dialog};
     MirOrientationMode mode{mir_orientation_mode_landscape};
     mf::SurfaceId surf_id{1000};
 
@@ -194,7 +194,7 @@ struct SurfaceCreation : public ::testing::Test
     SurfaceCreation()
         : surface(surface_name,
             rect, mir_pointer_unconfined,
-            false, streams,
+            streams,
             std::make_shared<mtd::StubInputChannel>(),
             std::make_shared<mtd::StubInputSender>(),
             nullptr /* cursor_image */, report)
@@ -379,7 +379,6 @@ TEST_F(SurfaceCreation, input_fds)
         surface_name,
         rect,
         mir_pointer_unconfined,
-        false,
         streams,
         mt::fake_shared(channel),
         std::make_shared<mtd::StubInputSender>(),
@@ -398,7 +397,6 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         surface_name,
         rect,
         mir_pointer_unconfined,
-        false,
         streams,
         std::make_shared<mtd::StubInputChannel>(),
         mt::fake_shared(mock_sender),
@@ -412,8 +410,8 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(ByRef(*key_event)), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(ByRef(*touch_event)), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(key_event.get()), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(touch_event.get()), _)).Times(1);
 
     surface.consume(key_event.get());
     surface.consume(touch_event.get());

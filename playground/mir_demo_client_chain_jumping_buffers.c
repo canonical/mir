@@ -19,8 +19,9 @@
 
 #include <mir_toolkit/mir_connection.h>
 #include <mir_toolkit/mir_buffer_stream.h>
-#include <mir_toolkit/mir_surface.h>
+#include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_presentation_chain.h>
+#include <mir_toolkit/mir_render_surface.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <mir_toolkit/version.h>
 #include <sys/types.h>
@@ -38,8 +39,10 @@
 void fill_buffer_diagonal_stripes(
     MirBuffer* buffer, unsigned int fg, unsigned int bg)
 {
-    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
-    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888))
+    MirBufferLayout layout = mir_buffer_layout_unknown;
+    MirGraphicsRegion region;
+    mir_buffer_map(buffer, &region, &layout);
+    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888) || layout != mir_buffer_layout_linear)
         return;
 
     unsigned char* vaddr = (unsigned char*) region.vaddr;
@@ -57,6 +60,7 @@ void fill_buffer_diagonal_stripes(
         }
         vaddr += region.stride; 
     }
+    mir_buffer_unmap(buffer);
 }
 
 typedef struct SubmissionInfo
@@ -171,9 +175,17 @@ int main(int argc, char** argv)
     unsigned int spare_buffer = 0;
 
     MirPresentationChain* chain[num_chains];
+    MirRenderSurface* render_surface[num_chains];
     for(unsigned int i = 0u; i < num_chains; i++)
     {
-        chain[i] =  mir_connection_create_presentation_chain_sync(connection);
+        render_surface[i] = mir_connection_create_render_surface_sync(connection, chain_width, chain_height);
+        if (!mir_render_surface_is_valid(render_surface[i]))
+        {
+            printf("could not create render surface\n");
+            return -1;
+        }
+
+        chain[i] =  mir_render_surface_get_presentation_chain(render_surface[i]);
         if (!mir_presentation_chain_is_valid(chain[i]))
         {
             printf("could not create MirPresentationChain\n");
@@ -188,18 +200,19 @@ int main(int argc, char** argv)
         }
     }
 
-    //Arrange a 2x2 grid of chains within surface
-    MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    mir_surface_spec_add_presentation_chain(
-        spec, chain_width, chain_height, displacement_x, displacement_y, chain[0]);
-    mir_surface_spec_add_presentation_chain(
-        spec, chain_width, chain_height, chain_width, displacement_y, chain[1]);
-    mir_surface_spec_add_presentation_chain(
-        spec, chain_width, chain_height, displacement_x, chain_height, chain[2]);
-    mir_surface_spec_add_presentation_chain(
-        spec, chain_width, chain_height, chain_width, chain_height, chain[3]);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    //Arrange a 2x2 grid of chains within window
+    MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, format);
+    mir_surface_spec_add_render_surface(
+        spec, render_surface[0], chain_width, chain_height, displacement_x, displacement_y);
+    mir_surface_spec_add_render_surface(
+        spec, render_surface[1], chain_width, chain_height, chain_width, displacement_y);
+    mir_surface_spec_add_render_surface(
+        spec, render_surface[2], chain_width, chain_height, displacement_x, chain_height);
+    mir_surface_spec_add_render_surface(
+        spec, render_surface[3], chain_width, chain_height, chain_width, chain_height);
+    MirWindow* window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
     MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_buffers];
@@ -237,7 +250,8 @@ int main(int argc, char** argv)
             b = buffer_available[spare_buffer].buffer;
             pthread_mutex_unlock(&buffer_available[spare_buffer].lock);
 
-            mir_presentation_chain_submit_buffer(chain[i], b);
+            mir_presentation_chain_submit_buffer(
+                chain[i], b, available_callback, &buffer_available[spare_buffer]);
 
             //just looks like a blur if we don't slow things down
             ualarm(500000, 0);
@@ -253,8 +267,8 @@ int main(int argc, char** argv)
     for (unsigned int i = 0u; i < num_buffers; i++)
         mir_buffer_release(buffer_available[i].buffer);
     for (unsigned int i = 0u; i < num_chains; i++)
-        mir_presentation_chain_release(chain[i]);
-    mir_surface_release_sync(surface);
+        mir_render_surface_release(render_surface[i]);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
     return 0;
 }

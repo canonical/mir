@@ -23,6 +23,8 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/client_visible_error.h"
 
 #include <gmock/gmock.h>
 
@@ -56,8 +58,9 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD0(show, void());
 
     MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD1(send_input_device_change, void(std::vector<std::shared_ptr<mir::input::Device>> const&));
-    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD1(send_error, void(ClientVisibleError const&));
+    MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
+    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirWindowAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
 

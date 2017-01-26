@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -33,7 +34,8 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
+struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase,
+    public renderer::software::PixelSource
 {
  public:
     MockBuffer()

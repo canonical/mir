@@ -1,17 +1,409 @@
-mir (0.24.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 43
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 6
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . New/improved toolkit APIs: MirInputConfig and related functions,
+        MirWindow and related functions, DisplayConfig and related functions,
+        MirScreencastSpec and related functions,
+      . Support for configuring input configuration
+      . Introduce toolkit extension mechanism for platform specific APIs.
+      . Toolkit extensions for: mesa_drm_auth, set_gbm_device and
+        window_coordinate_translation
+      . Screencasting to a specific MirBuffer.
+      . Add DisplayConfigurationController::base_configuration() so downstreams
+        can get the base configuration. (Weirdly they can already set it.).
+      . x11 platform: allow adjustable scale parameter.
+      . Added EDID support: client API, server logging and in mirout.
+      . mirout: Add newer attributes only available in the new display
+        config API: scaling factor, subpixel arrangement and form factor.
+      . mirout: Log the orientation and logical size of each output too.
+      . Replace the mir::Server-overridable Reports with Observers.
+      . Add xkbcommon to mirclient.pc Requires.private.
+      . Deprecate legacy toolkit APIs that will be removed in Mir 1.0
+      . Introduced 'client-side vsync', which dramatically reduces latency
+        from the client to the screen (particularly for nested servers like
+        Unity8).
+    - Bugs fixed:
+      . [performance] Restore support for better-than-triple buffering by
+        default. (LP: #1240909)
+      . Frame rate is artificially low on Diamondville Intel Atom systems due
+        to aggressive power management (LP: #1388490)
+      . [testsfail] failure in CI in
+        AndroidInputReceiverSetup.slow_raw_input_doesnt_cause_frameskipping
+        (LP: #1394369)
+      . [trusted prompt sessions] Can't open two prompt sessions at the same
+        time (LP: #1494197)
+      . Changing scale, formFactor or DPI in display configuration causes
+        renderer teardown/recreate unnecessarily (LP: #1556142)
+      . [testsfail] ApplicationNotRespondingDetection.failure_to_pong_is_
+        noticed (LP: #1570327)
+      . CI failure in TestClientInput.receives_one_touch_event_per_frame
+        (LP: #1570698)
+      . Mir-on-X mouse input is jerky/stuttery compared to Mir-on-KMS
+        (LP: #1576600)
+      . [regression] Two fingers in mir_proving_server now resizes/moves app
+        windows (two finger apps unusable) (LP: #1586311)
+      . Pointer/cursor input lag in unity8 session (LP: #1591328)
+      . PointerConfinement.test_we_update_our_confined_region_on_a_resize
+        (LP: #1606418)
+      . [ FAILED ] ClientLatency.throttled_input_rate_yields_lower_latency
+        (LP: #1624188)
+      . Valgrind failure on mir_acceptance_tests - leak on incoming buffer in
+        Requests::free_buffer(int) (LP: #1628794)
+      . Add support for returning monitor EDIDs (LP: #1634868)
+      . When pointer motion crosses window borders SurfaceInputDispatcher
+        injected events increase accumulated relative motion (LP: #1639749)
+      . [ FAILED ] ClientLatency.dropping_latency_is_limited_to_one (AKA
+        dropping_latency_is_closer_to_zero_than_one) (LP: #1640366)
+      . Server::override_the_coordinate_translator() cannot be effectively used
+        downstream (LP: #1641166)
+      . [regression] FTBFS when cross compiling to yakkety from zesty:
+        test_client_extensions.cpp: error: ‘Ne’ was not declared in this scope
+        (LP: #1642473)
+      . [regression] mir_proving_server crashes with std::exception::what:
+        add_options() must be called before the_options() (LP: #1642504)
+      . [ FAILED ] NestedServer.nested_platform_connects_and_disconnects
+        (LP: #1643432)
+      . googletest 1.8.0-2 (on zesty) breaks existing builds [add_library
+        cannot create target "gmock" ...] (LP: #1644062)
+      . [regression] Those mir_demo_client_* which default to fullscreen now
+        ignore the size parameter (-s WIDTHxHEIGHT) (LP: #1644075)
+      . Shell doesn't know when base display config has changed (LP: #1644189)
+      . miral::ActiveOutputsMonitor (and therefore miral-shell --window-manager
+        tiling) are broken by lp:mir (LP: #1645284)
+      . mir_proving_server's four finger swipe to switch apps leaks touch
+        events to the clients (LP: #1646700)
+      . [regression] Cross compiling from zesty to yakkety fails with *** No
+        rule to make target 'gmock/libs/googlemock/gtest/libgtest.a' (LP:
+        #1646704)
+      . [ FAILED ] ThreadedDispatcherDeathTest.destroying_dispatcher_from_a_
+        callback_is_an_error (LP: #1647573)
+      . [regression] eglapps now all have window title "default" (LP: #1647575)
+      . Package mirtest-dev is missing a dependency on mir-renderer-gl-dev
+        (LP: #1651391)
+      . EDID data is missing in nested servers (LP: #1651633)
+      . [regression] Latency for fullscreen interval 0 clients (e.g. games and
+        benchmarks) increased with the introduction of nested passthrough
+        (LP: #1651638)
+      . Race between MirConnection::released() and
+        MirConnection::~MirConnection() causes deadlocks, possible crashes and
+        memory corruption (LP: #1653658)
+      . DisplayConfigurationTest.configure_session_removed_display failure
+        (LP: #1653789)
+      . [regression] Development headers reference unknown header
+        "mir_toolkit/mir_input_device_types.h" so some clients can't build at
+        all any more (LP: #1654023)
+      . [regression] mir_acceptance_tests' death tests leave behind core files
+        (LP: #1654478)
+      . Setting the event handler after the surface has been created does
+        nothing (LP: #1654612)
+      . [ FAILED ] RaiseSurfaces.key_event_with_cookie (LP: #1655293)
+      . Black screen with Raspberry Pi 3 VC4 Mesa driver (LP: #1656164)
+      . i386 FTBFS:
+        src/platforms/eglstream-kms/server/kms_display_configuration.cpp:88:47:
+        error: narrowing conversion of ‘..._drmModeConnector::connector_id’
+        from ‘uint32_t {aka unsigned int}’ to ‘EGLAttrib {aka int}’ inside { }
+        [-Werror=narrowing] (LP: #1656633)
+      . android: overlays no longer are activated (LP: #1657755)
+      . Mir FTBFS with MIR_USE_PRECOMPILED_HEADERS=OFF: error: ISO C++11
+        requires at least one argument for the "..." in a variadic macro
+        [-Werror] (LP: #1658604)
+      . [regression] Mir cross-compile to vivid/armhf FTBFS with:
+        mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
+        (LP: #1658605)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
+
+mir (0.25.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
+
+  * New upstream release 0.25.0 (https://launchpad.net/mir/+milestone/0.25.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 42
+      . mircommon ABI bumped to 7
+      . mirplatform ABI bumped to 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI bumped to 6
+      . mircore ABI added, at version 1
+    - Enhancements:
+      . Added pointer confinement support
+      . Identify Raspberry Pi output types correctly
+      . Added dead key and compose key support
+      . Added gamma support for KMS hardware
+      . Added yakkety and zesty gcc-6 support
+      . Added surface passthrough support for fullscreen clients of nested
+        servers
+      . Introduced a new library `libmircore'
+      . Began migrating from Protobuf to Cap'n Proto starting with events
+      . Began support for VirtualBox (servers now start instead of crashing
+        but full support for GL clients is still missing)
+      . Began support for high precision frame timing, implemented for the
+        KMS, Android and X11 backends so far
+      . Added --display-report support for the X11 backend
+      . Improved reliability of `mirvanity' latency test tool
+      . Moved to using the CSS cursor naming scheme internally, although
+        the old symbolic indentifiers remain unchanged and still work
+      . Added refresh rate to MirSurfaceOutputEvent
+      . Many improvements to automated test quality and coverage
+      . Smoother desktop zoom using mir_proving_server (Super + two fingers)
+    - Bugs fixed:
+      . FTBFS On Zesty: invalid use of
+        'struct native_handle' (LP: #1638774)
+      . libmirclient-debug-extension-dev install debug/surface.h
+        twice (LP: #1639153)
+      . Mir crashes on virtual box drmModeCrtcSetGamma
+        Function not implemented (LP: #1638220)
+      . Flickering in mir_demo_client_multistream (LP: #1635273)
+      . Camera apps (camera & vanity) never exit (LP: #1635010)
+      . Clients cannot connect when MIR_SOCKET="" (LP: #1634508)
+      . mirtest-dev packaging fails to sepcify boost depends (LP: #1633537)
+      . cursor.h is unclear about mir_diagonal_resize_* (LP: #1626924)
+      . Inconsistent underscores in cursor names (LP: #1632617)
+      . [regression] Accidental libmircommon.so.6 break (LP: #1617865)
+      . [regression] mir demo server fails to start with mx4 (LP: #1615703)
+      . [regression] Trust prompt now shown when starting camera (LP: #1612256)
+      . [regression] make abi-check fails to build (LP: #1626866)
+      . Nested servers prevent overlays or fullscreen bypass (LP: #1262116)
+      . Failed to get PRIME fd from gbm bo (LP: #1607812)
+      . Mir-on-X is difficult to use on 1366x768 laptop (LP: #1590959)
+      . Remove useless message 'Surface 0 DPI' in demos (LP: #1559831)
+      . Mir fails to cross-build with newer sbuild (LP: #1628507)
+      . Infinite loop in AbstractShell::focus_next_session (LP: #1625401)
+      . Destroying a presentation chain doesn't trigger ownership
+        notification to client (LP: #1626503)
+      . Keyboard layout not applied on the shell (LP: #1626435)
+      . Warning, No syntax specified for the proto file (LP: #1624971)
+      . display-report=log reports vsync on non-existent output number
+        (LP: #1621352)
+      . libmirserver-dev missing uuid-dev depends (LP: #1617435)
+      . debian/control missing epoxy (LP: #1617256)
+      . Downstreams need to disable clang diagnostic "-Wreturn-type-clinkage"
+        to build against public headers (LP: #1615587)
+      . mirtest-dev: mock_display_configuration.h uses mg namespace without
+        using it (LP: #1614983)
+      . FTBFS using clang (LP: #1609612)
+      . mesa-kms doesn't fall back to using software cursor if hardware
+        cursor is unavailable (LP: #1610054)
+      . StubGraphicsPlatform::create_display() leaves a dubious state
+        (LP: #1611337)
+      . Mir build/tests fail with gcc-6 and LTO (LP: #1610215)
+      . Cross compiling on xenial fails (LP: #1609329)
+      . Building with -DMIR_PLATFORM=anroid fails (LP: #1609916)
+      . unity-system-compositor crashes on start-up with "Mir fatal error:
+        Failed to schedule page flip" (LP: #1584894)
+      . mir_connection_create_spec_for_tooltip doesn't meet requirements
+        (LP: #1603922)
+      . Updating surface size/location needs to update the pointer confinement
+        (LP: #1604673)
+      . ServerConfigurationOption is not ptest safe (LP: #1607351)
+      . HWC's vsync_signal_on is never called when using HWC 1.0 (LP: #1613373)
+      . mir_connection_create_spec_for_tooltip does not set aux_rect
+        (LP: #1632335)
+      . VMware virtual connector recognized by Mir as "unknown" (LP: #1248072)
+      . Fix code to match the documentation of CoordinateTranslator - vis "It is
+        acceptable ...[to] throw a std::runtime_error" (LP: #1641166)
+      . Test timeout MesaDisplayConfigurationTests.* (LP: #1613352)
+      . Tests fail when built against lp:mir (LP: #1621917)
+      . CI failure MultiThreadedCompositor (LP: #1595940)
+      . CI failure in DisplayConfiguration (LP: #1563210)
+      . CI failure  NestedServer.given_client_set_display_configuration*
+        (LP: #1617036)
+      . CI failure on krillin in NestedServer.* testes (LP: #1628828)
+      . CI failure: PosixRWMutex hangs (LP: #1633920)
+      . googletest 1.8.0-2 (on zesty) breaks existing builds [add_library
+        cannot create target "gmock" ...] (LP: #1644062)
+
+ -- Brandon Schaefer <brandon.schaefer@canonical.com>  Sat, 03 Dec 2016 12:42:33 +0000
+
+mir (0.24.1+16.10.20160928-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.24.1 (https://launchpad.net/mir/+milestone/0.24.1)
+    - ABI summary:
+      . All ABI numbers remain unchanged.
+      . mircommon ABI at 6, but now including a symbol misplaced in 0.24.0
+    - Bugs fixed:
+      . mirserver ignored further keymap configuration changes after a keyboard 
+        is configured (LP: #1626435)
+      . fix for libmircommon.so.6 ABI break: version stanza of
+        mir::dispatch::ReadableFd* moved to newer version (LP: #1617865)
+      . clang builds fail (again) (LP: #1609612)
+      . Valgrind errors in NesterServer.* cause subsequent tests
+        (ServerDisconnect, ServerStartup, UnresponsiveClient) to fail
+        (LP: #1612012)
+      . Break potentially infinite loop in search for next session to focus
+        (LP: #1625401)
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Wed, 28 Sep 2016 12:09:49 +0000
+
+mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release 0.24.0 (https://launchpad.net/mir/+milestone/0.24.0)
     - ABI summary:
-      . TODO
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 41
+      . mircommon ABI unchanged at 6
+      . mirplatform ABI bumped to 12
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 10
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . Added a new tool 'mirvanity' which can use a high speed video camera
         to measure client-to-screen latency.
       . Added (build-time) support for desktop full OpenGL servers (disabled
         by default in favor of GLESv2).
-    - Bug fixes:
-      . TODO: list these after branching
+      . Introduced new buffer semantics (NBS) and enabled it by default.
+      . Avoided using libmirserver in mir_demo_standalone_render_overlays,
+        making bringup traces less cluttered.
+      . Removed TilingWindowManager from example servers.
+      . Added two new mir_*_performance_test tools that are run as part of
+        'mir_performance_tests'.
+      . Added pointer confinement to the client API.
+      . Added new platform supporting software EGLStreams.
+      . Added an input platform that the nested server can use.
+      . Allow configuration of the application_not_responding_detector
+      . Handle server-side keymapping using XKBMapper.
+      . Remove the offscreen display.
+      . Add callback option to notify shells that the server is about to stop.
+      . Add logging for ANativeWindow events on Android.
+    - Bugs fixed:
+      . usage of std:call_once in mirclient causes TLS collisions with some
+        android devices (LP: #1599867)
+      . AltGr not working on external keyboards (LP: #1565236)
+      . [regression] unity8 fails to start when built with 0.24 series (lp:mir)
+        (LP: #1597717)
+      . CI failure in MirSurfaceVisibilityEvent.exposed_received_when_surface_
+        raised_over_occluding_surface [called twice - over-saturated and active]
+        (LP: #1556045)
+      . package-built mir_demo_server does not start on device (LP: #1577357)
+      . During surface creation, first stream in spec becomes default stream.
+        (LP: #1577967)
+      . mouse is getting stuck on a phantom edge (LP: #1580774)
+      . [testsfail] in MirSurfaceVisibilityEvent.exposed_received_when_surface_
+        raised_over_occluding_surface [never called] (LP: #1581385)
+      . [enhancement] Add support for full OpenGL compositing (LP: #1420581)
+      . [testsfail] ServerSignal.terminate_handler_is_called_for_SIGINT|SIGTERM
+        (LP: #1570353)
+      . [testsfail] ClientLatency.triple_buffered_client_has_less_than_two_
+        frames_latency (LP: #1576690)
+      . [testsfail] NestedServer.when_monitor_plugged_in_client_is_notified_of_
+        new_display_configuration (LP: #1576760)
+      . mir server crashed in what(): drmModeMoveCursor failed (returned -13)
+        (LP: #1579630)
+      . mirtest-dev is hard to use as the objects used are compiled with LTO
+        (LP: #1583536)
+      . [testsfail] ClientLogging.reports_performance [Value of: lag]
+        (LP: #1583970)
+      . [ FAILED ] ClientLogging.reports_performance (Value of: nbuffers)
+        (LP: #1584603)
+      . [ FAILED ] ClientLogging.reports_performance (Value of: render)
+        (LP: #1584605)
+      . ClientCredsTestFixture.session_authorizer_receives_pid_of_connecting_
+        clients failure (LP: #1587604)
+      . Mir on X11 ignores mir::graphics::GLConfig depth & stencil buffer size
+        (LP: #1589632)
+      . Need to support pointer confinement (LP: #1590099)
+      . [tests] given_nested_server_set_base_display_configuration_when_
+        monitor_plugged_in_configuration_is_reset fails (LP: #1591354)
+      . CI failure in DemoInProcessServerWithStubClientPlatform.surface_
+        creation_does_not_leak_fds (LP: #1598802)
+      . Screen is squashed/distorted when rotated in Mir-on-X11 (LP: #1577262)
+      . --display-report=log shows some invalid uninitialized EGL attribute
+        values (LP: #1582066)
+      . mir_demo_client_eglplasma falls back to software rendering on i915
+        (Intel Atoms), which explains why it's so slow (LP: #1583532)
+      . [regression] x11 platform only draws to a small part of the x11 window
+        (LP: #1598267)
+      . mir ftbfs in yakkety builders (LP: #1600343)
+      . Autolanding keeps failing: mock_egl.h:89:7: error: type 'struct
+        MockEGL' violates one definition rule [-Werror=odr] (LP: #1603303)
+      . [regression] The Super/Windows key doesn't work any more (LP: #1602966)
+      . mir_acceptance_tests.bin: double free or corruption (fasttop)
+        (LP: #1603114)
+      . ftbfs in linking libmir-test-assist.a in xenial+overlay and
+        yakkety+overlay (LP: #1601810)
+      . [testsfail] failure in NestedInput.on_input_device_state_nested_*
+        (LP: #1602646)  
+      . mirtest-dev provides an incorrect .pc file (LP: #1603080)
+      . mir_test_framework::server_platform_path(), 
+        mir_test_framework::server_platform() don't support use in a downstream
+        test built against mir-test-assist (LP: #1603091)
+      . Servers based on Mir need a hook to execute code when the server is
+        closing (LP: #1593655)
+      . Android graphics platform doesn't get packaged for arm64 (LP: #157866)
+      . memory leaks in unit tests on android (LP: #1253486)
+      . Physical "screen" size reported by the X11 backend is same as pixel
+        count, fixing dpi to 25.4 (LP: #1596051)
+      . Mir build and test failures with gcc-6 and LTO (LP: #1610215)
+      . [regression] Trust prompt not shown when starting camera (LP: #1612256)
  
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 10 Jun 2016 16:29:31 -0400
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 15 Aug 2016 16:29:03 +0000
+
+mir (0.23.5+16.10.20160729-0ubuntu2) yakkety; urgency=medium
+
+  * No-change rebuild for boost soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 04 Aug 2016 08:25:48 +0000
+
+mir (0.23.5+16.10.20160729-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.5 (https://launchpad.net/mir/+milestone/0.23.5)
+    - ABI summary:
+      . No ABI changes in any libraries.
+    - Enhancements:
+      . Enable new buffer semantics (NBS) by default.
+    - Bugs fixed:
+      . Mir fails to build in: COMPOSITOR_TRACE_CALL (LP: #1584601)
+      . [testsfail] Process.* (memory leak in libhybris generated when probing
+        android platforms) (LP: #1602199)
+      . unity8/libmirclient gives up and terminates prematurely with
+        "std::exception::what: disconnected: no new buffers" via
+        ExchangeSemantics::submit() (LP: #1506358)
+
+ -- Kevin DuBois <kdub432@gmail.com>  Fri, 29 Jul 2016 11:31:02 +0000
+
+mir (0.23.4+16.10.20160719.1-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.4 (https://launchpad.net/mir/+milestone/0.23.4)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Android graphics platform doesn't get packaged for arm64 (LP: #1579866)
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Tue, 19 Jul 2016 17:49:47 +0000
+
+mir (0.23.3+16.10.20160707.1-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.3 (https://launchpad.net/mir/+milestone/0.23.3)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . usage of std:call_once in mirclient causes TLS collisions with some
+        android devices (LP: #1599867)
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 07 Jul 2016 17:07:38 +0000
+
+mir (0.23.2+16.10.20160624-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release 0.23.2 (https://launchpad.net/mir/+milestone/0.23.2)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . Refine Android display format selection LP: #1584657
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Fri, 24 Jun 2016 19:56:05 +0000
 
 mir (0.23.1+16.10.20160610.1-0ubuntu1) yakkety; urgency=medium
 

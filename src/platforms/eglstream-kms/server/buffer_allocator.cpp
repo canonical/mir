@@ -22,6 +22,7 @@
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
+#include "software_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -40,26 +41,24 @@ mge::BufferAllocator::BufferAllocator()
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
     BufferProperties const& buffer_properties)
 {
-    if (!mgc::ShmBuffer::supports(buffer_properties.format))
+    if (buffer_properties.usage == mg::BufferUsage::software)
+        return alloc_buffer(buffer_properties.size, buffer_properties.format);
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating hardware buffers"));
+}
+
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(geom::Size size, MirPixelFormat format)
+{
+    if (!mgc::ShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{
-        MIR_BYTES_PER_PIXEL(buffer_properties.format) *
-        buffer_properties.size.width.as_uint32_t()};
-    size_t const size_in_bytes =
-        stride.as_int() * buffer_properties.size.height.as_int();
-    auto shm_file =
-        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
-
-    auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
-                                         buffer_properties.format);
-
-    return buffer;
+    auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
+    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
+    return std::make_shared<mge::SoftwareBuffer>(
+        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes), size, format);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
@@ -67,3 +66,8 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
     // Lazy
     return {mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888};
 }
+
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(geometry::Size, uint32_t, uint32_t)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers"));
+} 

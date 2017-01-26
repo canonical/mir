@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 24)
+set(MIR_VERSION_MINOR 26)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -62,18 +62,22 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++14 -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
+
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
+
+if(HAS_W_MISMATCHED_TAGS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
+endif()
 
 option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
 if(MIR_USE_LD_GOLD)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
-endif()
-
-if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
@@ -81,8 +85,8 @@ message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
 
 option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF)
 if(MIR_LINK_TIME_OPTIMIZATION)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto -ffat-lto-objects")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -ffat-lto-objects")
   if(${CMAKE_COMPILER_IS_GNUCXX})
     set(CMAKE_NM "gcc-nm")
     set(CMAKE_AR "gcc-ar")
@@ -138,6 +142,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
+include_directories(include/core)
 include_directories(include/common)
 include_directories(include/cookie)
 
@@ -192,6 +197,7 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(GLM REQUIRED)
 find_package(Protobuf REQUIRED )
+find_package(CapnProto REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(LTTngUST REQUIRED)
@@ -204,9 +210,11 @@ include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 #
 # Full OpenGL support is possibly complete but not yet perfect. So is
-# presently disabled by default. See the TODOs in:
-#   src/platform/graphics/egl_extensions.cpp: glEGLImageTargetTexture2DOES
-#   src/platforms/common/server/shm_buffer.cpp: glTexImage2D
+# presently disabled by default due to:
+#   1. Black windows bug: https://bugs.freedesktop.org/show_bug.cgi?id=92265
+#   2. Use of glEGLImageTargetTexture2DOES in:
+#        src/platform/graphics/egl_extensions.cpp
+#      possibly shouldn't work even though it does. Or should it?
 #
 #if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
 #    TARGET_ARCH STREQUAL "i386-linux-gnu")
@@ -287,7 +295,7 @@ if (MIR_ENABLE_TESTS)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required
-    COMMAND /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform"
+    COMMAND /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/capnproto"
   )
   mir_add_test(NAME GPL-required
     COMMAND /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
@@ -313,3 +321,9 @@ mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirprotobuf release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
+
+if (TARGET doc)
+  add_custom_target(doc-show
+          xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
+          DEPENDS doc)
+endif()

@@ -20,11 +20,12 @@
 #define MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
 
 #include "mir/test/doubles/null_display.h"
-#include "mir/test/pipe.h"
+#include "mir/fd.h"
 
 #include "mir/geometry/rectangle.h"
 
 #include <atomic>
+#include <mutex>
 #include <vector>
 
 namespace mir
@@ -33,6 +34,7 @@ namespace test
 {
 namespace doubles
 {
+class StubDisplayConfig;
 class FakeDisplay : public NullDisplay
 {
 public:
@@ -48,6 +50,7 @@ public:
         mir::graphics::EventHandlerRegister& handlers,
         mir::graphics::DisplayConfigurationChangeHandler const& handler) override;
 
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) override;
     void configure(mir::graphics::DisplayConfiguration const&) override;
 
     void emit_configuration_change_event(
@@ -56,10 +59,11 @@ public:
     void wait_for_configuration_change_handler();
 
 private:
-    std::shared_ptr<mir::graphics::DisplayConfiguration> config;
+    std::shared_ptr<StubDisplayConfig> config;
     std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
-    Pipe p;
+    Fd const wakeup_trigger;
     std::atomic<bool> handler_called;
+    std::mutex mutable configuration_mutex;
 };
 }
 }

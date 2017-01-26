@@ -35,7 +35,7 @@ class NestedDisplayConfiguration : public DisplayConfiguration
 {
 public:
     NestedDisplayConfiguration(
-        std::shared_ptr<MirDisplayConfiguration> const& display_config);
+        std::shared_ptr<MirDisplayConfig> const& display_config);
     NestedDisplayConfiguration(NestedDisplayConfiguration const&);
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const override;
@@ -43,10 +43,12 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)>) override;
     std::unique_ptr<DisplayConfiguration> clone() const override;
 
-    operator MirDisplayConfiguration*() const { return display_config.get(); }
+    operator MirDisplayConfig*() const { return display_config.get(); }
 
 private:
-    std::shared_ptr<MirDisplayConfiguration> display_config;
+    DisplayConfigurationOutput create_display_output_config_from(MirOutput const* output) const;
+
+    std::shared_ptr<MirDisplayConfig> display_config;
 
     /*
      * The client display config doesn't currently expose the form factor or scaling factor, nor is it
@@ -59,6 +61,9 @@ private:
     {
         float scale;
         MirFormFactor form_factor;
+        MirSubpixelArrangement subpixel_arrangement;
+        GammaCurves gamma;
+        MirOutputGammaSupported gamma_supported;
     };
     std::unordered_map<uint32_t, LocalOutputConfig> mutable local_config;
 

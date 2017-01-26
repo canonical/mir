@@ -44,9 +44,10 @@ public:
     std::shared_ptr<graphics::DisplayReport> create_display_report() override;
     std::shared_ptr<scene::SceneReport> create_scene_report() override;
     std::shared_ptr<frontend::ConnectorReport> create_connector_report() override;
-    std::shared_ptr<frontend::SessionMediatorReport> create_session_mediator_report() override;
+    std::shared_ptr<frontend::SessionMediatorObserver> create_session_mediator_report() override;
     std::shared_ptr<frontend::MessageProcessorReport> create_message_processor_report() override;
     std::shared_ptr<input::InputReport> create_input_report() override;
+    std::shared_ptr<input::SeatObserver> create_seat_report() override;
     std::shared_ptr<mir::SharedLibraryProberReport> create_shared_library_prober_report() override;
     std::shared_ptr<shell::ShellReport> create_shell_report() override;
 

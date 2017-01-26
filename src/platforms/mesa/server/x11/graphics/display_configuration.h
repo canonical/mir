@@ -33,7 +33,11 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(MirPixelFormat pf, mir::geometry::Size const size, MirOrientation orientation);
+    DisplayConfiguration(MirPixelFormat pf,
+                         mir::geometry::Size const pixels,
+                         mir::geometry::Size const size_mm,
+                         float const scale,
+                         MirOrientation orientation);
     DisplayConfiguration(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;
@@ -42,6 +46,8 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<graphics::DisplayConfiguration> clone() const override;
+
+    static DisplayConfigurationOutputId const the_output_id;
 
 private:
     DisplayConfigurationOutput configuration;

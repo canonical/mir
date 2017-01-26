@@ -16,12 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
-#include "src/server/compositor/buffer_queue.h"
-#include "src/server/compositor/buffer_stream_surfaces.h"
+#include "src/server/compositor/stream.h"
+#include "src/server/compositor/buffer_map.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -44,40 +43,13 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
-        auto properties = mg::BufferProperties{geom::Size{380, 210},
-                                          mir_pixel_format_abgr_8888,
-                                          mg::BufferUsage::hardware};
         mtd::StubFrameDroppingPolicyFactory policy_factory;
-        switching_bundle = std::make_shared<mc::BufferQueue>(3, allocator, properties, policy_factory);
+        stream = std::make_shared<mc::Stream>(policy_factory,
+            std::make_shared<mc::BufferMap>(nullptr),
+            geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 
-    std::shared_ptr<mc::BufferQueue> switching_bundle;
-    std::mutex acquire_mutex;  // must live longer than our callback/lambda
-
-    mg::Buffer* client_acquire_blocking(
-        std::shared_ptr<mc::BufferQueue> const& switching_bundle)
-    {
-        std::condition_variable cv;
-        bool acquired = false;
-    
-        mg::Buffer* result;
-        switching_bundle->client_acquire(
-            [&](mg::Buffer* new_buffer)
-             {
-                std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-                result = new_buffer;
-                acquired = true;
-                cv.notify_one();
-             });
-    
-        std::unique_lock<decltype(acquire_mutex)> lock(acquire_mutex);
-    
-        cv.wait(lock, [&]{ return acquired; });
-    
-        return result;
-    }
+    std::shared_ptr<mc::Stream> stream;
 };
 
 } // namespace
@@ -89,11 +61,11 @@ TEST_F(SwapperSwappingStress, swapper)
     auto f = std::async(std::launch::async,
                 [&]
                 {
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = client_acquire_blocking(switching_bundle);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
-                        switching_bundle->client_release(b);
                     }
                     done = true;
                 });
@@ -103,9 +75,9 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     while (!done)
                     {
-                        auto b = switching_bundle->compositor_acquire(0);
+                        auto b = stream->lock_compositor_buffer(0);
                         std::this_thread::yield();
-                        switching_bundle->compositor_release(b);
+                        b.reset();
                     }
                 });
 
@@ -114,9 +86,9 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 100; i++)
                     {
-                        switching_bundle->allow_framedropping(true);
+                        stream->allow_framedropping(true);
                         std::this_thread::yield();
-                        switching_bundle->allow_framedropping(false);
+                        stream->allow_framedropping(false);
                         std::this_thread::yield();
                     }
                 });
@@ -133,11 +105,11 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto f = std::async(std::launch::async,
                 [&]
                 {
+                    std::shared_ptr<mg::Buffer> buffer = nullptr;
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = client_acquire_blocking(switching_bundle);
+                        stream->submit_buffer(buffer);
                         std::this_thread::yield();
-                        switching_bundle->client_release(b);
                     }
                     done = true;
                 });
@@ -147,9 +119,9 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     while (!done)
                     {
-                        auto b = switching_bundle->compositor_acquire(0);
+                        auto b = stream->lock_compositor_buffer(0);
                         std::this_thread::yield();
-                        switching_bundle->compositor_release(b);
+                        b.reset();
                     }
                 });
 
@@ -158,9 +130,9 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
-                        switching_bundle->allow_framedropping(true);
+                        stream->allow_framedropping(true);
                         std::this_thread::yield();
-                        switching_bundle->allow_framedropping(false);
+                        stream->allow_framedropping(false);
                         std::this_thread::yield();
                     }
                 });

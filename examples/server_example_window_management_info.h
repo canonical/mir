@@ -39,7 +39,7 @@ struct SurfaceInfo
 
     bool can_be_active() const;
 
-    bool can_morph_to(MirSurfaceType new_type) const;
+    bool can_morph_to(MirWindowType new_type) const;
 
     bool must_have_parent() const;
 
@@ -47,7 +47,7 @@ struct SurfaceInfo
 
     bool is_visible() const;
 
-    static bool needs_titlebar(MirSurfaceType type);
+    static bool needs_titlebar(MirWindowType type);
 
     void constrain_resize(
         std::shared_ptr <scene::Surface> const& surface,
@@ -57,8 +57,8 @@ struct SurfaceInfo
         const bool top_resize,
         geometry::Rectangle const& bounds) const;
 
-    MirSurfaceType type;
-    MirSurfaceState state;
+    MirWindowType type;
+    MirWindowState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr <scene::Session> session;
     std::weak_ptr <scene::Surface> parent;
@@ -87,7 +87,6 @@ private:
 
     struct StreamPainter;
     struct AllocatingPainter;
-    struct SwappingPainter;
 
     std::shared_ptr <StreamPainter> stream_painter;
 };

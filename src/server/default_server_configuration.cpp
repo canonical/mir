@@ -66,7 +66,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
-    default_filter(std::make_shared<mi::VTFilter>())
+    default_filter(std::make_shared<mi::VTFilter>()),
+    reports{initialise_reports()}
 {
 }
 
@@ -191,6 +192,11 @@ std::shared_ptr<mir::cookie::Authority> mir::DefaultServerConfiguration::the_coo
 
             return mir::cookie::Authority::create();
         });
+}
+
+std::function<void()> mir::DefaultServerConfiguration::the_stop_callback()
+{
+    return []{};
 }
 
 auto mir::DefaultServerConfiguration::the_fatal_error_strategy()

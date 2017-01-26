@@ -34,7 +34,7 @@ public:
     using BasicObservers<SurfaceObserver>::remove;
     using BasicObservers<SurfaceObserver>::for_each;
 
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void attrib_changed(MirWindowAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void hidden_set_to(bool hide) override;
@@ -49,6 +49,7 @@ public:
                         std::string const& variant, std::string const& options) override;
     void renamed(char const*) override;
     void cursor_image_removed() override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 };
 
 }

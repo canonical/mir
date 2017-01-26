@@ -26,6 +26,7 @@
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -56,6 +57,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     Nice<mtd::MockInputSeat> mock_seat;
+    Nice<mtd::MockSeatObserver> mock_seat_report;
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
@@ -68,7 +70,8 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock)};
+        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock),
+        mt::fake_shared(mock_seat_report)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };
@@ -80,7 +83,7 @@ TEST_F(SeatInputDeviceTracker, throws_on_unknown_device)
     EXPECT_CALL(mock_dispatcher, dispatch(_)).Times(0);
     EXPECT_THROW(
         {
-            tracker.dispatch(*some_device_builder.touch_event(arbitrary_timestamp));
+            tracker.dispatch(*some_device_builder.touch_event(arbitrary_timestamp,{}));
         },
         std::logic_error);
 }
@@ -90,7 +93,7 @@ TEST_F(SeatInputDeviceTracker, dispatch_posts_to_input_dispatcher)
     EXPECT_CALL(mock_dispatcher, dispatch(_));
 
     tracker.add_device(some_device);
-    tracker.dispatch(*some_device_builder.touch_event(arbitrary_timestamp));
+    tracker.dispatch(*some_device_builder.touch_event(arbitrary_timestamp, {}));
 }
 
 TEST_F(SeatInputDeviceTracker, forwards_touch_spots_to_visualizer)
@@ -104,25 +107,23 @@ TEST_F(SeatInputDeviceTracker, forwards_touch_spots_to_visualizer)
 
     tracker.add_device(some_device);
 
-    auto touch_event_1 = some_device_builder.touch_event(arbitrary_timestamp);
-    some_device_builder.add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f,
-                                  10.0f, 15.0f, 5.0f, 4.0f);
+    auto touch_event_1 = some_device_builder.touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f, 10.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_2 = some_device_builder.touch_event(arbitrary_timestamp);
-    some_device_builder.add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger, 10.0f, 10.0f,
-                                  30.0f, 15.0f, 5.0f, 4.0f);
-    some_device_builder.add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger, 100.0f, 34.0f,
-                                  0.0f, 15.0f, 5.0f, 4.0f);
+    auto touch_event_2 = some_device_builder.touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_change, mir_touch_tooltype_finger, 10.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_down, mir_touch_tooltype_finger, 100.0f, 34.0f, 0.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_3 = some_device_builder.touch_event(arbitrary_timestamp);
-    some_device_builder.add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 100.0f, 34.0f,
-                                  0.0f, 15.0f, 5.0f, 4.0f);
-    some_device_builder.add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 10.0f,
-                                  30.0f, 15.0f, 5.0f, 4.0f);
+    auto touch_event_3 = some_device_builder.touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_up, mir_touch_tooltype_finger, 100.0f, 34.0f, 0.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f}});
 
-    auto touch_event_4 = some_device_builder.touch_event(arbitrary_timestamp);
-    some_device_builder.add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 10.0f,
-                                  30.0f, 15.0f, 5.0f, 4.0f);
+    auto touch_event_4 = some_device_builder.touch_event(
+        arbitrary_timestamp,
+        {{1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f}});
 
     tracker.dispatch(*touch_event_1);
     tracker.dispatch(*touch_event_2);
@@ -139,9 +140,9 @@ TEST_F(SeatInputDeviceTracker, removal_of_touch_device_removes_spots)
 
     tracker.add_device(some_device);
 
-    auto touch_event_1 = some_device_builder.touch_event(arbitrary_timestamp);
-    some_device_builder.add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f,
-                                  10.0f, 15.0f, 5.0f, 4.0f);
+    auto touch_event_1 = some_device_builder.touch_event(
+        arbitrary_timestamp,
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f, 10.0f, 15.0f, 5.0f, 4.0f}});
 
     tracker.dispatch(*touch_event_1);
     tracker.remove_device(some_device);

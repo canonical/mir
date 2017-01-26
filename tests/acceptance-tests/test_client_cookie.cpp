@@ -41,7 +41,7 @@ namespace mis = mir::input::synthesis;
 namespace
 {
 std::chrono::seconds const max_wait{4};
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx);
 }
 
 class ClientCookies : public mtf::ConnectedClientHeadlessServer
@@ -58,18 +58,18 @@ public:
         mtf::ConnectedClientHeadlessServer::SetUp();
 
         // Need fullscreen for the cursor events
-        auto const spec = mir_connection_create_spec_for_normal_surface(
-            connection, 100, 100, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_fullscreen_on_output(spec, 1);
-        mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        auto const spec = mir_create_normal_window_spec(connection, 100, 100);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_fullscreen_on_output(spec, 1);
+        mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
+        window = mir_create_window_sync(spec);
+        mir_window_spec_release(spec);
 
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(max_wait);
         if (!ready_to_accept_events.raised())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -90,32 +90,32 @@ public:
     mutable std::mutex mutex;
     bool exposed{false};
     bool focused{false};
-    MirSurface* surface;
+    MirWindow* window;
 };
 
 namespace
 {
 
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+void cookie_capturing_callback(MirWindow*, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
     auto client_cookie = static_cast<ClientCookies*>(ctx);
 
-    if (event_type == mir_event_type_surface)
+    if (event_type == mir_event_type_window)
     {
-        auto event = mir_event_get_surface_event(ev);
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto event = mir_event_get_window_event(ev);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
         std::lock_guard<std::mutex> lk(client_cookie->mutex);
-        if (attrib == mir_surface_attrib_visibility &&
-            value == mir_surface_visibility_exposed)
+        if (attrib == mir_window_attrib_visibility &&
+            value == mir_window_visibility_exposed)
         {
             client_cookie->exposed = true;
         }
 
-        if (attrib == mir_surface_attrib_focus &&
-            value == mir_surface_focused)
+        if (attrib == mir_window_attrib_focus &&
+            value == mir_window_focus_state_focused)
         {
             client_cookie->focused = true;
         }
@@ -177,10 +177,9 @@ TEST_F(ClientCookies, keyboard_events_have_cookies)
 
 TEST_F(ClientCookies, pointer_motion_events_do_not_have_cookies)
 {
-    // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
 
-    int events = 2;
+    size_t events = 1;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);
@@ -217,11 +216,11 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_cookies)
         .at_position({1, 1})
         );
 
-    int events = 1;
+    size_t events = 1;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);
         EXPECT_GE(event_count, events);
-        EXPECT_EQ(out_cookies.size(), 1);
+        EXPECT_EQ(out_cookies.size(), 1u);
     }
 }

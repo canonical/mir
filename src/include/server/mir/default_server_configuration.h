@@ -31,6 +31,12 @@ class ServerActionQueue;
 class SharedLibrary;
 class SharedLibraryProberReport;
 
+template<class Observer>
+class ObserverRegistrar;
+
+template<class Observer>
+class ObserverMultiplexer;
+
 namespace cookie
 {
 class Authority;
@@ -41,13 +47,11 @@ class MultiplexingDispatchable;
 }
 namespace compositor
 {
-class Renderer;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class RendererFactory;
 class CompositorReport;
 class FrameDroppingPolicyFactory;
 }
@@ -58,7 +62,7 @@ class Connector;
 class ConnectorReport;
 class ProtobufIpcFactory;
 class ConnectionCreator;
-class SessionMediatorReport;
+class SessionMediatorObserver;
 class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
@@ -108,7 +112,7 @@ namespace graphics
 class Platform;
 class Display;
 class DisplayReport;
-class DisplayConfigurationReport;
+class DisplayConfigurationObserver;
 class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
@@ -122,6 +126,7 @@ class MirClientHostConnection;
 namespace input
 {
 class InputReport;
+class SeatObserver;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
@@ -154,6 +159,12 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
+class Reports;
+}
+
+namespace renderer
+{
+class RendererFactory;
 }
 
 class DefaultServerConfiguration : public virtual ServerConfiguration
@@ -177,6 +188,7 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
+    std::function<void()>                   the_stop_callback() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-except to avoid a
@@ -195,7 +207,7 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<renderer::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -210,7 +222,8 @@ public:
     virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
-    virtual std::shared_ptr<graphics::DisplayConfigurationReport> the_display_configuration_report();
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>
+        the_display_configuration_observer_registrar();
 
     /** @} */
 
@@ -234,7 +247,8 @@ public:
     /** @name frontend configuration - dependencies
      * dependencies of frontend on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
+    virtual std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>>
+        the_session_mediator_observer_registrar();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     // the_frontend_shell() is an adapter for the_shell().
@@ -301,6 +315,7 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
+    virtual std::shared_ptr<ObserverRegistrar<input::SeatObserver>> the_seat_observer_registrar();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
 
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
@@ -341,6 +356,9 @@ protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
+    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
+    std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<frontend::SessionMediatorObserver> the_session_mediator_observer();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -386,14 +404,13 @@ protected:
     CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
-    CachedPtr<compositor::RendererFactory> renderer_factory;
+    CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;
@@ -411,7 +428,6 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<graphics::DisplayConfigurationReport> display_configuration_report;
     CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
@@ -436,6 +452,13 @@ protected:
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> const default_filter;
+    CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
+        display_configuration_observer_multiplexer;
+    CachedPtr<ObserverMultiplexer<input::SeatObserver>>
+        seat_observer_multiplexer;
+    CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
+        session_mediator_observer_multiplexer;
+    std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;
 
@@ -446,6 +469,7 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
+    auto initialise_reports() -> std::shared_ptr<report::Reports>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
 };

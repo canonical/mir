@@ -23,6 +23,7 @@
 #include "mir_toolkit/events/event.h"
 
 #include "mir/input/input_reception_mode.h"
+#include "mir/geometry/rectangle.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -44,7 +45,7 @@ namespace scene
 class SurfaceObserver
 {
 public:
-    virtual void attrib_changed(MirSurfaceAttrib attrib, int value) = 0;
+    virtual void attrib_changed(MirWindowAttrib attrib, int value) = 0;
     virtual void resized_to(geometry::Size const& size) = 0;
     virtual void moved_to(geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(bool hide) = 0;
@@ -59,6 +60,7 @@ public:
                                 std::string const& variant, std::string const& options) = 0;
     virtual void renamed(char const* name) = 0;
     virtual void cursor_image_removed() = 0;
+    virtual void placed_relative(geometry::Rectangle const& placement) = 0;
 
 protected:
     SurfaceObserver() = default;

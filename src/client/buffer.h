@@ -21,7 +21,9 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/geometry/size.h"
-#include "mir_buffer.h"
+#include "mir/fd.h"
+#include "atomic_callback.h"
+#include "mir/mir_buffer.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -36,24 +38,21 @@ class Buffer : public MirBuffer
 {
 public:
     Buffer(
-        mir_buffer_callback cb, void* context,
+        MirBufferCallback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
         MirBufferUsage usage);
+
     int rpc_id() const override;
 
     void submitted() override;
     void received() override;
     void received(MirBufferPackage const& update_message) override;
 
-    MirNativeBuffer* as_mir_native_buffer() const override;
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
-
-    void set_fence(MirNativeFence*, MirBufferAccess) override;
-    MirNativeFence* get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) override;
+    void unmap_region() override;
 
     MirBufferUsage buffer_usage() const override;
     MirPixelFormat pixel_format() const override;
@@ -62,11 +61,14 @@ public:
     MirConnection* allocating_connection() const override;
 
     void increment_age() override;
+    bool valid() const override;
+    char const* error_message() const override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 private:
-    mir_buffer_callback cb;
-    void* cb_context;
     int const buffer_id;
-    std::shared_ptr<ClientBuffer> buffer;
+    std::shared_ptr<ClientBuffer> const buffer;
+
+    AtomicCallback<> cb;
 
     std::mutex mutex;
     bool owned;

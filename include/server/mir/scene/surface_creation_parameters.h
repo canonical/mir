@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -58,9 +58,9 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_output_id(graphics::DisplayConfigurationOutputId const& output_id);
 
-    SurfaceCreationParameters& of_type(MirSurfaceType type);
+    SurfaceCreationParameters& of_type(MirWindowType type);
 
-    SurfaceCreationParameters& with_state(MirSurfaceState state);
+    SurfaceCreationParameters& with_state(MirWindowState state);
 
     SurfaceCreationParameters& with_preferred_orientation(MirOrientationMode mode);
 
@@ -80,13 +80,18 @@ struct SurfaceCreationParameters
     input::InputReceptionMode input_mode;
     graphics::DisplayConfigurationOutputId output_id;
 
-    mir::optional_value<MirSurfaceState> state;
-    mir::optional_value<MirSurfaceType> type;
+    mir::optional_value<MirWindowState> state;
+    mir::optional_value<MirWindowType> type;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     mir::optional_value<frontend::SurfaceId> parent_id;
     mir::optional_value<frontend::BufferStreamId> content_id;
     mir::optional_value<geometry::Rectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
+    optional_value<MirPlacementHints> placement_hints;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
 
     std::weak_ptr<Surface> parent;
 

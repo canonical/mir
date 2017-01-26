@@ -19,7 +19,6 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/spin_wait.h"
 
@@ -41,13 +40,13 @@ namespace
 struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
 {
     std::atomic<MirConnection*> connection{nullptr};
-    std::atomic<MirSurface*> surface{nullptr};
+    std::atomic<MirWindow*> window{nullptr};
     std::atomic<int> buffers{0};
 
     void TearDown() override
     {
-        if (surface)
-            mir_surface_release_sync(surface);
+        if (window)
+            mir_window_release_sync(window);
         if (connection)
             mir_connection_release(connection);
 
@@ -60,22 +59,22 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         config->connected(connection);
     }
 
-    static void create_surface_callback(MirSurface* surface, void* context)
+    static void create_surface_callback(MirWindow* window, void* context)
     {
         auto const config = reinterpret_cast<ClientLibraryCallbacks*>(context);
-        config->surface_created(surface);
+        config->surface_created(window);
     }
 
-    static void next_buffer_callback(MirBufferStream* bs, void* context)
+    static void swap_buffers_callback(MirBufferStream* bs, void* context)
     {
         auto const config = reinterpret_cast<ClientLibraryCallbacks*>(context);
-        config->next_buffer(bs);
+        config->swap_buffers(bs);
     }
 
-    static void release_surface_callback(MirSurface* surface, void* context)
+    static void release_surface_callback(MirWindow* window, void* context)
     {
         auto const config = reinterpret_cast<ClientLibraryCallbacks*>(context);
-        config->surface_released(surface);
+        config->surface_released(window);
     }
 
     virtual void connected(MirConnection* conn)
@@ -84,25 +83,23 @@ struct ClientLibraryCallbacks : mtf::HeadlessInProcessServer
         connection = conn;
     }
 
-    virtual void surface_created(MirSurface* new_surface)
+    virtual void surface_created(MirWindow* new_surface)
     {
         std::this_thread::sleep_for(10ms);
-        surface = new_surface;
+        window = new_surface;
     }
 
-    virtual void next_buffer(MirBufferStream*)
+    virtual void swap_buffers(MirBufferStream*)
     {
         std::this_thread::sleep_for(10ms);
         ++buffers;
     }
 
-    void surface_released(MirSurface*)
+    void surface_released(MirWindow*)
     {
         std::this_thread::sleep_for(10ms);
-        surface = nullptr;
+        window = nullptr;
     }
-
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 }
@@ -114,7 +111,10 @@ TEST_F(ClientLibraryCallbacks, connect_callback_is_called_before_wait_handler_ha
     auto const wh = mir_connect(
         new_connection().c_str(), __PRETTY_FUNCTION__,
         connection_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(connection.load(), NotNull());
 
@@ -125,33 +125,42 @@ TEST_F(ClientLibraryCallbacks, connect_callback_is_called_before_wait_handler_ha
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, create_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, 100, 100, mir_pixel_format_argb_8888);
+    auto const spec = mir_create_normal_window_spec(connection, 100, 100);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_argb_8888);
     auto const wh = mir_surface_create(spec, create_surface_callback, this);
-    mir_surface_spec_release(spec);
+    mir_window_spec_release(spec);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
-    EXPECT_THAT(surface.load(), NotNull());
+    EXPECT_THAT(window.load(), NotNull());
 
     // Even if the test fails, wait for object to become ready so we can
     // tear down properly
     mt::spin_wait_for_condition_or_timeout(
-        [this] { return surface != nullptr; },
+        [this] { return window != nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    surface = mtf::make_any_surface(connection);
+    window = mtf::make_any_surface(connection);
 
     auto const wh = mir_buffer_stream_swap_buffers(
-        mir_surface_get_buffer_stream(surface), next_buffer_callback, this);
+        mir_window_get_buffer_stream(window), swap_buffers_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(buffers, Eq(1));
 
@@ -162,19 +171,25 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
         3s);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryCallbacks, release_surface_callback_is_called_before_wait_handler_has_result)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    surface = mtf::make_any_surface(connection);
+    window = mtf::make_any_surface(connection);
 
-    auto const wh = mir_surface_release(surface, release_surface_callback, this);
+    auto const wh = mir_surface_release(window, release_surface_callback, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(wh);
+#pragma GCC diagnostic pop
 
-    EXPECT_THAT(surface.load(), IsNull());
+    EXPECT_THAT(window.load(), IsNull());
 
     // Even if the test fails, wait for object to become ready so we can
     // tear down properly
     mt::spin_wait_for_condition_or_timeout(
-        [this] { return surface == nullptr; },
+        [this] { return window == nullptr; },
         3s);
 }
+#pragma GCC diagnostic pop

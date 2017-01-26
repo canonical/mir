@@ -49,7 +49,7 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    mg::BufferID add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const&)
     {
         return mg::BufferID{};
     }
@@ -104,18 +104,11 @@ struct Stream : Test
 };
 }
 
-TEST_F(Stream, swapping_returns_null_via_callback)
-{
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer* buffer) {
-        EXPECT_THAT(buffer, IsNull());
-    });
-}
-
 TEST_F(Stream, transitions_from_queuing_to_framedropping)
 {
     EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
     stream.allow_framedropping(true);
 
     std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
@@ -123,6 +116,7 @@ TEST_F(Stream, transitions_from_queuing_to_framedropping)
         cbuffers.push_back(stream.lock_compositor_buffer(this));
     ASSERT_THAT(cbuffers, SizeIs(1));
     EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, transitions_from_framedropping_to_queuing)
@@ -132,11 +126,11 @@ TEST_F(Stream, transitions_from_framedropping_to_queuing)
 
     EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 
     stream.allow_framedropping(false);
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
 
@@ -149,7 +143,7 @@ TEST_F(Stream, transitions_from_framedropping_to_queuing)
 TEST_F(Stream, indicates_buffers_ready_when_queueing)
 {
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 
     for(auto i = 0u; i < buffers.size(); i++)
     {
@@ -165,7 +159,7 @@ TEST_F(Stream, indicates_buffers_ready_when_dropping)
     stream.allow_framedropping(true);
 
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
     stream.lock_compositor_buffer(this);
@@ -175,7 +169,7 @@ TEST_F(Stream, indicates_buffers_ready_when_dropping)
 TEST_F(Stream, tracks_has_buffer)
 {
     EXPECT_FALSE(stream.has_submitted_buffer());
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
     EXPECT_TRUE(stream.has_submitted_buffer());
 }
 
@@ -184,9 +178,9 @@ TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(1, initial_size));
     stream.add_observer(observer);
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
     stream.remove_observer(observer);
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
 }
 
 TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
@@ -198,13 +192,13 @@ TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
             EXPECT_TRUE(stream.has_submitted_buffer());
         }));
     stream.add_observer(observer);
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
 }
 
 TEST_F(Stream, flattens_queue_out_when_told_to_drop)
 {
     for(auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
     stream.drop_old_buffers();
@@ -215,9 +209,9 @@ TEST_F(Stream, flattens_queue_out_when_told_to_drop)
 TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
 {
     int that{0};
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
-    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
-    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
+    stream.submit_buffer(buffers[1]);
+    stream.submit_buffer(buffers[2]);
 
     auto a = stream.lock_compositor_buffer(this);
     stream.drop_old_buffers();
@@ -228,15 +222,15 @@ TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
     EXPECT_THAT(a->id(), Ne(c->id())); 
 }
 
-TEST_F(Stream, ignores_nullptr_submissions) //legacy behavior
+TEST_F(Stream, throws_on_nullptr_submissions)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(_,_)).Times(0);
     stream.add_observer(observer);
-    bool was_called = false;
-    stream.swap_buffers(nullptr, [&](mg::Buffer*){ was_called = true; });
+    EXPECT_THROW({
+        stream.submit_buffer(nullptr);
+    }, std::invalid_argument);
     EXPECT_FALSE(stream.has_submitted_buffer());
-    EXPECT_TRUE(was_called);
 }
 
 //it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers
@@ -280,7 +274,7 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
         stream.associate_buffer(buffer->id());
 
     for (auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 }
 
 TEST_F(Stream, timer_does_not_start_when_no_associated_buffers)
@@ -295,7 +289,7 @@ TEST_F(Stream, timer_does_not_start_when_no_associated_buffers)
         policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
 }
 
 TEST_F(Stream, timer_stops_if_a_buffer_is_available)
@@ -312,63 +306,68 @@ TEST_F(Stream, timer_stops_if_a_buffer_is_available)
     for (auto const& buffer : buffers)
         stream.associate_buffer(buffer->id());
     for (auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
     stream.lock_compositor_buffer(this);
 }
 
 TEST_F(Stream, triggering_policy_gives_a_buffer_back)
 {
     for (auto& buffer : buffers)
-        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+        stream.submit_buffer(buffer);
     stream.lock_compositor_buffer(this);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,_,_));
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_only_frame_when_arbiter_has_none)
 {
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,_,_))
         .Times(0);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_longer_queue)
 {
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
     stream.lock_compositor_buffer(this);
-    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
-    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[1]);
+    stream.submit_buffer(buffers[2]);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
         .Times(1);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_2_buffer_queue)
 {
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
     stream.lock_compositor_buffer(this);
-    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[1]);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
         .Times(0);
     framedrop_factory.trigger_policies();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, returns_buffers_to_client_when_told_to_bring_queue_up_to_date)
 {
-    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
-    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
-    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+    stream.submit_buffer(buffers[0]);
+    stream.submit_buffer(buffers[1]);
+    stream.submit_buffer(buffers[2]);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[0]),_));
     EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_));
     stream.drop_old_buffers();
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }

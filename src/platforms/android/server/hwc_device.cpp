@@ -56,7 +56,7 @@ bool mga::HwcDevice::compatible_renderlist(RenderableList const& list)
         //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
         if (plane_alpha_is_translucent(*renderable) ||
-           (renderable->transformation() != identity))
+            renderable->transformation() != identity)
         {
             return false;
         }

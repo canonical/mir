@@ -21,17 +21,37 @@
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir_test_framework/stub_client_platform_options.h"
 #include "mir/assert_module_entry_point.h"
+
 #include <memory>
+#include <unordered_map>
+#include <exception>
 #include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
 
-mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
+namespace
+{
+std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> next_error_set;
+}
+
+extern "C" void add_client_platform_error(mtf::FailurePoint where, std::exception_ptr what)
+{
+    next_error_set[where] = what;
+}
+
+mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(
+    mcl::ClientContext* context,
+    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
-    return mir::make_module_ptr<mtf::StubClientPlatform>(context);
+
+    auto error_set = std::move(next_error_set);
+    next_error_set = {};
+
+    return mir::make_module_ptr<mtf::StubClientPlatform>(context, std::move(error_set));
 }
 
 bool is_appropriate_module(mcl::ClientContext* context)

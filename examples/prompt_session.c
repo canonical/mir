@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
@@ -40,13 +41,13 @@
 /// Opens a mir connection and creates a prompt session
 /// before closing the prompt session and connection.
 ///\section prompt_session_app prompt_session_app()
-/// Opens a mir connection and creates a surface
-/// before releasing the surface and closing the connection.
+/// Opens a mir connection and creates a window
+/// before releasing the window and closing the connection.
 ///\example prompt_session.c A mir client demonstrating prompt sessions.
-///\section MirDemoState MirDemoState
+///\section PsMirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
 ///\snippet prompt_session.c MirDemoState_tag
-///\section Callbacks Callbacks
+///\section PsCallbacks Callbacks
 ///\snippet prompt_session.c Callback_tag
 /// This program creates two processes, both opening a mir connection, one starting
 /// a prompt session with the other process.
@@ -56,13 +57,15 @@
 typedef struct MirDemoState
 {
     MirConnection *connection;
-    MirSurface *surface;
+    MirWindow *window;
     MirPromptSession *prompt_session;
     pid_t  child_pid;
     MirPromptSessionState state;
 
     int* client_fds;
     unsigned int client_fd_count;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -87,13 +90,18 @@ static void prompt_session_event_callback(MirPromptSession* prompt_session,
 static void client_fd_callback(MirPromptSession* prompt_session, size_t count, int const* fds, void* context)
 {
     (void)prompt_session;
-    ((MirDemoState*)context)->client_fds = malloc(sizeof(int)*count);
+    MirDemoState* mcd = (MirDemoState*)context;
+    pthread_mutex_lock(&mcd->mutex);
+    mcd->client_fds = malloc(sizeof(int)*count);
     unsigned int i = 0;
     for (; i < count; i++)
     {
-        ((MirDemoState*)context)->client_fds[i] = fds[i];
+        mcd->client_fds[i] = fds[i];
     }
-    ((MirDemoState*)context)->client_fd_count = count;
+
+    mcd->client_fd_count = count;
+    pthread_cond_signal(&mcd->cond);
+    pthread_mutex_unlock(&mcd->mutex);
 }
 ///\internal [Callback_tag]
 
@@ -109,28 +117,20 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
     assert(mir_connection_is_valid(mcd->connection));
     assert(strcmp(mir_connection_get_error_message(mcd->connection), "") == 0);
     printf("%s: Connected\n", name);
-
-    // We can query information about the platform we're running on
-    {
-        MirPlatformPackage platform_package;
-        platform_package.data_items = -1;
-        platform_package.fd_items = -1;
-
-        mir_connection_get_platform(mcd->connection, &platform_package);
-        assert(0 <= platform_package.data_items);
-        assert(0 <= platform_package.fd_items);
-    }
 }
 
 void stop_session(MirDemoState* mcd, const char* name)
 {
-    if (mcd->surface)
+    if (mcd->window)
     {
-        // We should release our surface
-        mir_surface_release_sync(mcd->surface);
-        mcd->surface = 0;
-        printf("%s: Surface released\n", name);
+        // We should release our window
+        mir_window_release_sync(mcd->window);
+        mcd->window = 0;
+        printf("%s: Window released\n", name);
     }
+
+    pthread_cond_destroy(&mcd->cond);
+    pthread_mutex_destroy(&mcd->mutex);
 
     // We should release our connection
     mir_connection_release(mcd->connection);
@@ -141,11 +141,23 @@ void helper(const char* server)
 {
     MirDemoState mcd;
     mcd.connection = 0;
-    mcd.surface = 0;
+    mcd.window = 0;
     mcd.prompt_session = 0;
     mcd.state = mir_prompt_session_state_stopped;
     mcd.client_fd_count = 0;
     start_session(server, "helper", &mcd);
+
+    int error = pthread_mutex_init(&mcd.mutex, NULL);
+    if (error)
+    {
+        fprintf(stderr, "Failed to init mutex: %s", strerror(error));
+    }
+
+    error = pthread_cond_init(&mcd.cond, NULL);
+    if (error)
+    {
+        fprintf(stderr, "Failed to init cond: %s", strerror(error));
+    }
 
     // We create a prompt session
     mcd.prompt_session = mir_connection_create_prompt_session_sync(mcd.connection, getpid(), prompt_session_event_callback, &mcd);
@@ -154,7 +166,15 @@ void helper(const char* server)
     assert(mcd.state == mir_prompt_session_state_started);
     puts("helper: Started prompt session");
 
-    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd));
+    mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd);
+
+    pthread_mutex_lock(&mcd.mutex);
+    while (mcd.client_fd_count == 0)
+    {
+        pthread_cond_wait(&mcd.cond, &mcd.mutex);
+    }
+    pthread_mutex_unlock(&mcd.mutex);
+
     assert(mcd.client_fd_count == 1);
     puts("helper: Added waiting FD");
 

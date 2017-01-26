@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,7 @@
 #ifndef MIR_SERVER_CONFIGURATION_H_
 #define MIR_SERVER_CONFIGURATION_H_
 
+#include <functional>
 #include <memory>
 
 namespace mir
@@ -50,7 +51,6 @@ namespace input
 class InputManager;
 class InputDispatcher;
 class EventFilter;
-class InputConfiguration;
 }
 
 namespace scene
@@ -82,6 +82,7 @@ public:
     virtual std::shared_ptr<cookie::Authority> the_cookie_authority() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
+    virtual std::function<void()> the_stop_callback() = 0;
 
 protected:
     ServerConfiguration() = default;

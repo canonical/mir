@@ -19,12 +19,12 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/configuration.h"
 
+#include "reports.h"
 #include "lttng_report_factory.h"
 #include "logging_report_factory.h"
 #include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
-#include "logging/display_configuration_report.h"
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
@@ -56,6 +56,11 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
     }
 }
 
+std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports()
+{
+    return std::make_unique<report::Reports>(*this, *the_options());
+}
+
 auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
 {
     return compositor_report(
@@ -74,15 +79,6 @@ auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<
         });
 }
 
-auto mir::DefaultServerConfiguration::the_session_mediator_report() -> std::shared_ptr<mf::SessionMediatorReport>
-{
-    return session_mediator_report(
-        [this]()->std::shared_ptr<mf::SessionMediatorReport>
-        {
-            return report_factory(options::session_mediator_report_opt)->create_session_mediator_report();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::shared_ptr<mf::MessageProcessorReport>
 {
     return message_processor_report(
@@ -98,14 +94,6 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
         [this]()->std::shared_ptr<mg::DisplayReport>
         {
             return report_factory(options::display_report_opt)->create_display_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_display_configuration_report() -> std::shared_ptr<mg::DisplayConfigurationReport>
-{
-    return display_configuration_report([this]() -> std::shared_ptr<mg::DisplayConfigurationReport>
-        {
-            return std::make_shared<mir::report::logging::DisplayConfigurationReport>(the_logger());
         });
 }
 

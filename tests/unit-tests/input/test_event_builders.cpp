@@ -69,7 +69,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float pressure_values[] = {3, 9, 14.6};
     float touch_major_values[] = {11, 9, 14};
     float touch_minor_values[] = {13, 3, 9.13};
-    float size_values[] = {4, 9, 6};
+    float size_values[] = {13, 9, 14};
 
    auto ev = mev::make_event(device_id, timestamp,
        cookie, modifiers);
@@ -189,12 +189,14 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     auto const pos_y = 53.2f;
     auto const button_state = mir_pointer_button_primary|mir_pointer_button_secondary;
     auto const modifiers = mir_input_event_modifier_ctrl_right | mir_input_event_modifier_ctrl;
+    std::vector<uint32_t> const pressed_keys = {KEY_LEFTALT, KEY_M};
+
     auto ev = mev::make_event(timestamp,
                               button_state,
                               modifiers,
                               pos_x,
                               pos_y,
-                              {mev::InputDeviceState{MirInputDeviceId{3}, {KEY_LEFTALT, KEY_M}, 0},
+                              {mev::InputDeviceState{MirInputDeviceId{3}, pressed_keys, 0},
                                mev::InputDeviceState{MirInputDeviceId{2}, {}, button_state}});
 
     EXPECT_THAT(mir_event_get_type(ev.get()), Eq(mir_event_type_input_device_state));
@@ -208,9 +210,12 @@ TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied
     EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(2));
 
     EXPECT_THAT(mir_input_device_state_event_device_id(ids_event, 0), Eq(MirInputDeviceId{3}));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(ids_event, 0), Eq(2));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 0)[0], Eq(KEY_LEFTALT));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 0)[1], Eq(KEY_M));
+    auto const pressed_keys_count = mir_input_device_state_event_device_pressed_keys_count(ids_event, 0);
+    EXPECT_THAT(pressed_keys_count, Eq(2));
+    for (uint32_t i = 0; i < pressed_keys_count; i++)
+    {
+        EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(ids_event, 0, i), Eq(pressed_keys[i]));
+    }
     EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(ids_event, 0), Eq(0));
 
     EXPECT_THAT(mir_input_device_state_event_device_id(ids_event, 1), Eq(MirInputDeviceId{2}));
@@ -252,6 +257,7 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     auto const pos_y = 0.0f;
     auto const button_state = mir_pointer_button_primary | mir_pointer_button_secondary;
     auto const modifiers = mir_input_event_modifier_none;
+    std::vector<uint32_t> const pressed_keys = {KEY_RIGHTALT, KEY_LEFTSHIFT, KEY_Q};
     auto ev = mev::make_event(timestamp,
                               button_state,
                               modifiers,
@@ -259,7 +265,7 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
                               pos_y,
                               {mev::InputDeviceState{MirInputDeviceId{0}, {}, mir_pointer_button_primary},
                                mev::InputDeviceState{MirInputDeviceId{2}, {}, mir_pointer_button_secondary},
-                               mev::InputDeviceState{MirInputDeviceId{3}, {KEY_RIGHTALT, KEY_LEFTSHIFT, KEY_Q}, 0}});
+                               mev::InputDeviceState{MirInputDeviceId{3}, pressed_keys, 0}});
 
     auto encoded = MirEvent::serialize(ev.get());
 
@@ -269,8 +275,11 @@ TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplie
     auto ids_event = mir_event_get_input_device_state_event(deserialzed_event.get());
 
     EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(3));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(ids_event, 2), Eq(3));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[0], Eq(KEY_RIGHTALT));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[1], Eq(KEY_LEFTSHIFT));
-    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[2], Eq(KEY_Q));
+    auto pressed_keys_count = mir_input_device_state_event_device_pressed_keys_count(ids_event, 2);
+    EXPECT_THAT(pressed_keys_count, Eq(3));
+
+    for (uint32_t i = 0; i < pressed_keys_count; i++)
+    {
+        EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_for_index(ids_event, 2, i), Eq(pressed_keys[i]));
+    }
 }

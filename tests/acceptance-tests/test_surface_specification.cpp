@@ -48,7 +48,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
     MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
@@ -92,8 +92,8 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     template<typename Specifier>
     mtf::VisibleSurface create_surface(Specifier const& specifier)
     {
-        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
-        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(mir_create_surface_spec(connection), del);
+        auto del = [] (MirWindowSpec* spec) { mir_window_spec_release(spec); };
+        std::unique_ptr<MirWindowSpec, decltype(del)> spec(mir_create_window_spec(connection), del);
         specifier(spec.get());
         return mtf::VisibleSurface{spec.get()};
     }
@@ -149,7 +149,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         server.the_shell()->handle(*drag_event);
     }
 
-    void wait_for_arbitrary_change(MirSurface* surface)
+    void wait_for_arbitrary_change(MirWindow* surface)
     {
         auto const new_title = __PRETTY_FUNCTION__;
 
@@ -158,12 +158,12 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
         signal_change.reset();
 
-        auto const spec = mir_create_surface_spec(connection);
+        auto const spec = mir_create_window_spec(connection);
 
-        mir_surface_spec_set_name(spec, new_title);
+        mir_window_spec_set_name(spec, new_title);
 
-        mir_surface_apply_spec(surface, spec);
-        mir_surface_spec_release(spec);
+        mir_window_apply_spec(surface, spec);
+        mir_window_spec_release(spec);
         signal_change.wait_for(1s);
     }
 
@@ -179,7 +179,7 @@ private:
     }
 };
 
-struct SurfaceSpecificationCase : SurfaceSpecification, ::testing::WithParamInterface<MirSurfaceType> {};
+struct SurfaceSpecificationCase : SurfaceSpecification, ::testing::WithParamInterface<MirWindowType> {};
 using SurfaceWithoutParent = SurfaceSpecificationCase;
 using SurfaceNeedingParent = SurfaceSpecificationCase;
 using SurfaceMayHaveParent = SurfaceSpecificationCase;
@@ -188,7 +188,7 @@ MATCHER(IsValidSurface, "")
 {
     if (arg == nullptr) return false;
 
-    if (!mir_surface_is_valid(arg)) return false;
+    if (!mir_window_is_valid(arg)) return false;
 
     return true;
 }
@@ -208,14 +208,14 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
 {
     auto const min_width = 17;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_min_width(spec, min_width);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_min_width(spec, min_width);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -233,14 +233,14 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
 {
     auto const min_height = 19;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_min_height(spec, min_height);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_min_height(spec, min_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -258,14 +258,14 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
 {
     auto const max_width = 23;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_max_width(spec, max_width);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_max_width(spec, max_width);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -283,14 +283,14 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
 {
     auto const max_height = 29;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_max_height(spec, max_height);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_max_height(spec, max_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -308,14 +308,14 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
 {
     auto const width_inc = 13;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_width_increment(spec, width_inc);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_width_increment(spec, width_inc);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -337,15 +337,15 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
     auto const width_inc = 13;
     auto const min_width = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_width_increment(spec, width_inc);
-            mir_surface_spec_set_min_width(spec, min_width);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_width_increment(spec, width_inc);
+            mir_window_spec_set_min_width(spec, min_width);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -366,14 +366,14 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
 {
     auto const height_inc = 13;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_height_increment(spec, height_inc);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_height_increment(spec, height_inc);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -395,15 +395,15 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
     auto const height_inc = 13;
     auto const min_height = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_height_increment(spec, height_inc);
-            mir_surface_spec_set_min_height(spec, min_height);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_height_increment(spec, height_inc);
+            mir_window_spec_set_min_height(spec, min_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -425,14 +425,14 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
     auto const aspect_width = 11;
     auto const aspect_height = 7;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -455,14 +455,14 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
     auto const aspect_width = 7;
     auto const aspect_height = 11;
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -492,28 +492,28 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
     auto const height_inc = 7;
     auto const expected_aspect_ratio = FloatEq(float(aspect_width)/aspect_height);
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
-            mir_surface_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
-            mir_surface_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_window_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
+            mir_window_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
 
-            mir_surface_spec_set_min_height(spec, min_height);
-            mir_surface_spec_set_min_width(spec, min_width);
+            mir_window_spec_set_min_height(spec, min_height);
+            mir_window_spec_set_min_width(spec, min_width);
 
-            mir_surface_spec_set_max_height(spec, max_height);
-            mir_surface_spec_set_max_width(spec, max_width);
+            mir_window_spec_set_max_height(spec, max_height);
+            mir_window_spec_set_max_width(spec, max_width);
 
-            mir_surface_spec_set_width_increment(spec, width_inc);
-            mir_surface_spec_set_height_increment(spec, height_inc);
+            mir_window_spec_set_width_increment(spec, width_inc);
+            mir_window_spec_set_height_increment(spec, height_inc);
 
-            mir_surface_spec_set_height(spec, min_height);
-            mir_surface_spec_set_width(spec, min_width);
+            mir_window_spec_set_height(spec, min_height);
+            mir_window_spec_set_width(spec, min_width);
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -546,13 +546,13 @@ TEST_P(SurfaceWithoutParent, not_setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, type);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, type);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
@@ -562,23 +562,23 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
     {
-        mir_surface_spec_set_type(spec, type);
-        mir_surface_spec_set_width(spec, width);
-        mir_surface_spec_set_height(spec, height);
-        mir_surface_spec_set_pixel_format(spec, pixel_format);
-        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-        mir_surface_spec_set_parent(spec, parent);
+        mir_window_spec_set_type(spec, type);
+        mir_window_spec_set_width(spec, width);
+        mir_window_spec_set_height(spec, height);
+        mir_window_spec_set_pixel_format(spec, pixel_format);
+        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        mir_window_spec_set_parent(spec, parent);
     });
 
     EXPECT_THAT(surface, Not(IsValidSurface()));
@@ -588,23 +588,23 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, type);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_parent(spec, parent);
+            mir_window_spec_set_type(spec, type);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
@@ -614,13 +614,13 @@ TEST_P(SurfaceNeedingParent, not_setting_parent_fails)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, type);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, type);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     EXPECT_THAT(surface, Not(IsValidSurface()));
@@ -630,23 +630,23 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const parent = create_surface([&](MirSurfaceSpec* spec)
+    auto const parent = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, mir_surface_type_normal);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, mir_window_type_normal);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, type);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-            mir_surface_spec_set_parent(spec, parent);
+            mir_window_spec_set_type(spec, type);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_parent(spec, parent);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
@@ -656,23 +656,23 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
 {
     auto const type = GetParam();
 
-    auto const surface = create_surface([&](MirSurfaceSpec* spec)
+    auto const surface = create_surface([&](MirWindowSpec* spec)
         {
-            mir_surface_spec_set_type(spec, type);
-            mir_surface_spec_set_width(spec, width);
-            mir_surface_spec_set_height(spec, height);
-            mir_surface_spec_set_pixel_format(spec, pixel_format);
-            mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+            mir_window_spec_set_type(spec, type);
+            mir_window_spec_set_width(spec, width);
+            mir_window_spec_set_height(spec, height);
+            mir_window_spec_set_pixel_format(spec, pixel_format);
+            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         });
 
     EXPECT_THAT(surface, IsValidSurface());
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceWithoutParent,
-    Values(mir_surface_type_utility, mir_surface_type_normal));
+    Values(mir_window_type_utility, mir_window_type_normal));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceNeedingParent,
-    Values(mir_surface_type_satellite, mir_surface_type_gloss, mir_surface_type_tip));
+    Values(mir_window_type_satellite, mir_window_type_gloss, mir_window_type_tip));
 
 INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceMayHaveParent,
-    Values(mir_surface_type_dialog, mir_surface_type_freestyle));
+    Values(mir_window_type_dialog, mir_window_type_freestyle));

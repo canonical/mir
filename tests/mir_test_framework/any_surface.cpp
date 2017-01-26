@@ -18,6 +18,9 @@
 
 #include "mir_test_framework/any_surface.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mtf = mir_test_framework;
 
 namespace 
@@ -27,12 +30,26 @@ namespace
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 }
 
-MirSurface* mtf::make_any_surface(MirConnection *connection)
+MirWindow* mtf::make_any_surface(MirConnection *connection)
 {
-    auto spec = mir_connection_create_spec_for_normal_surface(connection,
-        width, height, format);
-    auto surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    return mtf::make_surface(connection, mir::geometry::Size{width, height}, format);
+}
+
+MirWindow* mtf::make_surface(
+    MirConnection *connection, mir::geometry::Size size, MirPixelFormat f)
+{
+    using namespace std::literals::string_literals;
+
+    auto spec = mir_create_normal_window_spec(connection, size.width.as_int(), size.height.as_int());
+    mir_window_spec_set_pixel_format(spec, f);
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    if (!mir_window_is_valid(window))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"Failed to create window: "s + mir_window_get_error_message(window)}));
+    }
     
-    return surface;
+    return window;
 }

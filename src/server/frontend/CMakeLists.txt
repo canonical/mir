@@ -1,7 +1,6 @@
 set(
   FRONTEND_SOURCES
 
-  client_buffer_tracker.cpp
   connection_context.cpp
   no_prompt_shell.cpp
   session_mediator.cpp
@@ -9,13 +8,14 @@ set(
   protobuf_message_processor.cpp
   protobuf_responder.cpp
   protobuf_buffer_packer.cpp
+  protobuf_input_converter.cpp
+  protobuf_input_converter.h
   published_socket_connector.cpp
   protobuf_connection_creator.cpp
   socket_connection.cpp
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
-  buffer_stream_tracker.cpp
   authorizing_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
@@ -29,6 +29,8 @@ set(
   reordering_message_sender.h
   event_sink_factory.h
   screencast_buffer_tracker.cpp
+  session_mediator_observer_multiplexer.cpp
+  session_mediator_observer_multiplexer.h
 )
 
 add_library(

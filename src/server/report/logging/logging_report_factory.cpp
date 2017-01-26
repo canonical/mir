@@ -26,6 +26,7 @@
 #include "session_mediator_report.h"
 #include "shell_report.h"
 #include "input_report.h"
+#include "seat_report.h"
 #include "mir/logging/shared_library_prober_report.h"
 
 #include "mir/default_server_configuration.h"
@@ -46,7 +47,7 @@ std::shared_ptr<mir::compositor::CompositorReport> mr::LoggingReportFactory::cre
 
 std::shared_ptr<mir::graphics::DisplayReport> mr::LoggingReportFactory::create_display_report()
 {
-    return std::make_shared<logging::DisplayReport>(logger, clock);
+    return std::make_shared<logging::DisplayReport>(logger);
 }
 
 std::shared_ptr<mir::scene::SceneReport> mr::LoggingReportFactory::create_scene_report()
@@ -59,7 +60,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mr::LoggingReportFactory::create
     return std::make_shared<logging::ConnectorReport>(logger);
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mr::LoggingReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mr::LoggingReportFactory::create_session_mediator_report()
 {
     return std::make_shared<logging::SessionMediatorReport>(logger);
 }
@@ -72,6 +73,11 @@ std::shared_ptr<mir::frontend::MessageProcessorReport> mr::LoggingReportFactory:
 std::shared_ptr<mir::input::InputReport> mr::LoggingReportFactory::create_input_report()
 {
     return std::make_shared<logging::InputReport>(logger);
+}
+
+std::shared_ptr<mir::input::SeatObserver> mr::LoggingReportFactory::create_seat_report()
+{
+    return std::make_shared<logging::SeatReport>(logger);
 }
 
 std::shared_ptr<mir::SharedLibraryProberReport> mr::LoggingReportFactory::create_shared_library_prober_report()

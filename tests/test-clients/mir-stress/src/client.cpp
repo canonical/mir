@@ -60,25 +60,26 @@ bool UnacceleratedClient::connect(std::string unique_name, const char* socket_fi
 
 bool UnacceleratedClient::create_surface()
 {
-    auto display_configuration = mir_connection_create_display_config(connection_);
-    if (display_configuration->num_outputs < 1)
+    auto display_configuration = mir_connection_create_display_configuration(connection_);
+    auto num_outputs = mir_display_config_get_num_outputs(display_configuration);
+    if (num_outputs < 1)
         return false;
 
-    MirDisplayOutput display_state = display_configuration->outputs[0];
-    if (display_state.num_output_formats < 1)
+    auto output = mir_display_config_get_output(display_configuration, 0);
+    if (mir_output_get_num_pixel_formats(output) < 1)
         return false;
 
     // TODO: instead of picking the first pixel format, pick a random one!
-    MirPixelFormat const pixel_format = display_state.output_formats[0];
-    mir_display_config_destroy(display_configuration);
+    MirPixelFormat const pixel_format = mir_output_get_pixel_format(output, 0);
+    mir_display_config_release(display_configuration);
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection_, 640, 480, pixel_format);
-    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    auto const spec = mir_create_normal_window_spec(connection_, 640, 480);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surface_ = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    surface_ = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
     return true;
 }
@@ -87,7 +88,7 @@ void UnacceleratedClient::release_surface()
 {
     if (surface_ != nullptr)
     {
-        mir_surface_release_sync(surface_);
+        mir_window_release_sync(surface_);
         surface_ = nullptr;
     }
 }

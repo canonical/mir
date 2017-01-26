@@ -50,7 +50,7 @@ extern "C" {
 MirWaitHandle *mir_connect(
     char const *server,
     char const *app_name,
-    mir_connected_callback callback,
+    MirConnectedCallback callback,
     void *context);
 
 /**
@@ -92,7 +92,8 @@ void mir_connection_release(MirConnection *connection);
  *   \param [in]  connection        The connection
  *   \param [out] platform_package  Structure to be populated
  */
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
+__attribute__((deprecated("use platform extensions instead")));
 
 /**
  * Query graphics platform module.
@@ -103,7 +104,8 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
  *   \param [in]  connection    The connection
  *   \param [out] properties    Structure to be populated
  */
-void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties);
+void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
+__attribute__((deprecated("use graphics module extension instead")));
 
 /**
  * Register a callback to be called when a Lifecycle state change occurs.
@@ -112,7 +114,7 @@ void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProp
  *   \param [in,out] context    User data passed to the callback function
  */
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
-    mir_lifecycle_event_callback callback, void* context);
+    MirLifecycleEventCallback callback, void* context);
 
 
 /**
@@ -133,7 +135,7 @@ void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
  * \param [in] context          User data passed to the callback function
  */
 void mir_connection_set_ping_event_callback(MirConnection* connection,
-    mir_ping_event_callback callback, void* context);
+    MirPingEventCallback callback, void* context);
 
 
 /**
@@ -153,7 +155,8 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
-MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
+__attribute__ ((deprecated("use mir_connection_create_display_configuration instead")));
 
 /**
  * Query the display
@@ -178,13 +181,14 @@ MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* con
  */
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
-    mir_display_config_callback callback, void* context);
+    MirDisplayConfigCallback callback, void* context);
 
 /**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed
  */
-void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
+__attribute__ ((deprecated("use mir_display_config_release instead")));
 
 /**
  * Apply the display configuration
@@ -199,7 +203,32 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
  *   \param [in] display_configuration  The display_configuration to apply
  *   \return                            A handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
+__attribute__ ((deprecated("use mir_connection_apply_session_display_config instead")));
+
+/**
+ * Apply the display config for the connection
+ *
+ * The display config is applied to this connection only (per-connection
+ * config) and is invalidated when a hardware change occurs. Clients should
+ * register a callback with mir_connection_set_display_config_change_callback()
+ * to get notified about hardware changes, so that they can apply a new config.
+ *
+ *   \param [in] connection             The connection
+ *   \param [in] display_config         The display_config to apply
+ */
+void mir_connection_apply_session_display_config(MirConnection* connection, MirDisplayConfig const* display_config);
+
+/**
+ * Remove the display configuration for the connection
+ *
+ * If a session display config is applied to the connection it is removed, and
+ * the base display config is used. If there was no previous call to
+ * mir_connection_apply_session_display_config this will do nothing.
+ *
+ *   \param [in] connection             The connection
+ */
+void mir_connection_remove_session_display_config(MirConnection* connection);
 
 /**
  * Set the base display configuration
@@ -224,7 +253,8 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
  */
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration);
+    MirDisplayConfiguration const* display_configuration)
+__attribute__ ((deprecated("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration")));
 
 
 /**
@@ -235,7 +265,8 @@ MirWaitHandle* mir_connection_set_base_display_config(
  *
  * The display configuration will automatically revert to the previous
  * settings after timeout_seconds unless confirmed by a call to
- * mir_connection_confirm_base_display_configuration().
+ * mir_connection_confirm_base_display_configuration(), or is reverted
+ * immediately after a call to mir_connection_cancel_display_configuration_preview().
  *
  * If this request succeeds a configuration change event is sent to the
  * client. Clients should register a callback with
@@ -280,6 +311,22 @@ void mir_connection_confirm_base_display_configuration(
     MirDisplayConfig const* configuration);
 
 /**
+ * Cancel a pending base display configuration preview.
+ *
+ * If this request succeeds a configuration change event is sent to the client,
+ * with the now-current base display configuration.
+ *
+ * This call will fail if there is no display configuration preview current.
+ * A client can detect this by registering a callback with
+ * mir_connection_set_error_callback() and checking for
+ * mir_display_configuration_error_no_preview_in_progress.
+ *
+ * \param [in] connection   The connection
+ */
+void mir_connection_cancel_base_display_configuration_preview(
+    MirConnection* connection);
+
+/**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use
@@ -314,7 +361,7 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
-    unsigned const int format_size, unsigned int *num_valid_formats);
+    unsigned const int formats_size, unsigned int *num_valid_formats);
 
 /**
  * Perform a platform specific operation.
@@ -331,11 +378,12 @@ void mir_connection_get_available_surface_formats(
 MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
+    MirPlatformOperationCallback callback, void* context)
+__attribute__ ((deprecated("use platform specific extensions instead")));
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
- * \warning return value must be destroyed via mir_input_config_destroy()
+ * \warning return value must be destroyed via mir_input_config_release()
  * \warning may return null if connection is invalid
  * \param [in]  connection        The connection
  * \return      structure that describes the input configuration
@@ -343,12 +391,24 @@ MirWaitHandle* mir_connection_platform_operation(
 MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
+ * \deprecated  Use mir_input_config_release() instead.
+ *
  * Release this snapshot of the input configuration.
  * This invalidates any pointers retrieved from this structure.
  *
- * \param [in] devices  The input configuration
+ * \param [in] config  The input configuration
  */
-void mir_input_config_destroy(MirInputConfig const* config);
+void mir_input_config_destroy(MirInputConfig const* config)
+__attribute__ ((deprecated("use mir_input_config_release instead")));
+
+/**
+ * Release this snapshot of the input configuration.
+ * This invalidates any pointers retrieved from this structure.
+ *
+ * \param [in] config  The input configuration
+ */
+void mir_input_config_release(MirInputConfig const* config);
+
 
 /**
  * Register a callback to be called when the input devices change.
@@ -362,7 +422,7 @@ void mir_input_config_destroy(MirInputConfig const* config);
  */
 void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
-    mir_input_config_callback callback, void* context);
+    MirInputConfigCallback callback, void* context);
 
 /**
  * Register a callback to be called on non-fatal errors
@@ -373,7 +433,7 @@ void mir_connection_set_input_config_change_callback(
  */
 void mir_connection_set_error_callback(
     MirConnection* connection,
-    mir_error_callback callback,
+    MirErrorCallback callback,
     void* context);
 
 #ifdef __cplusplus

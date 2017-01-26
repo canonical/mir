@@ -42,7 +42,7 @@ public:
     {
     }
 
-    mir::graphics::NativeBuffer* driver_requests_buffer() override
+    mir::graphics::android::NativeBuffer* driver_requests_buffer() override
     {
         return nullptr;
     }
@@ -72,7 +72,12 @@ public:
 
     void dispatch_driver_request_buffer_count(unsigned int) override
     {
-    } 
+    }
+
+    void dispatch_driver_request_buffer_size(geometry::Size) override
+    {
+    }
+ 
 private:
     mir::geometry::Size sz;
     int visual_id;

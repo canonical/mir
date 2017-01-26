@@ -29,9 +29,9 @@
 
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/renderer/gl/context.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -53,7 +53,7 @@ int errno_from_exception(std::exception const& e)
     return (errno_ptr != nullptr) ? *errno_ptr : -1;
 }
 
-class GBMGLContext : public mg::GLContext
+class GBMGLContext : public mir::renderer::gl::Context
 {
 public:
     GBMGLContext(mgm::helpers::GBMHelper const& gbm,
@@ -154,110 +154,8 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
     }
 
     {
-        std::lock_guard<std::mutex> lg{configuration_mutex};
-
-        auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
-        // Treat the current_display_configuration as incompatible with itself,
-        // before it's fully constructed, to force proper initialization.
-        bool const comp{(&conf != &current_display_configuration) &&
-                        compatible(kms_conf, current_display_configuration)};
-        std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
-
-        if (!comp)
-        {
-            /*
-             * Notice for a little while here we will have duplicate
-             * DisplayBuffers attached to each output, and the display_buffers_new
-             * will take over the outputs before the old display_buffers are
-             * destroyed. So to avoid page flipping confusion in-between, make
-             * sure we wait for all pending page flips to finish before the
-             * display_buffers_new are created and take control of the outputs.
-             */
-            for (auto& db : display_buffers)
-                db->wait_for_page_flip();
-
-            /* Reset the state of all outputs */
-            kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
-            {
-                uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-                auto kms_output = output_container.get_kms_output_for(connector_id);
-                kms_output->clear_cursor();
-                kms_output->reset();
-            });
-        }
-
-        /* Set up used outputs */
-        OverlappingOutputGrouping grouping{conf};
-        auto group_idx = 0;
-
-        grouping.for_each_group([&](OverlappingOutputGroup const& group)
-        {
-            auto bounding_rect = group.bounding_rectangle();
-            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
-            MirOrientation orientation = mir_orientation_normal;
-
-            group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
-            {
-                uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
-                auto kms_output = output_container.get_kms_output_for(connector_id);
-
-                auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
-                                                                    conf_output.current_mode_index);
-                kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
-                if (!comp)
-                {
-                    kms_output->set_power_mode(conf_output.power_mode);
-                    kms_outputs.push_back(kms_output);
-                }
-
-                /*
-                 * Presently OverlappingOutputGroup guarantees all grouped
-                 * outputs have the same orientation.
-                 */
-                orientation = conf_output.orientation;
-            });
-
-            if (comp)
-            {
-                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
-            }
-            else
-            {
-                uint32_t width = bounding_rect.size.width.as_uint32_t();
-                uint32_t height = bounding_rect.size.height.as_uint32_t();
-                if (orientation == mir_orientation_left ||
-                    orientation == mir_orientation_right)
-                {
-                    std::swap(width, height);
-                }
-
-                auto surface = gbm->create_scanout_surface(width, height);
-
-                std::unique_ptr<DisplayBuffer> db{
-                    new DisplayBuffer{bypass_option,
-                                      drm,
-                                      gbm,
-                                      listener,
-                                      kms_outputs,
-                                      std::move(surface),
-                                      bounding_rect,
-                                      orientation,
-                                      *gl_config,
-                                      shared_egl.context()}};
-
-                display_buffers_new.push_back(std::move(db));
-            }
-        });
-
-        if (!comp)
-            display_buffers = std::move(display_buffers_new);
-
-        /* Store applied configuration */
-        current_display_configuration = kms_conf;
-
-        if (!comp)
-            /* Clear connected but unused outputs */
-            clear_connected_unused_outputs();
+        std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+        configure_locked(dynamic_cast<RealKMSDisplayConfiguration const&>(conf), lock);
     }
 
     if (auto c = cursor.lock()) c->resume();
@@ -360,17 +258,22 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
             Display& display;
         };
 
-        cursor = locked_cursor = std::make_shared<Cursor>(gbm->device, output_container,
-            std::make_shared<KMSCurrentConfiguration>(*this),
-            initial_image);
+        try
+        {
+            locked_cursor = std::make_shared<Cursor>(gbm->device,
+                              output_container,
+                              std::make_shared<KMSCurrentConfiguration>(*this),
+                              initial_image);
+        }
+        catch (std::runtime_error const&)
+        {
+            // That's OK, we don't need a hardware cursor. Returning null
+            // is allowed and will trigger a fallback to software.
+        }
+        cursor = locked_cursor;
     }
 
     return locked_cursor;
-}
-
-std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
-{
-    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }
 
 void mgm::Display::clear_connected_unused_outputs()
@@ -390,6 +293,7 @@ void mgm::Display::clear_connected_unused_outputs()
 
             kms_output->clear_crtc();
             kms_output->set_power_mode(conf_output.power_mode);
+            kms_output->set_gamma(conf_output.gamma);
         }
     });
 }
@@ -397,4 +301,144 @@ void mgm::Display::clear_connected_unused_outputs()
 std::unique_ptr<mg::VirtualOutput> mgm::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
+}
+
+mg::NativeDisplay* mgm::Display::native_display()
+{
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
+{
+    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
+}
+
+bool mgm::Display::apply_if_configuration_preserves_display_buffers(
+    mg::DisplayConfiguration const& conf)
+{
+    auto const& new_kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (compatible(current_display_configuration, new_kms_conf))
+    {
+        configure_locked(new_kms_conf, lock);
+        return true;
+    }
+    return false;
+}
+
+mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
+{
+    auto output = output_container.get_kms_output_for(output_id);
+    return output->last_frame();
+}
+
+void mgm::Display::configure_locked(
+    mgm::RealKMSDisplayConfiguration const& kms_conf,
+    std::lock_guard<std::mutex> const&)
+{
+    // Treat the current_display_configuration as incompatible with itself,
+    // before it's fully constructed, to force proper initialization.
+    bool const comp{
+        (&kms_conf != &current_display_configuration) &&
+        compatible(kms_conf, current_display_configuration)};
+    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
+
+    if (!comp)
+    {
+        /*
+         * Notice for a little while here we will have duplicate
+         * DisplayBuffers attached to each output, and the display_buffers_new
+         * will take over the outputs before the old display_buffers are
+         * destroyed. So to avoid page flipping confusion in-between, make
+         * sure we wait for all pending page flips to finish before the
+         * display_buffers_new are created and take control of the outputs.
+         */
+        for (auto& db : display_buffers)
+            db->wait_for_page_flip();
+
+        /* Reset the state of all outputs */
+        kms_conf.for_each_output(
+            [&](DisplayConfigurationOutput const& conf_output)
+            {
+                uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
+                auto kms_output = output_container.get_kms_output_for(connector_id);
+                kms_output->clear_cursor();
+                kms_output->reset();
+            });
+    }
+
+    /* Set up used outputs */
+    OverlappingOutputGrouping grouping{kms_conf};
+    auto group_idx = 0;
+
+    grouping.for_each_group(
+        [&](OverlappingOutputGroup const& group)
+        {
+            auto bounding_rect = group.bounding_rectangle();
+            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+            MirOrientation orientation = mir_orientation_normal;
+
+            group.for_each_output(
+                [&](DisplayConfigurationOutput const& conf_output)
+                {
+                    uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+                    auto kms_output = output_container.get_kms_output_for(connector_id);
+
+                    auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
+                                                                  conf_output.current_mode_index);
+                    kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+                    if (!comp)
+                    {
+                        kms_output->set_power_mode(conf_output.power_mode);
+                        kms_output->set_gamma(conf_output.gamma);
+                        kms_outputs.push_back(kms_output);
+                    }
+
+                    /*
+                    * Presently OverlappingOutputGroup guarantees all grouped
+                    * outputs have the same orientation.
+                    */
+                    orientation = conf_output.orientation;
+                });
+
+            if (comp)
+            {
+                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
+            }
+            else
+            {
+                uint32_t width = bounding_rect.size.width.as_uint32_t();
+                uint32_t height = bounding_rect.size.height.as_uint32_t();
+                if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+                {
+                    std::swap(width, height);
+                }
+
+                auto surface = gbm->create_scanout_surface(width, height);
+
+                std::unique_ptr<DisplayBuffer> db{
+                    new DisplayBuffer{bypass_option,
+                    drm,
+                    gbm,
+                    listener,
+                    kms_outputs,
+                    std::move(surface),
+                    bounding_rect,
+                    orientation,
+                    *gl_config,
+                    shared_egl.context()}};
+
+                display_buffers_new.push_back(std::move(db));
+            }
+        });
+
+    if (!comp)
+        display_buffers = std::move(display_buffers_new);
+
+    /* Store applied configuration */
+    current_display_configuration = kms_conf;
+
+    if (!comp)
+        /* Clear connected but unused outputs */
+        clear_connected_unused_outputs();
 }

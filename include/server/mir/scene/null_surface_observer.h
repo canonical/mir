@@ -31,7 +31,7 @@ public:
     NullSurfaceObserver() = default;
     virtual ~NullSurfaceObserver() = default;
 
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void attrib_changed(MirWindowAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void hidden_set_to(bool hide) override;
@@ -45,6 +45,7 @@ public:
     void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout, std::string const& variant, std::string const& options) override;
     void renamed(char const* name) override;
     void cursor_image_removed() override;
+    void placed_relative(geometry::Rectangle const& placement) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

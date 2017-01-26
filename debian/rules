@@ -28,8 +28,13 @@ else
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=ON
 endif
 
+# Disable LTO on s390x, due to failing to build
+ifeq ($(DEB_HOST_ARCH),s390x)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
+endif
+
 override_dh_auto_configure:
-ifeq ($(DEB_HOST_ARCH),armhf)
+ifneq ($(filter armhf arm64,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \

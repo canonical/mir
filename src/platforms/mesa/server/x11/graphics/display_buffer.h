@@ -21,37 +21,53 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
-#include "gl_context.h"
+#include "egl_helper.h"
 
 #include <EGL/egl.h>
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class AtomicFrame;
+class GLConfig;
+class DisplayReport;
+
 namespace X
 {
 
 class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
                       public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(
+            ::Display* const x_dpy,
+            Window const win,
             geometry::Size const sz,
-            EGLDisplay const d,
-            EGLSurface const s,
-            EGLContext const c,
-            MirOrientation const o);
+            EGLContext const shared_context,
+            std::shared_ptr<AtomicFrame> const& f,
+            std::shared_ptr<DisplayReport> const& r,
+            MirOrientation const o,
+            GLConfig const& gl_config);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
     void bind() override;
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool overlay(RenderableList const& renderlist) override;
     void set_orientation(MirOrientation const new_orientation);
+
+    void for_each_display_buffer(
+        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void post() override;
+    std::chrono::milliseconds recommended_sleep() const override;
 
     MirOrientation orientation() const override;
     MirMirrorMode mirror_mode() const override;
@@ -59,10 +75,15 @@ public:
 
 private:
     geometry::Size const size;
-    EGLDisplay const egl_dpy;
-    EGLSurface const egl_surf;
-    EGLContext const egl_ctx;
+    std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;
+    helpers::EGLHelper egl;
+    std::shared_ptr<AtomicFrame> const last_frame;
+
+    typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
+        (EGLDisplay dpy, EGLSurface surface, int64_t *ust,
+         int64_t *msc, int64_t *sbc);
+    EglGetSyncValuesCHROMIUM* eglGetSyncValues;
 };
 
 }

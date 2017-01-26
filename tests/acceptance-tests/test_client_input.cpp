@@ -22,6 +22,7 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/input/mir_touchpad_config.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -33,6 +34,8 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
 
+#include "mir/input/input_device_observer.h"
+#include "mir/input/input_device_hub.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/events/event_builders.h"
 
@@ -54,6 +57,7 @@ namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
+using namespace testing;
 
 namespace
 {
@@ -72,7 +76,7 @@ struct MockEventFilter : public mi::EventFilter
 const int surface_width = 100;
 const int surface_height = 100;
 
-void null_event_handler(MirSurface*, MirEvent const*, void*)
+void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -117,7 +121,7 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
 
 struct ClientWithSurface
 {
-    MirSurface* surface{nullptr};
+    MirWindow* window{nullptr};
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
@@ -133,49 +137,49 @@ struct ClientWithSurface
                 std::runtime_error{std::string{"Failed to connect to test server: "} +
                 mir_connection_get_error_message(connection)});
         }
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
-                                                                  surface_height, mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_name(spec, name.c_str());
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-        if (!mir_surface_is_valid(surface))
-            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a surface: "}+
-                mir_surface_get_error_message(surface)});
+        auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_name(spec, name.c_str());
+        window = mir_create_window_sync(spec);
+        mir_window_spec_release(spec);
+        if (!mir_window_is_valid(window))
+            BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
+                mir_window_get_error_message(window)});
 
-        mir_surface_set_event_handler(surface, handle_event, this);
+        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
-            mir_surface_get_buffer_stream(surface));
+            mir_window_get_buffer_stream(window));
 
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
 
-    void handle_surface_event(MirSurfaceEvent const* event)
+    void handle_window_event(MirWindowEvent const* event)
     {
-        auto const attrib = mir_surface_event_get_attribute(event);
-        auto const value = mir_surface_event_get_attribute_value(event);
+        auto const attrib = mir_window_event_get_attribute(event);
+        auto const value = mir_window_event_get_attribute_value(event);
 
-        if (mir_surface_attrib_visibility == attrib &&
-            mir_surface_visibility_exposed == value)
+        if (mir_window_attrib_visibility == attrib &&
+            mir_window_visibility_exposed == value)
             exposed = true;
 
-        if (mir_surface_attrib_focus == attrib &&
-            mir_surface_focused == value)
+        if (mir_window_attrib_focus == attrib &&
+            mir_window_focus_state_focused == value)
             focused = true;
 
         if (exposed && focused)
             ready_to_accept_events.raise();
     }
 
-    static void handle_event(MirSurface*, MirEvent const* ev, void* context)
+    static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<ClientWithSurface*>(context);
         auto type = mir_event_get_type(ev);
-        if (type == mir_event_type_surface)
+        if (type == mir_event_type_window)
         {
-            auto surface_event = mir_event_get_surface_event(ev);
-            client->handle_surface_event(surface_event);
+            auto window_event = mir_event_get_window_event(ev);
+            client->handle_window_event(window_event);
 
         }
         if (type == mir_event_type_input)
@@ -188,10 +192,10 @@ struct ClientWithSurface
     ~ClientWithSurface()
     {
         // Remove the event handler to avoid handling spurious events unrelated
-        // to the tests (e.g. pointer leave events when the surface is destroyed),
+        // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
-        mir_surface_set_event_handler(surface, null_event_handler, nullptr);
-        mir_surface_release_sync(surface);
+        mir_window_set_event_handler(window, null_event_handler, nullptr);
+        mir_window_release_sync(window);
         mir_connection_release(connection);
     }
     MirConnection * connection;
@@ -199,6 +203,29 @@ struct ClientWithSurface
     mir::test::Signal all_events_received;
     bool exposed = false;
     bool focused = false;
+};
+
+struct DeviceCounter : mi::InputDeviceObserver
+{
+    DeviceCounter(std::function<void(size_t)> const& callback)
+        : callback{callback}
+    {}
+    void device_added(std::shared_ptr<mi::Device> const&) override
+    {
+        ++count_devices;
+    }
+    void device_changed(std::shared_ptr<mi::Device> const&) override
+    {}
+    void device_removed(std::shared_ptr<mi::Device> const&) override
+    {
+        --count_devices;
+    }
+    void changes_complete()
+    {
+        callback(count_devices);
+    }
+    std::function<void(size_t)> const callback;
+    int count_devices{0};
 };
 
 struct TestClientInput : mtf::HeadlessInProcessServer
@@ -247,14 +274,54 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     mtf::ClientPositions positions;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
+    mt::Signal devices_available;
+
+    void wait_for_input_devices(int expected_number_of_input_devices = 3)
+    {
+        // The fake input devices are registered from within the input thread, as soon as the
+        // input manager starts. So clients may connect to the server before those additions
+        // have been processed.
+        auto counter = std::make_shared<DeviceCounter>(
+            [&](int count)
+            {
+                if (count == expected_number_of_input_devices)
+                    devices_available.raise();
+            });
+
+        server.the_input_device_hub()->add_observer(counter);
+
+        devices_available.wait_for(5s);
+        ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
+
+        server.the_input_device_hub()->remove_observer(counter);
+    }
+
+    MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
+    {
+        for (size_t i = 0; i != mir_input_config_device_count(config); ++i)
+        {
+            auto dev = mir_input_config_get_device(config, i);
+            if (caps == mir_input_device_get_capabilities(dev))
+                return dev;
+        }
+        return nullptr;
+    }
+
+    MirInputDevice* get_mutable_device_with_capabilities(MirInputConfig* config, MirInputDeviceCapabilities caps)
+    {
+        for (size_t i = 0; i != mir_input_config_device_count(config); ++i)
+        {
+            auto dev = mir_input_config_get_mutable_device(config, i);
+            if (caps == mir_input_device_get_capabilities(dev))
+                return dev;
+        }
+        return nullptr;
+    }
 };
 
 }
 
 using Client = ::testing::NiceMock<ClientWithSurface>;
-
-using namespace ::testing;
-using namespace std::chrono_literals;
 
 TEST_F(TestClientInput, clients_receive_keys)
 {
@@ -304,11 +371,10 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
     // We should see the cursor enter
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(surface_width - 1, surface_height - 1)));
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(surface_width - 1, surface_height - 1)));
     EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
-    // But we should not receive an event for the second movement outside of our surface!
+    // But we should not receive an event for the second movement outside of our window!
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 2));
@@ -318,16 +384,12 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
 
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
 {
-    using namespace ::testing;
-
-    mtf::TemporaryEnvironmentValue disable_batching("MIR_CLIENT_INPUT_RATE", "0");
-    
     positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     Client first_client(new_connection(), first);
 
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(1, 1), mt::PointerEventWithDiff(1, 1))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEnterEventWithPosition(1, 1),
+                                                 mt::PointerEnterEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(3, 3), mt::PointerEventWithDiff(1, 1))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::PointerEventWithPosition(2, 2), mt::PointerEventWithDiff(-1, -1))));
@@ -423,22 +485,20 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 
     {
         InSequence seq;
-        EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)));
+        EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(client_width - 1, client_height - 1)));
         EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent()))
             .WillOnce(mt::WakeUp(&first_client.all_events_received));
     }
 
     {
         InSequence seq;
-        EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent()));
-        EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(client_width - 1, client_height - 1)))
+        EXPECT_CALL(second_client, handle_input(mt::PointerEnterEventWithPosition(client_width - 1, client_height - 1)))
             .WillOnce(mt::WakeUp(&second_client.all_events_received));
     }
 
-    // In the bounds of the first surface
+    // In the bounds of the first window
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width - 1, client_height - 1));
-    // In the bounds of the second surface
+    // In the bounds of the second window
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width, client_height));
 
     first_client.all_events_received.wait_for(2s);
@@ -545,17 +605,15 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     Client first_client(new_connection(), first);
     Client second_client(new_connection(), second);
 
-    EXPECT_CALL(second_client, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(second_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
-    EXPECT_CALL(second_client, handle_input(mt::PointerEventWithPosition(1, 1)))
+    EXPECT_CALL(second_client, handle_input(mt::PointerEnterEventWithPosition(1, 1)))
         .WillOnce(mt::WakeUp(&second_client.all_events_received));
 
-    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEvent())).Times(AnyNumber());
-    EXPECT_CALL(first_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
-    EXPECT_CALL(first_client, handle_input(mt::PointerEventWithPosition(2, 2)))
+    EXPECT_CALL(second_client, handle_input(mt::PointerLeaveEvent())).Times(AnyNumber());
+
+    EXPECT_CALL(first_client, handle_input(mt::PointerEnterEventWithPosition(2, 2)))
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
-    // We send one event and then hide the surface on top before sending the next.
+    // We send one event and then hide the window on top before sending the next.
     // So we expect each of the two surfaces to receive one event
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1,1));
 
@@ -640,67 +698,6 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                                   .at_position({abs_touch_x_2, abs_touch_y_2}));
 
     first_client.all_events_received.wait_for(2s);
-}
-
-TEST_F(TestClientInput, receives_one_touch_event_per_frame)
-{
-    positions[first] = screen_geometry;
-    Client first_client(new_connection(), first);
-
-    int const frame_rate = 60;
-    int const input_rate = 500;
-    int const nframes = 100;
-    int const nframes_error = 50;
-    int const inputs_per_frame = input_rate / frame_rate;
-    int const ninputs = nframes * inputs_per_frame;
-    auto const frame_time = 1000ms / frame_rate;
-
-    int received_input_events = 0;
-
-    EXPECT_CALL(first_client, handle_input(_))
-        .Times(Between(nframes-nframes_error, nframes+nframes_error))
-        .WillRepeatedly(InvokeWithoutArgs(
-            [&]()
-            {
-                ++received_input_events;
-                if (received_input_events >= nframes-nframes_error)
-                    first_client.all_events_received.raise();
-            }));
-
-    fake_touch_screen->emit_event(mis::a_touch_event()
-                                  .at_position({0,0}));
-
-    ASSERT_THAT(input_rate, Ge(2 * frame_rate));
-    ASSERT_THAT(ninputs, Gt(2 * nframes));
-    for (int i = 0; i < ninputs; ++i)
-    {
-        int const x = i;
-        int const y = 2 * i;
-        fake_touch_screen->emit_event(mis::a_touch_event()
-                                      .with_action(mis::TouchParameters::Action::Move)
-                                      .at_position({x,y}));
-
-        // I would like to:
-        //std::this_thread::sleep_for(1000ms/input_rate);
-        // but this is more robust under Valgrind:
-        if (!((i+1) % inputs_per_frame))
-            std::this_thread::sleep_for(frame_time);
-    }
-
-    // Wait for the expected minimum number of events (should be quick)
-    ASSERT_TRUE(first_client.all_events_received.wait_for(20s));
-
-    // The main thing we're testing for is that too many events don't arrive
-    // so we wait a little to check the cooked event stream has stopped:
-    std::this_thread::sleep_for(100 * frame_time);
-
-    // Remove reference to local received_input_events
-    Mock::VerifyAndClearExpectations(&first_client);
-
-    float const client_input_events_per_frame =
-        (float)received_input_events / nframes;
-    EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
-    EXPECT_THAT(client_input_events_per_frame, Lt(1.5f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
@@ -788,7 +785,7 @@ TEST_F(TestClientInput, sends_no_wrong_keymaps_to_clients)
 
     EXPECT_THROW(
         {server.the_shell()->focused_surface()->set_keymap(id, model, layout, "", "");},
-        std::runtime_error);
+        std::invalid_argument);
 }
 
 TEST_F(TestClientInput, event_filter_may_consume_events)
@@ -828,8 +825,6 @@ struct TestClientInputKeyRepeat : public TestClientInput
 
 TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
 {
-    using namespace testing;
-
     Client first_client(new_connection(), first);
 
     InSequence seq;
@@ -846,27 +841,23 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
 
 TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
 {
-    using namespace testing;
-
     positions[first] = {{0, 0}, {10, 10}};
     
     Client client(new_connection(), first);
 
     MirRectangle input_rects[] = {{1, 1, 10, 10}};
 
-    auto spec = mir_connection_create_spec_for_changes(client.connection);
-    mir_surface_spec_set_input_shape(spec, input_rects, 1);
-    mir_surface_apply_spec(client.surface, spec);
-    mir_surface_spec_release(spec);
+    auto spec = mir_create_window_spec(client.connection);
+    mir_window_spec_set_input_shape(spec, input_rects, 1);
+    mir_window_apply_spec(client.window, spec);
+    mir_window_spec_release(spec);
 
     ASSERT_TRUE(shell->wait_for_modify_surface(5s));
 
     // We verify that we don't receive the first shaped out button event.
-    EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
-    EXPECT_CALL(client, handle_input(mt::PointerEventWithPosition(1, 1)));
+    EXPECT_CALL(client, handle_input(mt::PointerEnterEventWithPosition(1, 1)));
     EXPECT_CALL(client, handle_input(mt::ButtonDownEvent(1, 1)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
-    
 
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT).with_action(mis::EventAction::Up));
@@ -890,24 +881,24 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
     return one_of_the_devices_matched;
 }
 
-//Poll for the expected config to fix lp: #1555708. Client can't expect synchronization
-//with the server on the input config.
 TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
+    wait_for_input_devices();
+
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);
     int limit = 10;
-    int num_devices = 0;
-    int expected_devices = 3;
- 
+    unsigned num_devices = 0u;
+    unsigned const expected_devices = 3u;
+
     for(auto i = 0; i < limit; i++)
     {
         num_devices = mir_input_config_device_count(config);
         if (num_devices == expected_devices)
             break;
- 
+
         std::this_thread::sleep_for(10ms);
-        mir_input_config_destroy(config);
+        mir_input_config_release(config);
         config = mir_connection_create_input_config(con);
     }
 
@@ -921,7 +912,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
                                         uint32_t(mir_input_device_capability_touchscreen |
                                                  mir_input_device_capability_multitouch)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
     mir_connection_release(con);
 }
 
@@ -948,11 +939,11 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
     EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
-    EXPECT_THAT(mir_input_config_device_count(config), Eq(4));
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(4u));
     EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
                                                                          mir_input_device_capability_pointer)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
@@ -973,8 +964,8 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
-    EXPECT_THAT(mir_input_config_device_count(config), Eq(2));
-    mir_input_config_destroy(config);
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(2u));
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, num_lock_is_off_on_startup)
@@ -1025,7 +1016,7 @@ TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keym
         .WillOnce(mt::WakeUp(&device_state_received));
 
     get_surface(first)->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
-    keymap_received.wait_for(1s);
+    keymap_received.wait_for(4s);
 
     {
         Client a_client(new_connection(), second);
@@ -1043,11 +1034,129 @@ TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keym
 
         a_client.all_events_received.wait_for(10s);
     }
-    device_state_received.wait_for(1s);
+    device_state_received.wait_for(4s);
     EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
         .WillOnce(mt::WakeUp(&a_client_with_keymap.all_events_received));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
 
     a_client_with_keymap.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
+    ASSERT_THAT(mouse, Ne(nullptr));
+
+    auto pointer_config = mir_input_device_get_pointer_config(mouse);
+
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_none));
+    EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.0));
+    EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, no_touchpad_config_on_mouse)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
+
+    EXPECT_THAT(mir_input_device_get_touchpad_config(mouse), Eq(nullptr));
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, pointer_config_is_mutable)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+    mir_pointer_config_set_acceleration_bias(pointer_config, 1.0);
+    mir_pointer_config_set_horizontal_scroll_scale(pointer_config, 1.2);
+    mir_pointer_config_set_vertical_scroll_scale(pointer_config, 1.4);
+
+    EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.4));
+    EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.2));
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(1.0));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, touchpad_config_can_be_querried)
+{
+    MirTouchpadConfig const default_configuration;
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"tpd", "tpd-id",
+                            mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
+
+    wait_for_input_devices(4);
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchpad = get_device_with_capabilities(config,
+                                                 mir_input_device_capability_pointer|
+                                                 mir_input_device_capability_touchpad);
+    ASSERT_THAT(touchpad, Ne(nullptr));
+
+    auto touchpad_config = mir_input_device_get_touchpad_config(touchpad);
+
+    EXPECT_THAT(mir_touchpad_config_get_click_modes(touchpad_config), Eq(default_configuration.click_mode()));
+    EXPECT_THAT(mir_touchpad_config_get_scroll_modes(touchpad_config), Eq(default_configuration.scroll_mode()));
+    EXPECT_THAT(mir_touchpad_config_get_button_down_scroll_button(touchpad_config), Eq(default_configuration.button_down_scroll_button()));
+    EXPECT_THAT(mir_touchpad_config_get_tap_to_click(touchpad_config), Eq(default_configuration.tap_to_click()));
+    EXPECT_THAT(mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config), Eq(default_configuration.middle_mouse_button_emulation()));
+    EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
+    EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, touchpad_config_is_mutable)
+{
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"tpd", "tpd-id",
+                            mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchpad = get_mutable_device_with_capabilities(config,
+                                                 mir_input_device_capability_pointer|
+                                                 mir_input_device_capability_touchpad);
+    ASSERT_THAT(touchpad, Ne(nullptr));
+
+    auto touchpad_config = mir_input_device_get_mutable_touchpad_config(touchpad);
+
+    mir_touchpad_config_set_click_modes(touchpad_config, mir_touchpad_click_mode_area_to_click);
+    mir_touchpad_config_set_scroll_modes(touchpad_config, mir_touchpad_scroll_mode_edge_scroll|mir_touchpad_scroll_mode_button_down_scroll);
+    mir_touchpad_config_set_button_down_scroll_button(touchpad_config, 10);
+    mir_touchpad_config_set_tap_to_click(touchpad_config, true);
+    mir_touchpad_config_set_middle_mouse_button_emulation(touchpad_config, true);
+    mir_touchpad_config_set_disable_with_mouse(touchpad_config, true);
+    mir_touchpad_config_set_disable_while_typing(touchpad_config, false);
+
+    EXPECT_THAT(mir_touchpad_config_get_click_modes(touchpad_config), Eq(mir_touchpad_click_mode_area_to_click));
+    EXPECT_THAT(mir_touchpad_config_get_scroll_modes(touchpad_config),
+                Eq(static_cast<MirTouchpadClickModes>(
+                    mir_touchpad_scroll_mode_edge_scroll
+                  | mir_touchpad_scroll_mode_button_down_scroll)));
+    EXPECT_THAT(mir_touchpad_config_get_button_down_scroll_button(touchpad_config), Eq(10));
+    EXPECT_THAT(mir_touchpad_config_get_tap_to_click(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(true));
+    EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(false));
+
+    mir_input_config_release(config);
 }

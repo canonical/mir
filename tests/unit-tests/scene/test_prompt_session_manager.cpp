@@ -18,8 +18,7 @@
 
 #include "src/server/scene/prompt_session_manager_impl.h"
 
-#include "src/server/scene/session_container.h"
-
+#include "mir/scene/session_container.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 

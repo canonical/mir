@@ -1,24 +1,44 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
+#
+# When cross compiling MIR_CHROOT points to our chroot.
+# When not cross compiling, it should be blank to use the host system.
+#
+set(usr ${MIR_CHROOT}/usr)
+
+if (EXISTS ${usr}/src/googletest)
+  set (USING_GOOGLETEST_1_8 TRUE)
+  set (GTEST_INSTALL_DIR ${usr}/src/googletest/googletest/include)
+else()
+  set (GTEST_INSTALL_DIR ${usr}/src/gmock/gtest/include)
+endif()
+
 #gtest
-set(GTEST_INSTALL_DIR /usr/src/gmock/gtest/include)
-find_path(GTEST_INCLUDE_DIR gtest/gtest.h
-            HINTS ${GTEST_INSTALL_DIR})
+find_path(
+  GTEST_INCLUDE_DIR gtest/gtest.h
+  HINTS ${GTEST_INSTALL_DIR}
+)
 
 #gmock
-find_path(GMOCK_INSTALL_DIR gmock/CMakeLists.txt
-          HINTS /usr/src)
+find_path(
+  GMOCK_INSTALL_DIR CMakeLists.txt
+  HINTS ${usr}/src/googletest ${usr}/src/gmock)
 if(${GMOCK_INSTALL_DIR} STREQUAL "GMOCK_INSTALL_DIR-NOTFOUND")
     message(FATAL_ERROR "google-mock package not found")
 endif()
 
-set(GMOCK_INSTALL_DIR ${GMOCK_INSTALL_DIR}/gmock)
 find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
-set(GMOCK_PREFIX gmock)
-set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
-set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
+if (USING_GOOGLETEST_1_8)
+  set(GMOCK_BASE_BINARY_DIR ${CMAKE_BINARY_DIR}/gmock/libs)
+  set(GMOCK_BINARY_DIR ${GMOCK_BASE_BINARY_DIR}/googlemock)
+  set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
+else()
+  set(GMOCK_BASE_BINARY_DIR ${CMAKE_BINARY_DIR}/gmock/libs)
+  set(GMOCK_BINARY_DIR ${GMOCK_BASE_BINARY_DIR})
+  set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
+endif()
 
 set(GTEST_CXX_FLAGS "-fPIC -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64")
 if (cmake_build_type_lower MATCHES "threadsanitizer")
@@ -30,13 +50,18 @@ endif()
 set(GTEST_CMAKE_ARGS "-DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}")
 list(APPEND GTEST_CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
 list(APPEND GTEST_CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+
+if (USING_GOOGLETEST_1_8)
+  list(APPEND GTEST_CMAKE_ARGS -DBUILD_GTEST=ON)
+endif()
+
 if (cmake_build_type_lower MATCHES "threadsanitizer")
   #Skip compiler check, since if GCC is the compiler, we need to link against -ltsan
   #explicitly; specifying additional linker flags doesn't seem possible for external projects
   list(APPEND GTEST_CMAKE_ARGS -DCMAKE_CXX_COMPILER_WORKS=1)
 endif()
 if (${CMAKE_CROSSCOMPILING})
-  if(DEFINED MIR_NDK_PATH)
+  if(DEFINED MIR_CHROOT)
     list(APPEND GTEST_CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_MODULE_PATH}/LinuxCrossCompile.cmake)
   else()
     list(APPEND GTEST_CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
@@ -52,7 +77,7 @@ ExternalProject_Add(
     SOURCE_DIR ${GMOCK_INSTALL_DIR}
     #forward the compilers to the subproject so cross-arch builds work
     CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-    BINARY_DIR ${GMOCK_BINARY_DIR}
+    BINARY_DIR ${GMOCK_BASE_BINARY_DIR}
 
     #we don't need to install, so skip
     INSTALL_COMMAND ""

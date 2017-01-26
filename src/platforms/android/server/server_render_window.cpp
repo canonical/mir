@@ -46,10 +46,10 @@ mga::ServerRenderWindow::ServerRenderWindow(
 {
 }
 
-mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+mga::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = fb_bundle->buffer_for_render();
-    auto handle = buffer->native_buffer_handle();
+    auto handle = mga::to_native_buffer_checked(buffer->native_buffer_handle());
     resource_cache->store_buffer(buffer, handle);
     return handle.get();
 }
@@ -69,6 +69,10 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer,
 void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)
 {
     format = request_format;
+}
+
+void mga::ServerRenderWindow::dispatch_driver_request_buffer_size(geometry::Size)
+{
 }
 
 int mga::ServerRenderWindow::driver_requests_info(int key) const

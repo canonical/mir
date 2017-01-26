@@ -44,6 +44,7 @@ public:
     MOCK_METHOD1(capture,
                  std::shared_ptr<graphics::Buffer>(
                      frontend::ScreencastSessionId));
+    MOCK_METHOD2(capture, void(frontend::ScreencastSessionId, std::shared_ptr<graphics::Buffer> const&));
 };
 
 }

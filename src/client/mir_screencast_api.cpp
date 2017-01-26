@@ -124,7 +124,7 @@ void mir_screencast_release_sync(MirScreencast* screencast)
 MirBufferStream *mir_screencast_get_buffer_stream(MirScreencast *screencast)
 try
 {
-    return reinterpret_cast<MirBufferStream*>(screencast->get_buffer_stream());
+    return screencast->get_buffer_stream();
 }
 catch (std::exception const& ex)
 {

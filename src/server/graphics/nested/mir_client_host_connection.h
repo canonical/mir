@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <string>
 #include <vector>
@@ -59,14 +60,18 @@ public:
                             std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
     ~MirClientHostConnection();
 
-    std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
-    std::shared_ptr<MirDisplayConfiguration> create_display_config() override;
+    std::shared_ptr<MirDisplayConfig> create_display_config() override;
+    std::unique_ptr<HostStream> create_stream(BufferProperties const& properties) const override;
+    std::unique_ptr<HostChain> create_chain() const override;
+    std::unique_ptr<HostSurfaceSpec> create_surface_spec() override;
     std::shared_ptr<HostSurface> create_surface(
-        int width, int height, MirPixelFormat pf, char const* name,
-        MirBufferUsage usage, uint32_t output_id) override;
+        std::shared_ptr<HostStream> const& stream,
+        geometry::Displacement stream_displacement,
+        graphics::BufferProperties properties,
+        char const* name, uint32_t output_id) override;
     void set_display_config_change_callback(std::function<void()> const& cb) override;
-    void apply_display_config(MirDisplayConfiguration&) override;
+    void apply_display_config(MirDisplayConfig&) override;
 
     void set_cursor_image(CursorImage const& image) override;
     void hide_cursor() override;
@@ -79,7 +84,13 @@ public:
     void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) override;
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;
+    std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) override;
+    std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, MirPixelFormat) override;
+    std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) override;
+    bool supports_passthrough() override;
 
+    optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;
+    optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override;
 private:
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;
@@ -90,7 +101,9 @@ private:
 
     std::vector<HostSurface*> surfaces;
 
+    RecursiveReadWriteMutex input_config_callback_mutex;
     std::function<void(UniqueInputConfig)> input_config_callback;
+    RecursiveReadWriteMutex event_callback_mutex;
     std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> event_callback;
 
     struct NestedCursorImage : graphics::CursorImage

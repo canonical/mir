@@ -26,6 +26,7 @@
 #include "mir/input/seat.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/mir_input_config.h"
 
 #include "mir_toolkit/event.h"
 
@@ -37,6 +38,7 @@
 namespace mir
 {
 class ServerActionQueue;
+class ServerStatusListener;
 namespace frontend
 {
 class EventSink;
@@ -67,7 +69,8 @@ public:
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<cookie::Authority> const& cookie_authority,
-                          std::shared_ptr<KeyMapper> const& key_mapper);
+                          std::shared_ptr<KeyMapper> const& key_mapper,
+                          std::shared_ptr<ServerStatusListener> const& server_status_listener);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -77,11 +80,15 @@ public:
     void add_observer(std::shared_ptr<InputDeviceObserver> const&) override;
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
     void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
+    void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
+
 
 private:
     void update_spots();
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
+    void device_changed(Device* dev);
+    void emit_changed_devices();
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<frontend::EventSink> const sink;
@@ -91,6 +98,7 @@ private:
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::shared_ptr<ServerStatusListener> const server_status_listener;
 
     struct RegisteredDevice : public InputSink
     {
@@ -109,8 +117,8 @@ private:
         std::shared_ptr<Seat> seat;
         const std::shared_ptr<DefaultDevice> handle;
 
-        void set_key_state(std::vector<uint32_t> const& scan_codes) override;
-        void set_pointer_state(MirPointerButtons buttons) override;
+        void key_state(std::vector<uint32_t> const& scan_codes) override;
+        void pointer_state(MirPointerButtons buttons) override;
     private:
         MirInputDeviceId device_id;
         std::unique_ptr<DefaultEventBuilder> builder;
@@ -120,10 +128,14 @@ private:
     };
 
     std::vector<std::shared_ptr<Device>> handles;
+    MirInputConfig config;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
+    std::mutex changed_devices_guard;
+    std::unique_ptr<std::vector<std::shared_ptr<Device>>> changed_devices;
 
     MirInputDeviceId device_id_generator;
+    bool ready{false};
 };
 
 }

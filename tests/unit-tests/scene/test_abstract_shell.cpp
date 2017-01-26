@@ -382,15 +382,15 @@ TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
     auto const surface_id = shell.create_surface(session, params, nullptr);
     auto const surface = session->surface(surface_id);
 
-    MirSurfaceState const state{mir_surface_state_fullscreen};
+    MirWindowState const state{mir_window_state_fullscreen};
 
-    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_surface_attrib_state, state))
+    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_window_attrib_state, state))
         .WillOnce(WithArg<1>(Invoke([](std::shared_ptr<ms::Surface> const& surface)
-             { surface->configure(mir_surface_attrib_state, mir_surface_state_maximized); return mir_surface_state_maximized; })));
+             { surface->configure(mir_window_attrib_state, mir_window_state_maximized); return mir_window_state_maximized; })));
 
-    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_state, mir_surface_state_maximized));
+    EXPECT_CALL(mock_surface, configure(mir_window_attrib_state, mir_window_state_maximized));
 
-    shell.set_surface_attribute(session, surface, mir_surface_attrib_state, mir_surface_state_fullscreen);
+    shell.set_surface_attribute(session, surface, mir_window_attrib_state, mir_window_state_fullscreen);
 }
 
 TEST_F(AbstractShell, as_focus_controller_set_focus_to_notifies_session_event_sink)
@@ -544,9 +544,9 @@ TEST_F(AbstractShell,
     session->destroy_surface(surface_id);
 
     EXPECT_CALL(session_container, successor_of(session)).
-        WillOnce(Return(session1));
+        WillRepeatedly(Return(session1));
     EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session));
+        WillRepeatedly(Return(session));
 
     EXPECT_CALL(session_event_sink, handle_no_focus());
 
@@ -587,6 +587,30 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
     EXPECT_CALL(*wm, modify_surface(_,_,_)).Times(0);
 
     shell.modify_surface(session, surface, stream_modification);
+}
+
+// lp:1625401
+TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_doesnt_loop_endlessly)
+{
+    std::shared_ptr<ms::Session> empty_session =
+        shell.open_session(__LINE__, "empty_session", std::shared_ptr<mf::EventSink>());
+
+    {
+        std::shared_ptr<ms::Session> another_session =
+            shell.open_session(__LINE__, "another_session", std::shared_ptr<mf::EventSink>());
+
+        auto creation_params = ms::a_surface()
+            .with_buffer_stream(another_session->create_buffer_stream(properties));
+        auto surface_id = shell.create_surface(another_session, creation_params, nullptr);
+
+        shell.set_focus_to(another_session, another_session->surface(surface_id));
+
+        shell.close_session(another_session);
+    }
+
+    ON_CALL(session_container, successor_of(_)).WillByDefault(Return(empty_session));
+
+    shell.focus_next_session();
 }
 
 namespace mir

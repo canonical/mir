@@ -16,6 +16,7 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
+#define _DEFAULT_SOURCE
 #define _BSD_SOURCE /* for usleep() */
 
 #include "mir_toolkit/mir_client_library.h"
@@ -25,7 +26,7 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-void configure_cursor(MirSurface *surface, unsigned int cursor_index)
+void configure_cursor(MirConnection* connection, MirWindow *surface, unsigned int cursor_index)
 {
     char const *const cursors[] = {
         mir_busy_cursor_name,
@@ -45,19 +46,17 @@ void configure_cursor(MirSurface *surface, unsigned int cursor_index)
 
     size_t num_cursors = sizeof(cursors)/sizeof(*cursors);
     size_t real_index = cursor_index % num_cursors;
-    
-    MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursors[real_index]);
-
-    mir_wait_for(mir_surface_configure_cursor(surface, conf));
-    
-    mir_cursor_configuration_destroy(conf);
+    MirWindowSpec* spec = mir_create_window_spec(connection);
+    mir_window_spec_set_cursor_name(spec, cursors[real_index]);
+    mir_window_apply_spec(surface, spec);
+    mir_window_spec_release(spec);
 }
 
 int main(int argc, char *argv[])
 {
     unsigned int width = 128, height = 128;
 
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    if (!mir_eglapp_init(argc, argv, &width, &height, NULL))
         return 1;
 
     glClearColor(0.5, 0.5, 0.5, mir_eglapp_background_opacity);
@@ -67,11 +66,11 @@ int main(int argc, char *argv[])
     unsigned int cursor_index = 0;
     while (mir_eglapp_running())
     {
-        configure_cursor(mir_eglapp_native_surface(), cursor_index++);
+        configure_cursor(mir_eglapp_native_connection(), mir_eglapp_native_window(), cursor_index++);
         usleep(100000);
     }
 
-    mir_eglapp_shutdown();
+    mir_eglapp_cleanup();
 
     return 0;
 }

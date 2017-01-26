@@ -19,7 +19,7 @@
 #include "mir/gl/program_factory.h"
 #include "mir/gl/texture.h"
 #include "mir/gl/tessellation_helpers.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "swapping_gl_context.h"
 #include "buffer.h"
@@ -77,7 +77,7 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
 
 mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     gl::ProgramFactory const& factory,
-    mg::GLContext const& context,
+    renderer::gl::Context const& context,
     geom::Rectangle const& screen_pos)
 {
     context.make_current();

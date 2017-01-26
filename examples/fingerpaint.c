@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
-
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
@@ -184,7 +182,7 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     (void)surface;
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
@@ -301,7 +299,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             changed = true;
         }
     }
-    else if (event_type == mir_event_type_close_surface)
+    else if (event_type == mir_event_type_close_window)
     {
         static int closing = 0;
 
@@ -324,36 +322,30 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     pthread_mutex_unlock(&mutex);
 }
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
+static MirOutput const* find_active_output(
+    MirDisplayConfig const* conf)
 {
-    const MirDisplayOutput *output = NULL;
-    int d;
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (d = 0; d < (int)conf->num_outputs; d++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        MirOutputConnectionState state = mir_output_get_connection_state(output);
+        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
         {
-            output = out;
-            break;
+            return output;
         }
     }
 
-    return output;
+    return NULL;
 }
 
 int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
-    MirSurface *surf;
+    MirWindow* window;
     MirGraphicsRegion canvas;
-    unsigned int f;
     int swap_interval = 0;
 
     char *mir_socket = NULL;
@@ -415,10 +407,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // We do our own resampling now. We can keep up with raw input...
-    // TODO: Replace setenv with a proper Mir function (LP: #1439590)
-    setenv("MIR_CLIENT_INPUT_RATE", "0", 0);
-
     conn = mir_connect_sync(mir_socket, argv[0]);
     if (!mir_connection_is_valid(conn))
     {
@@ -426,28 +414,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration *display_config =
-        mir_connection_create_display_config(conn);
+    MirDisplayConfig* display_config =
+        mir_connection_create_display_configuration(conn);
 
-    const MirDisplayOutput *dinfo = find_active_output(display_config);
-    if (dinfo == NULL)
+    MirOutput const* output = find_active_output(display_config);
+    if (output == NULL)
     {
         fprintf(stderr, "No active outputs found.\n");
         mir_connection_release(conn);
         return 1;
     }
 
-    unsigned int const pf_size = 32;
-    MirPixelFormat formats[pf_size];
-    unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
-
     MirPixelFormat pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < valid_formats; f++)
+    size_t num_pfs = mir_output_get_num_pixel_formats(output);
+
+    for (size_t i = 0; i < num_pfs; i++)
     {
-        if (BYTES_PER_PIXEL(formats[f]) == 4)
+        MirPixelFormat f = mir_output_get_pixel_format(output, i);
+        if (BYTES_PER_PIXEL(f) == 4)
         {
-            pixel_format = formats[f];
+            pixel_format = f;
             break;
         }
     }
@@ -459,24 +445,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    MirOutputMode const* mode = mir_output_get_current_mode(output);
+    int width  = mir_output_mode_get_width(mode);
+    int height = mir_output_mode_get_height(mode);
 
-    int width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
-    int height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+    mir_display_config_release(display_config);
 
-    mir_display_config_destroy(display_config);
+    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
+    mir_window_spec_set_pixel_format(spec, pixel_format);
+    mir_window_spec_set_name(spec, "Mir Fingerpaint");
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
-    mir_surface_spec_set_name(spec, "Mir Fingerpaint");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
-    surf = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
-    if (surf != NULL)
+    if (window != NULL)
     {
-        mir_surface_set_swapinterval(surf, swap_interval);
-        mir_surface_set_event_handler(surf, &on_event, &canvas);
-    
+        MirBufferStream* bs = mir_window_get_buffer_stream(window);
+        mir_buffer_stream_set_swapinterval(bs, swap_interval);
+        mir_window_set_event_handler(window, &on_event, &canvas);
+
         canvas.width = width;
         canvas.height = height;
         canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
@@ -488,10 +476,8 @@ int main(int argc, char *argv[])
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
             signal(SIGHUP, shutdown);
-        
+
             clear_region(&canvas, &background);
-        
-            MirBufferStream *bs = mir_surface_get_buffer_stream(surf);
 
             while (running)
             {
@@ -509,7 +495,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(surf, NULL, NULL);
+            mir_window_set_event_handler(window, NULL, NULL);
             free(canvas.vaddr);
         }
         else
@@ -517,7 +503,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to malloc canvas\n");
         }
 
-        mir_surface_release_sync(surf);
+        mir_window_release_sync(window);
     }
     else
     {

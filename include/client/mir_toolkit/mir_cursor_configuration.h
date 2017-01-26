@@ -23,7 +23,7 @@
 
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
- * Used with mir_surface_configure_cursor.
+ * Used with mir_window_configure_cursor.
  */
 typedef struct MirCursorConfiguration MirCursorConfiguration;
 
@@ -47,17 +47,21 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  * mir_default_cursor_name and mir_caret_cursor_name are available
  * see (mir_toolkit/cursors.h).
  * as input.
+ *    \deprecated  Users should use mir_window_spec_set_cursor_name.
  *    \param [in] name The cursor name
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy
  */
+/// @cond
+__attribute__ ((deprecated))
+/// @endcond
 MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
 
 /**
  * Returns a new cursor configuration tied to a given buffer stream.
  * If the configuration is successfully applied buffers from the stream will be used 
  * to fill the system cursor.
- *    \param [in] name      The buffer stream
+ *    \param [in] stream      The buffer stream
  *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
  *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
  *    \return A cursor parameters object which must be passed

@@ -43,7 +43,6 @@ struct MockSurface : public scene::BasicSurface
             {},
             {{},{}},
             mir_pointer_unconfined,
-            true,
             { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },
             std::make_shared<StubInputChannel>(),
             {},
@@ -70,7 +69,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
 
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
+    MOCK_METHOD2(configure, int(MirWindowAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(consume, void(MirEvent const*));

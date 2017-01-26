@@ -169,7 +169,7 @@ TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
                                    default_mirror_mode, free_queue,
                                    ready_queue, stub_display};
 
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
+    EXPECT_FALSE(db.overlay(renderables));
 }
 
 TEST_F(ScreencastDisplayBufferTest, does_not_throw_on_multiple_make_current_calls)
@@ -191,7 +191,7 @@ TEST_F(ScreencastDisplayBufferTest, schedules_onto_ready_queue)
     db.bind();
     db.swap_buffers();
 
-    ASSERT_THAT(ready_queue.num_scheduled(), Gt(0));
+    ASSERT_THAT(ready_queue.num_scheduled(), Gt(0u));
 
     auto ready_buffer = ready_queue.next_buffer();
     auto const expected_buffer = mt::fake_shared(stub_buffer);

@@ -19,12 +19,12 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
+#include "mir/graphics/frame.h"
 #include "mir/int_wrapper.h"
 #include "display_name.h"
 #include "power_mode.h"
 #include <array>
 #include <functional>
-#include <chrono>
 #include <vector>
 
 struct hwc_display_contents_1;
@@ -51,7 +51,7 @@ public:
     //As with the HWC api, these events MUST NOT call-back to the other functions in HwcWrapper. 
     virtual void subscribe_to_events(
         void const* subscriber,
-        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
+        std::function<void(DisplayName, graphics::Frame::Timestamp)> const& vsync_callback,
         std::function<void(DisplayName, bool)> const& hotplug_callback,
         std::function<void()> const& invalidate_callback) = 0;
     virtual void unsubscribe_from_events(void const* subscriber) noexcept = 0;

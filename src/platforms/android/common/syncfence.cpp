@@ -40,6 +40,23 @@ void mga::SyncFence::wait()
     }
 }
 
+bool mga::SyncFence::wait_for(std::chrono::milliseconds ms)
+{
+    int timed_out = 0;
+    if (fence_fd > 0)
+    {
+        int timeout = ms.count();
+        timed_out = ops->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
+        fence_fd = mir::Fd(Fd::invalid);
+    }
+    return timed_out >= 0;
+}
+
+void mga::SyncFence::reset_fence()
+{
+   fence_fd = mir::Fd(mir::Fd::invalid);
+}
+
 void mga::SyncFence::merge_with(NativeFence& merge_fd)
 {
     if (merge_fd < 0)
@@ -67,6 +84,11 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
 mga::NativeFence mga::SyncFence::copy_native_handle() const
 {
     return ops->dup(fence_fd);
+}
+
+mga::NativeFence mga::SyncFence::native_handle() const
+{
+    return fence_fd;
 }
 
 int mga::RealSyncFileOps::ioctl(int fd, int req, void* dat)

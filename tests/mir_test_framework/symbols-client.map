@@ -1,3 +1,8 @@
+MIR_TEST_DETAIL {
+  global:
+    add_client_platform_error;
+};
+
 MIR_CLIENT_PLATFORM_5 {
   global: 
     create_client_platform;

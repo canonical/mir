@@ -26,6 +26,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include "mir_test_framework/server_runner.h"
 #include "mir/test/validity_matchers.h"
@@ -40,6 +41,7 @@ namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -113,33 +115,38 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
 
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, test_width, test_height, mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    auto const surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto const spec = mir_create_normal_window_spec(
+        connection, test_width, test_height);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    auto const window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
-    EXPECT_THAT(surface, IsValid());
+    EXPECT_THAT(window, IsValid());
     MirGraphicsRegion graphics_region;
-    mir_buffer_stream_get_graphics_region(mir_surface_get_buffer_stream(surface), &graphics_region);
+    mir_buffer_stream_get_graphics_region(mir_window_get_buffer_stream(window), &graphics_region);
     draw_pattern.draw(graphics_region);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
     auto scene = runner->config.the_scene();
     auto seq = scene->scene_elements_for(this);
     ASSERT_THAT(seq, testing::SizeIs(1));
     auto buffer = seq[0]->renderable()->buffer();
     auto valid_content = false;
-    buffer->read([&valid_content, &buffer](unsigned char const* data){
+
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = draw_pattern.check(region);
     });
     EXPECT_TRUE(valid_content);
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -165,15 +172,16 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
     eglGetConfigAttrib(egl_display, egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, test_width, test_height, select_format_for_visual_id(visual_id));
-    auto const mir_surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    auto const spec = mir_create_normal_window_spec(connection, test_width, test_height);
+    mir_window_spec_set_pixel_format(spec, select_format_for_visual_id(visual_id));
+
+    auto const mir_surface = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
     EXPECT_THAT(mir_surface, IsValid());
 
     auto native_window = static_cast<EGLNativeWindowType>(
-        mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(mir_surface)));
+        mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -188,16 +196,18 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
     ASSERT_THAT(seq, testing::SizeIs(1));
     auto buffer = seq[0]->renderable()->buffer();
     auto valid_content = false;
-    buffer->read([&valid_content, &buffer](unsigned char const* data){
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         mt::DrawPatternSolid green_pattern(0xFF00FF00);
         valid_content = green_pattern.check(region);
     });
     EXPECT_TRUE(valid_content);
-    mir_surface_release_sync(mir_surface);
+    mir_window_release_sync(mir_surface);
     mir_connection_release(connection);
 }
 
@@ -231,6 +241,10 @@ TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
         BasicRenderable(std::shared_ptr<mg::Buffer> const& buffer) :
             buffer_(buffer)
         {
+        }
+        unsigned int swap_interval() const override
+        {
+            return 1u;
         }
         ID id() const override
         {
@@ -273,7 +287,7 @@ TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
                 std::make_shared<BasicRenderable>(buffer)
             };
 
-            db.post_renderables_if_optimizable(list);
+            db.overlay(list);
         });
         group.post();
     });
@@ -296,11 +310,13 @@ TEST_F(AndroidMirDiagnostics, can_allocate_sw_buffer)
     mt::DrawPatternSolid green_pattern(green);
     std::generate(px.begin(), px.end(), [&i]{ if(i++ % 2) return 0x00; else return 0xFF; });
 
-    buffer->write(px.data(), px.size());
-    buffer->read([&](unsigned char const* data){
+    auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
+    ASSERT_THAT(pixel_source, testing::Ne(nullptr));
+    pixel_source->write(px.data(), px.size());
+    pixel_source->read([&](unsigned char const* data){
         MirGraphicsRegion region{
             buffer->size().width.as_int(), buffer->size().height.as_int(),
-            buffer->stride().as_int(), buffer->pixel_format(),
+            pixel_source->stride().as_int(), buffer->pixel_format(),
             reinterpret_cast<char*>(const_cast<unsigned char*>(data))};
         valid_content = green_pattern.check(region);
     });

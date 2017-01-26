@@ -36,14 +36,14 @@ public:
     virtual ~AsyncBufferFactory() = default;
     AsyncBufferFactory() = default;
 
-    virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
+    virtual std::unique_ptr<MirBuffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context) = 0;
     virtual void cancel_requests_with_context(void*) = 0;
 
@@ -55,19 +55,20 @@ private:
 class BufferFactory : public AsyncBufferFactory
 {
 public:
-    std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
+    std::unique_ptr<MirBuffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
-        mir_buffer_callback cb,
+        MirBufferCallback cb,
         void* cb_context) override;
     void cancel_requests_with_context(void*) override;
 
 private:
     std::mutex mutex;
+    int error_id { -1 };
     struct AllocationRequest
     {
         AllocationRequest(
@@ -76,7 +77,7 @@ private:
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
-            mir_buffer_callback cb,
+            MirBufferCallback cb,
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
@@ -84,7 +85,7 @@ private:
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;
-        mir_buffer_callback cb;
+        MirBufferCallback cb;
         void* cb_context;
     };
     std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;

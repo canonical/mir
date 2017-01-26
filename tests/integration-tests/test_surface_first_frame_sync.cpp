@@ -20,8 +20,8 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_listener.h"
-#include "mir/compositor/renderer_factory.h"
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer_factory.h"
+#include "mir/renderer/renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
@@ -139,16 +139,16 @@ private:
 
 struct ServerConfig : mtf::TestingServerConfiguration
 {
-    std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
+    std::shared_ptr<mir::renderer::RendererFactory> the_renderer_factory() override
     {
-        struct StubRendererFactory : mc::RendererFactory
+        struct StubRendererFactory : mir::renderer::RendererFactory
         {
             StubRendererFactory(std::atomic<int>& render_operations)
                 : render_operations{render_operations}
             {
             }
 
-            std::unique_ptr<mc::Renderer> create_renderer_for(mg::DisplayBuffer&)
+            std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mg::DisplayBuffer&)
             {
                 auto raw = new StubRenderer{render_operations};
                 return std::unique_ptr<StubRenderer>(raw);
@@ -179,7 +179,7 @@ struct ServerConfig : mtf::TestingServerConfiguration
     }
 
     std::atomic<int> render_operations{0};
-    std::shared_ptr<mc::RendererFactory> stub_renderer_factory;
+    std::shared_ptr<mir::renderer::RendererFactory> stub_renderer_factory;
     std::shared_ptr<SynchronousCompositor> sync_compositor;
 };
 
@@ -195,11 +195,11 @@ struct SurfaceFirstFrameSync : mtf::BasicClientServerFixture<ServerConfig>
 
 TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
 {
-    auto surface = mtf::make_any_surface(connection);
+    auto window = mtf::make_any_surface(connection);
 
-    ASSERT_TRUE(surface != NULL);
-    EXPECT_TRUE(mir_surface_is_valid(surface));
-    EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+    ASSERT_TRUE(window != NULL);
+    EXPECT_TRUE(mir_window_is_valid(window));
+    EXPECT_STREQ(mir_window_get_error_message(window), "");
 
     /*
      * This test uses a synchronous compositor (instead of the default
@@ -211,12 +211,12 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
     EXPECT_EQ(0, number_of_executed_render_operations());
 
     mir_buffer_stream_swap_buffers_sync(
-        mir_surface_get_buffer_stream(surface));
+        mir_window_get_buffer_stream(window));
 
     /* After submitting the buffer we should get some render operations */
     mir::test::spin_wait_for_condition_or_timeout(
         [this] { return number_of_executed_render_operations() > 0; },
         std::chrono::seconds{5});
 
-    mir_surface_release_sync(surface);
+    mir_window_release_sync(window);
 }

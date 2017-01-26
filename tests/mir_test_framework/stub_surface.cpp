@@ -131,22 +131,22 @@ int mtd::StubSurface::buffers_ready_for_compositor(void const* /*compositor_id*/
     return 0;
 }
 
-MirSurfaceType mtd::StubSurface::type() const
+MirWindowType mtd::StubSurface::type() const
 {
-    return MirSurfaceType::mir_surface_type_normal;
+    return MirWindowType::mir_window_type_normal;
 }
 
-MirSurfaceState mtd::StubSurface::state() const
+MirWindowState mtd::StubSurface::state() const
 {
-    return MirSurfaceState::mir_surface_state_fullscreen;
+    return MirWindowState::mir_window_state_fullscreen;
 }
 
-int mtd::StubSurface::configure(MirSurfaceAttrib /*attrib*/, int value)
+int mtd::StubSurface::configure(MirWindowAttrib /*attrib*/, int value)
 {
     return value;
 }
 
-int mtd::StubSurface::query(MirSurfaceAttrib /*attrib*/) const
+int mtd::StubSurface::query(MirWindowAttrib /*attrib*/) const
 {
     return 0;
 }
@@ -209,6 +209,9 @@ MirPointerConfinementState mtd::StubSurface::confine_pointer_state() const
     return {};
 }
 
+void mtd::StubSurface::placed_relative(geometry::Rectangle const& /*placement*/)
+{
+}
 
 namespace
 {

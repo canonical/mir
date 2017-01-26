@@ -18,10 +18,10 @@
 
 #include "egl_native_surface_interpreter.h"
 #include "sync_fence.h"
-#include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>
 #include <hardware/gralloc.h>
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
@@ -38,11 +38,11 @@ mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface&
 {
 }
 
-mir::graphics::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
+mga::NativeBuffer* mcla::EGLNativeSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
-    auto buffer_to_driver = buffer->native_buffer_handle();
-
+    auto buffer_to_driver = mga::to_native_buffer_checked(buffer->native_buffer_handle());
+    
     ANativeWindowBuffer* anwb = buffer_to_driver->anwb();
     anwb->format = driver_pixel_format;
     return buffer_to_driver.get();
@@ -54,7 +54,7 @@ void mcla::EGLNativeSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffe
     mga::SyncFence sync_fence(sync_ops, mir::Fd(fence_fd));
     sync_fence.wait();
 
-    surface.request_and_wait_for_next_buffer();
+    surface.swap_buffers_sync();
 }
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_format(int format)
@@ -92,11 +92,18 @@ int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
 
 void mcla::EGLNativeSurfaceInterpreter::sync_to_display(bool should_sync)
 { 
-    surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
+    surface.request_and_wait_for_configure(mir_window_attrib_swapinterval, should_sync);
 }
 
 void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_count(unsigned int count)
 {
-    if (count > mir::frontend::client_buffer_cache_size)
-        surface.set_buffer_cache_size(count);
+    surface.set_buffer_cache_size(count);
+}
+
+void mcla::EGLNativeSurfaceInterpreter::dispatch_driver_request_buffer_size(geometry::Size size)
+{
+    auto params = surface.get_parameters();
+    if (geometry::Size{params.width, params.height} == size)
+        return;
+    surface.set_size(size);
 }

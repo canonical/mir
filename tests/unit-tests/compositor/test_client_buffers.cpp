@@ -31,116 +31,89 @@ namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-namespace
-{
-struct MockBufferAllocator : public mg::GraphicBufferAllocator
-{
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
-};
-
-struct StubBufferAllocator : public mg::GraphicBufferAllocator
-{
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        auto b = std::make_shared<mtd::StubBuffer>();
-        map[b->id()] = b;
-        ids.push_back(b->id());
-        return b;
-    }
-    std::vector<MirPixelFormat> supported_pixel_formats()
-    {
-        return {};
-    }
-    std::map<mg::BufferID, std::shared_ptr<mg::Buffer>> map;
-    std::vector<mg::BufferID> ids;
-};
-}
-
 struct ClientBuffers : public Test
 {
-    testing::NiceMock<mtd::MockEventSink> mock_sink;
+    std::shared_ptr<mtd::MockEventSink> mock_sink = std::make_shared<testing::NiceMock<mtd::MockEventSink>>();
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    MockBufferAllocator mock_allocator;
-    StubBufferAllocator stub_allocator;
-    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
+    mtd::StubBuffer stub_buffer{properties};
+    mc::BufferMap map{mock_sink};
 };
 
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
 {
-    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(mock_sink, add_buffer(Ref(*stub_buffer)));
-    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
-    EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
+    EXPECT_CALL(*mock_sink, add_buffer(Ref(stub_buffer)));
+    mc::BufferMap map{mock_sink};
+    EXPECT_THAT(map.add_buffer(mt::fake_shared(stub_buffer)), Eq(stub_buffer.id()));
 }
 
 TEST_F(ClientBuffers, access_of_nonexistent_buffer_throws)
 {
-    auto stub_buffer = std::make_unique<mtd::StubBuffer>();
     EXPECT_THROW({
-        auto buffer = map[stub_buffer->id()];
+        auto buffer = map[stub_buffer.id()];
     }, std::logic_error);
 }
 
 TEST_F(ClientBuffers, removal_of_nonexistent_buffer_throws)
 {
-    auto stub_buffer = std::make_unique<mtd::StubBuffer>();
     EXPECT_THROW({
-        map.remove_buffer(stub_buffer->id());
+        map.remove_buffer(stub_buffer.id());
     }, std::logic_error);
 }
 
 TEST_F(ClientBuffers, can_access_once_added)
 {
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_THAT(buffer, Eq(stub_allocator.map[stub_allocator.ids[0]]));
+    auto id = map.add_buffer(mt::fake_shared(stub_buffer));
+    EXPECT_THAT(map[id].get(), Eq(&stub_buffer));
 }
 
 TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
 {
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, update_buffer(Ref(*buffer)));
-    map.send_buffer(stub_allocator.ids[0]);
+    auto id = map.add_buffer(mt::fake_shared(stub_buffer));
+    auto buffer = map[id];
+    EXPECT_CALL(*mock_sink, update_buffer(Ref(*buffer)));
+    map.send_buffer(id);
 }
 
 TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 {
-    map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(1));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
-    auto buffer = map[stub_allocator.ids[0]];
+    auto id = map.add_buffer(mt::fake_shared(stub_buffer));
+    auto buffer = map[id];
 
-    EXPECT_CALL(mock_sink, remove_buffer(Ref(*buffer)));
-    map.remove_buffer(stub_allocator.ids[0]);
-    map.send_buffer(stub_allocator.ids[0]);
+    EXPECT_CALL(*mock_sink, remove_buffer(Ref(*buffer)));
+    map.remove_buffer(id);
+    map.send_buffer(id);
 }
 
 TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
 {
-    map.add_buffer(properties);
-    ON_CALL(mock_sink, update_buffer(_))
+    auto id = map.add_buffer(mt::fake_shared(stub_buffer));
+    ON_CALL(*mock_sink, update_buffer(_))
         .WillByDefault(Invoke(
         [&] (mg::Buffer& buffer)
         {
             map.remove_buffer(buffer.id());
         }));
 
-    map.send_buffer(stub_allocator.ids[0]);
+    map.send_buffer(id);
 }
 
 TEST_F(ClientBuffers, ignores_unknown_receive)
 {
-    EXPECT_CALL(mock_sink, add_buffer(_))
+    EXPECT_CALL(*mock_sink, add_buffer(_))
         .Times(1);
-    map.add_buffer(properties);
-    map.remove_buffer(stub_allocator.ids[0]);
-    map.send_buffer(stub_allocator.ids[0]);
+    auto id = map.add_buffer(mt::fake_shared(stub_buffer));
+    map.remove_buffer(id);
+    map.send_buffer(id);
+}
+
+TEST_F(ClientBuffers, sends_error_buffer_when_alloc_fails)
+{
+    std::string error_msg = "a reason";
+    EXPECT_CALL(*mock_sink, add_buffer(_))
+        .WillOnce(Throw(std::runtime_error(error_msg)));
+    EXPECT_CALL(*mock_sink, error_buffer(stub_buffer.size(), stub_buffer.pixel_format(), StrEq(error_msg)));
+    mc::BufferMap map{mock_sink};
+    EXPECT_THROW({
+        map.add_buffer(mt::fake_shared(stub_buffer));
+    }, std::runtime_error);
 }

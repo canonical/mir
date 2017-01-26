@@ -45,6 +45,9 @@ enum class mcl::BufferVault::Owner
 
 namespace
 {
+void ignore_buffer(MirBuffer*, void*)
+{
+}
 void incoming_buffer(MirBuffer* buffer, void* context)
 {
     auto vault = static_cast<mcl::BufferVault*>(context);
@@ -76,14 +79,18 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    if (disconnected_)
-        return;
-
     buffer_factory->cancel_requests_with_context(this);
+    std::unique_lock<std::mutex> lk(mutex);
     for (auto& it : buffers)
     try
     {
-        free_buffer(it.first);
+        if (auto map = surface_map.lock())
+        {
+            auto buffer = map->buffer(it.first);
+            buffer->set_callback(ignore_buffer, nullptr);
+        } 
+        if (!disconnected_)
+            free_buffer(it.first);
     }
     catch (...)
     {
@@ -219,10 +226,10 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
     }
     else
     {
-        next_buffer_wait_handle.expect_result();
+        swap_buffers_wait_handle.expect_result();
         deferred_cb = done;
     }
-    return &next_buffer_wait_handle;
+    return &swap_buffers_wait_handle;
 }
 
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
@@ -289,7 +296,7 @@ void mcl::BufferVault::trigger_callback(std::unique_lock<std::mutex> lk)
         deferred_cb = {};
         lk.unlock();
         cb();
-        next_buffer_wait_handle.result_received();
+        swap_buffers_wait_handle.result_received();
     }
 }
 
@@ -310,31 +317,36 @@ void mcl::BufferVault::set_size(std::unique_lock<std::mutex> const&, geometry::S
     size = new_size;
 }
 
-void mcl::BufferVault::increase_buffer_count()
+void mcl::BufferVault::set_interval(int i)
 {
     std::unique_lock<std::mutex> lk(mutex);
-    current_buffer_count++;
-    needed_buffer_count++;
-    lk.unlock();
-    
-    alloc_buffer(size, format, usage);
-}
 
-void mcl::BufferVault::decrease_buffer_count()
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    if (current_buffer_count == initial_buffer_count)
+    if (i == interval)
         return;
-    needed_buffer_count--;
+    interval = i;
 
-    auto it = std::find_if(buffers.begin(), buffers.end(),
-        [](auto const& entry) { return entry.second == Owner::Self; });
-    if (it != buffers.end())
+    if (i == 0)
     {
-        current_buffer_count--;
-        int free_id = it->first;
-        buffers.erase(it);
+        current_buffer_count++;
+        needed_buffer_count++;
         lk.unlock();
-        free_buffer(free_id);
+        alloc_buffer(size, format, usage);
+    }
+    else
+    {
+        needed_buffer_count = initial_buffer_count;
+        while (current_buffer_count > needed_buffer_count)
+        {
+            auto it = std::find_if(buffers.begin(), buffers.end(),
+                [](auto const& entry) { return entry.second == Owner::Self; });
+            if (it == buffers.end())
+                break;
+            current_buffer_count--;
+            int id = it->first;
+            buffers.erase(it);
+            lk.unlock();
+            free_buffer(id);
+            lk.lock();
+        }
     }
 }

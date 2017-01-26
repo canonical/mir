@@ -51,192 +51,8 @@ namespace geom = mir::geometry;
 
 namespace gp = google::protobuf;
 
-namespace mir
-{
-namespace client
-{
-//An internal interface useful in transitioning buffer exchange semantics based on
-//the BufferStream response provided by the server
-struct ServerBufferSemantics
-{
-    virtual void deposit(protobuf::Buffer const&, mir::optional_value<geometry::Size>, MirPixelFormat) = 0;
-    virtual void set_buffer_cache_size(unsigned int) = 0;
-    virtual std::shared_ptr<mir::client::ClientBuffer> current_buffer() = 0;
-    virtual uint32_t current_buffer_id() = 0;
-    virtual MirWaitHandle* submit(std::function<void()> const&, MirPixelFormat, int stream_id) = 0;
-    virtual void lost_connection() = 0;
-    virtual void set_size(geom::Size) = 0;
-    virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
-    virtual void set_interval(int interval) = 0;
-    virtual geom::Size size() const = 0;
-    virtual ~ServerBufferSemantics() = default;
-    ServerBufferSemantics() = default;
-    ServerBufferSemantics(ServerBufferSemantics const&) = delete;
-    ServerBufferSemantics& operator=(ServerBufferSemantics const&) = delete;
-};
-}
-}
-
 namespace
 {
-
-struct ExchangeSemantics : mcl::ServerBufferSemantics
-{
-    ExchangeSemantics(
-        mir::protobuf::DisplayServer& server,
-        std::shared_ptr<mcl::ClientBufferFactory> const& factory, int max_buffers,
-        mp::Buffer const& first_buffer, geom::Size first_size, MirPixelFormat first_pf) :
-        wrapped{factory, max_buffers},
-        display_server(server),
-        size_(first_size)
-    {
-        wrapped.deposit_package(
-            mcl::protobuf_to_native_buffer(first_buffer),
-            first_buffer.buffer_id(), first_size, first_pf);
-    }
-
-    void deposit(mp::Buffer const& buffer, mir::optional_value<geom::Size> size, MirPixelFormat pf) override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        if (size.is_set())
-            size_ = size.value(); 
-
-        if (on_incoming_buffer)
-        {
-            wrapped.deposit_package(
-                mcl::protobuf_to_native_buffer(buffer),
-                buffer.buffer_id(), size_, pf);
-            if (on_incoming_buffer)
-            {
-                on_incoming_buffer();
-                next_buffer_wait_handle.result_received();
-                on_incoming_buffer = std::function<void()>{};
-            }
-        }
-        else
-        {
-            incoming_buffers.push(buffer);
-        }
-    }
-
-    void set_buffer_cache_size(unsigned int sz) override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        wrapped.set_max_buffers(sz);
-    }
-    std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        return wrapped.current_buffer();
-    }
-    uint32_t current_buffer_id() override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        if (incoming_buffers.size())
-            return incoming_buffers.front().buffer_id();
-        return wrapped.current_buffer_id();
-    }
-
-    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat pf, int stream_id) override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        if (server_connection_lost)
-            BOOST_THROW_EXCEPTION(std::runtime_error("disconnected: no new buffers"));
-        //always submit what we have, whether we have a buffer, or will have to wait for an async reply
-        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
-        request->mutable_id()->set_value(stream_id);
-        request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
-        lock.unlock();
-
-        display_server.submit_buffer(request.get(), protobuf_void.get(),
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
-
-        lock.lock();
-        if (server_connection_lost)
-            BOOST_THROW_EXCEPTION(std::runtime_error("disconnected: no new buffers"));
-        if (incoming_buffers.empty())
-        {
-            next_buffer_wait_handle.expect_result();
-            on_incoming_buffer = done; 
-        }
-        else
-        {
-            wrapped.deposit_package(
-                mcl::protobuf_to_native_buffer(incoming_buffers.front()),
-                incoming_buffers.front().buffer_id(), size_, pf);
-            incoming_buffers.pop();
-            done();
-        }
-        return &next_buffer_wait_handle;
-    }
-
-    void lost_connection() override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        server_connection_lost = true;
-        if (on_incoming_buffer)
-        {
-            on_incoming_buffer();
-            on_incoming_buffer = std::function<void()>{};
-        }
-        if (next_buffer_wait_handle.is_pending())
-            next_buffer_wait_handle.result_received();
-
-        while (!incoming_buffers.empty())
-        {
-            auto b = incoming_buffers.front();
-            for (auto i = 0; i < b.fd_size(); i++)
-                close(b.fd(i));
-            incoming_buffers.pop();
-        }
-    }
-
-    void set_size(geom::Size) override
-    {
-    }
-
-    geom::Size size() const override
-    {
-        std::unique_lock<std::mutex> lk(mutex);
-        return size_;
-    }
-
-    void on_scale_set(float scale)
-    {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        scale_ = scale;
-        scale_wait_handle.result_received();
-    }
-
-    MirWaitHandle* set_scale(float scale, mf::BufferStreamId stream_id) override
-    {
-        mp::StreamConfiguration configuration;
-        configuration.mutable_id()->set_value(stream_id.as_value());
-        configuration.set_scale(scale);
-        scale_wait_handle.expect_result();
-
-        display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-            google::protobuf::NewCallback(this, &ExchangeSemantics::on_scale_set, scale));
-        return &scale_wait_handle;
-    }
-
-    void set_interval(int) override
-    {
-    }
-
-    std::mutex mutable mutex;
-    mcl::ClientBufferDepository wrapped;
-    mir::protobuf::DisplayServer& display_server;
-    std::function<void()> on_incoming_buffer;
-    std::queue<mir::protobuf::Buffer> incoming_buffers;
-    std::unique_ptr<mir::protobuf::Void> protobuf_void{std::make_unique<mp::Void>()};
-    MirWaitHandle next_buffer_wait_handle;
-    bool server_connection_lost {false};
-    MirWaitHandle scale_wait_handle;
-    float scale_;
-    geom::Size size_;
-};
-
 class Requests : public mcl::ServerBufferRequests
 {
 public:
@@ -256,9 +72,8 @@ public:
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.allocate_buffers(&request,  protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.allocate_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -268,9 +83,8 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.release_buffers(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.release_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
@@ -280,26 +94,42 @@ public:
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
-        //note, NewCallback will trigger on exception, deleting this object there
-        auto protobuf_void = new mp::Void;
-        server.submit_buffer(&request, protobuf_void,
+        auto protobuf_void = std::make_shared<mp::Void>();
+        server.submit_buffer(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    static void ignore_response(mp::Void* void_response)
+    static void ignore_response(std::shared_ptr<mp::Void>)
     {
-        delete void_response;
     }
 
 private:
     mclr::DisplayServer& server;
-    mp::Void protobuf_void;
     int stream_id;
 };
 
-struct NewBufferSemantics : mcl::ServerBufferSemantics
+mir::optional_value<int> parse_env_for_swap_interval()
 {
-    NewBufferSemantics(
+    if (auto env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL"))
+    {
+        mir::log_info("overriding swapinterval setting because of presence of MIR_CLIENT_FORCE_SWAP_INTERVAL");
+        return {atoi(env)};
+    }
+    else
+    {
+        return {};
+    }
+}
+}
+
+namespace mir
+{
+namespace client
+{
+//Should be merged with mcl::BufferVault
+struct BufferDepository
+{
+    BufferDepository(
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
         std::shared_ptr<mcl::AsyncBufferFactory> const& mirbuffer_factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
@@ -308,12 +138,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         unsigned int initial_nbuffers) :
         vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers),
         current(nullptr),
-        future(vault.withdraw()),
         size_(size)
     {
+        future = vault.withdraw();
     }
 
-    void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat) override
+    void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat)
     {
     }
 
@@ -325,7 +155,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         current = c;
     }
 
-    std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
+    std::shared_ptr<mir::client::ClientBuffer> current_buffer()
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -333,7 +163,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return current->client_buffer();
     }
 
-    uint32_t current_buffer_id() override
+    uint32_t current_buffer_id()
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -341,7 +171,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return current->rpc_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat, int) override
+    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat, int)
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -358,7 +188,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return wh;
     }
 
-    void set_size(geom::Size size) override
+    void set_size(geom::Size size)
     {
         {
             std::unique_lock<std::mutex> lk(mutex);
@@ -367,22 +197,18 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         vault.set_size(size);
     }
 
-    geom::Size size() const override
+    geom::Size size() const
     {
         std::unique_lock<std::mutex> lk(mutex);
         return size_;
     }
 
-    void lost_connection() override
+    void lost_connection()
     {
         vault.disconnected();
     }
 
-    void set_buffer_cache_size(unsigned int) override
-    {
-    }
-
-    MirWaitHandle* set_scale(float scale, mf::BufferStreamId) override
+    MirWaitHandle* set_scale(float scale, mf::BufferStreamId)
     {
         scale_wait_handle.expect_result();
         scale_wait_handle.result_received();
@@ -390,32 +216,29 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return &scale_wait_handle;
     }
 
-    void set_interval(int interval) override
+    void set_interval(int interval)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         interval = std::max(0, std::min(1, interval));
-        if (current_swap_interval == interval)
-            return;
-        if (interval == 0)
-            vault.increase_buffer_count();
-        else
-            vault.decrease_buffer_count();
-        current_swap_interval = interval;
+        vault.set_interval(interval);
     }
+
+    // Future must be before vault, to ensure vault's destruction marks future
+    // as ready.
+    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
 
     mcl::BufferVault vault;
     std::mutex mutable mutex;
     std::shared_ptr<mcl::MirBuffer> current{nullptr};
-    mir::client::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> future;
     MirWaitHandle scale_wait_handle;
-    int current_swap_interval = 1;
     geom::Size size_;
 };
-
+}
 }
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    MirRenderSurface* render_surface,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
@@ -427,9 +250,11 @@ mcl::BufferStream::BufferStream(
     geom::Size ideal_size,
     size_t nbuffers)
     : connection_(connection),
-      display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
+      user_swap_interval(parse_env_for_swap_interval()),
+      using_client_side_vsync(false),
+      interval_config{server, frontend::BufferStreamId{a_protobuf_bs.id().value()}},
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -437,9 +262,19 @@ mcl::BufferStream::BufferStream(
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
       map(map),
-      factory(factory)
+      factory(factory),
+      render_surface_(render_surface)
 {
-    init_swap_interval();
+    /*
+     * Since we try to use client-side vsync where possible, a separate
+     * copy of the current swap interval is required to represent that
+     * the stream might have a non-zero interval while we want the server
+     * to use a zero interval. This is not stored inside interval_config
+     * because with some luck interval_config will eventually go away
+     * leaving just int current_swap_interval.
+     */
+    current_swap_interval = interval_config.swap_interval();
+
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -447,29 +282,23 @@ mcl::BufferStream::BufferStream(
     }
 
     if (protobuf_bs->has_error())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
-
-    try
     {
         if (protobuf_bs->has_buffer())
         {
-            buffer_depository = std::make_unique<ExchangeSemantics>(
-                display_server,
-                client_platform->create_buffer_factory(),
-                mir::frontend::client_buffer_cache_size,
-                protobuf_bs->buffer(),
-                geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()},
-                static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
-        }
-        else
-        {
-            buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(), factory,
-                std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
-                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
-                protobuf_bs->buffer_usage(), nbuffers);
+            for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+                ::close(protobuf_bs->buffer().fd(i));
         }
 
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+    }
+
+    try
+    {
+        buffer_depository = std::make_unique<BufferDepository>(
+            client_platform->create_buffer_factory(), factory,
+            std::make_shared<Requests>(server, protobuf_bs->id().value()), map,
+            ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
+            protobuf_bs->buffer_usage(), nbuffers);
 
         egl_native_window_ = client_platform->create_egl_native_window(this);
 
@@ -477,8 +306,8 @@ mcl::BufferStream::BufferStream(
         // knowing the swap interval is not a precondition to creation. It's
         // only a precondition to your second and subsequent swaps, so don't
         // bother the creation parameters with this stuff...
-        if (fixed_swap_interval)
-            force_swap_interval(swap_interval_);
+        if (user_swap_interval.is_set())
+            set_swap_interval(user_swap_interval.value());
     }
     catch (std::exception const& error)
     {
@@ -495,67 +324,6 @@ mcl::BufferStream::BufferStream(
     if (!valid())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
     perf_report->name_surface(surface_name.c_str());
-}
-
-void mcl::BufferStream::init_swap_interval()
-{
-    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
-    if (env)
-    {
-        swap_interval_ = atoi(env);
-        fixed_swap_interval = true;
-    }
-    else
-    {
-        swap_interval_ = 1;
-        fixed_swap_interval = false;
-    }
-}
-
-
-mcl::BufferStream::BufferStream(
-    MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> creation_wait_handle,
-    mclr::DisplayServer& server,
-    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const& map,
-    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
-    mp::BufferStreamParameters const& parameters,
-    std::shared_ptr<mcl::PerfReport> const& perf_report,
-    size_t nbuffers)
-    : connection_(connection),
-      display_server(server),
-      client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      swap_interval_(1),
-      perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle),
-      map(map),
-      factory(factory)
-{
-    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
-
-    egl_native_window_ = client_platform->create_egl_native_window(this);
-    if (protobuf_bs->has_buffer())
-    {
-        buffer_depository = std::make_unique<ExchangeSemantics>(
-            display_server,
-            client_platform->create_buffer_factory(),
-            mir::frontend::client_buffer_cache_size,
-            protobuf_bs->buffer(),
-            geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()},
-            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
-    }
-    else
-    {
-        buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(), factory,
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
-            ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
-    }
 }
 
 mcl::BufferStream::~BufferStream()
@@ -591,11 +359,15 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
+MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done)
 {
     auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
     perf_report->end_frame(id);
+
+    if (!using_client_side_vsync &&
+        current_swap_interval != interval_config.swap_interval())
+        set_server_swap_interval(current_swap_interval);
 
     secured_region.reset();
 
@@ -636,11 +408,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
-MirSurfaceParameters mcl::BufferStream::get_parameters() const
+MirWindowParameters mcl::BufferStream::get_parameters() const
 {
     auto size = buffer_depository->size();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return MirSurfaceParameters{
+    return MirWindowParameters{
         "",
         size.width.as_int(),
         size.height.as_int(),
@@ -649,31 +421,84 @@ MirSurfaceParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-void mcl::BufferStream::request_and_wait_for_next_buffer()
+void mcl::BufferStream::wait_for_vsync()
 {
-    next_buffer([](){})->wait_for_all();
-}
+    mir::time::PosixTimestamp last, target;
+    std::shared_ptr<FrameClock> clock;
 
-void mcl::BufferStream::on_swap_interval_set(int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    swap_interval_ = interval;
-    interval_wait_handle.result_received();
-}
-
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    if (attrib != mir_surface_attrib_swapinterval)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
-        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (!frame_clock)
+            return;
+        last = last_vsync;
+        clock = frame_clock;
     }
 
-    auto i = interval;
-    lock.unlock();
-    set_swap_interval(i);
-    interval_wait_handle.wait_for_all();
+    target = clock->next_frame_after(last);
+    sleep_until(target);
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (target > last_vsync)
+            last_vsync = target;
+    }
+}
+
+MirWaitHandle* mcl::BufferStream::set_server_swap_interval(int i)
+{
+    /*
+     * TODO: Remove these functions in future, after
+     *       mir_buffer_stream_swap_buffers has been converted to use
+     *       client-side vsync, and the server has been told to always use
+     *       dropping for BufferStream. Then there will be no need to ever
+     *       change the server swap interval from zero.
+     */
+    buffer_depository->set_interval(i);
+    return interval_config.set_swap_interval(i);
+}
+
+void mcl::BufferStream::swap_buffers_sync()
+{
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = true;
+    }
+
+    /*
+     * Until recently it seemed like server-side vsync could co-exist with
+     * client-side vsync. However my original theory that it was risky has
+     * proven to be true. If we leave server-side vsync throttling to interval
+     * one at the same time as using client-side, there's a risk the server
+     * will not get scheduled sufficiently to drain the queue as fast as
+     * we fill it, creating lag. The acceptance test `ClientLatency' has now
+     * proven this is a real problem so we must be sure to put the server in
+     * interval 0 when using client-side vsync. This guarantees that random
+     * scheduling imperfections won't create queuing lag.
+     */
+    if (interval_config.swap_interval() != 0)
+        set_server_swap_interval(0);
+
+    swap_buffers([](){})->wait_for_all();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        using_client_side_vsync = false;
+    }
+
+    int interval = swap_interval();
+    for (int i = 0; i < interval; ++i)
+        wait_for_vsync();
+}
+
+void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)
+{
+    if (attrib != mir_window_attrib_swapinterval)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
+        " on BufferStream but only mir_window_attrib_swapinterval is supported")); 
+    }
+
+    set_swap_interval(interval)->wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -683,31 +508,42 @@ uint32_t mcl::BufferStream::get_current_buffer_id()
 
 int mcl::BufferStream::swap_interval() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return swap_interval_;
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    return current_swap_interval;
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    if (fixed_swap_interval)
-        return nullptr;
-    else
-        return force_swap_interval(interval);
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    current_swap_interval = user_swap_interval.is_set() ?
+        user_swap_interval.value() : interval;
+
+    return set_server_swap_interval(current_swap_interval);
 }
 
-MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
+void mcl::BufferStream::adopted_by(MirWindow* win)
 {
-    mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(protobuf_bs->id().value());
-    configuration.set_swapinterval(interval);
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    /*
+     * Yes, we're storing raw pointers here. That's safe so long as MirWindow
+     * remembers to always call unadopted_by prior to its destruction.
+     *   The alternative of MirWindow passing in a shared_ptr to itself is
+     * actually uglier than this...
+     */
+    users.insert(win);
+    if (!frame_clock)
+        frame_clock = win->get_frame_clock();
+}
 
-    buffer_depository->set_interval(interval);
-
-    interval_wait_handle.expect_result();
-    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
-
-    return &interval_wait_handle;
+void mcl::BufferStream::unadopted_by(MirWindow* win)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    users.erase(win);
+    if (frame_clock == win->get_frame_clock())
+    {
+        frame_clock = users.empty() ? nullptr
+                                    : (*users.begin())->get_frame_clock();
+    }
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
@@ -735,10 +571,8 @@ bool mcl::BufferStream::valid() const
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
-void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+void mcl::BufferStream::set_buffer_cache_size(unsigned int)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    buffer_depository->set_buffer_cache_size(cache_size);
 }
 
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
@@ -756,6 +590,11 @@ void mcl::BufferStream::buffer_unavailable()
 void mcl::BufferStream::set_size(geom::Size sz)
 {
     buffer_depository->set_size(sz);
+}
+
+geom::Size mcl::BufferStream::size() const
+{
+    return buffer_depository->size();
 }
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
@@ -778,4 +617,9 @@ char const * mcl::BufferStream::get_error_message() const
 MirConnection* mcl::BufferStream::connection() const
 {
     return connection_;
+}
+
+MirRenderSurface* mcl::BufferStream::render_surface() const
+{
+    return render_surface_;
 }

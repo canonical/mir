@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <string.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -32,10 +33,11 @@ float mir_eglapp_background_opacity = 1.0f;
 static const char* appname = "egldemo";
 
 static MirConnection *connection;
-static MirSurface *surface;
+static MirWindow* window;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
+static double refresh_rate = 0.0;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
@@ -44,21 +46,26 @@ static volatile sig_atomic_t running = 0;
         return 0; \
     }
 
-void mir_eglapp_shutdown(void)
+void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    mir_surface_release_sync(surface);
-    surface = NULL;
+    mir_window_release_sync(window);
+    window = NULL;
     mir_connection_release(connection);
     connection = NULL;
+}
+
+void mir_eglapp_quit(void)
+{
+    running = 0;
 }
 
 static void shutdown(int signum)
 {
     if (running)
     {
-        running = 0;
+        mir_eglapp_quit();
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -103,36 +110,62 @@ static void mir_eglapp_handle_input_event(MirInputEvent const* event)
     running = 0;
 }
 
-static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+static void mir_eglapp_handle_window_event(MirWindowEvent const* sev)
 {
-    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
-    if (attrib != mir_surface_attrib_visibility)
-        return;
-    switch (mir_surface_event_get_attribute_value(sev))
+    MirWindowAttrib attrib = mir_window_event_get_attribute(sev);
+    int value = mir_window_event_get_attribute_value(sev);
+
+    switch (attrib)
     {
-    case mir_surface_visibility_exposed:
-        printf("Surface exposed\n");
+    case mir_window_attrib_visibility:
+        printf("Window %s\n", value == mir_window_visibility_exposed ?
+                               "exposed" : "occluded");
         break;
-    case mir_surface_visibility_occluded:
-        printf("Surface occluded\n");
+    case mir_window_attrib_dpi:
+        // value is still zero - never implemented. Deprecate? (LP: #1559831)
         break;
     default:
         break;
     }
 }
 
-static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
+static void handle_window_output_event(MirWindowOutputEvent const* out)
 {
-    (void) surface;
-    (void) context;
-    
+    static char const* const form_factor_name[6] =
+        {"unknown", "phone", "tablet", "monitor", "TV", "projector"};
+    unsigned ff = mir_window_output_event_get_form_factor(out);
+    char const* form_factor = (ff < 6) ? form_factor_name[ff] : "out-of-range";
+
+    refresh_rate = mir_window_output_event_get_refresh_rate(out);
+
+    printf("Window is on output %u: %d DPI, scale %.1fx, %s form factor, %.2fHz\n",
+           mir_window_output_event_get_output_id(out),
+           mir_window_output_event_get_dpi(out),
+           mir_window_output_event_get_scale(out),
+           form_factor,
+           refresh_rate);
+}
+
+double mir_eglapp_display_hz(void)
+{
+    return refresh_rate;
+}
+
+void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused)
+{
+    (void) window;
+    (void) unused;
+
     switch (mir_event_get_type(ev))
     {
     case mir_event_type_input:
         mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
         break;
-    case mir_event_type_surface:
-        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+    case mir_event_type_window:
+        mir_eglapp_handle_window_event(mir_event_get_window_event(ev));
+        break;
+    case mir_event_type_window_output:
+        handle_window_output_event(mir_event_get_window_output_event(ev));
         break;
     case mir_event_type_resize:
         /*
@@ -149,7 +182,7 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
                    mir_resize_event_get_height(resize));
         }
         break;
-    case mir_event_type_close_surface:
+    case mir_event_type_close_window:
         printf("Received close event from server.\n");
         running = 0;
         break;
@@ -158,31 +191,133 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
     }
 }
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
+static MirOutput const* find_active_output(
+    MirDisplayConfig const* conf)
 {
-    const MirDisplayOutput *output = NULL;
-    int d;
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
-    for (d = 0; d < (int)conf->num_outputs; d++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
+        MirOutput const* output = mir_display_config_get_output(conf, i);
+        MirOutputConnectionState state = mir_output_get_connection_state(output);
+        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
         {
-            output = out;
-            break;
+            return output;
         }
     }
 
-    return output;
+    return NULL;
 }
 
-mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
-                                unsigned int *width, unsigned int *height)
+static void show_help(struct mir_eglapp_arg const* const* arg_lists)
+{
+    int const indent = 2, desc_offset = 2;
+    struct mir_eglapp_arg const* const* list;
+    int max_len = 0;
+
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        struct mir_eglapp_arg const* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
+        {
+            int len = indent + strlen(arg->syntax);
+            if (len > max_len)
+                max_len = len;
+        }
+    }
+    for (list = arg_lists; *list != NULL; ++list)
+    {
+        struct mir_eglapp_arg const* arg;
+        for (arg = *list; arg->syntax != NULL; ++arg)
+        {
+            int len = 0, remainder = 0;
+            printf("%*c%s%n", indent, ' ', arg->syntax, &len);
+            remainder = desc_offset + max_len - len;
+            printf("%*c%s", remainder, ' ', arg->description);
+            switch (arg->format[0])
+            {
+            case '=':
+                {
+                    char const* str = *(char const**)arg->variable;
+                    if (str)
+                        printf(" [%s]", str);
+                }
+                break;
+            case '%':
+                switch (arg->format[1])
+                {
+                case 'u': printf(" [%u]", *(unsigned*)arg->variable); break;
+                case 'f': printf(" [%.1f]", *(float*)arg->variable); break;
+                default: break;
+                }
+            default:
+                break;
+            }
+            printf("\n");
+        }
+    }
+}
+
+static mir_eglapp_bool parse_args(int argc, char *argv[],
+                             struct mir_eglapp_arg const* const* arg_lists)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        char const* operator = argv[i];
+        struct mir_eglapp_arg const* const* list;
+        for (list = arg_lists; *list != NULL; ++list)
+        {
+            struct mir_eglapp_arg const* arg;
+            for (arg = *list; arg->syntax != NULL; ++arg)
+            {
+                char const* space = strchr(arg->syntax, ' ');
+                int operator_len = space != NULL ? space - arg->syntax
+                                                 : (int)strlen(arg->syntax);
+                if (!strncmp(operator, arg->syntax, operator_len))
+                {
+                    char const* operand = operator + operator_len;
+                    if (!operand[0] && strchr("=%", arg->format[0]))
+                    {
+                        if (i+1 < argc)
+                            operand = argv[++i];
+                        else
+                        {
+                            fprintf(stderr, "Missing argument for %s\n",
+                                    operator);
+                            return 0;
+                        }
+                    }
+                    switch (arg->format[0])
+                    {
+                    case '$': return 1;  /* -- is special */
+                    case '!': *(mir_eglapp_bool*)arg->variable = 1; break;
+                    case '=': *(char const**)arg->variable = operand; break;
+                    case '%':
+                        if (!sscanf(operand, arg->format, arg->variable))
+                        {
+                            fprintf(stderr,
+                                    "Invalid option: %s  (expected %s)\n",
+                                    operand, arg->syntax);
+                            return 0;
+                        }
+                        break;
+                    default: abort(); break;
+                    }
+                    goto next;
+                }
+            }
+        }
+        fprintf(stderr, "Unknown option: %s\n", operator);
+        return 0;
+        next:
+        (void)0; /* Stop compiler warnings about label at the end */
+    }
+    return 1;
+}
+
+mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
+                                unsigned int* width, unsigned int* height,
+                                struct mir_eglapp_arg const* custom_args)
 {
     EGLint ctxattribs[] =
     {
@@ -195,153 +330,64 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLBoolean ok;
     EGLint swapinterval = 1;
     unsigned int output_id = mir_display_output_id_invalid;
-    char *mir_socket = NULL;
+    char const* mir_socket = NULL;
+    char const* dims = NULL;
     char const* cursor_name = mir_default_cursor_name;
     unsigned int rgb_bits = 8;
+    mir_eglapp_bool help = 0, no_vsync = 0, quiet = 0;
+    mir_eglapp_bool fullscreen = !*width || !*height;
 
-    if (argc > 1)
+    struct mir_eglapp_arg const default_args[] =
     {
-        int i;
-        for (i = 1; i < argc; i++)
+        {"-a <name>", "=", &appname, "Set application name"},
+        {"-b <0.0-0.1>", "%f", &mir_eglapp_background_opacity, "Background opacity"},
+        {"-c <name>", "=", &cursor_name, "Request cursor image by name"},
+        {"-e <nbits>", "%u", &rgb_bits, "EGL colour channel size"},
+        {"-f", "!", &fullscreen, "Force full screen"},
+        {"-h", "!", &help, "Show this help text"},
+        {"-m <socket>", "=", &mir_socket, "Mir server socket"},
+        {"-n", "!", &no_vsync, "Don't sync to vblank"},
+        {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
+        {"-q", "!", &quiet, "Quiet mode (no messages output)"},
+        {"-s <width>x<height>", "=", &dims, "Force window size"},
+        {"--", "$", NULL, "Ignore all arguments that follow"},
+        {NULL, NULL, NULL, NULL}
+    };
+
+    struct mir_eglapp_arg const* const arg_lists[] =
+    {
+        default_args,
+        custom_args,
+        NULL
+    };
+
+    if (!parse_args(argc, argv, arg_lists))
+        return 0;
+
+    if (help)
+    {
+        printf("Usage: %s [<options>]\n", argv[0]);
+        show_help(arg_lists);
+        return 0;
+    }
+
+    if (no_vsync)
+        swapinterval = 0;
+
+    if (dims)
+    {
+        if (2 != sscanf(dims, "%ux%u", width, height))
         {
-            mir_eglapp_bool help = 0;
-            const char *arg = argv[i];
-
-            if (arg[0] == '-')
-            {
-                if (arg[1] == '-' && arg[2] == '\0')
-                    break;
-
-                switch (arg[1])
-                {
-                case 'a':
-                    appname = argv[++i];
-                    break;
-                case 'b':
-                    {
-                        float alpha = 1.0f;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%f", &alpha) == 1)
-                        {
-                            mir_eglapp_background_opacity = alpha;
-                        }
-                        else
-                        {
-                            printf("Invalid opacity value: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'e':
-                    {
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            ++i;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &rgb_bits) != 1)
-                        {
-                            printf("Invalid colour channel depth: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'n':
-                    swapinterval = 0;
-                    break;
-                case 'o':
-                    {
-                        unsigned int the_id = 0;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%u", &the_id) == 1)
-                        {
-                            output_id = the_id;
-                        }
-                        else
-                        {
-                            printf("Invalid output ID: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'f':
-                    *width = 0;
-                    *height = 0;
-                    break;
-                case 's':
-                    {
-                        unsigned int w, h;
-                        arg += 2;
-                        if (!arg[0] && i < argc-1)
-                        {
-                            i++;
-                            arg = argv[i];
-                        }
-                        if (sscanf(arg, "%ux%u", &w, &h) == 2)
-                        {
-                            *width = w;
-                            *height = h;
-                        }
-                        else
-                        {
-                            printf("Invalid size: %s\n", arg);
-                            help = 1;
-                        }
-                    }
-                    break;
-                case 'm':
-                    mir_socket = argv[++i];
-                    break;
-                case 'c':
-                    cursor_name = argv[++i];
-                    break;
-                case 'q':
-                    {
-                        FILE *unused = freopen("/dev/null", "a", stdout);
-                        (void)unused;
-                        break;
-                    }
-                case 'h':
-                default:
-                    help = 1;
-                    break;
-                }
-            }
-            else
-            {
-                help = 1;
-            }
-
-            if (help)
-            {
-                printf("Usage: %s [<options>]\n"
-                       "  -a name          Set application name\n"
-                       "  -b               Background opacity (0.0 - 1.0)\n"
-                       "  -e               EGL colour channel size in bits\n"
-                       "  -h               Show this help text\n"
-                       "  -f               Force full screen\n"
-                       "  -o ID            Force placement on output monitor ID\n"
-                       "  -n               Don't sync to vblank\n"
-                       "  -m socket        Mir server socket\n"
-                       "  -s WIDTHxHEIGHT  Force surface size\n"
-                       "  -c name          Request cursor image by name\n"
-                       "  -q               Quiet mode (no messages output)\n"
-                       "  --               Ignore all arguments that follow\n"
-                       , argv[0]);
-                return 0;
-            }
+            fprintf(stderr, "Invalid dimensions: %s\n", dims);
+            return 0;
         }
+        fullscreen = 0;
+    }
+
+    if (quiet)
+    {
+        FILE *unused = freopen("/dev/null", "a", stdout);
+        (void)unused;
     }
 
     connection = mir_connect_sync(mir_socket, appname);
@@ -392,10 +438,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */
-    MirDisplayConfiguration* display_config =
-        mir_connection_create_display_config(connection);
+    MirDisplayConfig* display_config =
+        mir_connection_create_display_configuration(connection);
 
-    const MirDisplayOutput *output = find_active_output(display_config);
+    MirOutput const* output = find_active_output(display_config);
 
     if (output == NULL)
     {
@@ -403,23 +449,32 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         return 0;
     }
 
-    const MirDisplayMode *mode = &output->modes[output->current_mode];
+    MirOutputMode const* mode = mir_output_get_current_mode(output);
+
+    int pos_x = mir_output_get_position_x(output);
+    int pos_y = mir_output_get_position_y(output);
+
+    int mode_width  = mir_output_mode_get_width(mode);
+    int mode_height = mir_output_mode_get_height(mode);
 
     printf("Current active output is %dx%d %+d%+d\n",
-           mode->horizontal_resolution, mode->vertical_resolution,
-           output->position_x, output->position_y);
+        mode_width, mode_height,
+        pos_x, pos_y);
 
-    if (*width == 0)
-        *width = mode->horizontal_resolution;
-    if (*height == 0)
-        *height = mode->vertical_resolution;
+    if (fullscreen)  /* TODO: Use surface states for this */
+    {
+        *width  = mode_width;
+        *height = mode_height;
+    }
 
-    mir_display_config_destroy(display_config);
+    mir_display_config_release(display_config);
 
-    MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
+    MirWindowSpec *spec =
+        mir_create_normal_window_spec(connection, *width, *height);
 
-    CHECK(spec != NULL, "Can't create a surface spec");
+    CHECK(spec != NULL, "Can't create a window spec");
+
+    mir_window_spec_set_pixel_format(spec, pixel_format);
 
     char const* name = argv[0];
     for (char const* p = name; *p; p++)
@@ -427,24 +482,25 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         if (*p == '/')
             name = p + 1;
     }
-    mir_surface_spec_set_name(spec, name);
+    mir_window_spec_set_name(spec, name);
 
     if (output_id != mir_display_output_id_invalid)
-        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+        mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
 
-    CHECK(mir_surface_is_valid(surface), "Can't create a surface");
+    CHECK(mir_window_is_valid(window), "Can't create a window");
 
-    mir_surface_set_event_handler(surface, mir_eglapp_handle_event, NULL);
-    
-    MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
-    mir_surface_configure_cursor(surface, conf);
-    mir_cursor_configuration_destroy(conf);
+    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
+
+    spec = mir_create_window_spec(connection);
+    mir_window_spec_set_cursor_name(spec, cursor_name);
+    mir_window_apply_spec(window, spec);
+    mir_window_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(surface)), NULL);
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)), NULL);
     
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
@@ -459,7 +515,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
 
-    printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
@@ -472,7 +527,7 @@ struct MirConnection* mir_eglapp_native_connection()
     return connection;
 }
 
-struct MirSurface* mir_eglapp_native_surface()
+MirWindow* mir_eglapp_native_window()
 {
-    return surface;
+    return window;
 }

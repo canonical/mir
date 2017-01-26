@@ -21,6 +21,7 @@
 #define MIR_INPUT_KEYMAP_H_
 
 #include <string>
+#include <ostream>
 
 namespace mir
 {
@@ -64,6 +65,11 @@ inline bool operator==(Keymap const& lhs, Keymap const& rhs)
 inline bool operator!=(Keymap const& lhs, Keymap const& rhs)
 {
     return !(lhs == rhs);
+}
+
+inline std::ostream& operator<<(std::ostream &out, Keymap const& rhs)
+{
+    return out << rhs.model << "-" << rhs.layout << "-"<< rhs.variant << "-" << rhs.options;
 }
 
 }

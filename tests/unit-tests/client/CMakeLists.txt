@@ -2,7 +2,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_aging_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_stream_transport.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer_depository.cpp #to deprecate soon
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_vault.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_mir_surface.cpp
@@ -23,15 +22,10 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_error_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_mir_error.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_no_tls_future.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_render_surface.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_frame_clock.cpp
 )
-
-if(MIR_TEST_PLATFORM STREQUAL "android")
-  add_subdirectory("android")
-endif()
-
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11" )
-  add_subdirectory("mesa")
-endif()
 
 if (NOT MIR_DISABLE_INPUT)
 add_subdirectory("input")

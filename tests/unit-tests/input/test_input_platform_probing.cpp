@@ -53,7 +53,6 @@ struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
     void add(mir::ModuleEmergencyCleanupHandler) override {}
 };
 char const platform_input_lib[] = "platform-input-lib";
-char const vt[] = "vt";
 char const platform_path[] = "platform-path";
 
 struct InputPlatformProbe : ::testing::Test
@@ -140,6 +139,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_X11
+char const vt[] = "vt";
 TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_works)
 {
     auto platform =

@@ -84,6 +84,13 @@ void mclr::DisplayServer::configure_display(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::remove_session_configuration(
+    mir::protobuf::Void const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
 void mclr::DisplayServer::set_base_display_configuration(
     mir::protobuf::DisplayConfiguration const* request,
     mir::protobuf::Void* response,
@@ -105,6 +112,13 @@ void mclr::DisplayServer::confirm_base_display_configuration(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::cancel_base_display_configuration_preview(
+    mir::protobuf::Void const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
 void mclr::DisplayServer::create_screencast(
     mir::protobuf::ScreencastParameters const* request,
     mir::protobuf::Screencast* response,
@@ -115,6 +129,13 @@ void mclr::DisplayServer::create_screencast(
 void mclr::DisplayServer::screencast_buffer(
     mir::protobuf::ScreencastId const* request,
     mir::protobuf::Buffer* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
+void mclr::DisplayServer::screencast_to_buffer(
+    mir::protobuf::ScreencastRequest const* request,
+    mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {
     channel->call_method(std::string(__func__), request, response, done);
@@ -156,21 +177,14 @@ void mclr::DisplayServer::new_fds_for_prompt_providers(
 }
 void mclr::DisplayServer::start_prompt_session(
     mir::protobuf::PromptSessionParameters const* request,
-    mir::protobuf::Void* response,
+    mir::protobuf::PromptSession* response,
     google::protobuf::Closure* done)
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
 void mclr::DisplayServer::stop_prompt_session(
-    mir::protobuf::Void const* request,
+    mir::protobuf::PromptSession const* request,
     mir::protobuf::Void* response,
-    google::protobuf::Closure* done)
-{
-    channel->call_method(std::string(__func__), request, response, done);
-}
-void mclr::DisplayServer::exchange_buffer(
-    mir::protobuf::BufferRequest const* request,
-    mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
 {
     channel->call_method(std::string(__func__), request, response, done);

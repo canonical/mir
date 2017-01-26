@@ -37,12 +37,14 @@ public:
     void handle_event(MirEvent const& ev) override;
     void handle_lifecycle_event(MirLifecycleState state) override;
     void handle_display_config_change(mg::DisplayConfiguration const& conf) override;
+    void handle_error(mir::ClientVisibleError const& error) override;
     void send_ping(int32_t serial) override;
     void send_buffer(mf::BufferStreamId id, mg::Buffer& buf, mg::BufferIpcMsgType type) override;
-    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) override;
+    void handle_input_config_change(MirInputConfig const& devices) override;
     void add_buffer(mir::graphics::Buffer&) override;
     void remove_buffer(mir::graphics::Buffer&) override;
     void update_buffer(mir::graphics::Buffer&) override;
+    void error_buffer(mir::geometry::Size, MirPixelFormat, std::string const&) override;
 
 private:
     std::shared_ptr<mf::EventSink> underlying_sink;
@@ -79,10 +81,10 @@ void GloballyUniqueMockEventSink::send_ping(int32_t serial)
     underlying_sink->send_ping(serial);
 }
 
-void GloballyUniqueMockEventSink::handle_input_device_change(
-    std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void GloballyUniqueMockEventSink::handle_input_config_change(
+    MirInputConfig const& config)
 {
-    underlying_sink->handle_input_device_change(devices);
+    underlying_sink->handle_input_config_change(config);
 }
 
 void GloballyUniqueMockEventSink::send_buffer(
@@ -98,6 +100,12 @@ void GloballyUniqueMockEventSink::add_buffer(mir::graphics::Buffer& buffer)
     underlying_sink->add_buffer(buffer);
 }
 
+void GloballyUniqueMockEventSink::error_buffer(
+    mir::geometry::Size sz, MirPixelFormat pf, std::string const& error)
+{
+    underlying_sink->error_buffer(sz, pf, error);
+}
+
 void GloballyUniqueMockEventSink::remove_buffer(mir::graphics::Buffer& buffer)
 {
     underlying_sink->remove_buffer(buffer);
@@ -106,6 +114,11 @@ void GloballyUniqueMockEventSink::remove_buffer(mir::graphics::Buffer& buffer)
 void GloballyUniqueMockEventSink::update_buffer(mir::graphics::Buffer& buffer)
 {
     underlying_sink->update_buffer(buffer);
+}
+
+void GloballyUniqueMockEventSink::handle_error(mir::ClientVisibleError const& error)
+{
+    underlying_sink->handle_error(error);
 }
 
 mtd::MockEventSinkFactory::MockEventSinkFactory()

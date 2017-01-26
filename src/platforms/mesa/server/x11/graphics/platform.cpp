@@ -26,10 +26,13 @@ namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mgx::Platform::Platform(std::shared_ptr<::Display> const& conn, geom::Size const size)
+mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
+                        geom::Size const size,
+                        std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)},
+      report{report},
       size{size}
 {
     if (!x11_connection)
@@ -48,15 +51,11 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), size, *gl_config);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), size, gl_config,
+                                         report);
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
-}
-
-EGLNativeDisplayType mgx::Platform::egl_native_display() const
-{
-    return eglGetDisplay(x11_connection.get());
 }

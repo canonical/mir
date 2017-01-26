@@ -30,7 +30,7 @@ namespace mir
  * For scoped enumerations, there are optional bitwise operators available
  * that can be enabled by declaring a function within the namespace of the
  * enumeration (here Enum):
- * \begincode
+ * \code
  *   Enum mir_enable_enum_bit_operators(Enum);
  * \endcode
  */
@@ -81,6 +81,11 @@ struct Flags
     constexpr bool operator==(Flags<Enum> other) const noexcept
     {
         return flag_value == other.flag_value;
+    }
+
+    constexpr bool operator!=(Flags<Enum> other) const noexcept
+    {
+        return flag_value != other.flag_value;
     }
 
     constexpr value_type value() const noexcept

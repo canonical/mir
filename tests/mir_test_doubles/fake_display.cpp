@@ -22,33 +22,72 @@
 
 #include "mir/graphics/event_handler_register.h"
 
+#include <system_error>
+#include <boost/throw_exception.hpp>
+
 #include <unistd.h>
+#include <sys/eventfd.h>
 
 namespace mtd = mir::test::doubles;
+namespace mg = mir::graphics;
 
+namespace
+{
+bool compatible(mtd::StubDisplayConfig const& conf1, mtd::StubDisplayConfig const& conf2)
+{
+    auto compatible =
+        conf1.cards == conf2.cards &&
+        conf1.outputs.size() == conf2.outputs.size() &&
+        std::equal(begin(conf1.outputs), end(conf1.outputs),
+                             begin(conf2.outputs),
+                             [] (mg::DisplayConfigurationOutput const& output1, mg::DisplayConfigurationOutput const& output2)
+                             {
+                                 // ignore difference in orientation, scale factor, form factor, subpixel arrangement
+                                 auto clone = output2;
+                                 clone.orientation = output1.orientation;
+                                 clone.subpixel_arrangement = output1.subpixel_arrangement;
+                                 clone.scale = output1.scale;
+                                 clone.form_factor = output1.form_factor;
+                                 return clone == output1;
+                             });
+    return compatible;
+}
+}
 
 mtd::FakeDisplay::FakeDisplay()
     : config{std::make_shared<StubDisplayConfig>()},
+      wakeup_trigger{::eventfd(0, EFD_CLOEXEC)},
       handler_called{false}
 {
+    if (wakeup_trigger == Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to create wakeup FD"));
+    }
 }
 
 mtd::FakeDisplay::FakeDisplay(std::vector<geometry::Rectangle> const& output_rects) :
     config{std::make_shared<StubDisplayConfig>(output_rects)},
+    wakeup_trigger{::eventfd(0, EFD_CLOEXEC)},
     handler_called{false}
 {
+    if (wakeup_trigger == Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to create wakeup FD"));
+    }
     for (auto const& rect : output_rects)
         groups.emplace_back(new StubDisplaySyncGroup({rect}));
 }
 
 void mtd::FakeDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     for (auto& group : groups)
         f(*group);
 }
 
 std::unique_ptr<mir::graphics::DisplayConfiguration> mtd::FakeDisplay::configuration() const
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     return std::unique_ptr<mir::graphics::DisplayConfiguration>(new StubDisplayConfig(*config));
 }
 
@@ -57,12 +96,16 @@ void mtd::FakeDisplay::register_configuration_change_handler(
     mir::graphics::DisplayConfigurationChangeHandler const& handler)
 {
     handlers.register_fd_handler(
-        {p.read_fd()},
+        {wakeup_trigger},
         this,
         [this, handler](int fd)
             {
-                char c;
-                if (read(fd, &c, 1) == 1)
+                eventfd_t value;
+                if (eventfd_read(fd, &value) == -1)
+                {
+                    BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to read from wakeup FD"));
+                }
+                if (value > 0)
                 {
                     handler();
                     handler_called = true;
@@ -70,8 +113,23 @@ void mtd::FakeDisplay::register_configuration_change_handler(
             });
 }
 
+bool mtd::FakeDisplay::apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& new_config)
+{
+    auto new_configuration = std::make_shared<StubDisplayConfig>(new_config);
+
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (compatible(*config, *new_configuration))
+    {
+        std::swap(config, new_configuration);
+        return true;
+    }
+
+    return false;
+}
+
 void mtd::FakeDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     decltype(config) new_configuration = std::make_shared<StubDisplayConfig>(new_config);
     decltype(groups) new_groups;
 
@@ -88,8 +146,12 @@ void mtd::FakeDisplay::emit_configuration_change_event(
     std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config)
 {
     handler_called = false;
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     config = std::make_shared<StubDisplayConfig>(*new_config);
-    if (write(p.write_fd(), "a", 1)) {}
+    if (eventfd_write(wakeup_trigger, 1) == -1)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to write to wakeup FD"));
+    }
 }
 
 void mtd::FakeDisplay::wait_for_configuration_change_handler()

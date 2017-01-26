@@ -21,7 +21,7 @@
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
-void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::NullSurfaceObserver::attrib_changed(MirWindowAttrib /*attrib*/, int /*value*/) {}
 void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
 void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
 void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
@@ -39,3 +39,4 @@ void ms::NullSurfaceObserver::keymap_changed(MirInputDeviceId /* id */, std::str
 }
 void ms::NullSurfaceObserver::renamed(char const*) {}
 void ms::NullSurfaceObserver::cursor_image_removed() {}
+void ms::NullSurfaceObserver::placed_relative(geometry::Rectangle const& /*placement*/)  {}

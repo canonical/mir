@@ -291,6 +291,11 @@ uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
     return properties_table.at(property_name).id;
 }
 
+bool mgk::ObjectProperties::has_property(char const* property_name) const
+{
+    return properties_table.count(property_name) > 0;
+}
+
 auto mgk::ObjectProperties::begin() const -> std::unordered_map<std::string, Prop>::const_iterator
 {
     return properties_table.begin();

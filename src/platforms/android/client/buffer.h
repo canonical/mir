@@ -22,6 +22,7 @@
 
 #include "android_native_buffer.h"
 #include "mir/aging_buffer.h"
+#include "mir/fd.h"
 
 #include <system/window.h>
 #include <memory>
@@ -49,21 +50,22 @@ public:
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
     void update_from(MirBufferPackage const& update_package) override;
     void fill_update_msg(MirBufferPackage& message) override;
-    MirNativeBuffer* as_mir_native_buffer() const override;
-    void set_fence(MirNativeFence*, MirBufferAccess) override;
-    MirNativeFence* get_fence() const override;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
+    MirBufferPackage* package() const override;
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint**) override;
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
 private:
     void pack_native_window_buffer();
 
+    mir::Fd mutable api_user_fence;
+ 
     std::shared_ptr<BufferRegistrar> const buffer_registrar;
-    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
+    std::shared_ptr<graphics::android::NativeBuffer> const native_buffer;
     MirPixelFormat const buffer_pf;
     geometry::Stride const buffer_stride;
     geometry::Size const buffer_size;
+    MirBufferPackage const creation_package;
 };
 
 }

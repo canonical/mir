@@ -23,6 +23,7 @@ compositor-report            | log,lttng
 display-report               | log,lttng
 input-report                 | log,lttng
 legacy-input-report          | log
+seat-report                  | log
 msg-processor-report         | log,lttng
 session-mediator-report      | log,lttng
 scene-report                 | log,lttng

@@ -27,9 +27,6 @@ struct MirCloseSurfaceEvent : MirEvent
 
     int surface_id() const;
     void set_surface_id(int id);
-
-private:
-    int surface_id_{-1};
 };
 
 #endif /* MIR_COMMON_CLOSE_SURFACE_EVENT_H_ */

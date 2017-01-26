@@ -20,7 +20,8 @@
 
 #include "mir/main_loop.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_context.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
 #include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
@@ -31,7 +32,7 @@
 #include "gl_pixel_buffer.h"
 #include "global_event_sender.h"
 #include "mediating_display_changer.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_stack.h"
@@ -140,7 +141,7 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_session_container(),
                 the_session_event_handler_register(),
                 the_server_action_queue(),
-                the_display_configuration_report(),
+                the_display_configuration_observer(),
                 the_input_region(),
                 the_main_loop());
         });
@@ -195,8 +196,17 @@ mir::DefaultServerConfiguration::the_pixel_buffer()
     return pixel_buffer(
         [this]()
         {
+            auto as_context_source = [](mg::Display* display)
+            {
+                auto const ctx = dynamic_cast<renderer::gl::ContextSource*>(
+                        display->native_display());
+                if (!ctx)
+                    BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
+                return ctx;
+            };
+
             return std::make_shared<ms::GLPixelBuffer>(
-                the_display()->create_gl_context());
+                as_context_source(the_display().get())->create_gl_context());
         });
 }
 

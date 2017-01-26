@@ -47,7 +47,7 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::LttngReportFactory:
     return std::make_shared<lttng::ConnectorReport>();
 }
 
-std::shared_ptr<mir::frontend::SessionMediatorReport> mir::report::LttngReportFactory::create_session_mediator_report()
+std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::LttngReportFactory::create_session_mediator_report()
 {
     return std::make_shared<lttng::SessionMediatorReport>();
 }
@@ -60,6 +60,11 @@ std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::LttngReportF
 std::shared_ptr<mir::input::InputReport> mir::report::LttngReportFactory::create_input_report()
 {
     return std::make_shared<lttng::InputReport>();
+}
+
+std::shared_ptr<mir::input::SeatObserver> mir::report::LttngReportFactory::create_seat_report()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
 }
 
 std::shared_ptr<mir::SharedLibraryProberReport> mir::report::LttngReportFactory::create_shared_library_prober_report()

@@ -68,8 +68,8 @@ public:
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
-    virtual MirSurfaceType type() const = 0;
-    virtual MirSurfaceState state() const = 0;
+    virtual MirWindowType type() const = 0;
+    virtual MirWindowState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual bool visible() const = 0;
@@ -84,7 +84,7 @@ public:
      * By default the input region is the whole surface. To unset a custom input region
      * and revert to the default set an empty input region, i.e., set_input_region({}).
      * To disable input set a non-empty region containing an empty rectangle, i.e.,
-     * set_input_region({geom::Rectangle{}}).
+     * set_input_region({Rectangle{}}).
      */
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
     virtual void resize(geometry::Size const& size) = 0;
@@ -107,9 +107,9 @@ public:
     virtual std::shared_ptr<Surface> parent() const = 0;
 
     // TODO a legacy of old interactions and needs removing
-    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+    virtual int configure(MirWindowAttrib attrib, int value) = 0;
     // TODO a legacy of old interactions and needs removing
-    virtual int query(MirSurfaceAttrib attrib) const = 0;
+    virtual int query(MirWindowAttrib attrib) const = 0;
 
     virtual void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
                             std::string const& variant, std::string const& options) = 0;
@@ -118,6 +118,8 @@ public:
 
     virtual void set_confine_pointer_state(MirPointerConfinementState state) = 0;
     virtual MirPointerConfinementState confine_pointer_state() const = 0;
+
+    virtual void placed_relative(geometry::Rectangle const& placement) = 0;
 };
 }
 }

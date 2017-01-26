@@ -52,7 +52,7 @@ struct MirBufferTest : Test
     MirBufferUsage usage { mir_buffer_usage_hardware };
     MirPixelFormat format { mir_pixel_format_abgr_8888 };
     std::shared_ptr<char> vaddr { std::make_shared<char>('\0') };
-    mir_buffer_callback cb { buffer_callback };
+    MirBufferCallback cb { buffer_callback };
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
     std::chrono::nanoseconds timeout { 101 };
@@ -113,54 +113,6 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
 }
 
-TEST_F(MirBufferTest, returns_correct_native_buffer)
-{
-    int fake { 4321 };
-    EXPECT_CALL(*mock_client_buffer, as_mir_native_buffer())
-        .WillOnce(Return(reinterpret_cast<MirNativeBuffer*>(&fake)));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-
-    EXPECT_THAT(buffer.as_mir_native_buffer(), Eq(reinterpret_cast<MirNativeBuffer*>(&fake)));
-}
-
-TEST_F(MirBufferTest, sets_client_buffers_fence)
-{
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
-    auto access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fence, access));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fence, access);
-}
-
-TEST_F(MirBufferTest, gets_fence_from_client_buffer)
-{
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
-
-    EXPECT_CALL(*mock_client_buffer, get_fence())
-        .WillOnce(Return(fence));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    EXPECT_THAT(fence, Eq(buffer.get_fence()));
-}
-
-TEST_F(MirBufferTest, waits_for_proper_access)
-{
-    int fakefence { 19 };
-    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
-    auto current_access = MirBufferAccess::mir_read;
-    auto needed_access = MirBufferAccess::mir_read_write;
-
-    EXPECT_CALL(*mock_client_buffer, set_fence(fence, current_access));
-    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout))
-        .WillOnce(Return(true));
-
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.set_fence(fence, current_access);
-    EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
-}
-
 TEST_F(MirBufferTest, callback_called_when_available_from_creation)
 {
     int call_count = 0;
@@ -173,6 +125,24 @@ TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
 {
     int call_count = 0;
     mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.received(update_message);
+    EXPECT_THAT(call_count, Eq(1));
+}
+
+TEST_F(MirBufferTest, callback_called_after_change_when_available_from_creation)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.set_callback(cb, &call_count); 
+    buffer.received();
+    EXPECT_THAT(call_count, Eq(1));
+}
+
+TEST_F(MirBufferTest, callback_called_after_change_when_available_from_server_return)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.set_callback(cb, &call_count); 
     buffer.received(update_message);
     EXPECT_THAT(call_count, Eq(1));
 }

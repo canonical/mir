@@ -19,7 +19,7 @@
 #include "typo_glcache.h"
 #include MIR_SERVER_GL_H
 
-using namespace mir::examples::typo;
+using namespace mir::typo;
 
 GLCache::GLCache(std::shared_ptr<Renderer> const& r)
     : renderer(r)
@@ -76,10 +76,10 @@ GLCache::Entry const& GLCache::get(char const* str)
     {
         Renderer::Image img;
         renderer->render(str, img);
-        if (img.buf)
+        if (img.data())
         {
-            entry.width = img.width;
-            entry.height = img.height;
+            entry.width = img.width();
+            entry.height = img.height();
             glGenTextures(1, &entry.tex);
             glBindTexture(GL_TEXTURE_2D, entry.tex);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -87,10 +87,10 @@ GLCache::Entry const& GLCache::get(char const* str)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, img.align);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, img.alignment());
             glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA,
-                         img.width, img.height, 0, GL_ALPHA,
-                         GL_UNSIGNED_BYTE, img.buf);
+                         img.width(), img.height(), 0, GL_ALPHA,
+                         GL_UNSIGNED_BYTE, img.data());
             glGenerateMipmap(GL_TEXTURE_2D); // Antialiasing shrinkage please
         }
     }

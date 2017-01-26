@@ -68,7 +68,7 @@ TEST(MirFlags,lookup_rules_work_in_arbitrary_namespace)
     using namespace testing;
     arb::Profile empty = arb::Character::Curious & arb::Character::Reckless;
 
-    EXPECT_THAT(empty.value(),Eq(0));
+    EXPECT_THAT(empty.value(),Eq(0u));
 }
 
 TEST(MirFlags,contains_check_works_for_masks)

@@ -17,8 +17,8 @@
  */
 
 #include "gl_pixel_buffer.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/texture_source.h"
 
 #include <stdexcept>
@@ -49,7 +49,7 @@ inline uint32_t abgr_to_argb(uint32_t p)
 
 }
 
-ms::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<graphics::GLContext> gl_context)
+ms::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<renderer::gl::Context> gl_context)
     : gl_context{std::move(gl_context)},
       tex{0}, fbo{0}, gl_pixel_format{0}, pixels_need_y_flip{false}
 {

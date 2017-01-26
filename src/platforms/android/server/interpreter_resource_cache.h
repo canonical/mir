@@ -26,17 +26,17 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class NativeBuffer;
 
 namespace android
 {
+class NativeBuffer;
 class InterpreterResourceCache
 {
 public:
     InterpreterResourceCache() {}
 
     virtual void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer,
-                              std::shared_ptr<graphics::NativeBuffer> const& key) = 0;
+                              std::shared_ptr<NativeBuffer> const& key) = 0;
     virtual std::shared_ptr<graphics::Buffer> retrieve_buffer(ANativeWindowBuffer* key) = 0;
     virtual void update_native_fence(ANativeWindowBuffer* key, int fence) = 0;
 

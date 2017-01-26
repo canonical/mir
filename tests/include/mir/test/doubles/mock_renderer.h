@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 #define MIR_TEST_DOUBLES_MOCK_RENDERER_H_
 
-#include "mir/compositor/renderer.h"
+#include "mir/renderer/renderer.h"
 
 #include <gmock/gmock.h>
 
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-struct MockRenderer : public compositor::Renderer
+struct MockRenderer : public renderer::Renderer
 {
     MOCK_METHOD1(set_viewport, void(geometry::Rectangle const&));
     MOCK_METHOD2(set_output_transform, void(MirOrientation, MirMirrorMode));

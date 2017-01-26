@@ -20,10 +20,12 @@
 #define MIR_TEST_FRAMEWORK_ANY_SURFACE_H_
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir/geometry/size.h"
 
 namespace mir_test_framework
 {
-MirSurface *make_any_surface(MirConnection *connection);
+MirWindow* make_any_surface(MirConnection *connection);
+MirWindow* make_surface(MirConnection *connection, mir::geometry::Size size, MirPixelFormat format);
 }
 
 #endif // MIR_TEST_FRAMEWORK_ANY_SURFACE_H_

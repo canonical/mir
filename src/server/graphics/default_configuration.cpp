@@ -25,13 +25,14 @@
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"
-#include "offscreen/display.h"
+#include "nested/platform.h"
 #include "software_cursor.h"
 
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/platform_probe.h"
+#include "display_configuration_observer_multiplexer.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
@@ -85,12 +86,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     auto const host_connection = the_host_connection();
 
                     platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
-
-                    auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
-                        "create_guest_platform",
-                        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-
-                    return create_guest_platform(the_display_report(), host_connection);
+                    return std::make_shared<mgn::Platform>(
+                        platform_library,
+                        host_connection,
+                        the_display_report(),
+                        *the_options());
                 }
 
                 // fallback to standalone if host socket is unset
@@ -122,7 +122,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                               description->minor_version,
                               description->micro_version);
 
-                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report(), the_logger());
             }
             catch(...)
             {
@@ -150,27 +150,9 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            if (the_options()->is_set(options::offscreen_opt))
-            {
-                return std::make_shared<mg::offscreen::Display>(
-                    the_graphics_platform()->egl_native_display(),
-                    the_display_configuration_policy(),
-                    the_display_report());
-            }
-            else if (the_options()->is_set(options::host_socket_opt))
-            {
-                return std::make_shared<mgn::Display>(
-                    the_graphics_platform(),
-                    the_host_connection(),
-                    the_display_report(),
-                    the_display_configuration_policy(),
-                    the_gl_config());
-            }
-            {
-                return the_graphics_platform()->create_display(
-                    the_display_configuration_policy(),
-                    the_gl_config());
-            }
+            return the_graphics_platform()->create_display(
+                the_display_configuration_policy(),
+                the_gl_config());
         });
 }
 
@@ -269,5 +251,25 @@ mir::DefaultServerConfiguration::the_gl_config()
                 int stencil_buffer_bits() const override { return 0; }
             };
             return std::make_shared<NoGLConfig>();
+        });
+}
+
+std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>>
+mir::DefaultServerConfiguration::the_display_configuration_observer_registrar()
+{
+    return display_configuration_observer_multiplexer(
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mg::DisplayConfigurationObserver>
+mir::DefaultServerConfiguration::the_display_configuration_observer()
+{
+    return display_configuration_observer_multiplexer(
+        [default_executor = the_main_loop()]
+        {
+            return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
         });
 }

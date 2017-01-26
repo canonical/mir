@@ -17,6 +17,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
+)
+
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -43,7 +48,6 @@ add_subdirectory(input)
 
 add_library(mirclientobjects OBJECT
 
-  client_buffer_depository.cpp
   display_configuration.cpp
   error_connections.cpp
   event.cpp
@@ -61,8 +65,9 @@ add_library(mirclientobjects OBJECT
   logging/input_receiver_report.cpp
   logging/perf_report.cpp
   default_connection_configuration.cpp
-  surface_map.cpp
+  connection_surface_map.cpp
   private.cpp
+  frame_clock.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
@@ -77,9 +82,12 @@ add_library(mirclientobjects OBJECT
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
+  error_render_surface.cpp
   error_chain.cpp
   buffer.cpp
   error_buffer.cpp
+  mir_render_surface_api.cpp
+  render_surface.cpp
   presentation_chain.cpp
   mir_presentation_chain_api.cpp
   mir_buffer_api.cpp
@@ -89,24 +97,30 @@ add_library(mirclientobjects OBJECT
   mir_error.cpp
   mir_error.h
   mir_error_api.cpp
+  buffer_stream_configuration.cpp
+  error_handler.h
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_display_configuration.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
+  mir_extension_core.cpp
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
 )
 
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
+add_dependencies(mirclientobjects mircapnproto)
 
-mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
-add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
+add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 
 set_target_properties(mirclient
 
   PROPERTIES
   SOVERSION ${MIRCLIENT_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_DEPENDS ${symbol_map}
 )
 
 set(LINKS
@@ -119,7 +133,6 @@ set(LINKS
 
 target_link_libraries(mirclient
   LINK_PRIVATE
-  mirclientrpc-static
   mirclientlttng-static
   LINK_PUBLIC
   ${MIR_CLIENT_REFERENCES}
@@ -145,8 +158,7 @@ install(
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
 
-mir_add_library_with_symbols(mirclient-debug-extension SHARED
-  ${debug_symbol_map}
+add_library(mirclient-debug-extension SHARED
   mir_debug_api.cpp
 )
 
@@ -155,7 +167,6 @@ target_link_libraries(mirclient-debug-extension
   mirclient-static  # Link statically; only copy what you need.
                     # This allows access to private symbols normally hidden
                     # in the shared version of libmirclient.
-  mirclientrpc-static
   mirclientlttng-static
   PUBLIC
   ${LINKS}
@@ -167,11 +178,7 @@ set_target_properties(
   PROPERTIES
   SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${debug_symbol_map}"
-)
-
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/debug
-  DESTINATION "include/mirclient/mir_toolkit/debug"
+  LINK_DEPENDS ${debug_symbol_map}
 )
 
 install(
