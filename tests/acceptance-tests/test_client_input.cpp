@@ -119,7 +119,7 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
     std::shared_ptr<mir::shell::Shell> wrapped_shell;
 };
 
-struct ClientWithSurface
+struct Client
 {
     MirWindow* window{nullptr};
 
@@ -127,7 +127,7 @@ struct ClientWithSurface
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
     MOCK_METHOD1(handle_input_device_state, void(MirEvent const*));
 
-    ClientWithSurface(std::string const& con, std::string const& name)
+    Client(std::string const& con, std::string const& name)
     {
         connection = mir_connect_sync(con.c_str(), name.c_str());
 
@@ -174,7 +174,7 @@ struct ClientWithSurface
 
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
-        auto const client = static_cast<ClientWithSurface*>(context);
+        auto const client = static_cast<Client*>(context);
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
@@ -189,7 +189,7 @@ struct ClientWithSurface
         if (type == mir_event_type_input_device_state)
             client->handle_input_device_state(ev);
     }
-    ~ClientWithSurface()
+    ~Client()
     {
         // Remove the event handler to avoid handling spurious events unrelated
         // to the tests (e.g. pointer leave events when the window is destroyed),
@@ -320,8 +320,6 @@ struct TestClientInput : mtf::HeadlessInProcessServer
 };
 
 }
-
-using Client = ::testing::NiceMock<ClientWithSurface>;
 
 TEST_F(TestClientInput, clients_receive_keys)
 {
