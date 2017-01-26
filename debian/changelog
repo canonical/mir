@@ -123,6 +123,7 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1658605)
       . Caught exception at Mir/EGL driver boundary (in setSwapInterval) in
         clients and tests (LP: #1659298)
+      . Support display scaling slider in unity8 (LP: #1645372)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
 

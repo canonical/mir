@@ -357,6 +357,11 @@ try
     abort();
 }
 
+void mir_output_set_scale_factor(MirOutput* output, float scale)
+{
+    output->set_scale_factor(scale);
+}
+
 MirFormFactor mir_output_get_form_factor(MirOutput const* output)
 {
     return static_cast<MirFormFactor>(output->form_factor());
