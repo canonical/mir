@@ -330,7 +330,6 @@ MirConnection::~MirConnection() noexcept
 {
     if (channel)  // some tests don't have one
     {
-        channel->discard_future_calls();
         channel->wait_for_outstanding_calls();
     }
 
@@ -669,9 +668,6 @@ MirWaitHandle* MirConnection::disconnect()
     disconnect_wait_handle.expect_result();
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
-
-    if (channel)
-        channel->discard_future_calls();
 
     return &disconnect_wait_handle;
 }
