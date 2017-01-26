@@ -90,7 +90,7 @@ RenderSurfaceToConnectionMap connection_map;
 void mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
-    mir_render_surface_callback callback,
+    MirRenderSurfaceCallback callback,
     void* context)
 try
 {
@@ -118,7 +118,7 @@ try
     mir_connection_create_render_surface(
         connection,
         width, height,
-        reinterpret_cast<mir_render_surface_callback>(set_result),
+        reinterpret_cast<MirRenderSurfaceCallback>(set_result),
         &result);
     return result.wait_for_result();
 }
@@ -156,7 +156,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return "Unknown error";
+    return ex.what();
 }
 
 void mir_render_surface_release(

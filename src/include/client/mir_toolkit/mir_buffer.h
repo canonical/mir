@@ -46,7 +46,7 @@ void mir_connection_allocate_buffer(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_callback available_callback, void* available_context);
+    MirBufferCallback available_callback, void* available_context);
 
 /** Allocate a MirBuffer and wait for the server to return it.
  *
