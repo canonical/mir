@@ -23,6 +23,8 @@
 
 #include "mir/events/event.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MirInputConfigurationEvent : MirEvent
 {
     MirInputConfigurationEvent();
@@ -37,5 +39,6 @@ struct MirInputConfigurationEvent : MirEvent
     void set_id(MirInputDeviceId id);
 }
  __attribute__((deprecated));
+#pragma GCC diagnostic pop
 
 #endif /* MIR_COMMON_INPUT_CONFIGURATION_EVENT_H_ */
