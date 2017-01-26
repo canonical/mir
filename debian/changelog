@@ -121,6 +121,8 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] Mir cross-compile to vivid/armhf FTBFS with:
         mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
         (LP: #1658605)
+      . Caught exception at Mir/EGL driver boundary (in setSwapInterval) in
+        clients and tests (LP: #1659298)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
 
