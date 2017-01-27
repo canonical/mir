@@ -226,6 +226,9 @@ TEST_F(DefaultDisplayBufferCompositor, rotates_viewport)
         screen.top_left,
         {screen.size.height.as_int(), screen.size.width.as_int()}};
 
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(rotated_screen));
+
     Sequence render_seq;
     EXPECT_CALL(mock_renderer, suspend())
         .Times(0);
