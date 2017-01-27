@@ -173,7 +173,7 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
     }
 }
 
-glm::mat4 mc::ScreencastDisplayBuffer::transformation() const
+glm::mat2 mc::ScreencastDisplayBuffer::transformation() const
 {
     return transform;
 }

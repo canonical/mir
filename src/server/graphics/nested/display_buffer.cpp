@@ -176,7 +176,7 @@ void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationCha
         submitted_buffers.erase(buf);
 }
 
-glm::mat4 mgn::detail::DisplayBuffer::transformation() const
+glm::mat2 mgn::detail::DisplayBuffer::transformation() const
 {
     return {};
 }

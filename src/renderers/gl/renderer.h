@@ -64,7 +64,7 @@ public:
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
-    void set_output_transform(glm::mat4 const&) override;
+    void set_output_transform(glm::mat2 const&) override;
     void render(graphics::RenderableList const&) const override;
 
     // This is called _without_ a GL context:

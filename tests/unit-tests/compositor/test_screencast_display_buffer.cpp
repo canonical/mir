@@ -202,10 +202,8 @@ TEST_F(ScreencastDisplayBufferTest, schedules_onto_ready_queue)
 TEST_F(ScreencastDisplayBufferTest, uses_requested_mirror_mode)
 {
     MirMirrorMode const expected_mirror_mode{mir_mirror_mode_horizontal};
-    glm::mat4 const expected_transformation(-1, 0, 0, 0,
-                                             0, 1, 0, 0,
-                                             0, 0, 1, 0,
-                                             0, 0, 0, 1);
+    glm::mat2 const expected_transformation(-1, 0,
+                                             0, 1);
     mc::ScreencastDisplayBuffer db{default_rect, default_size,
                                    expected_mirror_mode, free_queue,
                                    ready_queue, stub_display};

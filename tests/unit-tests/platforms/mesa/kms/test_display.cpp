@@ -886,10 +886,8 @@ TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_d
 
     EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(*config));
 
-    glm::mat4 const rotate_inverted(-1, 0, 0, 0,
-                                     0,-1, 0, 0,
-                                     0, 0, 1, 0,
-                                     0, 0, 0, 1);
+    glm::mat2 const rotate_inverted(-1, 0,
+                                     0,-1);
     for (auto display_buffer : initial_display_buffer_references)
     {
         EXPECT_THAT(display_buffer->transformation(), Eq(rotate_inverted));

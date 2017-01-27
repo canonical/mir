@@ -66,7 +66,7 @@ public:
     bool overlay(RenderableList const& renderlist) override;
     void bind() override;
 
-    glm::mat4 transformation() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;

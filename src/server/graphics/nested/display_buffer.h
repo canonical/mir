@@ -61,7 +61,7 @@ public:
     void release_current() override;
     void swap_buffers() override;
     void bind() override;
-    glm::mat4 transformation() const override;
+    glm::mat2 transformation() const override;
 
     bool overlay(RenderableList const& renderlist) override;
 

@@ -75,7 +75,7 @@ public:
      * hardware is unable to do itself, such as screen rotation, flipping,
      * reflection, scaling or keystone correction.
      */
-    virtual glm::mat4 transformation() const = 0;
+    virtual glm::mat2 transformation() const = 0;
 
     /** Returns a pointer to the native display buffer object backing this
      *  display buffer.
@@ -90,11 +90,11 @@ protected:
     DisplayBuffer(DisplayBuffer const& c) = delete;
     DisplayBuffer& operator=(DisplayBuffer const& c) = delete;
 
-    class Transformation : public glm::mat4
+    class Transformation : public glm::mat2
     {
     public:
-        bool is_null() const { return const_mat() == glm::mat4(); }
-        void reset()         { mat() = glm::mat4(); }
+        bool is_null() const { return const_mat() == glm::mat2(); }
+        void reset()         { mat() = glm::mat2(); }
         void orient(MirOrientation ori)
         {
             int cos, sin;
@@ -105,7 +105,7 @@ protected:
             case mir_orientation_inverted: sin =  0; cos = -1;  break;
             case mir_orientation_right:    sin = -1; cos =  0;  break;
             }
-            mat() = glm::mat4(glm::mat2(cos, sin, -sin, cos)) * mat();
+            mat() = glm::mat2(cos, sin, -sin, cos) * mat();
         }
         void mirror(MirMirrorMode mode)
         {
@@ -114,11 +114,11 @@ protected:
                 x = -1;
             else if (mode == mir_mirror_mode_vertical)
                 y = -1;
-            mat() = glm::mat4(glm::mat2(x, 0, 0, y)) * mat();
+            mat() = glm::mat2(x, 0, 0, y) * mat();
         }
     private:
-        glm::mat4 const& const_mat() const { return *this; }
-        glm::mat4& mat() { return *this; }
+        glm::mat2 const& const_mat() const { return *this; }
+        glm::mat2& mat() { return *this; }
     };
 };
 

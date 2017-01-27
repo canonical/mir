@@ -108,7 +108,7 @@ void mga::DisplayBuffer::bind()
 {
 }
 
-glm::mat4 mga::DisplayBuffer::transformation() const
+glm::mat2 mga::DisplayBuffer::transformation() const
 {
     return transform;
 }

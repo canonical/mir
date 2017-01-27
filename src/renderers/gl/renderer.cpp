@@ -372,9 +372,9 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mrg::Renderer::set_output_transform(glm::mat4 const& t)
+void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    display_transform = t;
+    display_transform = glm::mat4(t);
 }
 
 void mrg::Renderer::suspend()

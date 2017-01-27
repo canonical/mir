@@ -183,7 +183,7 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
     return area;
 }
 
-glm::mat4 mgm::DisplayBuffer::transformation() const
+glm::mat2 mgm::DisplayBuffer::transformation() const
 {
     return transform;
 }

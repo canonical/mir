@@ -55,15 +55,11 @@ mg::DisplayConfigurationOutputId const primary_output_id{
 mg::DisplayConfigurationOutputId const external_output_id{
     mga::as_output_id(mga::DisplayName::external)};
 
-glm::mat4 const rotate_none;
-glm::mat4 const rotate_left( 0, 1, 0, 0,  // transposed!
-                            -1, 0, 0, 0,
-                             0, 0, 1, 0,
-                             0, 0, 0, 1);
-glm::mat4 const rotate_inverted(-1, 0, 0, 0,
-                                 0,-1, 0, 0,
-                                 0, 0, 1, 0,
-                                 0, 0, 0, 1);
+glm::mat2 const rotate_none;
+glm::mat2 const rotate_left( 0, 1,  // transposed
+                            -1, 0);
+glm::mat2 const rotate_inverted(-1, 0,
+                                 0,-1);
 }
 
 class Display : public ::testing::Test

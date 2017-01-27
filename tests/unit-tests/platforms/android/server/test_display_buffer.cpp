@@ -42,19 +42,13 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-glm::mat4 const rotate_none;
-glm::mat4 const rotate_left( 0, 1, 0, 0,  // transposed!
-                            -1, 0, 0, 0,
-                             0, 0, 1, 0,
-                             0, 0, 0, 1);
-glm::mat4 const rotate_right( 0,-1, 0, 0,  // transposed!
-                              1, 0, 0, 0,
-                              0, 0, 1, 0,
-                              0, 0, 0, 1);
-glm::mat4 const rotate_inverted(-1, 0, 0, 0,
-                                 0,-1, 0, 0,
-                                 0, 0, 1, 0,
-                                 0, 0, 0, 1);
+glm::mat2 const rotate_none;
+glm::mat2 const rotate_left( 0, 1, // transposed
+                            -1, 0);
+glm::mat2 const rotate_right( 0,-1, // transposed
+                              1, 0);
+glm::mat2 const rotate_inverted(-1, 0,
+                                 0,-1);
 
 struct DisplayBuffer : public ::testing::Test
 {
@@ -125,7 +119,7 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
 
 TEST_F(DisplayBuffer, defaults_to_no_transformation)
 {
-    EXPECT_EQ(glm::mat4(), db.transformation());
+    EXPECT_EQ(glm::mat2(), db.transformation());
 }
 
 TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)

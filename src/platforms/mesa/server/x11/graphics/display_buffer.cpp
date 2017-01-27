@@ -153,7 +153,7 @@ void mgx::DisplayBuffer::bind()
 {
 }
 
-glm::mat4 mgx::DisplayBuffer::transformation() const
+glm::mat2 mgx::DisplayBuffer::transformation() const
 {
     return transform;
 }

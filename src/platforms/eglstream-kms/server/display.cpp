@@ -200,7 +200,7 @@ public:
         return false;
     }
 
-    glm::mat4 transformation() const override
+    glm::mat2 transformation() const override
     {
         return {};
     }

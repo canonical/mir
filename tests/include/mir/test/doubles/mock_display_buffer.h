@@ -44,7 +44,7 @@ public:
     }
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
     MOCK_METHOD1(overlay, bool(graphics::RenderableList const&));
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
+    MOCK_CONST_METHOD0(transformation, glm::mat2());
     MOCK_METHOD0(native_display_buffer, graphics::NativeDisplayBuffer*());
 };
 

@@ -74,7 +74,7 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    glm::mat4 transformation() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);

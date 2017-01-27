@@ -389,10 +389,8 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
-    glm::mat4 const rotate_left( 0, 1, 0, 0,  // transposed!
-                                -1, 0, 0, 0,
-                                 0, 0, 1, 0,
-                                 0, 0, 0, 1);
+    glm::mat2 const rotate_left( 0, 1, // transposed!
+                                -1, 0);
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,

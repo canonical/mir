@@ -112,7 +112,7 @@ public:
 
     void swap_buffers() override;
 
-    glm::mat4 transformation() const override;
+    glm::mat2 transformation() const override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 
