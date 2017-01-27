@@ -185,7 +185,7 @@ TEST_F(GLibMainLoopTest, handles_multiple_signals)
 
 
     std::thread signal_sending_thread(
-        [&]
+        [this, &signals, &num_handled_signals]
         {
             for (size_t i = 0; i < num_signals_to_send; i++)
             {
@@ -352,7 +352,7 @@ TEST_F(GLibMainLoopTest, multiple_fds_with_single_handler_handled)
         });
 
     std::thread fd_writing_thread{
-        [&]
+        [this, &pipes, &num_handled_fds]
         {
             for (size_t i = 0; i < num_elems_to_send; i++)
             {

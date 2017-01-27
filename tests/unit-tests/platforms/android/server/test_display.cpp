@@ -978,7 +978,7 @@ TEST_F(Display, applying_orientation_after_hotplug)
     hotplug_fn();
 
     auto config = display.configuration();
-    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+    config->for_each_output([](mg::UserDisplayConfigurationOutput& output) {
         output.orientation = orientation;
     });
     display.configure(*config);

@@ -129,7 +129,7 @@ TYPED_TEST(StreamTransportTest, watch_fd_is_no_longer_readable_after_event_proce
     auto observer = std::make_shared<NiceMock<MockObserver>>();
 
     ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([&]()
+        .WillByDefault(Invoke([this]()
                               {
                                   decltype(dummy) buffer;
                                   this->transport->receive_data(&buffer, sizeof(dummy));
@@ -158,7 +158,7 @@ TYPED_TEST(StreamTransportTest, no_events_dispatched_until_dispatch_called)
     EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
     ::close(this->test_fd);
 
-    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&]()
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, &data_available]()
                                                                  {
                                                                      decltype(dummy) buffer;
                                                                      this->transport->receive_data(&buffer, sizeof(buffer));
@@ -194,7 +194,7 @@ TYPED_TEST(StreamTransportTest, dispatches_single_event_at_a_time)
     EXPECT_EQ(ssizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
     ::close(this->test_fd);
 
-    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([&]()
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([this, &data_available]()
                                                                  {
                                                                      decltype(dummy) buffer;
                                                                      this->transport->receive_data(&buffer, sizeof(buffer));
@@ -378,7 +378,7 @@ TYPED_TEST(StreamTransportTest, doesnt_send_data_available_notification_on_disco
     ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([&disconnected]()
                                                                { disconnected = true; }));
     ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([&]()
+        .WillByDefault(Invoke([this, &notify_count]()
                               {
                                   notify_count++;
 
