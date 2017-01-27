@@ -33,8 +33,7 @@ class NullDisplayBuffer : public graphics::DisplayBuffer, public graphics::Nativ
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
     bool overlay(graphics::RenderableList const&) override { return false; }
-    MirOrientation orientation() const override { return mir_orientation_normal; }
-    MirMirrorMode mirror_mode() const override { return mir_mirror_mode_none; }
+    glm::mat4 transformation() const override { return {}; }
     NativeDisplayBuffer* native_display_buffer() override { return this; }
 };
 

@@ -42,6 +42,20 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
+glm::mat4 const rotate_none;
+glm::mat4 const rotate_left( 0, 1, 0, 0,  // transposed!
+                            -1, 0, 0, 0,
+                             0, 0, 1, 0,
+                             0, 0, 0, 1);
+glm::mat4 const rotate_right( 0,-1, 0, 0,  // transposed!
+                              1, 0, 0, 0,
+                              0, 0, 1, 0,
+                              0, 0, 0, 1);
+glm::mat4 const rotate_inverted(-1, 0, 0, 0,
+                                 0,-1, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1);
+
 struct DisplayBuffer : public ::testing::Test
 {
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -109,28 +123,28 @@ TEST_F(DisplayBuffer, posts_overlay_list_returns_display_device_decision)
     EXPECT_FALSE(db.overlay(renderlist)); 
 }
 
-TEST_F(DisplayBuffer, defaults_to_normal_orientation)
+TEST_F(DisplayBuffer, defaults_to_no_transformation)
 {
-    EXPECT_EQ(mir_orientation_normal, db.orientation());
+    EXPECT_EQ(glm::mat4(), db.transformation());
 }
 
 TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
 {
     geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
     EXPECT_EQ(display_size, db.view_area().size);
-    EXPECT_EQ(db.orientation(), mir_orientation_normal);
+    EXPECT_EQ(db.transformation(), rotate_none);
     db.configure(mir_power_mode_on, mir_orientation_inverted, top_left);
 
     EXPECT_EQ(display_size, db.view_area().size);
-    EXPECT_EQ(db.orientation(), mir_orientation_inverted);
+    EXPECT_EQ(db.transformation(), rotate_inverted);
     db.configure(mir_power_mode_on, mir_orientation_left, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
-    EXPECT_EQ(db.orientation(), mir_orientation_left);
+    EXPECT_EQ(db.transformation(), rotate_left);
     db.configure(mir_power_mode_on, mir_orientation_right, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
-    EXPECT_EQ(db.orientation(), mir_orientation_right);
+    EXPECT_EQ(db.transformation(), rotate_right);
 }
 
 TEST_F(DisplayBuffer, reports_correct_size)

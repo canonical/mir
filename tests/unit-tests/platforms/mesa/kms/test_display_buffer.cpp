@@ -389,6 +389,11 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
+    glm::mat4 const rotate_left( 0, 1, 0, 0,  // transposed!
+                                -1, 0, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1);
+
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
         drm,
@@ -401,7 +406,7 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_EQ(mir_orientation_left, db.orientation());
+    EXPECT_EQ(rotate_left, db.transformation());
 }
 
 TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)

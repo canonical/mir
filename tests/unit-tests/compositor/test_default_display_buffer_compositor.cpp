@@ -16,6 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#if 0
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/decoration.h"
@@ -98,10 +99,8 @@ struct DefaultDisplayBufferCompositor : public testing::Test
        fullscreen(std::make_shared<mtd::FakeRenderable>(screen))
     {
         using namespace testing;
-        ON_CALL(display_buffer, orientation())
-            .WillByDefault(Return(mir_orientation_normal));
-        ON_CALL(display_buffer, mirror_mode())
-            .WillByDefault(Return(mir_mirror_mode_none));
+        ON_CALL(display_buffer, transformation())
+            .WillByDefault(Return(glm::mat4()));
         ON_CALL(display_buffer, view_area())
             .WillByDefault(Return(screen));
         ON_CALL(display_buffer, overlay(_))
@@ -358,3 +357,4 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
 
+#endif

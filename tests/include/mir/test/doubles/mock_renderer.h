@@ -32,7 +32,7 @@ namespace doubles
 struct MockRenderer : public renderer::Renderer
 {
     MOCK_METHOD1(set_viewport, void(geometry::Rectangle const&));
-    MOCK_METHOD2(set_output_transform, void(MirOrientation, MirMirrorMode));
+    MOCK_METHOD1(set_output_transform, void(glm::mat4 const&));
     MOCK_CONST_METHOD1(render, void(graphics::RenderableList const&));
     MOCK_METHOD0(suspend, void());
 

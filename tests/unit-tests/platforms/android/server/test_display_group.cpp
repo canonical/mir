@@ -36,8 +36,7 @@ struct StubConfigurableDB : mga::ConfigurableDisplayBuffer, mg::NativeDisplayBuf
 {
     mir::geometry::Rectangle view_area() const override { return {}; }
     bool overlay(mg::RenderableList const&) override { return false; }
-    MirOrientation orientation() const override { return mir_orientation_normal; }
-    MirMirrorMode mirror_mode() const override { return mir_mirror_mode_none; }
+    glm::mat4 transformation() const override { return {}; }
     mg::NativeDisplayBuffer* native_display_buffer() override { return this; }
     void configure(MirPowerMode, MirOrientation, mir::geometry::Displacement) override {}
     mga::DisplayContents contents() override
