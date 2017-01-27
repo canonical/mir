@@ -214,11 +214,11 @@ public:
 
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format,
-        MirBufferCallback callback, void* context);
+        MirBufferCallback callback, void* context) override;
     void allocate_buffer(
         mir::geometry::Size size, uint32_t native_format, uint32_t native_flags,
-        MirBufferCallback callback, void* context);
-    void release_buffer(mir::client::MirBuffer* buffer);
+        MirBufferCallback callback, void* context) override;
+    void release_buffer(mir::client::MirBuffer* buffer) override;
 
     auto create_render_surface_with_content(
         mir::geometry::Size logical_size,
