@@ -80,6 +80,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     else
     {
         renderer->set_output_transform(display_buffer.orientation(), display_buffer.mirror_mode());
+        renderer->set_viewport(view_area);
         renderer->render(renderable_list);
 
         report->renderables_in_frame(this, renderable_list);
