@@ -101,7 +101,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
     {
         using namespace testing;
         ON_CALL(display_buffer, transformation())
-            .WillByDefault(Return(glm::mat2()));
+            .WillByDefault(Return(no_transformation));
         ON_CALL(display_buffer, view_area())
             .WillByDefault(Return(screen));
         ON_CALL(display_buffer, overlay(_))
