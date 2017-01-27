@@ -300,6 +300,8 @@ TEST_F(SoftwareCursor, new_buffer_on_each_show)
     struct MockBufferAllocator : public mg::GraphicBufferAllocator
     {
         MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
+        MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
+        MOCK_METHOD3(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, uint32_t, uint32_t));
         std::vector<MirPixelFormat> supported_pixel_formats() { return {mir_pixel_format_abgr_8888}; } 
     } mock_allocator;
 
