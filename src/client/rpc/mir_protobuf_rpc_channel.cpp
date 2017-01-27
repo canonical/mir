@@ -197,7 +197,7 @@ void mclr::MirProtobufRpcChannel::call_method(
     google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
-    std::lock_guard<std::mutex> lk(send_mutex);
+    std::lock_guard<std::mutex> lk(discard_mutex);
     if (discard)
     {
        /*
@@ -244,6 +244,12 @@ void mclr::MirProtobufRpcChannel::call_method(
     }
 
     send_message(invocation, invocation, fds);
+}
+
+void mclr::MirProtobufRpcChannel::discard_future_calls()
+{
+    std::unique_lock<decltype(discard_mutex)> lk(discard_mutex);
+    discard = true;
 }
 
 void mclr::MirProtobufRpcChannel::wait_for_outstanding_calls()

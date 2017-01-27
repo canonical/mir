@@ -98,13 +98,14 @@ public:
         google::protobuf::MessageLite const* parameters,
         google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) override;
+    void discard_future_calls() override;
     void wait_for_outstanding_calls() override;
 
 private:
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
 
-    std::mutex send_mutex;
+    std::mutex discard_mutex;
     bool discard{false};
 
     static constexpr size_t size_of_header = 2;

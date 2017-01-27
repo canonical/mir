@@ -115,6 +115,7 @@ public:
         google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) = 0;
 
+    virtual void discard_future_calls() = 0;
     virtual void wait_for_outstanding_calls() = 0;
 
 protected:
