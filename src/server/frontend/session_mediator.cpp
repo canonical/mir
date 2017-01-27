@@ -1219,6 +1219,7 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+        dest.scale = src.scale_factor();
 
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),

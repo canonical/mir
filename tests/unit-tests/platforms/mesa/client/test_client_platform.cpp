@@ -64,16 +64,16 @@ struct StubClientContext : mcl::ClientContext
         memset(&graphics_module, 0, sizeof(graphics_module));
     }
     MirWaitHandle* platform_operation(
-        MirPlatformMessage const*, mir_platform_operation_callback, void*) override
+        MirPlatformMessage const*, MirPlatformOperationCallback, void*) override
     {
         return nullptr;
     }
     void allocate_buffer(
-        mir::geometry::Size, MirPixelFormat, mir_buffer_callback, void*) override
+        mir::geometry::Size, MirPixelFormat, MirBufferCallback, void*) override
     {
     }
 
-    void allocate_buffer(mir::geometry::Size, uint32_t, uint32_t, mir_buffer_callback, void*) override
+    void allocate_buffer(mir::geometry::Size, uint32_t, uint32_t, MirBufferCallback, void*) override
     {
     }
 
@@ -209,7 +209,10 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
 
     mtd::StubConnectionConfiguration conf(platform);
     MirConnection connection(conf);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+#pragma GCC diagnostic pop
 
     int width = 32;
     int height = 90;

@@ -37,13 +37,13 @@ public:
     virtual void populate_graphics_module(MirModuleProperties& graphics_module) = 0;
     virtual MirWaitHandle* platform_operation(
         MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context) = 0;
+        MirPlatformOperationCallback callback, void* context) = 0;
     virtual void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format,
-        mir_buffer_callback callback, void* context) = 0;
+        MirBufferCallback callback, void* context) = 0;
     virtual void allocate_buffer(
         mir::geometry::Size size, uint32_t native_format, uint32_t native_flags,
-        mir_buffer_callback callback, void* context) = 0;
+        MirBufferCallback callback, void* context) = 0;
     virtual void release_buffer(mir::client::MirBuffer* buffer) = 0;
 
 protected:

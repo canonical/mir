@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/mir_connection.h>
 #include <mir_toolkit/mir_surface.h>
+#include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_wait.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/version.h>
@@ -29,5 +30,6 @@
 #include <mir_toolkit/mir_display_configuration.h>
 #include <mir_toolkit/mir_input_device.h>
 #include <mir_toolkit/mir_error.h>
+#include <mir_toolkit/mir_persistent_id.h>
 
 #endif /* MIR_CLIENT_LIBRARY_H */

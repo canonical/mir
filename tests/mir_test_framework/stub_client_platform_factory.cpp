@@ -57,7 +57,7 @@ int get_fence(MirBuffer*)
 }
 
 void allocate_buffer(
-    MirConnection* connection, int width, int height, unsigned int pf, unsigned int flags, mir_buffer_callback cb, void* cb_context)
+    MirConnection* connection, int width, int height, unsigned int pf, unsigned int flags, MirBufferCallback cb, void* cb_context)
 {
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(
@@ -137,8 +137,9 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_egl_native_window);
-
-    return std::shared_ptr<void>{surface ? surface : reinterpret_cast<void*>(0xBEEFBABE), [](void*){}};
+    if (surface)
+        return std::shared_ptr<void>{surface, [](void*){}};
+    return std::make_shared<int>(332);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()

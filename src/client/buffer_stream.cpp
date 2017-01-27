@@ -511,7 +511,9 @@ void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, i
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
         " on BufferStream but only mir_window_attrib_swapinterval is supported")); 
     }
-    mir_wait_for(set_swap_interval(interval));
+
+    if (auto wh = set_swap_interval(interval))
+        wh->wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()

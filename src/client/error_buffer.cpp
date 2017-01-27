@@ -24,7 +24,7 @@ namespace geom = mir::geometry;
 
 mcl::ErrorBuffer::ErrorBuffer(
     std::string const& msg, int buffer_id,
-    mir_buffer_callback cb, void* context,
+    MirBufferCallback cb, void* context,
     MirConnection* connection) :
     error_msg(msg),
     buffer_id(buffer_id),
@@ -72,4 +72,4 @@ MirBufferUsage mcl::ErrorBuffer::buffer_usage() const THROW_EXCEPTION
 MirPixelFormat mcl::ErrorBuffer::pixel_format() const THROW_EXCEPTION
 geom::Size mcl::ErrorBuffer::size() const THROW_EXCEPTION
 void mcl::ErrorBuffer::increment_age() THROW_EXCEPTION
-void mcl::ErrorBuffer::set_callback(mir_buffer_callback, void*) THROW_EXCEPTION
+void mcl::ErrorBuffer::set_callback(MirBufferCallback, void*) THROW_EXCEPTION

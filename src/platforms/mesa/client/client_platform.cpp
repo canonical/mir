@@ -125,7 +125,7 @@ void allocate_buffer_gbm(
     int width, int height,
     unsigned int gbm_pixel_format,
     unsigned int gbm_bo_flags,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 {
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(

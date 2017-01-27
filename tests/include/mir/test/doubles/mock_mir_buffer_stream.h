@@ -32,7 +32,7 @@ namespace doubles
 
 struct MockMirBufferStream : public MirBufferStream
 {
-    MOCK_METHOD2(release, MirWaitHandle*(mir_buffer_stream_callback, void*));
+    MOCK_METHOD2(release, MirWaitHandle*(MirBufferStreamCallback, void*));
     
     MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());

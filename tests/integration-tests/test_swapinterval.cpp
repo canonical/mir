@@ -143,7 +143,10 @@ TEST_F(SwapInterval, defaults_to_one)
 
 TEST_F(SwapInterval, change_to_zero_enables_framedropping)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
+#pragma GCC diagnostic pop
 
     EXPECT_EQ(0, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_TRUE(framedropping_enabled());
@@ -151,8 +154,11 @@ TEST_F(SwapInterval, change_to_zero_enables_framedropping)
 
 TEST_F(SwapInterval, change_to_one_disables_framedropping)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 0));
     mir_wait_for(mir_buffer_stream_set_swapinterval(stream, 1));
+#pragma GCC diagnostic pop
 
     EXPECT_EQ(1, mir_buffer_stream_get_swapinterval(stream));
     EXPECT_FALSE(framedropping_enabled());

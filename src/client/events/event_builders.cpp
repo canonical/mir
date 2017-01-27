@@ -345,6 +345,8 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     return ep;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDeviceId id, std::chrono::nanoseconds time)
 {
     auto e = new_event<MirInputConfigurationEvent>();
@@ -355,6 +357,7 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
 
     return make_uptr_event(e);
 }
+#pragma GCC diagnostic pop
 
 mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
                                MirPointerButtons pointer_buttons,

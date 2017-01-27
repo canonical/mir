@@ -37,6 +37,26 @@
 
 namespace mcl = mir::client;
 
+namespace
+{
+MirWaitHandle* mir_configure_cursor_helper(MirWindow* window, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+
+    try
+    {
+        if (window)
+            result = window->configure_cursor(cursor);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+
+    return result;
+}
+}
+
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,
                               int width, int height)
@@ -656,18 +676,16 @@ MirWindowType mir_window_get_type(MirWindow* window)
     return type;
 }
 
-MirWaitHandle* mir_window_set_state(MirWindow* window, MirWindowState state)
+void mir_window_set_state(MirWindow* window, MirWindowState state)
+try
 {
-    try
-    {
-        return window ? window->configure(mir_window_attrib_state, state) : nullptr;
+    mir::require(mir_window_is_valid(window));
+        window->configure(mir_window_attrib_state, state);
     }
     catch (std::exception const& ex)
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
     }
-}
 
 MirWindowState mir_window_get_state(MirWindow* window)
 {
@@ -754,38 +772,20 @@ int mir_window_get_dpi(MirWindow* window)
     return dpi;
 }
 
-MirWaitHandle* mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
+void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = nullptr;
-
-    try
-    {
-        if (window)
-            result = window->configure_cursor(cursor);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    mir_configure_cursor_helper(window, cursor);
 }
 
-MirWaitHandle* mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
+void mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
+try
 {
     mir::require(mir_window_is_valid(window));
-
-    MirWaitHandle *result{nullptr};
-    try
-    {
-        result = window->set_preferred_orientation(mode);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    }
-
-    return result;
+    window->set_preferred_orientation(mode);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
@@ -825,9 +825,7 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_window_request_persistent_id_helper(window,
-                                                         &assign_surface_id_result,
-                                                         &result));
+    mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 
@@ -1014,52 +1012,10 @@ void mir_surface_spec_set_streams(MirSurfaceSpec* spec, MirBufferStreamInfo* str
     mir_window_spec_set_streams(spec, streams, size);
 }
 
-void mir_surface_spec_add_presentation_chain(
-    MirSurfaceSpec* spec,
-    int width, int height,
-    int displacement_x, int displacement_y,
-    MirPresentationChain* client_chain)
-try
-{
-    mir::require(spec && client_chain);
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
-
-    ContentInfo info{
-        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-void mir_surface_spec_add_buffer_stream(
-    MirSurfaceSpec* spec,
-    int displacement_x, int displacement_y,
-    int width, int height,
-    MirBufferStream* stream)
-try
-{
-    mir::require(spec && stream);
-    ContentInfo info{{displacement_x, displacement_y}, stream->rpc_id().as_value(), mir::geometry::Size{width, height}};
-
-    if (spec->streams.is_set())
-        spec->streams.value().push_back(info);
-    else
-        spec->streams = std::vector<ContentInfo>{info};
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
 void mir_surface_spec_add_render_surface(
     MirSurfaceSpec* spec,
     MirRenderSurface* render_surface,
-    int /*logical_width*/, int /*logical_height*/,
+    int logical_width, int logical_height,
     int displacement_x, int displacement_y)
 try
 {
@@ -1068,7 +1024,11 @@ try
 
     if (rs->stream_id().as_value() < 0)
         BOOST_THROW_EXCEPTION(std::logic_error("Render surface holds no content."));
-    ContentInfo info{{displacement_x, displacement_y}, rs->stream_id().as_value(),{}};
+    ContentInfo info {
+        {displacement_x, displacement_y},
+        rs->stream_id().as_value(),
+        mir::geometry::Size{ logical_width, logical_height }
+    };
 
     if (spec->streams.is_set())
         spec->streams.value().push_back(info);
@@ -1186,8 +1146,15 @@ MirSurfaceType mir_surface_get_type(MirSurface* surf)
 }
 
 MirWaitHandle* mir_surface_set_state(MirSurface* surf, MirSurfaceState state)
+try
 {
-    return mir_window_set_state(surf, static_cast<MirWindowState>(state));
+    mir::require(mir_window_is_valid(surf));
+    return surf->configure(mir_window_attrib_state, state);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 MirSurfaceState mir_surface_get_state(MirSurface* surf)
@@ -1258,7 +1225,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    return mir_window_configure_cursor(surface, cursor);
+    return mir_configure_cursor_helper(surface, cursor);
 }
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
@@ -1267,8 +1234,15 @@ MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 }
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
+try
 {
-    return mir_window_set_preferred_orientation(surf, mode);
+    mir::require(mir_window_is_valid(surf));
+    return surf->set_preferred_orientation(mode);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
@@ -1289,9 +1263,7 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowI
 MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirPersistentId* result = nullptr;
-    mir_wait_for(mir_window_request_persistent_id_helper(surface,
-                                                  &assign_surface_id_result,
-                                                  &result));
+    mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 

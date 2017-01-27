@@ -79,9 +79,6 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    if (disconnected_)
-        return;
-
     buffer_factory->cancel_requests_with_context(this);
     std::unique_lock<std::mutex> lk(mutex);
     for (auto& it : buffers)
@@ -92,7 +89,8 @@ mcl::BufferVault::~BufferVault()
             auto buffer = map->buffer(it.first);
             buffer->set_callback(ignore_buffer, nullptr);
         } 
-        free_buffer(it.first);
+        if (!disconnected_)
+            free_buffer(it.first);
     }
     catch (...)
     {

@@ -171,7 +171,7 @@ void create_buffer(
     int width, int height,
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 {
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(

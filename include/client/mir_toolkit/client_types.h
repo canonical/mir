@@ -75,7 +75,10 @@ typedef struct MirPlatformMessage MirPlatformMessage;
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
+typedef void (*MirConnectedCallback)(
+    MirConnection *connection, void *client_context);
+typedef MirConnectedCallback mir_connected_callback
+    __attribute__((deprecated("Use MirConnectedCallback instead")));
 
 /**
  * Callback to be passed when calling window functions :
@@ -92,7 +95,10 @@ typedef void (*MirWindowCallback)(MirWindow *window, void *client_context);
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client_context);
+typedef void (*MirBufferStreamCallback)(
+    MirBufferStream *stream, void *client_context);
+typedef MirBufferStreamCallback mir_buffer_stream_callback
+    __attribute__((deprecated("Use MirBufferStreamCallback instead")));
 
 /**
  * Callback for handling of window events.
@@ -111,8 +117,10 @@ typedef void (*MirWindowEventCallback)(
  *   \param [in,out] context    The context provided by the client
  */
 
-typedef void (*mir_lifecycle_event_callback)(
+typedef void (*MirLifecycleEventCallback)(
     MirConnection* connection, MirLifecycleState state, void* context);
+typedef MirLifecycleEventCallback mir_lifecycle_event_callback
+    __attribute__((deprecated("Use MirLifecycleEventCallback instead")));
 
 /**
  * Callback called when the server pings for responsiveness testing.
@@ -121,8 +129,10 @@ typedef void (*mir_lifecycle_event_callback)(
  *                              mir_connection_pong()
  * \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_ping_event_callback)(
+typedef void (*MirPingEventCallback)(
     MirConnection* connection, int32_t serial, void* context);
+typedef MirPingEventCallback mir_ping_event_callback
+    __attribute__((deprecated("Use MirPingEventCallback instead")));
 
 /**
  * Callback called when a display config change has occurred
@@ -130,8 +140,10 @@ typedef void (*mir_ping_event_callback)(
  *   \param [in,out] context    The context provided by client
  */
 
-typedef void (*mir_display_config_callback)(
+typedef void (*MirDisplayConfigCallback)(
     MirConnection* connection, void* context);
+typedef MirDisplayConfigCallback mir_display_config_callback
+    __attribute__((deprecated("Use MirDisplayConfigCallback instead")));
 
 /**
  * Callback called when a request for client file descriptors completes
@@ -143,9 +155,10 @@ typedef void (*mir_display_config_callback)(
  *   \note Copy the FDs as the array will be invalidated after callback completes
  */
 
-typedef void (*mir_client_fd_callback)(
+typedef void (*MirClientFdCallback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
-
+typedef MirClientFdCallback mir_client_fd_callback
+    __attribute__((deprecated("Use MirClientFdCallback instead")));
 
 typedef void (*MirWindowIdCallback)(
     MirWindow* window, MirPersistentId* id, void* context);
@@ -397,14 +410,20 @@ typedef struct MirScreencastParameters
  *   \param [in] screencast          the screencast being updated
  *   \param [in,out] client_context  context provided by the client
  */
-typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
+typedef void (*MirScreencastCallback)(
+    MirScreencast *screencast, void *client_context);
+typedef MirScreencastCallback mir_screencast_callback
+    __attribute__((deprecated("Use MirScreencastCallback instead")));
 
 /**
  * Callback member of MirPromptSession for handling of prompt sessions.
  *   \param [in] prompt_provider  The prompt session associated with the callback
  *   \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, void* context);
+typedef void (*MirPromptSessionCallback)(
+    MirPromptSession* prompt_provider, void* context);
+typedef MirPromptSessionCallback mir_prompt_session_callback
+    __attribute__((deprecated("Use MirPromptSessionCallback instead")));
 
 /**
  * Callback member of MirPromptSession for handling of prompt sessions events.
@@ -412,8 +431,12 @@ typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, v
  *   \param [in] state            The state of the prompt session
  *   \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_prompt_session_state_change_callback)(
-    MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
+typedef void (*MirPromptSessionStateChangeCallback)(
+    MirPromptSession* prompt_provider, MirPromptSessionState state,
+    void* context);
+typedef MirPromptSessionStateChangeCallback
+        mir_prompt_session_state_change_callback
+    __attribute__((deprecated("Use MirPromptSessionStateChangeCallback instead")));
 
 /**
  * Callback called when a platform operation completes.
@@ -425,8 +448,10 @@ typedef void (*mir_prompt_session_state_change_callback)(
  *   \param [in] reply        The platform operation reply
  *   \param [in,out] context  The context provided by the client
  */
-typedef void (*mir_platform_operation_callback)(
+typedef void (*MirPlatformOperationCallback)(
     MirConnection* connection, MirPlatformMessage* reply, void* context);
+typedef MirPlatformOperationCallback mir_platform_operation_callback
+    __attribute__((deprecated("Use MirPlatformOperationCallback instead")));
 
 /**
  * Callback called when a change of input devices has occurred
@@ -435,8 +460,10 @@ typedef void (*mir_platform_operation_callback)(
  *   \param [in,out] context  The context provided by client
  */
 
-typedef void (*mir_input_config_callback)(
+typedef void (*MirInputConfigCallback)(
     MirConnection* connection, void* context);
+typedef MirInputConfigCallback mir_input_config_callback
+    __attribute__((deprecated("Use MirInputConfigCallback instead")));
 
 /**
  * Specifies the origin of an error.
@@ -491,12 +518,10 @@ typedef enum MirInputConfigurationError {
      mir_input_configuration_error_rejected_by_driver
 } MirInputConfigurationError;
 
-
-
-typedef void (*mir_error_callback)(
-    MirConnection* connection,
-    MirError const* error,
-    void* context);
+typedef void (*MirErrorCallback)(
+    MirConnection* connection, MirError const* error, void* context);
+typedef MirErrorCallback mir_error_callback
+    __attribute__((deprecated("Use MirErrorCallback instead")));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
