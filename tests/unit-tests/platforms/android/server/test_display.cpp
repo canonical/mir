@@ -978,12 +978,12 @@ TEST_F(Display, applying_orientation_after_hotplug)
     hotplug_fn();
 
     auto config = display.configuration();
-    config->for_each_output([orientation](mg::UserDisplayConfigurationOutput& output) {
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
         output.orientation = orientation;
     });
     display.configure(*config);
-    display.for_each_display_sync_group([orientation](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([orientation](mg::DisplayBuffer& db) {
+    display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             EXPECT_THAT(db.orientation(), Eq(orientation)); 
         });
     });

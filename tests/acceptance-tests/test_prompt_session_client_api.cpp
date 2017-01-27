@@ -114,7 +114,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     std::shared_ptr<MockSessionAuthorizer> the_mock_session_authorizer()
     {
-        return mock_prompt_session_authorizer([this]
+        return mock_prompt_session_authorizer([]
             {
                 return std::make_shared<NiceMock<MockSessionAuthorizer>>();
             });
