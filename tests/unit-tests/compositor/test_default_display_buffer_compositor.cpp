@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#if 0
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/decoration.h"
@@ -52,6 +51,8 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+
+glm::mat2 const no_transformation;
 
 struct StubSceneElement : mc::SceneElement
 {
@@ -195,11 +196,9 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     Sequence render_seq;
     EXPECT_CALL(mock_renderer, suspend())
         .Times(0);
-    EXPECT_CALL(display_buffer, orientation())
-        .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, mirror_mode())
-        .WillOnce(Return(mir_mirror_mode_none));
-    EXPECT_CALL(mock_renderer, set_output_transform(mir_orientation_normal, mir_mirror_mode_none))
+    EXPECT_CALL(display_buffer, transformation())
+        .WillOnce(Return(no_transformation));
+    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
         .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
         .InSequence(render_seq);
@@ -220,19 +219,17 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     using namespace testing;
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(screen));
-    ON_CALL(display_buffer, orientation())
-        .WillByDefault(Return(mir_orientation_normal));
-    ON_CALL(display_buffer, mirror_mode())
-            .WillByDefault(Return(mir_mirror_mode_none));
+    ON_CALL(display_buffer, transformation())
+        .WillByDefault(Return(no_transformation));
 
     Sequence seq;
     EXPECT_CALL(display_buffer, overlay(_))
         .InSequence(seq)
         .WillOnce(Return(false));
 
-    EXPECT_CALL(display_buffer, orientation())
+    EXPECT_CALL(display_buffer, transformation())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_output_transform(mir_orientation_normal, mir_mirror_mode_none))
+    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);
@@ -245,9 +242,9 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(display_buffer, overlay(_))
         .InSequence(seq)
         .WillOnce(Return(false));
-    EXPECT_CALL(display_buffer, orientation())
+    EXPECT_CALL(display_buffer, transformation())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_output_transform(mir_orientation_normal, mir_mirror_mode_none))
+    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);
@@ -269,10 +266,8 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     using namespace testing;
     EXPECT_CALL(display_buffer, view_area())
         .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, orientation())
-        .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, mirror_mode())
-        .WillOnce(Return(mir_mirror_mode_none));
+    EXPECT_CALL(display_buffer, transformation())
+        .WillOnce(Return(no_transformation));
     EXPECT_CALL(display_buffer, overlay(_))
         .WillRepeatedly(Return(false));
 
@@ -357,4 +352,3 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
 
-#endif
