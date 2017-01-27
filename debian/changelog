@@ -89,7 +89,6 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . [ FAILED ] ThreadedDispatcherDeathTest.destroying_dispatcher_from_a_
         callback_is_an_error (LP: #1647573)
       . [regression] eglapps now all have window title "default" (LP: #1647575)
-      . [ FAILED ] LifecycleEventTest.lifecycle_event_test (LP: #1649758)
       . Package mirtest-dev is missing a dependency on mir-renderer-gl-dev
         (LP: #1651391)
       . EDID data is missing in nested servers (LP: #1651633)
@@ -115,6 +114,10 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
         error: narrowing conversion of ‘..._drmModeConnector::connector_id’
         from ‘uint32_t {aka unsigned int}’ to ‘EGLAttrib {aka int}’ inside { }
         [-Werror=narrowing] (LP: #1656633)
+      . android: overlays no longer are activated (LP: #1657755)
+      . Mir FTBFS with MIR_USE_PRECOMPILED_HEADERS=OFF: error: ISO C++11
+        requires at least one argument for the "..." in a variadic macro
+        [-Werror] (LP: #1658604)
       . [regression] Mir cross-compile to vivid/armhf FTBFS with:
         mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
         (LP: #1658605)
