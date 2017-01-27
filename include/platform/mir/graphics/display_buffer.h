@@ -102,29 +102,19 @@ protected:
             {
             case mir_orientation_normal:   sin =  0; cos =  1;  break;
             case mir_orientation_left:     sin =  1; cos =  0;  break;
-            case mir_orientation_inverted: sin =  0; cos = -1; break;
+            case mir_orientation_inverted: sin =  0; cos = -1;  break;
             case mir_orientation_right:    sin = -1; cos =  0;  break;
             }
-            glm::mat2 const rot(cos, sin, -sin, cos);
-            mat() = glm::mat4(rot) * mat();
+            mat() = glm::mat4(glm::mat2(cos, sin, -sin, cos)) * mat();
         }
         void mirror(MirMirrorMode mode)
         {
+            int x = 1, y = 1;
             if (mode == mir_mirror_mode_horizontal)
-            {
-                auto& x = mat()[0][0];
-                x = -x;
-            }
+                x = -1;
             else if (mode == mir_mirror_mode_vertical)
-            {
-                auto& y = mat()[1][1];
-                y = -y;
-            }
-        }
-        void scale(float x, float y)
-        {
-            mat()[0][0] *= x;
-            mat()[1][1] *= y;
+                y = -1;
+            mat() = glm::mat4(glm::mat2(x, 0, 0, y)) * mat();
         }
     private:
         glm::mat4 const& const_mat() const { return *this; }
