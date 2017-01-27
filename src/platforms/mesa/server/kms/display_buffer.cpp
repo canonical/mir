@@ -113,13 +113,12 @@ mgm::DisplayBuffer::DisplayBuffer(
       surface_gbm{std::move(surface_gbm_param)},
       egl{gl_config},
       area(area),
-      rotation(rot),
       needs_set_crtc{false},
       page_flips_pending{false}
 {
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
-    if (rotation == mir_orientation_left || rotation == mir_orientation_right)
+    if (rot == mir_orientation_left || rot == mir_orientation_right)
     {
         fb_width = area_height;
         fb_height = area_width;
@@ -129,6 +128,8 @@ mgm::DisplayBuffer::DisplayBuffer(
         fb_width = area_width;
         fb_height = area_height;
     }
+
+    transform.orient(rot);
 
     egl.setup(*gbm, surface_gbm.get(), shared_context);
 
@@ -182,27 +183,21 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
     return area;
 }
 
-MirOrientation mgm::DisplayBuffer::orientation() const
+glm::mat4 mgm::DisplayBuffer::transformation() const
 {
-    // Tell the renderer to do the rotation, since we're not doing it here.
-    return rotation;
-}
-
-MirMirrorMode mgm::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return transform;
 }
 
 void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
 {
-    rotation = rot;
+    transform.reset();
+    transform.orient(rot);
     area = a;
 }
 
 bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
-    if ((rotation == mir_orientation_normal) &&
-       (bypass_option == mgm::BypassOption::allowed))
+    if (transform.is_null() && (bypass_option == mgm::BypassOption::allowed))
     {
         mgm::BypassMatch bypass_match(area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);

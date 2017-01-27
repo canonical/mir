@@ -68,10 +68,12 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     Schedule& ready_queue,
     mg::Display& display)
     : gl_context(as_context_source(&display)->create_gl_context()),
-      rect(rect), mirror_mode_(mirror_mode),
+      rect(rect),
       free_queue(free_queue), ready_queue(ready_queue),
       old_fbo(), old_viewport()
 {
+    transform.mirror(mirror_mode);
+
     auto const gl_context_raii = mir::raii::paired_calls(
         [this] { gl_context->make_current(); },
         [this] { gl_context->release_current(); });
@@ -171,14 +173,9 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
     }
 }
 
-MirOrientation mc::ScreencastDisplayBuffer::orientation() const
+glm::mat4 mc::ScreencastDisplayBuffer::transformation() const
 {
-    return mir_orientation_normal;
-}
-
-MirMirrorMode mc::ScreencastDisplayBuffer::mirror_mode() const
-{
-    return mirror_mode_;
+    return transform;
 }
 
 mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()

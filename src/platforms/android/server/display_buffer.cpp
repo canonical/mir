@@ -54,6 +54,7 @@ mga::DisplayBuffer::DisplayBuffer(
       offset_from_origin{offset},
       power_mode_{mir_power_mode_on}
 {
+    transform.orient(orientation_);
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
@@ -83,7 +84,7 @@ bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
 {
     if (!overlay_enabled ||
         !display_device->compatible_renderlist(renderlist) ||
-        orientation_ != mir_orientation_normal)
+        !transform.is_null())
         return false;
 
     layer_list->update_list(renderlist, offset_from_origin);
@@ -107,20 +108,9 @@ void mga::DisplayBuffer::bind()
 {
 }
 
-MirOrientation mga::DisplayBuffer::orientation() const
+glm::mat4 mga::DisplayBuffer::transformation() const
 {
-    /*
-     * android::DisplayBuffer is aways created with physical width/height
-     * (not rotated). So we just need to pass through the desired rotation
-     * and let the renderer do it.
-     * If and when we choose to implement HWC rotation, this may change.
-     */
-    return orientation_;
-}
-
-MirMirrorMode mga::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return transform;
 }
 
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Displacement offset)
@@ -130,6 +120,8 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orien
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
+    transform.reset();
+    transform.orient(orientation_);
 }
 
 mga::DisplayContents mga::DisplayBuffer::contents()

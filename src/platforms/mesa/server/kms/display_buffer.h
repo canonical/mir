@@ -102,7 +102,7 @@ private:
     helpers::EGLHelper egl;
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;
-    MirOrientation rotation;
+    Transformation transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;

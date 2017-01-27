@@ -119,7 +119,7 @@ public:
 private:
     std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
-    MirMirrorMode const mirror_mode_;
+    Transformation transform;
 
     Schedule& free_queue;
     Schedule& ready_queue;

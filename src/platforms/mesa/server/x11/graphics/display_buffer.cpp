@@ -43,6 +43,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
 {
+    transform.orient(o);
     egl.setup(x_dpy, win, shared_context);
     egl.report_egl_configuration(
         [&r] (EGLDisplay disp, EGLConfig cfg)
@@ -152,19 +153,16 @@ void mgx::DisplayBuffer::bind()
 {
 }
 
-MirOrientation mgx::DisplayBuffer::orientation() const
+glm::mat4 mgx::DisplayBuffer::transformation() const
 {
-    return orientation_;
-}
-
-MirMirrorMode mgx::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return transform;
 }
 
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
     orientation_ = new_orientation;
+    transform.reset();
+    transform.orient(orientation_);
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()

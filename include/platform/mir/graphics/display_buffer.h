@@ -89,6 +89,16 @@ protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;
     DisplayBuffer& operator=(DisplayBuffer const& c) = delete;
+
+    class Transformation : public glm::mat4
+    {
+    public:
+        bool is_null() const;
+        void reset();
+        void orient(MirOrientation ori);
+        void mirror(MirMirrorMode mode);
+        void scale(float x, float y);
+    };
 };
 
 }

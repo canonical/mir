@@ -76,6 +76,7 @@ private:
     geometry::Size const size;
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;
+    Transformation transform;
     helpers::EGLHelper egl;
     std::shared_ptr<AtomicFrame> const last_frame;
 

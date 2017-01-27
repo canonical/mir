@@ -200,14 +200,9 @@ public:
         return false;
     }
 
-    MirOrientation orientation() const override
+    glm::mat4 transformation() const override
     {
-        return mir_orientation_normal;
-    }
-
-    MirMirrorMode mirror_mode() const override
-    {
-        return mir_mirror_mode_none;
+        return {};
     }
 
     mir::graphics::NativeDisplayBuffer* native_display_buffer() override
