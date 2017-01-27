@@ -58,6 +58,7 @@ struct MockNativeBuffer : mgn::NativeBuffer
     MOCK_CONST_METHOD0(fence, mir::Fd());
     MOCK_METHOD1(set_fence, void(mir::Fd));
     MOCK_CONST_METHOD0(egl_image_creation_hints, std::tuple<EGLenum, EGLClientBuffer, EGLint*>());
+    MOCK_METHOD1(available, void(MirBuffer*));
 };
 
 struct MockHostConnection : mtd::StubHostConnection

@@ -62,6 +62,7 @@ public:
     virtual Fd fence() const = 0;
     virtual void set_fence(Fd) = 0;
     virtual std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const = 0;
+    virtual void available(MirBuffer* buffer) = 0;
 protected:
     NativeBuffer() = default;
     NativeBuffer(NativeBuffer const&) = delete;

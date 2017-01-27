@@ -266,7 +266,8 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * \param [in]  type  The MirDisplayOutputType to describe.
  * \returns           The name of the output type.
  */
-char const* mir_display_output_type_name(MirDisplayOutputType type);
+char const* mir_display_output_type_name(MirDisplayOutputType type)
+__attribute__((deprecated("use mir_output_type_name instead")));
 
 /**
  * Get the textual name of an output type.
@@ -530,6 +531,17 @@ void mir_output_set_gamma(MirOutput* client_output,
                           uint16_t const* green,
                           uint16_t const* blue,
                           uint32_t  size);
+
+/**
+ * Set the scale-factor of a display
+ *
+ * The scale-factor specifies the conversion between logical pixels and physical
+ * pixels on this output. See mir_output_get_scale_factor for further details.
+ *
+ * \param [in]  output  The MirOutput to modify
+ * \param [in]  scale   The scale factor
+ */
+void mir_output_set_scale_factor(MirOutput* output, float scale);
 
 /**
  * Get the raw EDID data of a display.

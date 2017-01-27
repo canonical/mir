@@ -265,7 +265,7 @@ TEST_F(Surface, emits_client_close_events)
     surface->add_observer(observer);
 
     MirCloseWindowEvent e;
-    e.to_close_surface()->set_surface_id(stub_id.as_value());
+    e.to_close_window()->set_surface_id(stub_id.as_value());
 
     EXPECT_CALL(*sink, handle_event(MirCloseSurfaceEventMatches(&e))).Times(1);
 

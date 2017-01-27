@@ -117,6 +117,24 @@ TEST_F(AndroidClientPlatformTest, egl_pixel_format_asks_the_driver)
     EXPECT_EQ(mir_pixel_format_invalid, platform->get_egl_pixel_format(d, c));
 }
 
+TEST_F(AndroidClientPlatformTest, translates_format_to_hal_pixel_formats)
+{
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_abgr_8888), Eq(HAL_PIXEL_FORMAT_RGBA_8888));
+    EXPECT_THAT(platform->native_format_for(mir_pixel_format_xbgr_8888), Eq(HAL_PIXEL_FORMAT_RGBX_8888));
+}
+
+TEST_F(AndroidClientPlatformTest, translates_usage_to_gralloc_bits)
+{
+    auto hw_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    auto sw_usage =
+        GRALLOC_USAGE_SW_WRITE_OFTEN |
+        GRALLOC_USAGE_SW_READ_OFTEN |
+        GRALLOC_USAGE_HW_COMPOSER |
+        GRALLOC_USAGE_HW_TEXTURE;
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_software, {}), Eq(sw_usage));
+    EXPECT_THAT(platform->native_flags_for(mir_buffer_usage_hardware, {}), Eq(hw_usage));
+}
+
 //TODO: platform helper uses anon namespace in header
 struct ClientExtensions : Test
 {
@@ -265,7 +283,10 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
     } conf(std::string{}, channel, platform);
 
     MirConnection connection(conf);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
+#pragma GCC diagnostic pop
 
     int width = 32;
     int height = 90;

@@ -103,6 +103,14 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return nullptr;
     }
+    uint32_t native_format_for(MirPixelFormat) const override
+    {
+        return 0u;
+    }
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override
+    {
+        return 0u;
+    }
 
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
@@ -785,4 +793,15 @@ TEST_F(ClientBufferStream, can_cycle_through_available_buffers_without_waiting)
         bs.get_current_buffer();
         bs.swap_buffers([&count]{ count++;});
     }
+}
+
+TEST_F(ClientBufferStream, ignores_interval_request_when_interval_is_already_correct_value)
+{
+    mcl::BufferStream bs{
+        nullptr, nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
 }

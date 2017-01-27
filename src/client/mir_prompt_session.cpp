@@ -69,7 +69,7 @@ void MirPromptSession::set_state(MirPromptSessionState new_state)
     }
 }
 
-MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session_callback callback, void* context)
+MirWaitHandle* MirPromptSession::start(pid_t application_pid, MirPromptSessionCallback callback, void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -86,7 +86,7 @@ MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session
     return &start_wait_handle;
 }
 
-MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void* context)
+MirWaitHandle* MirPromptSession::stop(MirPromptSessionCallback callback, void* context)
 {
     stop_wait_handle.expect_result();
 
@@ -100,7 +100,7 @@ MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void
 }
 
 void MirPromptSession::register_prompt_session_state_change_callback(
-    mir_prompt_session_state_change_callback callback,
+    MirPromptSessionStateChangeCallback callback,
     void* context)
 {
     std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
@@ -112,7 +112,7 @@ void MirPromptSession::register_prompt_session_state_change_callback(
         };
 }
 
-void MirPromptSession::done_start(mir_prompt_session_callback callback, void* context)
+void MirPromptSession::done_start(MirPromptSessionCallback callback, void* context)
 {
     {
         std::lock_guard<decltype(session_mutex)> lock(session_mutex);
@@ -124,7 +124,7 @@ void MirPromptSession::done_start(mir_prompt_session_callback callback, void* co
     start_wait_handle.result_received();
 }
 
-void MirPromptSession::done_stop(mir_prompt_session_callback callback, void* context)
+void MirPromptSession::done_stop(MirPromptSessionCallback callback, void* context)
 {
     set_state(mir_prompt_session_state_stopped);
 
@@ -144,7 +144,7 @@ char const* MirPromptSession::get_error_message()
 
 MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
     unsigned int no_of_fds,
-    mir_client_fd_callback callback,
+    MirClientFdCallback callback,
     void * context)
 {
     mp::SocketFDRequest request;
@@ -163,7 +163,7 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
 }
 
 void MirPromptSession::done_fds_for_prompt_providers(
-    mir_client_fd_callback callback,
+    MirClientFdCallback callback,
     void* context)
 {
     auto const size = socket_fd_response->fd_size();

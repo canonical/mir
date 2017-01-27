@@ -128,8 +128,9 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_egl_native_window);
-
-    return std::shared_ptr<void>{surface ? surface : reinterpret_cast<void*>(0xBEEFBABE), [](void*){}};
+    if (surface)
+        return std::shared_ptr<void>{surface, [](void*){}};
+    return std::make_shared<int>(332);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
@@ -179,6 +180,16 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
     if (!strcmp(name, "mir_extension_fenced_buffers") && (version == 1))
         return &fence_ext;
     return nullptr;
+}
+
+uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
+{
+    return 0u;
+}
+
+uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
+{
+    return 0u;
 }
 
 std::shared_ptr<mcl::ClientPlatform>
