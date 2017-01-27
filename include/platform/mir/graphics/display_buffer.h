@@ -93,11 +93,42 @@ protected:
     class Transformation : public glm::mat4
     {
     public:
-        bool is_null() const;
-        void reset();
-        void orient(MirOrientation ori);
-        void mirror(MirMirrorMode mode);
-        void scale(float x, float y);
+        bool is_null() const { return const_mat() == glm::mat4(); }
+        void reset()         { mat() = glm::mat4(); }
+        void orient(MirOrientation ori)
+        {
+            int cos, sin;
+            switch (ori)
+            {
+            case mir_orientation_normal:   sin =  0; cos =  1;  break;
+            case mir_orientation_left:     sin =  1; cos =  0;  break;
+            case mir_orientation_inverted: sin =  0; cos = -1; break;
+            case mir_orientation_right:    sin = -1; cos =  0;  break;
+            }
+            glm::mat2 const rot(cos, sin, -sin, cos);
+            mat() = glm::mat4(rot) * mat();
+        }
+        void mirror(MirMirrorMode mode)
+        {
+            if (mode == mir_mirror_mode_horizontal)
+            {
+                auto& x = mat()[0][0];
+                x = -x;
+            }
+            else if (mode == mir_mirror_mode_vertical)
+            {
+                auto& y = mat()[1][1];
+                y = -y;
+            }
+        }
+        void scale(float x, float y)
+        {
+            mat()[0][0] *= x;
+            mat()[1][1] *= y;
+        }
+    private:
+        glm::mat4 const& const_mat() const { return *this; }
+        glm::mat4& mat() { return *this; }
     };
 };
 
