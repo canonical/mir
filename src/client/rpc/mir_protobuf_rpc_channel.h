@@ -104,7 +104,9 @@ public:
 private:
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
-    std::atomic_bool discard{false};
+
+    std::mutex discard_mutex;
+    bool discard{false};
 
     static constexpr size_t size_of_header = 2;
     detail::SendBuffer header_bytes;
