@@ -1499,7 +1499,7 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
         {
             EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
             EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_unauthorized));
@@ -1564,7 +1564,7 @@ TEST_F(DisplayConfigurationTest, receives_error_when_display_configuration_alrea
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
     {
         EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
         EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_in_progress));
@@ -1636,7 +1636,7 @@ TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
     {
         EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
         EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_no_preview_in_progress));

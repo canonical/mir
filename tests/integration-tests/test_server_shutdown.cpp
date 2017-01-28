@@ -209,7 +209,7 @@ TEST(ServerShutdownWithThreadException,
             the_display_buffer_compositor_factory() override
         {
             return display_buffer_compositor_factory(
-                [this]()
+                []()
                 {
                     return std::make_shared<ExceptionThrowingDisplayBufferCompositorFactory>();
                 });

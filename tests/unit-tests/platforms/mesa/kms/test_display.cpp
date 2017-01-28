@@ -756,7 +756,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml, &done]()
+        [&call_count, &done]()
         {
             if (++call_count == expected_call_count)
             {

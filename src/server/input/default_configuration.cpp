@@ -102,7 +102,7 @@ bool is_arale()
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
     return input_region(
-        [this]()
+        []()
         {
             return std::make_shared<mi::DisplayInputRegion>();
         });
@@ -259,7 +259,7 @@ std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(
-        [this]() -> std::shared_ptr<mi::CursorImages>
+        []() -> std::shared_ptr<mi::CursorImages>
         {
             return std::make_shared<mi::BuiltinCursorImages>();
         });
@@ -316,7 +316,7 @@ std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
 mir::DefaultServerConfiguration::the_input_reading_multiplexer()
 {
     return input_reading_multiplexer(
-        [this]() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
+        []() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
         {
             return std::make_shared<mir::dispatch::MultiplexingDispatchable>();
         }
@@ -374,7 +374,7 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
 std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
 {
     return key_mapper(
-       [this]()
+       []()
        {
            return std::make_shared<mi::receiver::XKBMapper>();
        });
