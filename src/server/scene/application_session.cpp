@@ -449,6 +449,33 @@ mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& p
     }
 }
 
+mg::BufferID ms::ApplicationSession::create_buffer(mir::geometry::Size size, MirPixelFormat format)
+{
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_software_buffer(size, format));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(size, format, e.what());
+        throw;
+    }
+}
+
+mg::BufferID ms::ApplicationSession::create_buffer(
+    mir::geometry::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_buffer(size, native_format, native_flags));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(size, static_cast<MirPixelFormat>(native_format), e.what());
+        throw;
+    }
+}
+
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
 {
     buffers->remove_buffer(id);

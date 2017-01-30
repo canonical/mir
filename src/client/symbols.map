@@ -459,6 +459,13 @@ MIR_CLIENT_DETAIL_0.25 {
     };
 } MIR_CLIENT_DETAIL_0.24;
 
+MIR_CLIENT_DETAIL_0.26 {
+  global:
+    extern "C++" {
+        mir::client::to_client_context*;
+    };
+} MIR_CLIENT_DETAIL_0.25;
+
 MIR_CLIENT_0.26 {  # New functions in Mir 0.26
   global:
     mir_input_config_release;
@@ -468,6 +475,7 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_input_device_get_touchpad_config;
     mir_output_get_edid;
     mir_output_get_edid_size;
+    mir_output_set_scale_factor;
     mir_pointer_config_get_acceleration;
     mir_pointer_config_get_acceleration_bias;
     mir_pointer_config_get_handedness;

@@ -399,7 +399,7 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
                 if (!std::any_of(
                     new_outputs.begin(),
                     new_outputs.end(),
-                [id = existing_output.first](auto const&output) { return output.id == id; }))
+                [&existing_output](auto const& output) { return output.id == existing_output.first; }))
                 {
                     // At least one of the existing outputs isn't used in the ne
                     return false;

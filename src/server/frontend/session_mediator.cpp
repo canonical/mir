@@ -426,12 +426,32 @@ void mf::SessionMediator::allocate_buffers(
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
-        mg::BufferProperties properties(
-            geom::Size{req.width(), req.height()},
-            static_cast<MirPixelFormat>(req.pixel_format()),
-           static_cast<mg::BufferUsage>(req.buffer_usage()));
 
-        auto id = session->create_buffer(properties);
+        mg::BufferID id;
+        if (req.has_flags() && req.has_native_format())
+        {
+            id = session->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
+        }
+        else if (req.has_buffer_usage() && req.has_pixel_format())
+        {
+            auto const usage = static_cast<mg::BufferUsage>(req.buffer_usage());
+            geom::Size const size{req.width(), req.height()};
+            auto const pf = static_cast<MirPixelFormat>(req.pixel_format());
+            if (usage == mg::BufferUsage::software)
+            {
+                id = session->create_buffer(size, pf); 
+            }
+            else
+            {
+                //legacy route, server-selected pf and usage
+                id = session->create_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
+            }
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
+        }
+
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
@@ -1203,6 +1223,7 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+        dest.scale = src.scale_factor();
 
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),

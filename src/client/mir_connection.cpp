@@ -291,6 +291,11 @@ MirConnection::Deregisterer::~Deregisterer()
     }
 }
 
+mcl::ClientContext* mcl::to_client_context(MirConnection* connection)
+{
+    return connection;
+}
+
 MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
@@ -1251,7 +1256,7 @@ std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain
 }
 
 void MirConnection::allocate_buffer(
-    geom::Size size, MirPixelFormat format, MirBufferUsage usage,
+    geom::Size size, MirPixelFormat format,
     MirBufferCallback callback, void* context)
 {
     mp::BufferAllocation request;
@@ -1260,13 +1265,34 @@ void MirConnection::allocate_buffer(
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
     buffer_request->set_pixel_format(format);
-    buffer_request->set_buffer_usage(usage);
+    buffer_request->set_buffer_usage(mir_buffer_usage_software);
 
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
         client_buffer_factory, this,
-        size, format, usage,
+        size, format, mir_buffer_usage_software,
+        callback, context);
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+}
+ 
+void MirConnection::allocate_buffer(
+    geom::Size size, uint32_t native_format, uint32_t native_flags,
+    MirBufferCallback callback, void* context)
+{
+    mp::BufferAllocation request;
+    request.mutable_id()->set_value(-1);
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(size.width.as_int());
+    buffer_request->set_height(size.height.as_int());
+    buffer_request->set_native_format(native_format);
+    buffer_request->set_flags(native_flags);
+
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    buffer_factory->expect_buffer(
+        client_buffer_factory, this,
+        size, mir_pixel_format_invalid, mir_buffer_usage_hardware,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
