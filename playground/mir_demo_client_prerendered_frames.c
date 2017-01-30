@@ -182,7 +182,6 @@ int main(int argc, char** argv)
     mir_window_spec_release(spec);
 
     int num_prerendered_frames = 20;
-    MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_prerendered_frames];
 
     for (int i = 0u; i < num_prerendered_frames; i++)
@@ -193,7 +192,7 @@ int main(int argc, char** argv)
         buffer_available[i].buffer = NULL;
 
         mir_connection_allocate_buffer(
-            connection, width, height, format, usage, available_callback, &buffer_available[i]);
+            connection, width, height, format, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)
