@@ -89,27 +89,6 @@ protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;
     DisplayBuffer& operator=(DisplayBuffer const& c) = delete;
-
-    class Transformation : public glm::mat2
-    {
-    public:
-        void reset()         { mat() = glm::mat2(); }
-        void orient(MirOrientation ori)
-        {
-            int cos, sin;
-            switch (ori)
-            {
-            case mir_orientation_normal:   sin =  0; cos =  1;  break;
-            case mir_orientation_left:     sin =  1; cos =  0;  break;
-            case mir_orientation_inverted: sin =  0; cos = -1;  break;
-            case mir_orientation_right:    sin = -1; cos =  0;  break;
-            }
-            mat() = glm::mat2(cos, sin, -sin, cos) * mat();
-        }
-    private:
-        glm::mat2 const& const_mat() const { return *this; }
-        glm::mat2& mat() { return *this; }
-    };
 };
 
 }

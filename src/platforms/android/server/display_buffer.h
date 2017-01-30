@@ -82,7 +82,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
-    Transformation transform;
+    glm::mat2 transform;
     geometry::Displacement offset_from_origin;
     MirPowerMode power_mode_;
 };

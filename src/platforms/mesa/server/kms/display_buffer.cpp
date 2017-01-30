@@ -19,6 +19,7 @@
 #include "display_buffer.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/transformation.h"
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
@@ -113,6 +114,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       surface_gbm{std::move(surface_gbm_param)},
       egl{gl_config},
       area(area),
+      transform{mg::transformation(rot)},
       needs_set_crtc{false},
       page_flips_pending{false}
 {
@@ -128,8 +130,6 @@ mgm::DisplayBuffer::DisplayBuffer(
         fb_width = area_width;
         fb_height = area_height;
     }
-
-    transform.orient(rot);
 
     egl.setup(*gbm, surface_gbm.get(), shared_context);
 
@@ -190,8 +190,7 @@ glm::mat2 mgm::DisplayBuffer::transformation() const
 
 void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
 {
-    transform.reset();
-    transform.orient(rot);
+    transform = mg::transformation(rot);
     area = a;
 }
 

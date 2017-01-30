@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/gl/context_source.h"
@@ -69,14 +70,10 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     mg::Display& display)
     : gl_context(as_context_source(&display)->create_gl_context()),
       rect(rect),
+      transform(mg::transformation(mirror_mode)),
       free_queue(free_queue), ready_queue(ready_queue),
       old_fbo(), old_viewport()
 {
-    if (mirror_mode == mir_mirror_mode_horizontal)
-        transform[0][0] = -1;
-    else if (mirror_mode == mir_mirror_mode_vertical)
-        transform[1][1] = -1;
-
     auto const gl_context_raii = mir::raii::paired_calls(
         [this] { gl_context->make_current(); },
         [this] { gl_context->release_current(); });

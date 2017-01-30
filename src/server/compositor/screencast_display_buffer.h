@@ -119,7 +119,7 @@ public:
 private:
     std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
-    Transformation transform;
+    glm::mat2 transform;
 
     Schedule& free_queue;
     Schedule& ready_queue;

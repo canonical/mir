@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/transformation.h"
 #include "framebuffer_bundle.h"
 #include "display_buffer.h"
 #include "display_device.h"
@@ -51,10 +52,10 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation},
+      transform{mg::transformation(orientation)},
       offset_from_origin{offset},
       power_mode_{mir_power_mode_on}
 {
-    transform.orient(orientation_);
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
@@ -121,8 +122,7 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orien
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
-    transform.reset();
-    transform.orient(orientation_);
+    transform = mg::transformation(orientation_);
 }
 
 mga::DisplayContents mga::DisplayBuffer::contents()

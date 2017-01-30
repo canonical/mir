@@ -22,6 +22,7 @@
 #include "display_buffer.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/transformation.h"
 #include <cstring>
 
 namespace mg=mir::graphics;
@@ -39,11 +40,11 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   : size{sz},
                                     report{r},
                                     orientation_{o},
+                                    transform{mg::transformation(o)},
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
 {
-    transform.orient(o);
     egl.setup(x_dpy, win, shared_context);
     egl.report_egl_configuration(
         [&r] (EGLDisplay disp, EGLConfig cfg)
@@ -161,8 +162,7 @@ glm::mat2 mgx::DisplayBuffer::transformation() const
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
     orientation_ = new_orientation;
-    transform.reset();
-    transform.orient(orientation_);
+    transform = mg::transformation(orientation_);
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
