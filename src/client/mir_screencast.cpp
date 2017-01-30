@@ -238,7 +238,7 @@ void MirScreencast::screencast_done(ScreencastRequest* request)
 
 void MirScreencast::screencast_to_buffer(
     mcl::MirBuffer* buffer,
-    mir_buffer_callback cb,
+    MirBufferCallback cb,
     void* context)
 {
     if (!server) //construction with nullptr should be invalid

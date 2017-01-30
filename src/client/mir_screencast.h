@@ -90,7 +90,7 @@ public:
 
     void screencast_to_buffer(
         mir::client::MirBuffer* buffer,
-        mir_buffer_callback available_callback,
+        MirBufferCallback available_callback,
         void* available_context);
 
 private:
@@ -114,7 +114,7 @@ private:
 
     struct ScreencastRequest
     {
-        ScreencastRequest(mir::client::MirBuffer* b, mir_buffer_callback cb, void* context) :
+        ScreencastRequest(mir::client::MirBuffer* b, MirBufferCallback cb, void* context) :
             buffer(b),
             available_callback(cb),
             available_context(context)
@@ -122,7 +122,7 @@ private:
         }
  
         mir::client::MirBuffer* buffer;
-        mir_buffer_callback available_callback;
+        MirBufferCallback available_callback;
         void* available_context;
         mir::protobuf::Void response;
     };

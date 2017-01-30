@@ -150,7 +150,7 @@ void mir_buffer_release(MirBuffer* buffer);
 void mir_screencast_capture_to_buffer(
     MirScreencast* screencast,
     MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context);
+    MirBufferCallback available_callback, void* available_context);
 
 /** Capture the contents of the screen to a particular buffer and wait for the
  *  capture to complete.
