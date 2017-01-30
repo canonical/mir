@@ -73,7 +73,7 @@ public:
         if (server_thread.joinable())
             server_thread.join();
         server_thread = std::thread{
-            [response, done, this]
+            [response, done]
             {
                 response->clear_error();
                 done->Run();
@@ -87,7 +87,7 @@ public:
     {
         if (server_thread.joinable())
             server_thread.join();
-        server_thread = std::thread{[done, this] { done->Run(); }};
+        server_thread = std::thread{[done] { done->Run(); }};
     }
 
     ~StubProtobufServer()

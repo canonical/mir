@@ -200,6 +200,45 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .WillOnce(Return(no_transformation));
     EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
         .InSequence(render_seq);
+    EXPECT_CALL(mock_renderer, set_viewport(screen))
+        .InSequence(render_seq);
+    EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
+        .InSequence(render_seq);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
+    compositor.composite(make_scene_elements({
+        big,
+        small
+    }));
+}
+
+TEST_F(DefaultDisplayBufferCompositor, rotates_viewport)
+{   // Regression test for LP: #1643488
+    using namespace testing;
+
+    glm::mat2 const rotate_left( 0, 1,  // transposed
+                                -1, 0);
+
+    geom::Rectangle const rotated_screen{
+        screen.top_left,
+        {screen.size.height.as_int(), screen.size.width.as_int()}};
+
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(rotated_screen));
+
+    Sequence render_seq;
+    EXPECT_CALL(mock_renderer, suspend())
+        .Times(0);
+    EXPECT_CALL(display_buffer, transformation())
+        .WillOnce(Return(rotate_left));
+    EXPECT_CALL(mock_renderer, set_output_transform(rotate_left))
+        .InSequence(render_seq);
+    EXPECT_CALL(mock_renderer, set_viewport(rotated_screen))
+        .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
         .InSequence(render_seq);
 
@@ -231,6 +270,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
         .InSequence(seq);
+    EXPECT_CALL(mock_renderer, set_viewport(screen))
+        .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);
 
@@ -245,6 +286,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(display_buffer, transformation())
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
+        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, set_viewport(screen))
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);

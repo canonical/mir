@@ -284,7 +284,7 @@ void mge::Display::configure(DisplayConfiguration const& conf)
 {
     auto kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
     active_sync_groups.clear();
-    kms_conf.for_each_output([this, &conf](kms::EGLOutput const& output)
+    kms_conf.for_each_output([this](kms::EGLOutput const& output)
          {
              if (output.used)
              {
