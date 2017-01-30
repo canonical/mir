@@ -106,15 +106,6 @@ protected:
             }
             mat() = glm::mat2(cos, sin, -sin, cos) * mat();
         }
-        void mirror(MirMirrorMode mode)
-        {
-            int x = 1, y = 1;
-            if (mode == mir_mirror_mode_horizontal)
-                x = -1;
-            else if (mode == mir_mirror_mode_vertical)
-                y = -1;
-            mat() = glm::mat2(x, 0, 0, y) * mat();
-        }
     private:
         glm::mat2 const& const_mat() const { return *this; }
         glm::mat2& mat() { return *this; }

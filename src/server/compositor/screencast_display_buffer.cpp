@@ -72,7 +72,10 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
       free_queue(free_queue), ready_queue(ready_queue),
       old_fbo(), old_viewport()
 {
-    transform.mirror(mirror_mode);
+    if (mirror_mode == mir_mirror_mode_horizontal)
+        transform[0][0] = -1;
+    else if (mirror_mode == mir_mirror_mode_vertical)
+        transform[1][1] = -1;
 
     auto const gl_context_raii = mir::raii::paired_calls(
         [this] { gl_context->make_current(); },
