@@ -68,6 +68,18 @@ struct StubClientContext : mcl::ClientContext
     {
         return nullptr;
     }
+    void allocate_buffer(
+        mir::geometry::Size, MirPixelFormat, MirBufferCallback, void*) override
+    {
+    }
+
+    void allocate_buffer(mir::geometry::Size, uint32_t, uint32_t, MirBufferCallback, void*) override
+    {
+    }
+
+    void release_buffer(mcl::MirBuffer*) override
+    {
+    }
 };
 
 struct MesaClientPlatformTest : testing::Test
