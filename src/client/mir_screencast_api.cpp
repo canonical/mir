@@ -141,6 +141,9 @@ void mir_screencast_capture_to_buffer(
     MirBufferCallback available_callback, void* available_context)
 try
 {
+    mir::require(b);
+    mir::require(screencast);
+
     auto buffer = reinterpret_cast<mir::client::MirBuffer*>(b);
     screencast->screencast_to_buffer(buffer, available_callback, available_context);
 }
@@ -152,7 +155,28 @@ catch (std::exception const& ex)
 void mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
 try
 {
-    (void) screencast; (void)buffer;
+    class CaptureSync
+    {
+    public:
+        void wait_for_capture()
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            cv.wait(lk, [this] { return done; });
+        }
+        void captured()
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            done = true;
+            cv.notify_all();
+        }
+    private:
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool done = false;
+    } capture;
+
+    mir_screencast_capture_to_buffer(screencast, buffer,
+        [](MirBuffer*, void* c) { reinterpret_cast<CaptureSync*>(c)->captured(); }, &capture);
 }
 catch (std::exception const& ex)
 {

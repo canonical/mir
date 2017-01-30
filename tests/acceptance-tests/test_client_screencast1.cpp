@@ -42,7 +42,7 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
 
     mir_connection_allocate_buffer(
         connection,
-        default_width, default_height, default_pixel_format, mir_buffer_usage_software,
+        default_width, default_height, default_pixel_format,
         [](MirBuffer* b, void* ctxt) {
             auto info = reinterpret_cast<BufferSync*>(ctxt);
             std::unique_lock<decltype(info->mutex)> lk(info->mutex);

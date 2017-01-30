@@ -65,30 +65,8 @@ try
     printf("done SAASAS\n");
     mir_screencast_spec_release(spec);
 
-    struct BufferSync
-    {
-        MirBuffer* buffer = nullptr;
-        std::mutex mutex;
-        std::condition_variable cv;
-    } sync;
-    MirBuffer* buffer = nullptr;
-
     printf("YEPE \n");
-    mir_connection_allocate_buffer(
-        connection, width, height, pf, mir_buffer_usage_software,
-        [] ( MirBuffer* buffer, void* context)
-        {
-            auto sync = reinterpret_cast<BufferSync*>(context);
-            std::unique_lock<decltype(sync->mutex)> lk(sync->mutex);
-            sync->buffer = buffer;
-            sync->cv.notify_all();
-        }, &sync);
-
-    {
-        std::unique_lock<decltype(sync.mutex)> lk(sync.mutex);
-        sync.cv.wait(lk, [&] { return sync.buffer; } );
-        buffer = sync.buffer;
-    }
+    auto buffer = mir_connection_allocate_buffer_sync(connection, width, height, pf);
 
     struct Capture
     {
@@ -98,20 +76,7 @@ try
     } cap;
 
     printf("CAP\n");
-    mir_screencast_capture_to_buffer(screencast, buffer,
-        [](MirBuffer*, void* context) {
-            printf("BBB\n");
-            auto c = reinterpret_cast<Capture*>(context);
-            std::unique_lock<std::mutex> lk(c->mutex);
-            c->done = true;
-            c->cv.notify_all();
-            printf("BBBa\n");
-        }, &cap);
-
-    printf("BAh\n");
-    std::unique_lock<std::mutex> lk(cap.mutex);
-    cap.cv.wait(lk, [&] { return cap.done; });
-    printf("endCAP\n");
+    mir_screencast_capture_to_buffer_sync(screencast, buffer);
 
     MirBufferLayout layout;
     MirGraphicsRegion region;
