@@ -173,15 +173,10 @@ void create_buffer(
     unsigned int gralloc_usage_flags,
     MirBufferCallback available_callback, void* available_context)
 {
-    //TODO: pass actual gralloc flags along
-    (void) gralloc_usage_flags;
-
-    mir_connection_allocate_buffer(
-        connection,
-        width, height,
-        mga::to_mir_format(hal_pixel_format),
-        mir_buffer_usage_hardware,
-        available_callback, available_context);
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, hal_pixel_format, gralloc_usage_flags,
+        available_callback, available_context); 
 }
 
 }

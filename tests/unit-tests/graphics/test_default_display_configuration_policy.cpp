@@ -143,7 +143,7 @@ TEST(CloneDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 
     policy.apply_to(conf);
 
-    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    conf.for_each_output([](DisplayConfigurationOutput const& output)
     {
         if (output.connected && output.modes.size() > 0)
         {
@@ -180,7 +180,7 @@ TEST(CloneDisplayConfigurationPolicyTest, default_orientation_is_normal)
     CloneDisplayConfigurationPolicy policy;
     StubDisplayConfiguration conf{create_default_configuration()};
 
-    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    conf.for_each_output([](DisplayConfigurationOutput const& output)
     {
         EXPECT_EQ(mir_orientation_normal, output.orientation);
     });
@@ -242,7 +242,7 @@ TEST(SingleDisplayConfigurationPolicyTest, uses_first_of_connected_valid_outputs
 
     bool is_first{true};
 
-    conf.for_each_output([&conf, &is_first](DisplayConfigurationOutput const& output)
+    conf.for_each_output([&is_first](DisplayConfigurationOutput const& output)
     {
         if (output.connected && output.modes.size() > 0 && is_first)
         {
@@ -287,7 +287,7 @@ TEST(SingleDisplayConfigurationPolicyTest, default_orientation_is_normal)
     auto conf = create_default_configuration();
     //StubDisplayConfiguration conf{create_default_configuration()};
 
-    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    conf.for_each_output([](DisplayConfigurationOutput const& output)
     {
         EXPECT_EQ(mir_orientation_normal, output.orientation);
     });
@@ -346,7 +346,7 @@ TEST(SideBySideDisplayConfigurationPolicyTest, default_orientation_is_normal)
     SideBySideDisplayConfigurationPolicy policy;
     StubDisplayConfiguration conf{create_default_configuration()};
 
-    conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
+    conf.for_each_output([](DisplayConfigurationOutput const& output)
     {
         EXPECT_EQ(mir_orientation_normal, output.orientation);
     });

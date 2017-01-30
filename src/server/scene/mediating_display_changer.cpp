@@ -290,7 +290,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
 
     server_action_queue->enqueue(
         this,
-        [this, conf, session, timeout]()
+        [this, conf, session]()
         {
             if (auto live_session = session.lock())
             {

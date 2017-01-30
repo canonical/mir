@@ -121,7 +121,13 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
-  link_libraries(tsan) # Workaround for LP:1413474
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    # Work around GCC bug. It should automatically link to tsan when
+    # -fsanitize=thread is used, but doesn't.
+    #
+    # Linking everything with tsan is harmless and simple, so do that.
+    link_libraries(tsan) # Workaround for LP:1413474
+  endif()
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")

@@ -214,7 +214,6 @@ int main(int argc, char** argv)
     MirWindow* window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
-    MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_buffers];
 
     //prerender the frames
@@ -226,7 +225,7 @@ int main(int argc, char** argv)
         buffer_available[i].buffer = NULL;
 
         mir_connection_allocate_buffer(
-            connection, width, height, format, usage, available_callback, &buffer_available[i]);
+            connection, width, height, format, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)

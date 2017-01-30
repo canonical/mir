@@ -28,36 +28,6 @@
 #include <boost/throw_exception.hpp>
 namespace mcl = mir::client;
 
-namespace
-{
-class ChainResult
-{
-public:
-    void set_result(MirPresentationChain* result)
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        chain = result;
-        cv.notify_all();
-    }
-
-    MirPresentationChain* wait_for_result()
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        cv.wait(lk, [this] { return chain; });
-        return chain;
-    }
-
-private:
-    MirPresentationChain* chain = nullptr;
-    std::mutex mutex;
-    std::condition_variable cv;
-};
-
-void set_result(MirPresentationChain* result, ChainResult* context)
-{
-    context->set_result(result);
-}
-}
 //private NBS api under development
 void mir_presentation_chain_submit_buffer(
     MirPresentationChain* chain,
@@ -97,38 +67,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return "error accessing error message";
-}
-
-void mir_connection_create_presentation_chain(
-    MirConnection* connection, MirPresentationChainCallback callback, void* context)
-try
-{
-    mir::require(connection);
-    connection->create_presentation_chain(callback, context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
-MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection* connection)
-{
-    ChainResult result;
-    mir_connection_create_presentation_chain(connection,
-        reinterpret_cast<MirPresentationChainCallback>(set_result), &result);
-
-    return result.wait_for_result();
-}
-
-void mir_presentation_chain_release(MirPresentationChain* chain)
-try
-{
-    mir::require(chain);
-    chain->connection()->release_presentation_chain(chain);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_presentation_chain_set_queueing_mode(MirPresentationChain* chain)

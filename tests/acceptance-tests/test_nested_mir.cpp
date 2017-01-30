@@ -277,7 +277,7 @@ public:
 
     virtual std::shared_ptr<MockDisplayConfigurationPolicy> mock_display_configuration_policy()
     {
-        return mock_display_configuration_policy_([this]
+        return mock_display_configuration_policy_([]
             { return std::make_shared<NiceMock<MockDisplayConfigurationPolicy>>(); });
     }
 

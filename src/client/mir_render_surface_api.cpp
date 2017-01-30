@@ -156,7 +156,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return "Unknown error";
+    return ex.what();
 }
 
 void mir_render_surface_release(

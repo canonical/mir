@@ -37,12 +37,11 @@ void mir_connection_allocate_buffer(
     MirConnection* connection, 
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage usage,
     MirBufferCallback cb, void* context)
 try
 {
     mir::require(connection);
-    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, cb, context);
 }
 catch (std::exception const& ex)
 {
@@ -52,8 +51,7 @@ catch (std::exception const& ex)
 MirBuffer* mir_connection_allocate_buffer_sync(
     MirConnection* connection, 
     int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage)
+    MirPixelFormat format)
 try
 {
     mir::require(connection);
@@ -64,7 +62,7 @@ try
         std::mutex mutex;
         std::condition_variable cv;
     } info;
-    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, 
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format,
         [](MirBuffer* buffer, void* c)
         {
             mir::require(buffer);
