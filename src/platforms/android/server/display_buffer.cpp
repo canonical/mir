@@ -82,9 +82,10 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
 {
+    glm::mat2 static const no_transformation;
     if (!overlay_enabled ||
         !display_device->compatible_renderlist(renderlist) ||
-        !transform.is_null())
+        transform != no_transformation)
         return false;
 
     layer_list->update_list(renderlist, offset_from_origin);

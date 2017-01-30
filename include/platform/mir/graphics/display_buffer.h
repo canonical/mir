@@ -93,7 +93,6 @@ protected:
     class Transformation : public glm::mat2
     {
     public:
-        bool is_null() const { return const_mat() == glm::mat2(); }
         void reset()         { mat() = glm::mat2(); }
         void orient(MirOrientation ori)
         {

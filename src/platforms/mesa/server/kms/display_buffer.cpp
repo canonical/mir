@@ -197,7 +197,9 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
 
 bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
-    if (transform.is_null() && (bypass_option == mgm::BypassOption::allowed))
+    glm::mat2 static const no_transformation;
+    if (transform == no_transformation &&
+       (bypass_option == mgm::BypassOption::allowed))
     {
         mgm::BypassMatch bypass_match(area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
