@@ -241,7 +241,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
 std::shared_ptr<mir::client::AsyncBufferFactory> mir::client::DefaultConnectionConfiguration::the_buffer_factory()
 {
     return async_buffer_factory(
-        [this] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
+        [] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
         {
             return std::make_shared<mir::client::BufferFactory>();
         });

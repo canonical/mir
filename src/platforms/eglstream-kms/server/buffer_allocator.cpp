@@ -42,11 +42,11 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
     BufferProperties const& buffer_properties)
 {
     if (buffer_properties.usage == mg::BufferUsage::software)
-        return alloc_buffer(buffer_properties.size, buffer_properties.format);
+        return alloc_software_buffer(buffer_properties.size, buffer_properties.format);
     BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating hardware buffers"));
 }
 
-std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(geom::Size size, MirPixelFormat format)
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
     if (!mgc::ShmBuffer::supports(format))
     {

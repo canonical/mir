@@ -34,7 +34,7 @@ class StubRenderer : public renderer::Renderer
 {
 public:
     void set_viewport(geometry::Rectangle const&) override {}
-    void set_output_transform(MirOrientation, MirMirrorMode) override {}
+    void set_output_transform(glm::mat2 const&) override {}
     void suspend() override {}
 
     void render(graphics::RenderableList const& renderables) const override

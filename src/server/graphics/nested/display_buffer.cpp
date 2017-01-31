@@ -176,18 +176,9 @@ void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationCha
         submitted_buffers.erase(buf);
 }
 
-MirOrientation mgn::detail::DisplayBuffer::orientation() const
+glm::mat2 mgn::detail::DisplayBuffer::transformation() const
 {
-    /*
-     * Always normal orientation. The real rotation is handled by the
-     * native display.
-     */
-    return mir_orientation_normal;
-}
-
-MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return {};
 }
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept

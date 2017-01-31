@@ -285,7 +285,7 @@ void md::ThreadedDispatcher::remove_thread()
 
     auto dying_thread = std::find_if(threadpool.begin(),
                                      threadpool.end(),
-                                     [this, &terminated_thread_id](std::thread const& candidate)
+                                     [&terminated_thread_id](std::thread const& candidate)
     {
             return candidate.get_id() == terminated_thread_id;
     });
