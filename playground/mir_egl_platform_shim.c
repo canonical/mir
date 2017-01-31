@@ -20,6 +20,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/extensions/android_egl.h"
+#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <stdlib.h>
@@ -52,7 +53,8 @@ typedef struct
 EGLSurface future_driver_eglCreateWindowSurface(
     EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint* attr)
 {
-    if (info->surface)
+    MirExtensionHardwareBufferStreamV1 const * ext = mir_extension_hardware_buffer_stream_v1(info->connection);
+    if (info->surface || !ext)
     {
         printf("shim only supports one surface at the moment");
         return EGL_NO_SURFACE;
@@ -68,11 +70,10 @@ EGLSurface future_driver_eglCreateWindowSurface(
     MirPixelFormat pixel_format = mir_connection_get_egl_pixel_format(info->connection, display, config);
     //this particular [silly] driver has chosen the buffer stream as the way it wants to post
     //its hardware content. I'd think most drivers would want MirPresentationChain for flexibility
-    info->stream =
-        mir_render_surface_get_buffer_stream(surface,
-                                             info->current_physical_width,
-                                             info->current_physical_height,
-                                             pixel_format);
+    info->stream = ext->get_hardware_buffer_stream(surface,
+        info->current_physical_width,
+        info->current_physical_height,
+        pixel_format);
 
     printf("The driver chose pixel format %d.\n", pixel_format);
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, attr);
