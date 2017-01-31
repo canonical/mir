@@ -336,7 +336,7 @@ struct ScheduledProducer : ProducerSystem
     }
     ~ScheduledProducer()
     {
-        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
+        ipc->on_client_bound_transfer([](mp::BufferRequest&){});
     }
 
     bool can_produce()

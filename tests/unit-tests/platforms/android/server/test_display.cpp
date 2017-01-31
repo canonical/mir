@@ -54,6 +54,12 @@ mg::DisplayConfigurationOutputId const primary_output_id{
     mga::as_output_id(mga::DisplayName::primary)};
 mg::DisplayConfigurationOutputId const external_output_id{
     mga::as_output_id(mga::DisplayName::external)};
+
+glm::mat2 const rotate_none;
+glm::mat2 const rotate_left( 0, 1,  // transposed
+                            -1, 0);
+glm::mat2 const rotate_inverted(-1, 0,
+                                 0,-1);
 }
 
 class Display : public ::testing::Test
@@ -950,6 +956,7 @@ TEST_F(Display, applying_orientation_after_hotplug)
     std::function<void()> hotplug_fn = []{};
     bool external_connected = false;
     MirOrientation const orientation = mir_orientation_left;
+    auto const expected_transformation = rotate_left;
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
         ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
@@ -978,13 +985,13 @@ TEST_F(Display, applying_orientation_after_hotplug)
     hotplug_fn();
 
     auto config = display.configuration();
-    config->for_each_output([orientation](mg::UserDisplayConfigurationOutput& output) {
+    config->for_each_output([](mg::UserDisplayConfigurationOutput& output) {
         output.orientation = orientation;
     });
     display.configure(*config);
-    display.for_each_display_sync_group([orientation](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([orientation](mg::DisplayBuffer& db) {
-            EXPECT_THAT(db.orientation(), Eq(orientation)); 
+    display.for_each_display_sync_group([&expected_transformation](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&expected_transformation](mg::DisplayBuffer& db) {
+            EXPECT_THAT(db.transformation(), Eq(expected_transformation)); 
         });
     });
 }
@@ -1144,6 +1151,6 @@ TEST_F(Display, does_not_invalidate_display_buffers_when_it_promised_not_to)
     // Touch each of our saved display buffers, and let Valgrind tell us if we're accessing freed memory
     for (auto const& db : active_dbs)
     {
-        EXPECT_THAT(db->orientation(), AnyOf(Eq(mir_orientation_inverted), Eq(mir_orientation_normal)));
+        EXPECT_THAT(db->transformation(), AnyOf(Eq(rotate_inverted), Eq(rotate_none)));
     }
 }

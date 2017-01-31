@@ -66,8 +66,7 @@ public:
     bool overlay(RenderableList const& renderlist) override;
     void bind() override;
 
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
@@ -83,6 +82,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     MirOrientation orientation_;
+    glm::mat2 transform;
     geometry::Displacement offset_from_origin;
     MirPowerMode power_mode_;
 };

@@ -63,6 +63,7 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
+    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();

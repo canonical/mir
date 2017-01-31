@@ -61,8 +61,7 @@ public:
     void release_current() override;
     void swap_buffers() override;
     void bind() override;
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
 
     bool overlay(RenderableList const& renderlist) override;
 

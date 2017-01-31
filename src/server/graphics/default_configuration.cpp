@@ -243,7 +243,7 @@ std::shared_ptr<mg::GLConfig>
 mir::DefaultServerConfiguration::the_gl_config()
 {
     return gl_config(
-        [this]
+        []
         {
             struct NoGLConfig : public mg::GLConfig
             {

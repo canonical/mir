@@ -21,7 +21,9 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
+#include "src/client/mir_render_surface.h"
 #include "src/client/buffer_factory.h"
+#include "src/client/connection_surface_map.h"
 #include "src/client/presentation_chain.h"
 
 #include "mir/client_platform.h"
@@ -32,6 +34,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/mir_render_surface.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -59,7 +62,6 @@ using namespace testing;
 
 namespace
 {
-
 template<class T>
 struct Callback
 {
@@ -73,6 +75,7 @@ struct Callback
     T* result{nullptr};
 };
 
+using RenderSurfaceCallback = Callback<MirRenderSurface>;
 using PresentationChainCallback = Callback<MirPresentationChain>;
 using BufferStreamCallback = Callback<MirBufferStream>;
 
@@ -180,7 +183,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
         ON_CALL(*this, create_buffer_factory())
             .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
         ON_CALL(*this, create_egl_native_window(_))
-            .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
+            .WillByDefault(Return(std::make_shared<int>(2190)));
         ON_CALL(*this, platform_operation(_))
             .WillByDefault(Return(nullptr));
     }
@@ -737,37 +740,42 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
 
-TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
+TEST_F(MirConnectionTest, callback_is_invoked_after_rs_creation_error)
 {
-    PresentationChainCallback callback;
+    RenderSurfaceCallback callback;
     std::string error_msg = "danger will robertson";
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
         .WillOnce(Invoke([&](mp::BufferStream& bs, google::protobuf::Closure*)
         { bs.set_error(error_msg); }));
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
 
-    connection->create_presentation_chain(
-        &PresentationChainCallback::created, &callback);
+    //TODO: examine typing
+    auto native_window = connection->create_render_surface_with_content(
+        { 1, 1 }, &RenderSurfaceCallback::created, &callback);
+    auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
+
     EXPECT_TRUE(callback.invoked);
     ASSERT_THAT(callback.result, NotNull());
-    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.result),
-        StrEq("Error creating MirPresentationChain: " + error_msg));
+    EXPECT_THAT(actual_rs->get_error_message(),
+        StrEq("Error creating MirRenderSurface: " + error_msg));
 }
 
-TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_chain_created)
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_surface_created)
 {
-    PresentationChainCallback callback;
-
+    RenderSurfaceCallback callback;
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
         .WillOnce(DoAll(
             Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
             Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
-    connection->create_presentation_chain(
-        &PresentationChainCallback::created, &callback);
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto native_window = connection->create_render_surface_with_content(
+        { 1, 1 }, &RenderSurfaceCallback::created, &callback);
+    auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
     ASSERT_THAT(callback.result, NotNull());
-    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.result),
-        StrEq("Error creating MirPresentationChain: no ID in response"));
+    EXPECT_THAT(actual_rs->get_error_message(),
+        StrEq("Error creating MirRenderSurface: no ID in response (disconnected?)"));
 }
 
 namespace
@@ -778,7 +786,7 @@ MATCHER_P(ReleaseRequestHasId, val, "")
 }
 }
 
-TEST_F(MirConnectionTest, release_chain_calls_server)
+TEST_F(MirConnectionTest, release_render_surface_calls_server)
 {
     connection->connect("MirClientSurfaceTest", connected_callback, nullptr)->wait_for_all();
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
@@ -787,39 +795,41 @@ TEST_F(MirConnectionTest, release_chain_calls_server)
             stream.mutable_id()->set_value(0);
         }));
 
-    PresentationChainCallback callback;
-    connection->create_presentation_chain(
-        &PresentationChainCallback::created, &callback);
+    RenderSurfaceCallback callback;
+    auto native_window = connection->create_render_surface_with_content(
+        { 1, 1 }, &RenderSurfaceCallback::created, &callback);
+    auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
 
     EXPECT_TRUE(callback.invoked);
     ASSERT_THAT(callback.result, NotNull());
 
     mp::BufferStreamId expected_request;
-    expected_request.set_value(
-        static_cast<MirPresentationChain*>(callback.result)->rpc_id());
+    expected_request.set_value(actual_rs->stream_id().as_value());
 
     EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
         .Times(1);
 
-    connection->release_presentation_chain(callback.result);
+    connection->release_render_surface_with_content(native_window);
 }
 
 TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 {
-    PresentationChainCallback callback;
-    connection->create_presentation_chain(
-        &PresentationChainCallback::created, &callback);
+
+    RenderSurfaceCallback callback;
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+    auto native_window = connection->create_render_surface_with_content(
+        { 1, 1 }, &RenderSurfaceCallback::created, &callback);
+    auto actual_rs = connection->connection_surface_map()->render_surface(native_window);
+
     EXPECT_TRUE(callback.invoked);
     ASSERT_THAT(callback.result, NotNull());
-
-    mp::BufferStreamId expected_request;
-    expected_request.set_value(
-        static_cast<MirPresentationChain*>(callback.result)->rpc_id());
-
-    EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
+    EXPECT_CALL(*mock_channel, buffer_stream_release(_))
         .Times(0);
-
-    connection->release_presentation_chain(callback.result);
+    connection->release_render_surface_with_content(native_window);
 }
 
 TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
@@ -839,7 +849,27 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
     EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
 
-    connection->allocate_buffer(size, format, usage, nullptr, nullptr);
+    connection->allocate_buffer(size, format, nullptr, nullptr);
+}
+
+TEST_F(MirConnectionTest, can_alloc_native_buffer_from_connection)
+{
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
+    geom::Size size { 32, 11 };
+    auto native_format = 342u;
+    auto native_flags = 0x44;
+    mp::BufferAllocation mp_alloc;
+    mp_alloc.mutable_id()->set_value(-1);
+    auto params = mp_alloc.add_buffer_requests();
+    params->set_width(size.width.as_int());
+    params->set_height(size.height.as_int());
+    params->set_native_format(native_format);
+    params->set_flags(native_flags);
+    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, _, mir_buffer_usage_hardware, nullptr, nullptr));
+
+    connection->allocate_buffer(size, native_format, native_flags, nullptr, nullptr);
 }
 
 TEST_F(MirConnectionTest, can_release_buffer_from_connection)

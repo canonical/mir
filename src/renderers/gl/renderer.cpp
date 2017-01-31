@@ -44,40 +44,6 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-namespace
-{
-float cos_for(MirOrientation orientation)
-{
-    switch(orientation)
-    {
-    case mir_orientation_normal:
-        return 1.0f;
-    case mir_orientation_inverted:
-        return -1.0f;
-    case mir_orientation_left:
-    case mir_orientation_right:
-        return 0.0f;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
-    }
-}
-
-float sine_for(MirOrientation orientation)
-{
-    switch(orientation)
-    {
-    case mir_orientation_left:
-        return 1.0f;
-    case mir_orientation_right:
-        return -1.0f;
-    case mir_orientation_normal:
-    case mir_orientation_inverted:
-        return 0.0f;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
-    }
-}
-}
 mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
     : render_target{
         dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
@@ -170,9 +136,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
-      orientation(mir_orientation_normal),
-      mirror_mode(mir_mirror_mode_none)
+      texture_cache(mgl::DefaultProgramFactory().create_texture_cache())
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -408,28 +372,9 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mrg::Renderer::set_output_transform(MirOrientation new_orientation, MirMirrorMode new_mirror_mode)
+void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    if (new_orientation == orientation && new_mirror_mode == mirror_mode)
-        return;
-
-    GLfloat const cos = cos_for(new_orientation);
-    GLfloat const sin = sine_for(new_orientation);
-
-    glm::mat2 rotation_matrix(cos, sin, -sin, cos);
-    glm::mat2 mirror_matrix;
-    if (new_mirror_mode == mir_mirror_mode_horizontal)
-    {
-        mirror_matrix[0][0] = -1.0f;
-    }
-    else if (new_mirror_mode == mir_mirror_mode_vertical)
-    {
-        mirror_matrix[1][1] = -1.0f;
-    }
-
-    display_transform = glm::mat4(mirror_matrix*rotation_matrix);
-    orientation = new_orientation;
-    mirror_mode = new_mirror_mode;
+    display_transform = glm::mat4(t);
 }
 
 void mrg::Renderer::suspend()
