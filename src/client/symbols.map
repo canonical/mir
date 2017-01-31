@@ -365,16 +365,11 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_map;
     mir_buffer_unmap;
     mir_buffer_release;
-    mir_connection_create_presentation_chain_sync;
     mir_presentation_chain_is_valid;
     mir_presentation_chain_get_error_message;
-    mir_connection_create_presentation_chain;
     mir_connection_allocate_buffer;
     mir_connection_allocate_buffer_sync;
     mir_presentation_chain_submit_buffer;
-    mir_presentation_chain_release;
-    mir_surface_spec_add_presentation_chain;
-    mir_surface_spec_add_buffer_stream;
     mir_buffer_get_width;
     mir_buffer_get_height;
     mir_buffer_get_pixel_format;
@@ -464,10 +459,15 @@ MIR_CLIENT_DETAIL_0.25 {
     };
 } MIR_CLIENT_DETAIL_0.24;
 
+MIR_CLIENT_DETAIL_0.26 {
+  global:
+    extern "C++" {
+        mir::client::to_client_context*;
+    };
+} MIR_CLIENT_DETAIL_0.25;
+
 MIR_CLIENT_0.26 {  # New functions in Mir 0.26
   global:
-    mir_connection_apply_session_input_config;
-    mir_connection_set_base_input_config;
     mir_input_config_release;
     mir_input_device_get_mutable_pointer_config;
     mir_input_device_get_mutable_touchpad_config;
@@ -475,6 +475,7 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_input_device_get_touchpad_config;
     mir_output_get_edid;
     mir_output_get_edid_size;
+    mir_output_set_scale_factor;
     mir_pointer_config_get_acceleration;
     mir_pointer_config_get_acceleration_bias;
     mir_pointer_config_get_handedness;
@@ -576,3 +577,9 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_request_persistent_id;
     mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;
+
+MIR_CLIENT_unreleased {  # New functions in Mir 0.27 or 1.0
+  global:
+    mir_connection_apply_session_input_config;
+    mir_connection_set_base_input_config;
+} MIR_CLIENT_0.26;

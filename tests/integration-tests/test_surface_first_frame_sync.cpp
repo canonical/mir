@@ -86,7 +86,7 @@ public:
                 group.post();
             });
         };
-        auto notify2 = [this, notify](int) { notify(); };
+        auto notify2 = [notify](int) { notify(); };
 
         observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify2);
     }

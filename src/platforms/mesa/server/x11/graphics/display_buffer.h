@@ -69,14 +69,14 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     geometry::Size const size;
     std::shared_ptr<DisplayReport> const report;
     MirOrientation orientation_;
+    glm::mat2 transform;
     helpers::EGLHelper egl;
     std::shared_ptr<AtomicFrame> const last_frame;
 
