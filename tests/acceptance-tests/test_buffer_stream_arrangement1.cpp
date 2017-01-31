@@ -55,8 +55,7 @@ struct RenderSurfaceBasedStream : mt::Stream
                 rs->surface,
                 physical_size.width.as_int(),
                 physical_size.height.as_int(),
-                an_available_format(connection),
-                mir_buffer_usage_hardware);
+                an_available_format(connection));
         }),
         rs(std::move(rs))
     {

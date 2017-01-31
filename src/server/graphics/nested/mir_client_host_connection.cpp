@@ -220,8 +220,8 @@ public:
             properties.size.width.as_int(), properties.size.height.as_int())),
         stream(mir_render_surface_get_buffer_stream(render_surface,
             properties.size.width.as_int(), properties.size.height.as_int(),
-            properties.format,
-            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
+            properties.format))//,
+            //(properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
     {
     }
 
