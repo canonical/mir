@@ -31,7 +31,8 @@ extern "C" {
 //Android can allocate a hardware-capable ANativeWindow from the AndroidEgl extension,
 //and mesa's egl will use MirPresentationChain + MirBuffer, so there's no need
 //for a 'hardware' buffer stream publicly.
-//Internally, its useful in playground/ until we switch everything to the mir egl platform. 
+//Internally, its useful in playground/ and the nested server until we switch upstream
+//driver stacks to the mir egl platform. 
 
 typedef MirBufferStream* (*mir_extension_get_hardware_buffer_stream)(
     MirRenderSurface* rs,
