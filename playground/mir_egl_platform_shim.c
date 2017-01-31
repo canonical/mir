@@ -72,8 +72,7 @@ EGLSurface future_driver_eglCreateWindowSurface(
         mir_render_surface_get_buffer_stream(surface,
                                              info->current_physical_width,
                                              info->current_physical_height,
-                                             pixel_format,
-                                             mir_buffer_usage_hardware);
+                                             pixel_format);
 
     printf("The driver chose pixel format %d.\n", pixel_format);
     return eglCreateWindowSurface(display, config, (EGLNativeWindowType) surface, attr);
