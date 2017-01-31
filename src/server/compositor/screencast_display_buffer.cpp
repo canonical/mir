@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/gl/context_source.h"
@@ -68,7 +69,8 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     Schedule& ready_queue,
     mg::Display& display)
     : gl_context(as_context_source(&display)->create_gl_context()),
-      rect(rect), mirror_mode_(mirror_mode),
+      rect(rect),
+      transform(mg::transformation(mirror_mode)),
       free_queue(free_queue), ready_queue(ready_queue),
       old_fbo(), old_viewport()
 {
@@ -171,14 +173,9 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
     }
 }
 
-MirOrientation mc::ScreencastDisplayBuffer::orientation() const
+glm::mat2 mc::ScreencastDisplayBuffer::transformation() const
 {
-    return mir_orientation_normal;
-}
-
-MirMirrorMode mc::ScreencastDisplayBuffer::mirror_mode() const
-{
-    return mirror_mode_;
+    return transform;
 }
 
 mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()

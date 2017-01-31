@@ -125,7 +125,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     }
     else
     {
-        renderer.set_output_transform(display_buffer.orientation(), display_buffer.mirror_mode());
+        renderer.set_output_transform(display_buffer.transformation());
         update_viewport();
         renderer.set_viewport(viewport);
         renderer.begin(std::move(decorated));
