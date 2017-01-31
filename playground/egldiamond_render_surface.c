@@ -220,7 +220,10 @@ int main(int argc, char *argv[])
     CHECK(mir_render_surface_is_valid(render_surface), "could not create render surface");
     CHECK(mir_render_surface_get_error_message(render_surface), "");
 
-    eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
+    if (use_shim)
+        eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
+    else
+        eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
     if (eglsurface == EGL_NO_SURFACE)
     {
         printf("eglCreateWindowSurface failed. "
