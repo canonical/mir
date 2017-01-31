@@ -34,14 +34,14 @@ extern "C" {
 //Internally, its useful in playground/ and the nested server until we switch upstream
 //driver stacks to the mir egl platform. 
 
-typedef MirBufferStream* (*mir_extension_get_hardware_buffer_stream)(
+typedef MirBufferStream* (*MirExtensionGetHardwareBufferStream)(
     MirRenderSurface* rs,
     int width, int height,
     MirPixelFormat format);
 
 typedef struct MirExtensionHardwareBufferStreamV1
 {
-    mir_extension_get_hardware_buffer_stream get_hardware_buffer_stream;
+    MirExtensionGetHardwareBufferStream get_hardware_buffer_stream;
 } MirExtensionHardwareBufferStreamV1;
 
 static inline MirExtensionHardwareBufferStreamV1 const* mir_extension_hardware_buffer_stream_v1(
