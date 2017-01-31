@@ -183,6 +183,17 @@ void create_buffer(
         available_callback, available_context); 
 }
 
+MirBufferStream* get_hw_stream(
+    MirRenderSurface* rs_key,
+    int width, int height,
+    MirPixelFormat format)
+{
+    auto rs = mcl::render_surface_lookup(rs_key);
+    if (!rs)
+        return nullptr;
+    return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
+}
+
 }
 
 mcla::AndroidClientPlatform::AndroidClientPlatform(
@@ -193,7 +204,8 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
     android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
     fence_extension{get_fence, associate_fence, wait_for_access},
-    buffer_extension{create_buffer}
+    buffer_extension{create_buffer},
+    hw_stream{get_hw_stream}
 {
 }
 
@@ -287,6 +299,8 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
         return &buffer_extension;
     if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
         return &fence_extension;
+    if (!strcmp(name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &hw_stream;
     return nullptr;
 }
 
