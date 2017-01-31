@@ -26,7 +26,7 @@ namespace mir { namespace graphics {
 
 inline glm::mat2 transformation(MirOrientation ori)
 {
-    int cos, sin;
+    int cos = 0, sin = 0;
     switch (ori)
     {
     case mir_orientation_normal:   sin =  0; cos =  1; break;
