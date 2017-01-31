@@ -74,7 +74,7 @@ struct NoCompositingServer : mir::DefaultServerConfiguration
             void start() override {};
             void stop() override {};
         };
-        return compositor( [this]() { return std::make_shared<NullCompositor>(); });
+        return compositor( []() { return std::make_shared<NullCompositor>(); });
     }
 };
 

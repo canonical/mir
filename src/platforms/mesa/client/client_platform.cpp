@@ -128,22 +128,10 @@ void allocate_buffer_gbm(
     unsigned int gbm_bo_flags,
     MirBufferCallback available_callback, void* available_context)
 {
-    //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
-    //this will return an error buffer for now. In the future, we should share MirConnection
-    //and mcl::ErrorBuffer so the platforms can use them. 
-    if (gbm_bo_flags)
-    {
-        mir_connection_allocate_buffer(
-            connection, width, height, mir_pixel_format_invalid, mir_buffer_usage_hardware,
-            available_callback, available_context);
-    }
-
-    mir_connection_allocate_buffer(
-        connection,
-        width, height,
-        mir::graphics::mesa::gbm_format_to_mir_format(gbm_pixel_format),
-        mir_buffer_usage_hardware,
-        available_callback, available_context);
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, gbm_pixel_format, gbm_bo_flags,
+        available_callback, available_context); 
 }
 
 }

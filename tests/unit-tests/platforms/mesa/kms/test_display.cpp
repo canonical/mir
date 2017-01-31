@@ -756,7 +756,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml, &done]()
+        [&call_count, &done]()
         {
             if (++call_count == expected_call_count)
             {
@@ -886,8 +886,10 @@ TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_d
 
     EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(*config));
 
+    glm::mat2 const rotate_inverted(-1, 0,
+                                     0,-1);
     for (auto display_buffer : initial_display_buffer_references)
     {
-        EXPECT_THAT(display_buffer->orientation(), Eq(mir_orientation_inverted));
+        EXPECT_THAT(display_buffer->transformation(), Eq(rotate_inverted));
     }
 }
