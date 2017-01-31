@@ -168,7 +168,12 @@ struct Client
             mir_window_focus_state_focused == value)
             focused = true;
 
-        if (exposed && focused)
+        test_and_raise();
+    }
+
+    void test_and_raise()
+    {
+        if (exposed && focused && input_device_state_received)
             ready_to_accept_events.raise();
     }
 
@@ -187,7 +192,11 @@ struct Client
         if (type == mir_event_type_keymap)
             client->handle_keymap(ev);
         if (type == mir_event_type_input_device_state)
+        {
+            client->input_device_state_received = true;
+            client->test_and_raise();
             client->handle_input_device_state(ev);
+        }
     }
     ~Client()
     {
@@ -203,6 +212,7 @@ struct Client
     mir::test::Signal all_events_received;
     bool exposed = false;
     bool focused = false;
+    bool input_device_state_received = false;
 };
 
 struct DeviceCounter : mi::InputDeviceObserver
