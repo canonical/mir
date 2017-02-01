@@ -35,7 +35,6 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
-class InputDeviceHub;
 }
 
 namespace scene
@@ -52,6 +51,7 @@ class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
 class EventSinkFactory;
+class InputConfigurationChanger;
 
 class DefaultIpcFactory : public ProtobufIpcFactory
 {
@@ -68,7 +68,7 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<input::InputDeviceHub> const& seat);
+        std::shared_ptr<InputConfigurationChanger> const& input_Changer);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
@@ -104,7 +104,7 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<input::InputDeviceHub> const hub;
+    std::shared_ptr<InputConfigurationChanger> const input_changer;
 };
 }
 }

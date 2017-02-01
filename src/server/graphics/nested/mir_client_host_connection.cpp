@@ -36,6 +36,7 @@
 #include "mir_toolkit/extensions/android_buffer.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
 #include "mir_toolkit/extensions/graphics_module.h"
+#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -218,10 +219,7 @@ public:
     MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
         render_surface(mir_connection_create_render_surface_sync(connection,
             properties.size.width.as_int(), properties.size.height.as_int())),
-        stream(mir_render_surface_get_buffer_stream(render_surface,
-            properties.size.width.as_int(), properties.size.height.as_int(),
-            properties.format,
-            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
+        stream(get_appropriate_stream(connection, render_surface, properties))
     {
     }
 
@@ -246,6 +244,24 @@ public:
     }
 
 private:
+    MirBufferStream* get_appropriate_stream(
+        MirConnection* connection, MirRenderSurface* rs, mg::BufferProperties const& props)
+    {
+        if (props.usage == mg::BufferUsage::software)
+        {
+            return mir_render_surface_get_buffer_stream(
+                rs, props.size.width.as_int(), props.size.height.as_int(), props.format);
+        }
+        else
+        {
+            auto ext = mir_extension_hardware_buffer_stream_v1(connection);
+            if (!ext)
+                BOOST_THROW_EXCEPTION(std::runtime_error("no hardware streams available on platform"));
+            return ext->get_hardware_buffer_stream(
+                rs, props.size.width.as_int(), props.size.height.as_int(), props.format);
+        }
+    }
+
     MirRenderSurface* const render_surface;
     MirBufferStream* const stream;
 };

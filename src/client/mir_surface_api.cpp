@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/mir_window_id.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
@@ -313,11 +314,11 @@ catch (std::exception const& ex)
 }
 
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
-                                              MirPersistentId* parent,
+                                              MirWindowId* parent,
                                               MirRectangle* attachment_rect,
                                               MirEdgeAttachment edge)
 {
-    mir::require(mir_persistent_id_is_valid(parent));
+    mir::require(mir_window_id_is_valid(parent));
     mir::require(attachment_rect != nullptr);
 
     if (!spec->type.is_set() ||
@@ -326,7 +327,7 @@ bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
         return false;
     }
 
-    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
+    spec->parent_id = std::make_unique<MirWindowId>(*parent);
     spec->aux_rect = *attachment_rect;
     spec->edge_attachment = edge;
     return true;
@@ -813,18 +814,18 @@ void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback cal
 
 namespace
 {
-void assign_surface_id_result(MirWindow*, MirPersistentId* id, void* context)
+void assign_surface_id_result(MirWindow*, MirWindowId* id, void* context)
 {
     void** result_ptr = reinterpret_cast<void**>(context);
     *result_ptr = id;
 }
 }
 
-MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
+MirWindowId* mir_window_request_persistent_id_sync(MirWindow* window)
 {
     mir::require(mir_window_is_valid(window));
 
-    MirPersistentId* result = nullptr;
+    MirWindowId* result = nullptr;
     mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
@@ -1098,7 +1099,7 @@ void mir_surface_spec_set_placement(MirSurfaceSpec* spec,
 }
 
 bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
-                                               MirPersistentId* parent,
+                                               MirWindowId* parent,
                                                MirRectangle* attachment_rect,
                                                MirEdgeAttachment edge)
 {
@@ -1255,36 +1256,43 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
     return mir_window_get_buffer_stream(surface);
 }
 
-MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
+MirWaitHandle* mir_surface_request_window_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
 {
     return mir_window_request_persistent_id_helper(surface, callback, context);
 }
 
-MirPersistentId* mir_surface_request_persistent_id_sync(MirSurface *surface)
+MirPersistentId* mir_surface_request_window_id_sync(MirSurface *surface)
 {
-    MirPersistentId* result = nullptr;
+    MirWindowId* result = nullptr;
     mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
     return result;
 }
 
 #pragma GCC diagnostic pop
 
-bool mir_persistent_id_is_valid(MirPersistentId* id)
+bool mir_window_id_is_valid(MirWindowId* id)
 {
     return id != nullptr;
 }
 
-void mir_persistent_id_release(MirPersistentId* id)
+void mir_window_id_release(MirWindowId* id)
 {
     delete id;
 }
 
-char const* mir_persistent_id_as_string(MirPersistentId *id)
+char const* mir_window_id_as_string(MirWindowId *id)
 {
     return id->as_string().c_str();
 }
 
-MirPersistentId* mir_persistent_id_from_string(char const* id_string)
+MirWindowId* mir_window_id_from_string(char const* id_string)
 {
-    return new MirPersistentId{id_string};
+    return new MirWindowId{id_string};
 }
+
+__asm__(".symver mir_window_id_release,mir_persistent_id_release@");
+__asm__(".symver mir_window_id_as_string,mir_persistent_id_as_string@");
+__asm__(".symver mir_window_id_from_string,mir_persistent_id_from_string@");
+__asm__(".symver mir_window_id_is_valid,mir_persistent_id_is_valid@");
+__asm__(".symver mir_window_request_persistent_id,mir_surface_request_window_id@");
+__asm__(".symver mir_window_request_persistent_id_sync,mir_surface_request_window_id_sync@");

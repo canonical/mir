@@ -1055,6 +1055,8 @@ MIR_PROTOBUF_0.26 {
     mir::protobuf::TouchpadConfiguration::TouchpadConfiguration*;
     mir::protobuf::TouchpadConfiguration::?TouchpadConfiguration*;
     mir::protobuf::TouchpadConfiguration::default_instance_;
+    mir::protobuf::InputConfigurationRequest::InputConfigurationRequest*;
+    mir::protobuf::InputConfigurationRequest::?InputConfigurationRequest*;
     mir::protobuf::PointerConfiguration::?PointerConfiguration*;
     mir::protobuf::InputDeviceInfo::CopyFrom*;
     mir::protobuf::InputDevices::Clear*;

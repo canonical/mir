@@ -391,6 +391,44 @@ __attribute__ ((deprecated("use platform specific extensions instead")));
 MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
+ * Apply the input configuration for the connection
+ *
+ * Configure the behavior of input device attached to a server when the session
+ * this connection represents is the focused. If the session is not focused
+ * the configuration will be stored for later use.
+ *
+ * The call returns after sending the configuration to the server.
+ *
+ * Errors during application of the configuration will be indicated through
+ * the error callback.
+ *
+ *   \param [in] connection             The connection
+ *   \param [in] config                 The input config
+ */
+void mir_connection_apply_session_input_config(
+    MirConnection* connection, MirInputConfig const* config);
+
+/**
+ * Set the input configuration as base configuration.
+ *
+ * Configure the behavior of input device attached to a server. When
+ * allowed by the shell the configuration will be used as base configuration.
+ *
+ * So whenever the active session has no session specific configuration this
+ * input configuration will be used.
+ *
+ * The call returns after sending the configuration to the server.
+ *
+ * Errors during application of the configuration will be indicated through
+ * the error callback.
+ *
+ *   \param [in] connection             The connection
+ *   \param [in] config                 The input config
+ */
+void mir_connection_set_base_input_config(
+    MirConnection* connection, MirInputConfig const* config);
+
+/**
  * \deprecated  Use mir_input_config_release() instead.
  *
  * Release this snapshot of the input configuration.
@@ -408,7 +446,6 @@ __attribute__ ((deprecated("use mir_input_config_release instead")));
  * \param [in] config  The input configuration
  */
 void mir_input_config_release(MirInputConfig const* config);
-
 
 /**
  * Register a callback to be called when the input devices change.
