@@ -28,7 +28,6 @@ MIRPLATFORM_0.25 {
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::overlay*;
     mir::graphics::DisplayBuffer::view_area*;
-    mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;
     mir::graphics::DisplayConfiguration::for_each_card*;
     mir::graphics::DisplayConfiguration::for_each_output*;
