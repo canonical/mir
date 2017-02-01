@@ -813,7 +813,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_unreleased;
+} MIR_SERVER_0.27;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
 MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
