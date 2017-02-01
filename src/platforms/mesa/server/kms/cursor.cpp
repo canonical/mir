@@ -110,13 +110,13 @@ mgm::Cursor::Cursor(
     std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
-        visible(true),
         last_set_failed(false),
         buffer(gbm),
         buffer_width(gbm_bo_get_width(buffer)),
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
+    // TODO
     hide();
     if (last_set_failed)
         throw std::runtime_error("Initial KMS cursor set failed");
