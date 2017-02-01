@@ -116,7 +116,6 @@ mgm::Cursor::Cursor(
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
-    // TODO
     hide();
     if (last_set_failed)
         throw std::runtime_error("Initial KMS cursor set failed");
