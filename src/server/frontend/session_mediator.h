@@ -51,7 +51,6 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
-class InputDeviceHub;
 }
 
 namespace scene
@@ -76,6 +75,7 @@ class DisplayChanger;
 class Screencast;
 class PromptSession;
 class BufferStream;
+class InputConfigurationChanger;
 
 namespace detail
 {
@@ -122,7 +122,7 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<input::InputDeviceHub> const& hub
+        std::shared_ptr<InputConfigurationChanger> const& input_changer
         );
 
     ~SessionMediator() noexcept;
@@ -249,6 +249,14 @@ public:
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
+    void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing
     void translate_surface_to_screen(
@@ -293,7 +301,7 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<input::InputDeviceHub> const hub;
+    std::shared_ptr<InputConfigurationChanger> const input_changer;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

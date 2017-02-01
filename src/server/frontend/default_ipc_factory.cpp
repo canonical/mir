@@ -45,7 +45,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mir::input::InputDeviceHub> const& hub) :
+    std::shared_ptr<InputConfigurationChanger> const& input_changer) :
     shell(shell),
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_observer(sm_observer),
@@ -59,7 +59,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    hub(hub)
+    input_changer(input_changer)
 {
 }
 
@@ -136,5 +136,5 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         translator,
         anr_detector,
         cookie_authority,
-        hub);
+        input_changer);
 }
