@@ -25,6 +25,8 @@ namespace mir
 {
 namespace client
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class ErrorRenderSurface : public MirRenderSurface
 {
 public:
@@ -46,6 +48,7 @@ private:
     std::string const error;
     MirConnection* const connection_;
 };
+#pragma GCC diagnostic pop
 }
 }
 #endif
