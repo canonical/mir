@@ -35,6 +35,8 @@ struct MockInputManager : public input::InputManager
 {
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
+    MOCK_METHOD0(pause_for_config, void());
+    MOCK_METHOD0(continue_after_config, void());
 };
 
 }

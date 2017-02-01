@@ -129,6 +129,14 @@ void mie::Platform::process_input_events()
     }
 }
 
+void mie::Platform::pause_for_config()
+{
+}
+
+void mie::Platform::continue_after_config()
+{
+}
+
 void mie::Platform::device_added(libinput_device* dev)
 {
     auto device_ptr = make_libinput_device(lib, dev);
