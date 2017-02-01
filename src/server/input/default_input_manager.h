@@ -48,6 +48,8 @@ public:
 
     void start() override;
     void stop() override;
+    void pause_for_config() override;
+    void continue_after_config() override;
 private:
     void start_platforms();
     void stop_platforms();
