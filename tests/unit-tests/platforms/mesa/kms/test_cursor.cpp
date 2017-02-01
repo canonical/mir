@@ -301,6 +301,7 @@ struct MesaCursorTest : ::testing::Test
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
     StubCurrentConfiguration current_configuration;
+    StubCursorImage stub_image;
     StubKMSOutputContainer output_container;
     mgm::Cursor cursor;
 };
@@ -439,6 +440,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
         std::make_shared<StubCurrentConfiguration>()};
+    cursor_tmp.show(SinglePixelCursorImage());
 }
 
 TEST_F(MesaCursorTest, throws_when_images_are_too_large)
@@ -460,17 +462,16 @@ TEST_F(MesaCursorTest, throws_when_images_are_too_large)
     }, std::logic_error);
 }
 
-TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
+TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{0,0}));
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
+    EXPECT_CALL(*output_container.outputs[10], clear_cursor());
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
     EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
     /* No checking of existing cursor state */
-    EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(1);
+    EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[12], has_cursor()).Times(0);
 
@@ -497,6 +498,8 @@ TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 {
     using namespace testing;
 
+    cursor.show(stub_image);
+
     EXPECT_CALL(*output_container.outputs[10], has_cursor())
         .WillOnce(Return(false))
         .WillOnce(Return(true));
@@ -514,6 +517,8 @@ TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
 {
     using namespace testing;
+
+    cursor.show(stub_image);
 
     EXPECT_CALL(*output_container.outputs[10], has_cursor())
         .WillOnce(Return(true));
@@ -533,6 +538,8 @@ TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
 TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
 {
     using namespace testing;
+
+    cursor.show(stub_image);
 
     EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{10,10}));
     EXPECT_CALL(*output_container.outputs[11], move_cursor(_))
@@ -571,6 +578,8 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
 {
     using namespace testing;
 
+    cursor.show(stub_image);
+
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_left);
 
     EXPECT_CALL(*output_container.outputs[12], move_cursor(geom::Point{112,100}));
@@ -587,6 +596,8 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
 {
     using namespace testing;
 
+    cursor.show(stub_image);
+
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_right);
 
 
@@ -602,6 +613,8 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
 TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
 {
     using namespace testing;
+
+    cursor.show(stub_image);
 
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{12}, mir_orientation_inverted);
 
@@ -656,6 +669,8 @@ TEST_F(MesaCursorTest, clears_cursor_on_exit)
 TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
 {
     using namespace testing;
+
+    cursor.show(stub_image);
 
     EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{150,75}));
     EXPECT_CALL(*output_container.outputs[11], move_cursor(geom::Point{50,25}));
@@ -716,6 +731,8 @@ TEST_F(MesaCursorTest, show_without_param_places_cursor_on_output_output)
 TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
 {
     using namespace testing;
+
+    cursor.show(stub_image); // ensures initial_cursor_location
 
     static geom::Displacement hotspot_displacement{10, 10};
     
