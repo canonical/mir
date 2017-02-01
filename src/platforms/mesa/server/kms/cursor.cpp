@@ -215,9 +215,17 @@ void mgm::Cursor::move_to(geometry::Point position)
 void mir::graphics::mesa::Cursor::suspend()
 {
     std::lock_guard<std::mutex> lg(guard);
+    clear(lg);
+}
 
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.clear_cursor(); });
+void mir::graphics::mesa::Cursor::clear(std::lock_guard<std::mutex> const&)
+{
+    last_set_failed = false;
+    output_container.for_each_output([&](KMSOutput& output)
+        {
+            if (!output.clear_cursor())
+                last_set_failed = true;
+        });
 }
 
 void mgm::Cursor::resume()
@@ -229,9 +237,7 @@ void mgm::Cursor::hide()
 {
     std::lock_guard<std::mutex> lg(guard);
     visible = false;
-
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.clear_cursor(); });
+    clear(lg);
 }
 
 void mgm::Cursor::for_each_used_output(
@@ -287,8 +293,7 @@ void mgm::Cursor::place_cursor_at_locked(
             output.move_cursor(geom::Point{} + dp - hotspot);
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                output.set_cursor(buffer);
-                if (!output.has_cursor())
+                if (!output.set_cursor(buffer) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }

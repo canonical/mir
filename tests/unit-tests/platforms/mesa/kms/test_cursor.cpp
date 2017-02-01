@@ -66,6 +66,10 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
             auto& out = *entry.second;
             ON_CALL(out, has_cursor())
                 .WillByDefault(Return(true));
+            ON_CALL(out, set_cursor(_))
+                .WillByDefault(Return(true));
+            ON_CALL(out, clear_cursor())
+                .WillByDefault(Return(true));
         }
     }
 
@@ -485,8 +489,12 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
 {
     using namespace testing;
 
-    EXPECT_CALL(*output_container.outputs[10], has_cursor())
-        .WillOnce(Return(false));
+    ON_CALL(*output_container.outputs[10], clear_cursor())
+        .WillByDefault(Return(false));
+    ON_CALL(*output_container.outputs[10], set_cursor(_))
+        .WillByDefault(Return(false));
+    ON_CALL(*output_container.outputs[10], has_cursor())
+        .WillByDefault(Return(false));
 
     EXPECT_THROW(
         mgm::Cursor cursor_tmp(mock_gbm.fake_gbm.device, output_container,
