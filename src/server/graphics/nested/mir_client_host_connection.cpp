@@ -856,6 +856,11 @@ bool mgn::MirClientHostConnection::supports_passthrough()
     return true;
 }
 
+void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)
+{
+    mir_connection_apply_session_input_config(mir_connection, config);
+}
+
 namespace
 {
 template<typename T>

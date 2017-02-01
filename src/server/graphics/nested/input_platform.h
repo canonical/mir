@@ -51,8 +51,11 @@ public:
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
+    void pause_for_config() override;
+    void continue_after_config() override;
 
 private:
+    void config_changed();
     void update_devices();
     void update_devices_locked();
     struct InputDevice;
@@ -67,6 +70,12 @@ private:
     std::unordered_map<MirInputDeviceId, std::shared_ptr<InputDevice>> devices;
     std::unordered_map<MirInputDeviceId, std::vector<std::pair<EventUPtr, mir::geometry::Rectangle>>>
         unknown_device_events;
+    enum State
+    {
+        started, stopped, paused
+    };
+    State state{stopped};
+    bool changed{false};
 };
 }
 }

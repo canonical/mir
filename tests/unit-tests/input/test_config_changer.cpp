@@ -264,3 +264,11 @@ TEST_F(ConfigChanger, setting_the_base_configuration_changes_the_base_configurat
 
     changer.set_base_configuration(std::move(changed_config));
 }
+
+TEST_F(ConfigChanger, informs_input_manager_about_configuration_in_progess)
+{
+    EXPECT_CALL(mock_input_manager, pause_for_config());
+    EXPECT_CALL(mock_input_manager, continue_after_config());
+
+    changer.set_base_configuration(get_populated_conf(conf_for_first()));
+}

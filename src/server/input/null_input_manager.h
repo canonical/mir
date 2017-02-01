@@ -33,6 +33,12 @@ class NullInputManager : public input::InputManager
     void stop() override
     {
     }
+    void pause_for_config() override
+    {
+    }
+    void continue_after_config() override
+    {
+    }
 };
 
 }

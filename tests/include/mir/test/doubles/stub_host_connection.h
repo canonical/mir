@@ -175,6 +175,9 @@ public:
     {
         return true;
     }
+    void apply_input_configuration(MirInputConfig const*)
+    {
+    }
     optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension()
     {
         return {};
@@ -196,6 +199,7 @@ struct MockHostConnection : StubHostConnection
         (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
          graphics::BufferProperties, char const*, uint32_t));
     MOCK_METHOD2(request_interface, void*(char const*, int));
+    MOCK_METHOD1(apply_input_configuration, void(MirInputConfig const*));
 
     void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
     {
