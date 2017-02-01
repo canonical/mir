@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 #define MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 
-#include "mir_toolkit/client_types_nbs.h"
-
 namespace mir
 {
 namespace graphics

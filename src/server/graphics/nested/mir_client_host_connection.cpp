@@ -791,7 +791,7 @@ public:
 
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_render_surface(
+        mir_window_spec_add_render_surface(
             spec, chain.rs(),
             size.width.as_int(), size.height.as_int(),
             disp.dx.as_int(), disp.dy.as_int());
@@ -799,7 +799,7 @@ public:
 
     void add_stream(mgn::HostStream& stream, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_render_surface(
+        mir_window_spec_add_render_surface(
             spec, stream.rs(),
             size.width.as_int(), size.height.as_int(),
             disp.dx.as_int(), disp.dy.as_int());

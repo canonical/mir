@@ -23,6 +23,10 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "mir_toolkit/event.h"
+#include "mir_toolkit/extensions/android_buffer.h"
+#include "mir_toolkit/extensions/android_egl.h"
+#include "mir_toolkit/extensions/fenced_buffers.h"
+#include "mir_toolkit/extensions/gbm_buffer.h"
 
 int main()
 {

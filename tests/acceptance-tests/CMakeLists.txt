@@ -97,9 +97,6 @@ endif()
   set_source_files_properties(test_presentation_chain.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
 
-  set_source_files_properties(test_render_surface.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-
   set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
 # END "staging"

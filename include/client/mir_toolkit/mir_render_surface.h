@@ -20,7 +20,7 @@
 #ifndef MIR_TOOLKIT_MIR_RENDER_SURFACE_H_
 #define MIR_TOOLKIT_MIR_RENDER_SURFACE_H_
 
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 
 #ifdef __cplusplus
 /**
@@ -144,28 +144,6 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface);
-
-/**
- * Set the MirWindowSpec to display content contained in a render surface
- *
- * \warning: The initial call to mir_surface_spec_add_render_surface will set
- *           the bottom-most content, and subsequent calls will stack the
- *           content on top.
- *
- * \param spec             The surface_spec to be updated
- * \param render_surface   The render surface containing the content to be displayed
- * \param logical_width    The width that the content will be displayed at
- *                         (Ignored for buffer streams)
- * \param logical_height   The height that the content will be displayed at
- *                         (Ignored for buffer streams)
- * \param displacement_x   The x displacement from the top-left corner of the MirWindow
- * \param displacement_y   The y displacement from the top-left corner of the MirWindow
- */
-void mir_surface_spec_add_render_surface(
-    MirWindowSpec* spec,
-    MirRenderSurface* render_surface,
-    int logical_width, int logical_height,
-    int displacement_x, int displacement_y);
 
 /**
  * Set the MirWindowSpec to contain a specific cursor.

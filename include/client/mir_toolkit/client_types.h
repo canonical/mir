@@ -50,6 +50,12 @@ typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
 typedef struct MirError MirError;
+typedef struct MirPresentationChain MirPresentationChain;
+typedef struct MirBuffer MirBuffer;
+typedef struct MirRenderSurface MirRenderSurface;
+
+typedef void (*MirBufferCallback)(MirBuffer*, void* context);
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context);
 
 
 /**

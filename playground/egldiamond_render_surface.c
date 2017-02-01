@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 
     CHECK(spec, "Can't create a window spec");
     mir_window_spec_set_name(spec, appname);
-    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+    mir_window_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
     mir_window_spec_set_event_handler(spec, resize_callback, render_surface);
 

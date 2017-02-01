@@ -203,13 +203,13 @@ int main(int argc, char** argv)
     //Arrange a 2x2 grid of chains within window
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, render_surface[0], chain_width, chain_height, displacement_x, displacement_y);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, render_surface[1], chain_width, chain_height, chain_width, displacement_y);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, render_surface[2], chain_width, chain_height, displacement_x, chain_height);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, render_surface[3], chain_width, chain_height, chain_width, chain_height);
     MirWindow* window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);

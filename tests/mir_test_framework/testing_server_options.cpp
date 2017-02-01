@@ -163,5 +163,6 @@ void mtf::TestingServerConfiguration::wait_for_server_start()
 std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{create_random_socket_name()};
+    printf("%s\n", socket_file.c_str());
     return socket_file;
 }

@@ -31,7 +31,6 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
 #include "display_configuration.h"
 #include "error_handler.h"
