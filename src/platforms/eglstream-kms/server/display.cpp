@@ -200,14 +200,9 @@ public:
         return false;
     }
 
-    MirOrientation orientation() const override
+    glm::mat2 transformation() const override
     {
-        return mir_orientation_normal;
-    }
-
-    MirMirrorMode mirror_mode() const override
-    {
-        return mir_mirror_mode_none;
+        return {};
     }
 
     mir::graphics::NativeDisplayBuffer* native_display_buffer() override
@@ -289,7 +284,7 @@ void mge::Display::configure(DisplayConfiguration const& conf)
 {
     auto kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
     active_sync_groups.clear();
-    kms_conf.for_each_output([this, &conf](kms::EGLOutput const& output)
+    kms_conf.for_each_output([this](kms::EGLOutput const& output)
          {
              if (output.used)
              {

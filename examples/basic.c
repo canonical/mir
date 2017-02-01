@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 
 #include <assert.h>
 #include <string.h>
@@ -87,7 +88,10 @@ int demo_client(const char* server, int buffer_swap_count)
     {
         MirModuleProperties properties = { NULL, -1, -1, -1, NULL };
 
-        mir_connection_get_graphics_module(mcd.connection, &properties);
+        MirExtensionGraphicsModuleV1 const* ext = mir_extension_graphics_module_v1(mcd.connection);
+        assert(ext);
+
+        ext->graphics_module(mcd.connection, &properties);
 
         assert(NULL != properties.name);
         assert(0 <= properties.major_version);

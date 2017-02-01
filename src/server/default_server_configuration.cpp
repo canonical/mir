@@ -88,7 +88,7 @@ std::shared_ptr<ms::SessionListener>
 mir::DefaultServerConfiguration::the_session_listener()
 {
     return session_listener(
-        [this]
+        []
         {
             return std::make_shared<ms::NullSessionListener>();
         });
@@ -98,7 +98,7 @@ std::shared_ptr<ms::PromptSessionListener>
 mir::DefaultServerConfiguration::the_prompt_session_listener()
 {
     return prompt_session_listener(
-        [this]
+        []
         {
             return std::make_shared<ms::NullPromptSessionListener>();
         });
@@ -223,7 +223,7 @@ auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {
     return logger(
-        [this]() -> std::shared_ptr<ml::Logger>
+        []() -> std::shared_ptr<ml::Logger>
         {
             return std::make_shared<ml::DumbConsoleLogger>();
         });

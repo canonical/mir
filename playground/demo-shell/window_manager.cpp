@@ -298,7 +298,6 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
         
         if (rotating || mode_change || preferred_mode)
         {
-            compositor->stop();
             auto conf = display->configuration();
             conf->for_each_output(
                 [&](mg::UserDisplayConfigurationOutput& output) -> void
@@ -324,7 +323,6 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
                 });
                                   
             display->configure(*conf);
-            compositor->start();
             return true;
         }
     }

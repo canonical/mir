@@ -74,8 +74,7 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
@@ -103,7 +102,7 @@ private:
     helpers::EGLHelper egl;
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;
-    MirOrientation rotation;
+    glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;

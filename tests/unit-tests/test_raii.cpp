@@ -90,7 +90,7 @@ TEST_F(RaiiTest, free_create_lambda_destroy_ptr)
 
     auto const raii = mir::raii::paired_calls(
         ::create_ptr,
-        [this] (RaiiTest*p){ ::destroy_ptr(p); });
+        [] (RaiiTest*p){ ::destroy_ptr(p); });
 
     raii->test_call();
 

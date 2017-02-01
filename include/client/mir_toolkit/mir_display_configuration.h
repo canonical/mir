@@ -533,6 +533,17 @@ void mir_output_set_gamma(MirOutput* client_output,
                           uint32_t  size);
 
 /**
+ * Set the scale-factor of a display
+ *
+ * The scale-factor specifies the conversion between logical pixels and physical
+ * pixels on this output. See mir_output_get_scale_factor for further details.
+ *
+ * \param [in]  output  The MirOutput to modify
+ * \param [in]  scale   The scale factor
+ */
+void mir_output_set_scale_factor(MirOutput* output, float scale);
+
+/**
  * Get the raw EDID data of a display.
  *
  * This returns a pointer to the start of the raw, unparsed EDID data.

@@ -137,7 +137,7 @@ mf::SurfaceId msh::AbstractShell::create_surface(
     ms::SurfaceCreationParameters const& params,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    auto const build = [this, sink](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
+    auto const build = [sink](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
         {
             return session->create_surface(placed_params, sink);
         };

@@ -155,8 +155,9 @@ private:
 
 struct MockBufferAllocator : mg::GraphicBufferAllocator
 {
-    MOCK_METHOD1(alloc_buffer,
-                 std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
+    MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, uint32_t, uint32_t));
     MOCK_METHOD0(supported_pixel_formats,
                  std::vector<MirPixelFormat>());
 };
