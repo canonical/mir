@@ -186,6 +186,8 @@ public:
     void remove_session_display();
 
     MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
+    void apply_input_configuration(MirInputConfig  const* config);
+    void set_base_input_configuration(MirInputConfig const* config);
     void preview_base_display_configuration(
         mir::protobuf::DisplayConfiguration const& configuration,
         std::chrono::seconds timeout);

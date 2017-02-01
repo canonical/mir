@@ -47,6 +47,8 @@
 #include "mir/require.h"
 #include "mir/uncaught.h"
 
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 #include "mir/platform_message.h"
@@ -67,6 +69,7 @@ namespace mev = mir::events;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mi = mir::input;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 
@@ -1438,4 +1441,28 @@ void* MirConnection::request_interface(char const* name, int version)
         return &graphics_module_extension.value();
 
     return platform->request_interface(name, version);
+}
+
+void MirConnection::apply_input_configuration(MirInputConfig const* config)
+{
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.apply_input_configuration(&request,
+                                     store_error_result->result.get(),
+                                     gp::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::set_base_input_configuration(MirInputConfig const* config)
+{
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.set_base_input_configuration(&request,
+                                        store_error_result->result.get(),
+                                        gp::NewCallback(&handle_structured_error, store_error_result));
 }

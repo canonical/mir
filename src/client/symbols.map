@@ -587,3 +587,9 @@ MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
     mir_render_surface_release;
     mir_window_spec_add_render_surface;
 } MIR_CLIENT_0.26;
+
+MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
+  global:
+    mir_connection_apply_session_input_config;
+    mir_connection_set_base_input_config;
+} MIR_CLIENT_0.26.1;

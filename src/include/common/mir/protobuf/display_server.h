@@ -151,6 +151,14 @@ public:
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
+    virtual void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
+    virtual void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
 
 protected:
     DisplayServer() = default;
