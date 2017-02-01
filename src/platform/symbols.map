@@ -4,9 +4,6 @@ MIRPLATFORM_0.25 {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
     mir::graphics::BufferBasic::BufferBasic*;
-    mir::graphics::DisplayConfiguration::DisplayConfiguration*;
-    mir::graphics::DisplayConfiguration::for_each_card*;
-    mir::graphics::DisplayConfiguration::for_each_output*;
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfigurationOutput::extents*;
     mir::graphics::DisplayConfigurationOutput::valid*;
@@ -22,25 +19,9 @@ MIRPLATFORM_0.25 {
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
-    mir::graphics::GLConfig::depth_buffer_bits*;
-    mir::graphics::GLConfig::?GLConfig*;
-    mir::graphics::GLConfig::GLConfig*;
-    mir::graphics::GLConfig::operator*;
-    mir::graphics::GLConfig::stencil_buffer_bits*;
-    mir::graphics::GraphicBufferAllocator::alloc_buffer*;
-    mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
-    mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
-    mir::graphics::GraphicBufferAllocator::operator*;
-    mir::graphics::GraphicBufferAllocator::supported_pixel_formats*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
     mir::graphics::module_for_device*;
     mir::graphics::operator*;
-    mir::graphics::PlatformIpcOperations::connection_ipc_package*;
-    mir::graphics::PlatformIpcOperations::operator*;
-    mir::graphics::PlatformIpcOperations::pack_buffer*;
-    mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
-    mir::graphics::PlatformIpcOperations::PlatformIpcOperations*;
-    mir::graphics::PlatformIpcOperations::unpack_buffer*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::options::arw_server_socket_opt*;
@@ -106,9 +87,6 @@ MIRPLATFORM_0.25 {
     non-virtual?thunk?to?mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?mir::graphics::DisplayConfiguration::valid*;
     non-virtual?thunk?to?mir::graphics::EventHandlerRegister::?EventHandlerRegister*;
-    non-virtual?thunk?to?mir::graphics::GLConfig::?GLConfig*;
-    non-virtual?thunk?to?mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
-    non-virtual?thunk?to?mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     non-virtual?thunk?to?mir::options::Configuration::?Configuration*;
     non-virtual?thunk?to?mir::options::DefaultConfiguration::?DefaultConfiguration*;
     non-virtual?thunk?to?mir::options::DefaultConfiguration::parse_arguments*;
@@ -128,9 +106,6 @@ MIRPLATFORM_0.25 {
     typeinfo?for?mir::graphics::DisplayConfigurationOutput;
     typeinfo?for?mir::graphics::DisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::EventHandlerRegister;
-    typeinfo?for?mir::graphics::GLConfig;
-    typeinfo?for?mir::graphics::GraphicBufferAllocator;
-    typeinfo?for?mir::graphics::PlatformIpcOperations;
     typeinfo?for?mir::graphics::PlatformIPCPackage;
     typeinfo?for?mir::graphics::UserDisplayConfigurationOutput;
     typeinfo?for?mir::options::Configuration;
@@ -147,9 +122,6 @@ MIRPLATFORM_0.25 {
     vtable?for?mir::graphics::DisplayConfigurationOutput;
     vtable?for?mir::graphics::DisplayConfigurationPolicy;
     vtable?for?mir::graphics::EventHandlerRegister;
-    vtable?for?mir::graphics::GLConfig;
-    vtable?for?mir::graphics::GraphicBufferAllocator;
-    vtable?for?mir::graphics::PlatformIpcOperations;
     vtable?for?mir::graphics::PlatformIPCPackage;
     vtable?for?mir::graphics::UserDisplayConfigurationOutput;
     vtable?for?mir::options::Configuration;
