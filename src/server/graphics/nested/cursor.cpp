@@ -46,6 +46,9 @@ void mgn::Cursor::show(mg::CursorImage const& cursor_image)
 
 void mgn::Cursor::show()
 {
+    // TODO: Ideally we should not keep default_image, but rather keep the
+    //       last shown cursor image. Unfortunately not feasible with the
+    //       current reference parameter. So keep the status quo...
     connection->set_cursor_image(*default_image);
 }
 

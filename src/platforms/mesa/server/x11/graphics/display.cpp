@@ -326,7 +326,7 @@ void mgx::Display::resume()
     BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on x11 platform"));
 }
 
-auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
+auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return nullptr;
 }

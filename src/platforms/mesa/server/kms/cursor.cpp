@@ -107,8 +107,7 @@ inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
 mgm::Cursor::Cursor(
     gbm_device* gbm,
     KMSOutputContainer& output_container,
-    std::shared_ptr<CurrentConfiguration> const& current_configuration,
-    std::shared_ptr<mg::CursorImage> const& initial_image) :
+    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
         visible(true),
@@ -118,7 +117,7 @@ mgm::Cursor::Cursor(
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
-    show(*initial_image);
+    hide();
     if (last_set_failed)
         throw std::runtime_error("Initial KMS cursor set failed");
 }

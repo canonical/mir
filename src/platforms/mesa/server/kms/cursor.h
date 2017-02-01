@@ -68,8 +68,7 @@ public:
     Cursor(
         gbm_device* device,
         KMSOutputContainer& output_container,
-        std::shared_ptr<CurrentConfiguration> const& current_configuration,
-        std::shared_ptr<CursorImage> const& cursor_image);
+        std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
     ~Cursor() noexcept;
 
