@@ -1,4 +1,4 @@
-MIR_SERVER_unreleased {
+MIR_SERVER_0.27 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -681,7 +681,7 @@ MIR_SERVER_unreleased {
 };
 
 # these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_unreleased {
+MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
  global:
   extern "C++" {
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
@@ -816,7 +816,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_unreleased {
 } MIR_SERVER_unreleased;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_PROVING_unreleased {
+MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
  global:
   extern "C++" {
     mir::renderer::gl::ProgramFamily::add_program*;
@@ -872,4 +872,4 @@ MIR_SERVER_DETAIL_FOR_PROVING_unreleased {
     virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
     VTT?for?mir::shell::BasicWindowManager;
   };
-} MIR_SERVER_DETAIL_FOR_TESTING_unreleased;
+} MIR_SERVER_DETAIL_FOR_TESTING_0.27;
