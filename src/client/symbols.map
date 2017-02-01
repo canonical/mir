@@ -577,3 +577,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_request_persistent_id;
     mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;
+
+MIR_CLIENT_0.26.1 {  # New functions in Mir 0.26.1
+  global:
+    mir_prompt_session_new_fds_for_prompt_providers_sync;
+} MIR_CLIENT_0.26;
