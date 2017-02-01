@@ -578,7 +578,7 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;
 
-MIR_CLIENT_unreleased {  # New functions in Mir 0.27 or 1.0
+MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
   global:
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
