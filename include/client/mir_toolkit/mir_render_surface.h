@@ -30,6 +30,8 @@
 extern "C" {
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Create a render surface
  *
@@ -46,7 +48,8 @@ void mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
     MirRenderSurfaceCallback callback,
-    void* context);
+    void* context)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Create a render surface and wait for the result
@@ -60,7 +63,8 @@ void mir_connection_create_render_surface(
  */
 MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
-    int width, int height);
+    int width, int height)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Get the size of the MirRenderSurface
@@ -71,7 +75,8 @@ MirRenderSurface* mir_connection_create_render_surface_sync(
  */ 
 void mir_render_surface_get_size(
     MirRenderSurface* render_surface,
-    int* width, int* height);
+    int* width, int* height)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Set the size of the MirRenderSurface
@@ -82,7 +87,8 @@ void mir_render_surface_get_size(
  */ 
 void mir_render_surface_set_size(
     MirRenderSurface* render_surface,
-    int width, int height);
+    int width, int height)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Test for a valid render surface
@@ -93,7 +99,8 @@ void mir_render_surface_set_size(
  *                             or false otherwise
  */
 bool mir_render_surface_is_valid(
-    MirRenderSurface* render_surface);
+    MirRenderSurface* render_surface)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -105,7 +112,8 @@ bool mir_render_surface_is_valid(
  *                        object is valid.
  */
 char const *mir_render_surface_get_error_message(
-    MirRenderSurface* render_surface);
+    MirRenderSurface* render_surface)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Release the specified render surface
@@ -113,7 +121,8 @@ char const *mir_render_surface_get_error_message(
  * \param [in] render_surface                   The render surface to be released
  */
 void mir_render_surface_release(
-    MirRenderSurface* render_surface);
+    MirRenderSurface* render_surface)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Obtain the buffer stream backing a given render surface.
@@ -132,7 +141,8 @@ void mir_render_surface_release(
 MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
-    MirPixelFormat format);
+    MirPixelFormat format)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Obtain the presentation chain backing a given render surface
@@ -143,7 +153,8 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
  *                               been called once
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
-    MirRenderSurface* render_surface);
+    MirRenderSurface* render_surface)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Set the MirWindowSpec to contain a specific cursor.
@@ -153,10 +164,13 @@ MirPresentationChain* mir_render_surface_get_presentation_chain(
  * \param [in] hotspot_x        The x-coordinate to use as the cursor's hotspot
  * \param [in] hotspot_y        The y-coordinate to use as the cursor's hotspot
  */
-void mir_surface_spec_set_cursor_render_surface(
+void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
-    int hotspot_x, int hotspot_y);
+    int hotspot_x, int hotspot_y)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

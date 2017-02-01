@@ -32,8 +32,11 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection*);
 
 EGLBoolean future_driver_eglTerminate(EGLDisplay);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 EGLSurface future_driver_eglCreateWindowSurface(
     EGLDisplay display, EGLConfig config, MirRenderSurface* surface, const EGLint *);
+#pragma GCC diagnostic pop
 
 EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface);
 

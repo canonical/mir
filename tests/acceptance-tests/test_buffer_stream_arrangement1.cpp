@@ -26,6 +26,8 @@ namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 using namespace testing;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace
 {
 
@@ -63,6 +65,7 @@ struct RenderSurfaceBasedStream : mt::Stream
 
     std::unique_ptr<RenderSurface> const rs;
 };
+
 }
 
 typedef mt::BufferStreamArrangementBase BufferStreamArrangementStaging;
@@ -138,3 +141,4 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
     streams.back()->swap_buffers();
     EXPECT_THAT(stream.physical_size(), Eq(changed_physical_size));
 }
+#pragma GCC diagnostic pop

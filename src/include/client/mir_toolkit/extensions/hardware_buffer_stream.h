@@ -34,10 +34,13 @@ extern "C" {
 //Internally, its useful in playground/ and the nested server until we switch upstream
 //driver stacks to the mir egl platform. 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef MirBufferStream* (*MirExtensionGetHardwareBufferStream)(
     MirRenderSurface* rs,
     int width, int height,
     MirPixelFormat format);
+#pragma GCC diagnostic pop
 
 typedef struct MirExtensionHardwareBufferStreamV1
 {

@@ -49,7 +49,10 @@ namespace mir
 {
 namespace client
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* render_surface_lookup(void* key); 
+#pragma GCC diagnostic pop
 }
 }
 

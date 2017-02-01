@@ -213,6 +213,8 @@ private:
     mir::geometry::Displacement cursor_hotspot;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class MirClientHostStream : public mgn::HostStream
 {
 public:
@@ -227,7 +229,6 @@ public:
     {
         mir_render_surface_release(render_surface);
     }
-
     EGLNativeWindowType egl_native_window() const override
     {
         return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
@@ -265,6 +266,7 @@ private:
     MirRenderSurface* const render_surface;
     MirBufferStream* const stream;
 };
+#pragma GCC diagnostic pop
 
 }
 
@@ -534,9 +536,10 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct Chain : mgn::HostChain
 {
-
     Chain(MirConnection* connection) :
         render_surface(mir_connection_create_render_surface_sync(connection, 0, 0)),
         chain(mir_render_surface_get_presentation_chain(render_surface))
@@ -581,6 +584,7 @@ private:
     MirRenderSurface* const render_surface;
     MirPresentationChain* chain;
 };
+#pragma GCC diagnostic pop
 
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
@@ -789,6 +793,8 @@ public:
         mir_window_spec_release(spec);
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
     {
         mir_window_spec_add_render_surface(
@@ -804,6 +810,7 @@ public:
             size.width.as_int(), size.height.as_int(),
             disp.dx.as_int(), disp.dy.as_int());
     }
+#pragma GCC diagnostic pop
 
     MirWindowSpec* handle() override
     {

@@ -31,11 +31,14 @@ extern "C" {
 struct ANativeWindow;
 struct ANativeWindowBuffer;
 typedef void* (*mir_extension_to_native_display_type)(MirConnection*);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef struct ANativeWindow* (*mir_extension_create_anw)(
     MirRenderSurface* rs,
     int width, int height,
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags);
+#pragma GCC diagnostic pop
 typedef void (*mir_extension_destroy_anw)(struct ANativeWindow*);
 typedef struct ANativeWindowBuffer* (*mir_extension_create_anwb)(MirBuffer*);
 typedef void (*mir_extension_destroy_anwb)(struct ANativeWindowBuffer*);

@@ -44,8 +44,11 @@ struct ConnectionResourceMap : testing::Test
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     std::shared_ptr<MirRenderSurface> render_surface { std::make_shared<mcl::RenderSurface>(
         nullptr, nullptr, nullptr, nullptr, mir::geometry::Size{0, 0}) };
+#pragma GCC diagnostic pop
 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};

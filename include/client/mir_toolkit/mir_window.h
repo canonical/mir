@@ -549,10 +549,14 @@ void mir_window_spec_set_streams(MirWindowSpec* spec,
  * \param displacement_x   The x displacement from the top-left corner of the MirWindow
  * \param displacement_y   The y displacement from the top-left corner of the MirWindow
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_add_render_surface(MirWindowSpec* spec,
                                         MirRenderSurface* render_surface,
                                         int logical_width, int logical_height,
-                                        int displacement_x, int displacement_y);
+                                        int displacement_x, int displacement_y)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+#pragma GCC diagnostic pop
 
 /**
  * Release the resources held by a MirWindowSpec.

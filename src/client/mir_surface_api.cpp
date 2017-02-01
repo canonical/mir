@@ -829,6 +829,8 @@ MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
     return result;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_add_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
@@ -856,9 +858,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
                                                               int width, int height,

@@ -22,6 +22,8 @@
 #include "mir/require.h"
 #include "connection_surface_map.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace
 {
 class RenderSurfaceResult
@@ -223,7 +225,7 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
     rs->set_size({width, height});
 }
 
-void mir_surface_spec_set_cursor_render_surface(
+void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
@@ -245,3 +247,4 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+#pragma GCC diagnostic pop

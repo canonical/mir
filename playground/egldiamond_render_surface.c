@@ -52,6 +52,8 @@ static void shutdown(int signum)
        return -1; \
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 //The client arranges the scene in the subscene
 void resize_callback(MirWindow* window, MirEvent const* event, void* context)
 {
@@ -320,3 +322,4 @@ int main(int argc, char *argv[])
     mir_connection_release(connection);
     return 0;
 }
+#pragma GCC diagnostic pop

@@ -74,7 +74,10 @@ struct Callback
     T* result{nullptr};
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 using RenderSurfaceCallback = Callback<MirRenderSurface>;
+#pragma GCC diagnostic pop
 using PresentationChainCallback = Callback<MirPresentationChain>;
 using BufferStreamCallback = Callback<MirBufferStream>;
 

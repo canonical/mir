@@ -88,6 +88,8 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -271,3 +273,4 @@ int main(int argc, char** argv)
     mir_connection_release(connection);
     return 0;
 }
+#pragma GCC diagnostic pop

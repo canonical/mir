@@ -40,6 +40,8 @@ struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 
 using namespace testing;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(RenderSurfaceTest, creates_and_releases_render_surfaces)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -301,3 +303,4 @@ TEST_F(RenderSurfaceTest, excepts_on_chain_request_if_stream_handed_out)
     mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
+#pragma GCC diagnostic pop

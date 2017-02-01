@@ -179,6 +179,8 @@ void bounce_position(int& position, int& delta, int min, int max)
     position += delta;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int /*argc*/, char* /*argv*/[])
 {
     char const* socket = nullptr;
@@ -244,3 +246,4 @@ int main(int /*argc*/, char* /*argv*/[])
 
     return 0;
 }
+#pragma GCC diagnostic pop
