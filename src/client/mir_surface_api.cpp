@@ -21,7 +21,6 @@
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_window_id.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
@@ -1256,12 +1255,12 @@ MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface)
     return mir_window_get_buffer_stream(surface);
 }
 
-MirWaitHandle* mir_surface_request_window_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
+MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowIdCallback callback, void* context)
 {
     return mir_window_request_persistent_id_helper(surface, callback, context);
 }
 
-MirPersistentId* mir_surface_request_window_id_sync(MirSurface *surface)
+MirWindowId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirWindowId* result = nullptr;
     mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
@@ -1269,6 +1268,26 @@ MirPersistentId* mir_surface_request_window_id_sync(MirSurface *surface)
 }
 
 #pragma GCC diagnostic pop
+
+bool mir_persistent_id_is_valid(MirWindowId* id)
+{
+    return mir_window_id_is_valid(id);
+}
+
+void mir_persistent_id_release(MirWindowId* id)
+{
+    mir_window_id_release(id);
+}
+
+char const* mir_persistent_id_as_string(MirWindowId *id)
+{
+    return mir_window_id_as_string(id);
+}
+
+MirWindowId* mir_persistent_id_from_string(char const* id_string)
+{
+    return mir_window_id_from_string(id_string);
+}
 
 bool mir_window_id_is_valid(MirWindowId* id)
 {
@@ -1290,9 +1309,16 @@ MirWindowId* mir_window_id_from_string(char const* id_string)
     return new MirWindowId{id_string};
 }
 
-__asm__(".symver mir_window_id_release,mir_persistent_id_release@");
-__asm__(".symver mir_window_id_as_string,mir_persistent_id_as_string@");
-__asm__(".symver mir_window_id_from_string,mir_persistent_id_from_string@");
-__asm__(".symver mir_window_id_is_valid,mir_persistent_id_is_valid@");
-__asm__(".symver mir_window_request_persistent_id,mir_surface_request_window_id@");
-__asm__(".symver mir_window_request_persistent_id_sync,mir_surface_request_window_id_sync@");
+void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context)
+{
+    mir_window_request_persistent_id_helper(window, callback, context);
+}
+
+MirWindowId* mir_window_request_window_id_sync(MirWindow* window)
+{
+    mir::require(mir_window_is_valid(window));
+
+    MirWindowId* result = nullptr;
+    mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
+    return result;
+}
