@@ -723,6 +723,16 @@ TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_after_suspend_resume)
     output_container.verify_and_clear_expectations();
 }
 
+TEST_F(MesaCursorTest, show_with_param_places_cursor_on_output)
+{
+    EXPECT_CALL(*output_container.outputs[10], clear_cursor());
+    cursor.hide();
+
+    output_container.verify_and_clear_expectations();
+
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
+    cursor.show(stub_image);
+}
 
 TEST_F(MesaCursorTest, show_without_param_places_cursor_on_output_output)
 {
