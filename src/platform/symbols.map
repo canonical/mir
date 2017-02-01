@@ -4,6 +4,7 @@ MIRPLATFORM_0.25 {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
     mir::graphics::BufferBasic::BufferBasic*;
+    mir::graphics::Buffer::Buffer*;
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfigurationOutput::extents*;
     mir::graphics::DisplayConfigurationOutput::valid*;
@@ -114,6 +115,7 @@ MIRPLATFORM_0.25 {
     typeinfo?for?mir::options::ProgramOption;
     vtable?for?mir::AbnormalExit;
     vtable?for?mir::FatalErrorStrategy;
+    vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
     vtable?for?mir::graphics::BufferProperties;
     vtable?for?mir::graphics::DisplayConfiguration;
