@@ -197,13 +197,10 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
     }
     hotspot = cursor_image.hotspot();
     
-    // The hotspot may have changed so we need to call drmModeSetCursor again if the cursor was already visible.
-    if (visible)
-        place_cursor_at_locked(lg, current_position, ForceState);
-
     // Writing the data could throw an exception so lets
     // hold off on setting visible until after we have succeeded.
     visible = true;
+    place_cursor_at_locked(lg, current_position, ForceState);
 }
 
 void mgm::Cursor::move_to(geometry::Point position)
