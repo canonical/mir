@@ -12,27 +12,26 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 6
       . mircore ABI unchanged at 1
     - Enhancements:
-      . New/improved toolkit APIs: MirInputConfig and related functions,
-        MirWindow and related functions, DisplayConfig and related functions,
-        MirScreencastSpec and related functions,
-      . Support for configuring input configuration
-      . Introduce toolkit extension mechanism for platform specific APIs.
-      . Toolkit extensions for: mesa_drm_auth, set_gbm_device and
-        window_coordinate_translation
-      . Screencasting to a specific MirBuffer.
-      . Add DisplayConfigurationController::base_configuration() so downstreams
-        can get the base configuration. (Weirdly they can already set it.).
-      . x11 platform: allow adjustable scale parameter.
-      . Added EDID support: client API, server logging and in mirout.
-      . mirout: Add newer attributes only available in the new display
-        config API: scaling factor, subpixel arrangement and form factor.
-      . mirout: Log the orientation and logical size of each output too.
+      . New and improved client APIs: MirInputConfig, MirWindow, DisplayConfig,
+        MirScreencastSpec.
+      . Support for setting the input configuration.
+      . Introduced an extension mechanism for platform-specific APIs.
+      . Support for screencasting to a specific MirBuffer.
+      . Added DisplayConfigurationController::base_configuration() so
+        downstreams can get the base configuration (weirdly they can already
+        set it).
+      . X11 platform: Allow adjustable scale parameter.
+      . Added monitor EDID support to both the client API and server-side.
+      . mirout: Now shows scaling factor, subpixel arrangement, form factor and
+        EDID.
+      . mirout: Can now change the monitor configuration as well as report it.
       . Replace the mir::Server-overridable Reports with Observers.
-      . Add xkbcommon to mirclient.pc Requires.private.
       . Deprecate legacy toolkit APIs that will be removed in Mir 1.0
-      . Introduced 'client-side vsync', which dramatically reduces latency
-        from the client to the screen (particularly for nested servers like
-        Unity8).
+      . Introduced client-side vsync which dramatically reduces latency
+        from the client to the screen, by up to 44ms.
+      . Removed all input resampling logic. We now expect toolkits to do their
+        own, if at all. This reduces input lag by up to 16.9ms, or 8.4ms on
+        average.
     - Bugs fixed:
       . [performance] Restore support for better-than-triple buffering by
         default. (LP: #1240909)
