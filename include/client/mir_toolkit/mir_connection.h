@@ -473,6 +473,13 @@ void mir_connection_set_error_callback(
     MirErrorCallback callback,
     void* context);
 
+/**
+ * Returns client API version
+ *
+ * \return  The client API version
+ */
+unsigned mir_get_client_api_version();
+
 #ifdef __cplusplus
 }
 /**@}*/
