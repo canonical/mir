@@ -589,6 +589,12 @@ MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
     mir_buffer_is_valid;
     mir_buffer_get_error_message;
     mir_buffer_get_buffer_package;
+    mir_window_id_release;
+    mir_window_id_is_valid;
+    mir_window_id_as_string;
+    mir_window_id_from_string;
+    mir_window_request_window_id;
+    mir_window_request_window_id_sync;
 } MIR_CLIENT_0.26;
 
 MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
