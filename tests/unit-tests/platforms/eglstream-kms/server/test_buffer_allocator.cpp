@@ -43,7 +43,7 @@ TEST_F(BufferAllocator, cannot_alloc_sw_buffer_from_list)
     mge::BufferAllocator allocator;
     auto supported = allocator.supported_pixel_formats();
     ASSERT_THAT(supported, Not(IsEmpty()));
-    auto buffer = allocator.alloc_buffer({1, 1}, supported.front());
+    auto buffer = allocator.alloc_software_buffer({1, 1}, supported.front());
     EXPECT_THAT(buffer, Not(IsNull()));
 }
 

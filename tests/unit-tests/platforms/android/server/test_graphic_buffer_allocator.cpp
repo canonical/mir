@@ -139,7 +139,7 @@ TEST_F(GraphicBufferAllocator, adaptor_gralloc_usage_conversion_software)
 {
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
     mga::GraphicBufferAllocator allocator{std::make_shared<mtd::StubCmdStreamSyncFactory>(), quirks};
-    auto buffer = allocator.alloc_buffer({1,1}, mir_pixel_format_abgr_8888);
+    auto buffer = allocator.alloc_software_buffer({1,1}, mir_pixel_format_abgr_8888);
     auto native = reinterpret_cast<mga::NativeBuffer*>(buffer->native_buffer_handle().get());
     ASSERT_THAT(native, NotNull());
     EXPECT_THAT(native->anwb()->usage, Eq(sw_usage_flags));
