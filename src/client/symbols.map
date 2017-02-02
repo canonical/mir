@@ -582,6 +582,7 @@ MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
     mir_connection_allocate_buffer;
     mir_connection_allocate_buffer_sync;
     mir_presentation_chain_submit_buffer;
+    mir_prompt_session_new_fds_for_prompt_providers_sync;
     mir_buffer_get_width;
     mir_buffer_get_height;
     mir_buffer_get_pixel_format;
