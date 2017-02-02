@@ -144,8 +144,10 @@ message BufferStreamId {
 message BufferStreamParameters {
     required int32 width = 1;
     required int32 height = 2;
-    required int32 pixel_format = 3;
-    required int32 buffer_usage = 4;
+    optional int32 pixel_format = 3;
+    optional int32 buffer_usage = 4;
+    optional uint32 native_format = 5;
+    optional uint32 flags = 6;
 };
 
 message BufferAllocation {
