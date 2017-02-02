@@ -1120,6 +1120,8 @@ TEST_F(ClientLibrary, can_change_event_delegate)
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibrary, can_get_persistent_surface_id)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -1181,6 +1183,7 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     mir_connection_release(first_client);
     mir_connection_release(im_client);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibrary, creates_buffer_streams)
 {
