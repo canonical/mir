@@ -303,4 +303,27 @@ TEST_F(RenderSurfaceTest, excepts_on_chain_request_if_stream_handed_out)
     mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
+
+TEST_F(RenderSurfaceTest, stores_user_set_size_for_driver_to_access)
+{
+    auto width = 0;
+    auto height = 0;
+    geom::Size const size { 101, 102 };
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto rs = mir_connection_create_render_surface_sync(
+        connection, logical_size.width.as_int(), logical_size.height.as_int());
+
+    mir_render_surface_get_size(rs, &width, &height);
+    EXPECT_THAT(width, Eq(logical_size.width.as_int())); 
+    EXPECT_THAT(height, Eq(logical_size.height.as_int()));
+
+    mir_render_surface_set_size(rs, size.width.as_int(), size.height.as_int());
+    mir_render_surface_get_size(rs, &width, &height);
+    EXPECT_THAT(width, Eq(size.width.as_int())); 
+    EXPECT_THAT(height, Eq(size.height.as_int()));
+
+    mir_render_surface_release(rs);
+    mir_connection_release(connection);
+}
 #pragma GCC diagnostic pop
