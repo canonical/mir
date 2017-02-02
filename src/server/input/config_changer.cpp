@@ -24,6 +24,7 @@
 #include "mir/input/device.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/input/input_manager.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
@@ -262,6 +263,7 @@ void mi::ConfigChanger::session_stopping_handler(std::shared_ptr<ms::Session> co
 
 void mi::ConfigChanger::apply_config(MirInputConfig const& config)
 {
+    input_manager->pause_for_config();
     devices->for_each_mutable_input_device(
         [&config](Device& device)
         {
@@ -269,6 +271,7 @@ void mi::ConfigChanger::apply_config(MirInputConfig const& config)
             apply_device_config(device_config, device);
         });
     base_configuration_applied = false;
+    input_manager->continue_after_config();
 }
 
 void mi::ConfigChanger::apply_config_at_session(MirInputConfig const& config, std::shared_ptr<mf::Session> const& session)

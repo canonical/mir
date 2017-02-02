@@ -40,6 +40,14 @@ struct TouchpadSettings
     bool middle_mouse_button_emulation{true};
 };
 
+inline bool operator==(TouchpadSettings const& lhs, TouchpadSettings const& rhs)
+{
+    return lhs.click_mode == rhs.click_mode && lhs.scroll_mode == rhs.scroll_mode &&
+           lhs.button_down_scroll_button == rhs.button_down_scroll_button && lhs.tap_to_click == rhs.tap_to_click &&
+           lhs.disable_while_typing == rhs.disable_while_typing && lhs.disable_with_mouse == rhs.disable_with_mouse &&
+           lhs.middle_mouse_button_emulation == rhs.middle_mouse_button_emulation;
+}
+
 }
 }
 

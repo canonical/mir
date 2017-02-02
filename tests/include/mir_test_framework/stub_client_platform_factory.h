@@ -24,6 +24,7 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
+#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 #include "mir_test_framework/stub_platform_extension.h"
 #include "mir_test_framework/stub_client_platform_options.h"
 
@@ -61,6 +62,7 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirExtensionAnimalNamesV1 animal_ext;
     MirExtensionFencedBuffersV1 fence_ext;
     MirExtensionGbmBufferV1 buffer_ext;
+    MirExtensionHardwareBufferStreamV1 stream_ext;
 
     std::unordered_map<FailurePoint, std::exception_ptr, std::hash<int>> const fail_at;
 };

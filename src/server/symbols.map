@@ -1,4 +1,4 @@
-MIR_SERVER_0.26 {
+MIR_SERVER_0.27 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -681,7 +681,7 @@ MIR_SERVER_0.26 {
 };
 
 # these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
+MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
  global:
   extern "C++" {
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
@@ -745,6 +745,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     mir::DefaultServerConfiguration::the_input_channel_factory*;
+    mir::DefaultServerConfiguration::the_input_configuration_changer*;
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
@@ -812,10 +813,10 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_0.26;
+} MIR_SERVER_0.27;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
+MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
  global:
   extern "C++" {
     mir::renderer::gl::ProgramFamily::add_program*;
@@ -871,4 +872,4 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
     virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
     VTT?for?mir::shell::BasicWindowManager;
   };
-} MIR_SERVER_DETAIL_FOR_TESTING_0.26;
+} MIR_SERVER_DETAIL_FOR_TESTING_0.27;
