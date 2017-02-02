@@ -179,6 +179,8 @@ void bounce_position(int& position, int& delta, int min, int max)
     position += delta;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int /*argc*/, char* /*argv*/[])
 {
     char const* socket = nullptr;
@@ -199,7 +201,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     mir_window_spec_set_name(spec, "Stream");
 
-    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+    mir_window_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &nformats);
     if (nformats == 0)
@@ -244,3 +246,4 @@ int main(int /*argc*/, char* /*argv*/[])
 
     return 0;
 }
+#pragma GCC diagnostic pop

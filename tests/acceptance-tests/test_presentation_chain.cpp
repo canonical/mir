@@ -40,6 +40,8 @@ using namespace std::chrono_literals;
 
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct Chain
 {
     Chain(Chain const&) = delete;
@@ -69,6 +71,7 @@ private:
     MirRenderSurface* rs;
     MirPresentationChain* chain;
 };
+#pragma GCC diagnostic pop
 
 class SurfaceWithChain
 {
@@ -118,8 +121,11 @@ private:
         auto spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());
         mir_window_spec_set_pixel_format(spec, pf);
-        mir_surface_spec_add_render_surface(
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_window_spec_add_render_surface(
             spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
+#pragma GCC diagnostic pop
         auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         return window;
@@ -145,8 +151,11 @@ private:
         auto window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         spec = mir_create_window_spec(connection);
-        mir_surface_spec_add_render_surface(
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_window_spec_add_render_surface(
             spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
+#pragma GCC diagnostic pop
         mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
         return window;
@@ -348,6 +357,8 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
     mir_buffer_unmap(buffer);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
 {
     auto rs_chain = mir_connection_create_render_surface_sync(connection, 1, 1);
@@ -365,7 +376,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_window_spec_release(spec);
 
     spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, rs_chain, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
@@ -378,7 +389,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_presentation_chain_submit_buffer(chain, context.buffer(), buffer_callback, &context);
 
     spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_render_surface(spec, rs_stream, size.width.as_int(), size.height.as_int(), 0, 0);
+    mir_window_spec_add_render_surface(spec, rs_stream, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
     mir_render_surface_release(rs_chain);
@@ -389,6 +400,7 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_render_surface_release(rs_stream);
     mir_window_release_sync(window);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(PresentationChain, can_access_basic_buffer_properties)
 {

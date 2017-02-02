@@ -54,7 +54,10 @@ public:
     MirWaitHandle* set_scale(float) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirRenderSurface* render_surface() const override;
+#pragma GCC diagnostic pop
 
     MirWaitHandle* release(MirBufferStreamCallback callback, void* context);
 private:

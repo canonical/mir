@@ -19,7 +19,7 @@
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
 #include <stdbool.h>
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 #include <mir_toolkit/mir_native_buffer.h>
 
 #ifdef __cplusplus
