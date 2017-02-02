@@ -88,6 +88,7 @@ public:
     std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, MirPixelFormat) override;
     std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) override;
     bool supports_passthrough() override;
+    void apply_input_configuration(MirInputConfig const* config) override;
 
     optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;
     optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override;

@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ERROR_RENDER_SURFACE_H_
 #define MIR_CLIENT_ERROR_RENDER_SURFACE_H_
 
-#include "mir_render_surface.h"
+#include "mir/mir_render_surface.h"
 
 namespace mir
 {

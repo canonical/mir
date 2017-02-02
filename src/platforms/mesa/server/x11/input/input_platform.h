@@ -48,6 +48,8 @@ public:
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
+    void pause_for_config() override;
+    void continue_after_config() override;
 
 private:
     void process_input_event();

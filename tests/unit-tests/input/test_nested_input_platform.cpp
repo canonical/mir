@@ -26,7 +26,11 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_report.h"
+#include "mir/input/pointer_settings.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_keyboard_config.h"
+#include "mir/input/mir_touchpad_config.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_input_device.h"
@@ -60,6 +64,12 @@ struct TestNestedInputPlatform : Test
     MirInputDevice a_keyboard{1, mi::DeviceCapabilities{mir_input_device_capability_keyboard}, "keys" , "keys-evdev2"};
     MirInputDevice a_mouse{0, mi::DeviceCapabilities{mir_input_device_capability_pointer}, "rodent", "rodent-evdev1"};
     const mir::geometry::Rectangle source_surface{{0, 0}, {100, 100}};
+
+    TestNestedInputPlatform()
+    {
+        a_mouse.set_pointer_config(MirPointerConfig{});
+        a_keyboard.set_keyboard_config(MirKeyboardConfig{});
+    }
 
     auto capture_input_device(MirInputDevice& dev)
     {
@@ -189,4 +199,21 @@ TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
                                  60.0f, 35.0f);
 
     mock_host_connection.event_callback(*event, source_surface);
+}
+
+TEST_F(TestNestedInputPlatform, device_configurations_are_forwarded_to_host_connection)
+{
+    auto nested_input_device = capture_input_device(a_mouse);
+    NiceMock<mtd::MockInputSink> event_sink;
+    mi::DefaultEventBuilder builder(MirInputDeviceId{18}, mir::cookie::Authority::create(), mt::fake_shared(mock_seat));
+
+    ASSERT_THAT(nested_input_device, Ne(nullptr));
+    nested_input_device->start(&event_sink, &builder);
+
+    mi::PointerSettings left_handed = nested_input_device->get_pointer_settings().value();
+    left_handed.handedness = mir_pointer_handedness_left;
+
+    EXPECT_CALL(mock_host_connection, apply_input_configuration(_));
+
+    nested_input_device->apply_settings(left_handed);
 }
