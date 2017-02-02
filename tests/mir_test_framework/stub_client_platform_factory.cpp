@@ -64,6 +64,15 @@ void allocate_buffer(
         mir::geometry::Size{width, height}, pf, flags, cb, cb_context);
 }
 
+MirBufferStream* get_stream(
+    MirRenderSurface* rs,
+    int width, int height,
+    MirPixelFormat format)
+{
+    return mir_render_surface_get_buffer_stream(rs, width, height, format);
+}
+
+
 void throw_exception_if_requested(
     std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
     mtf::FailurePoint here)
@@ -89,6 +98,7 @@ mtf::StubClientPlatform::StubClientPlatform(
     animal_ext{animal_name},
     fence_ext{get_fence, nullptr, nullptr},
     buffer_ext{allocate_buffer},
+    stream_ext{get_stream},
     fail_at{std::move(fail_at)}
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_client_platform);
@@ -190,6 +200,8 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
         return &fence_ext;
     if (!strcmp(name, "mir_extension_gbm_buffer") && (version == 1))
         return &buffer_ext;
+    if (!strcmp(name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &stream_ext;
     return nullptr;
 }
 
