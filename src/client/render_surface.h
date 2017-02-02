@@ -21,7 +21,7 @@
 #define MIR_CLIENT_RENDER_SURFACE_H
 
 #include "mir_connection.h"
-#include "mir_render_surface.h"
+#include "mir/mir_render_surface.h"
 #include "mir_toolkit/mir_render_surface.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/frontend/surface_id.h"

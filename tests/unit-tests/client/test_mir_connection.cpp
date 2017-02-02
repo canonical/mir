@@ -21,7 +21,6 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
-#include "src/client/mir_render_surface.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"
 #include "src/client/presentation_chain.h"

@@ -81,6 +81,14 @@ void mix::XInputPlatform::stop()
     registry->remove_device(core_pointer);
 }
 
+void mix::XInputPlatform::pause_for_config()
+{
+}
+
+void mix::XInputPlatform::continue_after_config()
+{
+}
+
 void mix::XInputPlatform::process_input_event()
 {
     while(XPending(x11_connection.get()))

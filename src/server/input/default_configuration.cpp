@@ -23,6 +23,7 @@
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
 #include "channel_factory.h"
+#include "config_changer.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -357,7 +358,6 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            auto input_dispatcher = the_input_dispatcher();
            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-               the_global_event_sink(),
                the_seat(),
                the_input_reading_multiplexer(),
                the_main_loop(),
@@ -397,4 +397,15 @@ mir::DefaultServerConfiguration::the_seat_observer_registrar()
         {
             return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
+}
+
+std::shared_ptr<mir::frontend::InputConfigurationChanger>
+mir::DefaultServerConfiguration::the_input_configuration_changer()
+{
+    return input_configuration_changer(
+        [this]()
+        {
+            return std::make_shared<mi::ConfigChanger>(the_input_manager(), the_input_device_hub(), the_session_container(), the_session_event_handler_register());
+        }
+        );
 }

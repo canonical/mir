@@ -164,3 +164,13 @@ void mi::DefaultInputManager::stop_platforms()
     multiplexer->remove_watch(platform->dispatchable());
     platform->stop();
 }
+
+void mi::DefaultInputManager::pause_for_config()
+{
+    queue->enqueue([this](){platform->pause_for_config();});
+}
+
+void mi::DefaultInputManager::continue_after_config()
+{
+    queue->enqueue([this](){platform->continue_after_config();});
+}

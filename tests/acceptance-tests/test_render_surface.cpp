@@ -74,8 +74,7 @@ TEST_F(RenderSurfaceTest, can_hand_out_buffer_stream)
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     ASSERT_THAT(bs, NotNull());
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
@@ -96,8 +95,7 @@ TEST_F(RenderSurfaceTest, hands_out_buffer_stream_only_once)
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     ASSERT_THAT(bs, NotNull());
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
@@ -106,8 +104,7 @@ TEST_F(RenderSurfaceTest, hands_out_buffer_stream_only_once)
     auto bs2 = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     EXPECT_THAT(bs2, Eq(nullptr));
 
@@ -125,8 +122,7 @@ TEST_F(RenderSurfaceTest, dont_have_to_release_buffer_stream)
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     ASSERT_THAT(bs, NotNull());
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));
@@ -163,7 +159,6 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
 {
     int const width{800}, height{600};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
-    MirBufferUsage const usage{mir_buffer_usage_software};
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -174,10 +169,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
     mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
-    auto bs = mir_render_surface_get_buffer_stream(rs,
-                                                   640, 480,
-                                                   format,
-                                                   usage);
+    auto bs = mir_render_surface_get_buffer_stream(rs, 640, 480, format);
 
     EXPECT_THAT(window, IsValid());
     EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
@@ -279,8 +271,7 @@ TEST_F(RenderSurfaceTest, excepts_on_stream_request_if_chain_handed_out)
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     EXPECT_THAT(bs, Eq(nullptr));
 
@@ -298,8 +289,7 @@ TEST_F(RenderSurfaceTest, excepts_on_chain_request_if_stream_handed_out)
     auto bs = mir_render_surface_get_buffer_stream(
         rs,
         physical_size.width.as_int(), physical_size.height.as_int(),
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware);
+        mir_pixel_format_abgr_8888);
 
     ASSERT_THAT(bs, NotNull());
     EXPECT_TRUE(mir_buffer_stream_is_valid(bs));

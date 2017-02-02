@@ -68,6 +68,7 @@ class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
 class Screencast;
+class InputConfigurationChanger;
 }
 
 namespace shell
@@ -256,6 +257,7 @@ public:
     std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
+    virtual std::shared_ptr<frontend::InputConfigurationChanger> the_input_configuration_changer();
     virtual std::shared_ptr<frontend::Screencast>             the_screencast();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
@@ -410,6 +412,7 @@ protected:
     CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
+    CachedPtr<frontend::InputConfigurationChanger> input_configuration_changer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;

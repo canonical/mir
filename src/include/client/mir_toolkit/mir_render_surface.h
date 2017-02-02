@@ -116,13 +116,13 @@ void mir_render_surface_release(
     MirRenderSurface* render_surface);
 
 /**
- * Obtain the buffer stream backing a given render surface
+ * Obtain the buffer stream backing a given render surface.
+ * The MirBufferStream will contain buffers suitable for writing via the CPU. 
  *
  * \param [in] render_surface    The render surface
  * \param [in] width             Requested width
  * \param [in] height            Requested height
  * \param [in] format            Requested pixel format
- * \param [in] usage             Requested buffer usage
  *
  * \return                       The buffer stream contained in the given render surface
  *                               or 'nullptr' if it, or
@@ -132,8 +132,7 @@ void mir_render_surface_release(
 MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage);
+    MirPixelFormat format);
 
 /**
  * Obtain the presentation chain backing a given render surface
