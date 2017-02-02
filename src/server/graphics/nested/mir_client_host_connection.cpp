@@ -31,7 +31,7 @@
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_buffer.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"

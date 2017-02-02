@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_HARDWARE_BUFFER_STREAM_H_
 #define MIR_CLIENT_EXTENSIONS_HARDWARE_BUFFER_STREAM_H_
 
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer_stream.h"
 #include "mir_toolkit/mir_extension_core.h"
 

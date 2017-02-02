@@ -23,7 +23,7 @@
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_wait.h>
 #include <mir_toolkit/mir_presentation_chain.h>
-#include <mir_toolkit/mir_render_surface.h>
+#include <mir_toolkit/rs/mir_render_surface.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/version.h>

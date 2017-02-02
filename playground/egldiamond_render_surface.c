@@ -19,7 +19,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_egl_platform_shim.h"

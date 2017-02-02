@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_MIR_RENDER_SURFACE_H
 #define MIR_CLIENT_MIR_RENDER_SURFACE_H
 
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 

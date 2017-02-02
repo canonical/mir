@@ -18,7 +18,7 @@
 
 #include "buffer_stream_arrangement.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include <gmock/gmock.h>
 
 namespace mt = mir::test;

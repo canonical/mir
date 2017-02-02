@@ -20,7 +20,7 @@
 #define MIR_CLIENT_EXTENSIONS_ANDROID_EGL_H_
 
 #include "mir_toolkit/mir_connection.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_extension_core.h"
 

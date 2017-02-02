@@ -127,13 +127,6 @@ unsigned int mir_buffer_get_height(MirBuffer* buffer);
  **/
 MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
 
-/** Retrieve the buffer usage of the buffer.
- *
- *   \param [in] buffer   The buffer
- *   \return              The buffer usage of the buffer
- **/
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
-
 /** @} */
 
 /** release a MirBuffer
