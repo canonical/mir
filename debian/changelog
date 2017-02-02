@@ -1,5 +1,6 @@
-mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.0+17.04.20170126.3-0ubuntu1) zesty; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
@@ -125,7 +126,7 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
         clients and tests (LP: #1659298)
       . Support display scaling slider in unity8 (LP: #1645372)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 26 Jan 2017 23:29:33 +0000
 
 mir (0.25.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
 
