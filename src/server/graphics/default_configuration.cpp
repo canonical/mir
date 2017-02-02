@@ -171,7 +171,7 @@ mir::DefaultServerConfiguration::the_cursor()
                     the_host_connection(),
                     the_default_cursor_image());
             }
-            else if (primary_cursor = the_display()->create_hardware_cursor())
+            else if ((primary_cursor = the_display()->create_hardware_cursor()))
             {
                 mir::log_info("Using hardware cursor");
             }
