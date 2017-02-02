@@ -33,7 +33,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -74,7 +74,10 @@ struct Callback
     T* result{nullptr};
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 using RenderSurfaceCallback = Callback<MirRenderSurface>;
+#pragma GCC diagnostic pop
 using PresentationChainCallback = Callback<MirPresentationChain>;
 using BufferStreamCallback = Callback<MirBufferStream>;
 
