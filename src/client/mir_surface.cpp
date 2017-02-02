@@ -144,10 +144,22 @@ MirSurface::MirSurface(
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
     if (default_stream)
-    {
         streams.insert(default_stream);
-        default_stream->adopted_by(this);
+
+    if (spec.streams.is_set())
+    {
+        auto& map = connection_->connection_surface_map();
+        auto const& spec_streams = spec.streams.value();
+        for (auto& ci : spec_streams)
+        {
+            mir::frontend::BufferStreamId id(ci.stream_id);
+            if (auto bs = map->stream(id))
+                streams.insert(bs);
+        }
     }
+
+    for (auto& s : streams)
+        s->adopted_by(this);
 
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {
