@@ -110,7 +110,10 @@ public:
     {
         struct NullStream : graphics::nested::HostStream
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             MirRenderSurface* rs() const override { return nullptr; }
+#pragma GCC diagnostic pop
             MirBufferStream* handle() const override { return nullptr; }
             EGLNativeWindowType egl_native_window() const override { return 0; }
         };
@@ -121,7 +124,10 @@ public:
     {
         struct NullHostChain : graphics::nested::HostChain
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             MirRenderSurface* rs() const override { return nullptr; }
+#pragma GCC diagnostic pop
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
             void set_submission_mode(graphics::nested::SubmissionMode) override {}

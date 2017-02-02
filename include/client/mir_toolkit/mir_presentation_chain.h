@@ -18,7 +18,7 @@
 #ifndef MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_H_
 #define MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_H_
 
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 
 #ifdef __cplusplus
 /**

@@ -31,7 +31,6 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
 #include "display_configuration.h"
 #include "error_handler.h"
@@ -151,6 +150,8 @@ public:
     std::shared_ptr<MirBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
@@ -224,6 +225,7 @@ public:
         mir::geometry::Size logical_size,
         MirRenderSurfaceCallback callback,
         void* context) -> MirRenderSurface*;
+#pragma GCC diagnostic pop
     void release_render_surface_with_content(
         void* render_surface);
 
@@ -250,6 +252,8 @@ private:
 
     struct StreamCreationRequest
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         StreamCreationRequest(
             MirRenderSurface* rs,
             MirBufferStreamCallback mbs_cb,
@@ -264,6 +268,7 @@ private:
         {
         }
         MirRenderSurface* rs;
+#pragma GCC diagnostic pop
         MirBufferStreamCallback mbs_callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
@@ -276,6 +281,8 @@ private:
 
     struct RenderSurfaceCreationRequest
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         RenderSurfaceCreationRequest(
             MirRenderSurfaceCallback cb,
             void* context,
@@ -290,6 +297,7 @@ private:
         }
 
         MirRenderSurfaceCallback callback;
+#pragma GCC diagnostic pop
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
         std::shared_ptr<MirWaitHandle> const wh;

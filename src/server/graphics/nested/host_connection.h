@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
 
 #include "mir_toolkit/client_types.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/buffer_properties.h"
