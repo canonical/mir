@@ -35,6 +35,8 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] Nested server segfaults or rapidly logs exceptions when a
         fullscreen client starts [in mir_presentation_chain_set_dropping_mode
         ... std::exception::what: Operation not permitted] (LP: #1661508)
+      . mir_window_request_persistent_id_sync seg faults when called twice.
+        (LP: #1661704)
       . Fixes for 0.26 changelog.
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
