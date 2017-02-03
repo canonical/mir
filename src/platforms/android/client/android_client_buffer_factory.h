@@ -45,6 +45,9 @@ public:
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size,
         MirPixelFormat pf) override;
+    std::shared_ptr<ClientBuffer> create_buffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        unsigned int native_pf, unsigned int native_flags) override;
 private:
     std::shared_ptr<BufferRegistrar> const registrar;
 };

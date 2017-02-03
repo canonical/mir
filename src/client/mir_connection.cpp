@@ -1301,7 +1301,7 @@ void MirConnection::allocate_buffer(
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
         client_buffer_factory, this,
-        size, mir_pixel_format_invalid, mir_buffer_usage_hardware,
+        size, native_format, native_flags,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
