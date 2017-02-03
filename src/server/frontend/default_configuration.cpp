@@ -105,6 +105,16 @@ mir::DefaultServerConfiguration::the_prompt_connection_creator()
         {
             return true;
         }
+
+        bool configure_input_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
     };
 
     return prompt_connection_creator([this]
