@@ -441,7 +441,43 @@ TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
     EXPECT_EQ(adopted_by, unadopted_by);
 }
 
-TEST_F(MirClientSurfaceTest, adopts_custom_streams_if_set)
+TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_before_construction)
+{   // Regression test for nested server bugs LP: #1661128, LP: #1661072
+    using namespace ::testing;
+
+    mir::frontend::BufferStreamId const mock_stream_id(777888);
+    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
+    auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
+
+    MirWindow* adopted_by = nullptr;
+    MirWindow* unadopted_by = nullptr;
+    ON_CALL(*mock_stream, rpc_id())
+        .WillByDefault(Return(mock_stream_id));
+    EXPECT_CALL(*mock_stream, adopted_by(_))
+        .WillOnce(SaveArg<0>(&adopted_by));
+    EXPECT_CALL(*mock_stream, unadopted_by(_))
+        .WillOnce(SaveArg<0>(&unadopted_by));
+
+    surface_map->insert(mock_stream_id, mock_stream);
+
+    {
+        MirWindowSpec spec;
+        std::vector<ContentInfo> replacements
+        {
+            {geom::Displacement{0,0}, mock_stream_id.as_value(), geom::Size{1,1}}
+        };
+        spec.streams = replacements;
+        MirWindow win{connection.get(), *client_comm_channel, nullptr,
+            nullptr, mock_input_platform, spec, surface_proto, wh};
+        ASSERT_EQ(&win,    adopted_by);
+        ASSERT_EQ(nullptr, unadopted_by);
+    }
+
+    EXPECT_NE(nullptr,    unadopted_by);
+    EXPECT_EQ(adopted_by, unadopted_by);
+}
+
+TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_after_construction)
 {
     using namespace testing;
 

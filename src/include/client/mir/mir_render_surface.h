@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_MIR_RENDER_SURFACE_H
 #define MIR_CLIENT_MIR_RENDER_SURFACE_H
 
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 
@@ -44,5 +44,16 @@ protected:
     MirRenderSurface& operator=(MirRenderSurface const&) = delete;
     MirRenderSurface() = default;
 };
+
+namespace mir
+{
+namespace client
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirRenderSurface* render_surface_lookup(void* key); 
+#pragma GCC diagnostic pop
+}
+}
 
 #endif /* MIR_CLIENT_MIR_RENDER_SURFACE_H */

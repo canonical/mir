@@ -368,7 +368,7 @@ void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientati
  * to text entry widgets of other processes.
  *
  * \param [in] spec             Specification to mutate
- * \param [in] parent           A MirPersistentId reference to the parent window
+ * \param [in] parent           A MirWindowId reference to the parent window
  * \param [in] attachment_rect  A rectangle specifying the region (in parent window coordinates)
  *                              that the created window should be attached to.
  * \param [in] edge             The preferred edge direction to attach to. Use
@@ -381,7 +381,7 @@ void mir_window_spec_set_preferred_orientation(MirWindowSpec* spec, MirOrientati
  *          a close event.
  */
 bool mir_window_spec_attach_to_foreign_parent(MirWindowSpec* spec,
-                                              MirPersistentId* parent,
+                                              MirWindowId* parent,
                                               MirRectangle* attachment_rect,
                                               MirEdgeAttachment edge);
 
@@ -532,6 +532,31 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
 void mir_window_spec_set_streams(MirWindowSpec* spec,
                                  MirBufferStreamInfo* streams,
                                  unsigned int num_streams);
+
+/**
+ * Set the MirWindowSpec to display content contained in a render surface
+ *
+ * \warning: The initial call to mir_window_spec_add_render_surface will set
+ *           the bottom-most content, and subsequent calls will stack the
+ *           content on top.
+ *
+ * \param spec             The window_spec to be updated
+ * \param render_surface   The render surface containing the content to be displayed
+ * \param logical_width    The width that the content will be displayed at
+ *                         (Ignored for buffer streams)
+ * \param logical_height   The height that the content will be displayed at
+ *                         (Ignored for buffer streams)
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void mir_window_spec_add_render_surface(MirWindowSpec* spec,
+                                        MirRenderSurface* render_surface,
+                                        int logical_width, int logical_height,
+                                        int displacement_x, int displacement_y)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+#pragma GCC diagnostic pop
 
 /**
  * Release the resources held by a MirWindowSpec.
@@ -740,7 +765,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \brief Request an ID for the window that can be shared cross-process and
  *        across restarts.
  *
- * This call acquires a MirPersistentId for this MirWindow. This MirPersistentId
+ * This call acquires a MirWindowId for this MirWindow. This MirWindowId
  * can be serialized to a string, stored or sent to another process, and then
  * later deserialized to refer to the same window.
  *
@@ -748,16 +773,19 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in]     callback  Callback to invoke when the request completes.
  * \param [in,out] context   User data passed to completion callback.
  */
-void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context);
+void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
+__attribute__((deprecated("Use mir_window_request_window_id() instead")));
+void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
  * \brief Request a persistent ID for a window and wait for the result
  * \param [in] window  The window to acquire a persistent ID for.
- * \return A MirPersistentId. This MirPersistentId is owned by the calling code, and must
+ * \return A MirWindowId. This MirWindowId is owned by the calling code, and must
  *         be freed with a call to mir_persistent_id_release()
  */
-MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window);
-
+MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
+__attribute__((deprecated("Use mir_window_request_persistent_id_sync")));
+MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }
 /**@}*/

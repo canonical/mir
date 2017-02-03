@@ -65,6 +65,23 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
     void * context);
 
 /**
+ * Allocate some FDs for prompt providers to connect on
+ *
+ * Prompt helpers need to allocate connection FDs it will pass to
+ * prompt providers to use when connecting to the server. The server can
+ * then associate them with the prompt session.
+ *
+ *   \warning This API is tentative until the implementation of prompt sessions is complete
+ *   \param [in] prompt_session  The prompt session
+ *   \param [in] no_of_fds       The number of fds to allocate
+ *   \param [out] fds            An int array of at least size no_of_fds
+ *   \return                     The number of fds actually allocated
+ */
+size_t mir_prompt_session_new_fds_for_prompt_providers_sync(
+    MirPromptSession *prompt_session,
+    unsigned int no_of_fds,
+    int* fds);
+/**
  * Stop and release the specified prompt session
  *   \param [in] prompt_session  The prompt session
  */

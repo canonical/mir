@@ -20,7 +20,7 @@
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
 #include "mir_toolkit/client_types.h"
-#include "mir_toolkit/client_types_nbs.h"
+#include "mir/mir_render_surface.h"
 #include "mir/geometry/size.h"
 
 namespace mir
