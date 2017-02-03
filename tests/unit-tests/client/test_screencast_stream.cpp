@@ -173,7 +173,7 @@ TEST_F(ScreencastStream, exception_does_not_leave_wait_handle_hanging)
         std::shared_ptr<mcl::ClientBuffer> create_buffer(
             std::shared_ptr<MirBufferPackage> const&, uint32_t, uint32_t)
         {
-            return create_buffer(nullptr, 0, 0);
+            return create_buffer(nullptr, geom::Size{0,0}, mir_pixel_format_invalid);
         }
 
         void start_failing()
