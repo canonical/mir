@@ -784,7 +784,7 @@ void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callbac
  *         be freed with a call to mir_persistent_id_release()
  */
 MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
-__attribute__((deprecated("Use mir_window_request_persistent_id_sync")));
+__attribute__((deprecated("Use mir_window_request_window_id_sync")));
 MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }
