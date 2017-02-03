@@ -126,3 +126,17 @@ TEST_F(PresentationChain, double_submission_throws)
         chain.submit_buffer(&buffer);
     }, std::logic_error);
 }
+
+TEST_F(PresentationChain, double_interval_configure_is_ok)
+{
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
+    EXPECT_NO_THROW({
+        chain.set_dropping_mode();
+        chain.set_dropping_mode();
+        chain.set_queueing_mode();
+        chain.set_queueing_mode();
+    });
+}
