@@ -21,7 +21,7 @@
 #define MIR_INPUT_TOUCHSCREEN_SETTINGS_H
 
 #include "mir_toolkit/client_types.h"
-#include "mir_toolkit/mir_input_device.h"
+#include "mir_toolkit/mir_input_device_types.h"
 
 namespace mir
 {
@@ -35,11 +35,11 @@ struct TouchscreenSettings
      * The value of this setting is only relevant when the mapping mode is
      * set up to map to a single output.
      */
-    uint32_t output_id;
+    uint32_t output_id{0};
     /**
      * Selects the mapping mode.
      */
-    MirTouchscreenMappingMode mapping_mode;
+    MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_display_wall};
 };
 
 inline bool operator==(TouchscreenSettings const& lhs, TouchscreenSettings const& rhs)
