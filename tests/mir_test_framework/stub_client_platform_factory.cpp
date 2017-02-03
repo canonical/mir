@@ -138,6 +138,17 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
                 std::make_shared<mtf::NativeBuffer>(properties));
         }
+
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const& package, uint32_t, uint32_t) override
+        {
+            mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::hardware;
+            geom::Size size {package->width, package->height};
+            auto pf = mir_pixel_format_abgr_8888;
+            mir::graphics::BufferProperties properties { size, pf, usage }; 
+            return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
+                std::make_shared<mtf::NativeBuffer>(properties));
+        }
     };
     return std::make_shared<StubPlatformBufferFactory>();
 }

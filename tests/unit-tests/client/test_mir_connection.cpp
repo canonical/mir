@@ -93,6 +93,12 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         MirBufferUsage usage,
         MirBufferCallback cb,
         void* cb_context));
+    MOCK_METHOD7(expect_buffer, void(
+        std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
+        geom::Size size, uint32_t, uint32_t,
+        MirBufferCallback cb,
+        void* cb_context));
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -849,7 +855,7 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, TypedEq<MirPixelFormat>(format), usage, nullptr, nullptr));
 
     connection->allocate_buffer(size, format, nullptr, nullptr);
 }
@@ -869,7 +875,7 @@ TEST_F(MirConnectionTest, can_alloc_native_buffer_from_connection)
     params->set_native_format(native_format);
     params->set_flags(native_flags);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, _, mir_buffer_usage_hardware, nullptr, nullptr));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, TypedEq<uint32_t>(native_format), TypedEq<uint32_t>(native_flags), nullptr, nullptr));
 
     connection->allocate_buffer(size, native_format, native_flags, nullptr, nullptr);
 }
