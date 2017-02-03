@@ -1153,16 +1153,15 @@ TEST_F(ClientLibrary, can_get_window_id_more_than_once_in_quick_succession)
 
     ASSERT_THAT(window, IsValid());
 
-    auto surface_id = mir_window_request_persistent_id_sync(window);
+    MirWindowId* window_id, surface_id;
+    surface_id = mir_window_request_window_id_sync(window);
     EXPECT_NO_THROW({
-        mir_window_request_persistent_id_sync(window);
-        mir_window_request_persistent_id_sync(window);
-        mir_window_request_persistent_id_sync(window);
-        mir_window_request_persistent_id_sync(window);
+        window_id = mir_window_request_persistent_id_sync(window);
     });
 
     mir_window_release_sync(window);
-    mir_persistent_id_release(surface_id);
+    mir_window_id_release(surface_id);
+    mir_window_id_release(window_id);
     mir_connection_release(connection);
 }
 
