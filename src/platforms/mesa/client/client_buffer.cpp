@@ -103,6 +103,9 @@ mclm::ClientBuffer::ClientBuffer(
         EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
         EGL_NONE}
 {
+    if (pf == mir_pixel_format_invalid)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot create buffer with mir_pixel_format_invalid"));
+        
     if (package->fd_items != 1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
