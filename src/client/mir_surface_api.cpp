@@ -825,7 +825,8 @@ MirWindowId* mir_window_request_persistent_id_sync(MirWindow* window)
     mir::require(mir_window_is_valid(window));
 
     MirWindowId* result = nullptr;
-    mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result)->wait_for_all();
+    if (auto wh = mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result))
+        wh->wait_for_all();
     return result;
 }
 
@@ -1262,7 +1263,8 @@ MirWaitHandle* mir_surface_request_persistent_id(MirSurface* surface, MirWindowI
 MirWindowId* mir_surface_request_persistent_id_sync(MirSurface *surface)
 {
     MirWindowId* result = nullptr;
-    mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result)->wait_for_all();
+    if (auto wh = mir_window_request_persistent_id_helper(surface, &assign_surface_id_result, &result))
+        wh->wait_for_all();
     return result;
 }
 
