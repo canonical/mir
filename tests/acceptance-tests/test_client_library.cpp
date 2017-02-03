@@ -1198,7 +1198,7 @@ TEST_F(ClientLibrary, can_get_window_id_more_than_once_in_quick_succession)
     ASSERT_THAT(window, IsValid());
 
     MirWindowId* surface_id;
-    MirWindowId* window_id;
+    MirWindowId* window_id = nullptr; //circumvent ‘window_id’ uninitialized error
     surface_id = mir_window_request_window_id_sync(window);
     EXPECT_NO_THROW({
         window_id = mir_window_request_window_id_sync(window);
