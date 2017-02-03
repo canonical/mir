@@ -44,6 +44,10 @@ public:
                  std::shared_ptr<MirBufferPackage> const& buffer_package,
                  geometry::Size size,
                  MirPixelFormat pf);
+    ClientBuffer(std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+                 std::shared_ptr<MirBufferPackage> const& buffer_package,
+                 geometry::Size size,
+                 unsigned int native_pf, unsigned int native_flags);
 
     ~ClientBuffer() noexcept;
 

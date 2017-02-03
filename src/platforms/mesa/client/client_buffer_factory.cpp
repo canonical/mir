@@ -42,3 +42,15 @@ mclm::ClientBufferFactory::create_buffer(
         geometry::Size{package->width, package->height},
         pf);
 }
+
+std::shared_ptr<mcl::ClientBuffer>
+mclm::ClientBufferFactory::create_buffer(
+    std::shared_ptr<MirBufferPackage> const& package,
+    unsigned int native_pf, unsigned int native_flags)
+{
+    return std::make_shared<mclm::ClientBuffer>(
+        buffer_file_ops,
+        package,
+        geometry::Size{package->width, package->height},
+        native_pf, native_flags);
+}

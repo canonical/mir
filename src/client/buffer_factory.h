@@ -20,6 +20,7 @@
 #define MIR_CLIENT_MIR_BUFFER_FACTORY_H
 
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
 #include "mir_protobuf.pb.h"
 #include "buffer.h"
 #include <mutex>
@@ -45,6 +46,14 @@ public:
         MirBufferUsage usage,
         MirBufferCallback cb,
         void* cb_context) = 0;
+    virtual void expect_buffer(
+        std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
+        geometry::Size size,
+        uint32_t native_format,
+        uint32_t native_flags,
+        MirBufferCallback cb,
+        void* cb_context) = 0;
     virtual void cancel_requests_with_context(void*) = 0;
 
 private:
@@ -64,13 +73,34 @@ public:
         MirBufferUsage usage,
         MirBufferCallback cb,
         void* cb_context) override;
+    void expect_buffer(
+        std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
+        geometry::Size size,
+        uint32_t native_format,
+        uint32_t native_flags,
+        MirBufferCallback cb,
+        void* cb_context) override;
     void cancel_requests_with_context(void*) override;
 
 private:
     std::mutex mutex;
     int error_id { -1 };
+
     struct AllocationRequest
     {
+        struct NativeRequest
+        {
+            uint32_t native_format;
+            uint32_t native_flags;
+        };
+
+        struct SoftwareRequest
+        {
+            MirPixelFormat format;
+            MirBufferUsage usage;
+        };
+
         AllocationRequest(
             std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
             MirConnection* connection,
@@ -79,12 +109,20 @@ private:
             MirBufferUsage usage,
             MirBufferCallback cb,
             void* cb_context);
+        AllocationRequest(
+            std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+            MirConnection* connection,
+            geometry::Size size,
+            uint32_t native_format,
+            uint32_t native_flags,
+            MirBufferCallback cb,
+            void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
         MirConnection* connection;
         geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
+        optional_value<NativeRequest> native_request;
+        optional_value<SoftwareRequest> sw_request;
         MirBufferCallback cb;
         void* cb_context;
     };
