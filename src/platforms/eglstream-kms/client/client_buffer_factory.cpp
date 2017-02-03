@@ -19,6 +19,8 @@
 
 #include "client_buffer_factory.h"
 #include "client_buffer.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mcl=mir::client;
 namespace mcle=mir::client::eglstream;
@@ -33,4 +35,12 @@ mcle::ClientBufferFactory::create_buffer(
         package,
         geometry::Size{package->width, package->height},
         pf);
+}
+
+std::shared_ptr<mcl::ClientBuffer>
+mcle::ClientBufferFactory::create_buffer(
+    std::shared_ptr<MirBufferPackage> const&,
+    unsigned int, unsigned int)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("no native buffers on eglstream platform"));
 }
