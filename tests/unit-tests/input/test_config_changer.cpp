@@ -25,6 +25,7 @@
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 
 #include "mir/test/doubles/mock_input_device_hub.h"
 #include "mir/test/doubles/mock_input_manager.h"
@@ -57,6 +58,7 @@ struct MockDevice : mir::input::Device
         ON_CALL(*this, pointer_configuration()).WillByDefault(Return(MirPointerConfig{}));
         ON_CALL(*this, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{}));
         ON_CALL(*this, touchpad_configuration()).WillByDefault(Return(MirTouchpadConfig{}));
+        ON_CALL(*this, touchscreen_configuration()).WillByDefault(Return(MirTouchscreenConfig{}));
     }
 
     MOCK_CONST_METHOD0(id, MirInputDeviceId());
@@ -66,9 +68,11 @@ struct MockDevice : mir::input::Device
     MOCK_CONST_METHOD0(pointer_configuration, mir::optional_value<MirPointerConfig>());
     MOCK_CONST_METHOD0(touchpad_configuration, mir::optional_value<MirTouchpadConfig>());
     MOCK_CONST_METHOD0(keyboard_configuration, mir::optional_value<MirKeyboardConfig>());
+    MOCK_CONST_METHOD0(touchscreen_configuration, mir::optional_value<MirTouchscreenConfig>());
     MOCK_METHOD1(apply_pointer_configuration, void(MirPointerConfig const&));
     MOCK_METHOD1(apply_touchpad_configuration, void(MirTouchpadConfig const&));
     MOCK_METHOD1(apply_keyboard_configuration, void(MirKeyboardConfig const&));
+    MOCK_METHOD1(apply_touchscreen_configuration, void(MirTouchscreenConfig const&));
 };
 
 struct FakeInputDeviceHub : mir::input::InputDeviceHub

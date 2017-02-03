@@ -27,6 +27,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/device_capability.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
@@ -102,6 +103,8 @@ public:
 
             touchpad_settings = settings;
         }
+
+        // TODO Forwars config when mirclient API is there
     }
 
     void start(mi::InputSink* destination, mi::EventBuilder* builder) override
@@ -238,6 +241,19 @@ public:
         }
     }
 
+    mir::optional_value<mi::TouchscreenSettings> get_touchscreen_settings() const override
+    {
+        return touchscreen_settings;
+    }
+
+    void apply_settings(mi::TouchscreenSettings const& new_settings) override
+    {
+        if (touchscreen_settings.is_set() && touchscreen_settings.value() == new_settings)
+            return;
+
+        // TODO update the MirInputConfig..
+    }
+
     MirInputDeviceId device_id;
     MirInputDevice* device{nullptr};
     mi::InputSink* destination{nullptr};
@@ -245,6 +261,7 @@ public:
     mi::InputDeviceInfo device_info;
     mir::optional_value<mi::PointerSettings> pointer_settings;
     mir::optional_value<mi::TouchpadSettings> touchpad_settings;
+    mir::optional_value<mi::TouchscreenSettings> touchscreen_settings;
     std::function<void()> emit_device_change;
 };
 

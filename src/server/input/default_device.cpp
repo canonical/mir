@@ -23,6 +23,7 @@
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/key_mapper.h"
 
@@ -31,11 +32,20 @@
 
 namespace mi = mir::input;
 
-mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
+                                 std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 InputDevice& device,
+                                 std::shared_ptr<KeyMapper> const& key_mapper,
                                  std::function<void(Device*)> const& callback)
-    : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
-      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}, device_changed_callback{callback}
+    : device_id{id},
+      device{device},
+      info(device.get_device_info()),
+      pointer{device.get_pointer_settings()},
+      touchpad{device.get_touchpad_settings()},
+      touchscreen{device.get_touchscreen_settings()},
+      actions{actions},
+      key_mapper{key_mapper},
+      device_changed_callback{callback}
 {
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
@@ -162,4 +172,32 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
         key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
         device_changed_callback(this);
     }
+}
+
+mir::optional_value<MirTouchscreenConfig> mi::DefaultDevice::touchscreen_configuration() const
+{
+    if (!touchscreen.is_set())
+        return {};
+
+    auto const& settings = touchscreen.value();
+
+    return MirTouchscreenConfig(settings.output_id, settings.mapping_mode);
+}
+
+void mi::DefaultDevice::apply_touchscreen_configuration(MirTouchscreenConfig const& config)
+{
+    if (!touchscreen.is_set())
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchscreen configuration"));
+
+    TouchscreenSettings settings;
+    settings.output_id = config.output_id();
+    settings.mapping_mode = config.mapping_mode();
+
+    touchscreen = settings;
+
+    actions->enqueue([settings = std::move(settings), dev=&device]
+                     {
+                         dev->apply_settings(settings);
+                     });
+    device_changed_callback(this);
 }

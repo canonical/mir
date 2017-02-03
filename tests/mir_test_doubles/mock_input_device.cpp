@@ -40,4 +40,11 @@ mtd::MockInputDevice::MockInputDevice(char const* name, char const* uid, input::
     else
         ON_CALL(*this, get_touchpad_settings())
             .WillByDefault(Return(mir::optional_value<input::TouchpadSettings>()));
+    if (contains(caps, input::DeviceCapability::touchscreen))
+        ON_CALL(*this, get_touchscreen_settings())
+            .WillByDefault(Return(input::TouchscreenSettings()));
+    else
+        ON_CALL(*this, get_touchscreen_settings())
+            .WillByDefault(Return(mir::optional_value<input::TouchscreenSettings>()));
+
 }

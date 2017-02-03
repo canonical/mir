@@ -23,6 +23,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
 
@@ -73,6 +74,8 @@ private:
         void apply_settings(mir::input::PointerSettings const& settings) override;
         mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override;
         void apply_settings(mir::input::TouchpadSettings const& settings) override;
+        mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override;
+        void apply_settings(mir::input::TouchscreenSettings const& settings) override;
 
     private:
         MirPointerAction update_buttons(mir::input::synthesis::EventAction action, MirPointerButton button);
@@ -86,6 +89,7 @@ private:
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
         mir::input::PointerSettings settings;
+        mir::input::TouchscreenSettings touchscreen;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;
