@@ -430,7 +430,8 @@ void mf::SessionMediator::allocate_buffers(
         mg::BufferID id;
         if (req.has_flags() && req.has_native_format())
         {
-            id = session->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
+            auto session_ext = std::dynamic_pointer_cast<SessionExtensions>(session);
+            id = session_ext->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
         }
         else if (req.has_buffer_usage() && req.has_pixel_format())
         {
@@ -439,7 +440,8 @@ void mf::SessionMediator::allocate_buffers(
             auto const pf = static_cast<MirPixelFormat>(req.pixel_format());
             if (usage == mg::BufferUsage::software)
             {
-                id = session->create_buffer(size, pf); 
+                auto session_ext = std::dynamic_pointer_cast<SessionExtensions>(session);
+                id = session_ext->create_buffer(size, pf);
             }
             else
             {

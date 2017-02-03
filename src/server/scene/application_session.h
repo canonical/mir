@@ -50,7 +50,7 @@ class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
 
-class ApplicationSession : public Session
+class ApplicationSession : public Session, public frontend::SessionExtensions
 {
 public:
     ApplicationSession(

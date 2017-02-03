@@ -68,8 +68,6 @@ public:
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 
     virtual graphics::BufferID create_buffer(graphics::BufferProperties const& properties) = 0;
-    virtual graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) = 0;
-    virtual graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) = 0;
     virtual void destroy_buffer(graphics::BufferID) = 0;
     virtual std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) = 0;
 };
