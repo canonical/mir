@@ -1,3 +1,41 @@
+mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.26.1 (https://launchpad.net/mir/+milestone/0.26.1)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 43
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 14
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 11
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 6
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Support for MirBuffer API that allows for better management of
+        hardware/software buffers.
+      . Support for MirPresentationChain API that allows better control
+        over {de}queueing of individual buffers {from}to the server.
+      . Interim support for MirRenderSurface API that provides a unit of
+        renderable for lower level content such as MirBufferStreams and
+        MirPresentationChains, etc.. MirRenderSurface API is marked
+        deprecated as it (and the relevant entry points) will be renamed to
+        MirSurface before general availability. It will initially be used for
+        revamping support for EGL drivers.
+      . Synchronous version of mir_prompt_session_new_fds_for_prompt_providers()
+        API (mir_prompt_session_new_fds_for_prompt_providers_sync()) added for
+        convenience.
+      . Better name for MirPersistentId-->MirWindowId. MirPersistentId has now
+        been deprecated.
+    - Bugs fixed:
+      . [regression] Unity8 stutters constantly (like half frame rate).
+        (LP: #1661128)
+      . mir 0.26 - spinner loading animation, minimize, maximize too fast.
+        (LP: #1661072)
+      . Fixes for 0.26 changelog.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
+
 mir (0.26.0+17.04.20170126.3-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
