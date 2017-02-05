@@ -419,7 +419,6 @@ unsigned mir_get_client_api_version()
     return MIR_CLIENT_API_VERSION;
 }
 
-
 void mir_connection_apply_session_display_config(MirConnection* connection, MirDisplayConfig const* display_config)
 try
 {
