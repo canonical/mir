@@ -1205,5 +1205,5 @@ TEST_F(ClientLibrary, client_api_version)
 {
     ASSERT_TRUE( MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR,
                                     MIR_CLIENT_API_VERSION_MINOR,
-                                    MIR_CLIENT_API_VERSION_PATCH) >= mir_get_client_api_version());
+                                    MIR_CLIENT_API_VERSION_PATCH) == mir_get_client_api_version());
 }
