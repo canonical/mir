@@ -1151,7 +1151,7 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
     mir_connection_apply_session_input_config(unfocused_client.connection, config);
     mir_input_config_release(config);
 
-    EXPECT_FALSE(expect_no_changes.wait_for(10s));
+    EXPECT_FALSE(expect_no_changes.wait_for(1s));
     mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
 }
 
