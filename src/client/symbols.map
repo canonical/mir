@@ -482,6 +482,8 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_pointer_config_set_handedness;
     mir_pointer_config_set_horizontal_scroll_scale;
     mir_pointer_config_set_vertical_scroll_scale;
+    mir_surface_spec_set_cursor_name;
+    mir_surface_spec_set_cursor_render_surface;
     mir_touchpad_config_get_button_down_scroll_button;
     mir_touchpad_config_get_click_modes;
     mir_touchpad_config_get_disable_while_typing;
