@@ -48,6 +48,8 @@ public:
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
+    void pause_for_config() override;
+    void continue_after_config() override;
 
     static void add(std::shared_ptr<mir::input::InputDevice> const& dev);
     static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);

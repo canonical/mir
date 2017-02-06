@@ -27,7 +27,6 @@
 #include "mir/test/fake_shared.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/sw/pixel_source.h"
-#include "mir_toolkit/client_types_nbs.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

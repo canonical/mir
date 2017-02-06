@@ -47,6 +47,8 @@
 #include "mir/require.h"
 #include "mir/uncaught.h"
 
+#include "mir/input/mir_input_config.h"
+#include "mir/input/mir_input_config_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
 #include "mir/platform_message.h"
@@ -67,6 +69,7 @@ namespace mev = mir::events;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace mi = mir::input;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 
@@ -897,6 +900,8 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWaitHandle* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
@@ -947,6 +952,7 @@ std::shared_ptr<mir::client::BufferStream> MirConnection::create_client_buffer_s
     surface_map->insert(render_surface->stream_id(), stream);
     return stream;
 }
+#pragma GCC diagnostic pop
 
 void MirConnection::render_surface_error(std::string const& error_msg, std::shared_ptr<RenderSurfaceCreationRequest> const& request)
 {
@@ -956,10 +962,13 @@ void MirConnection::render_surface_error(std::string const& error_msg, std::shar
     auto rs = std::make_shared<mcl::ErrorRenderSurface>(error_msg, this);
     surface_map->insert(request->native_window.get(), rs);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     if (request->callback)
         request->callback(
             static_cast<MirRenderSurface*>(request->native_window.get()),
             request->context);
+#pragma GCC diagnostic pop
 
     request->wh->result_received();
 }
@@ -1242,6 +1251,8 @@ std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_dis
     return display_configuration->take_snapshot();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain_with_id(
     MirRenderSurface* render_surface,
     mir::protobuf::BufferStream const& a_protobuf_bs)
@@ -1254,6 +1265,7 @@ std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain
     surface_map->insert(render_surface->stream_id(), chain);
     return chain;
 }
+#pragma GCC diagnostic pop
 
 void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format,
@@ -1337,6 +1349,8 @@ void MirConnection::release_render_surface_with_content(
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void MirConnection::render_surface_created(RenderSurfaceCreationRequest* request_raw)
 {
     std::string static const error_msg = "Error creating MirRenderSurface: ";
@@ -1426,6 +1440,7 @@ auto MirConnection::create_render_surface_with_content(
 
     return static_cast<MirRenderSurface*>(nw.get());
 }
+#pragma GCC diagnostic pop
 
 void* MirConnection::request_interface(char const* name, int version)
 {
@@ -1438,4 +1453,28 @@ void* MirConnection::request_interface(char const* name, int version)
         return &graphics_module_extension.value();
 
     return platform->request_interface(name, version);
+}
+
+void MirConnection::apply_input_configuration(MirInputConfig const* config)
+{
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.apply_input_configuration(&request,
+                                     store_error_result->result.get(),
+                                     gp::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::set_base_input_configuration(MirInputConfig const* config)
+{
+    auto store_error_result = create_stored_error_result<mp::Void>(error_handler);
+
+    mp::InputConfigurationRequest request;
+    request.set_input_configuration(mi::serialize_input_config(*config));
+
+    server.set_base_input_configuration(&request,
+                                        store_error_result->result.get(),
+                                        gp::NewCallback(&handle_structured_error, store_error_result));
 }

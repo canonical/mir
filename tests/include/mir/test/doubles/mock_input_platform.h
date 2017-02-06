@@ -34,6 +34,8 @@ struct MockInputPlatform : input::Platform
     MOCK_METHOD0(dispatchable, std::shared_ptr<mir::dispatch::Dispatchable>());
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
+    MOCK_METHOD0(pause_for_config, void());
+    MOCK_METHOD0(continue_after_config, void());
 };
 
 }
