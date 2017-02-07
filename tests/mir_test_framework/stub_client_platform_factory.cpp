@@ -64,6 +64,8 @@ void allocate_buffer(
         mir::geometry::Size{width, height}, pf, flags, cb, cb_context);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_stream(
     MirRenderSurface* rs,
     int width, int height,
@@ -71,7 +73,7 @@ MirBufferStream* get_stream(
 {
     return mir_render_surface_get_buffer_stream(rs, width, height, format);
 }
-
+#pragma GCC diagnostic pop
 
 void throw_exception_if_requested(
     std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
@@ -133,6 +135,17 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
             if (package->data[0] == static_cast<int>(mir::graphics::BufferUsage::hardware))
                 usage = mir::graphics::BufferUsage::hardware;
             mir::graphics::BufferProperties properties {size, pf, usage }; 
+            return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
+                std::make_shared<mtf::NativeBuffer>(properties));
+        }
+
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const& package, uint32_t, uint32_t) override
+        {
+            mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::hardware;
+            geom::Size size {package->width, package->height};
+            auto pf = mir_pixel_format_abgr_8888;
+            mir::graphics::BufferProperties properties { size, pf, usage }; 
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
                 std::make_shared<mtf::NativeBuffer>(properties));
         }

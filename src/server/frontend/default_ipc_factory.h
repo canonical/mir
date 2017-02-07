@@ -88,7 +88,8 @@ public:
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::shared_ptr<InputConfigurationChanger> const& input_changer);
 
 private:
     std::shared_ptr<Shell> const shell;

@@ -31,6 +31,8 @@
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
@@ -44,13 +46,16 @@
 
 #include <condition_variable>
 #include <chrono>
+#include <atomic>
 #include <mutex>
 
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
@@ -58,6 +63,22 @@ using namespace testing;
 
 namespace
 {
+
+struct StubAuthorizer : mtd::StubSessionAuthorizer
+{
+    bool configure_input_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_configure_input;
+    }
+
+    bool set_base_input_configuration_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_set_base_input_configuration;
+    }
+
+    std::atomic<bool> allow_configure_input{true};
+    std::atomic<bool> allow_set_base_input_configuration{true};
+};
 
 struct MockEventFilter : public mi::EventFilter
 {
@@ -197,6 +218,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
                 shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
                 return shell;
             });
+        server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
 
         HeadlessInProcessServer::SetUp();
 
@@ -222,6 +244,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
+    StubAuthorizer stub_authorizer;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
     mt::Signal devices_available;
@@ -1128,7 +1151,7 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
     mir_connection_apply_session_input_config(unfocused_client.connection, config);
     mir_input_config_release(config);
 
-    EXPECT_FALSE(expect_no_changes.wait_for(10s));
+    EXPECT_FALSE(expect_no_changes.wait_for(1s));
     mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
 }
 
@@ -1165,6 +1188,54 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
     mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_set_base_input_configuration = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_base_configuration_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_set_base_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_configure_input = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_apply_session_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
 TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
 {
     wait_for_input_devices();
@@ -1192,4 +1263,3 @@ TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
 
     EXPECT_TRUE(wait_for_error.wait_for(10s));
 }
-

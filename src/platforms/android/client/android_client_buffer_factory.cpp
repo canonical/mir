@@ -18,12 +18,14 @@
  */
 
 #include "android_client_buffer_factory.h"
+#include "android_format_conversion-inl.h"
 #include "buffer_registrar.h"
 #include "buffer.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
+namespace mga=mir::graphics::android;
 
 mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(
     std::shared_ptr<BufferRegistrar> const& buffer_registrar) :
@@ -35,4 +37,11 @@ std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buff
 {
     (void)size; // TODO: remove this unused parameter
     return std::make_shared<mcla::Buffer>(registrar, *package, pf);
+}
+
+std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buffer(
+    std::shared_ptr<MirBufferPackage> const& package,
+    unsigned int native_pf, unsigned int)
+{
+    return std::make_shared<mcla::Buffer>(registrar, *package, mga::to_mir_format(native_pf));
 }

@@ -21,6 +21,7 @@
 #include "no_prompt_shell.h"
 #include "session_mediator.h"
 #include "authorizing_display_changer.h"
+#include "authorizing_input_config_changer.h"
 #include "unauthorized_screencast.h"
 #include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
@@ -69,6 +70,13 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
     std::shared_ptr<mf::MessageSender> const& message_sender,
     ConnectionContext const &connection_context)
 {
+    bool input_configuration_is_authorized = session_authorizer->configure_input_is_allowed(creds);
+    bool base_input_configuration_is_authorized = session_authorizer->set_base_input_configuration_is_allowed(creds);
+    auto const input_config_changer = std::make_shared<AuthorizingInputConfigChanger>(
+        input_changer,
+        input_configuration_is_authorized,
+        base_input_configuration_is_authorized);
+
     bool configuration_is_authorized = session_authorizer->configure_display_is_allowed(creds);
     bool base_configuration_is_authorized = session_authorizer->set_base_display_configuration_is_allowed(creds);
 
@@ -101,7 +109,9 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         sink_factory,
         message_sender,
         effective_screencast,
-        connection_context, cursor_images);
+        connection_context,
+        cursor_images,
+        input_config_changer);
 }
 
 std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
@@ -119,7 +129,8 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<Screencast> const& effective_screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mi::CursorImages> const& cursor_images)
+    std::shared_ptr<mi::CursorImages> const& cursor_images,
+    std::shared_ptr<InputConfigurationChanger> const& input_changer)
 {
     return std::make_shared<SessionMediator>(
         shell,

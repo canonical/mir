@@ -46,11 +46,15 @@ typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
-typedef struct MirPersistentId MirPersistentId;
+typedef struct MirPersistentId MirPersistentId __attribute((deprecated("Use MirWindowId instead")));
+typedef struct MirPersistentId MirWindowId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
 typedef struct MirError MirError;
-
+typedef struct MirPresentationChain MirPresentationChain;
+typedef struct MirBuffer MirBuffer;
+typedef struct MirRenderSurface MirRenderSurface
+__attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
  * Descriptor for an output connection.
@@ -160,8 +164,11 @@ typedef void (*MirClientFdCallback)(
 typedef MirClientFdCallback mir_client_fd_callback
     __attribute__((deprecated("Use MirClientFdCallback instead")));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef void (*MirWindowIdCallback)(
     MirWindow* window, MirPersistentId* id, void* context);
+#pragma GCC diagnostic pop
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -465,6 +472,8 @@ typedef void (*MirInputConfigCallback)(
 typedef MirInputConfigCallback mir_input_config_callback
     __attribute__((deprecated("Use MirInputConfigCallback instead")));
 
+typedef void (*MirBufferCallback)(MirBuffer*, void* context);
+
 /**
  * Specifies the origin of an error.
  *
@@ -515,7 +524,17 @@ typedef enum MirInputConfigurationError {
     /**
      * Input configuration was attempted but was rejected by driver
      */
-     mir_input_configuration_error_rejected_by_driver
+     mir_input_configuration_error_rejected_by_driver,
+
+    /**
+     * Client is not permitted to change global input configuration
+    */
+     mir_input_configuration_error_base_configuration_unauthorized,
+
+    /**
+     * Client is not permitted to change its input configuration
+     */
+     mir_input_configuration_error_unauthorized,
 } MirInputConfigurationError;
 
 typedef void (*MirErrorCallback)(
@@ -536,6 +555,9 @@ __attribute__((deprecated("Use MirWindowEventCallback instead")));
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
 __attribute__((deprecated("Use MirWindowIdCallback instead")));
+
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
+__attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 typedef MirSurfaceParameters MirWindowParameters;
 

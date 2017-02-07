@@ -249,6 +249,8 @@ struct BufferDepository
 }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
     MirRenderSurface* render_surface,
@@ -339,6 +341,7 @@ mcl::BufferStream::BufferStream(
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
     perf_report->name_surface(surface_name.c_str());
 }
+#pragma GCC diagnostic pop
 
 mcl::BufferStream::~BufferStream()
 {
@@ -634,7 +637,10 @@ MirConnection* mcl::BufferStream::connection() const
     return connection_;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* mcl::BufferStream::render_surface() const
 {
     return render_surface_;
 }
+#pragma GCC diagnostic pop
