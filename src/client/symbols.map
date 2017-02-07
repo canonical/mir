@@ -589,4 +589,10 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
   global:
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
+    mir_input_device_get_mutable_touchscreen_config;
+    mir_input_device_get_touchscreen_config;
+    mir_touchscreen_config_get_output_id;
+    mir_touchscreen_config_get_mapping_mode;
+    mir_touchscreen_config_set_output_id;
+    mir_touchscreen_config_set_mapping_mode;
 } MIR_CLIENT_0.26;

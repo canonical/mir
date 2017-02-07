@@ -35,6 +35,7 @@ struct MockInputSink : mir::input::InputSink
     MOCK_METHOD1(handle_input, void(MirEvent&));
     MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
     MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
+    MOCK_CONST_METHOD1(output_info, mir::input::OutputInfo(uint32_t));
     MOCK_METHOD1(key_state, void(std::vector<uint32_t> const&));
     MOCK_METHOD1(pointer_state, void(MirPointerButtons));
 };

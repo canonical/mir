@@ -20,7 +20,6 @@
 #include "seat_input_device_tracker.h"
 #include "mir/input/device.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/key_mapper.h"
 #include "mir/input/seat_observer.h"
@@ -44,12 +43,11 @@ namespace geom = mir::geometry;
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
-                                                   std::shared_ptr<InputRegion> const& input_region,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
                                                    std::shared_ptr<SeatObserver> const& observer)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
+      key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
 {
 }
 
@@ -220,10 +218,16 @@ void mi::SeatInputDeviceTracker::reset_confinement_regions()
     observer->seat_reset_confinement_regions();
 }
 
+void mi::SeatInputDeviceTracker::update_outputs(geom::Rectangles const& output_regions)
+{
+    std::lock_guard<std::mutex> lg(output_mutex);
+    input_region = output_regions;
+}
+
 void mi::SeatInputDeviceTracker::confine_function(mir::geometry::Point& p) const
 {
     std::lock_guard<std::mutex> lg(region_mutex);
-    input_region->confine(p);
+    input_region.confine(p);
     confined_region.confine(p);
 }
 

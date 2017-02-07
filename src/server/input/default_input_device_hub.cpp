@@ -201,7 +201,15 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
 
-    return seat->get_rectangle_for(*handle);
+    return seat->bounding_rectangle();
+}
+
+mi::OutputInfo mi::DefaultInputDeviceHub::RegisteredDevice::output_info(uint32_t output_id) const
+{
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    return seat->output_info(output_id);
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::key_state(std::vector<uint32_t> const& scan_codes)

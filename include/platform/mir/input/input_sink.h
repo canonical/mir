@@ -22,7 +22,7 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/displacement.h"
+#include "mir/geometry/point.h"
 
 #include <vector>
 
@@ -30,6 +30,15 @@ namespace mir
 {
 namespace input
 {
+
+struct OutputInfo
+{
+    bool active{false};
+    geometry::Size output_size;
+    geometry::Point position;
+    MirOrientation orientation{mir_orientation_normal};
+};
+
 class InputSink
 {
 public:
@@ -40,6 +49,13 @@ public:
      * Obtain the bounding rectangle of the destination area for this input sink
      */
     virtual mir::geometry::Rectangle bounding_rectangle() const = 0;
+
+    /**!
+     * Obtain the output information for a specific ouput.
+     *
+     * \param[in] output_id the id of the output
+     */
+    virtual OutputInfo output_info(uint32_t output_id) const = 0;
 
     /**
      * \name Device State interface of InputSink

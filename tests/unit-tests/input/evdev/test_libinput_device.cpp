@@ -31,6 +31,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/gmock_fixes.h"
 #include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
@@ -63,20 +64,6 @@ public:
 };
 
 using namespace ::testing;
-
-struct MockInputSink : mi::InputSink
-{
-    MockInputSink()
-    {
-        ON_CALL(*this, bounding_rectangle())
-            .WillByDefault(Return(geom::Rectangle({0,0}, {100,100})));
-    }
-    MOCK_METHOD1(handle_input,void(MirEvent &));
-    MOCK_METHOD1(confine_pointer, void(geom::Point&));
-    MOCK_CONST_METHOD0(bounding_rectangle, geom::Rectangle());
-    MOCK_METHOD1(key_state, void(std::vector<uint32_t> const&));
-    MOCK_METHOD1(pointer_state, void(MirPointerButtons));
-};
 
 struct MockEventBuilder : mi::EventBuilder
 {
@@ -128,7 +115,7 @@ struct MockEventBuilder : mi::EventBuilder
 struct LibInputDevice : public ::testing::Test
 {
     mtf::LibInputEnvironment env;
-    ::testing::NiceMock<MockInputSink> mock_sink;
+    ::testing::NiceMock<mtd::MockInputSink> mock_sink;
     ::testing::NiceMock<MockEventBuilder> mock_builder;
     std::shared_ptr<libinput> lib;
 
@@ -145,6 +132,8 @@ struct LibInputDevice : public ::testing::Test
 
     LibInputDevice()
     {
+        ON_CALL(mock_sink, bounding_rectangle())
+            .WillByDefault(Return(geom::Rectangle({0,0}, {100,100})));
         lib = mie::make_libinput(fake_udev);
     }
 
@@ -268,6 +257,16 @@ struct LibInputDeviceOnTouchScreen : public LibInputDevice
 {
     libinput_device*const fake_device = setup_touchscreen();
     mie::LibInputDevice touch_screen{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
+
+    const float x = 10;
+    const float y = 5;
+    const uint32_t output_id = 2;
+    const float output_x_pos = 20;
+    const float output_y_pos = 50;
+    const float screen_x_pos = 70;
+    const float screen_y_pos = 30;
+    const int width = 100;
+    const int height = 200;
 };
 
 struct LibInputDeviceOnTouchpad : public LibInputDevice
@@ -776,4 +775,170 @@ TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
 
     lib.reset();
     device_ptr.reset();
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_selected_output)
+{
+    const float x = 30;
+    const float y = 20;
+    const uint32_t output_id = 2;
+    const float output_x_pos = 20;
+    const float output_y_pos = 50;
+    const int width = 100;
+    const int height = 200;
+
+    EXPECT_CALL(mock_sink, bounding_rectangle())
+        .Times(0);
+    EXPECT_CALL(mock_sink, output_info(output_id))
+        .WillRepeatedly(Return(
+                mi::OutputInfo{
+                    true,
+                    geom::Size{width, height},
+                    geom::Point{output_x_pos, output_y_pos},
+                    mir_orientation_normal}));
+    EXPECT_CALL(mock_sink,
+                handle_input(
+                    mt::TouchContact(
+                        0,
+                        mir_touch_action_down,
+                        x + output_x_pos,
+                        y + output_y_pos)))
+        .Times(1);
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_left_rotated_output)
+{
+    const float x = 10;
+    const float y = 5;
+    const uint32_t output_id = 2;
+    const float output_x_pos = 20;
+    const float output_y_pos = 50;
+    const int width = 100;
+    const int height = 200;
+
+    EXPECT_CALL(mock_sink, bounding_rectangle())
+        .Times(0);
+    EXPECT_CALL(mock_sink, output_info(output_id))
+        .WillRepeatedly(Return(
+                mi::OutputInfo{
+                               true,
+                               geom::Size{width, height},
+                               geom::Point{output_x_pos, output_y_pos},
+                               mir_orientation_left}));
+    EXPECT_CALL(mock_sink,
+                handle_input(
+                    mt::TouchContact(
+                        0,
+                        mir_touch_action_down,
+                        output_x_pos + y,
+                        output_y_pos + width - x)))
+        .Times(1);
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_right_rotated_output)
+{
+    EXPECT_CALL(mock_sink, bounding_rectangle())
+        .Times(0);
+    EXPECT_CALL(mock_sink, output_info(output_id))
+        .WillRepeatedly(Return(
+                mi::OutputInfo{
+                    true,
+                    geom::Size{width, height},
+                    geom::Point{output_x_pos, output_y_pos},
+                    mir_orientation_right}));
+    EXPECT_CALL(mock_sink,
+                handle_input(
+                    mt::TouchContact(
+                        0,
+                        mir_touch_action_down,
+                        output_x_pos + height - y,
+                        output_y_pos + x)))
+        .Times(1);
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_inverted_output)
+{
+    EXPECT_CALL(mock_sink, bounding_rectangle())
+        .Times(0);
+    EXPECT_CALL(mock_sink, output_info(output_id))
+        .WillRepeatedly(Return(
+                mi::OutputInfo{
+                   true,
+                   geom::Size{width, height},
+                   geom::Point{output_x_pos, output_y_pos},
+                   mir_orientation_inverted}));
+    EXPECT_CALL(mock_sink,
+                handle_input(
+                    mt::TouchContact(
+                        0,
+                        mir_touch_action_down,
+                        output_x_pos + width - x,
+                        output_y_pos + height- y)))
+        .Times(1);
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, display_wall_device_maps_to_bounding_rectangle)
+{
+    EXPECT_CALL(mock_sink, output_info(output_id))
+        .Times(0);
+    EXPECT_CALL(mock_sink, bounding_rectangle())
+        .WillOnce(Return(geom::Rectangle{geom::Point{screen_x_pos, screen_y_pos}, geom::Size{100, 100}}));
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, x + screen_x_pos, y + screen_y_pos)))
+        .Times(1);
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_display_wall});
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, drops_touchscreen_event_on_deactivated_output)
+{
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+
+    ON_CALL(mock_sink, output_info(output_id))
+        .WillByDefault(Return(mi::OutputInfo{false, geom::Size{width, height}, geom::Point{0,0}, mir_orientation_normal}));
+
+    touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
+
+    touch_screen.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, 0, x, y, 0, 0, 0, 0);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    process_events(touch_screen);
 }

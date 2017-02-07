@@ -19,6 +19,7 @@
 #include "mir/input/input_devices.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/require.h"
 #include "handle_event_exception.h"
 
@@ -224,4 +225,38 @@ void mir_touchpad_config_set_disable_with_mouse(MirTouchpadConfig* conf, bool ac
 void mir_touchpad_config_set_disable_while_typing(MirTouchpadConfig* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
 {
     conf->disable_while_typing(active);
+})
+
+MirTouchscreenConfig const* mir_input_device_get_touchscreen_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_touchscreen_config())
+        return &device->touchscreen_config();
+    return nullptr;
+})
+
+uint32_t mir_touchscreen_config_get_output_id(MirTouchscreenConfig const* config) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->output_id();
+})
+
+MirTouchscreenMappingMode mir_touchscreen_config_get_mapping_mode(MirTouchscreenConfig const* config) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->mapping_mode();
+})
+
+MirTouchscreenConfig* mir_input_device_get_mutable_touchscreen_config(MirInputDevice* device)  MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_touchscreen_config())
+        return &device->touchscreen_config();
+    return nullptr;
+})
+
+void mir_touchscreen_config_set_output_id(MirTouchscreenConfig* config, uint32_t id) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->output_id(id);
+})
+
+void mir_touchscreen_config_set_mapping_mode(MirTouchscreenConfig* config, MirTouchscreenMappingMode mode) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->mapping_mode(mode);
 })

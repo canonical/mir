@@ -114,7 +114,10 @@ void mie::LibInputDevice::process_event(libinput_event* event)
             // Not yet provided by libinput.
             break;
         case LIBINPUT_EVENT_TOUCH_FRAME:
-            sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
+            if (is_output_active())
+            {
+                sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
+            }
             break;
         default:
             break;
@@ -184,6 +187,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     auto const action = mir_pointer_action_motion;
     auto const hscroll_value = 0.0f;
     auto const vscroll_value = 0.0f;
+    // either the bounding box .. or the specific output ..
     auto const screen = sink->bounding_rectangle();
     uint32_t const width = screen.size.width.as_int();
     uint32_t const height = screen.size.height.as_int();
@@ -290,9 +294,10 @@ void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
 
 void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction action, libinput_event_touch* touch)
 {
-    auto const screen = sink->bounding_rectangle();
-    uint32_t const width = screen.size.width.as_int();
-    uint32_t const height = screen.size.height.as_int();
+    auto info = get_output_info();
+
+    uint32_t width = info.output_size.width.as_int();
+    uint32_t height = info.output_size.height.as_int();
 
     data.action = action;
     data.pressure = libinput_event_touch_get_pressure(touch);
@@ -300,6 +305,25 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction
     data.y = libinput_event_touch_get_y_transformed(touch, height);
     data.major = libinput_event_touch_get_major_transformed(touch, width, height);
     data.minor = libinput_event_touch_get_minor_transformed(touch, width, height);
+
+    if (info.orientation == mir_orientation_left)
+    {
+        std::swap(data.x, data.y);
+        data.y = width - data.y;
+    }
+    else if (info.orientation == mir_orientation_right)
+    {
+        std::swap(data.x, data.y);
+        data.x = height - data.x;
+    }
+    else if (info.orientation == mir_orientation_inverted)
+    {
+        data.x = width - data.x;
+        data.y = height - data.y;
+    }
+
+    data.x += info.position.x.as_int();
+    data.y += info.position.y.as_int();
 }
 
 void mie::LibInputDevice::handle_touch_motion(libinput_event_touch* touch)
@@ -362,6 +386,40 @@ libinput_device_group* mie::LibInputDevice::group()
 libinput_device* mie::LibInputDevice::device() const
 {
     return devices.front().get();
+}
+
+mi::OutputInfo mie::LibInputDevice::get_output_info() const
+{
+    mi::OutputInfo info;
+    if (touchscreen.is_set() && touchscreen.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
+    {
+        info = sink->output_info(touchscreen.value().output_id);
+    }
+    else
+    {
+        auto scene_bbox = sink->bounding_rectangle();
+        info.active = true;
+        info.position = scene_bbox.top_left;
+        info.output_size = scene_bbox.size;
+    }
+    return info;
+}
+
+bool mie::LibInputDevice::is_output_active() const
+{
+    if (!sink)
+        return false;
+
+    if (touchscreen.is_set())
+    {
+        auto const& touchscreen_config = touchscreen.value();
+        if (touchscreen_config.mapping_mode == mir_touchscreen_mapping_mode_to_output)
+        {
+            auto output = sink->output_info(touchscreen_config.output_id);
+            return output.active;
+        }
+    }
+    return true;
 }
 
 mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const

@@ -23,7 +23,10 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/geometry/size.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/event.h"
+
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -56,7 +59,6 @@ public:
     SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
-                           std::shared_ptr<InputRegion> const& input_region,
                            std::shared_ptr<KeyMapper> const& key_mapper,
                            std::shared_ptr<time::Clock> const& clock,
                            std::shared_ptr<SeatObserver> const& observer);
@@ -74,6 +76,8 @@ public:
     void set_cursor_position(float cursor_x, float cursor_y);
     void set_confinement_regions(geometry::Rectangles const& region);
     void reset_confinement_regions();
+
+    void update_outputs(geometry::Rectangles const& outputs);
 private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);
@@ -86,7 +90,6 @@ private:
     std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
-    std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<SeatObserver> const observer;
@@ -102,6 +105,9 @@ private:
         MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;
         std::vector<uint32_t> scan_codes;
+
+        MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_output};
+        mir::optional_value<uint32_t> output_id;
     };
 
     // Libinput's acceleration curve means the cursor moves by non-integer
@@ -114,6 +120,9 @@ private:
     mir::geometry::Rectangles confined_region;
 
     std::mutex mutable region_mutex;
+
+    std::mutex mutable output_mutex;
+    geometry::Rectangles input_region;
 };
 
 }
