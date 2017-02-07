@@ -206,6 +206,8 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 {
     using namespace testing;
@@ -306,6 +308,7 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic pop
 TEST_F(ClientLibraryErrorsDeathTest, creating_screencast_with_invalid_connection)
 {
     MIR_EXPECT_DEATH(mir_create_screencast_spec(nullptr), "");

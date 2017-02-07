@@ -19,12 +19,14 @@
 #ifndef MIR_CLIENT_ERROR_RENDER_SURFACE_H_
 #define MIR_CLIENT_ERROR_RENDER_SURFACE_H_
 
-#include "mir_render_surface.h"
+#include "mir/mir_render_surface.h"
 
 namespace mir
 {
 namespace client
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class ErrorRenderSurface : public MirRenderSurface
 {
 public:
@@ -46,6 +48,7 @@ private:
     std::string const error;
     MirConnection* const connection_;
 };
+#pragma GCC diagnostic pop
 }
 }
 #endif

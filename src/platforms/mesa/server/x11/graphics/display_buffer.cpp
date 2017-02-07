@@ -22,6 +22,7 @@
 #include "display_buffer.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/transformation.h"
 #include <cstring>
 
 namespace mg=mir::graphics;
@@ -39,6 +40,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   : size{sz},
                                     report{r},
                                     orientation_{o},
+                                    transform{mg::transformation(o)},
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
@@ -152,19 +154,15 @@ void mgx::DisplayBuffer::bind()
 {
 }
 
-MirOrientation mgx::DisplayBuffer::orientation() const
+glm::mat2 mgx::DisplayBuffer::transformation() const
 {
-    return orientation_;
-}
-
-MirMirrorMode mgx::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return transform;
 }
 
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
     orientation_ = new_orientation;
+    transform = mg::transformation(orientation_);
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()

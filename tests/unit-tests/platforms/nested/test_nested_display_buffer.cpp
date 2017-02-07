@@ -95,12 +95,18 @@ struct MockNestedChain : mgn::HostChain
     MOCK_METHOD1(submit_buffer, void(mgn::NativeBuffer&));
     MOCK_METHOD0(handle, MirPresentationChain*());
     MOCK_METHOD1(set_submission_mode, void(mgn::SubmissionMode));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(rs, MirRenderSurface*());
+#pragma GCC diagnostic pop
 };
 
 struct MockNestedStream : mgn::HostStream
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(rs, MirRenderSurface*());
+#pragma GCC diagnostic pop
     MOCK_CONST_METHOD0(handle, MirBufferStream*());
     MOCK_CONST_METHOD0(egl_native_window, EGLNativeWindowType());
 };

@@ -163,3 +163,19 @@ TEST_F(DefaultInputManagerTest, deals_with_parallel_stops)
         threads.pop_front();
     }
 }
+
+TEST_F(DefaultInputManagerTest, forwards_pause_continue_state_changes_to_platform)
+{
+    input_manager.start();
+
+    EXPECT_CALL(platform, pause_for_config());
+
+    input_manager.pause_for_config();
+    wait_for_multiplexer_dispatch();
+    Mock::VerifyAndClearExpectations(&platform);
+
+    EXPECT_CALL(platform, continue_after_config());
+    input_manager.continue_after_config();
+    wait_for_multiplexer_dispatch();
+    Mock::VerifyAndClearExpectations(&platform);
+}

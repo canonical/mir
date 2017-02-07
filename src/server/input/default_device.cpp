@@ -18,6 +18,7 @@
  */
 
 #include "default_device.h"
+#include "default_input_device_hub.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
@@ -31,15 +32,22 @@
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
+                                 std::function<void(Device*)> const& callback)
     : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
-      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}
+      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}, device_changed_callback{callback}
 {
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         keyboard = MirKeyboardConfig{};
         key_mapper->set_keymap_for_device(device_id, keyboard.value().device_keymap());
     }
+}
+
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
+    : DefaultDevice(id, actions, device, key_mapper, [](Device*){})
+{
 }
 
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
@@ -70,8 +78,8 @@ mir::optional_value<MirPointerConfig> mi::DefaultDevice::pointer_configuration()
     auto const& settings = pointer.value();
 
     return MirPointerConfig(settings.handedness, settings.acceleration,
-                                settings.cursor_acceleration_bias, settings.horizontal_scroll_scale,
-                                settings.vertical_scroll_scale);
+                            settings.cursor_acceleration_bias, settings.horizontal_scroll_scale,
+                            settings.vertical_scroll_scale);
 }
 
 mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration() const
@@ -82,8 +90,8 @@ mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration
     auto const& settings = touchpad.value();
 
     return MirTouchpadConfig(settings.click_mode, settings.scroll_mode, settings.button_down_scroll_button,
-                                 settings.tap_to_click, settings.disable_while_typing, settings.disable_with_mouse,
-                                 settings.middle_mouse_button_emulation);
+                             settings.tap_to_click, settings.disable_while_typing, settings.disable_with_mouse,
+                             settings.middle_mouse_button_emulation);
 }
 
 void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf)
@@ -107,6 +115,7 @@ void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf
                      {
                          dev->apply_settings(settings);
                      });
+    device_changed_callback(this);
 }
 
 void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& conf)
@@ -133,6 +142,7 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
                      {
                          dev->apply_settings(settings);
                      });
+    device_changed_callback(this);
 }
 
 mir::optional_value<MirKeyboardConfig> mi::DefaultDevice::keyboard_configuration() const
@@ -148,6 +158,8 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
     if (keyboard.value().device_keymap() != conf.device_keymap())
     {
         keyboard = conf;
+
         key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
+        device_changed_callback(this);
     }
 }

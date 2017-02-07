@@ -21,7 +21,6 @@
 
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"

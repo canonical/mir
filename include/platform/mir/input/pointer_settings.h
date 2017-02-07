@@ -56,6 +56,13 @@ struct PointerSettings
     double vertical_scroll_scale{1.0};
 };
 
+inline bool operator==(PointerSettings const& lhs, PointerSettings const& rhs)
+{
+    return lhs.handedness == rhs.handedness && lhs.cursor_acceleration_bias == rhs.cursor_acceleration_bias &&
+           lhs.acceleration == rhs.acceleration && lhs.horizontal_scroll_scale == rhs.horizontal_scroll_scale &&
+           lhs.vertical_scroll_scale == rhs.vertical_scroll_scale;
+}
+
 }
 }
 
