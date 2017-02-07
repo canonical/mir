@@ -22,7 +22,6 @@
 #include "mir/geometry/size.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/fd.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"

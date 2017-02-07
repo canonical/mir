@@ -217,3 +217,38 @@ TEST_F(MesaClientBufferTest, suggests_dma_import)
     EXPECT_THAT(egl_buffer, Eq(nullptr));
     EXPECT_THAT(attrs, mir::test::doubles::AttrMatches(expected_image_attrs));
 }
+
+//LP: #1661521
+TEST_F(MesaClientBufferTest, suggests_dma_import_with_native_format)
+{
+    auto format = GBM_FORMAT_ABGR8888;
+    static EGLint expected_image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_WIDTH, static_cast<const EGLint>(package->width),
+        EGL_HEIGHT, static_cast<const EGLint>(package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(format),
+        EGL_DMA_BUF_PLANE0_FD_EXT, package->fd[0],
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(package->stride),
+        EGL_NONE
+    };
+
+    EGLenum type;
+    EGLClientBuffer egl_buffer;
+    EGLint* attrs;
+    
+    mclg::ClientBuffer buffer(buffer_file_ops, package, size, format, 0);
+    buffer.egl_image_creation_parameters(&type, &egl_buffer, &attrs);
+
+    EXPECT_THAT(type, Eq(static_cast<EGLenum>(EGL_LINUX_DMA_BUF_EXT)));
+    EXPECT_THAT(egl_buffer, Eq(nullptr));
+    EXPECT_THAT(attrs, mir::test::doubles::AttrMatches(expected_image_attrs));
+}
+
+TEST_F(MesaClientBufferTest, invalid_pixel_format_throws)
+{
+    EXPECT_THROW({ 
+        mclg::ClientBuffer buffer(buffer_file_ops, package, size, mir_pixel_format_invalid);
+    }, std::invalid_argument);
+}

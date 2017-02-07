@@ -105,6 +105,16 @@ mir::DefaultServerConfiguration::the_prompt_connection_creator()
         {
             return true;
         }
+
+        bool configure_input_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
     };
 
     return prompt_connection_creator([this]
@@ -157,7 +167,7 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_coordinate_translator(),
                 the_application_not_responding_detector(),
                 the_cookie_authority(),
-                the_input_device_hub());
+                the_input_configuration_changer());
 }
 
 std::shared_ptr<mf::SessionMediatorObserver>

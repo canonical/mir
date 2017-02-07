@@ -56,18 +56,18 @@ std::mutex handle_mutex;
 std::unordered_set<MirWindow*> valid_surfaces;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}
 {
 }
 
-std::string const&MirPersistentId::as_string()
+std::string const& MirPersistentId::as_string()
 {
     return string_id;
 }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 MirSurfaceSpec::MirSurfaceSpec(
     MirConnection* connection, int width, int height, MirPixelFormat format)
@@ -144,10 +144,22 @@ MirSurface::MirSurface(
       output_id(spec.output_id.is_set() ? spec.output_id.value() : static_cast<uint32_t>(mir_display_output_id_invalid))
 {
     if (default_stream)
-    {
         streams.insert(default_stream);
-        default_stream->adopted_by(this);
+
+    if (spec.streams.is_set())
+    {
+        auto& map = connection_->connection_surface_map();
+        auto const& spec_streams = spec.streams.value();
+        for (auto& ci : spec_streams)
+        {
+            mir::frontend::BufferStreamId id(ci.stream_id);
+            if (auto bs = map->stream(id))
+                streams.insert(bs);
+        }
     }
+
+    for (auto& s : streams)
+        s->adopted_by(this);
 
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {

@@ -281,6 +281,8 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_window_release_sync(window);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 {
     using namespace testing;
@@ -332,3 +334,4 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_connection_release(im_connection);
 }
+#pragma GCC diagnostic pop

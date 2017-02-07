@@ -21,7 +21,7 @@
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_presentation_chain.h>
-#include <mir_toolkit/mir_render_surface.h>
+#include <mir_toolkit/rs/mir_render_surface.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <mir_toolkit/version.h>
 #include <sys/types.h>
@@ -92,6 +92,8 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -170,7 +172,7 @@ int main(int argc, char** argv)
 
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, render_surface, width, height, displacement_x, displacement_y);
     MirWindow* window = mir_create_window_sync(spec);
     if (!mir_window_is_valid(window))
@@ -237,3 +239,4 @@ int main(int argc, char** argv)
     mir_connection_release(connection);
     return 0;
 }
+#pragma GCC diagnostic pop

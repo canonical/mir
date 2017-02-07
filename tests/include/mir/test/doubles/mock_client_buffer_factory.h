@@ -36,6 +36,8 @@ struct MockClientBufferFactory : client::ClientBufferFactory
                  std::shared_ptr<client::ClientBuffer>(
                     std::shared_ptr<MirBufferPackage> const& /*package*/,
                     mir::geometry::Size /*size*/, MirPixelFormat /*pf*/));
+    MOCK_METHOD3(create_buffer, std::shared_ptr<client::ClientBuffer>(
+        std::shared_ptr<MirBufferPackage> const&, uint32_t, uint32_t));
 };
 }
 }
