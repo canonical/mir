@@ -39,6 +39,8 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1661704)
       . [regression] Windowed clients of nested servers are all black.
         (LP: #1661521)
+      . Mir graphics platform ABI broke in series 0.26 but sonames never
+        changed (LP: #1662455)
       . Fixes for 0.26 changelog.
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
