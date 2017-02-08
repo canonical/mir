@@ -17,10 +17,12 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_blob.h"
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 static const char *power_mode_name(MirPowerMode m)
 {
@@ -86,6 +88,77 @@ static char const* form_factor_name(MirFormFactor f)
     };
     return ((unsigned)f < sizeof(name)/sizeof(name[0])) ? name[f]
                                                         : "out-of-range";
+}
+
+static bool save(MirDisplayConfig* conf, char const* path)
+{
+    MirBlob* blob = mir_blob_from_display_config(conf);
+    if (!blob)
+    {
+        fprintf(stderr, "mir_blob_from_display_config failed\n");
+        return false;
+    }
+    bool ret = false;
+    FILE* file = path ? fopen(path, "wb") : stdout;
+    if (!file)
+    {
+        perror("save:fopen");
+    }
+    else
+    {
+        if (1 == fwrite(mir_blob_data(blob), mir_blob_size(blob), 1, file))
+            ret = true;
+        else
+            perror("save:fwrite");
+
+        if (file != stdout)
+            fclose(file);
+    }
+    mir_blob_release(blob);
+    return ret;
+}
+
+static MirDisplayConfig* load(char const* path)
+{
+    MirDisplayConfig* conf = NULL;
+    FILE* file = path ? fopen(path, "rb") : stdin;
+    if (!file)
+    {
+        perror("load:fopen");
+    }
+    else
+    {
+        fseek(file, 0, SEEK_END);
+        long size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        void* data = malloc(size);
+        if (!data)
+            perror("load:malloc");
+        else
+        {
+            if (1 != fread(data, size, 1, file))
+            {
+                perror("load:fread");
+            }
+            else
+            {
+                MirBlob* blob = mir_blob_onto_buffer(data, size);
+                if (!blob)
+                {
+                    fprintf(stderr, "mir_blob_onto_buffer failed with %ld bytes\n", size);
+                }
+                else
+                {
+                    conf = mir_blob_to_display_config(blob);
+                    mir_blob_release(blob);
+                }
+            }
+            free(data);
+        }
+        if (file != stdin)
+            fclose(file);
+    }
+    return conf;
 }
 
 static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
@@ -363,6 +436,8 @@ int main(int argc, char *argv[])
                            "    place +X+Y\n"
                            "    mode (WIDTHxHEIGHT | preferred) [rate HZ]\n"
                            "    rate HZ\n"
+                           "    save FILEPATH\n"
+                           "    load FILEPATH\n"
                            , argv[0]);
                     return 0;
             }
@@ -387,14 +462,39 @@ int main(int argc, char *argv[])
     }
 
     int ret = 0;
-    MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
+    bool dump = true;
+    MirDisplayConfig* conf = NULL;
+    if (actionc && !strcmp(actionv[0], "load"))
+    {
+        dump = false;
+        --actionc;
+        ++actionv;
+        char const* path = NULL;
+        if (actionc)
+        {
+            path = actionv[0];
+            --actionc;
+            ++actionv;
+        }
+        conf = load(path);
+    }
+    else
+    {
+        conf = mir_connection_create_display_configuration(conn);
+    }
+
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
     }
-    else if (actionc)
+    else if (actionc || !dump)
     {
-        if (modify(conf, actionc, actionv))
+        dump = false;
+        if (actionc && !strcmp(actionv[0], "save"))
+        {
+            ret = save(conf, actionc > 1 ? actionv[1] : NULL) ? 0 : 1;
+        }
+        else if (modify(conf, actionc, actionv))
         {
             mir_connection_preview_base_display_configuration(conn, conf, 10);
             mir_connection_confirm_base_display_configuration(conn, conf);
@@ -404,7 +504,8 @@ int main(int argc, char *argv[])
             ret = 1;
         }
     }
-    else
+    
+    if (dump)
     {
         printf("Connected to server: %s\n", server ? server : "<default>");
 
