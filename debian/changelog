@@ -5,9 +5,9 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
       . mirclient ABI unchanged at 9
       . mirserver ABI unchanged at 43
       . mircommon ABI unchanged at 7
-      . mirplatform ABI unchanged at 14
+      . mirplatform ABI bumped to 15
       . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI unchanged at 11
+      . mirplatformgraphics ABI bumped to 12
       . mirclientplatform ABI unchanged at 5
       . mirinputplatform ABI unchanged at 6
       . mircore ABI unchanged at 1
