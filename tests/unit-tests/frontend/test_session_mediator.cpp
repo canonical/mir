@@ -573,6 +573,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     mp::ScreencastParameters screencast_parameters;
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
+    screencast_parameters.set_pixel_format(stub_buffer.pixel_format());
 
     EXPECT_CALL(mock_ipc_operations, pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg));
 
@@ -580,6 +581,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
                                &screencast, null_callback.get());
     EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
               screencast.buffer_stream().buffer().buffer_id());
+    EXPECT_THAT(screencast.buffer_stream().pixel_format(), Eq(stub_buffer.pixel_format()));
 }
 
 TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
