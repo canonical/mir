@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_EXTENSIONS_HARDWARE_BUFFER_STREAM_H_
 #define MIR_CLIENT_EXTENSIONS_HARDWARE_BUFFER_STREAM_H_
 
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer_stream.h"
 #include "mir_toolkit/mir_extension_core.h"
 
@@ -34,10 +34,13 @@ extern "C" {
 //Internally, its useful in playground/ and the nested server until we switch upstream
 //driver stacks to the mir egl platform. 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef MirBufferStream* (*MirExtensionGetHardwareBufferStream)(
     MirRenderSurface* rs,
     int width, int height,
     MirPixelFormat format);
+#pragma GCC diagnostic pop
 
 typedef struct MirExtensionHardwareBufferStreamV1
 {

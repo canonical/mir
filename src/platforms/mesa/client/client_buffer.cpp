@@ -103,11 +103,35 @@ mclm::ClientBuffer::ClientBuffer(
         EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
         EGL_NONE}
 {
+    if (pf == mir_pixel_format_invalid)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("cannot create buffer with mir_pixel_format_invalid"));
+        
     if (package->fd_items != 1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "Buffer package does not contain the expected number of fd items"));
     }
+}
+
+mclm::ClientBuffer::ClientBuffer(
+    std::shared_ptr<BufferFileOps> const& buffer_file_ops,
+    std::shared_ptr<MirBufferPackage> const& package,
+    geometry::Size size,
+    unsigned int native_pf, unsigned int /*native_flags*/) :
+    buffer_file_ops{buffer_file_ops},
+    creation_package{to_native_buffer(*package)},
+    rect({geom::Point{0, 0}, size}),
+    buffer_pf{mir::graphics::mesa::gbm_format_to_mir_format(native_pf)},
+    egl_image_attrs{
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_WIDTH, static_cast<const EGLint>(creation_package->width),
+        EGL_HEIGHT, static_cast<const EGLint>(creation_package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(native_pf),
+        EGL_DMA_BUF_PLANE0_FD_EXT, creation_package->fd[0],
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
+        EGL_NONE}
+{
 }
 
 mclm::ClientBuffer::~ClientBuffer() noexcept

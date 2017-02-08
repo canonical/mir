@@ -54,6 +54,8 @@ void assign_result(void* result, void** context)
 
 struct RenderSurfaceCallback
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     static void created(MirRenderSurface* render_surface, void *client_context)
     {
         auto const context = reinterpret_cast<RenderSurfaceCallback*>(client_context);
@@ -62,6 +64,7 @@ struct RenderSurfaceCallback
     }
     bool invoked = false;
     MirRenderSurface* resulting_render_surface = nullptr;
+#pragma GCC diagnostic pop
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -211,12 +214,15 @@ TEST_F(MirRenderSurfaceTest, render_surface_can_be_created_and_released)
 
     connection->connect("MirRenderSurfaceTest", connected_callback, 0)->wait_for_all();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirRenderSurface* render_surface_from_callback = nullptr;
 
     auto const render_surface_returned = connection->create_render_surface_with_content(
         {10, 10},
         reinterpret_cast<MirRenderSurfaceCallback>(assign_result),
         &render_surface_from_callback);
+#pragma GCC diagnostic pop
 
     EXPECT_THAT(render_surface_from_callback, NotNull());
     EXPECT_THAT(render_surface_returned, NotNull());

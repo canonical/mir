@@ -20,7 +20,6 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <mir_toolkit/client_types_nbs.h>
 
 #ifdef __cplusplus
 /**

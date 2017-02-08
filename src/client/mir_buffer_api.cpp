@@ -168,19 +168,6 @@ catch (std::exception const& ex)
     return mir_pixel_format_invalid;
 }
 
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* b)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->buffer_usage();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return mir_buffer_usage_hardware;
-}
-
 bool mir_buffer_is_valid(MirBuffer* b)
 try
 {

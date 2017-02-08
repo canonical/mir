@@ -49,7 +49,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
     MockClientBufferFactory()
     {
-        ON_CALL(*this, create_buffer(_,_,_))
+        ON_CALL(*this, create_buffer(_,An<geom::Size>(),_))
             .WillByDefault(Invoke([](
                     std::shared_ptr<MirBufferPackage> const&, geom::Size size, MirPixelFormat)
                 {
@@ -61,6 +61,8 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     }
     MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
+    MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
+        std::shared_ptr<MirBufferPackage> const&, uint32_t, uint32_t));
 };
 
 struct MockServerRequests : mcl::ServerBufferRequests
@@ -272,7 +274,7 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
     ON_CALL(*mock_buffer, size())
         .WillByDefault(Return(size));
     EXPECT_CALL(*mock_buffer, increment_age());
-    ON_CALL(mock_platform_factory, create_buffer(_,_,_))
+    ON_CALL(mock_platform_factory, create_buffer(_,An<uint32_t>(),_))
         .WillByDefault(Return(mock_buffer));
     auto b1 = std::make_shared<mcl::Buffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);
@@ -289,7 +291,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     ON_CALL(*mock_buffer, size())
         .WillByDefault(Return(size));
     EXPECT_CALL(*mock_buffer, mark_as_submitted());
-    ON_CALL(mock_platform_factory, create_buffer(_,_,_))
+    ON_CALL(mock_platform_factory, create_buffer(_,An<uint32_t>(),_))
         .WillByDefault(Return(mock_buffer));
     auto b1 = std::make_shared<mcl::Buffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);

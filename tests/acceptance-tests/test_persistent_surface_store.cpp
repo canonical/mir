@@ -68,6 +68,8 @@ private:
 };
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
 {
     auto const shell_server_surface = latest_shell_surface();
@@ -82,3 +84,4 @@ TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
 
     mir_persistent_id_release(client_surface_id);
 }
+#pragma GCC diagnostic pop
