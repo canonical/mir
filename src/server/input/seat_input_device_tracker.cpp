@@ -30,6 +30,7 @@
 #include "input_modifier_utils.h"
 
 #include <boost/throw_exception.hpp>
+#include <linux/input.h>
 
 #include <stdexcept>
 #include <algorithm>
@@ -113,7 +114,7 @@ bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)
         if (stored_data == end(device_data))
             return true;
 
-        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));
+        return !stored_data->second.allowed_scan_code_action(mir_input_event_get_keyboard_event(event));;
     }
     return false;
 }
@@ -255,8 +256,44 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
     std::vector<mev::InputDeviceState> devices;
     devices.reserve(device_data.size());
     for (auto const& item : device_data)
+    {
         devices.push_back({item.first, item.second.scan_codes, item.second.buttons});
+        auto lock_state = key_mapper->device_modifiers(item.first);
 
+        bool caps_lock_active = (lock_state & mir_input_event_modifier_caps_lock);
+        bool scroll_lock_active = (lock_state & mir_input_event_modifier_scroll_lock);
+        bool num_lock_active = (lock_state & mir_input_event_modifier_num_lock);
+
+        bool contains_caps_lock_pressed = false;
+        bool contains_scroll_lock_pressed = false;
+        bool contains_num_lock_pressed = false;
+
+        for (uint32_t scan_code : item.second.scan_codes)
+        {
+            if (scan_code == KEY_CAPSLOCK)
+                contains_caps_lock_pressed = true;
+            else if (scan_code == KEY_SCROLLLOCK)
+                contains_scroll_lock_pressed = true;
+            else if (scan_code == KEY_NUMLOCK)
+                contains_num_lock_pressed = true;
+        }
+
+        if (caps_lock_active && !contains_caps_lock_pressed)
+        {
+            devices.back().pressed_keys.push_back(KEY_CAPSLOCK);
+            devices.back().pressed_keys.push_back(KEY_CAPSLOCK);
+        }
+        if (num_lock_active && !contains_num_lock_pressed)
+        {
+            devices.back().pressed_keys.push_back(KEY_NUMLOCK);
+            devices.back().pressed_keys.push_back(KEY_NUMLOCK);
+        }
+        if (scroll_lock_active && !contains_scroll_lock_pressed)
+        {
+            devices.back().pressed_keys.push_back(KEY_SCROLLLOCK);
+            devices.back().pressed_keys.push_back(KEY_SCROLLLOCK);
+        }
+    }
     auto out_ev = mev::make_event(
         clock->now().time_since_epoch(),
         buttons,

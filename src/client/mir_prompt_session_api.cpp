@@ -22,6 +22,7 @@
 #include "mir_prompt_session.h"
 #include "mir_connection.h"
 
+#include "mir/require.h"
 #include "mir/uncaught.h"
 
 #include <stdexcept>
@@ -72,6 +73,33 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
+}
+
+size_t mir_prompt_session_new_fds_for_prompt_providers_sync(
+    MirPromptSession *prompt_session,
+    unsigned int no_of_fds,
+    int* fds)
+{
+    mir::require(prompt_session);
+    mir::require(fds);
+
+    struct Context
+    {
+        size_t count;
+        int * const fds;
+    };
+    auto cb = [](MirPromptSession*, size_t count, int const* fds, void* context)
+    {
+        auto ctx = reinterpret_cast<Context *>(context);
+        ctx->count = count;
+        for (size_t i = 0; i < count; i++)
+        {
+            ctx->fds[i] = fds[i];
+        }
+    };
+    Context ctx{0, fds};
+    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_fds, cb, &ctx)->wait_for_all();
+    return ctx.count;
 }
 
 void mir_prompt_session_release_sync(

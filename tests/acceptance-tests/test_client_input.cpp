@@ -18,7 +18,10 @@
 
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
+#include "mir/input/keymap.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_input_config.h"
 
@@ -31,6 +34,8 @@
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
@@ -43,14 +48,18 @@
 #include <linux/input.h>
 
 #include <condition_variable>
+#include <unordered_map>
 #include <chrono>
+#include <atomic>
 #include <mutex>
 
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
@@ -58,6 +67,22 @@ using namespace testing;
 
 namespace
 {
+
+struct StubAuthorizer : mtd::StubSessionAuthorizer
+{
+    bool configure_input_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_configure_input;
+    }
+
+    bool set_base_input_configuration_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_set_base_input_configuration;
+    }
+
+    std::atomic<bool> allow_configure_input{true};
+    std::atomic<bool> allow_set_base_input_configuration{true};
+};
 
 struct MockEventFilter : public mi::EventFilter
 {
@@ -93,12 +118,52 @@ void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
+struct SurfaceTrackingShell : mir::shell::ShellWrapper
+{
+    SurfaceTrackingShell(
+        std::shared_ptr<mir::shell::Shell> wrapped_shell)
+        : ShellWrapper{wrapped_shell}, wrapped_shell{wrapped_shell}
+    {}
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto surface_id = wrapped_shell->create_surface(session, params, sink);
+
+        tracked_surfaces[session->name()] =  TrackedSurface{session, surface_id};
+
+        return surface_id;
+    }
+
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& session_name)
+    {
+        if (end(tracked_surfaces) == tracked_surfaces.find(session_name))
+            return nullptr;
+        TrackedSurface & tracked_surface = tracked_surfaces[session_name];
+        auto session = tracked_surface.session.lock();
+        if (!session)
+            return nullptr;
+        return session->surface(tracked_surface.surface);
+    }
+
+    struct TrackedSurface
+    {
+        std::weak_ptr<mir::scene::Session> session;
+        mir::frontend::SurfaceId surface;
+    };
+    std::unordered_map<std::string, TrackedSurface> tracked_surfaces;
+    std::shared_ptr<mir::shell::Shell> wrapped_shell;
+};
+
 struct Client
 {
     MirWindow* window{nullptr};
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
+    MOCK_METHOD1(handle_input_device_state, void(MirEvent const*));
 
     Client(std::string const& con, std::string const& name)
     {
@@ -141,7 +206,12 @@ struct Client
             mir_window_focus_state_focused == value)
             focused = true;
 
-        if (exposed && focused)
+        test_and_raise();
+    }
+
+    void test_and_raise()
+    {
+        if (exposed && focused && input_device_state_received)
             ready_to_accept_events.raise();
     }
 
@@ -159,6 +229,12 @@ struct Client
             client->handle_input(ev);
         if (type == mir_event_type_keymap)
             client->handle_keymap(ev);
+        if (type == mir_event_type_input_device_state)
+        {
+            client->input_device_state_received = true;
+            client->test_and_raise();
+            client->handle_input_device_state(ev);
+        }
     }
     ~Client()
     {
@@ -176,6 +252,7 @@ struct Client
     mir::test::Signal all_events_received;
     bool exposed = false;
     bool focused = false;
+    bool input_device_state_received = false;
 };
 
 struct DeviceCounter : mi::InputDeviceObserver
@@ -211,15 +288,23 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
             {
                 shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
-                return shell;
+                surfaces = std::make_shared<SurfaceTrackingShell>(shell);
+                return surfaces;
             });
+        server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
 
         HeadlessInProcessServer::SetUp();
 
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
+    {
+        return surfaces->get_surface(name);
+    }
+
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
+    std::shared_ptr<SurfaceTrackingShell> surfaces;
     std::string const keyboard_name = "keyboard";
     std::string const keyboard_unique_id = "keyboard-uid";
     std::string const mouse_name = "mouse";
@@ -238,6 +323,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
+    StubAuthorizer stub_authorizer;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
     mt::Signal devices_available;
@@ -961,6 +1047,81 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, num_lock_is_off_on_startup)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_Left)))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, keeps_num_lock_state_after_focus_change)
+{
+    Client first_client(new_connection(), first);
+
+    {
+        Client second_client(new_connection(), second);
+        EXPECT_CALL(second_client, handle_input(mt::KeyDownEvent()));
+        EXPECT_CALL(second_client, handle_input(mt::KeyUpEvent()))
+            .WillOnce(mt::WakeUp(&second_client.all_events_received));
+
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_NUMLOCK));
+
+        second_client.all_events_received.wait_for(10s);
+    }
+
+    EXPECT_CALL(first_client, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+    first_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keymap)
+{
+    Client a_client_with_keymap(new_connection(), first);
+
+    mir::test::Signal keymap_received;
+    mir::test::Signal device_state_received;
+
+    EXPECT_CALL(a_client_with_keymap, handle_keymap(_))
+        .WillOnce(mt::WakeUp(&keymap_received));
+    EXPECT_CALL(a_client_with_keymap,
+                handle_input_device_state(
+                    mt::DeviceStateWithPressedKeys(std::vector<uint32_t>{KEY_NUMLOCK, KEY_NUMLOCK})))
+        .WillOnce(mt::WakeUp(&device_state_received));
+
+    get_surface(first)->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
+    keymap_received.wait_for(4s);
+
+    {
+        Client a_client(new_connection(), second);
+
+        EXPECT_CALL(a_client, handle_input(mt::KeyDownEvent()));
+        EXPECT_CALL(a_client, handle_input(mt::KeyUpEvent()));
+        EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyDownEvent(),mt::KeyOfSymbol(XKB_KEY_KP_4))));
+        EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyUpEvent(),mt::KeyOfSymbol(XKB_KEY_KP_4))))
+            .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_KP4));
+
+        a_client.all_events_received.wait_for(10s);
+    }
+    device_state_received.wait_for(4s);
+    EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
+        .WillOnce(mt::WakeUp(&a_client_with_keymap.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+
+    a_client_with_keymap.all_events_received.wait_for(10s);
+}
+
 TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
 {
     wait_for_input_devices();
@@ -1163,7 +1324,7 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
     mir_connection_apply_session_input_config(unfocused_client.connection, config);
     mir_input_config_release(config);
 
-    EXPECT_FALSE(expect_no_changes.wait_for(10s));
+    EXPECT_FALSE(expect_no_changes.wait_for(1s));
     mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
 }
 
@@ -1193,6 +1354,54 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
 
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
     mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_set_base_input_configuration = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_base_configuration_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_set_base_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_configure_input = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_apply_session_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
 }
 
 TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
