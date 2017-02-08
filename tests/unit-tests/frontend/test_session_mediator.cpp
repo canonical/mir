@@ -581,6 +581,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
                                &screencast, null_callback.get());
     EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
               screencast.buffer_stream().buffer().buffer_id());
+    //LP: #1662997
     EXPECT_THAT(screencast.buffer_stream().pixel_format(), Eq(stub_buffer.pixel_format()));
 }
 
