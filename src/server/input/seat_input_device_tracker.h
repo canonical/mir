@@ -41,7 +41,6 @@ class Clock;
 namespace input
 {
 class CursorListener;
-class InputRegion;
 class InputDispatcher;
 class KeyMapper;
 class SeatObserver;

@@ -139,7 +139,6 @@ class EventFilterChainDispatcher;
 class InputChannelFactory;
 class CursorListener;
 class TouchVisualizer;
-class InputRegion;
 class InputSender;
 class CursorImages;
 class Seat;
@@ -326,7 +325,6 @@ public:
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
-    virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::Seat> the_seat();
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
@@ -393,7 +391,6 @@ protected:
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
-    CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;

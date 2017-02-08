@@ -41,7 +41,6 @@ namespace input
 {
 class TouchVisualizer;
 class CursorListener;
-class InputRegion;
 class InputDispatcher;
 class KeyMapper;
 class SeatObserver;
