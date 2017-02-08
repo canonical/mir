@@ -182,8 +182,11 @@ MirWaitHandle* MirScreencast::release(MirScreencastCallback callback, void* cont
 void MirScreencast::screencast_created(
     MirScreencastCallback callback, void* context)
 {
-    if (!protobuf_screencast->has_error() && connection && protobuf_screencast->has_buffer())
+    if (connection && !protobuf_screencast->has_error() &&
+        protobuf_screencast->has_buffer_stream() && protobuf_screencast->buffer_stream().has_buffer())
+    {
         buffer_stream = connection->make_consumer_stream(protobuf_screencast->buffer_stream());
+    }
 
     callback(this, context);
     create_screencast_wait_handle.result_received();

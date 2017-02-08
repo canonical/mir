@@ -790,7 +790,6 @@ void mf::SessionMediator::create_screencast(
     geom::Size const size{parameters->width(), parameters->height()};
     MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
 
-    printf("ABOUT here\n");
     int nbuffers = 1;
     if (parameters->has_num_buffers())
         nbuffers = parameters->num_buffers();
@@ -815,8 +814,8 @@ void mf::SessionMediator::create_screencast(
         screencast_session_id.as_value());
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
 
-    printf("DONE!\n");
     done->Run();
 }
 
@@ -859,10 +858,7 @@ void mf::SessionMediator::screencast_to_buffer(
     auto session = weak_session.lock();
     ScreencastSessionId const screencast_session_id{request->id().value()};
     auto buffer = session->get_buffer(mg::BufferID{request->buffer_id()});
-    try{
     screencast->capture(screencast_session_id, buffer);
-    } catch (std::exception& e) { printf("ASASASASA %s\n", e.what()); throw e; }
-    printf("AAAZ\n");
     done->Run();
 }
 
