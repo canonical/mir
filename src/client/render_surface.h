@@ -22,7 +22,7 @@
 
 #include "mir_connection.h"
 #include "mir/mir_render_surface.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/frontend/surface_id.h"
 
@@ -40,6 +40,8 @@ namespace client
 class ClientPlatform;
 class BufferStream;
 class PresentationChain;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class RenderSurface : public MirRenderSurface
 {
 public:
@@ -71,6 +73,7 @@ private:
     std::mutex mutable size_mutex;
     geometry::Size desired_size;
 };
+#pragma GCC diagnostic pop
 }
 }
 #endif /* MIR_CLIENT_RENDER_SURFACE_H */

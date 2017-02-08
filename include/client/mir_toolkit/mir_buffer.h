@@ -19,7 +19,7 @@
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
 #include <stdbool.h>
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 #include <mir_toolkit/mir_native_buffer.h>
 
 #ifdef __cplusplus
@@ -126,13 +126,6 @@ unsigned int mir_buffer_get_height(MirBuffer* buffer);
  *   \return              The pixel format of the buffer
  **/
 MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
-
-/** Retrieve the buffer usage of the buffer.
- *
- *   \param [in] buffer   The buffer
- *   \return              The buffer usage of the buffer
- **/
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
 
 /** @} */
 

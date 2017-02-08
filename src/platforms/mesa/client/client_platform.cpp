@@ -134,6 +134,8 @@ void allocate_buffer_gbm(
         available_callback, available_context); 
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_hw_stream(
     MirRenderSurface* rs_key,
     int width, int height,
@@ -144,6 +146,7 @@ MirBufferStream* get_hw_stream(
         return nullptr;
     return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
 }
+#pragma GCC diagnostic pop
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)

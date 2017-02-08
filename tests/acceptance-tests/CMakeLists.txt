@@ -91,19 +91,6 @@ endif()
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 # END "throwbacks"
 
-# BEGIN "staging"
-# The following tests use files we do not yet support in the public API
-# TODO update the public APIs
-  set_source_files_properties(test_presentation_chain.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-
-  set_source_files_properties(test_render_surface.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-
-  set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-# END "staging"
-
 mir_add_wrapped_executable(
   mir_acceptance_tests
 

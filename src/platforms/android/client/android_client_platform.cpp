@@ -69,6 +69,8 @@ void destroy_anwb(ANativeWindowBuffer*) noexcept
 {
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 ANativeWindow* create_anw(
     MirRenderSurface* rs_key,
     int width, int height,
@@ -94,6 +96,7 @@ ANativeWindow* create_anw(
     auto buffer_stream =  rs->get_buffer_stream(width, height, format, usage);
     return static_cast<ANativeWindow*>(buffer_stream->egl_native_window());
 }
+#pragma GCC diagnostic pop
 
 void destroy_anw(ANativeWindow*)
 {
@@ -183,6 +186,8 @@ void create_buffer(
         available_callback, available_context); 
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_hw_stream(
     MirRenderSurface* rs_key,
     int width, int height,
@@ -193,6 +198,7 @@ MirBufferStream* get_hw_stream(
         return nullptr;
     return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
 }
+#pragma GCC diagnostic pop
 
 }
 

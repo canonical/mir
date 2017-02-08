@@ -21,7 +21,6 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir/mir_render_surface.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir/geometry/size.h"
 
 namespace mir

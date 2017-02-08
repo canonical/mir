@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 
 #include "mir/geometry/size.h"
@@ -40,6 +40,8 @@ struct RenderSurfaceTest : mtf::HeadlessInProcessServer
 
 using namespace testing;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(RenderSurfaceTest, creates_and_releases_render_surfaces)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -142,7 +144,7 @@ TEST_F(RenderSurfaceTest, render_surfaces_without_content_can_be_added_to_spec)
     auto spec = mir_create_normal_window_spec(
         connection,
         physical_size.width.as_int(), physical_size.height.as_int());
-    mir_surface_spec_add_render_surface(
+    mir_window_spec_add_render_surface(
         spec, rs, logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -166,7 +168,7 @@ TEST_F(RenderSurfaceTest, stream_can_be_constructed_after_surface_creation)
         connection, logical_size.width.as_int(), logical_size.height.as_int());
     auto spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
-    mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
+    mir_window_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     auto bs = mir_render_surface_get_buffer_stream(rs, 640, 480, format);
@@ -227,7 +229,7 @@ TEST_F(RenderSurfaceTest, chain_can_be_constructed_after_surface_creation)
         connection, logical_size.width.as_int(), logical_size.height.as_int());
     auto spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
-    mir_surface_spec_add_render_surface(spec, rs, width, height, 0, 0);
+    mir_window_spec_add_render_surface(spec, rs, width, height, 0, 0);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
     auto pc = mir_render_surface_get_presentation_chain(rs);
@@ -301,3 +303,27 @@ TEST_F(RenderSurfaceTest, excepts_on_chain_request_if_stream_handed_out)
     mir_render_surface_release(rs);
     mir_connection_release(connection);
 }
+
+TEST_F(RenderSurfaceTest, stores_user_set_size_for_driver_to_access)
+{
+    auto width = 0;
+    auto height = 0;
+    geom::Size const size { 101, 102 };
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto rs = mir_connection_create_render_surface_sync(
+        connection, logical_size.width.as_int(), logical_size.height.as_int());
+
+    mir_render_surface_get_size(rs, &width, &height);
+    EXPECT_THAT(width, Eq(logical_size.width.as_int())); 
+    EXPECT_THAT(height, Eq(logical_size.height.as_int()));
+
+    mir_render_surface_set_size(rs, size.width.as_int(), size.height.as_int());
+    mir_render_surface_get_size(rs, &width, &height);
+    EXPECT_THAT(width, Eq(size.width.as_int())); 
+    EXPECT_THAT(height, Eq(size.height.as_int()));
+
+    mir_render_surface_release(rs);
+    mir_connection_release(connection);
+}
+#pragma GCC diagnostic pop

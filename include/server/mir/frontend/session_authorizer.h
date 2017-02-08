@@ -38,6 +38,8 @@ public:
     virtual bool set_base_display_configuration_is_allowed(SessionCredentials const& creds) = 0;
     virtual bool screencast_is_allowed(SessionCredentials const& creds) = 0;
     virtual bool prompt_session_is_allowed(SessionCredentials const&  creds) = 0;
+    virtual bool configure_input_is_allowed(SessionCredentials const& creds) = 0;
+    virtual bool set_base_input_configuration_is_allowed(SessionCredentials const& creds) = 0;
 
 protected:
     SessionAuthorizer() = default;
