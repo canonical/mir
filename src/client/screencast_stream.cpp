@@ -244,10 +244,13 @@ MirConnection* mcl::ScreencastStream::connection() const
     return connection_;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* mcl::ScreencastStream::render_surface() const
 {
     return nullptr;
 }
+#pragma GCC diagnostic pop
 
 void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
 {

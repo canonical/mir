@@ -50,6 +50,8 @@ struct MockSessionAuthorizer : public mf::SessionAuthorizer
     MOCK_METHOD1(set_base_display_configuration_is_allowed, bool(mf::SessionCredentials const&));
     MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
+    MOCK_METHOD1(configure_input_is_allowed, bool(mf::SessionCredentials const&));
+    MOCK_METHOD1(set_base_input_configuration_is_allowed, bool(mf::SessionCredentials const&));
 };
 
 struct ClientCredsTestFixture : mtf::InterprocessClientServerTest

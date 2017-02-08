@@ -57,7 +57,10 @@ struct MockMirBufferStream : public MirBufferStream
     MOCK_METHOD1(set_scale, MirWaitHandle*(float));
     MOCK_CONST_METHOD0(get_error_message, char const*(void));
     MOCK_CONST_METHOD0(connection, MirConnection*());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(render_surface, MirRenderSurface*());
+#pragma GCC diagnostic pop
 };
 
 }

@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 //Information the driver will have to maintain
 typedef struct
 {
@@ -93,6 +95,7 @@ EGLBoolean future_driver_eglSwapBuffers(EGLDisplay display, EGLSurface surface)
     } 
     return eglSwapBuffers(display, surface);
 }
+#pragma GCC diagnostic pop
 
 EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
 {
