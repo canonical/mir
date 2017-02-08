@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_protobuf.pb.h"
+#include "mir_error.h"
 
 #include <EGL/eglplatform.h>
 
@@ -89,7 +90,7 @@ public:
 
     void screencast_to_buffer(
         mir::client::MirBuffer* buffer,
-        MirBufferCallback available_callback,
+        MirScreencastBufferCallback available_callback,
         void* available_context);
 
 private:
@@ -113,7 +114,7 @@ private:
 
     struct ScreencastRequest
     {
-        ScreencastRequest(mir::client::MirBuffer* b, MirBufferCallback cb, void* context) :
+        ScreencastRequest(mir::client::MirBuffer* b, MirScreencastBufferCallback cb, void* context) :
             buffer(b),
             available_callback(cb),
             available_context(context)
@@ -121,12 +122,13 @@ private:
         }
  
         mir::client::MirBuffer* buffer;
-        MirBufferCallback available_callback;
+        MirScreencastBufferCallback available_callback;
         void* available_context;
         mir::protobuf::Void response;
     };
     std::vector<std::unique_ptr<ScreencastRequest>> requests;
     void screencast_done(ScreencastRequest* request);
+    std::unique_ptr<MirError> error = nullptr;
 };
 
 #endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */

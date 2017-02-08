@@ -214,7 +214,11 @@ MirBufferStream* MirScreencast::get_buffer_stream()
 
 void MirScreencast::screencast_done(ScreencastRequest* request)
 {
-    request->available_callback(reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
+    if (request->response.has_error())
+        error = std::make_unique<MirError>(mir_error_domain_screencast, mir_screencast_error_failure);
+
+    request->available_callback(
+        reinterpret_cast<MirBuffer*>(request->buffer), error.get(), request->available_context);
 
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = std::find_if(requests.begin(), requests.end(),
@@ -225,7 +229,7 @@ void MirScreencast::screencast_done(ScreencastRequest* request)
 
 void MirScreencast::screencast_to_buffer(
     mcl::MirBuffer* buffer,
-    MirBufferCallback cb,
+    MirScreencastBufferCallback cb,
     void* context)
 {
     if (!server) //construction with nullptr should be invalid

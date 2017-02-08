@@ -473,6 +473,8 @@ typedef MirInputConfigCallback mir_input_config_callback
     __attribute__((deprecated("Use MirInputConfigCallback instead")));
 
 typedef void (*MirBufferCallback)(MirBuffer*, void* context);
+typedef void (*MirScreencastBufferCallback)(
+    MirBuffer* buffer, MirError const* error, void* context);
 
 /**
  * Specifies the origin of an error.
@@ -493,6 +495,12 @@ typedef enum MirErrorDomain
      * Associated error codes are found in \ref MirInputConfigurationError.
      */
     mir_error_domain_input_configuration,
+    /**
+     * Errors relating to screencast
+     *
+     * Associated error codes are found in \ref MirScreencastError.
+     */
+    mir_error_domain_screencast,
 } MirErrorDomain;
 
 /**
@@ -536,6 +544,23 @@ typedef enum MirInputConfigurationError {
      */
      mir_input_configuration_error_unauthorized,
 } MirInputConfigurationError;
+
+typedef enum MirScreencastError
+{
+    /**
+     * Screencasting to the MirBuffer is unsupported.
+     */
+    mir_screencast_error_unsupported,
+    /**
+     * Screencasting failed.
+     */
+    mir_screencast_error_failure,
+    /**
+     * Screencast completed successfully, but format conversions, buffer copies
+     * or other operations occurred that affected performance.
+     */
+    mir_screencast_performance_warning,
+} MirScreencastError;
 
 typedef void (*MirErrorCallback)(
     MirConnection* connection, MirError const* error, void* context);
