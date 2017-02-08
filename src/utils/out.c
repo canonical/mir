@@ -133,7 +133,9 @@ static MirDisplayConfig* load(char const* path)
         fseek(file, 0, SEEK_SET);
         void* data = malloc(size);
         if (!data)
+        {
             perror("load:malloc");
+        }
         else
         {
             if (1 != fread(data, size, 1, file))
