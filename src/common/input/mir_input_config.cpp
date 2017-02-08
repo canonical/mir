@@ -293,7 +293,16 @@ bool MirInputConfig::operator!=(MirInputConfig const& rhs) const
 
 std::ostream& operator<<(std::ostream& out, MirInputDevice const& rhs)
 {
-    return out << rhs.id() << ' '<< rhs.name()  << ' ' << rhs.unique_id();
+    out << rhs.id() << ' '<< rhs.name()  << ' ' << rhs.unique_id();
+    if (rhs.has_pointer_config())
+        out << " pointer:(" << rhs.pointer_config() << ')';
+    if (rhs.has_touchpad_config())
+        out << " touchpad:(" << rhs.touchpad_config() << ')';
+    if (rhs.has_touchscreen_config())
+        out << " touchscreen:(" << rhs.touchscreen_config() << ')';
+    if (rhs.has_keyboard_config())
+        out << " keyboard:(" << rhs.keyboard_config() << ')';
+    return out;
 }
 
 std::ostream& operator<<(std::ostream& out, MirInputConfig const& rhs)
