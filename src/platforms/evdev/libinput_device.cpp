@@ -375,6 +375,10 @@ void mie::LibInputDevice::update_device_info()
         }
     }
 
+    if (contains(caps, mi::DeviceCapability::touchscreen) &&
+        !contains(info.capabilities, mi::DeviceCapability::touchscreen))
+        touchscreen = mi::TouchscreenSettings{};
+
     info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }
 

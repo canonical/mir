@@ -118,6 +118,10 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
     // the default setup results in a direct mapping of input velocity to output velocity.
     settings.acceleration = mir_pointer_acceleration_none;
     settings.cursor_acceleration_bias = 0.0;
+
+    // add default setup for touchscreen..
+    if (contains(info.capabilities, mi::DeviceCapability::touchscreen))
+        touchscreen = mi::TouchscreenSettings{};
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
@@ -211,13 +215,15 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     float abs_x = touch.abs_x;
     float abs_y = touch.abs_y;
     map_touch_coordinates(abs_x, abs_y);
-    // those values would need scaling too as soon as they can be controlled by the caller
 
-    auto touch_event = builder->touch_event(
-        event_time,
-        {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
+    if (is_output_active())
+    {
+        auto touch_event = builder->touch_event(
+            event_time,
+            {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
 
-    sink->handle_input(*touch_event);
+        sink->handle_input(*touch_event);
+    }
 }
 
 mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
@@ -271,13 +277,33 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchscreenSettin
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
 {
-    // TODO take orientation of input sink into account?
-    auto area = sink->bounding_rectangle();
+    auto info = get_output_info();
     auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
-    auto x_scale = area.size.width.as_int() / float(touch_range);
-    auto y_scale = area.size.height.as_int() / float(touch_range);
-    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale + area.top_left.x.as_int();
-    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale + area.top_left.y.as_int();
+    auto const width = info.output_size.width.as_int();
+    auto const height = info.output_size.height.as_int();
+    auto x_scale = width / float(touch_range);
+    auto y_scale = height / float(touch_range);
+    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale;
+    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale;
+
+    if (info.orientation == mir_orientation_left)
+    {
+        std::swap(x, y);
+        y = width - y;
+    }
+    else if (info.orientation == mir_orientation_right)
+    {
+        std::swap(x, y);
+        x = height - x;
+    }
+    else if (info.orientation == mir_orientation_inverted)
+    {
+        x = width - x;
+        y = height - y;
+    }
+
+    x += info.position.x.as_int();
+    y += info.position.y.as_int();
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink* destination, mi::EventBuilder* event_builder)
@@ -292,4 +318,34 @@ void mtf::FakeInputDeviceImpl::InputDevice::stop()
     sink = nullptr;
     builder = nullptr;
     mtf::StubInputPlatform::unregister_dispatchable(queue);
+}
+
+mi::OutputInfo mtf::FakeInputDeviceImpl::InputDevice::get_output_info() const
+{
+    mi::OutputInfo info;
+    if (touchscreen.mapping_mode == mir_touchscreen_mapping_mode_to_output)
+    {
+        info = sink->output_info(touchscreen.output_id);
+    }
+    else
+    {
+        auto scene_bbox = sink->bounding_rectangle();
+        info.active = true;
+        info.position = scene_bbox.top_left;
+        info.output_size = scene_bbox.size;
+    }
+    return info;
+}
+
+bool mtf::FakeInputDeviceImpl::InputDevice::is_output_active() const
+{
+    if (!sink)
+        return false;
+
+    if (touchscreen.mapping_mode == mir_touchscreen_mapping_mode_to_output)
+    {
+        auto output = sink->output_info(touchscreen.output_id);
+        return output.active;
+    }
+    return true;
 }

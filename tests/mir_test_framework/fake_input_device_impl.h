@@ -29,6 +29,10 @@
 
 namespace mir
 {
+namespace input
+{
+class OutputInfo;
+}
 namespace dispatch
 {
 class ActionQueue;
@@ -81,6 +85,8 @@ private:
         MirPointerAction update_buttons(mir::input::synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);
         void map_touch_coordinates(float& x, float& y);
+        mir::input::OutputInfo get_output_info() const;
+        bool is_output_active() const;
 
         mir::input::InputSink* sink{nullptr};
         mir::input::EventBuilder* builder{nullptr};
