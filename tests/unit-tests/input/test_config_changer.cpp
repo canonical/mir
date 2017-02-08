@@ -83,7 +83,8 @@ struct FakeInputDeviceHub : mir::input::InputDeviceHub
     MirInputDeviceId const first_id{13};
     MirInputDeviceId const second_id{14};
     mi::DeviceCapabilities const caps = mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad |
-                                        mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;
+                                        mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric |
+                                        mi::DeviceCapability::touchscreen;
 
     NiceMock<MockDevice> first_device{first_id, caps, first, first};
     NiceMock<MockDevice> second_device{second_id, caps, second, second};
@@ -149,6 +150,7 @@ struct ConfigChanger : Test
         conf.set_keyboard_config(MirKeyboardConfig{});
         conf.set_pointer_config(MirPointerConfig{});
         conf.set_touchpad_config(MirTouchpadConfig{});
+        conf.set_touchscreen_config(MirTouchscreenConfig{});
         return conf;
     }
     auto get_populated_conf(MirInputDevice && conf)
@@ -176,6 +178,7 @@ TEST_F(ConfigChanger, doesnt_apply_config_for_unfocused_session)
     EXPECT_CALL(hub.first_device, apply_touchpad_configuration(_)).Times(0);
     EXPECT_CALL(hub.first_device, apply_keyboard_configuration(_)).Times(0);
     EXPECT_CALL(hub.first_device, apply_pointer_configuration(_)).Times(0);
+    EXPECT_CALL(hub.first_device, apply_touchscreen_configuration(_)).Times(0);
 
     changer.configure(std::make_shared<mtd::StubSession>(), std::move(conf));
 }
