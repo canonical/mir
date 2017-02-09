@@ -1,6 +1,8 @@
 set(
   FRONTEND_SOURCES
 
+  authorizing_input_config_changer.cpp
+  authorizing_input_config_changer.h
   connection_context.cpp
   no_prompt_shell.cpp
   session_mediator.cpp

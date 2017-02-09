@@ -1185,6 +1185,31 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
 }
 #pragma GCC diagnostic pop
 
+//lp:1661704
+TEST_F(ClientLibrary, can_get_window_id_more_than_once_in_quick_succession)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_create_normal_window_spec(connection, 800, 600);
+    mir_window_spec_set_pixel_format(surface_spec, mir_pixel_format_argb_8888);
+    auto window = mir_create_window_sync(surface_spec);
+    mir_window_spec_release(surface_spec);
+
+    ASSERT_THAT(window, IsValid());
+
+    MirWindowId* surface_id;
+    MirWindowId* window_id = nullptr; //circumvent ‘window_id’ uninitialized error
+    surface_id = mir_window_request_window_id_sync(window);
+    EXPECT_NO_THROW({
+        window_id = mir_window_request_window_id_sync(window);
+    });
+
+    mir_window_id_release(surface_id);
+    mir_window_id_release(window_id);
+    mir_window_release_sync(window);
+    mir_connection_release(connection);
+}
+
 TEST_F(ClientLibrary, creates_buffer_streams)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -1199,4 +1224,11 @@ TEST_F(ClientLibrary, creates_buffer_streams)
 
     mir_buffer_stream_release_sync(stream);
     mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, client_api_version)
+{
+    ASSERT_TRUE( MIR_VERSION_NUMBER(MIR_CLIENT_API_VERSION_MAJOR,
+                                    MIR_CLIENT_API_VERSION_MINOR,
+                                    MIR_CLIENT_API_VERSION_PATCH) == mir_get_client_api_version());
 }

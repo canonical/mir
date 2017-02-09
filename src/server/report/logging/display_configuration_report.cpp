@@ -181,6 +181,11 @@ void mrl::DisplayConfigurationReport::log_configuration(
                             indent,
                             out.top_left.x.as_int(),
                             out.top_left.y.as_int());
+
+                logger->log(component, severity,
+                            "%sScaling factor: %.2f",
+                            indent,
+                            out.scale);
             }
         }
     });

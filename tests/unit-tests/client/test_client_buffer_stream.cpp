@@ -167,7 +167,7 @@ struct ClientBufferStream : TestWithParam<bool>
 {
     ClientBufferStream()
     {
-        ON_CALL(mock_factory, create_buffer(_,_,_))
+        ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
             .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>()));
     }
 
@@ -305,7 +305,7 @@ TEST_F(ClientBufferStream, protobuf_requirements)
 
 TEST_F(ClientBufferStream, uses_buffer_message_from_server)
 {
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(std::make_shared<mtd::NullClientBuffer>()));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -382,10 +382,10 @@ TEST_F(ClientBufferStream, returns_current_client_buffer)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage);
     
     Sequence seq;
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),An<geom::Size>(),_))
         .InSequence(seq)
         .WillOnce(Return(client_buffer_1));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),An<geom::Size>(),_))
         .InSequence(seq)
         .WillOnce(Return(client_buffer_2));
 
@@ -448,7 +448,7 @@ TEST_F(ClientBufferStream, map_graphics_region)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
     mcl::BufferStream bs(
@@ -470,7 +470,7 @@ TEST_F(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -568,7 +568,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     NiceMock<mtd::MockClientBuffer> second_mock_client_buffer;
     ON_CALL(second_mock_client_buffer, size())
         .WillByDefault(Return(size));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
     mcl::BufferStream bs(
@@ -582,7 +582,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     another_buffer_package.set_buffer_id(id);
     another_buffer_package.set_width(size.width.as_int());
     another_buffer_package.set_height(size.height.as_int());
-    EXPECT_CALL(mock_factory, create_buffer(_,_,_))
+    EXPECT_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -599,7 +599,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillByDefault(mtd::RunProtobufClosure());
@@ -741,7 +741,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
 {
     auto format = mir_pixel_format_bgr_888;
     response.set_pixel_format(format);
-    EXPECT_CALL(mock_factory, create_buffer(_,_,format))
+    EXPECT_CALL(mock_factory, create_buffer(_,_,TypedEq<MirPixelFormat>(format)))
         .WillRepeatedly(Return(std::make_shared<mtd::NullClientBuffer>()));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -755,7 +755,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
 
 TEST_F(ClientBufferStream, keeps_accurate_buffer_id)
 {
-    ON_CALL(mock_factory, create_buffer(_,_,_))
+    ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
         .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>(size)));
     mcl::BufferStream stream(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
