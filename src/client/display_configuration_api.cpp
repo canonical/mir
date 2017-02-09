@@ -113,7 +113,7 @@ char const* mir_output_get_model(MirOutput const* output)
 
 int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
 {
-    return config->display_card(0).max_simultaneous_outputs();
+    return mir_display_config_get_num_outputs(config);
 }
 
 int mir_output_get_id(MirOutput const* output)
