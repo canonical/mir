@@ -1,4 +1,4 @@
-mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.1+17.04.20170209.1-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.26.1 (https://launchpad.net/mir/+milestone/0.26.1)
     - ABI summary:
@@ -49,7 +49,7 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] Software clients of nested servers are all black in Mir 0.25.0
         and later. (LP: #1663062)
 
- -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 09 Feb 2017 21:46:32 +0000
 
 mir (0.26.0+17.04.20170126.3-0ubuntu1) zesty; urgency=medium
 
