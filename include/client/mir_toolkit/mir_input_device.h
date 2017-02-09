@@ -151,7 +151,7 @@ char const* mir_input_device_get_unique_id(MirInputDevice const* device);
  *
  * \param [in] device   The input device
  *
- * \return              The pointer config
+ * \return              The keyboard config
  */
 MirKeyboardConfig const* mir_input_device_get_keyboard_config(
     MirInputDevice const* device);
@@ -198,7 +198,7 @@ char const* mir_keyboard_config_get_keymap_options(
  *
  * \param [in] device   The input device
  *
- * \return              The pointer config
+ * \return              The keyboard config
  */
 MirKeyboardConfig* mir_input_device_get_mutable_keyboard_config(
     MirInputDevice* device);
