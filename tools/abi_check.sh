@@ -3,6 +3,7 @@
 set -e
 
 declare -A abi_var_for=(\
+    ["mircore"]="MIRCORE_ABI" \
     ["mirclient"]="MIRCLIENT_ABI" \
     ["mircommon"]="MIRCOMMON_ABI" \
     ["mirplatform"]="MIRPLATFORM_ABI" \
