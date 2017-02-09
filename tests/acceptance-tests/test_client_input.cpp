@@ -1512,9 +1512,19 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
         [display_config](MirConnection* con)
         {
             mir_connection_preview_base_display_configuration(con, display_config, 10);
+        });
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_display_config_change_callback,
+        [display_config](MirConnection* con)
+        {
             mir_connection_confirm_base_display_configuration(con, display_config);
             mir_display_config_release(display_config);
         });
+
+    display_config = mir_connection_create_display_configuration(client.connection);
+    ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
 
     auto config = mir_connection_create_input_config(client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
