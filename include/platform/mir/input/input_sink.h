@@ -33,6 +33,11 @@ namespace input
 
 struct OutputInfo
 {
+    OutputInfo() {}
+    OutputInfo(bool active, geometry::Size size, geometry::Point pos, MirOrientation orientation)
+        : active{active}, output_size{size}, position{pos}, orientation{orientation}
+    {}
+
     bool active{false};
     geometry::Size output_size;
     geometry::Point position;
