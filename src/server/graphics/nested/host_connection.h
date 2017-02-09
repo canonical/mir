@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
 
 #include "mir_toolkit/client_types.h"
-#include "mir_toolkit/client_types_nbs.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/buffer_properties.h"
@@ -79,7 +78,7 @@ public:
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(mir::geometry::Size, MirPixelFormat format) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) = 0;
-    virtual bool supports_passthrough() = 0;
+    virtual bool supports_passthrough(graphics::BufferUsage) = 0;
 
 protected:
     HostConnection() = default;

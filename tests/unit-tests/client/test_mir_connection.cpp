@@ -21,7 +21,6 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
-#include "src/client/mir_render_surface.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"
 #include "src/client/presentation_chain.h"
@@ -34,7 +33,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -75,7 +74,10 @@ struct Callback
     T* result{nullptr};
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 using RenderSurfaceCallback = Callback<MirRenderSurface>;
+#pragma GCC diagnostic pop
 using PresentationChainCallback = Callback<MirPresentationChain>;
 using BufferStreamCallback = Callback<MirBufferStream>;
 
@@ -89,6 +91,12 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
+        MirBufferCallback cb,
+        void* cb_context));
+    MOCK_METHOD7(expect_buffer, void(
+        std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
+        geom::Size size, uint32_t, uint32_t,
         MirBufferCallback cb,
         void* cb_context));
 };
@@ -847,9 +855,29 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, TypedEq<MirPixelFormat>(format), usage, nullptr, nullptr));
 
-    connection->allocate_buffer(size, format, usage, nullptr, nullptr);
+    connection->allocate_buffer(size, format, nullptr, nullptr);
+}
+
+TEST_F(MirConnectionTest, can_alloc_native_buffer_from_connection)
+{
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
+    geom::Size size { 32, 11 };
+    auto native_format = 342u;
+    auto native_flags = 0x44;
+    mp::BufferAllocation mp_alloc;
+    mp_alloc.mutable_id()->set_value(-1);
+    auto params = mp_alloc.add_buffer_requests();
+    params->set_width(size.width.as_int());
+    params->set_height(size.height.as_int());
+    params->set_native_format(native_format);
+    params->set_flags(native_flags);
+    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, TypedEq<uint32_t>(native_format), TypedEq<uint32_t>(native_flags), nullptr, nullptr));
+
+    connection->allocate_buffer(size, native_format, native_flags, nullptr, nullptr);
 }
 
 TEST_F(MirConnectionTest, can_release_buffer_from_connection)

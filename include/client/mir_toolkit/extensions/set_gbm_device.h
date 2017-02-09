@@ -31,11 +31,12 @@ struct gbm_device;
 //  \param [in] device    The gbm_device.
 //  \param [in] context   The context to set the gbm device.
 typedef void (*MirSetGbmDevice)(struct gbm_device*, void* const context);
-struct MirExtensionSetGbmDeviceV1
+typedef struct MirExtensionSetGbmDeviceV1
 {
     MirSetGbmDevice set_gbm_device;
     void* const context;
-};
+} MirExtensionSetGbmDeviceV1;
+
 //legacy compatibility
 typedef MirExtensionSetGbmDeviceV1 MirExtensionSetGbmDevice;
 

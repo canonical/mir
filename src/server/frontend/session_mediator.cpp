@@ -426,12 +426,34 @@ void mf::SessionMediator::allocate_buffers(
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
-        mg::BufferProperties properties(
-            geom::Size{req.width(), req.height()},
-            static_cast<MirPixelFormat>(req.pixel_format()),
-           static_cast<mg::BufferUsage>(req.buffer_usage()));
 
-        auto id = session->create_buffer(properties);
+        mg::BufferID id;
+        if (req.has_flags() && req.has_native_format())
+        {
+            auto session_ext = std::dynamic_pointer_cast<SessionExtensions>(session);
+            id = session_ext->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
+        }
+        else if (req.has_buffer_usage() && req.has_pixel_format())
+        {
+            auto const usage = static_cast<mg::BufferUsage>(req.buffer_usage());
+            geom::Size const size{req.width(), req.height()};
+            auto const pf = static_cast<MirPixelFormat>(req.pixel_format());
+            if (usage == mg::BufferUsage::software)
+            {
+                auto session_ext = std::dynamic_pointer_cast<SessionExtensions>(session);
+                id = session_ext->create_buffer(size, pf);
+            }
+            else
+            {
+                //legacy route, server-selected pf and usage
+                id = session->create_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
+            }
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
+        }
+
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
@@ -810,6 +832,7 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
 

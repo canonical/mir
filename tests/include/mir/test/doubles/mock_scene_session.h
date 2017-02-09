@@ -77,6 +77,8 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<scene::Surface> const&));
 
     MOCK_METHOD1(create_buffer, graphics::BufferID(graphics::BufferProperties const&));
+    MOCK_METHOD3(create_buffer, graphics::BufferID(geometry::Size, uint32_t, uint32_t));
+    MOCK_METHOD2(create_buffer, graphics::BufferID(geometry::Size, MirPixelFormat));
     MOCK_METHOD1(destroy_buffer, void(graphics::BufferID));
     MOCK_METHOD1(get_buffer, std::shared_ptr<graphics::Buffer>(graphics::BufferID));
 };

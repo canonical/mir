@@ -39,6 +39,7 @@ namespace graphics
 {
 class DisplayConfiguration;
 class GraphicBufferAllocator;
+class BufferAttribute;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -49,7 +50,7 @@ class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
 
-class ApplicationSession : public Session
+class ApplicationSession : public Session, public frontend::SessionExtensions
 {
 public:
     ApplicationSession(
@@ -103,6 +104,8 @@ public:
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
     graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
+    graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;
+    graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) override;
     void destroy_buffer(graphics::BufferID) override;
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:

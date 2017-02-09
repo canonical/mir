@@ -47,10 +47,13 @@ MirConnection* mcl::ErrorStream::connection() const
     return connection_;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* mcl::ErrorStream::render_surface() const
 {
     return nullptr;
 }
+#pragma GCC diagnostic pop
 
 mir::frontend::BufferStreamId mcl::ErrorStream::rpc_id() const
 {

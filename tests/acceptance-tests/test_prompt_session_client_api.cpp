@@ -266,15 +266,28 @@ extern "C" void prompt_session_state_change_callback(
     self->prompt_session_state_change_callback_called.store(true);
 }
 
+template<typename T>
+auto to_mir_fds(T* raw_fds, size_t count)
+{
+    std::vector<mir::Fd> fds;
+    for (size_t i = 0; i != count; ++i)
+        fds.push_back(mir::Fd{raw_fds[i]});
+    return fds;
+}
+
+template<typename T>
+auto to_mir_fds(T const& raw_fds)
+{
+    return to_mir_fds(raw_fds.data(), raw_fds.size());
+}
+
 void client_fd_callback(MirPromptSession*, size_t count, int const* fds, void* context)
 {
     auto const self = static_cast<PromptSessionClientAPI*>(context);
 
     std::unique_lock<decltype(self->mutex)> lock(self->mutex);
 
-    self->actual_fds.clear();
-    for (size_t i = 0; i != count; ++i)
-        self->actual_fds.push_back(mir::Fd{fds[i]});
+    self->actual_fds = to_mir_fds(fds, count);
 
     self->called_back = true;
     self->cv.notify_one();
@@ -353,13 +366,36 @@ TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    static std::size_t const arbritary_fd_request_count = 3;
+    std::size_t const arbritary_fd_request_count = 3;
 
     mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, arbritary_fd_request_count, &client_fd_callback, this);
 
     EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
     EXPECT_THAT(actual_fds.size(), Eq(arbritary_fd_request_count));
+
+    for (auto const& fd : actual_fds)
+        EXPECT_THAT(fd, Gt(0));
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers_sync)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+            connection, application_session_pid, null_state_change_callback, this);
+
+    std::size_t const arbritary_fd_request_count = 3;
+    std::array<int, arbritary_fd_request_count> fds;
+    auto actual_fd_count = mir_prompt_session_new_fds_for_prompt_providers_sync(
+            prompt_session, arbritary_fd_request_count, fds.data());
+
+    auto mir_fds = to_mir_fds(fds);
+    EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
+    for (auto const& fd : mir_fds)
+        EXPECT_THAT(fd, Gt(0));
 
     mir_prompt_session_release_sync(prompt_session);
 }

@@ -23,6 +23,7 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "mir/mir_render_surface.h"
 #include "mir/weak_egl.h"
 #include "mir/platform_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
@@ -127,24 +128,25 @@ void allocate_buffer_gbm(
     unsigned int gbm_bo_flags,
     MirBufferCallback available_callback, void* available_context)
 {
-    //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
-    //this will return an error buffer for now. In the future, we should share MirConnection
-    //and mcl::ErrorBuffer so the platforms can use them. 
-    if (gbm_bo_flags)
-    {
-        mir_connection_allocate_buffer(
-            connection, width, height, mir_pixel_format_invalid, mir_buffer_usage_hardware,
-            available_callback, available_context);
-    }
-
-    mir_connection_allocate_buffer(
-        connection,
-        width, height,
-        mir::graphics::mesa::gbm_format_to_mir_format(gbm_pixel_format),
-        mir_buffer_usage_hardware,
-        available_callback, available_context);
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, gbm_pixel_format, gbm_bo_flags,
+        available_callback, available_context); 
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirBufferStream* get_hw_stream(
+    MirRenderSurface* rs_key,
+    int width, int height,
+    MirPixelFormat format)
+{
+    auto rs = mcl::render_surface_lookup(rs_key);
+    if (!rs)
+        return nullptr;
+    return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
+}
+#pragma GCC diagnostic pop
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
@@ -162,7 +164,8 @@ mclm::ClientPlatform::ClientPlatform(
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
-      gbm_buffer{allocate_buffer_gbm}
+      gbm_buffer{allocate_buffer_gbm},
+      hw_stream{get_hw_stream}
 {
 }
 
@@ -287,6 +290,8 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &mesa_auth;
     if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
         return &gbm_buffer;
+    if (!strcmp(extension_name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &hw_stream;
 
     return nullptr;
 }

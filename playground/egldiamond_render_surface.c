@@ -19,7 +19,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_render_surface.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_egl_platform_shim.h"
@@ -52,6 +52,8 @@ static void shutdown(int signum)
        return -1; \
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 //The client arranges the scene in the subscene
 void resize_callback(MirWindow* window, MirEvent const* event, void* context)
 {
@@ -178,9 +180,8 @@ int main(int argc, char *argv[])
     w.cond = &cond;
     w.buffer = &buffer;
 
-    //FIXME: would be good to have some convenience functions 
     mir_connection_allocate_buffer(
-        connection, 256, 256, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, wait_buffer, &w);
+        connection, 256, 256, mir_pixel_format_abgr_8888, wait_buffer, &w);
 
     pthread_mutex_lock(&mutex);
     while (buffer == NULL)
@@ -225,6 +226,16 @@ int main(int argc, char *argv[])
         eglsurface = future_driver_eglCreateWindowSurface(egldisplay, eglconfig, render_surface, NULL);
     else
         eglsurface = eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType) render_surface, NULL);
+    if (eglsurface == EGL_NO_SURFACE)
+    {
+        printf("eglCreateWindowSurface failed. "
+               "This is likely because the egl driver does not support the usage of MirRenderSurface\n");
+        mir_render_surface_release(render_surface);
+        mir_connection_release(connection);   
+        eglTerminate(egldisplay);
+        return 0;
+    }
+
 
     //The format field is only used for default-created streams.
     //width and height are the logical width the user wants the window to be
@@ -233,14 +244,12 @@ int main(int argc, char *argv[])
 
     CHECK(spec, "Can't create a window spec");
     mir_window_spec_set_name(spec, appname);
-    mir_surface_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
+    mir_window_spec_add_render_surface(spec, render_surface, width, height, 0, 0);
 
     mir_window_spec_set_event_handler(spec, resize_callback, render_surface);
 
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
-
-    CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
                               ctxattribs);
@@ -313,3 +322,4 @@ int main(int argc, char *argv[])
     mir_connection_release(connection);
     return 0;
 }
+#pragma GCC diagnostic pop

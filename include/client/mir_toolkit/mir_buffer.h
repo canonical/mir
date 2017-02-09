@@ -19,7 +19,7 @@
 #define MIR_TOOLKIT_MIR_BUFFER_H_
 
 #include <stdbool.h>
-#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/client_types.h>
 #include <mir_toolkit/mir_native_buffer.h>
 
 #ifdef __cplusplus
@@ -31,6 +31,10 @@ extern "C" {
 #endif
 
 /** Allocate a MirBuffer and do not wait for the server to return it.
+ *  The buffer will be suitable for writing to via the CPU. Buffers that
+ *  will be used on a GPU should be allocated via the platform appropriate
+ *  extensions. (eg, mir_extension_gbm_buffer or mir_extension_android_buffer)
+ *
  *  The callback will be called when the buffer is created.
  *
  *   \param [in] connection            The connection
@@ -45,7 +49,6 @@ void mir_connection_allocate_buffer(
     MirConnection* connection,
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage buffer_usage,
     MirBufferCallback available_callback, void* available_context);
 
 /** Allocate a MirBuffer and wait for the server to return it.
@@ -59,8 +62,7 @@ void mir_connection_allocate_buffer(
 MirBuffer* mir_connection_allocate_buffer_sync(
     MirConnection* connection,
     int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage);
+    MirPixelFormat format);
 
 /** Test for a valid buffer
  *   \param [in] buffer    The buffer
@@ -124,13 +126,6 @@ unsigned int mir_buffer_get_height(MirBuffer* buffer);
  *   \return              The pixel format of the buffer
  **/
 MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
-
-/** Retrieve the buffer usage of the buffer.
- *
- *   \param [in] buffer   The buffer
- *   \return              The buffer usage of the buffer
- **/
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
 
 /** @} */
 

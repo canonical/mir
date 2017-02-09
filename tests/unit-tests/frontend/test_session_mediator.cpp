@@ -202,6 +202,18 @@ public:
         return mg::BufferID{3};
     }
 
+    mg::BufferID create_buffer(geom::Size, MirPixelFormat) override
+    {
+        buffer_count++;
+        return mg::BufferID{3};
+    }
+
+    mg::BufferID create_buffer(geom::Size, uint32_t, uint32_t) override
+    {
+        native_buffer_count++;
+        return mg::BufferID{3};
+    }
+
     MOCK_METHOD1(destroy_buffer_stream, void(mf::BufferStreamId));
     MOCK_METHOD1(destroy_buffer, void(mg::BufferID));
 
@@ -221,6 +233,7 @@ public:
     int last_stream_id = 0;
     int last_surface_id = 0;
     int buffer_count = 0;
+    int native_buffer_count = 0;
     int destroy_buffers = 0;
 };
 
@@ -556,6 +569,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     mp::ScreencastParameters screencast_parameters;
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
+    screencast_parameters.set_pixel_format(stub_buffer.pixel_format());
 
     EXPECT_CALL(mock_ipc_operations, pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg));
 
@@ -563,6 +577,8 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
                                &screencast, null_callback.get());
     EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
               screencast.buffer_stream().buffer().buffer_id());
+    //LP: #1662997
+    EXPECT_THAT(screencast.buffer_stream().pixel_format(), Eq(stub_buffer.pixel_format()));
 }
 
 TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
@@ -690,7 +706,7 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 
-TEST_F(SessionMediator, allocates_from_the_session)
+TEST_F(SessionMediator, allocates_software_buffers_from_the_session)
 {
     using namespace testing;
     auto num_requests = 3;
@@ -714,6 +730,30 @@ TEST_F(SessionMediator, allocates_from_the_session)
 
     mediator.allocate_buffers(&request, &null, null_callback.get());
     EXPECT_THAT(stubbed_session->num_alloc_requests(), Eq(num_requests));
+}
+
+TEST_F(SessionMediator, allocates_native_buffers_from_the_session)
+{
+    using namespace testing;
+    geom::Size const size { 1029, 10302 };
+    auto native_flags = 24u;
+    auto native_format = 124u;
+    mp::Void null;
+    mp::BufferStreamId id;
+    id.set_value(0);
+    mp::BufferAllocation request;
+    *request.mutable_id() = id;
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(size.width.as_int());
+    buffer_request->set_height(size.height.as_int());
+    buffer_request->set_native_format(native_format);
+    buffer_request->set_flags(native_flags);
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    mediator.allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->native_buffer_count, Eq(1));
 }
 
 TEST_F(SessionMediator, removes_buffer_from_the_session)

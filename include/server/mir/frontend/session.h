@@ -22,6 +22,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/geometry/size.h"
 #include "mir/frontend/buffer_stream_id.h"
 
 #include <memory>
@@ -70,6 +71,19 @@ protected:
     Session() = default;
     Session(Session const&) = delete;
     Session& operator=(Session const&) = delete;
+};
+
+class SessionExtensions
+{
+public:
+    virtual ~SessionExtensions() = default;
+    virtual graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) = 0;
+    virtual graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) = 0;
+protected:
+    SessionExtensions() = default;
+    SessionExtensions(SessionExtensions const&) = delete;
+    SessionExtensions& operator=(SessionExtensions const&) = delete;
+
 };
 
 }

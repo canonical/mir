@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-struct StubSession : scene::Session
+struct StubSession : scene::Session, frontend::SessionExtensions
 {
     StubSession(pid_t pid = -1);
 
@@ -80,6 +80,8 @@ struct StubSession : scene::Session
 
     frontend::BufferStreamId create_buffer_stream(
         graphics::BufferProperties const& props) override;
+    graphics::BufferID create_buffer(geometry::Size, uint32_t, uint32_t) override;
+    graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;
 
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
 

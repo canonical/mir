@@ -102,7 +102,10 @@ public:
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;
     virtual MirConnection* connection() const = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     virtual MirRenderSurface* render_surface() const = 0;
+#pragma GCC diagnostic pop
 
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
