@@ -1231,6 +1231,39 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
     mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, keyboard_config_can_be_changed)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+
+    auto keyboard_config = mir_input_device_get_mutable_keyboard_config(keyboard);
+
+    mir_keyboard_config_set_keymap_layout(keyboard_config, "de");
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        a_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_apply_session_input_config(a_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(changes_complete.wait_for(10s));
+    EXPECT_CALL(a_client, handle_input(mt::KeyOfSymbol(XKB_KEY_y)))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_Z));
+
+    EXPECT_TRUE(a_client.all_events_received.wait_for(10s));
+}
+
 TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
 {
     wait_for_input_devices();

@@ -385,6 +385,7 @@ typedef struct MirRectangle
 
 typedef struct MirInputConfig MirInputConfig;
 typedef struct MirInputDevice MirInputDevice;
+typedef struct MirKeyboardConfig MirKeyboardConfig;
 typedef struct MirPointerConfig MirPointerConfig;
 typedef struct MirTouchpadConfig MirTouchpadConfig;
 

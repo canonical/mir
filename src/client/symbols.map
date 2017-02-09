@@ -601,4 +601,14 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
   global:
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
+    mir_input_device_get_keyboard_config;
+    mir_input_device_get_mutable_keyboard_config;
+    mir_keyboard_config_get_keymap_layout;
+    mir_keyboard_config_get_keymap_model;
+    mir_keyboard_config_get_keymap_options;
+    mir_keyboard_config_get_keymap_variant;
+    mir_keyboard_config_set_keymap_layout;
+    mir_keyboard_config_set_keymap_model;
+    mir_keyboard_config_set_keymap_options;
+    mir_keyboard_config_set_keymap_variant;
 } MIR_CLIENT_0.26.1;
