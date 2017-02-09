@@ -44,6 +44,8 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
       . Fixes for 0.26 changelog.
       . [regression] mirscreencast hangs during screencast creation. (LP: #1662997)
       . libmirclient-dev missing build dependency on libmircore-dev. (LP: #1662942)
+      . mir_window_spec_set_cursor_name() doesn't trigger
+        mir::scene::SurfaceObserver::cursor_image_set_to. (LP: #1663197)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
 
