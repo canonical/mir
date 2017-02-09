@@ -410,12 +410,6 @@ int main(int argc, char *argv[])
 
         int num_outputs = mir_display_config_get_num_outputs(conf);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        printf("Max %d simultaneous outputs\n",
-               mir_display_config_get_max_simultaneous_outputs(conf));
-#pragma GCC diagnostic pop
-
         for (int i = 0; i < num_outputs; ++i)
         {
             MirOutput const* out = mir_display_config_get_output(conf, i);
