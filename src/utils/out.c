@@ -99,7 +99,7 @@ static bool save(MirDisplayConfig* conf, char const* path)
         return false;
     }
     bool ret = false;
-    FILE* file = path ? fopen(path, "wb") : stdout;
+    FILE* file = !strcmp(path, "-") ? stdout : fopen(path, "wb");
     if (!file)
     {
         perror("save:fopen");
@@ -121,7 +121,7 @@ static bool save(MirDisplayConfig* conf, char const* path)
 static MirDisplayConfig* load(char const* path)
 {
     MirDisplayConfig* conf = NULL;
-    FILE* file = path ? fopen(path, "rb") : stdin;
+    FILE* file = !strcmp(path, "-") ? stdin : fopen(path, "rb");
     if (!file)
     {
         perror("load:fopen");
@@ -407,6 +407,8 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
 int main(int argc, char *argv[])
 {
     char const* server = NULL;
+    char const* infile = NULL;
+    char const* outfile = NULL;
     char** actionv = NULL;
     int actionc = 0;
     bool verbose = false;
@@ -424,13 +426,33 @@ int main(int argc, char *argv[])
                 case 'v':
                     verbose = true;
                     break;
+                case 'i':
+                    ++a;
+                    if (a >= argc)
+                    {
+                        fprintf(stderr, "%s requires a file path\n", arg);
+                        return 1;
+                    }
+                    infile = argv[a];
+                    break;
+                case 'o':
+                    ++a;
+                    if (a >= argc)
+                    {
+                        fprintf(stderr, "%s requires a file path\n", arg);
+                        return 1;
+                    }
+                    outfile = argv[a];
+                    break;
                 case 'h':
                 default:
                     printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
-                           "    -h  Show this help information.\n"
-                           "    -v  Show verbose information.\n"
-                           "    --  Ignore the rest of the command line.\n"
+                           "    -h       Show this help information.\n"
+                           "    -i PATH  Load display configuration from a file instead of the server.\n"
+                           "    -o PATH  Save resulting configuration to a file.\n"
+                           "    -v       Show verbose information.\n"
+                           "    --       Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
                            "    disable | enable\n"
@@ -438,8 +460,6 @@ int main(int argc, char *argv[])
                            "    place +X+Y\n"
                            "    mode (WIDTHxHEIGHT | preferred) [rate HZ]\n"
                            "    rate HZ\n"
-                           "    save FILEPATH\n"
-                           "    load FILEPATH\n"
                            , argv[0]);
                     return 0;
             }
@@ -464,39 +484,15 @@ int main(int argc, char *argv[])
     }
 
     int ret = 0;
-    bool dump = true;
-    MirDisplayConfig* conf = NULL;
-    if (actionc && !strcmp(actionv[0], "load"))
-    {
-        dump = false;
-        --actionc;
-        ++actionv;
-        char const* path = NULL;
-        if (actionc)
-        {
-            path = actionv[0];
-            --actionc;
-            ++actionv;
-        }
-        conf = load(path);
-    }
-    else
-    {
-        conf = mir_connection_create_display_configuration(conn);
-    }
-
+    MirDisplayConfig* conf = infile ? load(infile) :
+                             mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
     }
-    else if (actionc || !dump)
+    else if (actionc || infile)
     {
-        dump = false;
-        if (actionc && !strcmp(actionv[0], "save"))
-        {
-            ret = save(conf, actionc > 1 ? actionv[1] : NULL) ? 0 : 1;
-        }
-        else if (modify(conf, actionc, actionv))
+        if (modify(conf, actionc, actionv))
         {
             mir_connection_preview_base_display_configuration(conn, conf, 10);
             mir_connection_confirm_base_display_configuration(conn, conf);
@@ -506,8 +502,7 @@ int main(int argc, char *argv[])
             ret = 1;
         }
     }
-    
-    if (dump)
+    else
     {
         printf("Connected to server: %s\n", server ? server : "<default>");
 
@@ -623,7 +618,12 @@ int main(int argc, char *argv[])
             if (num_modes)
                 printf("\n");
         }
+    }
 
+    if (conf)
+    {
+        if (outfile && !ret)
+            ret = save(conf, outfile) ? 0 : 1;
         mir_display_config_release(conf);
     }
 
@@ -631,3 +631,4 @@ int main(int argc, char *argv[])
 
     return ret;
 }
+
