@@ -115,7 +115,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon7 (= ${binary:Version}),
-         libmircore-dev,
+         libmircore-dev (= ${binary:Version}),
          libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
          ${misc:Depends},
@@ -133,7 +133,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirplatform15 (= ${binary:Version}),
-         libmircommon-dev,
+         libmircommon-dev (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
 Breaks: libmirplatform (<< 0.6)
@@ -411,7 +411,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-dev,
+Depends: libmirclient-dev (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - client platform library for Mesa development files
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -518,8 +518,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         libmircommon-dev,
-         libmirplatform-dev
+         libmircommon-dev (= ${binary:Version}),
+         libmirplatform-dev (= ${binary:Version})
 Description: Display server for Ubuntu - Renderer development files
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

@@ -42,7 +42,8 @@ mir (0.26.1-0ubuntu1) UNRELEASED; urgency=medium
       . Mir graphics platform ABI broke in series 0.26 but sonames never
         changed (LP: #1662455)
       . Fixes for 0.26 changelog.
-      . [regression] mirscreencast hangs during screencast creation (LP: #1662997)
+      . [regression] mirscreencast hangs during screencast creation. (LP: #1662997)
+      . libmirclient-dev missing build dependency on libmircore-dev. (LP: #1662942)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 02 Feb 2017 17:34:17 -0600
 
