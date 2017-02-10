@@ -106,10 +106,8 @@ public:
 private:
     bool passthrough_candidate(mir::geometry::Size size, mg::BufferUsage usage)
     {
-        auto a = connection->supports_passthrough(usage) &&
+        return connection->supports_passthrough(usage) &&
             (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
-        printf("CANDIDTA %i\n", a);
-        return a;
     }
     std::shared_ptr<mgn::HostConnection> const connection;
     std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
