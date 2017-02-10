@@ -1525,6 +1525,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
 
     display_config = mir_connection_create_display_configuration(client.connection);
     ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
+    mir_display_config_release(display_config);
 
     auto config = mir_connection_create_input_config(client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
@@ -1544,9 +1545,8 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
             mir_input_config_release(config);
         });
 
-    EXPECT_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
-        .Times(AnyNumber())
-        .WillOnce(mt::WakeUp(&client.all_events_received));
+    ON_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
+        .WillByDefault(mt::WakeUp(&client.all_events_received));
     fake_touch_screen->emit_event(mis::a_touch_event()
                            .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
 
