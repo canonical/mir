@@ -381,22 +381,18 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
         GLint logical_height = rect.size.height.as_int();
         GLint offset_x = 0, offset_y = 0;
         GLint physical_width = 0, physical_height = 0;
-        auto egl_aspect = static_cast<GLfloat>(egl_width) / egl_height;
-        auto logical_aspect = static_cast<GLfloat>(logical_width) / logical_height;
-        if (logical_aspect >= egl_aspect)
-        {
+        if (logical_width * egl_height >= egl_width * logical_height)
+        {   // if logical_aspect_ratio >= egl_aspect_ratio
             physical_width = egl_width;
             offset_x = 0;
-            auto scale = static_cast<GLfloat>(egl_width) / logical_width;
-            physical_height = egl_height * scale;
+            physical_height = logical_height * egl_width / logical_width;
             offset_y = (egl_height - physical_height) / 2;
         }
         else
         {
             physical_height = egl_height;
             offset_y = 0;
-            auto scale = static_cast<GLfloat>(egl_height) / logical_height;
-            physical_width = egl_width * scale;
+            physical_width = logical_width * egl_height / logical_height;
             offset_x = (egl_width - physical_width) / 2;
         }
         printf("Viewport L{%dx%d} E{%dx%d} -> %dx%d+%d+%d\n",
