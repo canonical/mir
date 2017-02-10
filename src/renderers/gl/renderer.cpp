@@ -377,8 +377,8 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     if (eglQuerySurface(dpy, surf, EGL_WIDTH, &egl_width) && egl_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &egl_height) && egl_height > 0)
     {
-        GLint logical_width = rect.size.width.as_int();
-        GLint logical_height = rect.size.height.as_int();
+        GLint logical_width = viewport.size.width.as_int();
+        GLint logical_height = viewport.size.height.as_int();
         GLint offset_x = 0, offset_y = 0;
         GLint physical_width = 0, physical_height = 0;
         if (logical_width * egl_height >= egl_width * logical_height)
