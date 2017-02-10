@@ -370,6 +370,42 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
                       0.0f});
 
     viewport = rect;
+
+    EGLint egl_width = 0, egl_height = 0;
+    auto dpy = eglGetCurrentDisplay();
+    auto surf = eglGetCurrentSurface(EGL_DRAW);
+    if (eglQuerySurface(dpy, surf, EGL_WIDTH, &egl_width) && egl_width > 0 &&
+        eglQuerySurface(dpy, surf, EGL_HEIGHT, &egl_height) && egl_height > 0)
+    {
+        GLint logical_width = rect.size.width.as_int();
+        GLint logical_height = rect.size.height.as_int();
+        GLint offset_x = 0, offset_y = 0;
+        GLint physical_width = 0, physical_height = 0;
+        auto egl_aspect = static_cast<GLfloat>(egl_width) / egl_height;
+        auto logical_aspect = static_cast<GLfloat>(logical_width) / logical_height;
+        if (logical_aspect >= egl_aspect)
+        {
+            physical_width = egl_width;
+            offset_x = 0;
+            auto scale = static_cast<GLfloat>(egl_width) / logical_width;
+            physical_height = egl_height * scale;
+            offset_y = (egl_height - physical_height) / 2;
+        }
+        else
+        {
+            physical_height = egl_height;
+            offset_y = 0;
+            auto scale = static_cast<GLfloat>(egl_height) / logical_height;
+            physical_width = egl_width * scale;
+            offset_x = (egl_width - physical_width) / 2;
+        }
+        printf("Viewport L{%dx%d} E{%dx%d} -> %dx%d+%d+%d\n",
+               logical_width, logical_height,
+               egl_width, egl_height,
+               physical_width, physical_height,
+               offset_x, offset_y);
+        glViewport(offset_x, offset_y, physical_width, physical_height);
+    }
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
