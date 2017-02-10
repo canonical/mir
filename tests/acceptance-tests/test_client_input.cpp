@@ -1525,6 +1525,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
 
     display_config = mir_connection_create_display_configuration(client.connection);
     ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
+    mir_display_config_release(display_config);
 
     auto config = mir_connection_create_input_config(client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
