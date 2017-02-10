@@ -323,6 +323,7 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
                 });
                                   
             display->configure(*conf);
+            force_redraw();
             return true;
         }
     }

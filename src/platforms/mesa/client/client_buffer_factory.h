@@ -39,6 +39,9 @@ public:
     std::shared_ptr<client::ClientBuffer> create_buffer(
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size, MirPixelFormat pf);
+    std::shared_ptr<client::ClientBuffer> create_buffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        unsigned int native_pf, unsigned int native_flags);
 private:
     std::shared_ptr<BufferFileOps> const buffer_file_ops;
 };

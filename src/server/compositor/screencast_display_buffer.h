@@ -112,16 +112,14 @@ public:
 
     void swap_buffers() override;
 
-    MirOrientation orientation() const override;
-
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
 
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
-    MirMirrorMode const mirror_mode_;
+    glm::mat2 transform;
 
     Schedule& free_queue;
     Schedule& ready_queue;

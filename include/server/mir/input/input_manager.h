@@ -30,6 +30,8 @@ class InputManager
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
+    virtual void pause_for_config() = 0;
+    virtual void continue_after_config() = 0;
 
 protected:
     InputManager() {};

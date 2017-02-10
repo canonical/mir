@@ -29,6 +29,7 @@
 #include "mir/optional_value.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -41,12 +42,16 @@ namespace input
 
 class KeyMapper;
 class InputDevice;
+class DefaultInputDeviceHub;
 
 class DefaultDevice : public Device
 {
 public:
     DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper);
+    DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
+                  InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::function<void(Device*)> const& change_callback);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
@@ -59,6 +64,7 @@ public:
     optional_value<MirKeyboardConfig> keyboard_configuration() const override;
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
 private:
+    void wake_hub_for_device_change();
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;
@@ -67,6 +73,7 @@ private:
     optional_value<MirKeyboardConfig> keyboard;
     std::shared_ptr<dispatch::ActionQueue> const actions;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::function<void(Device*)> device_changed_callback;
 };
 
 }

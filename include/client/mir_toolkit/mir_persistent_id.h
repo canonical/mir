@@ -29,6 +29,8 @@
  */
 extern "C" {
 #endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * \brief Check the validity of a MirPersistentId
  * \param [in] id  The MirPersistentId
@@ -36,7 +38,8 @@ extern "C" {
  *
  * \note This does not guarantee that the ID refers to a currently valid object.
  */
-bool mir_persistent_id_is_valid(MirPersistentId* id);
+bool mir_persistent_id_is_valid(MirPersistentId* id)
+__attribute__((deprecated("Use mir_window_id_is_valid() instead")));
 
 /**
  * \brief Free a MirPersistentId
@@ -44,7 +47,8 @@ bool mir_persistent_id_is_valid(MirPersistentId* id);
  * \note This frees only the client-side representation; it has no effect on the
  *       object referred to by \arg id.
  */
-void mir_persistent_id_release(MirPersistentId* id);
+void mir_persistent_id_release(MirPersistentId* id)
+__attribute__((deprecated("Use mir_window_id_release() instead")));
 
 /**
  * \brief Get a string representation of a MirSurfaceId
@@ -54,15 +58,18 @@ void mir_persistent_id_release(MirPersistentId* id);
  *
  * \see mir_surface_id_from_string
  */
-char const* mir_persistent_id_as_string(MirPersistentId* id);
+char const* mir_persistent_id_as_string(MirPersistentId* id)
+__attribute__((deprecated("Use mir_window_id_as_string() instead")));
 
 /**
  * \brief Deserialise a string representation of a MirSurfaceId
  * \param [in] string_representation  Serialised representation of the ID
  * \return The deserialised MirSurfaceId
  */
-MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
+MirPersistentId* mir_persistent_id_from_string(char const* string_representation)
+__attribute__((deprecated("Use mir_window_id_from_string() instead")));
 
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
 }

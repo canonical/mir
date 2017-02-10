@@ -47,6 +47,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
+#include "mir/frontend/input_configuration_changer.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_input_config_serialization.h"
@@ -114,7 +115,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mir::input::InputDeviceHub> const& hub) :
+    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -131,7 +132,7 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    hub(hub)
+    input_changer(input_changer)
 {
 }
 
@@ -185,26 +186,7 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    MirInputConfig temp;
-    hub->for_each_input_device(
-        [&temp](auto const& dev)
-        {
-            MirInputDevice conf(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
-            auto ptr_conf = dev.pointer_configuration();
-            auto tpd_conf = dev.touchpad_configuration();
-            auto kbd_conf = dev.keyboard_configuration();
-
-            if (ptr_conf.is_set())
-                conf.set_pointer_config(ptr_conf.value());
-            if (tpd_conf.is_set())
-                conf.set_touchpad_config(tpd_conf.value());
-            if (kbd_conf.is_set())
-                conf.set_keyboard_config(kbd_conf.value());
-
-            temp.add_device_config(conf);
-        });
-
-    response->set_input_configuration(mi::serialize_input_config(temp));
+    response->set_input_configuration(mi::serialize_input_config(input_changer->base_configuration()));
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
@@ -830,6 +812,7 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
 
@@ -1189,6 +1172,36 @@ void mf::SessionMediator::raise_surface(
     auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
     shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+
+    done->Run();
+}
+
+void mf::SessionMediator::apply_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto conf = mi::deserialize_input_config(request->input_configuration());
+    input_changer->configure(session, std::move(conf));
+
+    done->Run();
+}
+
+void mf::SessionMediator::set_base_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto conf = mi::deserialize_input_config(request->input_configuration());
+    input_changer->set_base_configuration(std::move(conf));
 
     done->Run();
 }

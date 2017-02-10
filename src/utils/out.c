@@ -410,9 +410,6 @@ int main(int argc, char *argv[])
 
         int num_outputs = mir_display_config_get_num_outputs(conf);
 
-        printf("Max %d simultaneous outputs\n",
-               mir_display_config_get_max_simultaneous_outputs(conf));
-
         for (int i = 0; i < num_outputs; ++i)
         {
             MirOutput const* out = mir_display_config_get_output(conf, i);

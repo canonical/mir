@@ -59,7 +59,7 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/test/doubles/null_message_sender.h"
 #include "mir/test/doubles/mock_message_sender.h"
-#include "mir/test/doubles/mock_input_device_hub.h"
+#include "mir/test/doubles/mock_input_config_changer.h"
 #include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/input_devices_matcher.h"
@@ -282,7 +282,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_hub)}
+            mt::fake_shared(mock_input_config_changer)}
     {
         using namespace ::testing;
 
@@ -293,6 +293,9 @@ struct SessionMediator : public ::testing::Test
 
         ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(
             WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::destroy_surface)));
+
+        ON_CALL(mock_input_config_changer, base_configuration())
+            .WillByDefault(Return(config));
     }
 
 
@@ -309,7 +312,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_hub));
+            mt::fake_shared(mock_input_config_changer));
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
@@ -324,12 +327,12 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_hub));
+            mt::fake_shared(mock_input_config_changer));
     }
 
     MockConnector connector;
     testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
-    testing::NiceMock<mtd::MockInputDeviceHub> mock_hub;
+    NiceMock<mtd::MockInputConfigurationChanger> mock_input_config_changer;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
@@ -348,6 +351,7 @@ struct SessionMediator : public ::testing::Test
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
+    MirInputConfig config;
 };
 
 }
@@ -381,7 +385,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_hub)};
+        mt::fake_shared(mock_input_config_changer)};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -569,6 +573,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     mp::ScreencastParameters screencast_parameters;
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
+    screencast_parameters.set_pixel_format(stub_buffer.pixel_format());
 
     EXPECT_CALL(mock_ipc_operations, pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg));
 
@@ -576,6 +581,8 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
                                &screencast, null_callback.get());
     EXPECT_EQ(static_cast<int>(stub_buffer.id().as_value()),
               screencast.buffer_stream().buffer().buffer_id());
+    //LP: #1662997
+    EXPECT_THAT(screencast.buffer_stream().pixel_format(), Eq(stub_buffer.pixel_format()));
 }
 
 TEST_F(SessionMediator, eventually_partially_packs_screencast_buffer)
@@ -863,7 +870,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_hub)};
+        mt::fake_shared(mock_input_config_changer)};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -957,19 +964,16 @@ TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
     }, mir::cookie::SecurityCheckError);
 }
 
-TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
+TEST_F(SessionMediator, connect_sends_base_input_configuration)
 {
     using namespace testing;
     mtd::StubDevice dev1{MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "kbd", "kbd-aaf474"};
     mtd::StubDevice dev2{MirInputDeviceId{7}, mi::DeviceCapability::touchscreen, "ts", "ts-ewrkw2"};
     std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
-    ON_CALL(mock_hub, for_each_input_device(_))
-        .WillByDefault(Invoke(
-            [&](std::function<void(mir::input::Device const&)> const& callback)
-            {
-                for(auto const& dev : devices)
-                    callback(*dev);
-            }));
+    config.add_device_config(MirInputDevice(dev1.id(), dev1.capabilities(), dev1.name(), dev1.unique_id()));
+    config.add_device_config(MirInputDevice(dev2.id(), dev2.capabilities(), dev2.name(), dev2.unique_id()));
+    ON_CALL(mock_input_config_changer, base_configuration())
+        .WillByDefault(Return(config));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     auto received_conf = mir::input::deserialize_input_config(connection.input_configuration());
