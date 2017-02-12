@@ -19,6 +19,7 @@
 #include "rpc_report.h"
 
 #include "mir/logging/logger.h"
+#include "mir/event_printer.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -89,11 +90,11 @@ void mcll::RpcReport::result_receipt_failed(
 }
 
 void mcll::RpcReport::event_parsing_succeeded(
-    MirEvent const& /*event*/)
+    MirEvent const& event)
 {
     std::stringstream ss;
-    /* TODO: Log more information about event */
-    ss << "Event parsed";
+    using mir::operator<<;
+    ss << "Event parsed: "<< event;
 
     logger->log(ml::Severity::debug, ss.str(), component);
 }
