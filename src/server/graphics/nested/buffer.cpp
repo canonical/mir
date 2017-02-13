@@ -20,6 +20,7 @@
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/gl_format.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "host_connection.h"
 #include "buffer.h"
@@ -101,11 +102,10 @@ public:
     {
     }
 
-protected:
+private:
     mgn::Buffer& buffer;
     std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
-private:
     mg::EGLExtensions extensions;
     typedef std::pair<EGLDisplay, EGLContext> ImageResources;
     typedef std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> EGLImageUPtr;
@@ -113,17 +113,20 @@ private:
 };
 
 class PixelAndTextureAccess :
-    public TextureAccess,
-    public mrs::PixelSource
+    public mg::NativeBufferBase,
+    public mrs::PixelSource,
+    public mrg::TextureSource
 {
 public:
     PixelAndTextureAccess(
         mgn::Buffer& buffer,
-        std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
-        std::shared_ptr<mgn::HostConnection> const& connection) :
-        TextureAccess(buffer, native_buffer, connection),
+        std::shared_ptr<mgn::NativeBuffer> const& native_buffer) :
+        buffer(buffer),
+        native_buffer(native_buffer),
         stride_(geom::Stride{native_buffer->get_graphics_region()->stride})
     {
+        if (!mg::get_gl_pixel_format(buffer.pixel_format(), format, type))
+            BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be used as texture"));
     }
 
     void write(unsigned char const* pixels, size_t pixel_size) override
@@ -156,15 +159,37 @@ public:
         return stride_;
     }
 
+    void bind() override
+    {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, format,
+            buffer.size().width.as_int(), buffer.size().height.as_int(),
+            0, format, type, native_buffer->get_graphics_region()->vaddr);
+    }
+
+    void gl_bind_to_texture() override
+    {
+        bind();
+    }
+
+    void secure_for_render() override
+    {
+    }
+
 private:
+    mgn::Buffer& buffer;
+    std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     geom::Stride const stride_;
+    GLenum format;
+    GLenum type;
 };
 }
 
 std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::BufferUsage const usage)
 {
     if (usage == mg::BufferUsage::software)
-        return std::make_shared<PixelAndTextureAccess>(*this, buffer, connection);
+        return std::make_shared<PixelAndTextureAccess>(*this, buffer);
     else if (usage == mg::BufferUsage::hardware)
         return std::make_shared<TextureAccess>(*this, buffer, connection);
     else
@@ -195,7 +220,7 @@ mgn::Buffer::Buffer(
     MirPixelFormat format) :
     connection(connection),
     buffer(connection->create_buffer(size, format)),
-    native_base(std::make_shared<PixelAndTextureAccess>(*this, buffer, connection))
+    native_base(std::make_shared<PixelAndTextureAccess>(*this, buffer))
 {
 }
 
