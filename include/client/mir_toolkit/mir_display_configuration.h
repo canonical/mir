@@ -59,7 +59,8 @@ void mir_display_config_release(MirDisplayConfig* config);
  *               supportable at this time.
  */
 int mir_display_config_get_max_simultaneous_outputs(
-    MirDisplayConfig const* config);
+    MirDisplayConfig const* config)
+    __attribute__((deprecated("Not accurate in Mir 0.26 and later. May be removed in future.")));
 
 /**
  * Get the number of outputs available in this display configuration.
