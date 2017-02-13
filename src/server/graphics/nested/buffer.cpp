@@ -41,7 +41,8 @@ namespace
 {
 class TextureAccess :
     public mg::NativeBufferBase,
-    public mrg::TextureSource
+    public mrg::TextureSource,
+    public mrg::TextureTarget
 {
 public:
     TextureAccess(
@@ -99,6 +100,11 @@ public:
 
     void secure_for_render() override
     {
+    }
+
+    void bind_for_write() override
+    {
+        bind();
     }
 
 protected:
