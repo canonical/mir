@@ -32,6 +32,7 @@
 int main(int argc, char *argv[])
 try
 {
+    int rc = 0;
     (void) argc; (void) argv;
 /*
     sigset_t sigset;
@@ -42,10 +43,8 @@ try
     sigprocmask(SIG_BLOCK, &sigset, nullptr);
     sigwaitinfo(&sigset, &siginfo);
 */
-    printf("cmon!\n");
     auto connection = mir_connect_sync(nullptr, "caps");
 
-    printf("CONNECT\n");
     auto pf = mir_pixel_format_abgr_8888;
     unsigned int width = 420;
     unsigned int height = 320;
@@ -60,12 +59,9 @@ try
     //TODO: no
     mir_screencast_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
-    printf("SAASAS\n");
     auto screencast = mir_screencast_create_sync(spec);
-    printf("done SAASAS\n");
     mir_screencast_spec_release(spec);
 
-    printf("YEPE \n");
     auto buffer = mir_connection_allocate_buffer_sync(connection, width, height, pf);
 
     struct Capture
@@ -75,23 +71,42 @@ try
         bool done = false;
     } cap;
 
-    printf("CAP\n");
-    mir_screencast_capture_to_buffer_sync(screencast, buffer);
-
-    MirBufferLayout layout;
-    MirGraphicsRegion region;
-    mir_buffer_map(buffer, &region, &layout);
-    printf("MAP IS %i %i\n", region.width, region.height);
-    for(auto i = 0; i < region.stride; i++)
+    auto error = mir_screencast_capture_to_buffer_sync(screencast, buffer);
+    if (mir_error_get_domain(error) == mir_error_domain_screencast)
     {
-        printf("%X ", region.vaddr[i]);
-    }
-    mir_buffer_unmap(buffer);
+        auto code = mir_error_get_code(error);
+        switch (code)
+        {
+            case mir_screencast_error_unsupported:
+                std::cerr << "screencast unsupported" << std::endl;
+                rc = -1;
+                break;
+            case mir_screencast_error_failure:
+                std::cerr << "screencast failed" << std::endl;
+                rc = -1;
+                break;
+            case mir_screencast_performance_warning:
+                std::cout << "screencast performance warning" << std::endl;
+                break;
+            default:
+                break;
+        }
+    }  
 
-//    mir_screencast_release_sync(screencast);
-    printf("RELESA\n");
-//    mir_connection_release(connection);
-    printf("END END\n");
+    if (!rc)
+    {
+        MirBufferLayout layout;
+        MirGraphicsRegion region;
+        mir_buffer_map(buffer, &region, &layout);
+        for(auto i = 0; i < region.stride; i++)
+        {
+            printf("%X ", region.vaddr[i]);
+        }
+        mir_buffer_unmap(buffer);
+    }
+
+    mir_screencast_release_sync(screencast);
+    mir_connection_release(connection);
     return 0;
 }
 catch(std::exception& e)

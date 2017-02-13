@@ -812,6 +812,7 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
     protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);

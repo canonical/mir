@@ -22,6 +22,7 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 
 #include <gbm.h>
 
@@ -41,7 +42,8 @@ namespace mesa
 {
 
 class GBMBuffer: public BufferBasic, public NativeBufferBase,
-                 public renderer::gl::TextureSource
+                 public renderer::gl::TextureSource,
+                 public renderer::gl::TextureTarget
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
@@ -63,6 +65,8 @@ public:
     virtual void gl_bind_to_texture() override;
     virtual void bind() override;
     virtual void secure_for_render() override;
+
+    void bind_for_write() override;
 
     NativeBufferBase* native_buffer_base() override;
 

@@ -21,6 +21,7 @@
 
 #include "stub_buffer.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 
 namespace mir
 {
@@ -30,7 +31,8 @@ namespace doubles
 {
 
 class StubGLBuffer : public StubBuffer,
-                     public renderer::gl::TextureSource
+                     public renderer::gl::TextureSource,
+                     public renderer::gl::TextureTarget
 {
 public:
     using StubBuffer::StubBuffer;
@@ -38,6 +40,7 @@ public:
     void gl_bind_to_texture() {}
     void bind() {}
     void secure_for_render() {}
+    void bind_for_write() {}
 };
 
 }
