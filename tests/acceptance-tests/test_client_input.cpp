@@ -161,6 +161,7 @@ struct Client
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_event_handler(spec, handle_event, this);
         mir_window_spec_set_name(spec, name.c_str());
         window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
@@ -168,7 +169,6 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
                 mir_window_get_error_message(window)});
 
-        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
 
@@ -202,12 +202,12 @@ struct Client
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
+        std::lock_guard<std::mutex> lock(client->client_status);
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
             auto window_event = mir_event_get_window_event(ev);
             client->handle_window_event(window_event);
-
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
@@ -237,6 +237,7 @@ struct Client
     bool exposed = false;
     bool focused = false;
     bool input_device_state_received = false;
+    std::mutex client_status;
 };
 
 struct DeviceCounter : mi::InputDeviceObserver
