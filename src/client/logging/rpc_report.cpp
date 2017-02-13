@@ -93,8 +93,8 @@ void mcll::RpcReport::event_parsing_succeeded(
     MirEvent const& event)
 {
     std::stringstream ss;
-    using mir::operator<<;
-    ss << "Event parsed: "<< event;
+    using mir::operator <<;
+    ss << "Event parsed: " <<event;
 
     logger->log(ml::Severity::debug, ss.str(), component);
 }

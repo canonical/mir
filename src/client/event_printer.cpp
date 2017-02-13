@@ -399,6 +399,16 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
     return out << ')';
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowOutputEvent const& event)
+{
+    return out << "window_output_event({"
+               << mir_window_output_event_get_dpi(&event) << ", "
+               << mir_window_output_event_get_form_factor(&event) << ", "
+               << mir_window_output_event_get_scale(&event) << ", "
+               << mir_window_output_event_get_refresh_rate(&event) << ", "
+               << mir_window_output_event_get_output_id(&event) << "})";
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirWindowPlacementEvent const& event)
 {
     auto const& placement = event.placement();
@@ -447,14 +457,15 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
     auto type = mir_event_get_type(&event);
     switch (type)
     {
-        PRINT_EVENT(surface);
+        PRINT_EVENT(window);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
         PRINT_EVENT(close_surface);
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
-        PRINT_EVENT(surface_placement);
+        PRINT_EVENT(window_placement);
+        PRINT_EVENT(window_output);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:
