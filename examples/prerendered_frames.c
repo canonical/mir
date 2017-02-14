@@ -1,16 +1,16 @@
 /*
  * Copyright © 2016 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -31,29 +31,33 @@
 #include <math.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <unistd.h>
-#include <assert.h>
 
-#define PALETTE_SIZE 5
+float distance(int x0, int y0, int x1, int y1)
+{
+    float dx = x1 - x0;
+    float dy = y1 - y0; 
+    return sqrt((dx * dx +  dy * dy));
+}
 
-void fill_buffer_diagonal_stripes(
-    MirBuffer* buffer, unsigned int fg, unsigned int bg)
+void fill_buffer_with_centered_circle_abgr(
+    MirBuffer* buffer, float radius, unsigned int fg, unsigned int bg)
 {
     MirBufferLayout layout = mir_buffer_layout_unknown;
     MirGraphicsRegion region;
     mir_buffer_map(buffer, &region, &layout);
     if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888) || layout != mir_buffer_layout_linear)
         return;
-
+    int const center_x = region.width / 2;
+    int const center_y = region.height / 2; 
     unsigned char* vaddr = (unsigned char*) region.vaddr;
-    int const num_stripes = 10;
-    int const stripes_thickness = region.width / num_stripes;
     for(int i = 0; i < region.height; i++)
     {
         unsigned int* pixel = (unsigned int*) vaddr;
         for(int j = 0; j < region.width ; j++)
         {
-            if ((((i + j) / stripes_thickness) % stripes_thickness) % 2)
+            int const centered_i = i - center_y;
+            int const centered_j = j - center_x; 
+            if (distance(0,0, centered_i, centered_j) > radius)
                 pixel[j] = bg;
             else
                 pixel[j] = fg;
@@ -81,7 +85,7 @@ static void available_callback(MirBuffer* buffer, void* client_context)
     pthread_mutex_unlock(&info->lock);
 }
 
-volatile sig_atomic_t rendering = 1;
+volatile int rendering = 1;
 static void shutdown(int signum)
 {
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -129,26 +133,13 @@ int main(int argc, char** argv)
         }
     }
 
-
-    int const chain_width = width / 2;
-    int const chain_height = height / 2;
-
-    sigset_t signal_set;
-    sigemptyset(&signal_set);
-    sigaddset(&signal_set, SIGALRM);
-    sigprocmask(SIG_BLOCK, &signal_set, NULL);
-
-    struct sigaction action;
-    action.sa_handler = shutdown;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-    sigaction(SIGINT, &action, NULL);
-    sigaction(SIGTERM, &action, NULL);
-
+    signal(SIGTERM, shutdown);
+    signal(SIGINT, shutdown);
 
     int displacement_x = 0;
     int displacement_y = 0;
-
+    unsigned int fg = 0xFF1448DD;
+    unsigned int bg = 0xFF6F2177;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
     MirConnection* connection = mir_connect_sync(socket_file, "prerendered_frames");
@@ -158,68 +149,44 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    unsigned int const num_chains = 4;
-    unsigned int const num_buffers = num_chains + 1;
-    unsigned int const fg[PALETTE_SIZE] = {
-        0xFF14BEA0,
-        0xFF000000,
-        0xFF1111FF,
-        0xFFAAAAAA,
-        0xFFB00076
-    };
-    unsigned int const bg[PALETTE_SIZE] = {
-        0xFFDF2111,
-        0xFFFFFFFF,
-        0xFF11DDDD,
-        0xFF404040,
-        0xFFFFFF00
-    };
-    unsigned int spare_buffer = 0;
-
-    MirPresentationChain* chain[num_chains];
-    MirRenderSurface* render_surface[num_chains];
-    for(unsigned int i = 0u; i < num_chains; i++)
+    MirRenderSurface* render_surface = mir_connection_create_render_surface_sync(connection, width, height);
+    if (!mir_render_surface_is_valid(render_surface))
     {
-        render_surface[i] = mir_connection_create_render_surface_sync(connection, chain_width, chain_height);
-        if (!mir_render_surface_is_valid(render_surface[i]))
-        {
-            printf("could not create render surface\n");
-            return -1;
-        }
-
-        chain[i] =  mir_render_surface_get_presentation_chain(render_surface[i]);
-        if (!mir_presentation_chain_is_valid(chain[i]))
-        {
-            printf("could not create MirPresentationChain\n");
-
-            // TODO this is a frig to pass smoke tests until we support NBS by default
-#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
-            printf("This is currently an unreleased API - likely server support is switched off\n");
-            return 0;
-#else
-            return -1;
-#endif
-        }
+        printf("could not create a render surface\n");
+        return -1;
     }
 
-    //Arrange a 2x2 grid of chains within window
+    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(render_surface);
+    if (!mir_presentation_chain_is_valid(chain))
+    {
+        printf("could not create MirPresentationChain\n");
+
+// TODO this is a frig to pass smoke tests until we support NBS by default
+#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
+        printf("This is currently an unreleased API - likely server support is switched off\n");
+        return 0;
+#else
+        return -1;
+#endif
+    }
+
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
     mir_window_spec_add_render_surface(
-        spec, render_surface[0], chain_width, chain_height, displacement_x, displacement_y);
-    mir_window_spec_add_render_surface(
-        spec, render_surface[1], chain_width, chain_height, chain_width, displacement_y);
-    mir_window_spec_add_render_surface(
-        spec, render_surface[2], chain_width, chain_height, displacement_x, chain_height);
-    mir_window_spec_add_render_surface(
-        spec, render_surface[3], chain_width, chain_height, chain_width, chain_height);
+        spec, render_surface, width, height, displacement_x, displacement_y);
     MirWindow* window = mir_create_window_sync(spec);
+    if (!mir_window_is_valid(window))
+    {
+        printf("could not create a window\n");
+        return -1;
+    }
+
     mir_window_spec_release(spec);
 
-    SubmissionInfo buffer_available[num_buffers];
+    int const num_prerendered_frames = 20;
+    SubmissionInfo buffer_available[num_prerendered_frames];
 
-    //prerender the frames
-    for (unsigned int i = 0u; i < num_buffers; i++)
+    for (int i = 0u; i < num_prerendered_frames; i++)
     {
         pthread_cond_init(&buffer_available[i].cv, NULL);
         pthread_mutex_init(&buffer_available[i].lock, NULL);
@@ -233,42 +200,41 @@ int main(int argc, char** argv)
         while(!buffer_available[i].buffer)
             pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
 
-        fill_buffer_diagonal_stripes(buffer_available[i].buffer,
-            fg[i % PALETTE_SIZE], bg[i % PALETTE_SIZE]);
+        if (!mir_buffer_is_valid(buffer_available[i].buffer))
+        {
+            printf("could not create MirBuffer\n");
+            return -1;
+        }
+
+        float max_radius = distance(0, 0, width, height) / 2.0f;
+        float radius_i = ((float) i + 1) / num_prerendered_frames * max_radius;
+        fill_buffer_with_centered_circle_abgr(buffer_available[i].buffer, radius_i, fg, bg);
 
         pthread_mutex_unlock(&buffer_available[i].lock);
     }
 
+    int i = 0;
+    int inc = -1;
     while (rendering)
     {
-        for(unsigned int i = 0u; i < num_chains; i++)
-        {
-            MirBuffer* b;
-            pthread_mutex_lock(&buffer_available[spare_buffer].lock);
-            while(!buffer_available[spare_buffer].available)
-                pthread_cond_wait(&buffer_available[spare_buffer].cv, &buffer_available[spare_buffer].lock);
-            buffer_available[spare_buffer].available = 0;
-            b = buffer_available[spare_buffer].buffer;
-            pthread_mutex_unlock(&buffer_available[spare_buffer].lock);
+        MirBuffer* b;
+        pthread_mutex_lock(&buffer_available[i].lock);
+        while(!buffer_available[i].available)
+            pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
+        buffer_available[i].available = 0;
+        b = buffer_available[i].buffer;
+        pthread_mutex_unlock(&buffer_available[i].lock);
 
-            mir_presentation_chain_submit_buffer(
-                chain[i], b, available_callback, &buffer_available[spare_buffer]);
+        mir_presentation_chain_submit_buffer(chain, b, available_callback, &buffer_available[i]);
 
-            //just looks like a blur if we don't slow things down
-            ualarm(500000, 0);
-            int sig;
-            sigwait(&signal_set, &sig);
-            if (!rendering) break;
-
-            if (++spare_buffer > num_chains)
-                spare_buffer = 0;
-        }
+        if ((i == num_prerendered_frames - 1) || (i == 0))
+            inc *= -1; 
+        i = i + inc;
     }
 
-    for (unsigned int i = 0u; i < num_buffers; i++)
+    for (i = 0u; i < num_prerendered_frames; i++)
         mir_buffer_release(buffer_available[i].buffer);
-    for (unsigned int i = 0u; i < num_chains; i++)
-        mir_render_surface_release(render_surface[i]);
+    mir_render_surface_release(render_surface);
     mir_window_release_sync(window);
     mir_connection_release(connection);
     return 0;
