@@ -235,7 +235,6 @@ void mclr::MirProtobufRpcChannel::call_method(
 
     rpc_report->invocation_requested(invocation);
 
-    printf("SAVE FOR %s\n", parameters->GetTypeName().c_str());
     pending_calls.save_completion_details(invocation, response, complete);
 
     if (prioritise_next_request)

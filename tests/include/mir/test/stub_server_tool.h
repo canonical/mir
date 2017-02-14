@@ -128,7 +128,6 @@ struct StubServerTool : doubles::StubDisplayServer
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* done)
     {
-        printf("RUN!\n");
         done->Run();
     }
     void release_buffers(
