@@ -25,6 +25,7 @@
 namespace mir_test_framework
 {
 MirWindow* make_any_surface(MirConnection *connection);
+MirWindow* make_any_surface(MirConnection *connection, MirWindowEventCallback callback, void* context);
 MirWindow* make_surface(MirConnection *connection, mir::geometry::Size size, MirPixelFormat format);
 }
 

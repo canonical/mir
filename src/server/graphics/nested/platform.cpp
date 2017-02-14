@@ -75,7 +75,7 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if (passthrough_candidate(properties.size))
+        if (passthrough_candidate(properties.size, properties.usage))
             return std::make_shared<mgn::Buffer>(connection, properties);
         else
             return guest_allocator->alloc_buffer(properties);
@@ -84,7 +84,7 @@ public:
     std::shared_ptr<mg::Buffer> alloc_buffer(
         mir::geometry::Size size, uint32_t native_format, uint32_t native_flags) override
     {
-        if (passthrough_candidate(size))
+        if (passthrough_candidate(size, mg::BufferUsage::hardware))
             return std::make_shared<mgn::Buffer>(connection, size, native_format, native_flags);
         else
             return guest_allocator->alloc_buffer(size, native_format, native_flags);
@@ -92,7 +92,7 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_software_buffer(mir::geometry::Size size, MirPixelFormat format) override
     {
-        if (passthrough_candidate(size))
+        if (passthrough_candidate(size, mg::BufferUsage::software))
             return std::make_shared<mgn::Buffer>(connection, size, format);
         else
             return guest_allocator->alloc_software_buffer(size, format);
@@ -104,9 +104,10 @@ public:
     }
 
 private:
-    bool passthrough_candidate(mir::geometry::Size size)
+    bool passthrough_candidate(mir::geometry::Size size, mg::BufferUsage usage)
     {
-        return (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
+        return connection->supports_passthrough(usage) &&
+            (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
     }
     std::shared_ptr<mgn::HostConnection> const connection;
     std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
@@ -115,7 +116,8 @@ private:
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    if (connection->supports_passthrough())
+    if (connection->supports_passthrough(mg::BufferUsage::software) ||
+        connection->supports_passthrough(mg::BufferUsage::hardware))
     {
         return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
     }
