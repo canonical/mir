@@ -36,27 +36,25 @@ namespace mt = mir::test;
 namespace mcl = mir::client;
 namespace mtd = mir::test::doubles;
 
-int b = 4;
-
-std::unique_ptr<mir::Fd> fd;
+std::unique_ptr<mir::Fd> fd = nullptr;
 int get_fence(MirBuffer*)
 {
     if (fd)
         return *fd;
     return -1;
 }
+
 struct TestConnectionConfiguration : mir::client::DefaultConnectionConfiguration
 {
 public:
 
-    TestConnectionConfiguration()
-        : DefaultConnectionConfiguration("./test_socket_surface")
+    TestConnectionConfiguration(std::string const& socket)
+        : DefaultConnectionConfiguration(socket)
     {
     }
 
     std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
     {
-        printf("ZA\n");
         auto platform = std::make_shared<mtd::MockClientPlatform>();
         ON_CALL(*platform, request_interface(StrEq("mir_extension_fenced_buffers"), 1))
             .WillByDefault(Return(&fence_ext));
@@ -74,35 +72,21 @@ public:
             {
                 return nullptr;
             }
-
             void expect_buffer(
-                std::shared_ptr<mcl::ClientBufferFactory> const&,
-                MirConnection* conn,
-                mir::geometry::Size,
-                MirPixelFormat,
-                MirBufferUsage usage,
-                MirBufferCallback cb,
-                void* ctx) override
+                std::shared_ptr<mcl::ClientBufferFactory> const&, 
+                MirConnection* conn, mir::geometry::Size,
+                MirPixelFormat, MirBufferUsage usage, MirBufferCallback cb, void* ctx) override
             {
                 if (!buffer)
                     buffer = std::make_shared<mcl::Buffer>(cb, ctx, 1, nullptr, conn, usage);
-
-
-
-                printf("FIRE CB\n");
-                cb((MirBuffer*)buffer.get(), ctx);
-                printf("GAA\n");
+                cb(reinterpret_cast<MirBuffer*>(buffer.get()), ctx);
             }
-
             void expect_buffer(
                 std::shared_ptr<mcl::ClientBufferFactory> const&,
-                MirConnection*,
-                mir::geometry::Size,
-                uint32_t, uint32_t,
+                MirConnection*, mir::geometry::Size, uint32_t, uint32_t,
                 MirBufferCallback, void*) override
             {
             }
-
             void cancel_requests_with_context(void*) {}
         };
         return std::make_shared<StubBufferFactory>(); 
@@ -114,12 +98,13 @@ struct HostBuffer : Test
     HostBuffer()
     {
         //MirConnection is hard to stub
-        std::remove("./test_socket_surface");
-        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", server_tool);
+        std::remove(socket.c_str());
+        test_server = std::make_shared<mt::TestProtobufServer>(socket, server_tool);
         test_server->comm->start();
-        config = std::make_shared<TestConnectionConfiguration>();
+        config = std::make_shared<TestConnectionConfiguration>(socket);
     }
 
+    std::string const socket { "./test_sock" };
     std::shared_ptr<mt::StubServerTool> const server_tool = std::make_shared<mt::StubServerTool>();
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<TestConnectionConfiguration> config;
@@ -131,15 +116,12 @@ TEST_F(HostBuffer, does_not_own_fd_when_accessing_fence)
     fd = std::make_unique<mir::Fd>( fileno(tmpfile()) );
 
     MirConnection connection{*config};
-    connection.connect("", [](auto*, auto*){printf("CONN\n");}, nullptr)->wait_for_all();
+    connection.connect("", [](auto*, auto*){}, nullptr)->wait_for_all();
     mgn::HostBuffer buffer(&connection, mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888);
-
     {
         auto fence = buffer.fence();
         EXPECT_THAT(fence, Eq(*fd));
     }
-
     EXPECT_THAT(fcntl(*fd, F_GETFD), Eq(0));
-
     fd.reset();
 }
