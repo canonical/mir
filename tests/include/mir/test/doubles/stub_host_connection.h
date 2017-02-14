@@ -177,7 +177,7 @@ public:
         }; 
         return std::make_unique<NullSpec>();
     }
-    bool supports_passthrough()
+    bool supports_passthrough(graphics::BufferUsage)
     {
         return true;
     }

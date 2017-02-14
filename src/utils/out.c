@@ -17,10 +17,12 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_blob.h"
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 static const char *power_mode_name(MirPowerMode m)
 {
@@ -86,6 +88,79 @@ static char const* form_factor_name(MirFormFactor f)
     };
     return ((unsigned)f < sizeof(name)/sizeof(name[0])) ? name[f]
                                                         : "out-of-range";
+}
+
+static bool save(MirDisplayConfig* conf, char const* path)
+{
+    MirBlob* blob = mir_blob_from_display_config(conf);
+    if (!blob)
+    {
+        fprintf(stderr, "mir_blob_from_display_config failed\n");
+        return false;
+    }
+    bool ret = false;
+    FILE* file = !strcmp(path, "-") ? stdout : fopen(path, "wb");
+    if (!file)
+    {
+        perror("save:fopen");
+    }
+    else
+    {
+        if (1 == fwrite(mir_blob_data(blob), mir_blob_size(blob), 1, file))
+            ret = true;
+        else
+            perror("save:fwrite");
+
+        if (file != stdout)
+            fclose(file);
+    }
+    mir_blob_release(blob);
+    return ret;
+}
+
+static MirDisplayConfig* load(char const* path)
+{
+    MirDisplayConfig* conf = NULL;
+    FILE* file = !strcmp(path, "-") ? stdin : fopen(path, "rb");
+    if (!file)
+    {
+        perror("load:fopen");
+    }
+    else
+    {
+        fseek(file, 0, SEEK_END);
+        long size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        void* data = malloc(size);
+        if (!data)
+        {
+            perror("load:malloc");
+        }
+        else
+        {
+            if (1 != fread(data, size, 1, file))
+            {
+                perror("load:fread");
+            }
+            else
+            {
+                MirBlob* blob = mir_blob_onto_buffer(data, size);
+                if (!blob)
+                {
+                    fprintf(stderr, "mir_blob_onto_buffer failed with %ld bytes\n", size);
+                }
+                else
+                {
+                    conf = mir_blob_to_display_config(blob);
+                    mir_blob_release(blob);
+                }
+            }
+            free(data);
+        }
+        if (file != stdin)
+            fclose(file);
+    }
+    return conf;
 }
 
 static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
@@ -332,6 +407,8 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
 int main(int argc, char *argv[])
 {
     char const* server = NULL;
+    char const* infile = NULL;
+    char const* outfile = NULL;
     char** actionv = NULL;
     int actionc = 0;
     bool verbose = false;
@@ -349,13 +426,33 @@ int main(int argc, char *argv[])
                 case 'v':
                     verbose = true;
                     break;
+                case 'i':
+                    ++a;
+                    if (a >= argc)
+                    {
+                        fprintf(stderr, "%s requires a file path\n", arg);
+                        return 1;
+                    }
+                    infile = argv[a];
+                    break;
+                case 'o':
+                    ++a;
+                    if (a >= argc)
+                    {
+                        fprintf(stderr, "%s requires a file path\n", arg);
+                        return 1;
+                    }
+                    outfile = argv[a];
+                    break;
                 case 'h':
                 default:
                     printf("Usage: %s [OPTIONS] [/path/to/mir/socket] [[output OUTPUTID] ACTION ...]\n"
                            "Options:\n"
-                           "    -h  Show this help information.\n"
-                           "    -v  Show verbose information.\n"
-                           "    --  Ignore the rest of the command line.\n"
+                           "    -h       Show this help information.\n"
+                           "    -i PATH  Load display configuration from a file instead of the server.\n"
+                           "    -o PATH  Save resulting configuration to a file.\n"
+                           "    -v       Show verbose information.\n"
+                           "    --       Ignore the rest of the command line.\n"
                            "Actions:\n"
                            "    off | suspend | standby | on\n"
                            "    disable | enable\n"
@@ -387,12 +484,13 @@ int main(int argc, char *argv[])
     }
 
     int ret = 0;
-    MirDisplayConfig* conf = mir_connection_create_display_configuration(conn);
+    MirDisplayConfig* conf = infile ? load(infile) :
+                             mir_connection_create_display_configuration(conn);
     if (conf == NULL)
     {
         fprintf(stderr, "Failed to get display configuration (!?)\n");
     }
-    else if (actionc)
+    else if (actionc || infile)
     {
         if (modify(conf, actionc, actionv))
         {
@@ -409,9 +507,6 @@ int main(int argc, char *argv[])
         printf("Connected to server: %s\n", server ? server : "<default>");
 
         int num_outputs = mir_display_config_get_num_outputs(conf);
-
-        printf("Max %d simultaneous outputs\n",
-               mir_display_config_get_max_simultaneous_outputs(conf));
 
         for (int i = 0; i < num_outputs; ++i)
         {
@@ -520,7 +615,12 @@ int main(int argc, char *argv[])
             if (num_modes)
                 printf("\n");
         }
+    }
 
+    if (conf)
+    {
+        if (outfile && !ret)
+            ret = save(conf, outfile) ? 0 : 1;
         mir_display_config_release(conf);
     }
 

@@ -183,8 +183,17 @@ void MirScreencast::screencast_created(
     if (!protobuf_screencast->has_error() && connection)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        buffer_stream = connection->make_consumer_stream(
-            protobuf_screencast->buffer_stream());
+        try
+        {
+            buffer_stream = connection->make_consumer_stream(
+                protobuf_screencast->buffer_stream());
+        }
+        catch (...)
+        {
+            callback(nullptr, context);
+            create_screencast_wait_handle.result_received();
+            return;
+        }
     }
 
     callback(this, context);
