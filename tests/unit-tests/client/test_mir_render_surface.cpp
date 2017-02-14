@@ -29,6 +29,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/stub_client_platform_factory.h"
+#include "mir/test/doubles/mock_client_platform.h"
 #include "mir_protobuf.pb.h"
 
 #include <sys/eventfd.h>
