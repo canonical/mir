@@ -23,7 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/context.h"
-#include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/raii.h"
 
@@ -36,11 +36,11 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto as_texture_source(mg::Buffer* buffer)
+auto as_texture_target(mg::Buffer* buffer)
 {
-    auto tex = dynamic_cast<mrgl::TextureSource*>(buffer->native_buffer_base());
+    auto tex = dynamic_cast<mrgl::TextureTarget*>(buffer->native_buffer_base());
     if (!tex)
-        BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Buffer does not support being rendered to as a GL target"));
     return tex;
 }
 
@@ -134,9 +134,9 @@ void mc::ScreencastDisplayBuffer::bind()
     if (!current_buffer)
         current_buffer = free_queue.next_buffer();
 
-    auto texture_source = as_texture_source(current_buffer.get());
+    auto texture_target = as_texture_target(current_buffer.get());
     glBindTexture(GL_TEXTURE_2D, color_tex);
-    texture_source->bind();
+    texture_target->bind_for_write();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, color_tex, 0);
 

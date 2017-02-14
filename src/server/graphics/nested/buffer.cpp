@@ -18,6 +18,7 @@
 
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/gl_format.h"
@@ -42,7 +43,8 @@ namespace
 {
 class TextureAccess :
     public mg::NativeBufferBase,
-    public mrg::TextureSource
+    public mrg::TextureSource,
+    public mrg::TextureTarget
 {
 public:
     TextureAccess(
@@ -100,6 +102,11 @@ public:
 
     void secure_for_render() override
     {
+    }
+
+    void bind_for_write() override
+    {
+        bind();
     }
 
 private:
