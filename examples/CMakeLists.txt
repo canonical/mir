@@ -284,3 +284,29 @@ target_link_libraries(mir_demo_client_multistream
   eglapp
   ${Boost_LIBRARIES}
 )
+
+mir_add_wrapped_executable(mir_demo_client_render_surface
+  render_surface.cpp
+)
+
+target_link_libraries(mir_demo_client_render_surface
+  mirclient
+  eglapp
+)
+
+mir_add_wrapped_executable(mir_demo_client_prerendered_frames
+    prerendered_frames.c
+)
+
+target_link_libraries(mir_demo_client_prerendered_frames
+    mirclient
+    m
+)
+
+mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
+    chain_jumping_buffers.c
+)
+
+target_link_libraries(mir_demo_client_chain_jumping_buffers
+    mirclient
+)

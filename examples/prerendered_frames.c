@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 
     mir_window_spec_release(spec);
 
-    int num_prerendered_frames = 20;
+    int const num_prerendered_frames = 20;
     SubmissionInfo buffer_available[num_prerendered_frames];
 
     for (int i = 0u; i < num_prerendered_frames; i++)
