@@ -20,6 +20,8 @@ add_library(playgroundserverconfig STATIC
 
 add_subdirectory(demo-shell/)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+
 mir_add_wrapped_executable(mir_demo_client_egldiamond_render_surface
     egldiamond_render_surface.c
     mir_egl_platform_shim.c
