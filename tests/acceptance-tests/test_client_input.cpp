@@ -1231,6 +1231,45 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
     mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, keyboard_config_can_be_querried)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+    auto keyboard_config = mir_input_device_get_keyboard_config(keyboard);
+
+    EXPECT_THAT(mir_keyboard_config_get_keymap_model(keyboard_config), StrEq("pc105+inet"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_layout(keyboard_config), StrEq("us"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_variant(keyboard_config), StrEq(""));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_options(keyboard_config), StrEq(""));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, keyboard_config_is_mutable)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+    auto keyboard_config = mir_input_device_get_mutable_keyboard_config(keyboard);
+
+    mir_keyboard_config_set_keymap_model(keyboard_config, "pc104");
+    mir_keyboard_config_set_keymap_layout(keyboard_config, "fr");
+    mir_keyboard_config_set_keymap_variant(keyboard_config, "alt");
+    mir_keyboard_config_set_keymap_options(keyboard_config, "compose:ralt");
+
+    EXPECT_THAT(mir_keyboard_config_get_keymap_model(keyboard_config), StrEq("pc104"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_layout(keyboard_config), StrEq("fr"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_variant(keyboard_config), StrEq("alt"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_options(keyboard_config), StrEq("compose:ralt"));
+
+    mir_input_config_release(config);
+}
+
 TEST_F(TestClientInput, keyboard_config_can_be_changed)
 {
     Client a_client(new_connection(), first);

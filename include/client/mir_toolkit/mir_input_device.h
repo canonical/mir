@@ -157,17 +157,17 @@ MirKeyboardConfig const* mir_input_device_get_keyboard_config(
     MirInputDevice const* device);
 
 /**
- * Retrieve the keyboard model of the keymap as a nul terminated string.
+ * Retrieve the keyboard model of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  *
- * \return              The keyboard model
+ * \return              The keyboard model used for the keymap
  */
-char const* mir_keyboard_config_get_keymap_keyboard_model(
+char const* mir_keyboard_config_get_keymap_model(
     MirKeyboardConfig const* conf);
 
 /**
- * Retrieve the layout of the keymap as a nul terminated string.
+ * Retrieve the layout of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  *
@@ -177,7 +177,17 @@ char const* mir_keyboard_config_get_keymap_layout(
     MirKeyboardConfig const* conf);
 
 /**
- * Retrieve the options of the keymap as a nul terminated string.
+ * Retrieve the layout of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ *
+ * \return              The keymap layout
+ */
+char const* mir_keyboard_config_get_keymap_variant(
+    MirKeyboardConfig const* conf);
+
+/**
+ * Retrieve the options of the keymap as a null terminated string.
  *
  * The keymap options are an optional parameter of the keymap selection,
  * this then indicated as an empty string.
@@ -204,16 +214,16 @@ MirKeyboardConfig* mir_input_device_get_mutable_keyboard_config(
     MirInputDevice* device);
 
 /**
- * Set the keyboard model of the keymap as a nul terminated string.
+ * Set the keyboard model of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  * \param [in] model    The keymap keyboard model
  */
-void mir_keyboard_config_set_keymap_keyboard_model(
+void mir_keyboard_config_set_keymap_model(
     MirKeyboardConfig* conf, char const* model);
 
 /**
- * Set the layout of the keymap as a nul terminated string.
+ * Set the layout of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  * \param [in] layout   The keymap layout
@@ -222,7 +232,7 @@ void mir_keyboard_config_set_keymap_layout(
     MirKeyboardConfig* conf, char const* layout);
 
 /**
- * Set the options of the keymap as a nul terminated string.
+ * Set the options of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  * \param [in] layout   The keymap options
@@ -231,7 +241,7 @@ void mir_keyboard_config_set_keymap_options(
     MirKeyboardConfig* conf, char const* options);
 
 /**
- * Set the variant of the keymap as a nul terminated string.
+ * Set the variant of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
  * \param [in] layout   The keymap variant
