@@ -176,6 +176,7 @@ void mgn::HostBuffer::set_fence(mir::Fd fd)
 
 mir::Fd mgn::HostBuffer::fence() const
 {
+    printf("FENCE EXT %i\n", (int)(long) fence_extensions);
     if (fence_extensions && fence_extensions->get_fence)
         return mir::Fd{fence_extensions->get_fence(handle)};
     else

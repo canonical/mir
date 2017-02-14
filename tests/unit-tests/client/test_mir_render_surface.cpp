@@ -28,6 +28,7 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_platform_factory.h"
 #include "mir_protobuf.pb.h"
 
 #include <sys/eventfd.h>
@@ -102,59 +103,6 @@ private:
     mir::Fd pollable_fd;
 };
 
-struct MockClientPlatform : public mcl::ClientPlatform
-{
-    MockClientPlatform()
-    {
-        auto native_window = std::make_shared<EGLNativeWindowType>();
-        *native_window = reinterpret_cast<EGLNativeWindowType>(this);
-
-        ON_CALL(*this, create_buffer_factory())
-            .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
-        ON_CALL(*this, create_egl_native_window(_))
-            .WillByDefault(Return(native_window));
-    }
-
-    void set_client_context(mcl::ClientContext* ctx)
-    {
-        client_context = ctx;
-    }
-
-    void populate(MirPlatformPackage& pkg) const override
-    {
-        client_context->populate_server_package(pkg);
-    }
-
-    MOCK_CONST_METHOD1(convert_native_buffer, MirNativeBuffer*(mir::graphics::NativeBuffer*));
-    MOCK_CONST_METHOD0(platform_type, MirPlatformType());
-    MOCK_METHOD1(platform_operation, MirPlatformMessage*(MirPlatformMessage const*));
-    MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
-    MOCK_METHOD2(use_egl_native_window, void(std::shared_ptr<void>, mcl::EGLNativeSurface*));
-    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<void>(mcl::EGLNativeSurface*));
-    MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
-    MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
-    MOCK_METHOD2(request_interface, void*(char const*, int));
-    MOCK_CONST_METHOD1(native_format_for, uint32_t(MirPixelFormat));
-    MOCK_CONST_METHOD2(native_flags_for, uint32_t(MirBufferUsage, mir::geometry::Size));
-
-    mcl::ClientContext* client_context = nullptr;
-};
-
-struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
-{
-    StubClientPlatformFactory(std::shared_ptr<mcl::ClientPlatform> const& platform)
-        : platform{platform}
-    {
-    }
-
-    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext*)
-    {
-        return platform;
-    }
-
-    std::shared_ptr<mcl::ClientPlatform> platform;
-};
-
 void connected_callback(MirConnection* /*connection*/, void* /*client_context*/)
 {
 }
@@ -178,7 +126,7 @@ public:
 
     std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
     {
-        return std::make_shared<StubClientPlatformFactory>(platform);
+        return std::make_shared<mtd::StubClientPlatformFactory>(platform);
     }
 
 private:
@@ -190,7 +138,7 @@ private:
 struct MirRenderSurfaceTest : public testing::Test
 {
     MirRenderSurfaceTest()
-        : mock_platform{std::make_shared<testing::NiceMock<MockClientPlatform>>()},
+        : mock_platform{std::make_shared<testing::NiceMock<mtd::MockClientPlatform>>()},
           mock_channel{std::make_shared<testing::NiceMock<MockRpcChannel>>()},
           conf{mock_platform, mock_channel},
           connection{std::make_shared<MirConnection>(conf)}
@@ -198,7 +146,7 @@ struct MirRenderSurfaceTest : public testing::Test
         mock_platform->set_client_context(connection.get());
     }
 
-    std::shared_ptr<testing::NiceMock<MockClientPlatform>> const mock_platform;
+    std::shared_ptr<testing::NiceMock<mtd::MockClientPlatform>> const mock_platform;
     std::shared_ptr<testing::NiceMock<MockRpcChannel>> const mock_channel;
     TestConnectionConfiguration conf;
     std::shared_ptr<MirConnection> const connection;
