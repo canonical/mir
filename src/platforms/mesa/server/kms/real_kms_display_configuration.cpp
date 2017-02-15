@@ -370,6 +370,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         output.current_format = mir_pixel_format_xrgb_8888;
         output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector.subpixel);
         output.gamma = gamma;
+        output.edid = edid;
     }
 }
 
