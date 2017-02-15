@@ -673,25 +673,6 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
     surface.set_cursor_image({});
 }
 
-TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
-{
-    using namespace ::testing;
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        mir_pointer_unconfined,
-        streams,
-        std::shared_ptr<mi::InputChannel>(),
-        mt::fake_shared(mock_sender),
-        nullptr,
-        report};
-
-    EXPECT_CALL(mock_sender, send_event(_,_));
-
-    surface.consume(mev::make_event(mir_prompt_session_state_started).get());
-}
-
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
 {
     using namespace testing;

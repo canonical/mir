@@ -67,6 +67,7 @@ struct MirEvent
     MirInputDeviceStateEvent* to_input_device_state();
     MirInputDeviceStateEvent const* to_input_device_state() const;
 
+    MirWindowPlacementEvent* to_window_placement();
     MirWindowPlacementEvent const* to_window_placement() const;
 
     static mir::EventUPtr deserialize(std::string const& bytes);

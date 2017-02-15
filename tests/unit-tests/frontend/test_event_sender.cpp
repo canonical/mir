@@ -167,7 +167,7 @@ TEST_F(EventSender, sends_noninput_events)
     event_sender.handle_event(*resize_ev);
 }
 
-TEST_F(EventSender, never_sends_input_events)
+TEST_F(EventSender, sends_input_events)
 {
     using namespace testing;
 
@@ -175,7 +175,7 @@ TEST_F(EventSender, never_sends_input_events)
                               0, 0, MirInputEventModifiers());
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
-        .Times(0);
+        .Times(1);
     event_sender.handle_event(*ev);
 }
 
