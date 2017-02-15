@@ -382,17 +382,17 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     auto transformed_viewport = display_transform * viewport_size;
     GLint viewport_width = abs(transformed_viewport[0]);
     GLint viewport_height = abs(transformed_viewport[1]);
-    EGLint buf_width = 0, buf_height = 0;
+
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
+    EGLint buf_width = 0, buf_height = 0;
 
     if (viewport_width && viewport_height &&
         eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
         GLint reduced_width = buf_width, reduced_height = buf_height;
-
-        // if viewport_aspect_ratio >= buf_aspect_ratio
+        // if viewport_aspect_ratio >= buf_aspect_ratio ... without floats
         if (viewport_width * buf_height >= buf_width * viewport_height)
             reduced_height = buf_width * viewport_height / viewport_width;
         else
@@ -401,11 +401,6 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
         GLint offset_x = (buf_width - reduced_width) / 2;
         GLint offset_y = (buf_height - reduced_height) / 2;
 
-        printf("Viewport L{%dx%d} E{%dx%d} -> %dx%d+%d+%d\n",
-               viewport_width, viewport_height,
-               buf_width, buf_height,
-               reduced_width, reduced_height,
-               offset_x, offset_y);
         glViewport(offset_x, offset_y, reduced_width, reduced_height);
     }
 }
