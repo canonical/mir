@@ -28,7 +28,6 @@ mgn::Cursor::Cursor(std::shared_ptr<HostConnection> const& host_connection, std:
     : connection(host_connection),
       default_image(default_image)
 {
-    connection->set_cursor_image(*default_image);
 }
 
 mgn::Cursor::~Cursor()

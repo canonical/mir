@@ -68,8 +68,7 @@ public:
     Cursor(
         gbm_device* device,
         KMSOutputContainer& output_container,
-        std::shared_ptr<CurrentConfiguration> const& current_configuration,
-        std::shared_ptr<CursorImage> const& cursor_image);
+        std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
     ~Cursor() noexcept;
 
@@ -89,6 +88,7 @@ private:
     void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
     void write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count);
     void pad_and_write_image_data_locked(std::lock_guard<std::mutex> const&, CursorImage const& image);
+    void clear(std::lock_guard<std::mutex> const&);
     
     std::mutex guard;
 

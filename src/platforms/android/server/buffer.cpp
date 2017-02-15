@@ -84,6 +84,11 @@ void mga::Buffer::bind()
     bind(lk);
 }
 
+void mga::Buffer::bind_for_write()
+{
+    bind();
+}
+
 void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
 {
     native_buffer->ensure_available_for(mga::BufferAccess::read);

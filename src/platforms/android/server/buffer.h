@@ -22,6 +22,7 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <hardware/gralloc.h>
@@ -48,6 +49,7 @@ namespace android
 class NativeBuffer;
 class Buffer: public BufferBasic, public NativeBufferBase,
               public renderer::gl::TextureSource,
+              public renderer::gl::TextureTarget,
               public renderer::software::PixelSource
 {
 public:
@@ -62,6 +64,8 @@ public:
     void gl_bind_to_texture() override;
     void bind() override;
     void secure_for_render() override;
+
+    void bind_for_write() override;
 
     //note, you will get the native representation of an android buffer, including
     //the fences associated with the buffer. You must close these fences

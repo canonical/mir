@@ -192,23 +192,26 @@ mg::Frame mgm::RealKMSOutput::last_frame() const
     return last_frame_.load();
 }
 
-void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
+bool mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
 {
+    int result = 0;
     if (current_crtc)
     {
         has_cursor_ = true;
-        if (auto result = drmModeSetCursor(
+        result = drmModeSetCursor(
                 drm_fd,
                 current_crtc->crtc_id,
                 gbm_bo_get_handle(buffer).u32,
                 gbm_bo_get_width(buffer),
-                gbm_bo_get_height(buffer)))
+                gbm_bo_get_height(buffer));
+        if (result)
         {
             has_cursor_ = false;
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)",
                              strerror(-result));
         }
     }
+    return !result;
 }
 
 void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
@@ -225,17 +228,20 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
     }
 }
 
-void mgm::RealKMSOutput::clear_cursor()
+bool mgm::RealKMSOutput::clear_cursor()
 {
+    int result = 0;
     if (current_crtc)
     {
-        auto result = drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+        result = drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
             mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
                              strerror(-result));
         has_cursor_ = false;
     }
+
+    return !result;
 }
 
 bool mgm::RealKMSOutput::has_cursor() const

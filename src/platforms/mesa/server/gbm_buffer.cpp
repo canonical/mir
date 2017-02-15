@@ -112,3 +112,8 @@ void mgm::GBMBuffer::bind()
 {
     gl_bind_to_texture();
 }
+
+void mgm::GBMBuffer::bind_for_write()
+{
+    bind();
+}
