@@ -231,7 +231,7 @@ void mgm::Display::resume()
     if (auto c = cursor.lock()) c->resume();
 }
 
-auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) -> std::shared_ptr<graphics::Cursor>
+auto mgm::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
 {
     // There is only one hardware cursor. We do not keep a strong reference to it in the display though,
     // if no other component of Mir is interested (i.e. the input stack does not keep a reference to send
@@ -262,8 +262,7 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
         {
             locked_cursor = std::make_shared<Cursor>(gbm->device,
                               output_container,
-                              std::make_shared<KMSCurrentConfiguration>(*this),
-                              initial_image);
+                              std::make_shared<KMSCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)
         {
