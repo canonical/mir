@@ -330,8 +330,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     glDisableVertexAttribArray(prog.position_attr);
 }
 
-void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
+void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
 {
+    auto rect = rec;
+    rect.size.width = geom::Width{rect.size.height.as_int()};
     if (rect == viewport)
         return;
 
@@ -371,36 +373,34 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
     viewport = rect;
 
-    EGLint egl_width = 0, egl_height = 0;
+    GLint viewport_width = viewport.size.width.as_int();
+    GLint viewport_height = viewport.size.height.as_int();
+    if (!viewport_width || !viewport_height)
+        return;  // You have problems. At infinite zoom you won't see anything.
+
+    EGLint buf_width = 0, buf_height = 0;
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
-    if (eglQuerySurface(dpy, surf, EGL_WIDTH, &egl_width) && egl_width > 0 &&
-        eglQuerySurface(dpy, surf, EGL_HEIGHT, &egl_height) && egl_height > 0)
+    if (eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
+        eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
-        GLint logical_width = viewport.size.width.as_int();
-        GLint logical_height = viewport.size.height.as_int();
-        GLint offset_x = 0, offset_y = 0;
-        GLint physical_width = 0, physical_height = 0;
-        if (logical_width * egl_height >= egl_width * logical_height)
-        {   // if logical_aspect_ratio >= egl_aspect_ratio
-            physical_width = egl_width;
-            offset_x = 0;
-            physical_height = logical_height * egl_width / logical_width;
-            offset_y = (egl_height - physical_height) / 2;
-        }
+        GLint reduced_width = buf_width, reduced_height = buf_height;
+
+        // if viewport_aspect_ratio >= buf_aspect_ratio
+        if (viewport_width * buf_height >= buf_width * viewport_height)
+            reduced_height = viewport_height * buf_width / viewport_width;
         else
-        {
-            physical_height = egl_height;
-            offset_y = 0;
-            physical_width = logical_width * egl_height / logical_height;
-            offset_x = (egl_width - physical_width) / 2;
-        }
+            reduced_width = viewport_width * buf_height / viewport_height;
+
+        GLint offset_x = (buf_width - reduced_width) / 2;
+        GLint offset_y = (buf_height - reduced_height) / 2;
+
         printf("Viewport L{%dx%d} E{%dx%d} -> %dx%d+%d+%d\n",
-               logical_width, logical_height,
-               egl_width, egl_height,
-               physical_width, physical_height,
+               viewport_width, viewport_height,
+               buf_width, buf_height,
+               reduced_width, reduced_height,
                offset_x, offset_y);
-        glViewport(offset_x, offset_y, physical_width, physical_height);
+        glViewport(offset_x, offset_y, reduced_width, reduced_height);
     }
 }
 
