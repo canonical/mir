@@ -375,7 +375,7 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
 
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that
-     * the viewport aspect ratio doesn't match the display aspect ratio.
+     * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
     GLint viewport_width = viewport.size.width.as_int();
@@ -392,9 +392,9 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
 
         // if viewport_aspect_ratio >= buf_aspect_ratio
         if (viewport_width * buf_height >= buf_width * viewport_height)
-            reduced_height = viewport_height * buf_width / viewport_width;
+            reduced_height = buf_width * viewport_height / viewport_width;
         else
-            reduced_width = viewport_width * buf_height / viewport_height;
+            reduced_width = buf_height * viewport_width / viewport_height;
 
         GLint offset_x = (buf_width - reduced_width) / 2;
         GLint offset_y = (buf_height - reduced_height) / 2;
