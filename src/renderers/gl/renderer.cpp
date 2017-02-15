@@ -376,23 +376,21 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
-    glm::vec4 viewport_size(viewport.size.width.as_int(),
-                            viewport.size.height.as_int(),
-                            0, 1);
-    auto transformed_viewport = display_transform * viewport_size;
-    GLint viewport_width = abs(transformed_viewport[0]);
-    GLint viewport_height = abs(transformed_viewport[1]);
-
+    auto transformed_viewport = display_transform *
+                                glm::vec4(viewport.size.width.as_int(),
+                                          viewport.size.height.as_int(), 0, 1);
+    auto viewport_width = fabs(transformed_viewport[0]);
+    auto viewport_height = fabs(transformed_viewport[1]);
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
     EGLint buf_width = 0, buf_height = 0;
 
-    if (viewport_width && viewport_height &&
+    if (viewport_width > 0.0f && viewport_height > 0.0f &&
         eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
         GLint reduced_width = buf_width, reduced_height = buf_height;
-        // if viewport_aspect_ratio >= buf_aspect_ratio ... without floats
+        // if viewport_aspect_ratio >= buf_aspect_ratio
         if (viewport_width * buf_height >= buf_width * viewport_height)
             reduced_height = buf_width * viewport_height / viewport_width;
         else
