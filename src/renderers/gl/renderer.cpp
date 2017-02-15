@@ -330,10 +330,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     glDisableVertexAttribArray(prog.position_attr);
 }
 
-void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
+void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
-    auto rect = rec;
-    rect.size.width = geom::Width{rect.size.height.as_int()};
     if (rect == viewport)
         return;
 
