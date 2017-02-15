@@ -29,6 +29,8 @@ extern "C" {
 
 /** Allocate a MirBuffer via gbm
  *
+ *  available in V1 and V2.
+ *
  *  The callback will be called when the buffer is available for use.
  *  It will be called once when created, and once per every
  *  mir_presentation_chain_submit_buffer.
@@ -57,6 +59,38 @@ typedef struct MirExtensionGbmBufferV1
 {
     mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
 } MirExtensionGbmBufferV1;
+
+
+/** Allocate a MirBuffer via gbm and wait for the allocation.
+ *  available in V2.
+ *  The buffer can be destroyed via mir_buffer_release().
+ *
+ *   \param [in] connection            The connection
+ *   \param [in] width                 Requested buffer width
+ *   \param [in] height                Requested buffer height
+ *   \param [in] gbm_pixel_format      The pixel format, one of the GBM_FORMATs
+ *   \param [in] gbm_bo_flags          The gbm_bo_flags for the buffer.
+ *   \return                           The buffer
+ **/
+typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int gbm_pixel_format,
+    unsigned int gbm_bo_flags);
+
+/* get the gbm_bo of a given buffer.
+ *   \pre   The buffer must be a gbm buffer object.
+ *   \param [in] buffer The buffer 
+ *   \return            The gbm_bo of the buffer.
+ */
+typedef struct gbm_bo* (*MirBufferGetGbmBo)(MirBuffer* buffer);
+
+typedef struct MirExtensionGbmBufferV2
+{
+    mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
+    MirConnectionAllocateBufferGbmSync allocate_buffer_gbm_sync;
+    MirBufferGetGbmBo get_gbm_bo;
+} MirExtensionGbmBufferV2;
 
 static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
     MirConnection* connection)
