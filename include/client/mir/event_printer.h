@@ -59,6 +59,7 @@ std::ostream& operator<<(std::ostream& out, MirKeymapEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirWindowEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputDeviceStateEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirWindowPlacementEvent const& event);
+std::ostream& operator<<(std::ostream& out, MirWindowOutputEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirEvent const& event);
 
 }

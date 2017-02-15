@@ -52,9 +52,9 @@ public:
     bool schedule_page_flip(uint32_t fb_id) override;
     void wait_for_page_flip() override;
 
-    void set_cursor(gbm_bo* buffer) override;
+    bool set_cursor(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
-    void clear_cursor() override;
+    bool clear_cursor() override;
     bool has_cursor() const override;
 
     void set_power_mode(MirPowerMode mode) override;

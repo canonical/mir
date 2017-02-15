@@ -854,13 +854,13 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
     return std::make_unique<SurfaceSpec>(mir_connection);
 }
 
-bool mgn::MirClientHostConnection::supports_passthrough()
+bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage usage)
 {
-    auto buffer = create_buffer(geom::Size{1, 1} , mir_pixel_format_abgr_8888);
-    auto hints = buffer->egl_image_creation_hints();
-    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
-        return false;
-    return true;
+    //FIXME: ShmBuffers currently don't upload properly. The logic here uses
+    //       passthrough where supported (ANativeWindowBuffer and gbm_bo)
+    //       (LP: #1663062 for more details)
+    return (mir_extension_android_buffer_v1(mir_connection) || 
+           ((mir_extension_gbm_buffer_v1(mir_connection) && usage == mg::BufferUsage::hardware)));
 }
 
 void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)
