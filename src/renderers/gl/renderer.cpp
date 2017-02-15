@@ -373,6 +373,11 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
 
     viewport = rect;
 
+    /*
+     * Letterboxing: Move the glViewport to add black bars in the case that
+     * the viewport aspect ratio doesn't match the display aspect ratio.
+     * This keeps pixels square. Note "black"-bars are really glClearColor.
+     */
     GLint viewport_width = viewport.size.width.as_int();
     GLint viewport_height = viewport.size.height.as_int();
     EGLint buf_width = 0, buf_height = 0;
