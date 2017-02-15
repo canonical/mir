@@ -375,13 +375,12 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rec)
 
     GLint viewport_width = viewport.size.width.as_int();
     GLint viewport_height = viewport.size.height.as_int();
-    if (!viewport_width || !viewport_height)
-        return;  // You have problems. At infinite zoom you won't see anything.
-
     EGLint buf_width = 0, buf_height = 0;
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
-    if (eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
+
+    if (viewport_width && viewport_height &&
+        eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
         GLint reduced_width = buf_width, reduced_height = buf_height;
